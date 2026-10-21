@@ -1,5 +1,5 @@
 import { NotFoundError } from "@crm/core/errors";
-import type { ListQuery } from "@crm/core/records";
+import type { ListQuery, RecordData } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { useQueryClient } from "@tanstack/react-query";
 import { act, renderHook, waitFor } from "@testing-library/react";
@@ -7,6 +7,7 @@ import type { ReactNode } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createClientRecordService } from "./client-record-service";
 import {
+  useAllRecordPages,
   useChangeOwner,
   useCreateRecord,
   useDeleteRecords,
@@ -59,6 +60,39 @@ afterEach(() => {
 });
 
 describe("record hooks", () => {
+  it("loads and refreshes every page of an all-pages list", async () => {
+    const service = createService();
+    const views = await service.listViews("Leads");
+    const view = views.find((item) => item.isDefault);
+    if (!view) throw new Error("Missing default view.");
+    const query = { viewId: view.id, perPage: 100 };
+    const seed = await service.list("Leads", { ...query, page: 1 });
+    let version = 1;
+    const listSpy = vi.spyOn(service, "list").mockImplementation(async (_module, request) => ({
+      ...seed,
+      page: request.page,
+      records: Array.from(
+        { length: request.page === 1 ? 100 : 1 },
+        (_, index) => ({ id: `${version}-${request.page}-${index}`, fields: {} }) as RecordData,
+      ),
+      moreRecords: request.page === 1,
+    }));
+    const { result } = renderHook(
+      () => ({
+        list: useAllRecordPages("Leads", query),
+        refresh: useRefreshModuleListData("Leads"),
+      }),
+      { wrapper: wrapper(service) },
+    );
+    await waitFor(() => expect(result.current.list.data).toHaveLength(101));
+    expect(listSpy.mock.calls.map(([, request]) => request.page)).toEqual([1, 2]);
+    version = 2;
+    act(() => result.current.refresh());
+    await waitFor(() => expect(result.current.list.data?.[0]?.id).toBe("2-1-0"));
+    expect(result.current.list.data?.[100]?.id).toBe("2-2-0");
+    expect(listSpy.mock.calls.map(([, request]) => request.page)).toEqual([1, 2, 1, 2]);
+  });
+
   it("returns the home currency", async () => {
     const service = createService();
     const { result } = renderHook(() => useHomeCurrency(), { wrapper: wrapper(service) });

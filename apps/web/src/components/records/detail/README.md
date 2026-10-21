@@ -166,11 +166,16 @@ menu present/absent, and all four arrow availability combinations.
   Whether the key is shared across all modules or scoped per module was not observed in reference
   captures; we use one global key for every record detail page.
 
-The spec places Scroll To Top at lower right but does not measure it: we use a 36px
-circle, 16px from the content frame's right/bottom edges, white surface, panel border,
-and the existing medium shadow. These values are separately documented as unmeasured
-tokens; they do not claim reference parity. The demo's 560px height is a synthetic
-inspection viewport, not a reference page height.
+Scroll To Top uses the existing-capture measurements in record-detail.md: a 37px
+disc, 44px from the viewport right edge. Its bottom offset reserves the 61px
+page-view strip plus the measured 17px gap, and tracks the actual footer
+position when it wraps. A blank lane of disc diameter plus gap before the
+strip prevents overlap with the final card at the 1470 × 835 baseline. This
+clearance is an implementation choice for the no-overlap requirement; the
+existing captures do not establish the final-card-to-strip spacing. The demo's 560px height remains a synthetic viewport.
+The page-view selector is 150 × 34px; the custom page action is at least 218 ×
+32px and can grow with its label. Related-card selectors use the small text role
+and 27px height. Unmeasured padding and line-height retain project defaults.
 
 ## Verification
 

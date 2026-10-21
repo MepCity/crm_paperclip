@@ -86,6 +86,28 @@ export function useRecordList(
   });
 }
 
+/** Loads every page of a list (until `moreRecords` is false) as one query under the list key prefix. */
+export function useAllRecordPages(
+  module: ModuleApiName,
+  query: Omit<ListQuery, "page">,
+  options?: { enabled?: boolean },
+) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  return useQuery({
+    queryKey: [...apiKeys.list(orgSlug, module, { ...query, page: 1 }), "all-pages"],
+    queryFn: async () => {
+      const records: RecordData[] = [];
+      for (let page = 1; ; page += 1) {
+        const result = await service.list(module, { ...query, page });
+        records.push(...result.records);
+        if (result.moreRecords !== true || result.records.length === 0) return records;
+      }
+    },
+    enabled: options?.enabled ?? Boolean(query.viewId),
+  });
+}
+
 export function useRecordCount(
   module: ModuleApiName,
   query: Pick<

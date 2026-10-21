@@ -3,8 +3,11 @@ import type { Page } from "@playwright/test";
 
 const WCAG_21_A_AND_AA = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa"];
 
-/** Measured sub-AA placeholder ink on white (ADR 0003 §8). Used on `/dev/ui` timeline filter demos. */
+/** Measured sub-AA text pairs retained in the gallery (ADR 0003 §8). */
 export const DEV_UI_A11Y_EXCLUDE = [
+  // Related-card action labels: measured #5464F2 on #F0F1FF (4.18:1), ADR 0003 §8.
+  // Only the text span is excluded; buttons, names and keyboard semantics remain scanned.
+  "span[data-related-action-label]",
   "[data-part=empty]",
   "[data-part=empty-value]",
   '.timeline-filter-selector-wrap[data-tone="checkbox-placeholder"] .timeline-filter-selector-label',

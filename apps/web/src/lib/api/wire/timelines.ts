@@ -190,6 +190,17 @@ const WINDOW_DAYS: Record<Exclude<TimelineTimePreset, "any">, [number, number]> 
   last30: [-29, 1],
 };
 
+/** Display-zone calendar boundaries shared by History and system list filters. */
+export function timelinePeriod(
+  time: Exclude<TimelineTimePreset, "any">,
+  now: Date,
+  timeZone: string,
+): { from: string; to: string } {
+  const today = localDate(now.getTime(), timeZone);
+  const [from, to] = WINDOW_DAYS[time];
+  return { from: startOfDay(today, from, timeZone), to: startOfDay(today, to, timeZone) };
+}
+
 export function encodeTimelineFilters(
   selection: TimelineSelection,
   now: Date,
@@ -206,12 +217,8 @@ export function encodeTimelineFilters(
   }
   if (selection.userId) leaf("done_by.id", "equal", selection.userId);
   if (selection.time !== "any") {
-    const today = localDate(now.getTime(), timeZone);
-    const [from, to] = WINDOW_DAYS[selection.time];
-    leaf("audited_time", "between", [
-      startOfDay(today, from, timeZone),
-      startOfDay(today, to, timeZone),
-    ]);
+    const { from, to } = timelinePeriod(selection.time, now, timeZone);
+    leaf("audited_time", "between", [from, to]);
   }
   if (selection.sources.length)
     leaf(

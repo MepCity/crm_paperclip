@@ -42,6 +42,7 @@ test("dev ui gallery is accessible with the data entry primitives", async ({ pag
   await whenHydrated(page.getByRole("region", { name: "combo box" }).getByRole("combobox").first());
   // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
   // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
+  // ADR 0003 §8: measured related-action label ink is 4.18:1; controls remain scanned.
   await expectNoA11yViolations(page, { exclude: [...DEV_UI_A11Y_EXCLUDE] });
 });
 

@@ -83,7 +83,10 @@ it("runs control actions by role and name", () => {
       }}
     />,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Add Contact" }));
+  const add = screen.getByRole("button", { name: "Add Contact" });
+  expect(add.querySelector("span[data-related-action-label]")?.textContent).toBe("Add Contact");
+  expect(add.matches("[data-related-action-label]")).toBe(false);
+  fireEvent.click(add);
   fireEvent.click(screen.getByRole("button", { name: "Expand" }));
   expect(onAdd).toHaveBeenCalledTimes(1);
   expect(onExpand).toHaveBeenCalledTimes(1);

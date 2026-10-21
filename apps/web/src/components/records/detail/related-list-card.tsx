@@ -145,14 +145,13 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
       return (
         <Button
           key={ctrl.id}
-          variant="secondary"
-          size="compact"
+          variant="recordSelector"
+          size="cardSelector"
           laterModule={laterMod}
           onPress={ctrl.onAction}
-          className="flex items-center gap-1.5"
         >
           <span>{ctrl.label}</span>
-          <Icons.chevronDown aria-hidden className="size-3 text-text-muted" />
+          <Icons.chevronDown aria-hidden className="size-3 text-(--color-form-caret)" />
         </Button>
       );
     }
@@ -178,12 +177,13 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
     return (
       <Button
         key={ctrl.id}
-        variant="secondary"
-        size="compact"
+        variant="relatedAction"
+        size="relatedAction"
+        className={ctrl.id === "add-campaigns" ? "min-w-[122px]" : undefined}
         laterModule={laterMod}
         onPress={ctrl.onAction}
       >
-        {ctrl.label}
+        <span data-related-action-label>{ctrl.label}</span>
       </Button>
     );
   }
