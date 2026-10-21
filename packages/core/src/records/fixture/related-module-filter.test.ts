@@ -2,7 +2,10 @@ import { randomUUID } from "node:crypto";
 import { beforeEach, describe, expect, it } from "vitest";
 import { ValidationError } from "../../errors";
 import type { RecordService, RelatedModuleFilter } from "../contract";
-import { casesRecordServiceContractModule } from "../contract-suite-module";
+import {
+  casesRecordServiceContractModule,
+  eventsRecordServiceContractModule,
+} from "../contract-suite-module";
 import { createFixtureRecordService } from "./index";
 
 describe("related-module list filter (Cases)", () => {
@@ -77,5 +80,76 @@ describe("related-module list filter (Cases)", () => {
     await expect(
       service.list("Leads", { viewId: leadsView, page: 1, perPage: 10, relatedModules: [row] }),
     ).rejects.toBeInstanceOf(ValidationError);
+  });
+  it("covers Meetings and Tasks with presence and criteria", async () => {
+    const meeting = eventsRecordServiceContractModule.buildMinimalValidInput({
+      Event_Title: "Sync",
+      What_Id: { module: "Cases", id: withCall },
+    });
+    await service.create("Events", meeting);
+    await service.create("Tasks", {
+      Subject: "Todo",
+      What_Id: { module: "Cases", id: bare },
+    });
+    const hit = { field: "Subject", comparator: "equal" as const, value: "Todo" };
+    const miss = { field: "Subject", comparator: "equal" as const, value: "Nope" };
+    expect(await ids([{ module: "Meetings", presence: "with", criteria: [] }])).toEqual([withCall]);
+    expect(await ids([{ module: "Meetings", presence: "without", criteria: [] }])).toEqual([bare]);
+    expect(await ids([{ module: "Tasks", presence: "with", criteria: [hit] }])).toEqual([bare]);
+    expect(await ids([{ module: "Tasks", presence: "without", criteria: [hit] }])).toEqual([
+      withCall,
+    ]);
+    expect(await ids([{ module: "Tasks", presence: "with", criteria: [miss] }])).toEqual([]);
+  });
+  it("requires all criteria to match the same child", async () => {
+    await service.create("Calls", {
+      Call_Type: "Inbound",
+      Call_Start_Time: "2026-01-16T10:00:00.000Z",
+      Call_Duration: "05:00",
+      Subject: "Other",
+      What_Id: { module: "Cases", id: withCall },
+    });
+    const a = { field: "Subject", comparator: "equal" as const, value: "Ping" };
+    const b = { field: "Call_Type", comparator: "equal" as const, value: "Inbound" };
+    expect(await ids([{ module: "Calls", presence: "with", criteria: [a, b] }])).toEqual([]);
+    expect(await ids([{ module: "Calls", presence: "with", criteria: [a] }])).toEqual([withCall]);
+  });
+  it("enforces parent and child visibility", async () => {
+    const blocked = new Set<string>();
+    const svc = createFixtureRecordService(
+      { orgId: randomUUID(), orgSlug: "rmf-vis", orgName: "S", userId: "user", role: "admin" },
+      { canReadRecord: (_m, id) => !blocked.has(id) },
+    );
+    const base = casesRecordServiceContractModule.buildMinimalValidInput();
+    const a = (await svc.create("Cases", { ...base, Subject: "RMF a" })).id;
+    const b = (await svc.create("Cases", { ...base, Subject: "RMF b" })).id;
+    const call = (
+      await svc.create("Calls", {
+        Call_Type: "Outbound",
+        Call_Start_Time: "2026-01-15T10:00:00.000Z",
+        Call_Duration: "05:00",
+        Subject: "Ping",
+        What_Id: { module: "Cases", id: a },
+      })
+    ).id;
+    const view = (await svc.listViews("Cases")).find((v) => v.isDefault)?.id ?? "";
+    const run = async (presence: "with" | "without") =>
+      (
+        await svc.list("Cases", {
+          viewId: view,
+          page: 1,
+          perPage: 100,
+          filters: subjectFilter,
+          relatedModules: [{ module: "Calls", presence, criteria: [] }],
+        })
+      ).records.map((r) => r.id);
+    expect(await run("with")).toEqual([a]);
+    blocked.add(call); // hidden child no longer counts
+    expect(await run("with")).toEqual([]);
+    expect((await run("without")).sort()).toEqual([a, b].sort());
+    blocked.add(a); // hidden parent never appears
+    expect(await run("without")).toEqual([b]);
+    blocked.delete(call);
+    expect(await run("with")).toEqual([]);
   });
 });

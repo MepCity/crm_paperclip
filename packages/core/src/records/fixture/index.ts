@@ -510,7 +510,8 @@ export function createFixtureRecordService(
       .map((record) => resolveRead(module, record, now))
       .filter(
         (record) =>
-          (!systemFilters || options?.canReadRecord?.(module, record.id) !== false) &&
+          ((!systemFilters && !relatedRows) ||
+            options?.canReadRecord?.(module, record.id) !== false) &&
           (!view?.criteria || matches(record, view.criteria, runtimeCtx, fieldMap)) &&
           (!query.filters || matches(record, query.filters, runtimeCtx, fieldMap)) &&
           matchesSearch(record, query.search, bundle.searchFields) &&
