@@ -14,6 +14,7 @@ vi.mock("@crm/core", async (importOriginal) => ({
 vi.mock("@/lib/records", () => ({ getRecordService: vi.fn(() => records) }));
 
 import { getSession } from "@crm/core";
+import { getRecordService } from "@/lib/records";
 import { operationRoute } from "./operation-route";
 import type { Operation } from "./wire/operations";
 
@@ -46,6 +47,20 @@ describe("operationRoute", () => {
     expect(await services.members()).toEqual(members);
     expect(input.ctx).toBe(ctx);
   });
+
+  it.each(["documents", "Documents", "DOCUMENTS"])(
+    "rejects %s before creating record services",
+    async (module) => {
+      const run = vi.fn();
+      const response = await operationRoute({ run } as unknown as Operation)(post(), {
+        params: Promise.resolve({ module }),
+      });
+      expect(response.status).toBe(404);
+      expect(await response.json()).toMatchObject({ code: "not_found", status: "error" });
+      expect(getRecordService).not.toHaveBeenCalled();
+      expect(run).not.toHaveBeenCalled();
+    },
+  );
 
   it("maps an AppError thrown by the operation to its error body", async () => {
     const run = vi.fn(async () => {
