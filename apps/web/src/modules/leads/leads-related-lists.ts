@@ -53,7 +53,7 @@ export function createLeadsRelatedLists(
       id: "notes",
       renderBody: notesCardBody("Leads"),
       title: "Notes",
-      moduleKey: "M6",
+      moduleKey: "M2",
       order: 0,
       targetId: "related-list-notes",
       emptyStateText: "No records found",
