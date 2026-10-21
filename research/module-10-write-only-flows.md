@@ -174,3 +174,19 @@ and `m7-campaign-links-contact-detail` show Overview, not email history.
 Record draft contents and email timeline events remain not observed with these
 reasons and move to the Module 10 gate questions. R9 retains the documentation
 follow-up above; no additional reference access or write is authorized.
+
+## 9. R4 calendar observation boundary
+
+R4 (MEP-1013), 2026-10-22: see [calendar.md](specs/calendar.md).
+Only the opening calendar route is captured, without view/date overrides or
+clicks. The initial default Day screenshot is provisional because of a page
+error; it does not establish weekly/monthly layouts or ordinary event tiles.
+
+- W5/W6/W17 remain untested: create from a slot, drag, resize, reschedule,
+  delete, recurrence edit scope, invitees and RSVP are writes. No event is
+  created or manipulated to populate an empty range.
+- W10 and calendar/user/group view creation or management remain writes or
+  possible preference writes. No connection, sync, selection, import/export,
+  view switch, sidebar collapse, search or date navigation is invoked.
+- R9 should preserve the distinction between documented capabilities and
+  unobserved results/validation. This note authorizes no further live action.
