@@ -10,7 +10,16 @@ import {
   MAX_RELATED_MODULE_CRITERIA,
   MAX_RELATED_MODULE_FILTERS,
 } from "@crm/core/records/related-module-filters";
-import { useMemo, useState } from "react";
+import {
+  type RefObject,
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useMemo,
+  useRef,
+  useState,
+} from "react";
+import { createPortal } from "react-dom";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import type { MultiSelectOption } from "@/components/ui/multi-select";
@@ -140,25 +149,59 @@ function useRelatedChildFields(
   }, [config.fieldLabels, fieldDefinitions, users]);
 }
 
+const MENU_WIDTH = 330;
+const MENU_MAX_HEIGHT = 340;
+
+/** Floating Select Field list: it overlays the table, so it is drawn outside the clipped panel. */
 function SelectFieldMenu({
   label,
   fields,
+  anchorRef,
   onSelect,
   onClose,
 }: {
   label: string;
   fields: readonly ChildField[];
+  anchorRef: RefObject<HTMLElement | null>;
   onSelect: (field: ChildField) => void;
   onClose: () => void;
 }) {
   const [query, setQuery] = useState("");
+  const menuRef = useRef<HTMLDivElement>(null);
+  const [position, setPosition] = useState<{ left: number; top: number } | null>(null);
+  useLayoutEffect(() => {
+    const rect = anchorRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    // Above the control when there is room (as in the reference), else below.
+    const above = rect.top >= MENU_MAX_HEIGHT + 8;
+    setPosition({
+      left: rect.left,
+      top: above ? rect.top - MENU_MAX_HEIGHT - 4 : rect.bottom + 4,
+    });
+  }, [anchorRef]);
+  useEffect(() => {
+    const outside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (!menuRef.current?.contains(target) && !anchorRef.current?.contains(target)) onClose();
+    };
+    document.addEventListener("mousedown", outside);
+    return () => document.removeEventListener("mousedown", outside);
+  }, [anchorRef, onClose]);
   const visible = fields.filter(
     (entry) => entry.field && entry.label.toLowerCase().includes(query.toLowerCase()),
   );
-  return (
+  return createPortal(
     // biome-ignore lint/a11y/noStaticElementInteractions: Escape closes the menu from its search box.
     <div
-      className="flex flex-col gap-1 rounded-md border border-border bg-surface p-1"
+      ref={menuRef}
+      className="fixed z-50 flex flex-col justify-end rounded-md border border-border bg-surface p-2 shadow-lg"
+      style={{
+        left: position?.left ?? 0,
+        top: position?.top ?? 0,
+        width: MENU_WIDTH,
+        maxHeight: MENU_MAX_HEIGHT,
+        visibility: position ? "visible" : "hidden",
+      }}
       onKeyDown={(event) => {
         if (event.key === "Escape") {
           event.stopPropagation();
@@ -166,15 +209,7 @@ function SelectFieldMenu({
         }
       }}
     >
-      <TextField
-        label={`${label} field search`}
-        hideLabel
-        placeholder="Search"
-        value={query}
-        onChange={setQuery}
-        autoFocus
-      />
-      <div role="listbox" aria-label="Select Field" className="max-h-60 overflow-auto">
+      <div role="listbox" aria-label="Select Field" className="min-h-0 overflow-auto order-2">
         {visible.map((entry) => (
           <button
             key={entry.field?.apiName}
@@ -191,6 +226,72 @@ function SelectFieldMenu({
           <div className="px-3 py-2 text-sm text-text-muted">No results</div>
         ) : null}
       </div>
+      <div className="order-1 pb-2">
+        <TextField
+          label={`${label} field search`}
+          hideLabel
+          placeholder="Search"
+          value={query}
+          onChange={setQuery}
+          autoFocus
+        />
+      </div>
+    </div>,
+    document.body,
+  );
+}
+
+function CriterionHeader({
+  label,
+  fieldLabel,
+  fields,
+  menuOpen,
+  pending,
+  onToggleMenu,
+  onRemove,
+  onSelect,
+}: {
+  label: string;
+  fieldLabel: string | null;
+  fields: readonly ChildField[];
+  menuOpen: boolean;
+  pending: boolean;
+  onToggleMenu: (open: boolean) => void;
+  onRemove: () => void;
+  onSelect: (field: ChildField) => void;
+}) {
+  const anchorRef = useRef<HTMLButtonElement>(null);
+  const close = useCallback(() => onToggleMenu(false), [onToggleMenu]);
+  return (
+    <div className="flex items-center gap-2">
+      <button
+        type="button"
+        aria-label={`Remove ${label} criterion`}
+        className="flex shrink-0 cursor-default items-center justify-center rounded-full border border-danger p-0 text-danger"
+        onClick={onRemove}
+      >
+        <Icons.minus aria-hidden className="size-3" />
+      </button>
+      <button
+        ref={anchorRef}
+        type="button"
+        aria-expanded={pending ? menuOpen : undefined}
+        className={`min-w-0 flex-1 cursor-default rounded-md border px-2 py-1 text-left text-sm ${
+          pending ? "border-focus-ring text-text-muted" : "border-border text-text"
+        }`}
+        onClick={() => pending && onToggleMenu(!menuOpen)}
+      >
+        {fieldLabel ?? "Select Field"}
+      </button>
+      {pending && menuOpen ? (
+        <SelectFieldMenu
+          label={label}
+          fields={fields}
+          anchorRef={anchorRef}
+          onClose={close}
+          onSelect={onSelect}
+        />
+      ) : null}
     </div>
   );
 }
@@ -217,7 +318,7 @@ export function RelatedModuleFilterEditor({
     });
   return (
     <div className="filter-editor" data-related-module={config.module}>
-      <div className="flex items-center gap-1 text-sm text-text">
+      <div className="flex flex-wrap items-center gap-1 text-sm text-text [&_button]:min-w-16">
         <span>{config.parentLabel}</span>
         <Select
           label={`${label} presence`}
@@ -241,50 +342,30 @@ export function RelatedModuleFilterEditor({
         const child = fields.find((entry) => entry.field?.apiName === criterion.field);
         return (
           <div key={criterion.key} className="flex flex-col gap-1" data-related-criterion>
-            <div className="flex items-center gap-1">
-              {criterion.field === null ? (
-                <Button
-                  size="sm"
-                  variant="secondary"
-                  aria-expanded={criterion.menuOpen}
-                  onPress={() => update(criterion.key, { menuOpen: !criterion.menuOpen })}
-                >
-                  Select Field
-                </Button>
-              ) : (
-                <span className="text-sm text-text">{child?.label}</span>
-              )}
-              <Button
-                size="sm"
-                variant="secondary"
-                aria-label={`Remove ${label} criterion`}
-                onPress={() =>
-                  onChange({
-                    ...draft,
-                    criteria: draft.criteria.filter((c) => c.key !== criterion.key),
-                  })
-                }
-              >
-                <Icons.close aria-hidden />
-              </Button>
-            </div>
-            {criterion.field === null && criterion.menuOpen ? (
-              <SelectFieldMenu
-                label={label}
-                fields={fields}
-                onClose={() => update(criterion.key, { menuOpen: false })}
-                onSelect={(next) => {
-                  if (!next.field || !next.editor) return;
-                  const initial = initialChildDraft(next.editor);
-                  update(criterion.key, {
-                    field: next.field.apiName,
-                    draft: initial,
-                    complete: isFilterComplete(next.editor, initial),
-                    menuOpen: false,
-                  });
-                }}
-              />
-            ) : null}
+            <CriterionHeader
+              label={label}
+              fieldLabel={child?.label ?? null}
+              fields={fields}
+              menuOpen={criterion.menuOpen}
+              pending={criterion.field === null}
+              onToggleMenu={(open) => update(criterion.key, { menuOpen: open })}
+              onRemove={() =>
+                onChange({
+                  ...draft,
+                  criteria: draft.criteria.filter((c) => c.key !== criterion.key),
+                })
+              }
+              onSelect={(next) => {
+                if (!next.field || !next.editor) return;
+                const initial = initialChildDraft(next.editor);
+                update(criterion.key, {
+                  field: next.field.apiName,
+                  draft: initial,
+                  complete: isFilterComplete(next.editor, initial),
+                  menuOpen: false,
+                });
+              }}
+            />
             {criterion.field === null ? (
               <div className="filter-editor" data-pending-criterion>
                 <div
