@@ -100,6 +100,8 @@ test("a Missed call with Completed status saves with a duration", async ({ page,
   await expect(duration).toBeVisible();
   await duration.getByRole("textbox", { name: "Call Duration minutes" }).fill("01");
   await duration.getByRole("textbox", { name: "Call Duration seconds" }).fill("05");
+  await page.getByRole("textbox", { name: "Call Start Time date" }).fill("30.11.2030");
+  await page.getByRole("textbox", { name: "Call Start Time time" }).fill("10:30");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Calls/\\d+$`), {
     timeout: 60_000,
