@@ -31,3 +31,11 @@ describe("activityPrefillFields", () => {
     });
   });
 });
+
+describe("campaign activity prefill", () => {
+  it("fills What with the campaign", () => {
+    expect(
+      activityPrefillFields("Campaigns", { id: "c1", fields: { Campaign_Name: "Spring" } }),
+    ).toEqual({ What_Id: { module: "Campaigns", id: "c1", name: "Spring" } });
+  });
+});

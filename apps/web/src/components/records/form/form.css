@@ -57,6 +57,12 @@
   width: var(--size-form-page-save-new-width);
 }
 
+.record-form-shell[data-form-layout="call"] .record-form-strip__action--save-new {
+  order: -1;
+  width: auto;
+  padding-inline: var(--space-4);
+}
+
 .record-form-strip__action--save {
   width: var(--size-form-page-save-width);
 }
@@ -402,8 +408,25 @@
   color: var(--color-text-muted);
 }
 
+.record-form-shell:has([data-pin-bottom]) {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - var(--size-topbar-height));
+}
+
+.record-form-shell:has([data-pin-bottom]) .record-form-card,
+.record-form-shell:has([data-pin-bottom]) .record-form-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
 .record-form-inventory-footer[data-align-end] {
   justify-content: flex-end;
+}
+
+.record-form-inventory-footer[data-pin-bottom] {
+  margin-top: auto;
 }
 
 .record-form-standard-view {
@@ -737,4 +760,18 @@
 }
 [data-form-layout="solutions"] .record-form-inventory-footer button {
   height: 32px;
+}
+
+/* activities-form.md → Visual layout — Call form (measured) rows 1 and 10: white title band, Start Time geometry. */
+.record-form-shell[data-form-layout="call"] .record-form-strip {
+  background-color: var(--color-surface);
+}
+[data-form-layout="call"] .record-form-datetime {
+  gap: 9px;
+}
+[data-form-layout="call"] .record-form-datetime > :first-child {
+  width: 210px;
+}
+[data-form-layout="call"] .record-form-datetime > :nth-child(2) {
+  width: 76px;
 }

@@ -6,6 +6,7 @@ import { DEFAULT_FORMAT } from "@/lib/locale";
 import { render } from "@/test/render";
 import { EMPTY_FIELD_DISPLAY } from "../field-format";
 import { FieldValueView } from "./field-value";
+import { NumericDatesProvider } from "./numeric-dates-context";
 
 afterEach(() => {
   cleanup();
@@ -236,3 +237,18 @@ for (const module of ["Cases", "Solutions"]) {
     expect(link.hasAttribute("data-later-module")).toBe(false);
   });
 }
+
+test("numeric dates context renders list-style dd.mm.yyyy values", () => {
+  render(
+    <NumericDatesProvider value>
+      <FieldValueView
+        field={field("Start", "datetime")}
+        value="2026-10-19T08:20:00.000Z"
+        format={DEFAULT_FORMAT}
+      />
+      <FieldValueView field={field("Day", "date")} value="2026-07-05" format={DEFAULT_FORMAT} />
+    </NumericDatesProvider>,
+  );
+  expect(screen.getByText("19.10.2026 11:20 AM")).toBeTruthy();
+  expect(screen.getByText("05.07.2026")).toBeTruthy();
+});

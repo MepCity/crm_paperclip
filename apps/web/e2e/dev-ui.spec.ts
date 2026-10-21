@@ -17,6 +17,7 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
   await expect(page).toHaveTitle(/Component Gallery/);
   // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
   // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
+  // ADR 0003 §8: measured related-action label ink is 4.18:1; controls remain scanned.
   await expectNoA11yViolations(page, { exclude: [...DEV_UI_A11Y_EXCLUDE] });
 
   // Each demo is a labelled region so screens and tests can address it.
@@ -139,6 +140,7 @@ test("dev ui gallery has no console errors and form demo works", async ({ page }
   // afterwards races that lifetime and fails when the scan is slow.
   // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
   // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
+  // ADR 0003 §8: measured related-action label ink is 4.18:1; controls remain scanned.
   await expectNoA11yViolations(page, { exclude: [...DEV_UI_A11Y_EXCLUDE] });
   // A pointer resting on the toast pauses its timer. Park it clear of the
   // region so auto-dismiss runs from whatever time is left.
@@ -401,6 +403,7 @@ test("type roles load one local variable font and preserve measured advances", a
   await expect(tokens.locator('[data-token="--text-xs"]')).toHaveCSS("font-size", "11.5px");
   // Empty-list copy is the measured #8B9AB9 on white (2.83:1). The value stays.
   // Empty selection text keeps the measured #8C91AB on white (3.11:1): ADR 0003 §8.
+  // ADR 0003 §8: measured related-action label ink is 4.18:1; controls remain scanned.
   await expectNoA11yViolations(page, { exclude: [...DEV_UI_A11Y_EXCLUDE] });
   expect(fontResponses).toHaveLength(1);
   expect(fontResponses[0]?.status).toBe(200);

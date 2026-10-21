@@ -1,12 +1,12 @@
 import type { ModuleApiName, RecordData } from "@crm/core/records";
-import { cleanup, renderHook } from "@testing-library/react";
+import { act, cleanup, renderHook } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { parentActivityCriteria } from "./parent-activities";
 import { useParentActivities, useParentActivityBadges } from "./use-parent-activities";
 
 const api = vi.hoisted(() => ({
   useViews: vi.fn(),
-  useRecordList: vi.fn(),
+  useAllRecordPages: vi.fn(),
   useUsers: vi.fn(),
 }));
 vi.mock("@/lib/api/client/hooks", () => api);
@@ -40,7 +40,10 @@ beforeEach(() => {
   };
   users = ready([{ userId: "user-1", name: "Fixture User" }]);
   api.useViews.mockImplementation((module: ActivityModule) => views[module]);
-  api.useRecordList.mockImplementation((module: ActivityModule) => lists[module]);
+  api.useAllRecordPages.mockImplementation((module: ActivityModule) => {
+    const list = lists[module];
+    return { ...list, data: list.data?.records };
+  });
   api.useUsers.mockImplementation(() => users);
 });
 
@@ -62,11 +65,10 @@ describe("useParentActivities queries", () => {
       renderHook(() => useParentActivities(parentModule, "parent-1", recordPath));
       for (const module of modules) {
         expect(api.useViews).toHaveBeenCalledWith(module);
-        expect(api.useRecordList).toHaveBeenCalledWith(
+        expect(api.useAllRecordPages).toHaveBeenCalledWith(
           module,
           {
             viewId: `${module}-default`,
-            page: 1,
             perPage: 100,
             filters: parentActivityCriteria(parentModule, "parent-1"),
           },
@@ -85,7 +87,7 @@ describe("useParentActivities queries", () => {
     }
     show();
     for (const module of modules) {
-      expect(api.useRecordList).toHaveBeenCalledWith(
+      expect(api.useAllRecordPages).toHaveBeenCalledWith(
         module,
         expect.objectContaining({ viewId: `${module}-first` }),
         { enabled: true },
@@ -100,11 +102,10 @@ describe("useParentActivities queries", () => {
     const { result, rerender } = show();
     expect(result.current.isLoading).toBe(true);
     for (const module of modules) {
-      expect(api.useRecordList).toHaveBeenCalledWith(
+      expect(api.useAllRecordPages).toHaveBeenCalledWith(
         module,
         {
           viewId: "pending",
-          page: 1,
           perPage: 100,
           filters: parentActivityCriteria("Contacts", "parent-1"),
         },
@@ -115,7 +116,7 @@ describe("useParentActivities queries", () => {
     rerender();
     expect(result.current.isLoading).toBe(false);
     for (const module of modules) {
-      expect(api.useRecordList).toHaveBeenCalledWith(
+      expect(api.useAllRecordPages).toHaveBeenCalledWith(
         module,
         expect.objectContaining({ viewId: `${module}-ready` }),
         { enabled: true },
@@ -126,7 +127,7 @@ describe("useParentActivities queries", () => {
   it("disables lists when the parent module is unsupported", () => {
     renderHook(() => useParentActivities("Tasks", "parent-1", recordPath));
     for (const module of modules) {
-      expect(api.useRecordList).toHaveBeenCalledWith(
+      expect(api.useAllRecordPages).toHaveBeenCalledWith(
         module,
         expect.objectContaining({ filters: undefined }),
         { enabled: false },
@@ -166,7 +167,7 @@ describe("useParentActivities query states", () => {
     views[module] = ready([]);
     lists[module].isLoading = true;
     expect(show().result.current.isLoading).toBe(false);
-    expect(api.useRecordList).toHaveBeenCalledWith(
+    expect(api.useAllRecordPages).toHaveBeenCalledWith(
       module,
       expect.objectContaining({ viewId: "pending" }),
       { enabled: false },
@@ -271,5 +272,43 @@ describe("useParentActivities rows and badges", () => {
       openActivities: result.current.openCount,
       closedActivities: result.current.closedCount,
     });
+  });
+});
+
+describe("useParentActivities paging and time", () => {
+  it("counts all rows and picks from the full set (101 tasks)", () => {
+    const all = Array.from({ length: 101 }, (_, i) =>
+      rec(`t${i}`, { Subject: `Task ${i}`, Status: "Not Started" }),
+    );
+    lists.Tasks = ready({ records: all });
+    const { result } = show();
+    expect(result.current.open.find((c) => c.kind === "task")?.count).toBe(101);
+    expect(result.current.openCount).toBe(101);
+  });
+
+  it("ends loading with an error when a page fails", () => {
+    lists.Tasks = { data: undefined, isLoading: false, isError: true };
+    const { result } = show();
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.isError).toBe(true);
+  });
+
+  it("moves an open meeting to closed when its end time passes", () => {
+    lists.Events = ready({
+      records: [
+        rec("e1", {
+          Event_Title: "Sync",
+          Start_DateTime: "2026-01-10T00:00:00Z",
+          End_DateTime: "2026-01-10T01:00:00Z",
+        }),
+      ],
+    });
+    const { result } = show();
+    expect(result.current.openCount).toBe(1);
+    act(() => {
+      vi.advanceTimersByTime(61 * 60 * 1000);
+    });
+    expect(result.current.openCount).toBe(0);
+    expect(result.current.closedCount).toBe(1);
   });
 });

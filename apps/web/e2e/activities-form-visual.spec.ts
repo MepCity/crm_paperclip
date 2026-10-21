@@ -236,6 +236,20 @@ async function expectCallFormVisual(page: Page) {
   await expect(
     page.getByRole("heading", { name: "Purpose Of Outgoing Call", exact: true }),
   ).toBeVisible();
+  // Title band is white (#FFFFFF), not Task's pale fill.
+  const band = await page
+    .locator("[data-record-form-strip]")
+    .evaluate((el) => getComputedStyle(el).backgroundColor);
+  expect(band).toBe("rgb(255, 255, 255)");
+  // Call Start Time: date 210 px, time 76 px, 9 px gap.
+  const dt = page.locator('[data-form-field="Call_Start_Time"] .record-form-datetime');
+  const parts = await dt.evaluate((el) =>
+    [...el.children].map((c) => c.getBoundingClientRect()).map((r) => ({ x: r.x, w: r.width })),
+  );
+  const [date, time] = parts as [{ x: number; w: number }, { x: number; w: number }];
+  near(date.w, 210);
+  near(time.w, 76);
+  near(time.x - (date.x + date.w), 9);
   // No Repeat field; Reminder is a dropdown, not a toggle.
   await expect(page.getByRole("switch", { name: "Repeat" })).toHaveCount(0);
   await expect(page.getByRole("switch", { name: "Reminder" })).toHaveCount(0);

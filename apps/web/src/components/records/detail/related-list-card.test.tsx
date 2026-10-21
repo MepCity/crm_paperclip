@@ -83,42 +83,40 @@ it("runs control actions by role and name", () => {
       }}
     />,
   );
-  fireEvent.click(screen.getByRole("button", { name: "Add Contact" }));
+  const add = screen.getByRole("button", { name: "Add Contact" });
+  expect(add.querySelector("span[data-related-action-label]")?.textContent).toBe("Add Contact");
+  expect(add.matches("[data-related-action-label]")).toBe(false);
+  fireEvent.click(add);
   fireEvent.click(screen.getByRole("button", { name: "Expand" }));
   expect(onAdd).toHaveBeenCalledTimes(1);
   expect(onExpand).toHaveBeenCalledTimes(1);
 });
 
-it.each(["Campaigns", "Cases"] as const)(
-  "keeps unsupported %s activity Add New controls inactive",
-  (module) => {
-    render(
-      <RelatedListCard
-        definition={{
-          ...base,
-          id: "open-activities",
-          title: "Open Activities",
-          moduleKey: "M5",
-          upperControls: [
-            { id: "add-new", label: "Add New", type: "split-button", moduleKey: "M5" },
-          ],
-        }}
-        context={{
-          orgSlug: "example",
-          module,
-          record: { id: "parent-1", fields: {} },
-          recordPath: () => "/parent",
-        }}
-      />,
-    );
-    const card = screen.getByRole("region", { name: "Open Activities" });
-    for (const label of ["Add New", "More"]) {
-      const control = within(card).getByRole("button", { name: label });
-      expect(control.getAttribute("data-later-module")).toBe("M5");
-      expect(control.getAttribute("aria-disabled")).toBe("true");
-    }
-  },
-);
+it.each(["Cases"] as const)("keeps unsupported %s activity Add New controls inactive", (module) => {
+  render(
+    <RelatedListCard
+      definition={{
+        ...base,
+        id: "open-activities",
+        title: "Open Activities",
+        moduleKey: "M5",
+        upperControls: [{ id: "add-new", label: "Add New", type: "split-button", moduleKey: "M5" }],
+      }}
+      context={{
+        orgSlug: "example",
+        module,
+        record: { id: "parent-1", fields: {} },
+        recordPath: () => "/parent",
+      }}
+    />,
+  );
+  const card = screen.getByRole("region", { name: "Open Activities" });
+  for (const label of ["Add New", "More"]) {
+    const control = within(card).getByRole("button", { name: label });
+    expect(control.getAttribute("data-later-module")).toBe("M5");
+    expect(control.getAttribute("aria-disabled")).toBe("true");
+  }
+});
 
 it("lists activity columns with their counts and empty texts", () => {
   render(

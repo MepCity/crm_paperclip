@@ -56,7 +56,7 @@ export function Link({
           ? "text-primary rounded-sm data-hovered:underline"
           : variant === "body"
             ? "rounded-sm text-text"
-            : `inline-flex items-center justify-center ${variant.startsWith("record") ? "" : "font-semibold"} rounded-md ${buttonStyles[variant]} ${buttonSizes[size]}`;
+            : `inline-flex shrink-0 whitespace-nowrap items-center justify-center ${variant.startsWith("record") ? "" : "font-semibold"} rounded-md ${buttonStyles[variant]} ${buttonSizes[size]}`;
 
   return (
     <AriaLink
