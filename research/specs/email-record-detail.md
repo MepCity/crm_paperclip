@@ -1,9 +1,9 @@
 # Email on record detail — partial research
 
-Status: partial; awaiting board-authored Contact record address in the existing
-issue interaction. MEP-1020 and CTO-approved MEP-1021 resolved the diagnostic
-stop. The existing Lead retry is accepted as the R3 Lead baseline; no new
-Lead capture is authorized or needed.
+Status: partial; Contact address received and click-free base captured. Research
+stopped on a new Contact pageerror; MEP-1023 owns offline safe-continuation
+review. MEP-1020/1021 resolved only the earlier Lead stop. The existing Lead
+retry remains accepted; no new Lead capture is authorized or needed.
 Issue: MEP-1012 / M10-R3. Research date: 2026-10-21.
 
 ## Purpose and evidence boundary
@@ -16,11 +16,12 @@ branches were merged. Existing shells and general behaviour stay in
 [Lead detail](record-detail.md), [Contact detail](contacts-record-detail.md),
 [Account detail](accounts-record-detail.md) and [Deal detail](deals-record-detail.md).
 
-The only board-written `address.txt` found within the research workspace is
-in `captures/board-lead-convert-probe/`. It identifies one Lead on a convert
-route. Only its record-detail parent was loaded; the convert screen was not
-opened. No Contact, Account or Deal address is supplied. No record was selected
-from customer data, metadata, previous captures or a guessed identifier.
+The Lead address came from `captures/board-lead-convert-probe/address.txt`.
+Only its record-detail parent was loaded; the convert screen was not opened.
+The board subsequently supplied `captures/board-contact-probe/address.txt` in
+the answered issue interaction. Its Contact detail was loaded without clicks.
+No Account or Deal address is supplied. No record was selected from customer
+data, metadata, previous captures or a guessed identifier.
 
 ## Layout
 
@@ -279,8 +280,218 @@ R3 does not re-open that record or claim these are fresh capture results.
 
 This historical evidence shows tabs inside an Emails card, not a separately
 painted Drafts card. Metadata's separate related-list definition must not be
-converted into a second visible card without evidence. No current Contact
-delta, Drafts contents, message row or email timeline event is established.
+converted into a second visible card without evidence. The current Contact delta below establishes only the failed-gate resting
+viewport. Drafts contents, message rows and email timeline events remain
+unestablished.
+
+### Contact base delta — m10r3-contact-detail-base (failed gate)
+
+Captured 2026-10-21 20:09:19 UTC, click-free, `--wait 25000`, using only the
+board-supplied Contact address. The full screenshot was opened and inspected.
+The Contact title, linked account, Send Email header action, Emails rail entry,
+Overview/Timeline strip and rendered record are visible. Overview is selected.
+The business card and visible Details Email fields show an empty-value dash;
+no email address link is painted there. No Lead stage strip or Convert button
+is present. Attachments has a shaded rail row and plus action on initial load;
+no preference was changed. The Emails card and Drafts contents are below the
+viewport; DOM content is not treated as settled visual evidence. No email
+message or timeline event was opened.
+
+This is a provisional structural inventory, not an accepted screen: diagnostics
+contain `sortable`, `XMLHttpRequest` and a new `Cannot read properties of
+undefined (reading 'setMethods')` pageerror. The new message is absent from
+the accepted Lead retry and its named earlier baseline. Historical accepted
+Contact meta files (`m2d-detail-main`, `m2d2-card-cases`,
+`m2d2-detail-timeline`) omit diagnostics entirely; that omission does not prove
+the new message was present or absent. No failed JavaScript GET is recorded.
+77 API entries exceed half of the earlier Contact detail's 80; 530 raw controls
+exceed 50 and the rendered record has account links. These facts do not waive
+the diagnostic failure. MEP-1020's continuation condition requires DUR for a
+new pageerror. No five-minute retry or click is attempted; MEP-1023 asks
+Platform Lead to determine the safe continuation from existing files only.
+
+Shared shell and header rows ER-01–ER-36 apply, with the Contact module active
+and Back belonging to M2. Raw ordinal mappings are unchanged for those rows;
+no shell table is repeated. Remaining visible controls are reconciled below.
+All behaviour is resting-state observation only.
+
+| # | Region | Control | Behaviour / limit | Source | Module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- |
+| RC-01 | Record header | Linked account | Present; not clicked | seen (m10r3-contact-detail-base) | M3 | D-03 |
+| RC-02 | Record header | Add Tags | Present; not clicked | seen (m10r3-contact-detail-base) | M6 | D-04 |
+| RC-03 | Record header | Send Email | Drawn; never activated (send guard) | seen (m10r3-contact-detail-base) | M10 | D-05 |
+| RC-04 | Record header | Edit | Present; not clicked | seen (m10r3-contact-detail-base) | M2 | D-06 |
+| RC-05 | Record header | More Options | Present; not clicked | seen (m10r3-contact-detail-base) | M2 | D-07 |
+| RC-06 | Related-list heading | Organize Contacts Details | Present; not clicked | seen (m10r3-contact-detail-base) | M11 | D-09 |
+| RC-07 | Related-list rail | Notes | Present; not clicked | seen (m10r3-contact-detail-base) | M6 | D-10 |
+| RC-08 | Related-list rail | Connected Records | Present; not clicked | seen (m10r3-contact-detail-base) | Unknown | D-11 |
+| RC-09 | Related-list rail | Attachments | Present; not clicked | seen (m10r3-contact-detail-base) | M6 | D-12 |
+| RC-10 | Related-list rail | Cadences | Present; not clicked | seen (m10r3-contact-detail-base) | P3 | D-13 |
+| RC-11 | Related-list rail | Deals | Present; not clicked | seen (m10r3-contact-detail-base) | M4 | D-14 |
+| RC-12 | Related-list rail | Open Activities | Present; not clicked | seen (m10r3-contact-detail-base) | M5 | D-15 |
+| RC-13 | Related-list rail | Closed Activities | Present; not clicked | seen (m10r3-contact-detail-base) | M5 | D-16 |
+| RC-14 | Related-list rail | Invited Meetings | Present; not clicked | seen (m10r3-contact-detail-base) | M5 | D-17 |
+| RC-15 | Related-list rail | Products | Present; not clicked | seen (m10r3-contact-detail-base) | P2 | D-18 |
+| RC-16 | Related-list rail | Cases | Present; not clicked | seen (m10r3-contact-detail-base) | M8 | D-19 |
+| RC-17 | Related-list rail | Quotes | Present; not clicked | seen (m10r3-contact-detail-base) | P2 | D-20 |
+| RC-18 | Related-list rail | Sales Orders | Present; not clicked | seen (m10r3-contact-detail-base) | P2 | D-21 |
+| RC-19 | Related-list rail | Purchase Orders | Present; not clicked | seen (m10r3-contact-detail-base) | P2 | D-22 |
+| RC-20 | Related-list rail | Emails | Present; not clicked | seen (m10r3-contact-detail-base) | M10 | D-23 |
+| RC-21 | Related-list rail | Invoices | Present; not clicked | seen (m10r3-contact-detail-base) | P2 | D-24 |
+| RC-22 | Related-list rail | Campaigns | Present; not clicked | seen (m10r3-contact-detail-base) | M7 | D-25 |
+| RC-23 | Related-list rail | Social | Present; not clicked | seen (m10r3-contact-detail-base) | M15 | D-26 |
+| RC-24 | Related-list rail | Reporting Contacts | Present; not clicked | seen (m10r3-contact-detail-base) | M2 | D-27 |
+| RC-25 | Related-list rail | Voice of the Customer | Present; not clicked | seen (m10r3-contact-detail-base) | P3 | D-28 |
+| RC-26 | Attachments rail entry | Plus action | Present; not clicked | seen (m10r3-contact-detail-base) | M6 | new |
+| RC-27 | Related-list rail | Add Related List | Present; not clicked | seen (m10r3-contact-detail-base) | M11 | D-29 |
+| RC-28 | Tab row | Rail visibility | Present; not clicked | seen (m10r3-contact-detail-base) | Shared | D-32 |
+| RC-29 | Tab row | Overview | Selected; not clicked | seen (m10r3-contact-detail-base) | Shared | D-33 |
+| RC-30 | Tab row | Timeline | Present; not clicked | seen (m10r3-contact-detail-base) | Shared | D-34 |
+| RC-31 | Business card Phone | Call icon | Present; not clicked | seen (m10r3-contact-detail-base) | M5 | D-37 |
+| RC-32 | Details header | Hide Details | Present; not clicked | seen (m10r3-contact-detail-base) | Shared | D-38 |
+| RC-33 | Details Account Name | Linked account | Present; not clicked | seen (m10r3-contact-detail-base) | M3 | D-39 |
+| RC-34 | Details Phone | Call icon | Present; not clicked | seen (m10r3-contact-detail-base) | M5 | D-41 |
+| RC-35 | Utility strip | My Pins | Present; not clicked | seen (m10r3-contact-detail-base) | Shared | SH-35 |
+| RC-36 | Utility strip | Chats | Present; not clicked | seen (m10r3-contact-detail-base) | Shared | SH-36 |
+| RC-37 | Utility strip | Contacts | Present; not clicked | seen (m10r3-contact-detail-base) | Shared | SH-37 |
+| RC-38 | Utility strip | Document/history icon | Present; not clicked | seen (m10r3-contact-detail-base) | Shared | SH-38 |
+| RC-39 | Utility strip | Announcements | Present; not clicked | seen (m10r3-contact-detail-base) | Shared | SH-39 |
+| RC-40 | Utility strip | Motivator | Present; not clicked | seen (m10r3-contact-detail-base) | Shared | SH-40 |
+| RC-41 | Utility strip | Sticky Notes | Present; not clicked | seen (m10r3-contact-detail-base) | Shared | SH-41 |
+| RC-42 | Utility strip | Activity Reminders | Present; not clicked | seen (m10r3-contact-detail-base) | Shared | SH-42 |
+| RC-43 | Utility strip | Recent Items | Present; not clicked | seen (m10r3-contact-detail-base) | Shared | SH-43 |
+| RC-44 | Utility strip | Accessibility | Present; not clicked | seen (m10r3-contact-detail-base) | Shared | SH-44 |
+| RC-45 | Utility strip | Help | Present; not clicked | seen (m10r3-contact-detail-base) | Shared | SH-45 |
+| RC-46 | Utility strip far right | Stacked-cards icon | Screenshot only; not clicked | seen (m10r3-contact-detail-base) | Shared | SH-46 |
+
+Contact structural rows: **82** (36 shared references + 46 delta
+rows, including one screenshot-only icon). Mapped raw entries: **135**;
+excluded: **395**. Ordinals are local evidence reconciliation,
+never selectors. Plain record values are excluded and never reproduced.
+
+| Inventory / exclusion | Contact controls.json ordinals |
+| --- | --- |
+| ER-01 | 2, 3, 4 |
+| ER-02 | 11 |
+| ER-03 | 12, 14 |
+| ER-04 | 15, 17 |
+| ER-05 | 18, 20 |
+| ER-06 | 21, 23 |
+| ER-07 | 24, 26 |
+| ER-08 | 27, 29 |
+| ER-09 | 30, 31, 32 |
+| ER-10 | 34 |
+| ER-11 | 35, 36 |
+| ER-12 | 37 |
+| ER-13 | 39, 40 |
+| ER-14 | 41, 42 |
+| ER-15 | 43, 44 |
+| ER-16 | 45, 46 |
+| ER-17 | 47, 48 |
+| ER-18 | 49, 50 |
+| ER-19 | 51 |
+| ER-20 | 53, 54 |
+| ER-21 | 55, 56 |
+| ER-22 | 57, 58 |
+| ER-23 | 59 |
+| ER-24 | 61, 62 |
+| ER-25 | 64, 65 |
+| ER-26 | 86 |
+| ER-27 | 87 |
+| ER-28 | 89 |
+| ER-29 | 90 |
+| ER-30 | 91 |
+| ER-31 | 94 |
+| ER-32 | 97 |
+| ER-33 | 100, 101 |
+| ER-34 | 104, 105, 106, 107 |
+| ER-35 | 109, 110 |
+| ER-36 | 112, 113 |
+| RC-01 | 115, 116, 117 |
+| RC-02 | 119 |
+| RC-03 | 121, 122 |
+| RC-04 | 123, 124 |
+| RC-05 | 125, 126 |
+| RC-06 | 130 |
+| RC-07 | 131, 132 |
+| RC-08 | 134, 135 |
+| RC-09 | 137, 138 |
+| RC-10 | 141, 142 |
+| RC-11 | 144, 145 |
+| RC-12 | 147, 148 |
+| RC-13 | 150, 151 |
+| RC-14 | 153, 154 |
+| RC-15 | 156, 157 |
+| RC-16 | 159, 160 |
+| RC-17 | 162, 163 |
+| RC-18 | 165, 166 |
+| RC-19 | 168, 169 |
+| RC-20 | 171, 172 |
+| RC-21 | 174, 175 |
+| RC-22 | 177, 178 |
+| RC-23 | 180, 181 |
+| RC-24 | 183, 184 |
+| RC-25 | 186, 187 |
+| RC-26 | 140 |
+| RC-27 | 189 |
+| RC-28 | 191 |
+| RC-29 | 193 |
+| RC-30 | 194 |
+| RC-31 | 501 |
+| RC-32 | 229, 230 |
+| RC-33 | 243, 244 |
+| RC-34 | 502 |
+| RC-35 | 490 |
+| RC-36 | 491 |
+| RC-37 | 492 |
+| RC-38 | 493 |
+| RC-39 | 494 |
+| RC-40 | 495 |
+| RC-41 | 496 |
+| RC-42 | 497 |
+| RC-43 | 498 |
+| RC-44 | 499 |
+| RC-45 | 500 |
+| RC-46 | screenshot only |
+| Excluded: Hidden, offscreen or zero-area | 5, 6, 7, 8, 9, 10, 13, 16, 19, 22, 25, 28, 33, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 84, 92, 93, 95, 96, 98, 99, 102, 103, 111, 118, 120, 128, 133, 136, 139, 143, 146, 149, 152, 155, 158, 161, 164, 167, 170, 173, 176, 179, 182, 185, 188, 190, 208, 215, 220, 226, 242, 248, 254, 258, 260, 261, 262, 263, 264, 265, 266, 267, 268, 269, 270, 271, 272, 273, 274, 275, 276, 280, 290, 295, 300, 302, 303, 304, 305, 306, 307, 308, 309, 310, 311, 312, 313, 314, 315, 316, 317, 318, 319, 320, 321, 322, 323, 324, 325, 326, 327, 328, 329, 330, 331, 332, 333, 334, 335, 336, 337, 338, 339, 340, 341, 342, 343, 344, 345, 346, 347, 348, 349, 350, 351, 352, 353, 354, 355, 356, 357, 358, 359, 360, 361, 362, 363, 364, 365, 366, 367, 368, 369, 370, 371, 372, 373, 374, 375, 376, 377, 378, 379, 380, 381, 382, 383, 384, 385, 386, 387, 388, 389, 390, 391, 392, 393, 394, 395, 396, 397, 398, 399, 400, 401, 402, 403, 404, 405, 406, 407, 408, 409, 410, 411, 412, 413, 414, 415, 416, 417, 418, 419, 420, 421, 422, 423, 424, 425, 426, 427, 428, 429, 430, 431, 432, 433, 434, 435, 436, 437, 438, 439, 440, 441, 442, 443, 444, 445, 446, 447, 448, 449, 450, 451, 452, 453, 454, 455, 456, 457, 458, 459, 460, 461, 462, 463, 464, 465, 466, 467, 468, 469, 470, 471, 472, 473, 474, 475, 476, 477, 478, 479, 480, 481, 482, 483, 484, 485, 486, 487, 488, 489, 503, 504, 505, 506, 507, 508, 509, 510, 511, 512, 513, 514, 524, 525, 526, 527, 528, 529, 530 |
+| Excluded: Visible structural wrapper, field label/value or duplicate non-interactive content | 1, 38, 52, 60, 63, 83, 85, 88, 108, 114, 127, 129, 192, 195, 196, 197, 198, 199, 200, 201, 202, 203, 204, 205, 206, 207, 209, 210, 211, 212, 213, 214, 216, 217, 218, 219, 221, 222, 223, 224, 225, 227, 228, 231, 232, 233, 234, 235, 236, 237, 238, 239, 240, 241, 245, 246, 247, 249, 250, 251, 252, 253, 255, 256, 257, 259, 277, 278, 279, 281, 282, 283, 284, 285, 286, 287, 288, 289, 291, 292, 293, 294, 296, 297, 298, 299, 301, 515, 516, 517, 518, 519, 520, 521, 522, 523 |
+
+### Contact request baseline and DUR
+
+First Contact screen baseline, not a comparison against Lead module paths.
+These are automatic page-load observations, never permission to replay.
+
+| Method | Neutral path | Count | HTTP status |
+| --- | --- | --- | --- |
+| POST | `/crm/<org>/EntityCustomization.do` | 1 | 200 |
+| POST | `/crm/v2.2/Contacts/bulk` | 1 | 204 |
+| POST | `/visitor/v2/<service>/livevisitors/<id>/triggers` | 1 | 200 |
+
+Seven tool-blocked entries, each occurring once: `/crm/<org>/ActivityReminder.do`,
+`/crm/v4/Contacts/<id>/actions/get_related_records_count`,
+`/crm/<org>/crminotification.do`, `/murphy/<id>/telemetry/urlMonitor`,
+`/murphy/<id>/telemetry/logs`, `/murphy/<id>/ingest/exceptions`,
+`/murphy/<id>/ingest/infoLogs`. None reached the reference CRM; none was
+retried. No user action, manual request replay, mail-service call or successful
+record mutation is observed. This first Contact capture defines the module's
+path/count set; no subsequent capture exists to compare against it. The stop
+is the new diagnostic, not an alleged new Contact request versus Lead paths.
+
+### Offline click-candidate review (no proposed or executed clicks)
+
+The executed click list remains empty. Visible Emails and Timeline labels are
+potential navigation candidates only. Both labels pass the tool's exported
+`DANGEROUS_TEXT` expression; exact named selector matches are one each for
+`[data-zcqa="newleft__Emails"]` and `[data-zcqa="newleft_timeline"]`. Both
+matched controls have a visible box and were checked against the screenshot.
+Four raw controls have the exact Emails label (two visible rail elements and
+two offscreen related-card elements); matching by label alone is ambiguous. No candidate is promoted to a click list: the
+failed gate prohibits interaction and preference persistence is unestablished.
+No selector is executed or proposed. Send Email matches `send` and is forbidden;
+Compose Email is forbidden by the plan. Drafts/Scheduled selection, related-card
+expansion and opening any draft or message remain unobserved. No alternate
+route is inferred. The missing Emails/Drafts/timeline evidence is retained as
+an explicit research gap, not fabricated from offscreen controls.
 
 ## Fields and metadata
 
@@ -294,19 +505,19 @@ field export is present, per the approved plan; R8 owns the missing model.
 | Module | Exported email/draft relations | Fresh R3 detail evidence |
 | --- | --- | --- |
 | Leads | Both | Existing retry accepted under MEP-1020/1021; card offscreen |
-| Contacts | Both | No board-written record address available |
+| Contacts | Both | Click-free base captured; new pageerror stops continuation |
 | Accounts | Both | No board-written record address available |
 | Deals | Both | No board-written record address available |
 
-The visible email address is a link, not an editable recipient field in the
-captured resting screen. Subject, sender/recipient columns, send/receive time,
+The Lead visible email address is a link, not an editable recipient field.
+The Contact visible Email fields show a dash. Subject, sender/recipient columns, send/receive time,
 status, attachment/thread markers, draft ownership and counters are unknown.
 No schema, field constraints or request payload is inferred.
 
 ## Actions and click list
 
-Executed click list: **empty (0 selectors / 0 clicks)**. Offline match testing
-and `DANGEROUS_TEXT` testing have no executed candidates. Send Email is
+Executed click list: **empty (0 selectors / 0 clicks)**. No selector was executed. Offline Contact candidate tests below passed,
+but the failed gate and unresolved persistence exclude both from a click list. Send Email is
 excluded by the tool's dangerous-text guard (`send`) and the plan. Compose
 Email is forbidden by the plan regardless of whether its text matches the
 regular expression. Address links may open compose and are not clicked.
@@ -320,7 +531,7 @@ was used. No control is proposed for a preference or gate exception.
 
 ## Filters / views / sorting / search
 
-No Emails card or message list is visible in the R3 viewport. Sort, search,
+No Emails card or message list is visible in either R3 module viewport. Sort, search,
 correspondence scope, pagination, thread expansion, Drafts/Scheduled selection and default ordering are unknown.
 Shared Timeline filter behaviour stays in the existing record-detail specs;
 email-specific filter options/results are not established.
@@ -384,8 +595,9 @@ retry: the known page errors above and blocked urlMonitor count are logged,
 not retried. Any new pageerror, failed JavaScript GET, new non-GET path or
 increased sent count stops further research under the amended rules.
 
-Contact remains unobserved pending the existing board address-file question.
-No reference capture or click was made during this offline reconciliation.
+The earlier offline reconciliation made no capture or click. The subsequent
+board-directed Contact base is recorded separately below; its request baseline
+is module-specific and does not inherit the Lead paths or counts.
 
 ## Flows and empty/error states
 
@@ -403,6 +615,7 @@ This fails the gate even though a screenshot exists. No failed JavaScript
 request is needed to establish the failure. No tool failure, missing meta,
 unknown click or user-initiated write occurred.
 
+The Contact resting viewport is now captured but fails the diagnostic gate.
 No fresh Emails/Drafts empty, loading, permission or error state is verified.
 The inherited Contact empty Mails area does not establish Drafts emptiness or
 an empty timeline. Email sent/received/opened/clicked/replied/bounced history
@@ -418,8 +631,9 @@ sandbox, night test or reference write is authorized by this spec.
 
 ## Open questions
 
-1. Where is the board-authored Contact `address.txt` for the required Contact
-   capture, and, if supplied, the Account/Deal addresses? Do not infer records.
+1. Contact address resolved by the board: `captures/board-contact-probe/address.txt`;
+   the click-free base is now captured. Account/Deal addresses are not supplied.
+   Contact continuation is blocked by the new diagnostic, not missing input.
 2. Resolved: MEP-1020/1021 accept the existing retry using the earlier
    `m7-campaign-links-lead-detail` baseline errors and the blocked telemetry
    exception. The initial probe remains failed; no new Lead capture is made.
@@ -430,6 +644,10 @@ sandbox, night test or reference write is authorized by this spec.
 5. Which email events appear in Timeline, with what grouping, ordering and
    permission rules? No message was opened or created to obtain an example.
 
+6. New Contact diagnostic: Platform Lead reviews MEP-1023 offline and determines
+   whether any plan-compliant continuation exists. No retry/click before that
+   decision. R3 is incomplete and R4 stays gated.
+
 ## Capture refs
 
 - `m10r3-lead-detail-base`: click-free, `--wait 25000`; provisional screenshot
@@ -439,8 +657,13 @@ sandbox, night test or reference write is authorized by this spec.
   subsequently accepted under MEP-1020/1021 as the R3 Lead baseline.
 - `m7-campaign-links-lead-detail`: earlier accepted painted Lead detail,
   used only for baseline-error/API-count comparison; no new capture.
-- `m2d2-card-cases`: inherited Contact spec reference only; no fresh R3 access,
-  recount or raw-evidence completeness claim.
+- `m2d2-card-cases`: inherited Contact spec reference; existing meta read only
+  for diagnostic-baseline comparison (diagnostics absent), no new access.
+- `m2d-detail-main`, `m2d2-detail-timeline`: existing Contact meta comparison
+  only; diagnostics absent, no new reference access.
+- `m10r3-contact-detail-base`: click-free, `--wait 25000`, 2026-10-21
+  20:09:19 UTC; 530 controls / 77 API entries; provisional Contact delta,
+  gate fails on new setMethods pageerror. No retry or click.
 
 ## Verification
 
@@ -449,7 +672,9 @@ sections, unique inventory numbers, exhaustive raw-control reconciliation,
 neutral content, relative links and `git diff --check`. No application code
 changed; application tests and biome/typecheck are unnecessary for this task.
 `docs/parity-checklist.md` is unchanged. This is a partial deliverable, not a
-completed UI Lead handoff. Each R3 capture reconciles 462 raw controls to
+completed UI Lead handoff. Each Lead capture reconciles 462 raw controls to
 86 structural rows (132 raw entries mapped), with 330 excluded raw entries.
+Contact reconciles 530 raw controls to 82 structural rows (135 raw entries
+mapped), with 395 excluded; its diagnostic gate is not accepted.
 No implementation/CI parity claim is made. The main merge includes unrelated
 checklist updates; this issue authors no checklist edit.

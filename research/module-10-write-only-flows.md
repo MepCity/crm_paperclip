@@ -142,8 +142,12 @@ R3 (MEP-1012), 2026-10-21: see
 shows Send Email and email-address links; none is activated. The initial probe
 fails the paint gate; MEP-1020/1021 accept the existing retry using the earlier
 painted Lead baseline errors and blocked-telemetry count exception. No new Lead
-capture is made. The required current Contact capture has no board-selected
-record address available. Historical Contact evidence shows Compose Email and
+capture is made. The board subsequently supplied the Contact address; the
+click-free `m10r3-contact-detail-base` was captured with `--wait 25000`. Its
+new `setMethods` pageerror triggers DUR under MEP-1020; MEP-1023 owns the
+offline safe-continuation review. No retry or click was attempted. Send Email
+and the Emails rail entry are visible, while the card and timeline email rows
+remain unobserved. Historical Contact evidence shows Compose Email and
 Mails/Drafts/Scheduled tabs, but does not establish current draft contents.
 
 - W1/W3: opening compose, resuming an existing draft, autosave, save/delete,
