@@ -144,6 +144,16 @@ test("an empty save asks for the Subject", async ({ page }) => {
   await openCreate(page);
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByText("Subject cannot be empty.")).toBeVisible();
+  const subject = page.getByRole("combobox", { name: "Subject", exact: true });
+  await expect(subject).toBeFocused();
+  await expect(subject).toHaveAttribute("aria-expanded", "true");
+  await expect(page.getByRole("listbox")).toBeVisible();
+  // Validation focuses Subject and opens suggestions. React Aria hides the rest of the
+  // page from assistive technology until the combobox popup closes.
+  await subject.press("Escape");
+  await expect(page.getByRole("listbox")).toBeHidden();
+  await expect(page.getByText("Subject cannot be empty.")).toBeVisible();
+  await expect(subject).toHaveValue("");
   await expect(page.getByRole("heading", { name: "Create Task" })).toBeVisible();
 });
 

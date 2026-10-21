@@ -804,7 +804,14 @@ test("every date field opens a calendar without a module opt-in", async () => {
   const user = userEvent.setup();
   render(<Controlled type="date" />);
   await user.click(screen.getByRole("textbox", { name: "Example" }));
-  expect(screen.getByRole("dialog", { name: "Example calendar" })).toBeTruthy();
+  const dialog = screen.getByRole("dialog", { name: "Example calendar" });
+  const input = screen.getByRole("textbox", { name: "Example" });
+  expect(input.getAttribute("aria-haspopup")).toBe("dialog");
+  expect(input.getAttribute("aria-details")).toBe(dialog.id);
+  expect(input.hasAttribute("aria-expanded")).toBe(false);
+  expect(input.hasAttribute("aria-controls")).toBe(false);
+  await user.keyboard("{Escape}");
+  expect(input.hasAttribute("aria-details")).toBe(false);
 });
 
 test("calendar supports keyboard opening and a disabled field cannot open it", async () => {

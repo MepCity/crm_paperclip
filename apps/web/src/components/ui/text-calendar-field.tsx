@@ -61,8 +61,7 @@ export function TextCalendarField({
           placeholder={placeholder}
           className="record-control"
           aria-haspopup="dialog"
-          aria-expanded={open}
-          aria-controls={open ? calendarId : undefined}
+          aria-details={open ? calendarId : undefined}
           onBlur={(event) => {
             if (
               event.relatedTarget instanceof Node &&
