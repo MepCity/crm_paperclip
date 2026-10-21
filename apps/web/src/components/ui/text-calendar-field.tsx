@@ -51,40 +51,51 @@ export function TextCalendarField({
   return (
     <TextField {...props} value={value} onChange={onChange} className="flex flex-col gap-1">
       <Label className={hideLabel ? "sr-only" : "record-label text-md"}>{label}</Label>
-      <Input
-        ref={input}
-        placeholder={placeholder}
-        className="record-control"
-        aria-haspopup="dialog"
-        aria-expanded={open}
-        aria-controls={open ? calendarId : undefined}
-        onBlur={(event) => {
-          if (
-            event.relatedTarget instanceof Node &&
-            !popover.current?.contains(event.relatedTarget)
-          ) {
-            setOpen(false);
-          }
-        }}
-        onClick={() => {
-          if (!props.isDisabled && !props.isReadOnly) {
-            setKeyboardOpen(false);
-            setOpen(true);
-          }
-        }}
-        onKeyDown={(event) => {
-          if (event.key === "Escape" && open) {
-            event.preventDefault();
-            event.stopPropagation();
-            setOpen(false);
-          }
-          if (event.altKey && event.key === "ArrowDown" && !props.isDisabled && !props.isReadOnly) {
-            event.preventDefault();
-            setKeyboardOpen(true);
-            setOpen(true);
-          }
-        }}
-      />
+      <div
+        className="record-control record-input-frame"
+        data-required={props.isRequired || undefined}
+        data-invalid={props.isInvalid || undefined}
+      >
+        <Input
+          ref={input}
+          placeholder={placeholder}
+          className="record-control"
+          aria-haspopup="dialog"
+          aria-expanded={open}
+          aria-controls={open ? calendarId : undefined}
+          onBlur={(event) => {
+            if (
+              event.relatedTarget instanceof Node &&
+              !popover.current?.contains(event.relatedTarget)
+            ) {
+              setOpen(false);
+            }
+          }}
+          onClick={() => {
+            if (!props.isDisabled && !props.isReadOnly) {
+              setKeyboardOpen(false);
+              setOpen(true);
+            }
+          }}
+          onKeyDown={(event) => {
+            if (event.key === "Escape" && open) {
+              event.preventDefault();
+              event.stopPropagation();
+              setOpen(false);
+            }
+            if (
+              event.altKey &&
+              event.key === "ArrowDown" &&
+              !props.isDisabled &&
+              !props.isReadOnly
+            ) {
+              event.preventDefault();
+              setKeyboardOpen(true);
+              setOpen(true);
+            }
+          }}
+        />
+      </div>
       <FieldError className="record-form-validation-error">{errorMessage}</FieldError>
       <Popover
         ref={popover}
