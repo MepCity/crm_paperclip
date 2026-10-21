@@ -266,7 +266,6 @@ function comparatorFits(
     NUMBER_TYPES.has(field.dataType) ||
     (field.dataType === "bigint" && (typeof value === "number" || isValueList(value)))
   ) {
-    // bigint columns store digit strings; criteria carry plain numbers like the other number fields.
     const number = (item: FieldValue) =>
       typeof item === "number" &&
       (field.dataType === "bigint" ? Number.isSafeInteger(item) : acceptsFieldValue(field, item));
