@@ -94,7 +94,7 @@ describe("Calls activity foundation", () => {
     const service = make();
     const { Call_Duration: _, ...bare } = input();
     for (const type of ["Outbound", "Inbound", "Missed"]) {
-      for (const status of ["Scheduled", "Completed", "Cancelled"]) {
+      for (const status of ["Scheduled", "Completed", "Cancelled", "Overdue"]) {
         const required = type === "Inbound" || status === "Completed";
         const attempt = service.create("Calls", {
           ...bare,
