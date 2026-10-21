@@ -217,6 +217,20 @@ export function createFixtureRecordService(
         seedAutoNumbers(seedContext.moduleStore(name), bundle.autoNumberField);
       bundle.afterSeed?.(seedContext);
     }
+    // Seeded notes get their parent-stream row up front, as if created through the service.
+    const seedEvents = relatedFilterHistory(
+      new Map(),
+      store.modules,
+      [],
+      {
+        sequence: 0,
+        occurredAt: new Date().toISOString(),
+        actor: { id: "system", name: "System" },
+        source: "manual",
+      },
+      randomUUID(),
+    ).filter((event) => event.kind === "note_added");
+    if (seedEvents.length) fixtureHistoryStore(store.history).appendBatch(seedEvents);
     stores.set(ctx.orgId, store);
   }
   const state = store;
@@ -851,7 +865,12 @@ export function createFixtureRecordService(
           const noteId = event.payload?.noteId;
           if (typeof noteId === "string") {
             const note = state.modules.get("Notes")?.records.get(noteId);
-            if (!note || !noteParentVisible(note.fields)) return null;
+            if (
+              !note ||
+              !noteParentVisible(note.fields) ||
+              options?.canReadRecord?.("Notes", noteId) === false
+            )
+              return null;
           }
         }
         if (

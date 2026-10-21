@@ -227,6 +227,36 @@ describe("system filter related history", () => {
     denyAttachments = true;
     expect(await kinds()).toEqual([]);
   });
+  it("hides attachment events of an unreadable note", async () => {
+    const ctx = context();
+    let denied = "";
+    const service = createFixtureRecordService(ctx, {
+      now: () => new Date(period.from),
+      canReadRecord: (_module, id) => id !== denied,
+    });
+    const parent = await service.create("Leads", { Last_Name: "Parent", Company: "Synthetic" });
+    const note = await service.create("Notes", {
+      Parent_Id: { module: "Leads", id: parent.id },
+      Note_Content: "Body",
+    });
+    const a = await service.create("Attachments", {
+      Parent_Id: { module: "Notes", id: note.id },
+      File_Name: "nested.pdf",
+      Size: "1",
+    });
+    service.attachmentLifecycle.publish(a.id, {
+      storageKey: "knested",
+      checksum: "c",
+      mediaType: "application/pdf",
+    });
+    const names = async () =>
+      (await service.history.list("Leads", parent.id, { perPage: 50 })).events
+        .filter((e) => e.kind === "attachment_added")
+        .map((e) => e.subject.name);
+    expect(await names()).toEqual(["nested.pdf"]);
+    denied = note.id;
+    expect(await names()).toEqual([]);
+  });
   it("moves a note's original event with its parent during merge", async () => {
     const ctx = context();
     const service = createFixtureRecordService(ctx, { now: () => new Date(period.from) });
