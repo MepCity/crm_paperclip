@@ -225,11 +225,11 @@ export function createFixtureRecordService(
       [],
       {
         sequence: 0,
-        occurredAt: new Date().toISOString(),
+        occurredAt: new Date(0).toISOString(),
         actor: { id: "system", name: "System" },
         source: "manual",
       },
-      randomUUID(),
+      "seed",
     )
       .filter((event) => event.kind === "note_added")
       .map((event) => {
