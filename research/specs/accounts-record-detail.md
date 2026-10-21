@@ -2091,3 +2091,44 @@ The five m3m screenshots were opened as images. Ordinals identify local evidence
 | SH-45 | 600 |
 
 601 source items; 92 inventory IDs represented by source entries; 413 excluded items (invisible/offscreen, duplicate wrappers, static record/field/event data).
+
+
+## Follow-up — Deals Assign opening attempt (MEP-539, 2026-10-21)
+
+Capture: `m539-account-deals-assign-oct21`. The no-write observation started
+from the Accounts list, opened an existing record, navigated to its Deals
+related-list card, clicked the card's Assign control once, and pressed Escape.
+Selectors came from earlier captured controls; no positional selector was used.
+The list readiness gate passed with no failed scripts. Step 1 paints the record
+overview; step 2 paints the Deals card and its Assign/New Deal controls above
+the no-records empty state.
+
+The unique opener is `[data-zcqa="Accounts_Potentials_Assign"]`. The tool
+records an allowed Assign opening click, but **step 3 does not paint an
+assignment dialog**. The accessibility snapshot contains a Loading indicator.
+The attempted `POST /crm/v2.2/Deals/actions/get_unassigned` is blocked by the
+capture network guard; client diagnostics then report an unexpected end of
+JSON input. The dialog layout, selection fields, candidate rows, action
+buttons and validation hints therefore remain **not observed**. This is an
+instrumented failure, not evidence that the reference has no assignment UI.
+The endpoint name alone does not establish read-only semantics.
+
+Step 4 and the final screenshot show the same underlying related-list card.
+Escape completed and `dialogVisibleAfterClose: false`; because no dialog
+painted, this does not establish successful dialog dismissal behaviour.
+No field was filled, record selected, assignment submitted or preference
+changed. The guard, shared browser and profile were unchanged.
+
+Safety audit: 20 blocked requests: reminder ×1, notification status ×1,
+telemetry ×17, and the unclassified Assign candidate request ×1. The 96 API
+calls include baseline list/related-record/count/customization/analytics reads
+and a background visitor trigger; no completed assignment request appears.
+Blocked calls were not retried or permitted through another route. The four
+step screenshots, final screenshot, accessibility snapshots, controls and
+metadata were inspected. Raw evidence remains local because it includes
+customer/session information.
+
+Open question: Platform Lead must classify the blocked candidate request and
+identify an approved capture route before this opener is tried again. The
+first-state dialog contract remains unavailable; do not infer it from other
+modules. One low-load capture was used in this night's board-authorized window.
