@@ -1,6 +1,8 @@
 # ADR 0009 — Real email and calendar (Module 10)
 
-- Status: Proposed (draft; decision by the board)
+- Status: Accepted in direction (board answers to Q1–Q14 on 2026-10-21,
+  MEP-1004); storage and schema details follow research R8 and are decided in
+  the implementation issues (high tier) or a follow-up ADR
 - Date: 2026-10-21
 - Decider: Board (CTO recommends per topic, marked below)
 - Issue: MEP-990
@@ -297,7 +299,29 @@ first as in the research plan.
   stays an open question until the sandbox or documentation settles it; the
   implementation uses documented constants marked as interim.
 
-## Board questions
+## Board decisions (2026-10-21, MEP-1004)
+
+These answers replace the "pending board decision" notes in the topics above
+where they conflict.
+
+| # | Decision |
+| --- | --- |
+| Q1 | Google (Gmail / Google Workspace mail and calendar) first, through option B; generic IMAP/SMTP (option A) later. Microsoft Graph is not planned for now. |
+| Q2 | No hosted services for now: secrets, queue and outbound mail stay on our own host. |
+| Q3 | Yes: an internal-only OAuth app for Google mail and calendar scopes; no public app verification. |
+| Q4 | One personal mailbox per user; no shared organization mailboxes. |
+| Q5 | Default sync window 30 days, Inbox and Sent; older mail can be imported on demand. |
+| Q6 | Deferred. The first release sends from the user's own connected mailbox; a system sender domain and SPF/DKIM/DMARC are decided later. |
+| Q7 | Outbound attachments: 20 MB total, ADR 0005 allowlist. |
+| Q8 | A linked message is private to the mailbox owner by default; others who can see the record see it only if the owner shares it. Deliberate choice, recorded as a deviation if the reference behaves differently. |
+| Q9 | No open or click tracking in the first release (implementation step 5 drops tracking). |
+| Q10 | The worker moves forward from Phase 4 to the start of Module 10. |
+| Q11 | First calendar release: native calendar over `Events` plus ICS invitations; external calendar sync later. |
+| Q12 | After research R1–R10 the CTO proposes the live test window and the final action list; the board approves. No write before the AGENTS.md rule 2 exception is written. |
+| Q13 | A notice or mail that can reach only the board's own user or test address is accepted without asking. Anything that could reach another user, customer, lead or contact stops that action and goes to the board. |
+| Q14 | Accepted: undeletable audit-log and analytics traces of a live test are fine as long as they are only logs or counters and no message reaches anyone. |
+
+## Board questions (as asked)
 
 | # | Question |
 | --- | --- |
