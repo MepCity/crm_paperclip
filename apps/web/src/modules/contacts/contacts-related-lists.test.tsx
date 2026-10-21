@@ -14,7 +14,7 @@ describe("contactsRelatedLists definition", () => {
     expect(contactsRelatedLists).toHaveLength(19);
 
     const expectedOrder = [
-      { order: 1, id: "notes", title: "Notes", moduleKey: "M6" },
+      { order: 1, id: "notes", title: "Notes", moduleKey: "M2" },
       { order: 2, id: "connected-records", title: "Connected Records", moduleKey: "P3" },
       { order: 3, id: "attachments", title: "Attachments", moduleKey: "M6" },
       { order: 4, id: "cadences", title: "Cadences", moduleKey: "P3" },
@@ -58,8 +58,13 @@ describe("contactsRelatedLists definition", () => {
     expect(reportingContacts?.moduleKey).toBe("M2");
 
     for (const card of contactsRelatedLists) {
-      // The Campaigns card is live and borrows the live key so its controls stay unlocked.
-      if (card.id === "reporting-contacts" || card.id === "campaigns" || card.id === "cases") {
+      // Campaigns, Cases and Notes cards are live and borrow the live key so their controls stay unlocked.
+      if (
+        card.id === "reporting-contacts" ||
+        card.id === "campaigns" ||
+        card.id === "cases" ||
+        card.id === "notes"
+      ) {
         expect(card.moduleKey).toBe("M2");
       } else {
         expect(card.moduleKey).not.toBe("M2");
@@ -337,7 +342,7 @@ describe("RecordPageFrame with Contacts rail", () => {
     const notesRow = notesLink.closest("div[class*='flex items-center']");
     const notesAddBtn = notesRow?.querySelector("button");
     expect(notesAddBtn).not.toBeNull();
-    expect(notesAddBtn?.getAttribute("data-later-module")).toBe("M6");
+    expect(notesAddBtn?.getAttribute("data-later-module")).toBeNull();
 
     // Reporting Contacts is NOT initially selected, so its plus button is not rendered
     const reportingLink = within(rail).getByRole("link", { name: "Reporting Contacts" });
@@ -501,6 +506,6 @@ describe("RecordPageFrame with Contacts rail", () => {
     expect(onSelect).toHaveBeenCalledWith("notes");
     const notesAddBtn = notesRow?.querySelector("button");
     expect(notesAddBtn).not.toBeNull();
-    expect(notesAddBtn?.getAttribute("data-later-module")).toBe("M6");
+    expect(notesAddBtn?.getAttribute("data-later-module")).toBeNull();
   });
 });

@@ -269,6 +269,8 @@ export interface FormRules {
   lookupPickers?: Readonly<Record<string, LookupPickerRule>>;
   /** Activity lookups whose module selector replaces the static row label. */
   lookupLabelFields?: readonly string[];
+  /** Lookup fields where the polymorphic in-input module prefix selector is suppressed. */
+  suppressLookupPrefix?: readonly string[];
   /** Subdued off-state appearance; selection and editability are unchanged. */
   subduedToggles?: readonly string[];
   /** Fields marked required by layout rules even when not system-mandatory in metadata. */

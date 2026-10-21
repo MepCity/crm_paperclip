@@ -34,6 +34,7 @@ const expectedIcons = [
   "check",
   "checkSquare",
   "chevronUp",
+  "file",
   "folder",
   "home",
   "signOut",

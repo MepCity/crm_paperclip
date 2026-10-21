@@ -40,7 +40,7 @@ describe("createDealsRelatedLists definition", () => {
   it("defines 15 cards in reference rail order with module keys", () => {
     expect(structuralLists).toHaveLength(15);
     const expected = [
-      { id: "notes", moduleKey: "M6" },
+      { id: "notes", moduleKey: "M2" },
       { id: "connected-records", moduleKey: "P3" },
       { id: "attachments", moduleKey: "M6" },
       { id: "stage-history", moduleKey: "M4" },

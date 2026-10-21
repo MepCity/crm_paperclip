@@ -23,7 +23,7 @@ describe("createLeadsRelatedLists", () => {
     expect(notes.order).toBe(0);
     expect(notes.id).toBe("notes");
     expect(notes.title).toBe("Notes");
-    expect(notes.moduleKey).toBe("M6");
+    expect(notes.moduleKey).toBe("M2");
     expect(notes.targetId).toBe("related-list-notes");
     expect(notes.emptyStateText).toBe("No records found");
 

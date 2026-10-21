@@ -1,6 +1,7 @@
 import type { ModuleListScreenConfig } from "@/components/records/list/module-list-screen";
 import {
   moduleCreatePath,
+  moduleDraftsPath,
   moduleListCustomPath,
   moduleListDefaultPath,
   moduleRecordPath,
@@ -66,7 +67,15 @@ export const casesListPageConfig: ModuleListScreenConfig = {
       { id: "client-script", label: "Create Client Script", laterModule: "M11" },
       { id: "export", label: "Export Cases" },
       { id: "sheet", label: "Sheet view", laterModule: "P3" },
-      { id: "print", label: "Print View", submenuIndicator: true },
+      {
+        id: "print",
+        label: "Print View",
+        submenuIndicator: true,
+        submenu: [
+          { id: "print-default", label: "Print Default view", laterModule: "M6" },
+          { id: "print-canvas", label: "Print Using Canvas", laterModule: "M6", accent: true },
+        ],
+      },
     ],
   },
   paths: {
@@ -74,5 +83,6 @@ export const casesListPageConfig: ModuleListScreenConfig = {
     customList: moduleListCustomPath,
     record: moduleRecordPath,
     create: moduleCreatePath,
+    drafts: moduleDraftsPath,
   },
 };
