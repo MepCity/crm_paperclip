@@ -48,6 +48,14 @@ describe("createHttpDocumentsPort", () => {
       createHttpDocumentsPort("acme", vi.fn().mockResolvedValue(value));
     await expect(bad({ data: [] }).getItem("i1")).rejects.toThrow();
     await expect(bad({ data: [row, row] }).getItem("i1")).rejects.toThrow();
+    const { parentId: _p, ...noParent } = row;
+    await expect(bad({ data: [noParent] }).getItem("i1")).rejects.toThrow();
+    await expect(
+      bad({ data: [{ ...row, parentId: 1 }] }).listItems("f1", {
+        field: "modifiedAt",
+        direction: "asc",
+      }),
+    ).rejects.toThrow();
     await expect(bad({}).listFolders()).rejects.toThrow();
     await expect(bad(null).listFolders()).rejects.toThrow();
     await expect(bad({ data: [{ id: "f1" }] }).listFolders()).rejects.toThrow();

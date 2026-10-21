@@ -30,6 +30,7 @@ function isItem(v: unknown): v is DocumentItem {
     typeof v.id === "string" &&
     typeof v.name === "string" &&
     (v.kind === "folder" || v.kind === "file") &&
+    typeof v.parentId === "string" &&
     typeof v.uploadedBy === "string" &&
     typeof v.modifiedBy === "string" &&
     typeof v.modifiedAt === "string"
