@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, screen } from "@testing-library/react";
+import { act, cleanup, fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render } from "@/test/render";
@@ -74,6 +74,15 @@ describe("NotesCardBody", () => {
     render(<NotesCardBody {...props} />);
     expect(screen.getByText("No records found")).toBeTruthy();
     expect(screen.getByTestId("note-composer-collapsed")).toBeTruthy();
+  });
+
+  it("expands the composer when the rail Add control fires the compose event", () => {
+    render(<NotesCardBody {...props} />);
+    expect(screen.queryByTestId("note-composer")).toBeNull();
+    act(() => {
+      window.dispatchEvent(new CustomEvent("crm:notes-compose"));
+    });
+    expect(screen.getByTestId("note-composer")).toBeTruthy();
   });
 
   it("renders stored notes through the safe content renderer", () => {

@@ -5,7 +5,7 @@ import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-
 import { ReportingContactsCardBody } from "@/components/records/detail/reporting-contacts-card-body";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
-import { notesCardBody } from "../notes-card";
+import { notesCardBody, openNotesComposer } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type { RelatedListActivityColumnDefinition, RelatedListDefinition } from "../types";
 
@@ -82,7 +82,7 @@ export function createContactsRelatedLists(
       railAction: {
         id: "notes-add",
         label: "Add",
-        moduleKey: "M6",
+        onAction: openNotesComposer,
       },
       emptyStateText: "No records found",
     },

@@ -4,7 +4,7 @@ import { CampaignMembersCardBody } from "@/components/records/detail/campaign-me
 import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
-import { notesCardBody } from "../notes-card";
+import { notesCardBody, openNotesComposer } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type {
   RelatedListActivityColumnDefinition,
@@ -205,7 +205,7 @@ export function createCampaignsRelatedLists(
       order: 2,
       targetId: "related-list-notes",
       countBadge: badgeValue(badges.notes),
-      railAction: { id: "notes-add", label: "Add", moduleKey: "M6" },
+      railAction: { id: "notes-add", label: "Add", onAction: openNotesComposer },
       notesShowMore: true,
       emptyStateText: "No records found",
     },

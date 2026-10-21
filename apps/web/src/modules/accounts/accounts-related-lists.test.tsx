@@ -107,7 +107,7 @@ describe("accountsRelatedLists definition", () => {
   });
 
   it("exposes rail plus actions and Links group metadata", () => {
-    expect(structuralLists.find((c) => c.id === "notes")?.railAction?.moduleKey).toBe("M6");
+    expect(structuralLists.find((c) => c.id === "notes")?.railAction?.moduleKey).toBeUndefined();
     expect(structuralLists.find((c) => c.id === "deals")?.railAction?.moduleKey).toBe("M4");
     expect(structuralLists.find((c) => c.id === "invoices")?.railAction?.moduleKey).toBe("P2");
 
@@ -336,7 +336,7 @@ describe("RecordPageFrame with Accounts rail metadata", () => {
 
     await user.click(within(rail).getByRole("link", { name: "Notes" }));
     expect(notesRow?.querySelector("button")).not.toBeNull();
-    expect(notesRow?.querySelector("button")?.getAttribute("data-later-module")).toBe("M6");
+    expect(notesRow?.querySelector("button")?.getAttribute("data-later-module")).toBeNull();
 
     const dealsLink = within(rail).getByRole("link", { name: "Deals" });
     expect(dealsLink.getAttribute("data-later-module")).toBeNull();

@@ -337,7 +337,7 @@ describe("RecordPageFrame with Contacts rail", () => {
     const notesRow = notesLink.closest("div[class*='flex items-center']");
     const notesAddBtn = notesRow?.querySelector("button");
     expect(notesAddBtn).not.toBeNull();
-    expect(notesAddBtn?.getAttribute("data-later-module")).toBe("M6");
+    expect(notesAddBtn?.getAttribute("data-later-module")).toBeNull();
 
     // Reporting Contacts is NOT initially selected, so its plus button is not rendered
     const reportingLink = within(rail).getByRole("link", { name: "Reporting Contacts" });
@@ -501,6 +501,6 @@ describe("RecordPageFrame with Contacts rail", () => {
     expect(onSelect).toHaveBeenCalledWith("notes");
     const notesAddBtn = notesRow?.querySelector("button");
     expect(notesAddBtn).not.toBeNull();
-    expect(notesAddBtn?.getAttribute("data-later-module")).toBe("M6");
+    expect(notesAddBtn?.getAttribute("data-later-module")).toBeNull();
   });
 });
