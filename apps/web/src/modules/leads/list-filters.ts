@@ -3,6 +3,7 @@ import type { FilterEditorDefinition } from "@/components/records/list/filter-ed
 import type { FilterGroup } from "@/components/records/list/filter-panel";
 import type { FilterFieldType } from "@/lib/records/filter-operators";
 import { filterOperators } from "@/lib/records/filter-operators";
+import { systemFilterProps } from "../system-filter-props";
 
 const systemDefinedItems = [
   "Activities",
@@ -103,10 +104,11 @@ function buildSystemDefinedItems() {
         systemEditor: "campaigns" as const,
       };
     }
+    const system = systemFilterProps(label, "Leads");
     return {
       id: `system-${index}`,
       label,
-      disabled: true,
+      ...(system ?? { disabled: true }),
     };
   });
 }

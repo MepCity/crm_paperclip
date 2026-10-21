@@ -747,3 +747,100 @@ test("currency help opens on click or keyboard, dismisses and never edits the am
   expect((screen.getByRole("textbox", { name: "Amount" }) as HTMLInputElement).value).toBe("125");
   expect(change).not.toHaveBeenCalled();
 });
+
+test("text suggestions open, filter, select with keyboard, and preserve custom text", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <Controlled
+      type="text"
+      suggestions={["Email", "Call", "Meeting", "Send Letter", "Product Demo"]}
+      onChange={change}
+    />,
+  );
+  const input = screen.getByRole("combobox", { name: "Example" });
+  await user.click(input);
+  expect(screen.getAllByRole("option")).toHaveLength(5);
+  await user.type(input, "mee");
+  expect(screen.getAllByRole("option")).toHaveLength(1);
+  await user.keyboard("{ArrowDown}{Enter}");
+  expect((input as HTMLInputElement).value).toBe("Meeting");
+  expect(change).toHaveBeenLastCalledWith("Meeting");
+  await user.click(input);
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("listbox")).toBeNull();
+  await user.clear(input);
+  await user.type(input, "Custom follow up");
+  await user.tab();
+  expect((input as HTMLInputElement).value).toBe("Custom follow up");
+  expect(change).toHaveBeenLastCalledWith("Custom follow up");
+});
+
+test("calendar chooses a model day, dismisses, and keeps invalid and partial text", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="date" initial="2026-11-10" onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" });
+  await user.click(input);
+  const day = screen.getByRole("button", { name: /November 15, 2026/ });
+  await user.click(day);
+  expect((input as HTMLInputElement).value).toBe("15.11.2026");
+  expect(change).toHaveBeenLastCalledWith("2026-11-15");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await user.click(input);
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await user.clear(input);
+  await user.type(input, "31.02.2026");
+  expect((input as HTMLInputElement).value).toBe("31.02.2026");
+  expect(change).toHaveBeenLastCalledWith("2026-02-31");
+  await user.clear(input);
+  await user.type(input, "12.0");
+  expect((input as HTMLInputElement).value).toBe("12.0");
+  expect(change).toHaveBeenLastCalledWith("12.0");
+});
+
+test("every date field opens a calendar without a module opt-in", async () => {
+  const user = userEvent.setup();
+  render(<Controlled type="date" />);
+  await user.click(screen.getByRole("textbox", { name: "Example" }));
+  const dialog = screen.getByRole("dialog", { name: "Example calendar" });
+  const input = screen.getByRole("textbox", { name: "Example" });
+  expect(input.getAttribute("aria-haspopup")).toBe("dialog");
+  expect(input.getAttribute("aria-details")).toBe(dialog.id);
+  expect(input.hasAttribute("aria-expanded")).toBe(false);
+  expect(input.hasAttribute("aria-controls")).toBe(false);
+  await user.keyboard("{Escape}");
+  expect(input.hasAttribute("aria-details")).toBe(false);
+});
+
+test("calendar supports keyboard opening and a disabled field cannot open it", async () => {
+  const user = userEvent.setup();
+  render(<Controlled type="date" initial="2026-11-10" />);
+  const input = screen.getByRole("textbox", { name: "Example" });
+  input.focus();
+  await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+  expect(screen.getByRole("dialog", { name: "Example calendar" })).toBeTruthy();
+  await user.keyboard("{ArrowRight}{Enter}");
+  expect((input as HTMLInputElement).value).toBe("11.11.2026");
+  cleanup();
+  render(<Controlled type="date" disabled />);
+  await user.click(screen.getByRole("textbox", { name: "Example" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+test("calendar dismisses on an outside click without changing the date", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <>
+      <Controlled type="date" initial="2026-11-10" onChange={change} />
+      <button type="button">Outside</button>
+    </>,
+  );
+  await user.click(screen.getByRole("textbox", { name: "Example" }));
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Outside" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(change).not.toHaveBeenCalled();
+});

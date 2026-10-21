@@ -43,6 +43,8 @@ Several agents may run `verify` on the same host. The E2E driver (`scripts/e2e.t
 | `MEP_E2E_LOCK_DIR` | `/tmp/crm-e2e.lock` | Lock directory (use a dedicated path in tests). |
 | `MEP_E2E_LOCK_WAIT_MS` | `1200000` (20 min) | Max wait for the lock; then the run continues without it. |
 
+Agents do not wait on the lock to repeat what CI already covers: GitHub CI runs every spec (4 shards plus the macOS geometry group) on each pushed `mep/*` head. Local runs follow the "Local test runs" rule in the repository `AGENTS.md`: the engineer runs only the specs of the touched screens, reviewers rely on the CI result of the same commit, the cross-module smoke (`smoke`, `shell`, `leads-detail`) runs once and only for high-tier issues without a green CI e2e, a held lock means wait or use CI, and at most 3 worktrees run local tests at once.
+
 The default wait budget fits under the merge bot's 45-minute `verify` ceiling (`check` + unit tests + wait + build + Playwright); raise it only if the full pipeline still stays below that limit.
 
 Playwright assertions use a **30s** default expect timeout (`playwright.config.ts`). Per-call timeouts in specs (for example `{ timeout: 50 }`) are unchanged.

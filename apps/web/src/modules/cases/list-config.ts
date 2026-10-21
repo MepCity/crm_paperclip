@@ -54,6 +54,7 @@ export const casesListPageConfig: ModuleListScreenConfig = {
   sortFieldLabels: CASES_SORT_FIELD_LABELS,
   pinnedViews: ["All Cases"],
   badgeColumn: false,
+  selectionTags: true,
   inventory: {
     actions: [
       { id: "mass-transfer", label: "Mass Transfer" },

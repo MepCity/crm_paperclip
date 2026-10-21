@@ -148,25 +148,7 @@ export function DatePicker({
           <Popover className={styles.popover}>
             <Dialog className={styles.dialog}>
               <Calendar>
-                <header className={styles.calendarHeader}>
-                  <Button slot="previous" className={styles.navButton}>
-                    <Icons.chevronLeft className="h-4 w-4" aria-hidden="true" />
-                  </Button>
-                  <Heading className={styles.heading} />
-                  <Button slot="next" className={styles.navButton}>
-                    <Icons.chevronRight className="h-4 w-4" aria-hidden="true" />
-                  </Button>
-                </header>
-                <CalendarGrid>
-                  <CalendarGridHeader>
-                    {(day) => (
-                      <CalendarHeaderCell className={styles.weekday}>{day}</CalendarHeaderCell>
-                    )}
-                  </CalendarGridHeader>
-                  <CalendarGridBody>
-                    {(date) => <CalendarCell date={date} className={styles.day} />}
-                  </CalendarGridBody>
-                </CalendarGrid>
+                <CalendarContent />
               </Calendar>
             </Dialog>
           </Popover>
@@ -177,4 +159,29 @@ export function DatePicker({
 
   // React Aria reads the locale from its provider, so a per-field locale has to be applied as one.
   return locale ? <I18nProvider locale={locale}>{picker}</I18nProvider> : picker;
+}
+
+/** Shared calendar body for segmented and freely typed date fields. */
+export function CalendarContent() {
+  return (
+    <>
+      <header className={styles.calendarHeader}>
+        <Button slot="previous" className={styles.navButton}>
+          <Icons.chevronLeft className="h-4 w-4" aria-hidden="true" />
+        </Button>
+        <Heading className={styles.heading} />
+        <Button slot="next" className={styles.navButton}>
+          <Icons.chevronRight className="h-4 w-4" aria-hidden="true" />
+        </Button>
+      </header>
+      <CalendarGrid>
+        <CalendarGridHeader>
+          {(day) => <CalendarHeaderCell className={styles.weekday}>{day}</CalendarHeaderCell>}
+        </CalendarGridHeader>
+        <CalendarGridBody>
+          {(date) => <CalendarCell date={date} className={styles.day} />}
+        </CalendarGridBody>
+      </CalendarGrid>
+    </>
+  );
 }

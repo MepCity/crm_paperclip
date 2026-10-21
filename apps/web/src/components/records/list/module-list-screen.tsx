@@ -40,6 +40,7 @@ import { ListToolbar } from "./list-toolbar";
 import { MassUpdateDialog } from "./mass-update-dialog";
 import { massUpdateFieldsInLayoutOrder } from "./mass-update-fields";
 import { SelectionBar } from "./selection-bar";
+import { SelectionTagsDialog } from "./selection-tags-dialog";
 import type { SystemFilterDraft } from "./system-filter-editor";
 import "./module-list-page.css";
 import {
@@ -142,6 +143,8 @@ export interface ModuleListScreenConfig {
   rowEditLink?: boolean;
   rowTools?: readonly ("edit" | "ellipsis" | "note")[];
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
+  /** Selection bar Tags adds tags to the selected records (Solutions, Cases). */
+  selectionTags?: boolean;
   inventory?: {
     actions: readonly Omit<MenuAction, "onAction">[];
     createItems?: readonly MenuAction[];
@@ -263,6 +266,7 @@ function ModuleListScreenLoaded({
   const [massUpdateOpen, setMassUpdateOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [changeOwnerOpen, setChangeOwnerOpen] = useState(false);
+  const [selectionTagsOpen, setSelectionTagsOpen] = useState(false);
   const [dedupOpen, setDedupOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [exportSelected, setExportSelected] = useState<string[] | undefined>(undefined);
@@ -819,6 +823,8 @@ function ModuleListScreenLoaded({
       {selectionActive && presentation === "table" ? (
         <SelectionBar
           laterInventory={Boolean(config.inventory)}
+          tagsEnabled={Boolean(config.selectionTags)}
+          onTags={config.selectionTags ? () => setSelectionTagsOpen(true) : undefined}
           selectedCount={pageSelectedIds.length}
           onClear={clearSelection}
           onMassUpdate={massUpdateFields.length > 0 ? () => setMassUpdateOpen(true) : undefined}
@@ -899,6 +905,15 @@ function ModuleListScreenLoaded({
           recordIds={pageSelectedIds}
           fields={massUpdateFields}
           users={ownerOptions}
+          onSuccess={clearSelection}
+        />
+      ) : null}
+      {selectionTagsOpen ? (
+        <SelectionTagsDialog
+          orgSlug={orgSlug}
+          module={config.module}
+          recordIds={pageSelectedIds}
+          onOpenChange={setSelectionTagsOpen}
           onSuccess={clearSelection}
         />
       ) : null}

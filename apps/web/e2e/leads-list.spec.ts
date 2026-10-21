@@ -10,6 +10,7 @@ import {
 } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, ignoreFailedResponses, test } from "./support/test";
+import { exerciseTouchedFilter } from "./support/touched-filter";
 import { expectType } from "./support/typography";
 
 /** Decorative owner avatar in RecordChoice rows (aria-hidden); known open question on img-alt. */
@@ -2280,4 +2281,10 @@ test("Print View exposes a left flyout without printing or navigating", async ({
   await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "Actions", exact: true })).toBeFocused();
+});
+
+test("Leads applies the Touched Records system filter and restores on Clear", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseTouchedFilter(page, org.slug, "Leads");
 });

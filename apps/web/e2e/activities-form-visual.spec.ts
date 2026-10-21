@@ -64,7 +64,7 @@ async function expectTaskFormVisual(page: Page) {
     });
   expect(marker).toEqual({ w: "25px", h: "2px", c: "rgb(242, 123, 119)" });
   // Value column starts at x=551 (requirement 4).
-  const subject = await box(page.getByRole("textbox", { name: "Subject", exact: true }));
+  const subject = await box(page.getByRole("combobox", { name: "Subject", exact: true }));
   near(subject.x, 551);
   // Lookup magnifier icon present on Contact and Account (requirement 8).
   await expect(page.getByRole("button", { name: "Open Contact Name lookup" })).toBeVisible();
@@ -101,7 +101,7 @@ test("Create Task matches the measured layout", async ({ page }) => {
 
 test("Task Edit keeps the Create layout", async ({ page }) => {
   const org = await openTaskCreate(page);
-  await page.getByRole("textbox", { name: "Subject", exact: true }).fill("Visual check");
+  await page.getByRole("combobox", { name: "Subject", exact: true }).fill("Visual check");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Tasks/\\d+$`), {
     timeout: 60_000,
@@ -195,7 +195,7 @@ test("Activities lists and record detail do not render copied extra elements", a
 
   // Task detail: no Related List rail, no rail control, no Client Script / Create Form Views (MEP-591 blocker)
   await page.getByRole("link", { name: "Create Task", exact: true }).click();
-  await page.getByRole("textbox", { name: "Subject", exact: true }).fill("Blocker check");
+  await page.getByRole("combobox", { name: "Subject", exact: true }).fill("Blocker check");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Tasks/\\d+$`), {
     timeout: 60_000,

@@ -2,6 +2,7 @@ import { signUpNewUser } from "./support/auth";
 import { moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
+import { exerciseTouchedFilter } from "./support/touched-filter";
 
 test("Campaigns shell entry, views, columns and sorting", async ({ page }) => {
   await signUpNewUser(page);
@@ -123,4 +124,12 @@ test("Campaigns Actions menu and later-module controls stay inert", async ({ pag
   await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click({ force: true });
   await expect(page.getByRole("menu")).toBeVisible();
   expect(page.url()).toBe(before);
+});
+
+test("Campaigns applies the Touched Records system filter and restores on Clear", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseTouchedFilter(page, org.slug, "Campaigns");
 });

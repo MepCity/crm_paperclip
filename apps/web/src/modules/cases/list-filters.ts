@@ -63,8 +63,11 @@ function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | 
   }
   const special =
     field.apiName === "Connected_To__s" ? "multilookup" : field.apiName === "Tag" ? "tag" : null;
-  if (!special && !(field.dataType in filterOperators)) return undefined;
-  const fieldType = special ?? (field.dataType as FilterFieldType);
+  if (!special && field.dataType !== "autonumber" && !(field.dataType in filterOperators))
+    return undefined;
+  // Autonumbers (Solution/Case Number) match as text.
+  const fieldType =
+    special ?? (field.dataType === "autonumber" ? "text" : (field.dataType as FilterFieldType));
   return {
     fieldType,
     ...(fieldType === "picklist"
