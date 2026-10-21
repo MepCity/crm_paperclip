@@ -1,7 +1,7 @@
 # Email inbox — list research and access evidence
 
-Status: blocked; both click-free probes failed the paint gate and showed an
-access-denied dialog. CTO access/route decision is required before continuation.
+Status: closed as gap: mail area not accessible to the capture user; no mail tab in the rail.
+Disposition: CTO decision on 2026-10-21; pending UI Lead approval.
 Issue: MEP-1010 / M10-R1. Research date: 2026-10-21.
 
 ## Purpose
@@ -9,8 +9,8 @@ Issue: MEP-1010 / M10-R1. Research date: 2026-10-21.
 Describe the default mail folder and directly exposed sent, draft, scheduled
 and tracked lists, without opening a message or changing any state. Follow
 [module-10-email-calendar-research-plan.md](../module-10-email-calendar-research-plan.md),
-section 4.1. This document currently records an access failure, not an inbox
-implementation contract.
+section 4.1. This document records the closed access gap and retained evidence;
+it does not establish an inbox implementation contract.
 
 ## Layout and observed state
 
@@ -21,10 +21,12 @@ permissions and contacting an administrator, and an OK button. OK was never
 clicked (confirmation/dismissal controls are forbidden).
 
 No mail module title, mailbox selector, folder pane, message list or utility
-strip is visible. This is **not evidence of an unconnected mailbox**. Whether
-this path is the correct mail-area entry point remains unverified; neither a
-missing feature nor missing user permissions can be concluded from this probe.
-No alternate route or folder query was invented.
+strip is visible. This is **not evidence of an unconnected mailbox**. The rail
+inventory E-01–E-35 contains no mail tab. The CTO determined on
+2026-10-21 that the mail area is unavailable to this capture user and closed
+R1 as a gap. The exact role/license prerequisite remains a documentation
+question for R9. No alternate route or folder query was invented; none will
+be tried, and switching applications through E-01 is outside scope.
 
 ## Control inventory
 
@@ -141,12 +143,15 @@ bar behaviour remain unobserved; Contacts list behaviour is not assumed for mail
    the same three pageerrors. No failed GET script request was reported in
    either capture, but the pageerrors and missing title fail the paint gate.
 5. Stop here: no additional captures, guessed routes, dismissals or attempts
-   to repair the reference CRM. This is incomplete research, not a skeleton
-   submitted as a completed mail-screen specification.
+   to repair the reference CRM. The CTO closed this access gap on 2026-10-21;
+   the retained evidence is submitted for UI Lead approval as a gap record, not a painted mail-screen
+   specification.
 
 The inbox empty state, connected-mailbox state, populated lists, loading and
 mail-service error states are not observed. No already-read message can be
-identified for R2; R2 must not open a message on this evidence.
+identified for R2. After R1 approval, R2 proceeds documentation-only with
+the gap recorded and no mail-area captures. R3 record-detail related-list
+captures remain within their separately approved scope.
 
 ## Request safety ledger (paths and counts only)
 
@@ -175,16 +180,22 @@ cover compose/send (W1), drafts (W3), scheduled send (W4), connection (W7), sync
 
 ## Open questions
 
-1. What is the correct existing mail-area entry path available to this session?
-   Is the access dialog caused by the route, feature availability or permission?
-   An authorized owner must establish this without changing reference settings.
-2. What does the inbox show with no connected mailbox? Not observed; do not
-   substitute the access-denied dialog for that empty state.
-3. Which sent/draft/scheduled/tracked lists expose direct read-only links?
-4. Does actual inbox navigation invoke sync, and at which path? No mail list
-   load was observed; no conclusion about synchronization is possible.
-5. R2 has no evidence of an unambiguously already-read message. Keep message
-   opening prohibited until adequate read-state evidence exists.
+1. Which role/license enables the mail area? R9 must answer from public
+   documentation only; no permission, setting, connection or session change.
+2. Which sent/draft/scheduled/tracked list views are available, and what are
+   their documented behaviours? R9 must record documentation-only evidence.
+3. Does a real list load trigger synchronization, and at which documented
+   path? No mail list loaded; R9 must use public documentation only and leave
+   undocumented details open, without triggering sync.
+4. What does the inbox show with no connected mailbox? Not observed; R9 may
+   describe documented behaviour, retaining any remaining visual gap. The
+   access-denied dialog must not substitute for this empty state.
+
+These follow-ups are recorded in the R9 scope note in
+[write-only flows](../module-10-write-only-flows.md#6-r9-documentation-only-follow-up-from-r1).
+The route/access question is closed by the CTO decision; no new route is to
+be explored. R2 has no already-read message evidence and proceeds only with
+public documentation and a gap record after R1 approval.
 
 ## Capture refs
 
