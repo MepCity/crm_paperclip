@@ -21,7 +21,7 @@ export interface InvitationInput {
   description?: string;
   start: Date;
   end: Date;
-  /** For all-day events `start` and `end` are the first and last day (UTC date), end inclusive. */
+  /** For all-day events `start`/`end` are UTC dates and `end` is exclusive (one-day event: end = next day). */
   allDay: boolean;
 }
 
@@ -82,10 +82,14 @@ function validate(input: InvitationInput): void {
   if (input.method === "REQUEST" && input.attendees.length === 0) {
     fail("attendees", "At least one attendee is required.");
   }
+  const emailOk = (e: string) => /^[^\s@:;,<>"\\]+@[^\s@:;,<>"\\]+$/.test(e);
+  if (!emailOk(input.organizer.email)) fail("organizer", "Organizer email is invalid.");
+  if (input.attendees.some((a) => !emailOk(a.email)))
+    fail("attendees", "Attendee email is invalid.");
   if (Number.isNaN(input.start.getTime())) fail("start", "Start is invalid.");
   if (Number.isNaN(input.end.getTime())) fail("end", "End is invalid.");
   const bad = input.allDay
-    ? formatDate(input.end) < formatDate(input.start)
+    ? formatDate(input.end) <= formatDate(input.start)
     : input.end.getTime() <= input.start.getTime();
   if (bad) fail("end", "End must be after start.");
 }
@@ -107,7 +111,7 @@ export function buildInvitation(input: InvitationInput): string {
   if (input.allDay) {
     const endExclusive = new Date(input.end.getTime() + 86_400_000);
     lines.push(`DTSTART;VALUE=DATE:${formatDate(input.start)}`);
-    lines.push(`DTEND;VALUE=DATE:${formatDate(endExclusive)}`);
+    lines.push(`DTEND;VALUE=DATE:${formatDate(input.end)}`);
   } else {
     lines.push(`DTSTART:${formatDateTime(input.start)}`);
     lines.push(`DTEND:${formatDateTime(input.end)}`);

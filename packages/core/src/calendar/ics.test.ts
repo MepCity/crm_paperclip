@@ -45,10 +45,28 @@ describe("buildInvitation", () => {
       ...base,
       allDay: true,
       start: new Date("2026-01-31T00:00:00Z"),
-      end: new Date("2026-01-31T00:00:00Z"),
+      end: new Date("2026-02-01T00:00:00Z"),
     });
-    expect(out).toContain("DTSTART;VALUE=DATE:20260131\r\n");
-    expect(out).toContain("DTEND;VALUE=DATE:20260201\r\n");
+    expect(out).toBe(
+      [
+        "BEGIN:VCALENDAR",
+        "VERSION:2.0",
+        "PRODID:-//MepCity//CRM//EN",
+        "METHOD:REQUEST",
+        "BEGIN:VEVENT",
+        "UID:evt-1@example.com",
+        "SEQUENCE:0",
+        "DTSTAMP:20260105T080000Z",
+        "DTSTART;VALUE=DATE:20260131",
+        "DTEND;VALUE=DATE:20260201",
+        "SUMMARY:Kickoff",
+        "ORGANIZER;CN=Owner:mailto:owner@example.com",
+        "ATTENDEE;CN=Guest;PARTSTAT=NEEDS-ACTION;RSVP=TRUE:mailto:guest@example.org",
+        "END:VEVENT",
+        "END:VCALENDAR",
+        "",
+      ].join("\r\n"),
+    );
   });
 
   it("escapes text", () => {
@@ -86,6 +104,17 @@ describe("buildInvitation", () => {
 
   it("rejects invalid input", () => {
     expect(() => buildInvitation({ ...base, end: base.start })).toThrow(ValidationError);
+    const day = new Date("2026-01-31T00:00:00Z");
+    expect(() => buildInvitation({ ...base, allDay: true, start: day, end: day })).toThrow(
+      ValidationError,
+    );
+    expect(() =>
+      buildInvitation({ ...base, organizer: { email: "a@example.com\r\nX-EVIL:1" } }),
+    ).toThrow(ValidationError);
+    expect(() =>
+      buildInvitation({ ...base, attendees: [{ email: "b@example.com\r\nX-EVIL:1" }] }),
+    ).toThrow(ValidationError);
+    expect(() => buildInvitation({ ...base, attendees: [{ email: "" }] })).toThrow(ValidationError);
     expect(() => buildInvitation({ ...base, uid: "" })).toThrow(ValidationError);
     expect(() => buildInvitation({ ...base, attendees: [] })).toThrow(ValidationError);
   });
