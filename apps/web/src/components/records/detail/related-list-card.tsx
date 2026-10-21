@@ -183,7 +183,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
         laterModule={laterMod}
         onPress={ctrl.onAction}
       >
-        {ctrl.label}
+        <span data-related-action-label>{ctrl.label}</span>
       </Button>
     );
   }

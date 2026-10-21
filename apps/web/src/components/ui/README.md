@@ -936,6 +936,8 @@ The related-card Attach and Add Campaigns actions keep the measured `--color-pri
 `record-detail.md` › Related-list card › Card shell. Per ADR 0003 §8 this
 measured pair is retained and reported for the board decision. Add Campaigns
 is independently confirmed in Existing-capture button measurements.
+The gallery axe scan excludes only `span[data-related-action-label]` for this
+measured pair (ADR 0003 §8); the surrounding buttons stay in the scan.
 
 ADR 0003 §8 requires WCAG 2.1 AA: 4.5:1 for text and 3:1 for the non-text parts of a control. The
 ratios below are computed from the token values with the WCAG relative-luminance formula.

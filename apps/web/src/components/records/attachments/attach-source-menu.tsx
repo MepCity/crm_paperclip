@@ -28,7 +28,7 @@ export function AttachSourceMenu({ onAttach }: AttachSourceMenuProps) {
         size="relatedAction"
         className="w-(--size-detail-attach-width) gap-1.5"
       >
-        <span>Attach</span>
+        <span data-related-action-label>Attach</span>
         <Chevron aria-hidden data-chevron={open ? "up" : "down"} className="size-3 shrink-0" />
       </Button>
       <Menu
