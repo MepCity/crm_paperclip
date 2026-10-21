@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { activityParentIds, activityParentModules, activityRules } from "../activities";
 import type { RecordData } from "../contract";
 import type { HistoryEventKind, HistoryRef, RecordHistoryEvent } from "../history";
@@ -21,9 +20,10 @@ export function relatedFilterHistory(
     kind: HistoryEventKind,
     original?: RecordHistoryEvent,
     name?: string,
+    payload: RecordHistoryEvent["payload"] = null,
   ) => {
     events.push({
-      id: randomUUID(),
+      id: globalThis.crypto.randomUUID(),
       schemaVersion: 1,
       stream,
       subject: { module, recordId: id, ...(name ? { name } : {}) },
@@ -33,7 +33,7 @@ export function relatedFilterHistory(
       ordinal: direct.length + events.length,
       mechanism: original?.mechanism ?? null,
       changes: original?.changes ?? [],
-      payload: null,
+      payload,
     });
   };
   const parentOf = (record: RecordData | undefined, stores: Map<string, FixtureModuleStore>) => {
@@ -63,10 +63,12 @@ export function relatedFilterHistory(
         const ready = next?.fields.$state === "ready";
         const parent = parentOf(next ?? old, next ? after : before);
         const name = String((next ?? old)?.fields.File_Name ?? "");
+        const direct = attachmentParent((next ?? old)?.fields.Parent_Id);
+        const payload = direct?.module === "Notes" ? { noteId: direct.id } : null;
         if (parent && ready && !wasReady)
-          append(parent, module, id, "attachment_added", undefined, name);
+          append(parent, module, id, "attachment_added", undefined, name, payload);
         if (parent && wasReady && !next)
-          append(parent, module, id, "attachment_deleted", undefined, name);
+          append(parent, module, id, "attachment_deleted", undefined, name, payload);
       }
     }
   }

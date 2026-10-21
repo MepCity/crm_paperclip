@@ -5,6 +5,7 @@ import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-
 import { ReportingContactsCardBody } from "@/components/records/detail/reporting-contacts-card-body";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
+import { emailsCard } from "../emails/record-card";
 import { notesCardBody, openNotesComposer } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type { RelatedListActivityColumnDefinition, RelatedListDefinition } from "../types";
@@ -353,6 +354,7 @@ export function createContactsRelatedLists(
     },
     {
       id: "emails",
+      renderCard: emailsCard("Contacts"),
       title: "Emails",
       moduleKey: "M10",
       order: 14,
