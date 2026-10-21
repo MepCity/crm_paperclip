@@ -3,6 +3,7 @@ import { CampaignChildCampaignsCardBody } from "@/components/records/detail/camp
 import { CampaignMembersCardBody } from "@/components/records/detail/campaign-members-card-body";
 import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
 import { Icons } from "@/components/ui/icon";
+import { attachmentsCard } from "../attachments-card";
 import { notesCardBody } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type {
@@ -235,13 +236,14 @@ export function createCampaignsRelatedLists(
       targetId: "related-list-open-activities",
       countBadge: openActivitiesBadge,
       upperControls: [
-        { id: "add-new", label: "Add New", type: "split-button", moduleKey: "M5" },
+        { id: "add-new", label: "Add New", type: "split-button" },
         ...viewControls("open"),
       ],
       activityColumns: openActivityColumns,
     },
     {
       id: "attachments",
+      renderCard: attachmentsCard("Campaigns"),
       title: "Attachments",
       moduleKey: "M6",
       order: 9,
@@ -262,12 +264,13 @@ export function createCampaignsRelatedLists(
     },
     {
       id: "leads",
-      renderBody: ({ record, recordPath, definition }) =>
+      renderBody: ({ record, recordPath, orgSlug, definition }) =>
         record && !definition.tablePreviewRows?.length
           ? createElement(CampaignMembersCardBody, {
               campaignRecord: record,
               memberKind: "Lead",
               recordPath,
+              orgSlug,
             })
           : undefined,
       title: "Leads",
@@ -321,12 +324,13 @@ export function createCampaignsRelatedLists(
     },
     {
       id: "contacts",
-      renderBody: ({ record, recordPath, definition }) =>
+      renderBody: ({ record, recordPath, orgSlug, definition }) =>
         record && !definition.tablePreviewRows?.length
           ? createElement(CampaignMembersCardBody, {
               campaignRecord: record,
               memberKind: "Contact",
               recordPath,
+              orgSlug,
             })
           : undefined,
       title: "Contacts",

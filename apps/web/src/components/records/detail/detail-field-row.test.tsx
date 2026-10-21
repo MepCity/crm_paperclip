@@ -8,6 +8,7 @@ import { DEFAULT_FORMAT } from "@/lib/locale";
 import { render } from "@/test/render";
 import { DetailFieldRow, type DetailFieldRowProps } from "./detail-field-row";
 import { InlineEditProvider } from "./inline-edit-context";
+import { RecordCallProvider } from "./record-call-context";
 
 afterEach(cleanup);
 
@@ -201,4 +202,18 @@ test("saving an unchanged row closes without a write and restores focus", async 
   expect(save).not.toHaveBeenCalled();
   expect(screen.queryByRole("textbox")).toBeNull();
   expect(document.activeElement).toBe(screen.getByRole("button", { name: "Edit Company value" }));
+});
+
+test("phone Call keeps the M5 marker without a call provider and is active with one", () => {
+  const phone = field({ apiName: "Phone", label: "Phone", dataType: "phone", required: false });
+  const { container, unmount } = render(row({ field: phone, value: "555-0100", callAction: true }));
+  const marked = container.querySelector('[data-later-module="M5"]');
+  expect(marked?.getAttribute("aria-disabled")).toBe("true");
+  unmount();
+  const view = render(
+    <RecordCallProvider value={vi.fn()}>
+      {row({ field: phone, value: "555-0100", callAction: true })}
+    </RecordCallProvider>,
+  );
+  expect(view.container.querySelector('[data-later-module="M5"]')).toBeNull();
 });
