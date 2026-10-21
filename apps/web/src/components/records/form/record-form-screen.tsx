@@ -775,7 +775,13 @@ function LoadedRecordForm({
       ) : null}
       <RecordFormShell
         variant={config.variant}
-        layout={config.variant === "activity" && config.module === "Calls" ? "call" : undefined}
+        layout={
+          config.variant === "activity" && config.module === "Calls"
+            ? "call"
+            : config.module === "Solutions"
+              ? "solutions"
+              : undefined
+        }
         title={title}
         formAriaLabel={title}
         titleAccessory={config.inventoryChrome ? <RecordFormEditPageLayoutLink /> : undefined}
