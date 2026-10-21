@@ -101,7 +101,7 @@ describe("panel predicate boundaries", () => {
     const fields = new Map([
       ["Big", { apiName: "Big", dataType: "bigint" }],
     ]) as unknown as Parameters<typeof matches>[3];
-    const hit = (stored: string, comparator: Criteria["comparator"], value: FieldValue) =>
+    const hit = (stored: string, comparator: string, value: FieldValue) =>
       matches(
         record("Big", stored),
         { field: "Big", comparator, value } as Criteria,
