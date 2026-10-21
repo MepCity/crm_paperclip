@@ -44,4 +44,36 @@ describe("DocumentsScreen", () => {
     await user.click(within(crumb).getByRole("button", { name: "My Folders" }));
     await within(screen.getByRole("list", { name: "Documents" })).findByText("Workspace Files");
   });
+
+  it("shows the empty state in an empty folder and returns through the breadcrumb", async () => {
+    const user = userEvent.setup();
+    render(<DocumentsScreen />);
+    await user.click(await screen.findByRole("button", { name: "Workspace Files" }));
+    await user.click(await screen.findByRole("button", { name: "Proposals" }));
+    await user.click(await screen.findByRole("button", { name: "Archive" }));
+    await screen.findByText("No items available.");
+    expect(screen.queryByText("Last Modified")).toBeNull();
+    expect(screen.queryByRole("button", { name: "Select all" })).toBeNull();
+    const crumb = screen.getByRole("navigation", { name: "Breadcrumb" });
+    expect(crumb.textContent).toContain("Archive");
+    await user.click(within(crumb).getByRole("button", { name: "Proposals" }));
+    await screen.findByText("Draft proposal.docx");
+    expect(screen.queryByText("No items available.")).toBeNull();
+  });
+
+  it("shows disabled select-all and row actions, and a sub-folder menu", async () => {
+    const user = userEvent.setup();
+    render(<DocumentsScreen />);
+    await user.click(await screen.findByRole("button", { name: "Workspace Files" }));
+    await screen.findByText("Contracts");
+    expect((screen.getByRole("button", { name: "Select all" }) as HTMLButtonElement).disabled).toBe(
+      true,
+    );
+    expect(screen.getAllByRole("button", { name: "More actions" }).length).toBe(3);
+    await user.click(screen.getByRole("button", { name: "Sub folders" }));
+    const menu = screen.getByRole("menu", { name: "Sub folders" });
+    await user.click(within(menu).getByRole("menuitem", { name: "Contracts" }));
+    await screen.findByText("Signed agreement.pdf");
+    expect(screen.queryByRole("menu")).toBeNull();
+  });
 });

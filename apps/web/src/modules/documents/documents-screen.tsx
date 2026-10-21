@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Icons } from "@/components/ui/icon";
+import { createHttpDocumentsPort } from "@/lib/documents/http-port";
 import { fixtureDocumentsPort } from "./fixture-port";
 import type { DocumentFolder, DocumentItem, DocumentSort, DocumentsPort } from "./port";
 
@@ -24,11 +25,20 @@ function CirclePlus({ className = "size-5" }: { className?: string }) {
   );
 }
 
-function InertButton({ label, children }: { label: string; children: React.ReactNode }) {
+function InertButton({
+  label,
+  children,
+  disabled,
+}: {
+  label: string;
+  children: React.ReactNode;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"
       aria-label={label}
+      disabled={disabled}
       className="inline-flex min-h-7 min-w-7 items-center justify-center rounded text-text-muted"
       onClick={(event) => event.preventDefault()}
     >
@@ -37,13 +47,37 @@ function InertButton({ label, children }: { label: string; children: React.React
   );
 }
 
+/** Route-level entry: binds the screen to the organization's HTTP port. */
+export function DocumentsHttpScreen({ orgSlug }: { orgSlug: string }) {
+  const port = useMemo(() => createHttpDocumentsPort(orgSlug), [orgSlug]);
+  return <DocumentsScreen port={port} />;
+}
+
+/** Original empty-folder illustration (not the reference asset). */
+function EmptyIllustration() {
+  return (
+    <svg width="96" height="80" viewBox="0 0 96 80" fill="none" aria-hidden="true">
+      <path
+        d="M8 20a6 6 0 0 1 6-6h20l8 8h40a6 6 0 0 1 6 6v36a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V20Z"
+        className="fill-surface-selected stroke-border"
+        strokeWidth="2"
+      />
+      <path d="M8 34h80" className="stroke-border" strokeWidth="2" />
+    </svg>
+  );
+}
+
 export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: DocumentsPort }) {
   const [folders, setFolders] = useState<readonly DocumentFolder[]>([]);
-  const [rootId, setRootId] = useState("my");
+  const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
   // Sub-folders entered below the selected root; the last entry is the current folder.
   const [trail, setTrail] = useState<readonly DocumentItem[]>([]);
   const [items, setItems] = useState<readonly DocumentItem[]>([]);
+  // Folder id the current `items` belong to; null while a folder is loading.
+  const [loadedId, setLoadedId] = useState<string | null>(null);
+  const [menuOpen, setMenuOpen] = useState(false);
 
+  const rootId = selectedRoot ?? folders.find((folder) => folder.section === "my")?.id ?? "";
   const currentId = trail.length > 0 ? (trail[trail.length - 1] as DocumentItem).id : rootId;
 
   useEffect(() => {
@@ -55,8 +89,14 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
   }, [port]);
 
   useEffect(() => {
+    if (!currentId) return;
     let live = true;
-    port.listItems(currentId, DEFAULT_SORT).then((rows) => live && setItems(rows));
+    setLoadedId(null);
+    port.listItems(currentId, DEFAULT_SORT).then((rows) => {
+      if (!live) return;
+      setItems(rows);
+      setLoadedId(currentId);
+    });
     return () => {
       live = false;
     };
@@ -67,9 +107,13 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
   const teamFolders = folders.filter((folder) => folder.section === "team");
 
   function selectRoot(id: string) {
-    setRootId(id);
+    setSelectedRoot(id);
     setTrail([]);
+    setMenuOpen(false);
   }
+
+  const isEmpty = loadedId === currentId && items.length === 0;
+  const subFolders = items.filter((row) => row.kind === "folder");
 
   const crumbs: { label: string; depth: number }[] = [
     { label: (trail.length === 0 ? root?.title : undefined) ?? root?.name ?? "", depth: 0 },
@@ -137,16 +181,58 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
                   <span key={crumb.depth} className="flex items-center gap-1">
                     <Icons.chevronRight className="size-4 text-text-muted" aria-hidden="true" />
                     {last ? (
-                      <span aria-current="page" className="flex items-center gap-1 font-semibold">
+                      <span
+                        aria-current="page"
+                        className="relative flex items-center gap-1 font-semibold"
+                      >
                         {crumb.label}
-                        {/* Current-folder menu: entries unobserved, inert. */}
-                        <Icons.chevronDown className="size-3" aria-hidden="true" />
+                        {/* D21: sub-folder menu; entries are our own reading (open question). */}
+                        <button
+                          type="button"
+                          aria-label="Sub folders"
+                          aria-haspopup="menu"
+                          aria-expanded={menuOpen}
+                          className="inline-flex min-h-7 min-w-5 items-center justify-center"
+                          onClick={() => setMenuOpen(!menuOpen)}
+                        >
+                          <Icons.chevronDown className="size-3" aria-hidden="true" />
+                        </button>
+                        {menuOpen ? (
+                          <div
+                            role="menu"
+                            aria-label="Sub folders"
+                            className="absolute left-0 top-full z-10 mt-1 min-w-48 rounded border border-border bg-surface py-1 text-sm font-normal shadow"
+                          >
+                            {subFolders.length === 0 ? (
+                              <div className="px-3 py-1.5 text-text-muted">No sub folders</div>
+                            ) : (
+                              subFolders.map((row) => (
+                                <div key={row.id} role="none">
+                                  <button
+                                    type="button"
+                                    role="menuitem"
+                                    className="w-full px-3 py-1.5 text-left"
+                                    onClick={() => {
+                                      setTrail([...trail, row]);
+                                      setMenuOpen(false);
+                                    }}
+                                  >
+                                    {row.name}
+                                  </button>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        ) : null}
                       </span>
                     ) : (
                       <button
                         type="button"
                         className="text-text-muted"
-                        onClick={() => setTrail(trail.slice(0, crumb.depth))}
+                        onClick={() => {
+                          setTrail(trail.slice(0, crumb.depth));
+                          setMenuOpen(false);
+                        }}
                       >
                         {crumb.label}
                       </button>
@@ -169,19 +255,34 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
             </div>
           </header>
 
-          <div className="flex items-center border-b border-border py-2 pl-16 pr-6 text-sm font-semibold text-text-muted">
-            <span className="flex-1">Name</span>
-            <span className="flex w-64 items-center gap-1">
-              Last Modified
-              <Icons.columnSortDesc className="size-3" aria-label="Sorted descending" />
-            </span>
-            {/* Column configuration: unobserved, inert. */}
-            <InertButton label="Columns">
-              <CirclePlus />
-            </InertButton>
-          </div>
+          {isEmpty ? null : (
+            <div className="flex items-center border-b border-border py-2 pl-4 pr-6 text-sm font-semibold text-text-muted">
+              {/* D18: selection model unobserved, visible but disabled. */}
+              <span className="w-12">
+                <InertButton label="Select all" disabled>
+                  <span className="size-4 rounded-sm border border-border" />
+                </InertButton>
+              </span>
+              <span className="flex-1">Name</span>
+              <span className="flex w-64 items-center gap-1">
+                Last Modified
+                <Icons.columnSortDesc className="size-3" aria-label="Sorted descending" />
+              </span>
+              {/* Column configuration: unobserved, inert. */}
+              <InertButton label="Columns">
+                <CirclePlus />
+              </InertButton>
+            </div>
+          )}
 
-          <ul aria-label="Documents" className="flex-1">
+          {isEmpty ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 text-text-muted">
+              <EmptyIllustration />
+              <p className="text-base font-semibold">No items available.</p>
+            </div>
+          ) : null}
+
+          <ul aria-label="Documents" className={isEmpty ? "hidden" : "flex-1"}>
             {items.map((row) => (
               <li
                 key={row.id}
@@ -213,7 +314,10 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
                     {dateFormat.format(new Date(row.modifiedAt))} by {row.modifiedBy}
                   </div>
                 </div>
-                <span className="size-7" aria-hidden="true" />
+                {/* D19: row menu unobserved, visible but disabled. */}
+                <InertButton label="More actions" disabled>
+                  <Icons.ellipsis className="size-4" />
+                </InertButton>
               </li>
             ))}
           </ul>
