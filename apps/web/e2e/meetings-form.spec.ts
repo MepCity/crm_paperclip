@@ -77,7 +77,7 @@ test("Cancel creates nothing and closes the window", async ({ page }) => {
 
 test("To earlier than From blocks Save and reports under To", async ({ page }) => {
   const { dialog } = await openDialog(page);
-  await dialog.getByLabel("To date", { exact: true }).fill("2000-01-01");
+  await dialog.getByLabel("To date", { exact: true }).fill("01.01.2000");
   await dialog.getByRole("button", { name: "Save", exact: true }).click();
   await expect(dialog.getByText("Please enter a valid To.")).toBeVisible();
   await expect(dialog).toBeVisible();

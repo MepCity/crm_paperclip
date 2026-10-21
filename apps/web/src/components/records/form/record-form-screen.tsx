@@ -120,6 +120,8 @@ export interface RecordFormConfig {
     detail: (id: string, module?: string) => string;
     record?: (module: string, id: string) => string;
     create: string;
+    /** Create route of another module with prefill query parameters (follow-up actions). */
+    createIn?: (module: string, params: Readonly<Record<string, string>>) => string;
     cancel: string;
   };
   navigate: (path: string) => void;
@@ -127,6 +129,8 @@ export interface RecordFormConfig {
   sectionColumnOverrides?: Readonly<Record<string, readonly (readonly string[])[]>>;
   inventoryChrome?: boolean;
   inventoryFooterEnd?: boolean;
+  /** Pins the inventory footer to the bottom edge of the form view instead of below the last field. */
+  inventoryFooterPinned?: boolean;
   profileImageLaterModule?: ModuleKey;
   profileImageIcon?: import("react").ComponentType<import("react").SVGProps<SVGSVGElement>>;
   renderOwnerPicker?: (props: OwnerPickerProps) => ReactNode;
@@ -472,7 +476,11 @@ function LoadedRecordForm({
       const saved = editing
         ? await update.mutateAsync({ id: editing.id, input })
         : await create.mutateAsync(input);
-      if (andNew) {
+      if (andNew && rules.followUp && config.paths.createIn) {
+        config.navigate(
+          config.paths.createIn(rules.followUp.module, rules.followUp.params(values)),
+        );
+      } else if (andNew) {
         const next = emptyValues();
         setValues(next);
         setLookupModules({});
@@ -769,7 +777,11 @@ function LoadedRecordForm({
         title={title}
         formAriaLabel={title}
         titleAccessory={config.inventoryChrome ? <RecordFormEditPageLayoutLink /> : undefined}
-        actionLabels={{ cancel: "Cancel", saveAndNew: "Save and New", save: "Save" }}
+        actionLabels={{
+          cancel: "Cancel",
+          saveAndNew: rules.followUp?.label ?? "Save and New",
+          save: "Save",
+        }}
         errorBanner={bannerMessage ? <FormErrorBanner>{bannerMessage}</FormErrorBanner> : null}
         disabled={saving}
         onCancel={requestCancel}
@@ -892,7 +904,10 @@ function LoadedRecordForm({
           );
         })}
         {config.inventoryChrome && config.variant !== "activity" ? (
-          <RecordFormInventoryFooter alignEnd={config.inventoryFooterEnd} />
+          <RecordFormInventoryFooter
+            alignEnd={config.inventoryFooterEnd}
+            pinBottom={config.inventoryFooterPinned}
+          />
         ) : null}
       </RecordFormShell>
       <UnsavedChangesDialog
