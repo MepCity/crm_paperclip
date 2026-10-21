@@ -1,6 +1,6 @@
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
-import { notesCardBody } from "../notes-card";
+import { notesCardBody, openNotesComposer } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type {
   RelatedListActivityColumnDefinition,
@@ -81,7 +81,7 @@ export const casesRelatedLists: readonly RelatedListDefinition[] = [
     moduleKey: "M6",
     order: 2,
     targetId: "related-list-notes",
-    railAction: { id: "notes-add", label: "Add", moduleKey: "M6" },
+    railAction: { id: "notes-add", label: "Add", onAction: openNotesComposer },
     emptyStateText: "No records found",
   },
   {

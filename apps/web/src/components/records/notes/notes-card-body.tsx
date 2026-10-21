@@ -166,6 +166,14 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
   const [composing, setComposing] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  useEffect(() => {
+    const open = () => {
+      setError(null);
+      setComposing(true);
+    };
+    window.addEventListener("crm:notes-compose", open);
+    return () => window.removeEventListener("crm:notes-compose", open);
+  }, []);
   const [uploadErrors, setUploadErrors] = useState<Record<string, string>>({});
   const upload = useUploadNoteAttachments();
 
