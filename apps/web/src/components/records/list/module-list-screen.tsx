@@ -13,7 +13,7 @@ import type {
   SortSpec,
   SystemFiltersValue,
 } from "@crm/core/records";
-import { TRANSFER_MODULES } from "@crm/core/transfer/types";
+import { IMPORT_MODULES, TRANSFER_MODULES } from "@crm/core/transfer/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { RecordBoard, type RecordBoardProps } from "@/components/records/board/record-board";
@@ -752,7 +752,8 @@ function ModuleListScreenLoaded({
   const toolbarActions = config.inventory?.actions ?? config.toolbarActions;
   const transferModule = isTransferModule(config.module) ? config.module : null;
   const exportSelectedTooLarge = pageSelectedIds.length > MAX_EXPORT_SELECTION;
-  const createItems: readonly MenuAction[] | undefined = transferModule
+  const importEnabled = (IMPORT_MODULES as readonly string[]).includes(config.module);
+  const createItems: readonly MenuAction[] | undefined = importEnabled
     ? [
         {
           id: "import",
@@ -874,7 +875,7 @@ function ModuleListScreenLoaded({
             href: config.quickCreate ? undefined : config.paths.create(orgSlug, config.module),
             onPress: config.quickCreate ? () => setQuickCreateOpen(true) : undefined,
             items: createItems,
-            moreLaterModule: config.inventory && !transferModule ? "M6" : undefined,
+            moreLaterModule: config.inventory && !importEnabled ? "M6" : undefined,
           }}
         />
       )}
