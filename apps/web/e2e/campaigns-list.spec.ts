@@ -128,4 +128,35 @@ test("Campaigns Actions menu and later-module controls stay inert", async ({ pag
   ]);
   await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click();
   await expect(page).toHaveURL(/\/tab\/Campaigns\/tags$/);
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+
+  // CL-14.7 Export Campaigns opens the export dialog
+  await list.getByRole("button", { name: "Actions", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Export Campaigns", exact: true }).click();
+  const exportDialog = page.getByRole("dialog", { name: "Export Campaigns" });
+  await expect(exportDialog).toBeVisible();
+  await exportDialog.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  // CL-14.9 Print View submenu
+  await list.getByRole("button", { name: "Actions", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Print View", exact: true }).click();
+  const printMenu = page.getByRole("menu", { name: "Print View", exact: true });
+  await expect(printMenu.getByRole("menuitem")).toHaveText([
+    "Print Default view",
+    "Print Using Canvas",
+  ]);
+  await page.keyboard.press("Escape");
+  await page.keyboard.press("Escape");
+
+  // CL-30 Expected Response number filter applies
+  const responseRow = list
+    .getByRole("listitem")
+    .filter({ has: page.getByRole("checkbox", { name: "Expected Response", exact: true }) });
+  await responseRow.scrollIntoViewIfNeeded();
+  await responseRow.getByText("Expected Response", { exact: true }).click();
+  await list.getByRole("textbox", { name: "Expected Response value" }).fill("1");
+  await list.getByRole("button", { name: "Apply Filter" }).click();
+  await expect(list.getByRole("button", { name: "Clear", exact: true })).toBeVisible();
 });

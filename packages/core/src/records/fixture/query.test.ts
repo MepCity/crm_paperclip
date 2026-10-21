@@ -97,6 +97,25 @@ describe("panel predicate boundaries", () => {
         validateCriteria({ field: "Annual_Revenue", comparator: "equal", value }),
       ).toThrow(ValidationError);
   });
+  it("bigint digit strings compare safely beyond the safe integer range", () => {
+    const fields = new Map([
+      ["Big", { apiName: "Big", dataType: "bigint" }],
+    ]) as unknown as Parameters<typeof matches>[3];
+    const hit = (stored: string, comparator: Criteria["comparator"], value: FieldValue) =>
+      matches(
+        record("Big", stored),
+        { field: "Big", comparator, value } as Criteria,
+        runtime,
+        fields,
+      );
+    expect(hit("9007199254740993", "equal", 9007199254740992)).toBe(false);
+    expect(hit("9007199254740993", "greater_than", 9007199254740991)).toBe(true);
+    expect(hit("-9007199254740993", "less_than", -9007199254740991)).toBe(true);
+    expect(hit("9007199254740993", "between", [0, 9007199254740991])).toBe(false);
+    expect(hit("100", "between", [100, 200])).toBe(true);
+    expect(hit("100", "less_equal", 100)).toBe(true);
+  });
+
   it("periods re-evaluate Sunday to Monday and preserve leap-day month boundaries", () => {
     const week: Criteria = {
       field: "Created_Time",

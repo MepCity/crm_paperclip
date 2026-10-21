@@ -963,13 +963,7 @@ disabled above 500 rows with the limit written in the menu label.
 
 ### Campaigns list
 
-<<<<<<< HEAD
-Implemented; closing QA 1/2 exercised the list after merging `origin/main` at
-`715835b3` (2026-10-20 09:54:02 +0300). The reference list was empty, so populated
-Campaigns rows remain a provisional use of the shared Accounts table pattern.
-=======
 Implemented; closing QA findings fixed in MEP-976 (pass).
->>>>>>> ba8ef764 (test(campaigns): update list spec and parity checklist rows)
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |

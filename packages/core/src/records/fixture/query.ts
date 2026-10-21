@@ -460,6 +460,14 @@ function matchesAge(value: FieldValue, expected: CriteriaValue, runtime: Criteri
   return parsed >= subtractCalendarMonths(runtime.now, expected.offset);
 }
 
+// Criteria carry safe integers, so a stored value beyond the safe range is further out than any
+// criteria value: map it to +/-Infinity instead of losing precision in Number().
+function bigintDigitsToNumber(digits: string): number {
+  const asNumber = Number(digits);
+  if (Number.isSafeInteger(asNumber)) return asNumber;
+  return digits.startsWith("-") ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+}
+
 export function matches(
   record: RecordData,
   criteria: Criteria,
@@ -534,7 +542,7 @@ export function matches(
           typeof raw === "string" &&
           typeof criteria.value !== "string" &&
           /^-?\d+$/.test(raw)
-        ? Number(raw)
+        ? bigintDigitsToNumber(raw)
         : raw;
   const dayRuntime =
     fields.get(criteria.field)?.dataType === "date"
