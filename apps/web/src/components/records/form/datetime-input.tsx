@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { TextCalendarField } from "@/components/ui/text-calendar-field";
 import { TextField } from "@/components/ui/text-field";
 import {
   calendarShapeToDisplayDate,
@@ -52,7 +53,7 @@ export function DateTimeInput({
   }
   return (
     <div className="record-form-datetime" data-record-form-datetime>
-      <TextField
+      <TextCalendarField
         id={id}
         label={`${label} date`}
         hideLabel

@@ -167,7 +167,7 @@ test("Save and Create Follow-up Task saves the call and opens a prefilled Task f
     timeout: 60_000,
   });
   await expect(page.getByRole("heading", { name: "Create Task" })).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Subject", exact: true })).toHaveValue(
+  await expect(page.getByRole("combobox", { name: "Subject", exact: true })).toHaveValue(
     "Follow-up: Intro call",
   );
   await expect(page.locator("[data-form-field=Who_Id] input")).toHaveValue(who);

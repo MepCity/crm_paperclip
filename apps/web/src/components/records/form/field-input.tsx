@@ -17,8 +17,10 @@ import { laterModuleProps, type ModuleKey, useLaterModule } from "@/components/u
 import { NumberField } from "@/components/ui/number-field";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { RecordChoice } from "@/components/ui/record-choice";
+import { SuggestionField } from "@/components/ui/suggestion-field";
 import { Switch } from "@/components/ui/switch";
 import { TextArea } from "@/components/ui/text-area";
+import { TextCalendarField } from "@/components/ui/text-calendar-field";
 import { TextField, type TextFieldProps } from "@/components/ui/text-field";
 import type { ClientRecordService } from "@/lib/api/client/provider";
 import {
@@ -61,6 +63,7 @@ export interface FieldInputProps {
   currencyInformation?: string;
   currencyHelp?: NonNullable<FormRules["currencyHelp"]>[string];
   textPrefix?: string;
+  suggestions?: readonly string[];
   /** Business range of a numeric entry; metadata carries no minimum or maximum. */
   numberLimits?: NumberLimits;
   /** Picker shape for this lookup field, when it differs from the target module's configuration. */
@@ -157,7 +160,7 @@ function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
     setEntry(calendarShapeToDisplayDate(value));
   }
   return (
-    <TextField
+    <TextCalendarField
       {...textField}
       type="text"
       value={entry}
@@ -191,6 +194,7 @@ export function FieldInput({
   currencyInformation,
   currencyHelp,
   textPrefix,
+  suggestions,
   numberLimits,
   lookupPicker,
   placeholder,
@@ -248,6 +252,17 @@ export function FieldInput({
     case "email":
     case "phone":
     case "website":
+      if (field.dataType === "text" && suggestions) {
+        return (
+          <SuggestionField
+            {...common}
+            value={text}
+            suggestions={suggestions}
+            maxLength={field.maxLength}
+            onChange={(next) => onChange(next === "" ? null : next)}
+          />
+        );
+      }
       return (
         <TextField
           {...common}
