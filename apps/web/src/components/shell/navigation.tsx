@@ -16,11 +16,14 @@ function NavigationLink({
   orgSlug,
   pathname,
   nested = false,
+  flat = false,
 }: {
   link: NavLink;
   orgSlug: string;
   pathname: string;
   nested?: boolean;
+  /** Ungrouped teamspace row: top-level geometry with the muted module-icon colour. */
+  flat?: boolean;
 }) {
   const IconComponent = link.icon;
   const active = isNavLinkActive(link, orgSlug, pathname);
@@ -31,7 +34,10 @@ function NavigationLink({
       aria-current={active ? "page" : undefined}
     >
       <span className={nested ? "ml-(--size-rail-nested-icon-offset) inline-flex" : "inline-flex"}>
-        <IconComponent className={navLinkIconClassName(link, { nested, active })} aria-hidden />
+        <IconComponent
+          className={navLinkIconClassName(link, { nested: nested || flat, active })}
+          aria-hidden
+        />
       </span>
       <span>{link.label}</span>
     </Link>
@@ -51,7 +57,7 @@ export function Navigation({
       ...section,
       groups: section.groups.filter((group) => group.links.length > 0),
     }))
-    .filter((section) => section.groups.length > 0);
+    .filter((section) => section.groups.length > 0 || (section.links?.length ?? 0) > 0);
   return (
     <nav aria-label="Main navigation" className="flex-1 overflow-y-auto">
       <div
@@ -92,6 +98,19 @@ export function Navigation({
                 </div>
               </Disclosure>
             ))}
+            {section.links?.length ? (
+              <div className="mt-(--size-rail-nested-row-gap) flex flex-col gap-(--size-rail-nested-row-gap)">
+                {section.links.map((link) => (
+                  <NavigationLink
+                    key={link.id}
+                    link={link}
+                    orgSlug={orgSlug}
+                    pathname={pathname}
+                    flat
+                  />
+                ))}
+              </div>
+            ) : null}
           </div>
         </section>
       ))}

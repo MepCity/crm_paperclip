@@ -680,6 +680,7 @@ function LoadedRecordForm({
           }
           options={isState && emptyCountry ? [] : undefined}
           textPrefix={rules.textPrefixes?.[field.apiName]}
+          suggestions={rules.textSuggestions?.[field.apiName]}
           numberLimits={rules.numberLimits?.[field.apiName]}
           lookupPicker={rules.lookupPickers?.[field.apiName]}
           lookupRecordHref={
@@ -773,7 +774,13 @@ function LoadedRecordForm({
       ) : null}
       <RecordFormShell
         variant={config.variant}
-        layout={config.variant === "activity" && config.module === "Calls" ? "call" : undefined}
+        layout={
+          config.variant === "activity" && config.module === "Calls"
+            ? "call"
+            : config.module === "Solutions"
+              ? "solutions"
+              : undefined
+        }
         title={title}
         formAriaLabel={title}
         titleAccessory={config.inventoryChrome ? <RecordFormEditPageLayoutLink /> : undefined}

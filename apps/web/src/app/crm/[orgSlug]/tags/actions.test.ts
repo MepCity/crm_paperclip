@@ -24,7 +24,7 @@ beforeEach(() => {
   session.ctx.orgId = randomUUID();
 });
 
-it.each(["Leads", "Contacts", "Accounts", "Deals"])(
+it.each(["Leads", "Contacts", "Accounts", "Deals", "Cases"])(
   "saves, reads and removes module-scoped %s memberships through the fixture service",
   async (module) => {
     const service = createFixtureRecordService(session.ctx);
@@ -107,7 +107,7 @@ it("does not expose or remove another organization's tag", async () => {
   expect(await original.tags.listRecordTags("Leads", record.id)).toHaveLength(1);
 });
 
-it.each(["Leads", "Contacts", "Accounts", "Deals"])(
+it.each(["Leads", "Contacts", "Accounts", "Deals", "Cases"])(
   "manages %s catalogue and keeps record projections consistent",
   async (module) => {
     const { readTagCatalogueAction, mutateTagCatalogueAction } = await import("./actions");
@@ -154,5 +154,42 @@ it.each(["Leads", "Contacts", "Accounts", "Deals"])(
     expect(
       await mutateTagCatalogueAction("synthetic", module, { kind: "create", name: "x".repeat(51) }),
     ).toMatchObject({ status: "error", fieldErrors: { name: expect.any(Array) } });
+  },
+);
+
+it("allows managing the Solutions catalogue and reports an empty catalogue", async () => {
+  const { readTagCatalogueAction } = await import("./actions");
+  expect(await readTagCatalogueAction("synthetic", "Solutions")).toMatchObject({
+    status: "success",
+    tags: [],
+    canManage: true,
+  });
+});
+
+it.each(["Cases", "Solutions"])(
+  "keeps the %s catalogue isolated between organizations",
+  async (module) => {
+    const { readTagCatalogueAction, mutateTagCatalogueAction } = await import("./actions");
+    const created = await mutateTagCatalogueAction("synthetic", module, {
+      kind: "create",
+      name: "Private",
+    });
+    if (created.status !== "success") throw new Error("Create failed");
+    const tag = required(created.tags[0]);
+    session.ctx = { ...session.ctx, orgId: randomUUID() };
+    expect(await readTagCatalogueAction("synthetic", module)).toMatchObject({
+      status: "success",
+      tags: [],
+    });
+    expect(
+      await mutateTagCatalogueAction("synthetic", module, {
+        kind: "rename",
+        id: tag.id,
+        name: "Hijacked",
+      }),
+    ).toMatchObject({ status: "error" });
+    expect(
+      await mutateTagCatalogueAction("synthetic", module, { kind: "delete", id: tag.id }),
+    ).toMatchObject({ status: "error" });
   },
 );

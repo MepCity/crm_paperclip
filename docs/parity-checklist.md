@@ -3,6 +3,17 @@
 One section per module. Each row is a capability of the reference CRM that
 the module's research found, assigned to the module that delivers it.
 
+### Task Subject suggestions and shared form calendars (MEP-981)
+
+| Inventory | Evidence and interim implementation | Open question |
+| --- | --- | --- |
+| TF-07 | Tasks metadata confirms Email, Call, Meeting, Send Letter, Product Demo in that order. Board finding (2026-10-21) confirms opening on focus/click. Filtering, keyboard selection, editable custom text and an input-width panel follow the issue acceptance contract. Ordinary dropdown row tokens are reused. | The popup was not opened in the existing captures; exact row spacing, filtering and empty-result rendering remain unobserved. This is an interim rule, not a measured popup parity claim. |
+| TF-08 | Board finding confirms click-to-open calendar and day selection. Reuse the shared calendar body; preserve DD.MM.YYYY text, YYYY-MM-DD model, partial text and impossible-day validation. No painted calendar icon, as observed. | Calendar interior geometry and navigation are not observed; shared calendar styling is interim. |
+| MF date/time and Title | Board scope extension (2026-10-21): From/To use the shared calendar and retain the existing time entry and all-day conversion. Title stays free text. | Time-picker behaviour and Title suggestions remain unobserved. |
+| CF-16 and Call Start Time | Board scope extension: date/time fields use the shared calendar, preserving the time. Call Subject stays free text. | Call Subject suggestions and a separate time picker remain unobserved. |
+| All module date/datetime fields | Board scope extension explicitly requires the shared calendar for every form date and datetime, including Campaigns Start/End Date, Contacts Date of Birth and Deals Closing Date. No module opt-in is required. | Calendar interior geometry remains interim; this is board-directed behaviour, not a claim of observed cross-module equivalence. |
+
+
 ## How to read this file
 
 - **The specs win.** `research/specs/` describes behaviour, look and request
@@ -963,7 +974,9 @@ disabled above 500 rows with the limit written in the menu label.
 
 ### Campaigns list
 
-Implemented; QA pending (MEP-805).
+Implemented; closing QA 1/2 exercised the list after merging `origin/main` at
+`715835b3` (2026-10-20 09:54:02 +0300). The reference list was empty, so populated
+Campaigns rows remain a provisional use of the shared Accounts table pattern.
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
@@ -976,6 +989,23 @@ Implemented; QA pending (MEP-805).
 | CL-32 – CL-39 | View Settings `laterModule` M11; alphabet picker; empty text and Total Records 0 | `campaigns-list.spec.ts` |
 
 Provisional rules: the populated table body is the Accounts table (not observed in the reference).
+
+Closing QA 1/2 inventory result (MEP-852):
+
+| Inventory | Result | Evidence and limit |
+| --- | --- | --- |
+| SH-18, CL-01, CL-02.1–CL-02.5 | Pass | Campaigns route and the four system views open; list and view-menu screenshots were compared with `m7-list-base` and `m7-list-views`. |
+| CL-02.6 | Defect | The dropdown choice closes without changing the view strip. The menu is also narrow enough to wrap its label to two lines, while `m7-list-views` shows one line. |
+| CL-02.7–CL-02.8 | Pass | M11 entries remain inert. |
+| CL-03–CL-05, CL-12, CL-15–CL-16, CL-21–CL-29, CL-31, CL-33–CL-40 | Pass for visible inventory and sampled behavior | Create route, sort, filter panel, Campaign Name/Status filters, alphabet, columns, empty text and total use the shared list flow. The reference has no populated Campaigns row. CL-32 is correctly inert as M11. |
+| CL-06–CL-11 | Defect | Five alternate presentation tiles and the overflow arrow are disabled; activation leaves the list unchanged despite their M7 inventory assignment. |
+| CL-13 | Defect | The Create Campaign split arrow carries an inert M6 marker. Its reference menu contents were blocked by the capture guard, so only the M7 functionality threshold can be assessed. |
+| CL-14.1–CL-14.3, CL-14.5 | Pass for menu inventory and sampled behavior | Actions rows appear in reference order; the shared mass-update selection dialog and Drafts route are wired. |
+| CL-14.4, CL-14.7 | Defect | Manage Tags and Export Campaigns remain inert with M6 markers, although M6 is within the gate threshold. |
+| CL-14.6, CL-14.8 | Pass | M11/P3 actions stay inert. |
+| CL-14.9 | Defect | Print View has the reference chevron but opens no submenu and performs no action. |
+| CL-17–CL-20, CL-30 | Defect | Four system filters and Expected Response are visibly disabled; the reference paints checkbox controls and the inventory assigns them to M7. Their reference criteria were not operated. |
+| Populated selection strip | Defect | Selection and Mass Update work, but Tags and row Notes still carry inert M6 markers. The populated strip itself has no reference Campaigns screenshot. |
 
 ### Campaigns create / edit form
 
@@ -1014,10 +1044,10 @@ Later-module controls: CF-01, CF-22, CF-23, CF-24 (M11 `laterModule`).
 
 ### Campaigns record detail
 
-- GK-1 header (Campaign Name title, arrows, Edit, More Options): implemented by provisional rule; QA pending (MEP-812).
-- GK-2 Overview (layout sections, inline edit): implemented by provisional rule; QA pending (MEP-812).
-- GK-3 Timeline (Accounts Timeline): implemented by provisional rule; QA pending (MEP-812).
-- GK-4 related-list rail (metadata order, card bodies empty): implemented by provisional rule; QA pending (MEP-812).
+- GK-1 header (Campaign Name title, arrows, Edit, More Options): implemented by provisional rule; closing QA 1/2 passed local route and action checks (MEP-852).
+- GK-2 Overview (layout sections, inline edit): implemented by provisional rule; closing QA 1/2 passed local section and edit checks (MEP-852).
+- GK-3 Timeline (Accounts Timeline): implemented by provisional rule; closing QA 1/2 passed local tab and filter checks (MEP-852).
+- GK-4 related-list rail (metadata order, card bodies empty): implemented by provisional rule; closing QA 1/2 passed local rail-order checks (MEP-852).
 - GK-5 Leads and Contacts cards (campaign membership, Member Status, Email, Phone): implemented by provisional rule; closing QA 2/2 verified populated cards and their left-to-right headings (MEP-853).
 - GK-6 Deals card (Campaign Source matching deals, Accounts Deals card behaviour): implemented by provisional rule; closing QA 2/2 verified the populated card and record navigation (MEP-853).
 - GK-7 Child Campaigns card (Parent Campaign matching campaigns, standard columns): implemented by provisional rule; closing QA 2/2 verified the populated card (MEP-853).
@@ -1028,6 +1058,9 @@ phone Call action with `data-later-module="M5"`; clicking it opens no call flow.
 The detail also retains M5/M6 later-module markers on activity and attachment
 rail/actions. These controls cross the M7 functionality threshold and need a
 gate decision or correction. M10/M11/P3 controls did not navigate when clicked.
+GK-1–GK-4 remain provisional: the reference had no campaign detail record or
+image, so closing QA 1/2 used our Accounts detail and the CD metadata inventory
+as the comparison baseline.
 
 ### Campaigns links in earlier modules
 
@@ -1039,6 +1072,15 @@ select, Apply, and Clear flows (MEP-853): the selected campaign returns two
 Leads and one Contact; Clear restores the full lists. After Apply, both filter
 panels scroll horizontally and clip the left edge of their section headings
 and checkboxes, a visible defect.
+
+Closing QA 1/2 (MEP-852) exercised both earlier-module links:
+
+| Inventory | Result | Evidence and limit |
+| --- | --- | --- |
+| CX-125, CX-148–CX-149, CX-425, CX-450, CX-486 | Defect in empty-card layout | Leads and Contacts rail entries, plus icons, card headings and Add Campaigns actions work. Empty text is centered in our card; `m7-campaign-links-lead-card` and `m7-campaign-links-contact-card` place it at the left content margin. |
+| CX-200–CX-205 | Pass under provisional rule | Local Lead/Contact membership add, Member Status edit, remove and multi-record selection work. The reference populated card and picker were not observed. |
+| CX-14.10, CX-314.9 | Pass | Two selected Leads and two selected Contacts can be added from list Actions; the campaign cards then show the members. |
+| CX-211, DF-23–DF-24, DL-66 | Pass under provisional lookup rule | Deal form lookup, saved detail link, empty value and Campaign Source field filtering pass e2e. Picker chrome and detail values were not observed in the reference. |
 
 ### Module 7 gate
 
@@ -1055,6 +1097,37 @@ Existing/Create New bulk membership, Campaign type/status and Service status
 filter criteria, Lead-conversion membership transfer, and a Deals Campaigns
 card are outside this half of the gate. Closing QA 1/2 (MEP-852) is tracked
 separately.
+
+Closing QA 1/2 result (MEP-852, `origin/main` `715835b3`): the Campaigns list,
+upper detail and earlier-module links were exercised in the local app at the
+reference capture's 1470×835 CSS viewport and 2× screenshot scale. The list
+and view/Actions menus were compared with `m7-list-base`, `m7-list-views` and
+`m7-list-actions`; the empty Leads/Contacts cards were compared with their CX
+captures. The gate is **not clean**: the CL-02.6 menu, CL-06–CL-11 presentations,
+CL-13 split arrow, CL-14.4/CL-14.7/CL-14.9 Actions entries, CL-17–CL-20 and
+CL-30 filters, populated selection-strip M6 controls, and both empty-card text
+positions need correction or a CTO gate decision. No correction task was opened
+from this QA slice. The Campaigns detail and CX-200–CX-205 picker/member behavior
+remain provisional; no reference record or dialog was created to resolve them.
+The excluded CX-206/CX-208/CX-210 and Lead-conversion membership transfer stay
+outside this gate slice, and Deals has no Campaigns related list in metadata.
+Regression checks covered Leads, Contacts and Deals list/detail routes, the
+single-record Account Name lookup, and meeting participant selection. The
+campaign create/save/detail route and the Deal Campaign Source link/filter flow
+also passed local e2e checks.
+
+Recheck on `origin/main` `f89760ab` (2026-10-21 04:07 +0300), merged into the
+QA branch: 73 targeted Campaigns/Leads/Deals/Activities e2e tests and 36
+Leads/Contacts/Deals list regression tests passed. Six additional Campaigns
+detail/link probes passed without suppressing HTTP 400 browser errors; this
+confirms those six flows, not every record page. Two focused Campaigns-detail
+probes passed: Open Activities **Add New** opens the Task create form, and a
+member **Call** action opens the Call create form. The earlier QA 2/2 finding
+about these M5 controls is resolved on this revision. The list-control and
+empty Campaigns-card layout findings above remain open; this main merge did
+not change their presentation or handlers. No reference Campaigns detail
+record became available, so its layout and member interactions remain
+provisional.
 
 ## Module 6 · Print page (MEP-871, interim rule)
 
@@ -1090,7 +1163,7 @@ reference account had no Cases rows.
 | KL-14, KL-14.1–KL-14.11 | **Defects:** menu order passes; M6 Manage Tags and Export are inert; M8 Drafts closes without opening a flow, and Print View opens no captured submenu or page | Browser clicks; `cases-list.spec.ts` covers order only |
 | KL-15–KL-31, KL-35, KL-38–KL-39 | Passed: system/field filter sections, alphabet picker, filter-produced empty state and Total Records 0 | Browser walkthrough; `cases-list.spec.ts` |
 | KL-32–KL-37 | Passed: M11 View Settings inert; Case Number, Subject, Status and Priority headings; populated columns provisional | Browser walkthrough; `cases-list.spec.ts` |
-| KL-41–KL-56 | Cases/Solutions routes and surrounding rail entries rendered; later phase entries remain placeholders | Browser walkthrough; `shell.test.tsx` |
+| KL-41–KL-56 | Cases/Solutions routes rendered; Solutions and Cases are ungrouped top-level rail rows (reference order Solutions, Cases) below the Sales/Activities groups, Campaigns stays under Sales; each module row has its own glyph (interim Lucide choice, reference glyph inventory pending spec); hover look unmeasured (open question); later phase entries remain placeholders | Browser walkthrough; `shell.test.tsx` |
 | Populated selection bar | Passed: one selected row shows Clear, Send Email, Tags and Mass Update; no reference row or selection bar could be observed | Browser walkthrough; provisional |
 
 The Cases filter catalogue also marks Calls, Meetings and Tasks as M5 and Notes
@@ -1265,3 +1338,26 @@ customization and Phase 3 controls.
 - Contact business-card and detail Phone **Call** controls open the Call create form with the
   contact pre-filled (provisional; reference click never invoked). M8+ markers are untouched.
 - Evidence: `parent-activities-cards.spec.ts` (Lead, Deal), `activity-add-new.test.ts`.
+
+### Solutions/Cases CSV export (MEP-968)
+
+- Implemented: list Actions > Export opens the shared dialog for Solutions/Cases;
+  shared CSV service, field projection, view/selection scope, download and history.
+- Interim parity rule: reference behavior was not observed (SL-14.7 / KL-14.9).
+  Reuse the existing modules' dialog defaults and limits; see
+  `research/specs/csv-import-export.md`. No new reference inspection performed.
+- Import remains unavailable for both modules. Actual reference export behavior
+  remains an open question; this implementation does not claim observed parity.
+
+
+### Shared choice panels (MEP-980)
+
+- Shared owner/search/type panels can exceed narrow triggers, with viewport collision
+  handling and readable option labels. Owner rows retain avatar, selected check,
+  name and email; default search placeholder is `Search Users`.
+- Numeric regressions: `apps/web/e2e/choice-panels.spec.ts` (Tasks and Meetings,
+  1470/900 px viewports, ±1 px search/row dimensions, clipping and viewport checks).
+- Reference gaps remain: activity-specific open panel widths, narrow viewport
+  wrapping, and owner secondary typography. Current activity values reuse the
+  nearest measured record-form family; they are not certified activity parity.
+- Inventory and evidence limits: `docs/choice-panel-audit.md`.

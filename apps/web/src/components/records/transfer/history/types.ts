@@ -24,7 +24,7 @@ export interface ExportHistoryProps {
   moduleLabel(m: TransferModule): string;
 }
 
-export const TRANSFER_MODULES: TransferModule[] = ["Leads", "Contacts", "Accounts", "Deals"];
+export { TRANSFER_MODULES } from "@crm/core/transfer/types";
 
 export const IMPORT_STATUS_LABELS: Record<ImportJob["status"], string> = {
   completed: "Completed",

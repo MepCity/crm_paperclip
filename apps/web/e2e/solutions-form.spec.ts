@@ -288,3 +288,32 @@ test("laterModule controls do not navigate or open dialogs (SF-01, SF-17, SF-18,
   await expect(page).toHaveURL(url);
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
+
+test("create form layout matches the measured reference geometry at 1470×835", async ({ page }) => {
+  await page.setViewportSize({ width: 1470, height: 835 });
+  await openCreate(page);
+  const card = page.locator(".record-form-card").first();
+  const cardBox = await card.boundingBox();
+  const footer = page.locator("[data-record-form-inventory-footer]");
+  const footerBox = await footer.boundingBox();
+  if (!cardBox || !footerBox) throw new Error("Missing form card or footer geometry");
+
+  // Card reaches the page bottom without scrolling (reference: 1126 wide, 712 tall).
+  expect(cardBox.width).toBeGreaterThan(1100);
+  expect(cardBox.width).toBeLessThan(1150);
+  expect(cardBox.height).toBeGreaterThan(690);
+  expect(cardBox.y + cardBox.height).toBeGreaterThan(780);
+
+  // Footer sits at the card base, right-aligned, inside the first viewport.
+  expect(footerBox.y + footerBox.height).toBeLessThanOrEqual(835);
+  expect(footerBox.y).toBeGreaterThan(740);
+  expect(footerBox.x + footerBox.width).toBeGreaterThan(cardBox.x + cardBox.width - 60);
+
+  // Question / Answer: 34 px fields on a ~54 px row pitch.
+  const q = await page.getByLabel("Question", { exact: true }).boundingBox();
+  const a = await page.getByLabel("Answer", { exact: true }).boundingBox();
+  if (!q || !a) throw new Error("Missing Question/Answer geometry");
+  expect(Math.abs(q.height - 34)).toBeLessThanOrEqual(2);
+  expect(Math.abs(a.height - 34)).toBeLessThanOrEqual(2);
+  expect(Math.abs(a.y - q.y - 54)).toBeLessThanOrEqual(3);
+});

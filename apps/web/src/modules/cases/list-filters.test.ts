@@ -92,3 +92,26 @@ test("Cases Filter By Related Modules has Calls, Emails, Meetings, Notes, Tasks 
   ]);
   expect(relatedGroup?.items.map((i) => i.laterModule)).toEqual(["M5", "M10", "M5", "M6", "M5"]);
 });
+
+test("Cases enables five system editors, keeps email deferred and maps Meetings to Events", () => {
+  const rows = casesFilterGroups[0]?.items ?? [];
+  expect(rows[0]?.laterModule).toBe("M10");
+  expect(rows.slice(1).map((row) => row.systemEditor)).toEqual([
+    "locked",
+    "record_action",
+    "related_records_action",
+    "touched",
+    "untouched",
+  ]);
+  expect(rows.slice(1).every((row) => !row.disabled && !row.laterModule)).toBe(true);
+  expect(
+    rows.find((row) => row.systemEditor === "related_records_action")?.systemOptions
+      ?.relatedModules,
+  ).toEqual([
+    { id: "Notes", label: "Notes" },
+    { id: "Attachments", label: "Attachments" },
+    { id: "Tasks", label: "Tasks" },
+    { id: "Events", label: "Meetings" },
+    { id: "Calls", label: "Calls" },
+  ]);
+});

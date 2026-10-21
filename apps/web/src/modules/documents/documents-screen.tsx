@@ -136,7 +136,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
                 <span key={crumb.depth} className="flex items-center gap-1">
                   <Icons.chevronRight className="size-4 text-text-muted" aria-hidden="true" />
                   {last ? (
-                    <span aria-current="page" className="flex items-center gap-1 font-medium">
+                    <span aria-current="page" className="flex items-center gap-1 font-semibold">
                       {crumb.label}
                       {/* Current-folder menu: entries unobserved, inert. */}
                       <Icons.chevronDown className="size-3" aria-hidden="true" />
@@ -196,13 +196,13 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
                   {row.kind === "folder" ? (
                     <button
                       type="button"
-                      className="font-medium text-accent-blue"
+                      className="font-semibold text-accent-blue"
                       onClick={() => setTrail([...trail, row])}
                     >
                       {row.name}
                     </button>
                   ) : (
-                    <span className="font-medium">{row.name}</span>
+                    <span className="font-semibold">{row.name}</span>
                   )}
                   <div className="text-sm text-text-muted">Uploaded by {row.uploadedBy}</div>
                 </div>

@@ -51,7 +51,7 @@ export function RecordChoice({
   searchable = false,
   owner = false,
   prefix = false,
-  searchLabel = "Search",
+  searchLabel = owner ? "Search Users" : "Search",
   disabled,
   required,
   errorMessage,
@@ -199,7 +199,6 @@ export function RecordChoice({
           isNonModal={inline}
           offset={inline ? -1 : 0}
           placement="bottom start"
-          style={prefix ? { width: "var(--size-form-prefix-width)" } : undefined}
           className={`record-choice-panel ${inline ? "record-inline-choice-panel" : ""} ${owner ? "record-owner-panel" : searchable ? "record-search-panel" : ""}`}
         >
           <Dialog aria-label={`${label} options`} className="record-search-dialog">
@@ -259,7 +258,7 @@ export function RecordChoice({
                           <Icons.avatarPerson className="record-owner-avatar-icon" />
                         </span>
                       )}
-                      <span className="min-w-0 flex-1 truncate">
+                      <span className="record-choice-text">
                         <span className={owner ? "record-owner-name block truncate" : ""}>
                           {option.label}
                         </span>

@@ -376,6 +376,7 @@ what the "no colour constants" rule forbids.
 | `--size-list-view-type-arrow-width` | `11px` | list-views.md › View type switcher › trailing dropdown arrow "11 × 6.5 px" ink box | from spec |
 | `--size-list-view-type-arrow-height` | `6.5px` | list-views.md › View type switcher › trailing dropdown arrow "11 × 6.5 px" ink box | from spec |
 | `--color-detail-divider` | `#d6d6e3` | record-detail.md › Details card › "`Hide Details` divider is 1 px `#D6D6E3`" | from spec |
+| `--size-detail-attach-width` | `78.5px` | record-detail.md › Related-list card › Card shell: Attach x 1359.5–1438 | measured |
 | `--size-detail-card-width` | `906px` | record-detail.md › Canvas and tab row › "first card left x 552, right x 1458" (906 px wide) | from spec |
 | `--size-detail-card-padding` | `20px` | record-detail.md › Related-list card › "Heading starts x 572" with card x 552 (20 px inset) | from spec |
 | `--size-detail-business-label-width` | `153.5px` | record-detail.md › Business card › labels end x 725.5 with card x 552 and 20 px inset | from spec |
@@ -422,6 +423,10 @@ what the "no colour constants" rule forbids.
 | `--size-form-list-padding` | `6px` | record-detail.md › Standard picklist › padding above and below | from spec |
 | `--size-form-country-height` | `270px` | record-detail.md › Country panel › panel height | from spec |
 | `--size-form-owner-height` | `179px` | record-detail.md › Owner dropdown › panel height | from spec |
+| `--size-choice-viewport-inset` | `12px` | Overlay collision boundary | interim viewport safety inset; not reference-measured |
+| `--size-form-panel-min-width` | `110px` | record-detail.md › Standard picklist › Salutation panel | smallest observed panel; content may expand |
+| `--size-form-panel-search-min-width` | `303px` | record-detail.md › Country panel | measured width; interim mapping for narrow module selectors |
+| `--size-form-panel-owner-min-width` | `299.5px` | record-detail.md › Owner dropdown | measured width; interim mapping for activity owner triggers |
 | `--size-form-prefix-width` | `110px` | record-detail.md › Composite inputs › Salutation panel width | from spec |
 | `--size-form-prefix-divider-offset` | `94px` | record-detail.md › Composite inputs › Salutation divider from outer left | from spec |
 | `--size-form-prefix-caret-gap` | `11px` | record-detail.md › Composite inputs › Salutation caret before divider | from spec |
@@ -735,8 +740,16 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-record-menu-inset` | `5px` | record-detail.md › More Options menu › Rows and groups › 6 px inner highlight inset minus 1px edge; group padding | from spec |
 | `--size-record-menu-inset-inline` | `5.75px` | record-detail.md › More Options menu › Rows and groups › Highlight width 1373 − 1169.5 = 203.5; (217 − 203.5) / 2 minus 1px border | from spec |
 | `--size-record-menu-text-inset` | `10.25px` | record-detail.md › More Options menu › Rows and groups › 1180 − 1163 − 1 − 5.75 | from spec |
-| `--size-record-scroll-top` | `36px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
-| `--size-record-scroll-offset` | `16px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
+| `--size-record-column-selector-width` | `117px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-selector-width` | `150px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-selector-height` | `34px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-action-width` | `218px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-action-gap` | `19.5px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-strip-height` | `61px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-top` | `37px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-right` | `44px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-bottom` | `78px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-footer-gap` | `17px` | record-detail.md › Existing-capture button measurements › Scroll To Top disc bottom to strip separator | from spec |
 | `--size-record-demo-height` | `560px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
 | `--color-status-current` | `#eeeffc` | record-detail.md › Visual layout › Status strip / current stage |
 | `--color-status-terminal-border` | `#ffadac` | record-detail.md › Visual layout › Hidden-rail layout / Terminal control |
@@ -921,6 +934,14 @@ token:
   token and the control is not drawn that way.
 
 ### Contrast notes
+
+The related-card Attach and Add Campaigns actions keep the measured `--color-primary` text on
+`--color-primary-subtle` (4.18:1, below the 4.5:1 AA text minimum), from
+`record-detail.md` › Related-list card › Card shell. Per ADR 0003 §8 this
+measured pair is retained and reported for the board decision. Add Campaigns
+is independently confirmed in Existing-capture button measurements.
+The gallery axe scan excludes only `span[data-related-action-label]` for this
+measured pair (ADR 0003 §8); the surrounding buttons stay in the scan.
 
 ADR 0003 §8 requires WCAG 2.1 AA: 4.5:1 for text and 3:1 for the non-text parts of a control. The
 ratios below are computed from the token values with the WCAG relative-luminance formula.
@@ -1153,3 +1174,18 @@ and restores the trigger. `TextField.variant="search"` supplies an unbordered qu
 inside its caller's shared selector/query frame, including prefix content for the
 Record Name badge. Both use existing tokens; geometry is interim under Module 2's
 visual parity rule. Existing text-field variants are unchanged.
+
+
+### Choice panel sizing
+
+`RecordChoice` uses the trigger as a minimum rather than a fixed width. Ordinary
+lists grow to their content; searchable/owner lists have separate measured minimum
+widths. Prefix controls keep their trigger geometry without locking the panel.
+React Aria flips/shifts overlays at viewport edges; panel widths are also capped
+by a viewport inset. Ordinary choice labels wrap at the cap. Owner name/email lines retain the reference
+ellipsis for unusually long values. Owner rows retain the avatar, name, secondary email and selected check.
+
+`Select`, `ComboBox`, and `SearchableSelect` use the selection panel boundary;
+filter multi-select and sort panels retain their measured widths. Generic popovers
+receive only a viewport cap, with no new minimum width. Lookup search windows
+remain dialogs. See `docs/choice-panel-audit.md` for coverage and evidence gaps.

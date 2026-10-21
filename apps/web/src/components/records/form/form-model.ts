@@ -218,6 +218,8 @@ export interface FormDynamicState {
 }
 
 export interface FormRules {
+  /** Observed free-text suggestion catalogs, scoped by the module form. */
+  textSuggestions?: Readonly<Record<string, readonly string[]>>;
   owner: string;
   /**
    * Replaces Save and New: saves, then opens a create form of `module` prefilled with `params`.

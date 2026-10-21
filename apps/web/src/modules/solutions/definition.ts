@@ -34,7 +34,7 @@ export const solutionsScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Solution",
   pluralLabel: "Solutions",
   pageTitle: "Solutions",
-  navigation: { id: "solutions", icon: Icons.building },
+  navigation: { id: "solutions", icon: Icons.bookUser, group: "flat" },
   list: solutionsListPageConfig,
   listCurrencyCode: SOLUTIONS_LIST_CURRENCY_CODE,
   searchColumns: ["Solution_Title", "Solution_Number", "Status", "Owner"],
@@ -42,6 +42,7 @@ export const solutionsScreenDefinition: ModuleScreenDefinition = {
   form: {
     rules: solutionsFormRules,
     inventoryChrome: true,
+    inventoryFooterEnd: true,
   },
   detail: {
     header: solutionsRecordHeaderIdentity,
