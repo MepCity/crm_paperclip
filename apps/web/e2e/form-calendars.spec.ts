@@ -67,7 +67,10 @@ for (const form of forms) {
     }
     if (form.module === "Meetings") {
       await expect(page.getByRole("textbox", { name: "Title", exact: true })).toBeVisible();
-      await page.getByRole("checkbox", { name: "All day" }).check();
+      await page
+        .getByRole("dialog", { name: "Meeting Information" })
+        .locator('[data-form-field="All_day"] label')
+        .click();
       const from = page.getByRole("textbox", { name: "From date", exact: true });
       await from.fill("10.11.2026");
       await from.click();

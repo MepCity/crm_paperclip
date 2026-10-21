@@ -821,3 +821,19 @@ test("calendar supports keyboard opening and a disabled field cannot open it", a
   await user.click(screen.getByRole("textbox", { name: "Example" }));
   expect(screen.queryByRole("dialog")).toBeNull();
 });
+
+test("calendar dismisses on an outside click without changing the date", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <>
+      <Controlled type="date" initial="2026-11-10" onChange={change} />
+      <button type="button">Outside</button>
+    </>,
+  );
+  await user.click(screen.getByRole("textbox", { name: "Example" }));
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Outside" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(change).not.toHaveBeenCalled();
+});

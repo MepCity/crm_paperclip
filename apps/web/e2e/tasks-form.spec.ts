@@ -284,7 +284,8 @@ test("Task Subject suggestions and Due Date calendar supplement editable text", 
   expect(inputBox).not.toBeNull();
   expect(panelBox).not.toBeNull();
   // TF-07 open-panel geometry is unobserved: board interim rule is exactly the input width.
-  expect(inputBox?.width).toBeCloseTo(279, 0);
+  // activities-form.md, label/value columns: x=551–880, 329px value span.
+  expect(inputBox?.width).toBeCloseTo(329, 0);
   expect(Math.abs((panelBox?.width ?? 0) - (inputBox?.width ?? 0))).toBeLessThanOrEqual(1);
   if (process.env.PAPERCLIP_RUN_SCRATCH_DIR)
     await page.screenshot({
@@ -303,7 +304,7 @@ test("Task Subject suggestions and Due Date calendar supplement editable text", 
   await expect(calendar).toBeVisible();
   const calendarBox = await calendar.locator("..").boundingBox();
   expect(calendarBox).not.toBeNull();
-  expect(calendarBox?.width).toBeGreaterThanOrEqual(279);
+  expect(calendarBox?.width).toBeGreaterThanOrEqual(329);
   if (process.env.PAPERCLIP_RUN_SCRATCH_DIR)
     await page.screenshot({
       path: `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/task-due-date-calendar.png`,

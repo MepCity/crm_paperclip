@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
+import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render } from "@/test/render";
 import { DateTimeInput } from "./datetime-input";
@@ -50,15 +51,24 @@ for (const dateOnly of [false, true]) {
   it(`selects a calendar day and preserves ${dateOnly ? "all-day UTC storage" : "the local time"}`, async () => {
     const user = userEvent.setup();
     const onChange = vi.fn();
-    render(
-      <DateTimeInput
-        id="from"
-        label="From"
-        dateOnly={dateOnly}
-        value={dateOnly ? "2026-11-10T00:00:00.000Z" : new Date(2026, 10, 10, 9, 30).toISOString()}
-        onChange={onChange}
-      />,
-    );
+    function Controlled() {
+      const [value, setValue] = useState(
+        dateOnly ? "2026-11-10T00:00:00.000Z" : new Date(2026, 10, 10, 9, 30).toISOString(),
+      );
+      return (
+        <DateTimeInput
+          id="from"
+          label="From"
+          dateOnly={dateOnly}
+          value={value}
+          onChange={(next) => {
+            setValue(next ?? "");
+            onChange(next);
+          }}
+        />
+      );
+    }
+    render(<Controlled />);
     await user.click(screen.getByLabelText("From date"));
     await user.click(screen.getByRole("button", { name: /November 15, 2026/ }));
     expect(screen.getByLabelText("From date")).toHaveProperty("value", "15.11.2026");

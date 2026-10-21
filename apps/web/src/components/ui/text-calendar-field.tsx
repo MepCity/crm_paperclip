@@ -2,7 +2,7 @@
 
 import "./record-input.css";
 import { parseDate } from "@internationalized/date";
-import { useId, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { Calendar, FieldError, Input, Label, Popover, TextField } from "react-aria-components";
 import { calendarShapeToDisplayDate, displayDateToModelShape } from "@/lib/records/calendar-date";
 import { CalendarContent } from "./date-picker";
@@ -20,8 +20,24 @@ export function TextCalendarField({
 }: TextFieldProps) {
   const input = useRef<HTMLInputElement>(null);
   const calendarId = useId();
+  const popover = useRef<HTMLDivElement>(null);
   const [open, setOpen] = useState(false);
   const [keyboardOpen, setKeyboardOpen] = useState(false);
+  // A non-modal calendar leaves the input editable. React Aria's non-modal popover only
+  // dismisses on blur from inside the popup, so also dismiss interactions outside the pair.
+  useEffect(() => {
+    if (!open) return;
+    function dismissOutside(event: PointerEvent) {
+      if (
+        event.target instanceof Node &&
+        !input.current?.contains(event.target) &&
+        !popover.current?.contains(event.target)
+      )
+        setOpen(false);
+    }
+    document.addEventListener("pointerdown", dismissOutside, true);
+    return () => document.removeEventListener("pointerdown", dismissOutside, true);
+  }, [open]);
   let selected = null;
   try {
     const shape = displayDateToModelShape(value ?? "");
@@ -42,6 +58,14 @@ export function TextCalendarField({
         aria-haspopup="dialog"
         aria-expanded={open}
         aria-controls={open ? calendarId : undefined}
+        onBlur={(event) => {
+          if (
+            event.relatedTarget instanceof Node &&
+            !popover.current?.contains(event.relatedTarget)
+          ) {
+            setOpen(false);
+          }
+        }}
         onClick={() => {
           if (!props.isDisabled && !props.isReadOnly) {
             setKeyboardOpen(false);
@@ -49,6 +73,11 @@ export function TextCalendarField({
           }
         }}
         onKeyDown={(event) => {
+          if (event.key === "Escape" && open) {
+            event.preventDefault();
+            event.stopPropagation();
+            setOpen(false);
+          }
           if (event.altKey && event.key === "ArrowDown" && !props.isDisabled && !props.isReadOnly) {
             event.preventDefault();
             setKeyboardOpen(true);
@@ -58,6 +87,7 @@ export function TextCalendarField({
       />
       <FieldError className="record-form-validation-error">{errorMessage}</FieldError>
       <Popover
+        ref={popover}
         isNonModal
         triggerRef={input}
         isOpen={open}
