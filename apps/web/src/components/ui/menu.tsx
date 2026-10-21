@@ -146,10 +146,14 @@ export interface MenuAction {
 
 const measuredMenuClass = "p-(--size-menu-inset) outline-none";
 
-function menuPopoverClass(widthClass: string, appearance: "default" | "measured" | "record") {
+function menuPopoverClass(
+  widthClass: string,
+  appearance: "default" | "measured" | "record",
+  tall = false,
+) {
   return (
     `${widthClass} ${appearance === "measured" ? "bg-menu-surface" : "bg-surface"} max-w-full ` +
-    `${appearance === "record" ? "max-h-screen rounded-(--radius-record-menu)" : "max-h-80 rounded-md"} ` +
+    `${appearance === "record" ? "max-h-screen rounded-(--radius-record-menu)" : `${tall ? "max-h-[80vh]" : "max-h-80"} rounded-md`} ` +
     "overflow-auto border border-border shadow-lg outline-none"
   );
 }
@@ -185,8 +189,11 @@ export function Menu<T extends object>({
   header,
   shouldCloseOnInteractOutside,
   widthPx,
+  tall,
   ...props
 }: AriaMenuProps<T> & {
+  /** Lifts the 320px height cap so a long list does not show a scrollbar that narrows the rows. */
+  tall?: boolean;
   /** Measured outer width in px; overrides the named `width` (Activities Actions menu). */
   widthPx?: number;
   width?: "create" | "actions" | "settings" | "columnOptions";
@@ -214,7 +221,7 @@ export function Menu<T extends object>({
     <Popover
       placement={placement ?? "bottom end"}
       offset={appearance === "record" ? 0 : undefined}
-      className={menuPopoverClass(widthClass, appearance)}
+      className={menuPopoverClass(widthClass, appearance, tall)}
       {...(widthPx ? { style: { width: widthPx } } : {})}
       {...(shouldCloseOnInteractOutside ? { shouldCloseOnInteractOutside } : {})}
     >
