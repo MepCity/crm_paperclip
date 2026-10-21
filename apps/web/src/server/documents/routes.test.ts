@@ -127,6 +127,35 @@ describe("documents read routes", () => {
     }
   });
 
+  it("admin and enabled member can read all three routes", async () => {
+    try {
+      for (const role of ["admin", "member"]) {
+        ctx.role = role;
+        const folderResponse = await folders(get("folders"), { params: Promise.resolve({}) });
+        expect(folderResponse.status).toBe(200);
+        expect(
+          ((await folderResponse.json()) as { data: { id: string }[] }).data.map((row) => row.id),
+        ).toContain("folder-team");
+
+        const itemsResponse = await itemsOf("folder-team");
+        expect(itemsResponse.status).toBe(200);
+        expect(
+          ((await itemsResponse.json()) as { data: { id: string }[] }).data.map((row) => row.id),
+        ).toContain("file-a");
+
+        const itemResponse = await item(get("items/file-a"), {
+          params: Promise.resolve({ itemId: "file-a" }),
+        });
+        expect(itemResponse.status).toBe(200);
+        expect((await itemResponse.json()) as { data: { id: string }[] }).toMatchObject({
+          data: [{ id: "file-a" }],
+        });
+      }
+    } finally {
+      ctx.role = "admin";
+    }
+  });
+
   it("foreign-tenant folder and file give the unknown-id 404 for admin and member", async () => {
     for (const role of ["admin", "member"]) {
       ctx.role = role;
