@@ -2,6 +2,11 @@
 
 import { useState } from "react";
 import { TextField } from "@/components/ui/text-field";
+import {
+  calendarShapeToDisplayDate,
+  DATE_MASK_PLACEHOLDER,
+  displayDateToModelShape,
+} from "@/lib/records/calendar-date";
 import { dateTimePartsToIso, isoToDateTimeParts } from "@/lib/records/datetime-parts";
 
 export interface DateTimeInputProps {
@@ -51,15 +56,16 @@ export function DateTimeInput({
         id={id}
         label={`${label} date`}
         hideLabel
-        type="date"
+        type="text"
         name={`${id}-date`}
-        value={parts.date}
+        placeholder={DATE_MASK_PLACEHOLDER}
+        value={calendarShapeToDisplayDate(parts.date)}
         isRequired={required}
         isDisabled={disabled}
         isInvalid={Boolean(errorMessage)}
         errorMessage={errorMessage}
         validationBehavior="aria"
-        onChange={(date) => update({ ...parts, date })}
+        onChange={(date) => update({ ...parts, date: displayDateToModelShape(date) ?? "" })}
       />
       {dateOnly ? null : (
         <TextField
