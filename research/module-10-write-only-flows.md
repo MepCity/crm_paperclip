@@ -134,3 +134,37 @@ locators, documented capabilities and explicit observation limits.
 - R9 should check message loading/empty/error guidance and any documented
   reading side effects, leaving undocumented behaviour as a gap. No additional
   mail route, sync, preference, permission or connection change is authorized.
+
+## 8. R9 public-documentation check (MEP-1019)
+
+Checked 2026-10-21 by web search over first-party help material only. No
+reference CRM access, no capture. Search results returned redirect links, so
+exact page paths were not resolved; the locator column names the help topic
+only (no host, no product name). Every row therefore needs a path re-check by
+the CTO or a follow-up run before the board relies on it. Vendor figures come
+from search summaries, not from a page read in full. Third-party pages were
+ignored.
+
+| Flow | Public doc enough? | Topic locator (checked 2026-10-21) | What the source proves / limit |
+| --- | --- | --- | --- |
+| W1 | partly | help: composing emails; template attachment limits | Template attachments: up to 10 files, 3 MB total. Composer limits depend on edition or the mailbox provider. No validation message text. |
+| W3 | partly | help: email drafts; drafts API reference | Drafts can be saved and created through an API for Leads, Contacts, Deals. No auto-save timing or ownership rule. |
+| W4 | partly | help: scheduling emails | Scheduled mail waits in an Outbox and can be edited, rescheduled or cancelled; paid editions only. Time zone and past-time rules not found. |
+| W5, W6 | partly (W6: no) | help: scheduling meetings and invitees | Invitation mail has an RSVP section (Yes / Maybe / No); host is notified; participant status window and an invited-meetings related list exist. Full state vocabulary and external-invitee reply handling not found. |
+| W7 | partly | help: mailbox configuration (OAuth, IMAP) | OAuth for the large providers; custom IMAP/SMTP with host, port and SSL/TLS; app-specific password when 2FA is on; each user authorizes their own mailbox. Role/licence prerequisites for mail-area access not found. |
+| W8 | no | none found | No documented first-sync window, folder set or matching rule; whether list loading starts a sync is not documented. Stays a gap; no sync is triggered. |
+| W9 | partly | help: template merge fields | Merge fields use `${Module.Field}` syntax and a `#` picker; user lookup fields exist. Editor validation and preview not covered. |
+| W10 | partly | help: calendar integrations | Two-way sync with a major external calendar via a marketplace integration; others via plugin or API. Direction rules, conflict handling, recurrence and deletion propagation not found. |
+| W12 | partly | help: email insights | Status lifecycle: In Queue, Delivered, Delivery Failure, Opened. Tracking is limited for some send routes. Click tracking and bot-open handling not found. |
+| W14 | partly | help: email insights | Delivery Failure status exists. Bounce reasons and blocked-address vocabulary not found. |
+| W15 | yes for limits | help: mass email limits | Per 24 h in org time zone: 250 / 500 / 1,000 / 2,000 by edition; count includes mass mail, macros, autoresponders and schedulers; an add-on raises it. Preview and review step not found. |
+| W18 | partly | help: attachments and large files | Template cap above; large-file link option exists. Per-message cap for ordinary mail not confirmed. |
+| W2, W11, W13, W16, W17, W19 | not checked | n/a | Not covered in this short run; verdicts in section 1 unchanged. |
+
+Conflicts: none seen. Mass email numbers came from a search summary that also
+cited a third-party page; the first-party figure is the one recorded.
+
+Open questions
+1. Resolve exact help page paths for every row above.
+2. W2, W11, W13, W16, W17, W19 remain unchecked.
+3. W8 and the mail-area access prerequisites stay documented gaps.
