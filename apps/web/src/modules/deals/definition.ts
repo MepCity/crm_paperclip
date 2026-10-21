@@ -13,7 +13,6 @@ import {
 } from "./deals-record-more-options";
 import { dealsRelatedListRail } from "./deals-related-lists";
 import {
-  DEALS_TIMELINE_EMPTY_EVENTS,
   DEALS_TIMELINE_MODULE_OPTIONS,
   DEALS_TIMELINE_SOURCE_OPTIONS,
   DEALS_TIMELINE_SUBTABS,
@@ -70,7 +69,6 @@ export const dealsScreenDefinition: ModuleScreenDefinition = {
       subtabs: DEALS_TIMELINE_SUBTABS,
       modules: DEALS_TIMELINE_MODULE_OPTIONS,
       sources: DEALS_TIMELINE_SOURCE_OPTIONS,
-      events: DEALS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeDealsEventKind,
       upcomingAutomatedActions: {
         label: "Show Upcoming Automated Actions",
