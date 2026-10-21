@@ -44,7 +44,7 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Contact",
   pluralLabel: "Contacts",
   pageTitle: "Contacts",
-  navigation: { id: "contacts", icon: Icons.users },
+  navigation: { id: "contacts", icon: Icons.circleUser },
   search: { secondaryFields: ["Email", "Phone"] },
   list: contactsListPageConfig,
   listCurrencyCode: CONTACTS_LIST_CURRENCY_CODE,

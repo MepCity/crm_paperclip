@@ -87,6 +87,14 @@ const expectedIcons = [
   "diagonalExpand",
   "recordTag",
   "lock",
+  "userPlus",
+  "handshake",
+  "megaphone",
+  "target",
+  "circleUser",
+  "wallet",
+  "ticket",
+  "bookUser",
 ] as const;
 
 test("Icons exposes every icon the primitives need", () => {
