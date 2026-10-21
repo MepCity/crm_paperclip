@@ -1,6 +1,7 @@
 # Module 10 (email inbox and calendar) — read-only research plan
 
-- Status: Draft for CEO/UI Lead review; no issue is opened from this file yet
+- Status: Approved by the board 2026-10-21 (MEP-990); issues opened by the CTO
+  on MEP-1004 after the Module 8 gate, in the chain order of section 4
 - Audience: CRM Analyst (executes), UI Lead (approves), CEO (opens and orders the issues)
 - Pattern: MEP-345 (Deals) and MEP-422 (Activities) research batches, with the
   Module 2+ parity rule (screenshots and behaviour, no measurement tables)
@@ -169,9 +170,11 @@ order below; each is `blockedBy` the previous one (UUIDs, not identifiers).
 | 4.7 | M10-R7 Email templates list | templates list only | `research/specs/email-templates.md` |
 | 4.8 | M10-R8 Metadata review and gap table | metadata only, no capture | `research/specs/email-calendar-metadata.md` |
 | 4.9 | M10-R9 Public documentation pass for write-only flows | documentation | `research/module-10-write-only-flows.md` update |
+| 4.10 | M10-R10 Rule, assignment and notification check (read-only) | settings area | `research/specs/email-calendar-rule-check.md` |
 
-R8 and R9 need no capture and can run in parallel with R1 to R7 if the CEO
-wants, but only one capture issue runs at a time.
+Chain order (board decision 2026-10-21, one research issue at a time): R1, R2,
+R3, R4, R5, R6, R10, R7, R8, R9. R10 was added by the board decision on
+MEP-990: it is the read-only rule check that must exist before any write test.
 
 ### 4.1 M10-R1 Inbox and list views
 
@@ -280,6 +283,28 @@ wants, but only one capture issue runs at a time.
   source rows with locator (path only, no vendor hostname), date checked,
   and the limit of what each source proves. Where two guides disagree
   (as in ADR 0005 P1/P2) both are listed and neither is chosen.
+
+### 4.10 M10-R10 Rule, assignment and notification check
+
+- Board decision 2026-10-21 (MEP-990): before any write test, a read-only
+  check of everything that could send a message or notice to a person
+  registered in the reference CRM. This issue is that check.
+- Base captures, by direct navigation or named settings links only: workflow
+  rules list (every module, with Emails, Events, Leads, Contacts, Accounts,
+  Deals and Cases first), assignment rules list, notification settings
+  (record owner notices, mention and follower notices, reminder mail),
+  email-alert and scheduled-action lists, approval processes, and any
+  auto-response or auto-reply rule list.
+- No rule is opened in an editor; a rule detail page is captured only if a
+  named link opens it read-only (proved from the base `controls.json`).
+- Output table: rule or setting, module, trigger (create, edit, field
+  update, date), action type (email alert, notice, task, field update,
+  webhook), recipients by role only (owner, team, follower, named user =
+  "named user", never the name or address), active yes/no, and a column
+  "could fire on a test write (yes/no/unknown)". Unknown counts as yes.
+- The result feeds section 4.2 of `module-10-night-test-protocol-draft.md`;
+  any "yes" row stops the matching action and goes to the board.
+- Approval: CTO (it feeds ADR 0009 Topic 8).
 
 ## 5. Deliverables checklist for each issue
 
