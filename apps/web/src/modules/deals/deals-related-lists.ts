@@ -4,6 +4,7 @@ import { DealStageHistoryCardBody } from "@/components/records/detail/deal-stage
 import { RelatedCasesCardBody } from "@/components/records/detail/related-cases-card-body";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
+import { emailsCard } from "../emails/record-card";
 import { notesCardBody, openNotesComposer } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type {
@@ -386,6 +387,7 @@ export function createDealsRelatedLists(
     },
     {
       id: "emails",
+      renderCard: emailsCard("Deals"),
       title: "Emails",
       moduleKey: "M10",
       order: 13,
