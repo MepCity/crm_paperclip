@@ -11,6 +11,7 @@ vi.mock("@/lib/api/client/hooks", () => ({
       fields: [
         { apiName: "Note_Title", label: "Note Title", dataType: "text" },
         { apiName: "Created_Time", label: "Created Time", dataType: "datetime" },
+        { apiName: "Note_Content", label: "Note Content", dataType: "textarea" },
       ],
     },
   }),
@@ -22,7 +23,7 @@ const config = (module: "Notes" | "Tasks") => ({
   module,
   fieldModule: module,
   parentLabel: "Samples",
-  fieldLabels: ["Note Title", "Created Time"],
+  fieldLabels: ["Note Title", "Created Time", "Note Content"],
 });
 const groups: FilterPanelProps["groups"] = [
   {
@@ -62,6 +63,7 @@ test("checking a row shows the editor; applying sends presence and child criteri
   await user.click(screen.getByRole("button", { name: /Notes presence/ }));
   await user.click(screen.getByRole("option", { name: "without" }));
   await user.click(screen.getByRole("button", { name: "+ Add Field" }));
+  await user.keyboard("{Escape}");
   // Incomplete pending criterion blocks Apply.
   expect((screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement).disabled).toBe(
     true,
@@ -81,6 +83,62 @@ test("a fourth related row cannot be selected", async () => {
   for (const name of ["Notes", "Tasks", "Calls"])
     await user.click(screen.getByRole("checkbox", { name }));
   expect((screen.getByRole("checkbox", { name: "Meetings" }) as HTMLInputElement).disabled).toBe(
+    true,
+  );
+});
+
+async function addField(user: ReturnType<typeof userEvent.setup>, option: string) {
+  await user.click(screen.getByRole("button", { name: "+ Add Field" }));
+  // The Select Field menu opens straight away; the pending criterion shows inactive controls.
+  expect(await screen.findByRole("listbox")).toBeTruthy();
+  expect(screen.getByText("is")).toBeTruthy();
+  expect((screen.getByPlaceholderText("Type here") as HTMLInputElement).disabled).toBe(true);
+  await user.click(screen.getByRole("option", { name: option }));
+}
+
+test("child criteria: text field defaults to contains and is sent on Apply", async () => {
+  const user = userEvent.setup();
+  const onApply = vi.fn();
+  render(<Harness onApply={onApply} />);
+  await user.click(screen.getByRole("checkbox", { name: "Notes" }));
+  await addField(user, "Note Title");
+  expect((screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement).disabled).toBe(
+    true,
+  );
+  await user.type(screen.getByPlaceholderText("Type here"), "Renewal");
+  await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+  expect(onApply.mock.calls[0]?.[5]).toEqual([
+    {
+      module: "Notes",
+      presence: "with",
+      criteria: [{ field: "Note_Title", comparator: "contains", value: "Renewal" }],
+    },
+  ]);
+});
+
+test("date child field defaults to age in 2 days; textarea fields are selectable", async () => {
+  const user = userEvent.setup();
+  const onApply = vi.fn();
+  render(<Harness onApply={onApply} />);
+  await user.click(screen.getByRole("checkbox", { name: "Notes" }));
+  await addField(user, "Created Time");
+  expect(screen.getByRole("button", { name: /operator/ }).textContent).toContain("age in");
+  await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+  expect(onApply.mock.calls[0]?.[5]?.[0].criteria).toHaveLength(1);
+  await user.click(screen.getByRole("button", { name: "Remove Notes criterion" }));
+  await addField(user, "Note Content");
+  expect(screen.getByPlaceholderText("Type here")).toBeTruthy();
+});
+
+test("a sixth criterion cannot be added", async () => {
+  const user = userEvent.setup();
+  render(<Harness onApply={() => {}} />);
+  await user.click(screen.getByRole("checkbox", { name: "Notes" }));
+  for (let i = 0; i < 5; i += 1) {
+    await user.click(screen.getByRole("button", { name: "+ Add Field" }));
+    await user.keyboard("{Escape}");
+  }
+  expect((screen.getByRole("button", { name: "+ Add Field" }) as HTMLButtonElement).disabled).toBe(
     true,
   );
 });
