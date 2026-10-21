@@ -140,7 +140,9 @@ locators, documented capabilities and explicit observation limits.
 R3 (MEP-1012), 2026-10-21: see
 [email-record-detail.md](specs/email-record-detail.md). The Lead resting screen
 shows Send Email and email-address links; none is activated. The initial probe
-fails the paint gate. The required current Contact capture has no board-selected
+fails the paint gate; MEP-1020/1021 accept the existing retry using the earlier
+painted Lead baseline errors and blocked-telemetry count exception. No new Lead
+capture is made. The required current Contact capture has no board-selected
 record address available. Historical Contact evidence shows Compose Email and
 Mails/Drafts/Scheduled tabs, but does not establish current draft contents.
 

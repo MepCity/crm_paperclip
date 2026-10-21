@@ -1,8 +1,9 @@
 # Email on record detail — partial research
 
-Status: partial and blocked; both Lead probes failed the paint gate, and the
-retry exceeded a blocked telemetry count. Platform Lead follow-up: MEP-1020.
-Contact record-address input is pending in the issue interaction.
+Status: partial; awaiting board-authored Contact record address in the existing
+issue interaction. MEP-1020 and CTO-approved MEP-1021 resolved the diagnostic
+stop. The existing Lead retry is accepted as the R3 Lead baseline; no new
+Lead capture is authorized or needed.
 Issue: MEP-1012 / M10-R3. Research date: 2026-10-21.
 
 ## Purpose and evidence boundary
@@ -31,13 +32,14 @@ show an email link. The Emails card itself is below the captured viewport;
 its DOM presence does not prove a painted or settled card. Drafts and email
 history are not visible. No message was opened.
 
-Despite visible content, diagnostics contain page errors, so this probe fails
-the plan's paint gate. The table below is a provisional screenshot census,
-not a successful screen contract. No navigation click is permitted from it.
+The initial probe remains failed evidence because of additional page errors.
+The existing retry passes under the CTO-approved baseline-error amendment
+(MEP-1021), as reconciled below. Acceptance covers the rendered resting record,
+not the offscreen Emails card, Drafts contents or email history.
 
 ## Control inventory
 
-### Full provisional base inventory — m10r3-lead-detail-base
+### Full initial-probe inventory — m10r3-lead-detail-base
 
 All rows have source `seen (m10r3-lead-detail-base)` unless explicitly marked
 screenshot-only. Seen means presence, never tested activation. Position is
@@ -250,7 +252,15 @@ are repeated.
 
 The module title and raw-control count are present, but `pageerror
 $L(...).sortable is not a function` and `pageerror XMLHttpRequest` remain.
-The retry therefore also fails the paint gate; no third capture is permitted.
+Both messages also occur in the earlier accepted painted record-detail capture
+`m7-campaign-links-lead-detail`. Under MEP-1021 rule 10 they are baseline
+errors, not a gate failure. The retry has no other pageerror and no failed
+JavaScript GET. Its 76 API entries exceed half of that earlier capture's 86;
+462 controls exceed 50. The existing full-frame screenshot inspection shows
+the module heading, rendered record and record links. Platform Lead accepted
+this existing retry as the R3 Lead baseline in MEP-1020. No third Lead capture
+is made. The original probe's additional `header` and `showChecklist` errors
+remain failed evidence; it is not retrospectively accepted.
 
 ### Inherited Contact evidence (not a new R3 capture)
 
@@ -283,7 +293,7 @@ field export is present, per the approved plan; R8 owns the missing model.
 
 | Module | Exported email/draft relations | Fresh R3 detail evidence |
 | --- | --- | --- |
-| Leads | Both | Failed-gate probe only |
+| Leads | Both | Existing retry accepted under MEP-1020/1021; card offscreen |
 | Contacts | Both | No board-written record address available |
 | Accounts | Both | No board-written record address available |
 | Deals | Both | No board-written record address available |
@@ -301,17 +311,17 @@ excluded by the tool's dangerous-text guard (`send`) and the plan. Compose
 Email is forbidden by the plan regardless of whether its text matches the
 regular expression. Address links may open compose and are not clicked.
 
-Emails navigation and Timeline remain untested: the failed paint gate prevents
-any continuation click. No claim is made that related headers expand without
-persisting. Drafts/Scheduled selection, message opens, scope/filter changes,
+Emails navigation and Timeline remain untested. The accepted Lead baseline
+does not establish that those controls avoid persisted preferences. No claim
+is made that related headers expand without persisting. Drafts/Scheduled selection, message opens, scope/filter changes,
 card collapse/expand, Hide Details and rail visibility are not exercised.
 No unnamed menu, positional selector, preference change or alternate route
-was used. There is no selector list awaiting permission to bypass the gate.
+was used. No control is proposed for a preference or gate exception.
 
 ## Filters / views / sorting / search
 
-No email list is painted in R3. Sort, search, correspondence scope, pagination,
-thread expansion, Drafts/Scheduled selection and default ordering are unknown.
+No Emails card or message list is visible in the R3 viewport. Sort, search,
+correspondence scope, pagination, thread expansion, Drafts/Scheduled selection and default ordering are unknown.
 Shared Timeline filter behaviour stays in the existing record-detail specs;
 email-specific filter options/results are not established.
 
@@ -345,28 +355,37 @@ about server-side executions.
 
 No mail-service load, email-related read count or safe message-read path is
 established. Offscreen DOM text is not evidence that such data was loaded.
-The base defines only this Lead module's load; it cannot be reused as a Contact,
-Account or Deal baseline. Any subsequent non-GET path/count excess triggers the
-plan's stop rule.
+The accepted retry defines only this Lead module's load; it cannot be reused
+as a Contact, Account or Deal baseline. Every sent non-GET path/count remains
+subject to rule 7. A new blocked path still stops; only existing tool-blocked
+telemetry/poll counts receive the limited MEP-1021 exception.
 
-### Retry comparison and mandatory stop
+### Retry comparison and resolved stop
 
-The retry reports 76 API entries. Successful non-GET counts: customization 1,
-Lead bulk 1 (base 2), visitor trigger 1; no successful path/count excess.
-The blocked array has **8 entries**, with the same seven paths as the base.
-However, `/murphy/<id>/telemetry/urlMonitor` appears **twice** against the
-base's **once**; each other blocked path appears once. This is an attempted
-non-GET count excess even though the tool refused it. Plan rule 7 was applied:
-**DUR**, issue blocked, CEO notified, no additional capture or retry. This is
-not evidence of a successful telemetry delivery or record mutation. No user
-write or manual replay occurred. The first failed JavaScript/page errors were
-not suppressed or treated as acceptable rendering.
+The retry reports 76 API entries. Sent non-GET counts are customization 1,
+Lead bulk 1 and visitor trigger 1. Platform Lead's MEP-1020 comment states
+initial Lead bulk 1 as well. Offline reconciliation in this continuation finds
+one aggregated initial network row with `count: 2`, versus `count: 1` in the
+accepted retry. The initial table preserves the file's count rather than
+silently changing evidence. The accepted retry's continuation baseline is
+unambiguously **1** for each of the three sent paths; no sent count increases
+from the initial probe to that retry. The discrepancy in the review comment
+does not change the accepted retry baseline.
 
-Platform Lead owns MEP-1020 to review these local artifacts and determine the
-safe continuation condition. That follow-up does not authorize a reference
-write, a new capture or a relaxation of the paint gate. The pending board
-question asks for the Contact address-file location, without requesting
-screenshots or customer content in comments.
+The blocked array has **8 entries**, with the same seven paths as the initial
+probe's **7 entries**. `/murphy/<id>/telemetry/urlMonitor` occurs twice versus
+once; every other blocked path occurs once. The tool refused these requests;
+none reached the reference CRM. No user write or manual replay occurred.
+
+Research originally stopped under the then-current rule 7, with CEO notified.
+MEP-1021 (CTO-approved) now compares existing blocked telemetry/poll paths by
+path only and logs their counts. MEP-1020 is complete and accepts the existing
+retry: the known page errors above and blocked urlMonitor count are logged,
+not retried. Any new pageerror, failed JavaScript GET, new non-GET path or
+increased sent count stops further research under the amended rules.
+
+Contact remains unobserved pending the existing board address-file question.
+No reference capture or click was made during this offline reconciliation.
 
 ## Flows and empty/error states
 
@@ -401,11 +420,11 @@ sandbox, night test or reference write is authorized by this spec.
 
 1. Where is the board-authored Contact `address.txt` for the required Contact
    capture, and, if supplied, the Account/Deal addresses? Do not infer records.
-2. Both probes fail the paint gate. What is the cause and safe continuation
-   condition for the page errors and blocked telemetry excess? MEP-1020 owns
-   the investigation; no additional capture is attempted.
+2. Resolved: MEP-1020/1021 accept the existing retry using the earlier
+   `m7-campaign-links-lead-detail` baseline errors and the blocked telemetry
+   exception. The initial probe remains failed; no new Lead capture is made.
 3. Does Emails navigation only scroll, and can it be used without persistence?
-   No click is made while the paint gate fails.
+   Persistence has not been established; no click is made.
 4. Which email/draft columns, counters, empty states, ownership and scope choices
    are actually visible? Metadata and inherited evidence do not settle them.
 5. Which email events appear in Timeline, with what grouping, ordering and
@@ -416,8 +435,10 @@ sandbox, night test or reference write is authorized by this spec.
 - `m10r3-lead-detail-base`: click-free, `--wait 25000`; provisional screenshot
   inventory only; paint gate failed.
 - `m10r3-lead-detail-retry-base`: click-free, `--wait 25000`; started
-  2026-10-21 13:49:50 UTC, after base meta 13:44:36 UTC; paint gate failed;
-  blocked telemetry count excess triggered the mandatory stop.
+  2026-10-21 13:49:50 UTC, after base meta 13:44:36 UTC; initially stopped,
+  subsequently accepted under MEP-1020/1021 as the R3 Lead baseline.
+- `m7-campaign-links-lead-detail`: earlier accepted painted Lead detail,
+  used only for baseline-error/API-count comparison; no new capture.
 - `m2d2-card-cases`: inherited Contact spec reference only; no fresh R3 access,
   recount or raw-evidence completeness claim.
 
