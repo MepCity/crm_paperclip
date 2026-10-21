@@ -71,52 +71,11 @@ export function historyEventToTimeline(event: RecordHistoryEvent): TimelineEvent
   };
 }
 
-/** Reconcile temporary child projections by subject ID, never by title or timestamp. */
-export function reconcileHistory(
-  server: readonly RecordHistoryEvent[],
-  transitional: readonly TimelineEvent[],
-  query: RecordHistoryQuery,
-): TimelineEvent[] {
-  const ids = new Set(
-    server.map((event) => `${event.subject.module}:${event.subject.recordId}:${event.kind}`),
-  );
-  const fallback = transitional.filter((event) => {
-    const module = MODULE_NAMES[event.moduleId ?? ""];
-    const kind =
-      event.moduleId === "attachments"
-        ? event.id.startsWith("attachment-deleted-")
-          ? "attachment_deleted"
-          : "attachment_added"
-        : event.kind === "note"
-          ? "note_added"
-          : event.kind;
-    const recordId = event.id
-      .replace(/^note-/, "")
-      .replace(/^attachment-(?:(?:added|deleted)-)?/, "");
-    return (
-      !ids.has(`${module}:${recordId}:${kind}`) &&
-      (!query.modules?.length || query.modules.includes(module ?? "")) &&
-      (!query.actorId || query.actorId === event.actorId) &&
-      (!query.sources?.length || query.sources.includes("manual")) &&
-      (!query.from || Date.parse(event.at) >= Date.parse(query.from)) &&
-      (!query.to || Date.parse(event.at) < Date.parse(query.to))
-    );
-  });
-  const result = server.map(historyEventToTimeline);
-  // Insert transitional rows chronologically without reordering the server's commit sequence.
-  for (const event of [...fallback].sort((a, b) => Date.parse(b.at) - Date.parse(a.at))) {
-    const index = result.findIndex((row) => Date.parse(row.at) < Date.parse(event.at));
-    result.splice(index < 0 ? result.length : index, 0, event);
-  }
-  return result;
-}
-
 export function RecordTimelineHistory({
   module,
   recordId,
-  events,
   ...props
-}: TimelineHistoryProps & { module: string; recordId: string }) {
+}: Omit<TimelineHistoryProps, "events"> & { module: string; recordId: string }) {
   const orgSlug = useOrgSlug();
   const service = useClientRecordService();
   const http = useMemo(() => createHttpRecordService({ orgSlug }), [orgSlug]);
@@ -160,7 +119,7 @@ export function RecordTimelineHistory({
   return (
     <TimelineHistory
       {...props}
-      events={emptySource ? [] : reconcileHistory(server, events, query)}
+      events={emptySource ? [] : server.map(historyEventToTimeline)}
       serverFiltered
       onApply={apply}
       loading={!emptySource && history.isPending}
