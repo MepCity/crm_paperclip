@@ -134,3 +134,25 @@ locators, documented capabilities and explicit observation limits.
 - R9 should check message loading/empty/error guidance and any documented
   reading side effects, leaving undocumented behaviour as a gap. No additional
   mail route, sync, preference, permission or connection change is authorized.
+
+## 8. R3 record-detail observation boundary
+
+R3 (MEP-1012), 2026-10-21: see
+[email-record-detail.md](specs/email-record-detail.md). The Lead resting screen
+shows Send Email and email-address links; none is activated. The initial probe
+fails the paint gate. The required current Contact capture has no board-selected
+record address available. Historical Contact evidence shows Compose Email and
+Mails/Drafts/Scheduled tabs, but does not establish current draft contents.
+
+- W1/W3: opening compose, resuming an existing draft, autosave, save/delete,
+  sending and scheduling remain writes or possible writes; no editor is opened
+  to inspect a Drafts result. Empty/error/validation states are not manufactured.
+- W12/W13/W19: send/receive/open/click/reply/bounce timeline entries, permission
+  filtering, tracking and association results are not observed. No message is
+  opened or sent to generate a timeline row. Metadata lists Emails and Email
+  Drafts relations on Leads, Contacts, Accounts and Deals, without proving any
+  visible card or event vocabulary.
+- R9 should document record-related email status/columns, draft visibility,
+  scheduled-mail placement and history events with dated sources; missing UI
+  evidence stays a gap. This note requests documentation only and grants no
+  sandbox, night-test, message-open, sync or preference-change permission.
