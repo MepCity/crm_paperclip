@@ -50,10 +50,10 @@ test("events grow after loadMore (timeline covers only loaded pages)", async () 
       <QueryClientProvider client={client}>{children}</QueryClientProvider>
     ),
   });
-  await waitFor(() => expect(result.current.events).toHaveLength(1));
+  await waitFor(() => expect(result.current.rows).toHaveLength(1));
   expect(result.current.hasMore).toBe(true);
   act(() => result.current.loadMore());
-  await waitFor(() => expect(result.current.events).toHaveLength(2));
+  await waitFor(() => expect(result.current.rows).toHaveLength(2));
   expect(result.current.hasMore).toBe(false);
 });
 
@@ -85,7 +85,6 @@ for (const module of ["Cases", "Solutions"] as const) {
       `/crm/v2.2/${module}/record-1/Attachments?page=1&per_page=20`,
     );
     expect(result.current.rows[0]?.fileName).toBe("guide.pdf");
-    expect(result.current.events).toHaveLength(1);
     unmount();
     client.clear();
   });
@@ -132,7 +131,6 @@ test.each(["Cases", "Solutions"] as const)(
       scope.org = "other-org";
       rerender();
       expect(result.current.rows).toEqual([]);
-      expect(result.current.events).toEqual([]);
       await waitFor(() => expect(result.current.rows[0]?.fileName).toBe("other-org.pdf"));
     } finally {
       scope.org = "org";

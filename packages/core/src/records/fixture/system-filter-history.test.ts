@@ -135,6 +135,53 @@ describe("system filter related history", () => {
     await service.delete("Attachments", [attachment.id]);
     expect(await count("deleted")).toBe(1);
   });
+  it("serves note and attachment events from the parent stream with the ADR rules", async () => {
+    const ctx = context();
+    const options = { now: () => new Date(period.from) };
+    const service = createFixtureRecordService(ctx, options);
+    const parent = await service.create("Leads", { Last_Name: "Parent", Company: "Synthetic" });
+    const stream = async (kind: string) =>
+      (await service.history.list("Leads", parent.id, { perPage: 50 })).events.filter(
+        (e) => e.kind === kind,
+      );
+    const failing = createFixtureRecordService(ctx, {
+      ...options,
+      beforeHistoryAppend: () => {
+        throw new Error("append failed");
+      },
+    });
+    await expect(
+      failing.create("Notes", { Parent_Id: { module: "Leads", id: parent.id }, Note_Content: "x" }),
+    ).rejects.toThrow("append failed");
+    expect(await stream("note_added")).toHaveLength(0);
+
+    const note = await service.create("Notes", {
+      Parent_Id: { module: "Leads", id: parent.id },
+      Note_Content: "Body",
+    });
+    await service.update("Notes", note.id, { Note_Content: "Edited" });
+    expect(await stream("note_added")).toHaveLength(1);
+    await service.delete("Notes", [note.id]);
+    expect(await stream("note_added")).toHaveLength(0);
+
+    const attachment = await service.create("Attachments", {
+      Parent_Id: { module: "Leads", id: parent.id },
+      File_Name: "tombstone.pdf",
+      Size: "12",
+    });
+    expect(await stream("attachment_added")).toHaveLength(0);
+    service.attachmentLifecycle.publish(attachment.id, {
+      storageKey: "opaque-key",
+      checksum: "synthetic-checksum",
+      mediaType: "application/pdf",
+    });
+    expect(await stream("attachment_added")).toHaveLength(1);
+    await service.delete("Attachments", [attachment.id]);
+    const deleted = await stream("attachment_deleted");
+    expect(deleted).toHaveLength(1);
+    expect(deleted[0]?.subject.name).toBe("tombstone.pdf");
+    expect(await stream("attachment_added")).toHaveLength(1);
+  });
   it("moves a note's original event with its parent during merge", async () => {
     const ctx = context();
     const service = createFixtureRecordService(ctx, { now: () => new Date(period.from) });
