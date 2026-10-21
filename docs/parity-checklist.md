@@ -1105,6 +1105,19 @@ single-record Account Name lookup, and meeting participant selection. The
 campaign create/save/detail route and the Deal Campaign Source link/filter flow
 also passed local e2e checks.
 
+Recheck on `origin/main` `f89760ab` (2026-10-21 04:07 +0300), merged into the
+QA branch: 73 targeted Campaigns/Leads/Deals/Activities e2e tests and 36
+Leads/Contacts/Deals list regression tests passed. Six additional Campaigns
+detail/link probes passed without suppressing HTTP 400 browser errors; this
+confirms those six flows, not every record page. Two focused Campaigns-detail
+probes passed: Open Activities **Add New** opens the Task create form, and a
+member **Call** action opens the Call create form. The earlier QA 2/2 finding
+about these M5 controls is resolved on this revision. The list-control and
+empty Campaigns-card layout findings above remain open; this main merge did
+not change their presentation or handlers. No reference Campaigns detail
+record became available, so its layout and member interactions remain
+provisional.
+
 ## Module 6 · Print page (MEP-871, interim rule)
 
 The reference print page could not be captured (capture protection, MEP-793), so the layout is
