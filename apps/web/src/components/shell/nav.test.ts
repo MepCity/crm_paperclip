@@ -3,6 +3,7 @@ import { Icons } from "@/components/ui/icon";
 import { getModuleScreens } from "@/modules/registry";
 import {
   createRecordsNav,
+  flatNavOrder,
   isNavLinkActive,
   type NavLink,
   navLinkIconClassName,
@@ -93,10 +94,9 @@ describe("shellNav", () => {
     const expectedActivitiesModules = screens.filter(
       (screen) => screen.navigation.group === "activities",
     );
-
-    expect(salesGroup?.links.map((link) => link.id)).toEqual(
-      expectedSalesModules.map((screen) => screen.navigation.id),
-    );
+    const salesIds = expectedSalesModules.map((screen) => screen.navigation.id);
+    salesIds.splice(salesIds.indexOf("deals") + 1, 0, "documents");
+    expect(salesGroup?.links.map((link) => link.id)).toEqual(salesIds);
     expect(activitiesGroup?.links.map((link) => link.id)).toEqual(
       expectedActivitiesModules.map((screen) => screen.navigation.id),
     );
@@ -106,6 +106,51 @@ describe("shellNav", () => {
       expect(link.href("acme")).toContain("/crm/acme/");
       expect(link.activePrefix?.("acme")).toContain("/crm/acme/");
     }
+  });
+
+  it("keeps Campaigns in Sales and places Solutions and Cases as ungrouped rows in reference order", () => {
+    const teamspace = shellNav.sections[0];
+    const sales = teamspace?.groups.find((group) => group.id === "sales");
+    expect(sales?.links.map((link) => link.id)).toEqual([
+      "leads",
+      "contacts",
+      "accounts",
+      "deals",
+      "documents",
+      "campaigns",
+    ]);
+    expect(teamspace?.links?.map((link) => link.id)).toEqual(["solutions", "cases"]);
+  });
+
+  it("lists the full reference order of ungrouped rows with Solutions before Cases", () => {
+    expect(flatNavOrder.indexOf("solutions")).toBeLessThan(flatNavOrder.indexOf("cases"));
+    expect(flatNavOrder).toEqual([
+      "price-books",
+      "products",
+      "quotes",
+      "invoices",
+      "sales-orders",
+      "solutions",
+      "social",
+      "forecasts",
+      "purchase-orders",
+      "vendors",
+      "salesinbox",
+      "cases",
+      "my-jobs",
+      "services",
+    ]);
+  });
+
+  it("gives every module row its own glyph", () => {
+    const teamspace = shellNav.sections[0];
+    const rows = [
+      ...(teamspace?.groups.flatMap((g) => g.links) ?? []),
+      ...(teamspace?.links ?? []),
+    ];
+    const glyphs = rows.filter((l) => l.id !== "accounts").map((l) => l.icon);
+    expect(new Set(glyphs).size).toBe(glyphs.length);
+    expect(rows.find((l) => l.id === "accounts")?.icon).toBe(Icons.building);
   });
 
   it("edge case: generates valid paths for empty and complex organization slugs", () => {

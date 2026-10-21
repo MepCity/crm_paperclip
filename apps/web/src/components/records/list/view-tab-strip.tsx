@@ -90,7 +90,8 @@ export function ViewTabStrip({
             aria-label="Custom views"
             placement="bottom start"
             appearance="measured"
-            widthPx={searchable ? 320 : undefined}
+            tall
+            widthPx={320}
             header={
               searchable ? (
                 <TextField

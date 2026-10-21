@@ -3,6 +3,17 @@
 One section per module. Each row is a capability of the reference CRM that
 the module's research found, assigned to the module that delivers it.
 
+### Task Subject suggestions and shared form calendars (MEP-981)
+
+| Inventory | Evidence and interim implementation | Open question |
+| --- | --- | --- |
+| TF-07 | Tasks metadata confirms Email, Call, Meeting, Send Letter, Product Demo in that order. Board finding (2026-10-21) confirms opening on focus/click. Filtering, keyboard selection, editable custom text and an input-width panel follow the issue acceptance contract. Ordinary dropdown row tokens are reused. | The popup was not opened in the existing captures; exact row spacing, filtering and empty-result rendering remain unobserved. This is an interim rule, not a measured popup parity claim. |
+| TF-08 | Board finding confirms click-to-open calendar and day selection. Reuse the shared calendar body; preserve DD.MM.YYYY text, YYYY-MM-DD model, partial text and impossible-day validation. No painted calendar icon, as observed. | Calendar interior geometry and navigation are not observed; shared calendar styling is interim. |
+| MF date/time and Title | Board scope extension (2026-10-21): From/To use the shared calendar and retain the existing time entry and all-day conversion. Title stays free text. | Time-picker behaviour and Title suggestions remain unobserved. |
+| CF-16 and Call Start Time | Board scope extension: date/time fields use the shared calendar, preserving the time. Call Subject stays free text. | Call Subject suggestions and a separate time picker remain unobserved. |
+| All module date/datetime fields | Board scope extension explicitly requires the shared calendar for every form date and datetime, including Campaigns Start/End Date, Contacts Date of Birth and Deals Closing Date. No module opt-in is required. | Calendar interior geometry remains interim; this is board-directed behaviour, not a claim of observed cross-module equivalence. |
+
+
 ## How to read this file
 
 - **The specs win.** `research/specs/` describes behaviour, look and request
@@ -896,11 +907,9 @@ list/form/detail routes, 105 visible M8-and-later controls were clicked with
 no navigation, dialog or menu change. QA 1/2 reported 63 passing e2e tests
 on its earlier main snapshot.
 
-**Gate result:** the module is implemented and its direct list/form/detail
-routes work, but the parent-detail creation flow and the Meeting form
-container still diverge visibly from the reference. The gate is not clear
-for approval until the CTO reviews the findings below. No reference record
-was changed during this QA; only saved captures were inspected.
+**Gate result:** the module is implemented; the closing-QA gaps were fixed
+and merged into `main`. The gate is ready for board review. No reference
+record was changed during this QA; only saved captures were inspected.
 
 **Provisional rules and open questions (not defects):**
 
@@ -915,24 +924,29 @@ was changed during this QA; only saved captures were inspected.
   detail remain under the MEP-517 observation limit. Deal Summary currency
   and amount format remains an open question from QA 1/2. Reference Call
   Edit layout and save effects were not safely observable.
+- Code-review MEP-941 finding 4 — deleting one of two parents removes the
+  activity (cascade kept per `activities-flows.md`).
 
 **Out of scope for this gate:** reference-side writes, imports/exports and
 Notes/Attachments/CSV workflows, email/calendar/invitations, and hover-only
 behaviour without a saved capture. Drawn M8-and-later controls are expected
 to stay inert.
 
-**Known gaps for CTO disposition:**
+**Closing-QA fixes (merged):**
 
-1. MEP-947 covers Meetings/Calls detail dates; Tasks detail Due Date still
-   uses an English month name instead of `dd.MM.yyyy`.
-2. Open Activities “Add New” is disabled with an M5 marker on parent record
-   detail, blocking new Task/Meeting/Call creation from that parent. Contact
-   Phone “Call” actions also retain inert M5 markers.
-3. Meeting Information opens too low in the viewport; Add more details leaves
-   the modal for a full page, whereas the captured reference keeps the modal
-   and scrolls its body to lower fields.
-4. Fixed in MEP-952: Call Create offers “Save and Create Follow-up Task”
-   (provisional interim rule) and Call Start Time uses `DD.MM.YYYY`.
+- MEP-947 — Meetings, Calls and Tasks record detail dates use the list format
+  `dd.MM.yyyy` (closing-QA gap 1).
+- MEP-950 — parent Open Activities “Add New” and Contact phone “Call” work
+  (closing-QA gap 2).
+- MEP-951 — Meeting Information modal position is corrected and “Add more
+  details” stays inside the modal (closing-QA gap 3).
+- MEP-952 — Call Create offers “Save and Create Follow-up Task” (provisional
+  interim rule) and Call Start Time uses `DD.MM.YYYY` (closing-QA gap 4).
+- MEP-948 — Call detail More → Edit opens Edit (code review MEP-941).
+- MEP-971 — Calls form Missed + Completed duration rule is aligned with the
+  service (code review MEP-942).
+- MEP-972 — parent activity cards load all pages, with corrected panel rows
+  and open/closed time boundary (code review MEP-942).
 
 ## Module 6 — CSV import and export
 
@@ -1150,7 +1164,7 @@ reference account had no Cases rows.
 | KL-14, KL-14.1–KL-14.11 | **Defects:** menu order passes; M6 Manage Tags and Export are inert; M8 Drafts closes without opening a flow, and Print View opens no captured submenu or page | Browser clicks; `cases-list.spec.ts` covers order only |
 | KL-15–KL-31, KL-35, KL-38–KL-39 | Passed: system/field filter sections, alphabet picker, filter-produced empty state and Total Records 0 | Browser walkthrough; `cases-list.spec.ts` |
 | KL-32–KL-37 | Passed: M11 View Settings inert; Case Number, Subject, Status and Priority headings; populated columns provisional | Browser walkthrough; `cases-list.spec.ts` |
-| KL-41–KL-56 | Cases/Solutions routes and surrounding rail entries rendered; later phase entries remain placeholders | Browser walkthrough; `shell.test.tsx` |
+| KL-41–KL-56 | Cases/Solutions routes rendered; Solutions and Cases are ungrouped top-level rail rows (reference order Solutions, Cases) below the Sales/Activities groups, Campaigns stays under Sales; each module row has its own glyph (interim Lucide choice, reference glyph inventory pending spec); hover look unmeasured (open question); later phase entries remain placeholders | Browser walkthrough; `shell.test.tsx` |
 | Populated selection bar | Passed: one selected row shows Clear, Send Email, Tags and Mass Update; no reference row or selection bar could be observed | Browser walkthrough; provisional |
 
 The Cases filter catalogue also marks Calls, Meetings and Tasks as M5 and Notes
@@ -1335,3 +1349,16 @@ customization and Phase 3 controls.
   `research/specs/csv-import-export.md`. No new reference inspection performed.
 - Import remains unavailable for both modules. Actual reference export behavior
   remains an open question; this implementation does not claim observed parity.
+
+
+### Shared choice panels (MEP-980)
+
+- Shared owner/search/type panels can exceed narrow triggers, with viewport collision
+  handling and readable option labels. Owner rows retain avatar, selected check,
+  name and email; default search placeholder is `Search Users`.
+- Numeric regressions: `apps/web/e2e/choice-panels.spec.ts` (Tasks and Meetings,
+  1470/900 px viewports, ±1 px search/row dimensions, clipping and viewport checks).
+- Reference gaps remain: activity-specific open panel widths, narrow viewport
+  wrapping, and owner secondary typography. Current activity values reuse the
+  nearest measured record-form family; they are not certified activity parity.
+- Inventory and evidence limits: `docs/choice-panel-audit.md`.

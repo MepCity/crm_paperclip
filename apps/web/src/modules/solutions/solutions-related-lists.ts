@@ -1,5 +1,5 @@
 import { attachmentsCard } from "../attachments-card";
-import { notesCardBody } from "../notes-card";
+import { notesCardBody, openNotesComposer } from "../notes-card";
 import type { RelatedListDefinition, RelatedListRailChromeDefinition } from "../types";
 
 /**
@@ -28,10 +28,10 @@ export const solutionsRelatedLists: readonly RelatedListDefinition[] = [
     id: "notes",
     renderBody: notesCardBody("Solutions"),
     title: "Notes",
-    moduleKey: "M6",
+    moduleKey: "M2",
     order: 2,
     targetId: "related-list-notes",
-    railAction: { id: "notes-add", label: "Add", moduleKey: "M6" },
+    railAction: { id: "notes-add", label: "Add", onAction: openNotesComposer },
     emptyStateText: "No records found",
   },
   {

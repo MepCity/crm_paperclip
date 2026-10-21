@@ -12,7 +12,12 @@ export const PRINT_PREVIEW_MODULES: readonly ModuleApiName[] = [
 ];
 
 /** List "Print Default view": the reference Deals list shows no Print View entry. */
-export const PRINT_LIST_MODULES: readonly ModuleApiName[] = ["Leads", "Contacts", "Accounts"];
+export const PRINT_LIST_MODULES: readonly ModuleApiName[] = [
+  "Leads",
+  "Contacts",
+  "Accounts",
+  "Cases",
+];
 
 export function supportsRecordPrint(module: ModuleApiName): boolean {
   return PRINT_PREVIEW_MODULES.includes(module);

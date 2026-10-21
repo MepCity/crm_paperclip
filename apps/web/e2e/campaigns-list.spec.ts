@@ -2,6 +2,7 @@ import { signUpNewUser } from "./support/auth";
 import { moduleCreatePath, moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
+import { exerciseTouchedFilter } from "./support/touched-filter";
 
 test("Campaigns shell entry, views, columns and sorting", async ({ page }) => {
   await signUpNewUser(page);
@@ -200,4 +201,12 @@ test("Campaigns Expected Response filter keeps matching rows only", async ({ pag
   await expect(
     table.getByRole("link", { name: "Synthetic Response High", exact: true }),
   ).toBeVisible();
+});
+
+test("Campaigns applies the Touched Records system filter and restores on Clear", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseTouchedFilter(page, org.slug, "Campaigns");
 });

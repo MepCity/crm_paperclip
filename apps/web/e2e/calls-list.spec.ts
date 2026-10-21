@@ -3,6 +3,7 @@ import { signUpNewUser } from "./support/auth";
 import { moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
+import { exerciseTouchedFilter } from "./support/touched-filter";
 
 test("Calls shell entry, single tab, view menu with search, columns and sorting", async ({
   page,
@@ -199,4 +200,10 @@ test("Calls list measured evidence and row configuration", async ({ page }) => {
   await expect(page).toHaveURL(/\/tab\/Calls\/[^/]+\/edit$/);
   await expect(page.getByRole("button", { name: "Save", exact: true })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Subject", exact: true })).not.toHaveValue("");
+});
+
+test("Calls applies the Touched Records system filter and restores on Clear", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseTouchedFilter(page, org.slug, "Calls");
 });

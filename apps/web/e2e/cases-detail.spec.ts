@@ -72,7 +72,14 @@ test.describe("Cases record detail (provisional rules, MEP-863)", () => {
     // GK-5: Notes card works
     const notesCard = page.locator("#related-list-notes");
     await expect(notesCard).toBeVisible();
-    await notesCard.getByTestId("note-composer-collapsed").click();
+    const rail = page.locator("[data-record-rail]");
+    const notesLink = rail.getByRole("link", { name: "Notes" });
+    await expect(notesLink).not.toHaveAttribute("data-later-module");
+    await notesLink.click();
+    const addNote = rail.getByRole("button", { name: "Add" });
+    await expect(addNote).not.toHaveAttribute("data-later-module");
+    await addNote.click();
+    await expect(notesCard.getByTestId("note-composer")).toBeVisible();
     await notesCard.getByLabel("Title").fill("E2E Case Note");
     await notesCard
       .getByRole("textbox", { name: "Note content" })

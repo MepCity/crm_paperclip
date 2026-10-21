@@ -61,6 +61,21 @@ test.describe("Accounts record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("rail Notes link and Add open the note composer", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const rail = page.locator("[data-record-rail]");
+    const notesLink = rail.getByRole("link", { name: "Notes" });
+    await expect(notesLink).not.toHaveAttribute("data-later-module");
+    await notesLink.click();
+    const addNote = rail.getByRole("button", { name: "Add" });
+    await expect(addNote).not.toHaveAttribute("data-later-module");
+    await addNote.click();
+    await expect(page.locator("#related-list-notes").getByTestId("note-composer")).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("opens from list context with header inventory and related rail", async ({
     page,
     pageErrors,

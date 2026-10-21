@@ -25,9 +25,10 @@ test("renders links in the configured order", () => {
   render(<Navigation orgSlug="acme" />);
   const expected = [
     ...shellNav.links.map((l) => l.label),
-    ...shellNav.sections.flatMap((s) =>
-      s.groups.flatMap((g) => (g.links.length > 0 ? g.links.map((l) => l.label) : [])),
-    ),
+    ...shellNav.sections.flatMap((s) => [
+      ...s.groups.flatMap((g) => (g.links.length > 0 ? g.links.map((l) => l.label) : [])),
+      ...(s.links ?? []).map((l) => l.label),
+    ]),
   ];
   const actual = screen
     .getAllByRole("link")
@@ -68,4 +69,16 @@ test("tab key moves focus through links in document order", async () => {
   expect(document.activeElement).toBe(links[0]);
   await user.tab();
   expect(document.activeElement).not.toBe(links[0]);
+});
+
+test.each(["solutions", "cases"])("highlights exactly one row on the %s route", (id) => {
+  const link = shellNav.sections[0]?.links?.find((l) => l.id === id);
+  if (!link) {
+    throw new Error(`no ${id} link`);
+  }
+  navigation.path = link.href("acme");
+  render(<Navigation orgSlug="acme" />);
+  const current = screen.getAllByRole("link").filter((a) => a.getAttribute("aria-current"));
+  expect(current).toHaveLength(1);
+  expect(current[0]?.textContent).toBe(link.label);
 });

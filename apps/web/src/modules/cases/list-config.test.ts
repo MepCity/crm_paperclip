@@ -37,4 +37,7 @@ test("list config names the link column, labels and Actions rows for Cases", () 
   expect(approve?.laterModule).toBe("P3");
   const sheet = casesListPageConfig.inventory?.actions.find((a) => a.id === "sheet");
   expect(sheet?.laterModule).toBe("P3");
+  const print = casesListPageConfig.inventory?.actions.find((a) => a.id === "print");
+  expect(print?.submenu?.map((r) => r.label)).toEqual(["Print Default view", "Print Using Canvas"]);
+  expect(casesListPageConfig.paths.drafts).toBeDefined();
 });

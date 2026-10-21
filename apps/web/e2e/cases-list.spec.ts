@@ -1,5 +1,5 @@
 import { signUpNewUser } from "./support/auth";
-import { moduleListDefaultPath, moduleTagsPath } from "./support/crm-paths";
+import { moduleDraftsPath, moduleListDefaultPath, moduleTagsPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { exerciseSystemFilters } from "./support/system-filters";
 import { expect, test } from "./support/test";
@@ -153,4 +153,56 @@ test("Cases Actions exports through the shared dialog", async ({ page }) => {
   await expect(page.getByText("Export completed", { exact: true })).toBeVisible();
   await page.goto(`/crm/${org.slug}/tab/Cases/import`);
   await expect(page.getByRole("heading", { name: "Page not found", exact: true })).toBeVisible();
+});
+
+test("Cases view menu and Actions links match the shared list flows", async ({
+  page,
+}, testInfo) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Cases"));
+  const list = page.locator(".module-list-page");
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+
+  await list.getByRole("button", { name: "Custom views" }).click();
+  const dropdownRow = page.getByRole("menuitem", { name: "Show custom views as Dropdown" });
+  await expect(dropdownRow).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("cases-view-menu.png") });
+  expect((await dropdownRow.boundingBox())?.height).toBeLessThan(42);
+  expect(
+    (await page.getByRole("menu", { name: "Custom views" }).boundingBox())?.width,
+  ).toBeGreaterThan(300);
+  await page.keyboard.press("Escape");
+
+  await page.goto(moduleListDefaultPath(org.slug, "Accounts"));
+  await page.getByRole("button", { name: "Custom views" }).click();
+  await expect(page.getByRole("menuitem", { name: "Show custom views as Dropdown" })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("accounts-view-menu.png") });
+  expect(
+    (await page.getByRole("menuitem", { name: "Show custom views as Dropdown" }).boundingBox())
+      ?.height,
+  ).toBeLessThan(42);
+  await page.goto(moduleListDefaultPath(org.slug, "Cases"));
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+
+  await list.getByRole("button", { name: "Actions", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Drafts", exact: true }).click();
+  await expect(page).toHaveURL(moduleDraftsPath(org.slug, "Cases"));
+  await expect(page.getByRole("heading", { name: "Criteria", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(page).toHaveURL(moduleListDefaultPath(org.slug, "Cases"));
+
+  await list.getByRole("button", { name: "Actions", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Print View", exact: true }).hover();
+  const printMenu = page.getByRole("menu", { name: "Print View", exact: true });
+  await expect(printMenu.getByRole("menuitem")).toHaveText([
+    "Print Default view",
+    "Print Using Canvas",
+  ]);
+  await expect(
+    printMenu.getByRole("menuitem", { name: "Print Using Canvas", exact: true }),
+  ).toHaveAttribute("data-later-module", "M6");
+  await printMenu.getByRole("menuitem", { name: "Print Default view", exact: true }).click();
+  await expect(page).toHaveURL(/\/tab\/Cases\/print\?viewId=/);
+  await expect(page.locator('[data-print-kind="list"]')).toBeVisible();
 });

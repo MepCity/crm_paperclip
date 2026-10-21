@@ -11,3 +11,10 @@ export function notesCardBody(
       ? createElement(NotesCardBody, { parentModule, parentRecord: record, recordPath })
       : undefined;
 }
+
+/** Window event the Notes rail "Add" control fires to open the Notes composer. */
+export const NOTES_COMPOSE_EVENT = "crm:notes-compose";
+
+export function openNotesComposer(): void {
+  window.dispatchEvent(new CustomEvent(NOTES_COMPOSE_EVENT));
+}

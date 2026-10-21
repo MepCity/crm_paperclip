@@ -43,6 +43,7 @@ export const solutionsListPageConfig: ModuleListScreenConfig = {
   sortFieldLabels: SOLUTIONS_SORT_FIELD_LABELS,
   pinnedViews: ["All Solutions"],
   badgeColumn: false,
+  selectionTags: true,
   inventory: {
     actions: [
       { id: "mass-transfer", label: "Mass Transfer" },
