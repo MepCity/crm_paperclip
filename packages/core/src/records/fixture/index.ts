@@ -218,6 +218,7 @@ export function createFixtureRecordService(
       bundle.afterSeed?.(seedContext);
     }
     // Seeded notes get their parent-stream row up front, as if created through the service.
+    const notes = store.modules.get("Notes");
     const seedEvents = relatedFilterHistory(
       new Map(),
       store.modules,
@@ -229,7 +230,14 @@ export function createFixtureRecordService(
         source: "manual",
       },
       randomUUID(),
-    ).filter((event) => event.kind === "note_added");
+    )
+      .filter((event) => event.kind === "note_added")
+      .map((event) => {
+        // Date the row at the note's own creation so seeds never count as recent activity.
+        const created = notes?.records.get(event.subject.recordId)?.fields.Created_Time;
+        const at = typeof created === "string" ? Date.parse(created) : Number.NaN;
+        return { ...event, occurredAt: new Date(Number.isNaN(at) ? 0 : at).toISOString() };
+      });
     if (seedEvents.length) fixtureHistoryStore(store.history).appendBatch(seedEvents);
     stores.set(ctx.orgId, store);
   }
