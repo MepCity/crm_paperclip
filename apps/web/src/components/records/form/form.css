@@ -408,8 +408,25 @@
   color: var(--color-text-muted);
 }
 
+.record-form-shell:has([data-pin-bottom]) {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - var(--size-topbar-height));
+}
+
+.record-form-shell:has([data-pin-bottom]) .record-form-card,
+.record-form-shell:has([data-pin-bottom]) .record-form-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
 .record-form-inventory-footer[data-align-end] {
   justify-content: flex-end;
+}
+
+.record-form-inventory-footer[data-pin-bottom] {
+  margin-top: auto;
 }
 
 .record-form-standard-view {

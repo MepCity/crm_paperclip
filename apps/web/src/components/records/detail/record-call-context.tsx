@@ -13,4 +13,5 @@ export const ACTIVITY_PARENT_MODULES: readonly string[] = [
   "Contacts",
   "Accounts",
   "Deals",
+  "Campaigns",
 ];
