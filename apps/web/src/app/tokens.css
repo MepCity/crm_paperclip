@@ -409,6 +409,12 @@
   --size-form-list-padding: 6px;
   --size-form-country-height: 270px;
   --size-form-owner-height: 179px;
+  /* record-detail.md: Salutation 110, Country 303, Owner 299.5 px.
+     Narrow activity triggers reuse these measured panel families; pending capture audit. */
+  --size-choice-viewport-inset: 12px;
+  --size-form-panel-min-width: 110px;
+  --size-form-panel-search-min-width: 303px;
+  --size-form-panel-owner-min-width: 299.5px;
   --size-form-prefix-width: 110px;
   --size-form-prefix-divider-offset: 94px;
   --size-form-prefix-caret-gap: 11px;
