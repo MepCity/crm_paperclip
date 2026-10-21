@@ -26,6 +26,7 @@ import {
   encodeCampaignFilter,
   encodeCriteria,
   encodeInput,
+  encodeRelatedModules,
   encodeSystemFilters,
   invalid,
 } from "@/lib/api/wire/codec";
@@ -109,12 +110,15 @@ function listBody(
     | "activityFilter"
     | "campaignFilter"
     | "systemFilters"
+    | "relatedModules"
     | "includeActivitySummary"
   >,
 ): unknown | undefined {
   const body: import("../wire/types").WireRestrictions = {};
   if (query.systemFilters !== undefined)
     body.system_filters = encodeSystemFilters(query.systemFilters);
+  if (query.relatedModules !== undefined)
+    body.related_modules = encodeRelatedModules(query.relatedModules);
   if (query.campaignFilter !== undefined)
     body.campaign_filter = encodeCampaignFilter(query.campaignFilter);
   if (query.activityFilter !== undefined)
@@ -352,7 +356,13 @@ export function createHttpRecordService({
       module: ModuleApiName,
       query: Pick<
         ListQuery,
-        "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter" | "systemFilters"
+        | "viewId"
+        | "filters"
+        | "search"
+        | "activityFilter"
+        | "campaignFilter"
+        | "systemFilters"
+        | "relatedModules"
       >,
     ): Promise<number> {
       const path = operationPath(operations.count, { module });

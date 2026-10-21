@@ -222,6 +222,15 @@ export interface SystemFiltersValue {
   untouched?: { actorIds?: readonly string[]; period: FilterPeriod };
 }
 
+/** A single field condition (a leaf of `Criteria`), evaluated on a child module's fields. */
+export type FieldCriterion = Extract<Criteria, { field: string }>;
+export type RelatedFilterModule = "Calls" | "Meetings" | "Notes" | "Tasks";
+export interface RelatedModuleFilter {
+  module: RelatedFilterModule;
+  presence: "with" | "without";
+  criteria: readonly FieldCriterion[];
+}
+
 export interface ListQuery {
   viewId: string;
   /** One-based page number. */
@@ -234,6 +243,7 @@ export interface ListQuery {
   filters?: Criteria;
   search?: string;
   systemFilters?: SystemFiltersValue;
+  relatedModules?: readonly RelatedModuleFilter[];
   activityFilter?: ActivityFilterValue;
   campaignFilter?: CampaignFilterValue;
   includeActivitySummary?: boolean;
@@ -241,7 +251,13 @@ export interface ListQuery {
 
 export type SummaryQuery = Pick<
   ListQuery,
-  "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter" | "systemFilters"
+  | "viewId"
+  | "filters"
+  | "search"
+  | "activityFilter"
+  | "campaignFilter"
+  | "systemFilters"
+  | "relatedModules"
 > & {
   groupBy: string;
   sum?: string;
@@ -333,7 +349,13 @@ export interface RecordService {
     module: ModuleApiName,
     query: Pick<
       ListQuery,
-      "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter" | "systemFilters"
+      | "viewId"
+      | "filters"
+      | "search"
+      | "activityFilter"
+      | "campaignFilter"
+      | "systemFilters"
+      | "relatedModules"
     >,
   ): Promise<number>;
   summarize(module: ModuleApiName, query: SummaryQuery): Promise<readonly GroupSummary[]>;
