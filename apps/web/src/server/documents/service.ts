@@ -1,6 +1,7 @@
 import type { OrgContext } from "@crm/core";
 import type { DocumentsSnapshot } from "@crm/core/documents";
 import { createDocumentsService, createFixtureDocumentsRepository } from "@crm/core/documents";
+import { canReadDocuments } from "./access";
 
 /** Synthetic scenario data until the persistent adapter exists (ADR 0008, awaiting ADR 0002). */
 function fixtureSnapshot(ctx: OrgContext): DocumentsSnapshot {
@@ -9,6 +10,7 @@ function fixtureSnapshot(ctx: OrgContext): DocumentsSnapshot {
     spaces: [
       { organizationId, id: "space-my", kind: "my", ownerUserId: ctx.userId },
       { organizationId, id: "space-team", kind: "team", associated: true },
+      { organizationId: "org-foreign", id: "space-foreign", kind: "team", associated: true },
     ],
     nodes: [
       node(organizationId, "folder-my", "space-my", null, "folder", "My Folders"),
@@ -32,9 +34,18 @@ function fixtureSnapshot(ctx: OrgContext): DocumentsSnapshot {
         "b.pdf",
         "2026-01-03T00:00:00Z",
       ),
+      node("org-foreign", "folder-foreign", "space-foreign", null, "folder", "Foreign Folder"),
+      node("org-foreign", "file-foreign", "space-foreign", "folder-foreign", "file", "x.pdf"),
     ],
     memberships: [
       { organizationId, spaceId: "space-team", userId: ctx.userId, role: "viewer", canRead: true },
+      {
+        organizationId: "org-foreign",
+        spaceId: "space-foreign",
+        userId: ctx.userId,
+        role: "viewer",
+        canRead: true,
+      },
     ],
     grants: [],
   };
@@ -64,15 +75,6 @@ function node(
     modifiedBy: "Fixture User",
     modifiedAt,
   };
-}
-
-/**
- * Profile-level Documents visibility. No profile store exists on `main` yet, so
- * the gate is the organization membership role; replace this function when the
- * profile permission source lands. Evaluated on every read.
- */
-export function canReadDocuments(ctx: OrgContext): boolean {
-  return ctx.role === "admin" || ctx.role === "member";
 }
 
 export function getDocumentsService(ctx: OrgContext) {

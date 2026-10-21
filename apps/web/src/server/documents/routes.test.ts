@@ -18,6 +18,7 @@ import { getSession } from "@crm/core";
 import { GET as items } from "@/app/crm/v2.2/documents/folders/[folderId]/items/route";
 import { GET as folders } from "@/app/crm/v2.2/documents/folders/route";
 import { GET as item } from "@/app/crm/v2.2/documents/items/[itemId]/route";
+import { documentsAccessSource } from "@/server/documents/access";
 
 const origin = "http://crm.test";
 vi.stubEnv("DATABASE_URL", "postgres://user:pass@localhost:5432/db");
@@ -91,19 +92,80 @@ describe("documents read routes", () => {
     expect(((await response.json()) as { data: { id: string }[] }).data[0]?.id).toBe("file-a");
   });
 
-  it("404 with the same envelope when the session lacks Documents access", async () => {
-    const unknown = await itemsOf("nope");
-    ctx.role = "guest" as never;
+  it("member with the capability off gets the unknown-id 404 on every read route", async () => {
+    ctx.role = "member";
+    const unknownFolder = await itemsOf("folder-missing");
+    const unknownItem = await item(get("items/file-missing"), {
+      params: Promise.resolve({ itemId: "file-missing" }),
+    });
+    const spy = vi.spyOn(documentsAccessSource, "documentsEnabled").mockResolvedValue(false);
     try {
-      const noAccess = await itemsOf("folder-team");
-      expect(noAccess.status).toBe(404);
-      expect(await noAccess.json()).toEqual(await unknown.json());
-      expect((await folders(get("folders"), { params: Promise.resolve({}) })).status).toBe(404);
-      const one = await item(get("items/file-a"), {
-        params: Promise.resolve({ itemId: "file-a" }),
-      });
-      expect(one.status).toBe(404);
+      const calls = [
+        folders(get("folders"), { params: Promise.resolve({}) }),
+        itemsOf("folder-team"),
+        itemsOf("folder-team", "?sort_by=name&sort_order=asc"),
+        item(get("items/file-a"), { params: Promise.resolve({ itemId: "file-a" }) }),
+      ];
+      for (const response of await Promise.all(calls)) {
+        expect(response.status).toBe(404);
+        expect(await response.json()).toEqual(await unknownFolder.clone().json());
+      }
+      expect(await unknownItem.json()).toEqual(await unknownFolder.json());
     } finally {
+      spy.mockRestore();
+      ctx.role = "admin";
+    }
+  });
+
+  it("admin still reads when the capability source returns false", async () => {
+    const spy = vi.spyOn(documentsAccessSource, "documentsEnabled").mockResolvedValue(false);
+    try {
+      expect((await folders(get("folders"), { params: Promise.resolve({}) })).status).toBe(200);
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it("foreign-tenant folder and file give the unknown-id 404 for admin and member", async () => {
+    for (const role of ["admin", "member"]) {
+      ctx.role = role;
+      const unknownFolder = await itemsOf("folder-missing");
+      const unknownItem = await item(get("items/file-missing"), {
+        params: Promise.resolve({ itemId: "file-missing" }),
+      });
+      const foreignFolder = await itemsOf("folder-foreign");
+      const foreignItem = await item(get("items/file-foreign"), {
+        params: Promise.resolve({ itemId: "file-foreign" }),
+      });
+      expect(foreignFolder.status).toBe(404);
+      expect(await foreignFolder.json()).toEqual(await unknownFolder.json());
+      expect(foreignItem.status).toBe(404);
+      expect(await foreignItem.json()).toEqual(await unknownItem.json());
+      const list = (await (
+        await folders(get("folders"), { params: Promise.resolve({}) })
+      ).json()) as {
+        data: { id: string }[];
+      };
+      expect(list.data.map((f) => f.id)).not.toContain("folder-foreign");
+    }
+    ctx.role = "admin";
+  });
+
+  it("does not evaluate the capability before the gates", async () => {
+    const spy = vi.spyOn(documentsAccessSource, "documentsEnabled");
+    ctx.role = "member";
+    try {
+      vi.mocked(getSession).mockResolvedValueOnce(null as never);
+      expect((await folders(get("folders"), { params: Promise.resolve({}) })).status).toBe(401);
+      expect((await folders(get("folders", {}), { params: Promise.resolve({}) })).status).toBe(400);
+      expect(
+        (await folders(get("folders", { "X-CRM-ORG": "other" }), { params: Promise.resolve({}) }))
+          .status,
+      ).toBe(404);
+      expect(spy).not.toHaveBeenCalled();
+    } finally {
+      spy.mockRestore();
       ctx.role = "admin";
     }
   });
