@@ -4,7 +4,6 @@ import {
   DEALS_TIMELINE_SOURCE_OPTIONS,
 } from "../deals/deals-timeline";
 import {
-  MEETINGS_TIMELINE_EMPTY_EVENTS,
   MEETINGS_TIMELINE_MODULE_OPTIONS,
   MEETINGS_TIMELINE_SOURCE_OPTIONS,
   MEETINGS_TIMELINE_SUBTABS,
@@ -14,7 +13,6 @@ import {
 test("uses History-only timeline subtabs with empty events and no Interactions tab", () => {
   expect(MEETINGS_TIMELINE_SUBTABS).toEqual([{ id: "history", label: "History" }]);
   expect(MEETINGS_TIMELINE_SUBTABS.some((tab) => tab.id === "interactions")).toBe(false);
-  expect(MEETINGS_TIMELINE_EMPTY_EVENTS).toEqual([]);
 });
 
 test("uses filter option sets matching Deals with non-empty choices including meetings", () => {

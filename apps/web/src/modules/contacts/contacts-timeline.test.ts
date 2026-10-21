@@ -1,6 +1,5 @@
 import { expect, test } from "vitest";
 import {
-  CONTACTS_TIMELINE_EMPTY_EVENTS,
   CONTACTS_TIMELINE_MODULE_OPTIONS,
   CONTACTS_TIMELINE_SOURCE_OPTIONS,
   CONTACTS_TIMELINE_SUBTABS,
@@ -25,7 +24,6 @@ test("defines observed subtabs and interim shared filter options without copying
     "Manual",
     "Import",
   ]);
-  expect(CONTACTS_TIMELINE_EMPTY_EVENTS).toEqual([]);
   expect(normalizeContactsEventKind("contact_image_upload")).toBe("image_upload");
   expect(normalizeContactsEventKind("contact_created")).toBe("contact_created");
 });

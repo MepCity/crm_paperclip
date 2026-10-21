@@ -102,7 +102,7 @@ flows, from the public documentation), with `request-shapes.md` and
 | 14 | Lead Status ribbon with the stage menu and the terminal menu | `record-detail.md` › Record page; `leads-write-behaviour.md` › A9 | Result of applying a stage. |
 | 15 | Business card (five fields) and the detail sections, blank values, Created By and Modified By rows, Hide Details | `record-detail.md` › Record page, Fields | Collapse behaviour of Hide Details. |
 | 16 | Inline field edit on the detail page | `record-detail.md` › Actions; `leads-write-behaviour.md` › A8 | Result of Save and Cancel, where errors appear, editors of field types other than the observed picklist. |
-| 17 | Timeline › History with its filter | `record-detail.md` › Timeline, Filters / views / sorting / search | Result of applying a filter; other event types. |
+| 17 | Timeline › History with its filter | `record-detail.md` › Timeline, Filters / views / sorting / search | Result of applying a filter; other event types. Field-change rows: leads detail e2e "Timeline History shows a row after an inline edit" (MEP-1027). |
 | 18 | Lead image shown with our own placeholder | `record-detail.md` › Record page | Upload is M6. |
 | 19 | Lead owner display and the `Select User` picker | `record-detail.md` › Create and edit forms | — |
 | 20 | Create Lead form: Standard layout, required markers, picklists, Country and State lists | `record-detail.md` › Create and edit forms; `leads-fields-and-layout.md` › Standard layout | Whether a compact quick-create form exists. The Country and State option lists are empty until the inventory is seeded with the database adapter (ADR 0002); only -None- is offered. |
@@ -245,7 +245,7 @@ remain authoritative.
 | --- | --- | --- |
 | D-01–D-09, D-32–D-35 | Shared record header and tab row; Account subtitle links to Account detail (D-03, MEP-343); Contacts add-tags row; Send Email as primary later-module command (M10); prev/next from list context | `e2e/contacts-detail.spec.ts` |
 | D-07.1–D-07.15 | Contacts More Options menu; Clone and Delete handlers | Contacts detail e2e; shared menu tests |
-| D-36–D-51 | Business card and Contact Information with phone call icons (D-37, D-41); balanced two-column Contact Information layout (MEP-388); active Account Name link (D-39) and inline edit via Choose Account picker (MEP-343); Timeline History filter; upcoming actions (M12, inert) | Contacts module tests; contacts detail e2e. Timeline panel and filter walked in MEP-355; **history rows: not walked** (seed record has no history) |
+| D-36–D-51 | Business card and Contact Information with phone call icons (D-37, D-41); balanced two-column Contact Information layout (MEP-388); active Account Name link (D-39) and inline edit via Choose Account picker (MEP-343); Timeline History filter; upcoming actions (M12, inert) | Contacts module tests; contacts detail e2e. Timeline panel and filter walked in MEP-355; **history rows: e2e "Timeline History shows a row after an inline edit" checks the v9 stream after saving and after reload (MEP-1027)** |
 | D-10–D-31, D-52–D-95 (rail/cards) | Contacts related-list definitions; Open and Closed Activities cards without count badges until M5 activity data (D-30, D-31); M2 Reporting Contacts data card; Deals rail row active (D-14, MEP-415) | Related-list component tests; contacts detail e2e. **Reporting Contacts manager filter (MEP-380): covered by e2e "Reporting Contacts filters by manager id, not by a shared Full Name"** (not walked in MEP-355; card not reopened after the fix landed) |
 | D-89–D-91 | Reporting Contacts rail plus, New/Add → create with Reporting To prefill; Hierarchy View opens Contact Hierarchy modal (D-90, MEP-421) | Contacts detail e2e |
 | D-14, D-56 | Deals card lists the Deals whose Contact Name is this record (interim columns: All Deals view); New Deal opens the Deal create form with Contact Name, and Account Name when the contact has an account (MEP-415) | `e2e/contacts-detail.spec.ts`; `contacts-related-lists.test.tsx`, `related-deals-card-body.test.tsx` |
@@ -638,7 +638,7 @@ Closing QA: MEP-453 (Deals form, record detail, stage transitions, earlier modul
 - **Amount information icon (DF-17):** drawn without a handler (unopened in reference capture).
 - **Advanced search stage chip (S-42):** chip renders stage label for display only; no interactive filtering.
 - **Kanban configuration and multi-pipeline:** Kanban settings window (DP-90–DP-93, DP-103), Manage Kanban Views window (DP-95, DP-111, DP-112) and the create-mode Share this with choice (DP-110) are done; Stage is the only Categorize By option and Mono Color the only Header Style (DP-94 pending). Gaps: Manage Kanban Views has no reordering or deleting (movements not observed), Selected users is drawn disabled (user picker not observed), and the multi-pipeline selector (DP-96) and pipeline management remain out of scope for Module 4.
-- **Timeline history:** empty shell walked (seed deal record carries no prior audit events).
+- **Timeline history:** rows covered by the deals detail e2e "Timeline History shows a row after an inline edit" (MEP-1027).
 - **Leads converted deal:** generic lookup display resolves the registered Deals route; seeded Leads records carry no converted references.
 
 **Interim rules**

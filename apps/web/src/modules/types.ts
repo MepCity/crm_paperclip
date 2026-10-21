@@ -285,7 +285,7 @@ export interface ModuleScreenDefinition {
       subtabs: readonly TimelineSubtab[];
       modules: readonly TimelineFilterOption[];
       sources: readonly TimelineFilterOption[];
-      events: readonly TimelineEvent[];
+      events?: readonly TimelineEvent[];
       normalizeEventKind: (kind: string) => string;
       upcomingAutomatedActions?: { label: string; laterModule: ModuleKey };
     };

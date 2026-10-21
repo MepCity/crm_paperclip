@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  LEADS_TIMELINE_EMPTY_EVENTS,
   LEADS_TIMELINE_MODULE_OPTIONS,
   LEADS_TIMELINE_SOURCE_OPTIONS,
   LEADS_TIMELINE_SUBTABS,
@@ -87,20 +86,5 @@ describe("LEADS_TIMELINE_SOURCE_OPTIONS", () => {
       expect(opt.id.length).toBeGreaterThan(0);
       expect(opt.label.length).toBeGreaterThan(0);
     }
-  });
-});
-
-describe("LEADS_TIMELINE_EMPTY_EVENTS", () => {
-  it("is initialized as an empty array", () => {
-    expect(Array.isArray(LEADS_TIMELINE_EMPTY_EVENTS)).toBe(true);
-    expect(LEADS_TIMELINE_EMPTY_EVENTS).toHaveLength(0);
-    expect(LEADS_TIMELINE_EMPTY_EVENTS).toEqual([]);
-  });
-
-  it("edge case: array access and functional operations safely yield empty results", () => {
-    expect(LEADS_TIMELINE_EMPTY_EVENTS[0]).toBeUndefined();
-    expect(LEADS_TIMELINE_EMPTY_EVENTS.filter(() => true)).toHaveLength(0);
-    expect(LEADS_TIMELINE_EMPTY_EVENTS.map((event) => event.id)).toEqual([]);
-    expect(LEADS_TIMELINE_EMPTY_EVENTS.find((event) => event.id === "test")).toBeUndefined();
   });
 });

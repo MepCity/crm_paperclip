@@ -1,8 +1,4 @@
-import type {
-  TimelineEvent,
-  TimelineFilterOption,
-  TimelineSubtab,
-} from "@/components/records/detail/timeline";
+import type { TimelineFilterOption, TimelineSubtab } from "@/components/records/detail/timeline";
 
 export const LEADS_TIMELINE_SUBTABS: readonly TimelineSubtab[] = [
   { id: "history", label: "History" },
@@ -24,4 +20,3 @@ export const LEADS_TIMELINE_SOURCE_OPTIONS: readonly TimelineFilterOption[] = [
 ];
 
 /** Interim: event list is empty until a database adapter / event source arrives. */
-export const LEADS_TIMELINE_EMPTY_EVENTS: readonly TimelineEvent[] = [];

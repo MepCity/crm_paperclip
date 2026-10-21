@@ -197,6 +197,33 @@ test.describe("Deals record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("Timeline History shows a row after an inline edit (MEP-1027)", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
+    const row = page.locator('[data-detail-field="Next_Step"]');
+    await row.scrollIntoViewIfNeeded();
+    await row.hover();
+    await row.getByRole("button", { name: "Edit Next Step value" }).click();
+    const input = row.getByRole("textbox");
+    await input.fill("History Step");
+    await input.press("Enter");
+    await expect(row).toContainText("History Step");
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    const history = frame.locator("[data-timeline-history]");
+    await expect(history).toBeVisible();
+    await expect(history.getByText("No logs found")).toHaveCount(0);
+    await expect(history.getByText(/Next Step changed from .* to History Step/)).toBeVisible();
+    await page.reload();
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    await expect(history.getByText(/Next Step changed from .* to History Step/)).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("stage history card lists rows and grows after stage change", async ({
     page,
     pageErrors,

@@ -4,7 +4,6 @@ import {
   TASKS_TIMELINE_SOURCE_OPTIONS,
 } from "../tasks/tasks-timeline";
 import {
-  CALLS_TIMELINE_EMPTY_EVENTS,
   CALLS_TIMELINE_MODULE_OPTIONS,
   CALLS_TIMELINE_SOURCE_OPTIONS,
   CALLS_TIMELINE_SUBTABS,
@@ -13,7 +12,6 @@ import {
 
 test("uses History-only timeline subtabs with empty events", () => {
   expect(CALLS_TIMELINE_SUBTABS).toEqual([{ id: "history", label: "History" }]);
-  expect(CALLS_TIMELINE_EMPTY_EVENTS).toEqual([]);
 });
 
 test("uses the Tasks option sets, including a Calls module option", () => {
