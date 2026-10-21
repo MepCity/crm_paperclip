@@ -93,6 +93,21 @@ describe("key ring", () => {
     expect(() => parseSecretBoxKeys(`bad.id:${g}`)).toThrow();
   });
 
+  it("rejects non-base64 characters in a key", () => {
+    const g = k1.toString("base64");
+    expect(() => parseSecretBoxKeys(`a:!${g}`)).toThrow();
+    expect(() => parseSecretBoxKeys(`a:${g.slice(0, 10)}*${g.slice(10)}`)).toThrow();
+  });
+
+  it.each([2, 3, 4])("rejects non-canonical encoding in part %i", (i) => {
+    const b = box({ a: k1 }, "a");
+    for (const mutate of [(v: string) => `${v}!`, (v: string) => `${v}=`, (v: string) => `!${v}`]) {
+      const parts = b.seal(plain, aad).split(".");
+      parts[i] = mutate(parts[i] as string);
+      expect(() => b.open(parts.join("."), aad)).toThrow(SecretBoxError);
+    }
+  });
+
   it("rejects invalid rings in the constructor", () => {
     expect(() => box({ k1 }, "missing")).toThrow();
     expect(() => box({ k1: randomBytes(8) }, "k1")).toThrow();

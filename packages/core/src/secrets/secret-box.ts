@@ -30,6 +30,16 @@ const IV_BYTES = 12;
 const TAG_BYTES = 16;
 const KEY_ID_PATTERN = /^[A-Za-z0-9_-]+$/;
 
+const B64URL = /^[A-Za-z0-9_-]*$/;
+const B64 = /^[A-Za-z0-9+/]+={0,2}$/;
+
+const decodeB64Url = (value: string): Buffer => {
+  if (!B64URL.test(value)) throw new SecretBoxError();
+  const buf = Buffer.from(value, "base64url");
+  if (buf.toString("base64url") !== value) throw new SecretBoxError();
+  return buf;
+};
+
 const aadBuffer = (aad: SecretAad, keyId: string): Buffer =>
   Buffer.from(JSON.stringify([VERSION, keyId, aad.organizationId, aad.purpose]), "utf8");
 
@@ -42,7 +52,9 @@ export function parseSecretBoxKeys(raw: string): Map<string, Buffer> {
     const id = sep < 0 ? "" : trimmed.slice(0, sep);
     if (!KEY_ID_PATTERN.test(id)) throw new Error("Invalid secret box key entry");
     if (keys.has(id)) throw new Error("Duplicate secret box key id");
-    const key = Buffer.from(trimmed.slice(sep + 1), "base64");
+    const b64 = trimmed.slice(sep + 1);
+    if (!B64.test(b64)) throw new Error("Secret box keys must be valid base64");
+    const key = Buffer.from(b64, "base64");
     if (key.length !== KEY_BYTES) throw new Error("Secret box keys must be 32 bytes");
     keys.set(id, key);
   }
@@ -75,13 +87,13 @@ export function createAesGcmSecretBox(options: AesGcmSecretBoxOptions): SecretBo
       const [, keyId, ivB, ctB, tagB] = parts as [string, string, string, string, string];
       const key = keys.get(keyId);
       if (!key) throw new SecretBoxError();
-      const iv = Buffer.from(ivB, "base64url");
-      const tag = Buffer.from(tagB, "base64url");
+      const iv = decodeB64Url(ivB);
+      const tag = decodeB64Url(tagB);
       if (iv.length !== IV_BYTES || tag.length !== TAG_BYTES) throw new SecretBoxError();
       const decipher = createDecipheriv("aes-256-gcm", key, iv, { authTagLength: TAG_BYTES });
       decipher.setAAD(aadBuffer(aad, keyId));
       decipher.setAuthTag(tag);
-      const pt = Buffer.concat([decipher.update(Buffer.from(ctB, "base64url")), decipher.final()]);
+      const pt = Buffer.concat([decipher.update(decodeB64Url(ctB)), decipher.final()]);
       return { plaintext: pt.toString("utf8"), keyId };
     } catch {
       throw new SecretBoxError();
