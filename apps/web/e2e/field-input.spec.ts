@@ -379,8 +379,8 @@ test("standard, searchable and owner panel geometry matches the dropdown table",
   const checkBox = await bounds(check);
   expectPixels(verticalCenterOffset(selectedRowBox, checkBox), 0);
   // c: Option text starts 32.5 px after the panel outer left edge.
-  const selectedText = selectedNone.locator(".min-w-0").first();
-  const unselectedText = unselected.locator(".min-w-0").first();
+  const selectedText = selectedNone.locator(".record-choice-text").first();
+  const unselectedText = unselected.locator(".record-choice-text").first();
   expectPixels(await outerLeftInset(panel, selectedText), 32.5);
   expectPixels(await outerLeftInset(panel, unselectedText), 32.5);
   // d: Inset selected fill on standard picklist only.
@@ -453,8 +453,14 @@ test("standard, searchable and owner panel geometry matches the dropdown table",
   const countryCheckBox = await bounds(countryCheck);
   expectPixels(verticalCenterOffset(countrySelectedRowBox, countryCheckBox), 0);
   const countryUnselected = page.getByRole("option", { name: "Alpha" });
-  expectPixels(await outerLeftInset(panel, countryUnselected.locator(".min-w-0").first()), 32.5);
-  expectPixels(await outerLeftInset(panel, countrySelected.locator(".min-w-0").first()), 32.5);
+  expectPixels(
+    await outerLeftInset(panel, countryUnselected.locator(".record-choice-text").first()),
+    32.5,
+  );
+  expectPixels(
+    await outerLeftInset(panel, countrySelected.locator(".record-choice-text").first()),
+    32.5,
+  );
   await expect(countrySelected).toHaveCSS("background-color", "rgba(0, 0, 0, 0)");
   await expectNoInsetHighlight(countrySelected);
   // i: First row starts 7.5 px below search bottom; 32 px pitch.
