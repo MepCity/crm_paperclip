@@ -62,3 +62,20 @@ test("Solutions has no Filter By Related Modules group", () => {
   expect(solutionsFilterGroups).toHaveLength(2);
   expect(solutionsFilterGroups.map((g) => g.id)).toEqual(["system", "fields"]);
 });
+
+test("Solutions enables all five system editors with only its registered related modules", () => {
+  const rows = solutionsFilterGroups[0]?.items ?? [];
+  expect(rows.map((row) => row.systemEditor)).toEqual([
+    "locked",
+    "record_action",
+    "related_records_action",
+    "touched",
+    "untouched",
+  ]);
+  expect(rows.every((row) => !row.disabled && !row.laterModule)).toBe(true);
+  expect(
+    rows
+      .find((row) => row.systemEditor === "related_records_action")
+      ?.systemOptions?.relatedModules?.map((option) => option.id),
+  ).toEqual(["Notes", "Attachments"]);
+});
