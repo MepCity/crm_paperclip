@@ -90,4 +90,30 @@ describe("documents read routes", () => {
     expect(response.status).toBe(200);
     expect(((await response.json()) as { data: { id: string }[] }).data[0]?.id).toBe("file-a");
   });
+
+  it("404 with the same envelope when the session lacks Documents access", async () => {
+    const unknown = await itemsOf("nope");
+    ctx.role = "guest" as never;
+    try {
+      const noAccess = await itemsOf("folder-team");
+      expect(noAccess.status).toBe(404);
+      expect(await noAccess.json()).toEqual(await unknown.json());
+      expect((await folders(get("folders"), { params: Promise.resolve({}) })).status).toBe(404);
+      const one = await item(get("items/file-a"), {
+        params: Promise.resolve({ itemId: "file-a" }),
+      });
+      expect(one.status).toBe(404);
+    } finally {
+      ctx.role = "admin";
+    }
+  });
+
+  it("404 for a tenant the session does not belong to, on every route", async () => {
+    const h = { "X-CRM-ORG": "other" };
+    expect((await itemsOf("folder-team", "", h)).status).toBe(404);
+    expect(
+      (await item(get("items/file-a", h), { params: Promise.resolve({ itemId: "file-a" }) }))
+        .status,
+    ).toBe(404);
+  });
 });

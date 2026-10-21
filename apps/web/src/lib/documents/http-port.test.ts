@@ -42,4 +42,20 @@ describe("createHttpDocumentsPort", () => {
     expect(await port.getItem("x")).toBeUndefined();
     await expect(port.getItem("y")).rejects.toBeInstanceOf(ValidationError);
   });
+
+  it("treats malformed envelopes and DTOs as errors, not as missing", async () => {
+    const bad = (value: unknown) =>
+      createHttpDocumentsPort("acme", vi.fn().mockResolvedValue(value));
+    await expect(bad({ data: [] }).getItem("i1")).rejects.toThrow();
+    await expect(bad({ data: [row, row] }).getItem("i1")).rejects.toThrow();
+    await expect(bad({}).listFolders()).rejects.toThrow();
+    await expect(bad(null).listFolders()).rejects.toThrow();
+    await expect(bad({ data: [{ id: "f1" }] }).listFolders()).rejects.toThrow();
+    await expect(
+      bad({ data: [{ ...row, kind: "other" }] }).listItems("f1", {
+        field: "modifiedAt",
+        direction: "asc",
+      }),
+    ).rejects.toThrow();
+  });
 });

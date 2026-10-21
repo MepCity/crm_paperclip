@@ -66,10 +66,19 @@ function node(
   };
 }
 
+/**
+ * Profile-level Documents visibility. No profile store exists on `main` yet, so
+ * the gate is the organization membership role; replace this function when the
+ * profile permission source lands. Evaluated on every read.
+ */
+export function canReadDocuments(ctx: OrgContext): boolean {
+  return ctx.role === "admin" || ctx.role === "member";
+}
+
 export function getDocumentsService(ctx: OrgContext) {
   return createDocumentsService(ctx, {
     repository: createFixtureDocumentsRepository(() => fixtureSnapshot(ctx)),
-    canReadDocuments: () => true,
+    canReadDocuments,
     nameSort: true,
   });
 }
