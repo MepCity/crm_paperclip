@@ -100,9 +100,15 @@ test("Campaigns Actions menu and later-module controls stay inert", async ({ pag
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
 
-  // CL-13 (M6) and CL-32 (M11)
-  await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toHaveCount(0);
+  // CL-13: Create Campaign dropdown opens the CSV import wizard (Accounts pattern)
+  await list.getByRole("button", { name: "More", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Import Campaigns", exact: true }).click();
+  await expect(page).toHaveURL(/\/tab\/Campaigns\/import$/);
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page).toHaveURL(before);
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+
+  // CL-32 (M11)
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
   await expect(page.getByRole("menu")).toHaveCount(0);
   expect(page.url()).toBe(before);
@@ -120,7 +126,6 @@ test("Campaigns Actions menu and later-module controls stay inert", async ({ pag
     "Sheet view",
     "Print View",
   ]);
-  await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toBeVisible();
-  expect(page.url()).toBe(before);
+  await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click();
+  await expect(page).toHaveURL(/\/tab\/Campaigns\/tags$/);
 });
