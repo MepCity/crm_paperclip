@@ -10,6 +10,8 @@ test("Documents main screen: folders, team folder, enter folder, breadcrumb", as
   await expect(page.getByRole("button", { name: /My Folders/ }).first()).toBeVisible();
   await expect(page.getByText("Last Modified")).toBeVisible();
   const docs = page.getByRole("list", { name: "Documents" });
+  await expect(docs.getByRole("listitem")).toHaveCount(1);
+  await page.getByRole("button", { name: "Workspace Files" }).click();
   await expect(docs.getByRole("listitem").first()).toContainText("Contracts");
 
   await page.getByRole("button", { name: /Sales Team/ }).click();
@@ -20,6 +22,7 @@ test("Documents main screen: folders, team folder, enter folder, breadcrumb", as
     .getByRole("button", { name: /My Folders/ })
     .first()
     .click();
+  await page.getByRole("button", { name: "Workspace Files" }).click();
   await page.getByRole("button", { name: "Proposals" }).click();
   await expect(page.getByText("Draft proposal.docx")).toBeVisible();
   await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toContainText("Proposals");

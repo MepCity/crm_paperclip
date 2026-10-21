@@ -72,7 +72,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
   }
 
   const crumbs: { label: string; depth: number }[] = [
-    { label: root?.name ?? "", depth: 0 },
+    { label: (trail.length === 0 ? root?.title : undefined) ?? root?.name ?? "", depth: 0 },
     ...trail.map((entry, index) => ({ label: entry.name, depth: index + 1 })),
   ];
 
@@ -83,7 +83,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
     >
       <aside
         aria-label="Folders"
-        className="flex w-60 shrink-0 flex-col rounded-lg border border-border bg-surface px-3 py-3"
+        className="flex w-72 shrink-0 flex-col rounded-lg border border-border bg-surface px-3 py-3"
       >
         {myFolders.map((folder) => (
           <FolderRow
@@ -168,7 +168,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
           </div>
         </header>
 
-        <div className="flex items-center border-b border-border px-4 py-2 text-xs font-semibold text-text-muted">
+        <div className="flex items-center border-b border-border px-6 py-2 text-sm font-semibold text-text-muted">
           <span className="flex-1">Name</span>
           <span className="flex w-64 items-center gap-1">
             Last Modified
@@ -182,9 +182,16 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
 
         <ul aria-label="Documents" className="flex-1">
           {items.map((row) => (
-            <li key={row.id} className="flex items-center border-b border-border px-4 py-3 text-sm">
-              <div className="flex flex-1 items-center gap-2">
-                <Icons.folder className="size-7 text-success" aria-hidden="true" />
+            <li
+              key={row.id}
+              className="flex items-center border-b border-border px-6 py-4 text-base"
+            >
+              <div className="flex flex-1 items-center gap-3">
+                {row.kind === "folder" ? (
+                  <Icons.folder className="size-7 text-success" aria-hidden="true" />
+                ) : (
+                  <Icons.file className="size-7 text-text-muted" aria-hidden="true" />
+                )}
                 <div>
                   {row.kind === "folder" ? (
                     <button
@@ -197,10 +204,10 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
                   ) : (
                     <span className="font-medium">{row.name}</span>
                   )}
-                  <div className="text-xs text-text-muted">Uploaded by {row.uploadedBy}</div>
+                  <div className="text-sm text-text-muted">Uploaded by {row.uploadedBy}</div>
                 </div>
               </div>
-              <div className="w-64 text-xs">
+              <div className="w-64 text-sm">
                 <div className="text-text-muted">
                   {dateFormat.format(new Date(row.modifiedAt))} by {row.modifiedBy}
                 </div>
@@ -248,7 +255,7 @@ function FolderRow({
       aria-current={selected ? "true" : undefined}
       onClick={() => onSelect(folder.id)}
       className={`flex items-center gap-2 rounded px-2 py-1.5 text-left text-sm ${
-        selected ? "bg-surface-selected font-semibold" : ""
+        selected ? "bg-[var(--color-surface-selected)] font-semibold" : ""
       }`}
     >
       <Icons.folder className="size-4" aria-hidden="true" />

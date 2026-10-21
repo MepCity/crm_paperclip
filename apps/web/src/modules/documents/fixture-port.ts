@@ -1,14 +1,15 @@
 import type { DocumentFolder, DocumentItem, DocumentSort, DocumentsPort } from "./port";
 
 const FOLDERS: readonly DocumentFolder[] = [
-  { id: "my", name: "My Folders", section: "my", locked: false },
+  { id: "my", name: "My Folders", title: "Workspace Files", section: "my", locked: false },
   { id: "team-sales", name: "Sales Team", section: "team", locked: true },
 ];
 
 const ITEMS: readonly DocumentItem[] = [
-  item("f1", "Proposals", "folder", "my", "2026-09-30T10:00:00Z"),
-  item("f2", "Contracts", "folder", "my", "2026-10-05T09:30:00Z"),
-  item("d1", "Price list.pdf", "file", "my", "2026-10-02T12:00:00Z"),
+  item("f0", "Workspace Files", "folder", "my", "2026-10-06T09:30:00Z"),
+  item("f1", "Proposals", "folder", "f0", "2026-09-30T10:00:00Z"),
+  item("f2", "Contracts", "folder", "f0", "2026-10-05T09:30:00Z"),
+  item("d1", "Price list.pdf", "file", "f0", "2026-10-02T12:00:00Z"),
   item("f3", "Archive", "folder", "f1", "2026-09-12T08:00:00Z"),
   item("d2", "Draft proposal.docx", "file", "f1", "2026-09-28T15:20:00Z"),
   item("d3", "Signed agreement.pdf", "file", "f2", "2026-10-04T11:10:00Z"),

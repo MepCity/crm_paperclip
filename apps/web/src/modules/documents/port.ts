@@ -2,6 +2,8 @@
 export interface DocumentFolder {
   id: string;
   name: string;
+  /** Optional breadcrumb label for the root, when it differs from the panel name. */
+  title?: string;
   section: "my" | "team";
   locked: boolean;
 }

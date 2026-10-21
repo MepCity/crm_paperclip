@@ -15,6 +15,8 @@ function rowNames() {
 describe("DocumentsScreen", () => {
   it("lists My Folders contents newest first", async () => {
     render(<DocumentsScreen />);
+    const user = userEvent.setup();
+    await user.click(await screen.findByRole("button", { name: "Workspace Files" }));
     await screen.findByText("Contracts");
     const rows = rowNames();
     expect(rows[0]).toContain("Contracts");
@@ -34,11 +36,12 @@ describe("DocumentsScreen", () => {
   it("enters a folder and updates the breadcrumb", async () => {
     const user = userEvent.setup();
     render(<DocumentsScreen />);
+    await user.click(await screen.findByRole("button", { name: "Workspace Files" }));
     await user.click(await screen.findByRole("button", { name: "Proposals" }));
     await screen.findByText("Draft proposal.docx");
     const crumb = screen.getByRole("navigation", { name: "Breadcrumb" });
     expect(crumb.textContent).toContain("Proposals");
     await user.click(within(crumb).getByRole("button", { name: "My Folders" }));
-    await screen.findByText("Contracts");
+    await within(screen.getByRole("list", { name: "Documents" })).findByText("Workspace Files");
   });
 });
