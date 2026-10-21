@@ -8,7 +8,8 @@ afterEach(cleanup);
 test("AttachSourceMenu renders trigger with chevron down", () => {
   render(<AttachSourceMenu onAttach={vi.fn()} />);
   const btn = screen.getByRole("button", { name: "Attach" });
-  expect(btn).toBeTruthy();
+  expect(btn.querySelector("span[data-related-action-label]")?.textContent).toBe("Attach");
+  expect(btn.matches("[data-related-action-label]")).toBe(false);
   expect(btn.querySelector("[data-chevron=down]")).toBeTruthy();
 });
 

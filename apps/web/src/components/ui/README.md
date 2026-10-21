@@ -376,6 +376,7 @@ what the "no colour constants" rule forbids.
 | `--size-list-view-type-arrow-width` | `11px` | list-views.md › View type switcher › trailing dropdown arrow "11 × 6.5 px" ink box | from spec |
 | `--size-list-view-type-arrow-height` | `6.5px` | list-views.md › View type switcher › trailing dropdown arrow "11 × 6.5 px" ink box | from spec |
 | `--color-detail-divider` | `#d6d6e3` | record-detail.md › Details card › "`Hide Details` divider is 1 px `#D6D6E3`" | from spec |
+| `--size-detail-attach-width` | `78.5px` | record-detail.md › Related-list card › Card shell: Attach x 1359.5–1438 | measured |
 | `--size-detail-card-width` | `906px` | record-detail.md › Canvas and tab row › "first card left x 552, right x 1458" (906 px wide) | from spec |
 | `--size-detail-card-padding` | `20px` | record-detail.md › Related-list card › "Heading starts x 572" with card x 552 (20 px inset) | from spec |
 | `--size-detail-business-label-width` | `153.5px` | record-detail.md › Business card › labels end x 725.5 with card x 552 and 20 px inset | from spec |
@@ -735,8 +736,16 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-record-menu-inset` | `5px` | record-detail.md › More Options menu › Rows and groups › 6 px inner highlight inset minus 1px edge; group padding | from spec |
 | `--size-record-menu-inset-inline` | `5.75px` | record-detail.md › More Options menu › Rows and groups › Highlight width 1373 − 1169.5 = 203.5; (217 − 203.5) / 2 minus 1px border | from spec |
 | `--size-record-menu-text-inset` | `10.25px` | record-detail.md › More Options menu › Rows and groups › 1180 − 1163 − 1 − 5.75 | from spec |
-| `--size-record-scroll-top` | `36px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
-| `--size-record-scroll-offset` | `16px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
+| `--size-record-column-selector-width` | `117px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-selector-width` | `150px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-selector-height` | `34px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-action-width` | `218px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-action-gap` | `19.5px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-strip-height` | `61px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-top` | `37px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-right` | `44px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-bottom` | `78px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-footer-gap` | `17px` | record-detail.md › Existing-capture button measurements › Scroll To Top disc bottom to strip separator | from spec |
 | `--size-record-demo-height` | `560px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
 | `--color-status-current` | `#eeeffc` | record-detail.md › Visual layout › Status strip / current stage |
 | `--color-status-terminal-border` | `#ffadac` | record-detail.md › Visual layout › Hidden-rail layout / Terminal control |
@@ -921,6 +930,14 @@ token:
   token and the control is not drawn that way.
 
 ### Contrast notes
+
+The related-card Attach and Add Campaigns actions keep the measured `--color-primary` text on
+`--color-primary-subtle` (4.18:1, below the 4.5:1 AA text minimum), from
+`record-detail.md` › Related-list card › Card shell. Per ADR 0003 §8 this
+measured pair is retained and reported for the board decision. Add Campaigns
+is independently confirmed in Existing-capture button measurements.
+The gallery axe scan excludes only `span[data-related-action-label]` for this
+measured pair (ADR 0003 §8); the surrounding buttons stay in the scan.
 
 ADR 0003 §8 requires WCAG 2.1 AA: 4.5:1 for text and 3:1 for the non-text parts of a control. The
 ratios below are computed from the token values with the WCAG relative-luminance formula.

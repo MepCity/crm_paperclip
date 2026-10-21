@@ -58,7 +58,7 @@ export const casesListPageConfig: ModuleListScreenConfig = {
       { id: "mass-transfer", label: "Mass Transfer" },
       { id: "mass-delete", label: "Mass Delete" },
       { id: "mass-update", label: "Mass Update" },
-      { id: "tags", label: "Manage Tags", laterModule: "M6" },
+      { id: "tags", label: "Manage Tags" },
       { id: "drafts", label: "Drafts" },
       { id: "mass-email", label: "Mass Email", laterModule: "M10" },
       { id: "approve", label: "Approve Cases", laterModule: "P3" },

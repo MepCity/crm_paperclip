@@ -1,6 +1,7 @@
 import { signUpNewUser } from "./support/auth";
-import { moduleListDefaultPath } from "./support/crm-paths";
+import { moduleListDefaultPath, moduleTagsPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
+import { exerciseSystemFilters } from "./support/system-filters";
 import { expect, test } from "./support/test";
 
 test("Cases shell entry, views, columns and sorting", async ({ page }) => {
@@ -112,8 +113,15 @@ test("Cases Actions menu and later-module controls stay inert", async ({ page })
     "Print View",
   ]);
   await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toBeVisible();
-  expect(page.url()).toBe(before);
+  await expect(page).toHaveURL(moduleTagsPath(org.slug, "Cases"));
+});
+
+test("Cases applies and clears all five system filters with matching list/count requests", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseSystemFilters(page, org.slug, "Cases", 60);
 });
 
 test("Cases Actions exports through the shared dialog", async ({ page }) => {

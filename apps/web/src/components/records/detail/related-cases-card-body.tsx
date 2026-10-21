@@ -1,7 +1,7 @@
 "use client";
 
 import type { Criteria, RecordData, RecordId } from "@crm/core/records";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { FieldValueView } from "@/components/records/detail/field-value";
 import { RelatedRecordsListError } from "@/components/records/detail/related-records-list-error";
 import { Link } from "@/components/ui/link";
@@ -29,6 +29,7 @@ export function RelatedCasesCardBody({
   filterField,
   caseRecordPath,
 }: RelatedCasesCardBodyProps) {
+  const [page, setPage] = useState(1);
   const moduleQuery = useModule("Cases");
   const viewsQuery = useViews("Cases");
   const usersQuery = useUsers();
@@ -44,9 +45,9 @@ export function RelatedCasesCardBody({
   const listQuery = useMemo(
     () =>
       defaultViewId
-        ? { viewId: defaultViewId, page: 1, perPage: LIST_PAGE_SIZE, filters: filter }
-        : { viewId: "pending", page: 1, perPage: LIST_PAGE_SIZE },
-    [defaultViewId, filter],
+        ? { viewId: defaultViewId, page, perPage: LIST_PAGE_SIZE, filters: filter }
+        : { viewId: "pending", page, perPage: LIST_PAGE_SIZE },
+    [defaultViewId, filter, page],
   );
   const list = useRecordList("Cases", listQuery, { enabled: defaultViewId !== null });
   const fieldsByName = useMemo(
@@ -84,7 +85,7 @@ export function RelatedCasesCardBody({
     return <RelatedRecordsListError />;
   }
 
-  if (rows.length === 0) {
+  if (rows.length === 0 && page === 1) {
     return (
       <div data-part="empty" className="py-8 text-center text-md text-text-empty">
         No records found
@@ -141,6 +142,26 @@ export function RelatedCasesCardBody({
           ))}
         </tbody>
       </table>
+      {page > 1 || list.data?.moreRecords ? (
+        <div data-part="pager" className="flex justify-end gap-3 px-2 py-2 text-md">
+          <button
+            type="button"
+            className="text-primary hover:underline disabled:text-text-muted disabled:no-underline"
+            disabled={page === 1}
+            onClick={() => setPage(page - 1)}
+          >
+            Previous
+          </button>
+          <button
+            type="button"
+            className="text-primary hover:underline disabled:text-text-muted disabled:no-underline"
+            disabled={!list.data?.moreRecords}
+            onClick={() => setPage(page + 1)}
+          >
+            Next
+          </button>
+        </div>
+      ) : null}
     </div>
   );
 }

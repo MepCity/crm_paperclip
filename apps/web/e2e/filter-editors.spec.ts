@@ -124,6 +124,7 @@ test("field filter editors match measured rows, keyboard, sticky actions and acc
   // ADR 0003 §8: measured placeholder ink #8C91AB on white is 3.11:1.
   // Exclude only empty text spans (including the two multi-select placeholders)
   // and the other measured gallery placeholders; their triggers stay scanned.
+  // ADR 0003 §8: measured related-action label ink is 4.18:1; controls remain scanned.
   await expectNoA11yViolations(page, { exclude: DEV_UI_A11Y_EXCLUDE });
   const screenshotPath = testInfo.outputPath("field-filter-editors.png");
   await page.screenshot({ path: screenshotPath });
@@ -168,6 +169,7 @@ test("field filter editors match measured rows, keyboard, sticky actions and acc
   // #8B9AB9 and empty-selection #8C91AB inks on white retain the measured
   // contrast exceptions from ADR 0003 §8, as in the gallery smoke test.
   // Only those text elements are excluded; filter triggers and selected values remain included.
+  // ADR 0003 §8: measured related-action label ink is 4.18:1; controls remain scanned.
   await expectNoA11yViolations(page, {
     exclude: DEV_UI_A11Y_EXCLUDE,
   });
