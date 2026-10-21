@@ -1325,3 +1325,13 @@ customization and Phase 3 controls.
 - Contact business-card and detail Phone **Call** controls open the Call create form with the
   contact pre-filled (provisional; reference click never invoked). M8+ markers are untouched.
 - Evidence: `parent-activities-cards.spec.ts` (Lead, Deal), `activity-add-new.test.ts`.
+
+### Solutions/Cases CSV export (MEP-968)
+
+- Implemented: list Actions > Export opens the shared dialog for Solutions/Cases;
+  shared CSV service, field projection, view/selection scope, download and history.
+- Interim parity rule: reference behavior was not observed (SL-14.7 / KL-14.9).
+  Reuse the existing modules' dialog defaults and limits; see
+  `research/specs/csv-import-export.md`. No new reference inspection performed.
+- Import remains unavailable for both modules. Actual reference export behavior
+  remains an open question; this implementation does not claim observed parity.

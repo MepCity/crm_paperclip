@@ -1,5 +1,5 @@
 import type { FieldDefinition, RecordData } from "@crm/core/records";
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, fireEvent, screen } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render } from "@/test/render";
 import { RelatedCasesCardBody } from "./related-cases-card-body";
@@ -68,7 +68,11 @@ const caseFields: FieldDefinition[] = [
 ];
 
 const hookState = vi.hoisted(() => ({
-  list: { data: { records: [] as RecordData[] }, isLoading: false, isError: false },
+  list: {
+    data: { records: [] as RecordData[] } as { records: RecordData[]; moreRecords?: boolean },
+    isLoading: false,
+    isError: false,
+  },
   module: { data: { fields: [] as FieldDefinition[] }, isLoading: false, isError: false },
   views: {
     data: [{ id: "all-cases", name: "All Cases", isDefault: true }],
@@ -77,7 +81,14 @@ const hookState = vi.hoisted(() => ({
   },
   view: { data: { id: "all-cases", columns: [] as string[] }, isLoading: false, isError: false },
   users: { data: [] as { userId: string; name: string }[], isLoading: false, isError: false },
-  calls: [] as { module: string; query: { viewId: string; filters?: unknown } }[],
+  listFor: undefined as
+    | undefined
+    | ((page: number) => {
+        data: { records: RecordData[]; moreRecords?: boolean };
+        isLoading: boolean;
+        isError: boolean;
+      }),
+  calls: [] as { module: string; query: { viewId: string; filters?: unknown; page?: number } }[],
 }));
 
 vi.mock("@/lib/api/client/hooks", () => ({
@@ -85,9 +96,9 @@ vi.mock("@/lib/api/client/hooks", () => ({
   useViews: () => hookState.views,
   useView: () => hookState.view,
   useUsers: () => hookState.users,
-  useRecordList: (module: string, query: { viewId: string; filters?: unknown }) => {
+  useRecordList: (module: string, query: { viewId: string; filters?: unknown; page?: number }) => {
     hookState.calls.push({ module, query });
-    return hookState.list;
+    return hookState.listFor ? hookState.listFor(query.page ?? 1) : hookState.list;
   },
 }));
 
@@ -103,6 +114,7 @@ afterEach(() => {
   hookState.view = { data: { id: "all-cases", columns: [] }, isLoading: false, isError: false };
   hookState.users = { data: [], isLoading: false, isError: false };
   hookState.calls = [];
+  hookState.listFor = undefined;
 });
 
 const accountRecord: RecordData = { id: "acc-1", fields: { Account_Name: "Acme" } };
@@ -157,5 +169,52 @@ describe("RelatedCasesCardBody", () => {
     expect(screen.getByRole("link", { name: "Broken login" }).getAttribute("href")).toBe(
       "/acme/Cases/case-1",
     );
+  });
+
+  it("shows a Next control when more than one page of cases exists", () => {
+    hookState.module = { data: { fields: caseFields }, isLoading: false, isError: false };
+    hookState.list = {
+      data: {
+        records: Array.from({ length: 100 }, (_, i) => ({
+          id: `case-${i}`,
+          fields: { Subject: `Case ${i}` },
+        })),
+        moreRecords: true,
+      },
+      isLoading: false,
+      isError: false,
+    };
+    renderCard("Account_Name");
+    const next = screen.getByRole("button", { name: "Next" }) as HTMLButtonElement;
+    expect(next.disabled).toBe(false);
+    fireEvent.click(next);
+    expect(hookState.calls.at(-1)?.query).toMatchObject({ page: 2 });
+  });
+  it("reaches the 101st case on page 2 and can go back", () => {
+    hookState.module = { data: { fields: caseFields }, isLoading: false, isError: false };
+    hookState.listFor = (page) => ({
+      data:
+        page === 1
+          ? {
+              records: Array.from({ length: 100 }, (_, i) => ({
+                id: `case-${i}`,
+                fields: { Subject: `Case ${i}` },
+              })),
+              moreRecords: true,
+            }
+          : { records: [{ id: "case-100", fields: { Subject: "Case 101" } }], moreRecords: false },
+      isLoading: false,
+      isError: false,
+    });
+    renderCard("Account_Name");
+    expect(screen.queryByRole("link", { name: "Case 101" })).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(screen.getByRole("link", { name: "Case 101" }).getAttribute("href")).toBe(
+      "/acme/Cases/case-100",
+    );
+    expect((screen.getByRole("button", { name: "Next" }) as HTMLButtonElement).disabled).toBe(true);
+    fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+    expect(screen.getByRole("link", { name: "Case 0" })).toBeTruthy();
+    expect(screen.queryByRole("link", { name: "Case 101" })).toBeNull();
   });
 });
