@@ -83,7 +83,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
     >
       <aside
         aria-label="Folders"
-        className="flex w-72 shrink-0 flex-col rounded-lg border border-border bg-surface px-3 py-3"
+        className="flex w-56 shrink-0 flex-col rounded-lg border border-border bg-surface px-3 py-3"
       >
         {myFolders.map((folder) => (
           <FolderRow

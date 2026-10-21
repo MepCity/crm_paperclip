@@ -99,7 +99,7 @@ function flatNavLinks(): NavLink[] {
   return moduleNavLinks("flat").sort((a, b) => rank(a.id) - rank(b.id));
 }
 
-/** Documents is not a record module (no list/detail engine); it closes the Sales group. */
+/** Documents is not a record module (no list/detail engine); it sits after Deals in the Sales group. */
 const documentsLink: NavLink = {
   id: "documents",
   label: "Documents",
@@ -109,13 +109,19 @@ const documentsLink: NavLink = {
   match: "prefix",
 };
 
+function withDocumentsAfterDeals(links: NavLink[]): NavLink[] {
+  const dealsIndex = links.findIndex((link) => link.id === "deals");
+  if (dealsIndex === -1) return [...links, documentsLink];
+  return [...links.slice(0, dealsIndex + 1), documentsLink, ...links.slice(dealsIndex + 1)];
+}
+
 function navGroup(group: "sales" | "activities", label: string): NavGroup {
   const links = moduleNavLinks(group);
   return {
     id: group,
     label,
     icon: Icons.folder,
-    links: group === "sales" ? [...links, documentsLink] : links,
+    links: group === "sales" ? withDocumentsAfterDeals(links) : links,
   };
 }
 

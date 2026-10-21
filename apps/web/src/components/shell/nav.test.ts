@@ -94,10 +94,9 @@ describe("shellNav", () => {
     const expectedActivitiesModules = screens.filter(
       (screen) => screen.navigation.group === "activities",
     );
-    expect(salesGroup?.links.map((link) => link.id)).toEqual([
-      ...expectedSalesModules.map((screen) => screen.navigation.id),
-      "documents",
-    ]);
+    const salesIds = expectedSalesModules.map((screen) => screen.navigation.id);
+    salesIds.splice(salesIds.indexOf("deals") + 1, 0, "documents");
+    expect(salesGroup?.links.map((link) => link.id)).toEqual(salesIds);
     expect(activitiesGroup?.links.map((link) => link.id)).toEqual(
       expectedActivitiesModules.map((screen) => screen.navigation.id),
     );
@@ -117,8 +116,8 @@ describe("shellNav", () => {
       "contacts",
       "accounts",
       "deals",
-      "campaigns",
       "documents",
+      "campaigns",
     ]);
     expect(teamspace?.links?.map((link) => link.id)).toEqual(["solutions", "cases"]);
   });
