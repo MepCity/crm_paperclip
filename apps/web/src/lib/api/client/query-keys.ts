@@ -28,7 +28,13 @@ export const apiKeys = {
     module: string,
     query: Pick<
       ListQuery,
-      "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter" | "systemFilters"
+      | "viewId"
+      | "filters"
+      | "search"
+      | "activityFilter"
+      | "campaignFilter"
+      | "systemFilters"
+      | "relatedModules"
     >,
   ) => [...apiKeys.module(orgSlug, module), "count", serializeCountQuery(query)] as const,
   summarize: (orgSlug: string, module: string, query: SummaryQuery) =>
@@ -66,7 +72,13 @@ function serializeListQuery(query: ListQuery): string {
 function serializeCountQuery(
   query: Pick<
     ListQuery,
-    "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter" | "systemFilters"
+    | "viewId"
+    | "filters"
+    | "search"
+    | "activityFilter"
+    | "campaignFilter"
+    | "systemFilters"
+    | "relatedModules"
   >,
 ): string {
   return JSON.stringify(query);

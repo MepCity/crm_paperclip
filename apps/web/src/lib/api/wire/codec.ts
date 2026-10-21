@@ -17,6 +17,11 @@ import type {
 import { isJsonArray, isJsonObject, lookupTargetModules } from "@crm/core/records";
 import { validateActivityFilter } from "@crm/core/records/activities";
 import { validateCampaignFilter } from "@crm/core/records/campaigns";
+import {
+  MAX_RELATED_MODULE_CRITERIA,
+  MAX_RELATED_MODULE_FILTERS,
+  validateRelatedModules,
+} from "@crm/core/records/related-module-filters";
 import { validateSystemFilters } from "@crm/core/records/system-filters";
 import type {
   WireCriteria,
@@ -776,4 +781,41 @@ export function encodeSystemFilters(
           ];
     }),
   ) as import("./types").WireSystemFilters;
+}
+
+export function decodeRelatedModules(
+  value: unknown,
+): import("@crm/core/records").RelatedModuleFilter[] {
+  if (!Array.isArray(value)) invalid("relatedModules");
+  const rows = value as unknown[];
+  if (rows.length > MAX_RELATED_MODULE_FILTERS)
+    invalid("relatedModules", "Send at most 3 related-module conditions.");
+  const decoded = rows.map((row): import("@crm/core/records").RelatedModuleFilter => {
+    const wire = object(row, "relatedModules");
+    if (Object.keys(wire).some((key) => !["module", "presence", "criteria"].includes(key)))
+      invalid("relatedModules");
+    const criteria = wire.criteria === undefined ? [] : wire.criteria;
+    if (!Array.isArray(criteria)) invalid("relatedModules");
+    if ((criteria as unknown[]).length > MAX_RELATED_MODULE_CRITERIA)
+      invalid("relatedModules", "Send at most 5 criteria per related-module condition.");
+    return {
+      module: wire.module as import("@crm/core/records").RelatedFilterModule,
+      presence: wire.presence as "with" | "without",
+      criteria: (criteria as unknown[]).map(
+        (item) => decodeCriteria(item) as import("@crm/core/records").FieldCriterion,
+      ),
+    };
+  });
+  validateRelatedModules(decoded);
+  return decoded;
+}
+export function encodeRelatedModules(
+  value: readonly import("@crm/core/records").RelatedModuleFilter[],
+): import("./types").WireRelatedModule[] {
+  validateRelatedModules(value);
+  return value.map((row) => ({
+    module: row.module,
+    presence: row.presence,
+    criteria: row.criteria.map(encodeCriteria),
+  }));
 }
