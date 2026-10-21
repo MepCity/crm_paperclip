@@ -18,5 +18,3 @@ export const LEADS_TIMELINE_SOURCE_OPTIONS: readonly TimelineFilterOption[] = [
   { id: "manual", label: "Manual" },
   { id: "import", label: "Import" },
 ];
-
-/** Interim: event list is empty until a database adapter / event source arrives. */

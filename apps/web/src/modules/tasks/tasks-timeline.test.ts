@@ -10,7 +10,7 @@ import {
   TASKS_TIMELINE_SUBTABS,
 } from "./tasks-timeline";
 
-test("uses History-only timeline subtabs with empty events and no Interactions tab", () => {
+test("uses History-only timeline subtabs and no Interactions tab", () => {
   expect(TASKS_TIMELINE_SUBTABS).toEqual([{ id: "history", label: "History" }]);
   expect(TASKS_TIMELINE_SUBTABS.some((tab) => tab.id === "interactions")).toBe(false);
 });

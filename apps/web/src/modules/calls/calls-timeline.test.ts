@@ -10,7 +10,7 @@ import {
   normalizeCallsEventKind,
 } from "./calls-timeline";
 
-test("uses History-only timeline subtabs with empty events", () => {
+test("uses History-only timeline subtabs", () => {
   expect(CALLS_TIMELINE_SUBTABS).toEqual([{ id: "history", label: "History" }]);
 });
 

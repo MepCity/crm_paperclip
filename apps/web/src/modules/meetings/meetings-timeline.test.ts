@@ -10,7 +10,7 @@ import {
   normalizeMeetingsEventKind,
 } from "./meetings-timeline";
 
-test("uses History-only timeline subtabs with empty events and no Interactions tab", () => {
+test("uses History-only timeline subtabs and no Interactions tab", () => {
   expect(MEETINGS_TIMELINE_SUBTABS).toEqual([{ id: "history", label: "History" }]);
   expect(MEETINGS_TIMELINE_SUBTABS.some((tab) => tab.id === "interactions")).toBe(false);
 });
