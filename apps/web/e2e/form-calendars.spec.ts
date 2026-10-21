@@ -69,7 +69,7 @@ for (const form of forms) {
       await expect(page.getByRole("textbox", { name: "Title", exact: true })).toBeVisible();
       await page
         .getByRole("dialog", { name: "Meeting Information" })
-        .locator('[data-form-field="All_day"] label')
+        .locator('[data-form-field="All_day"] label[data-rac]')
         .click();
       const from = page.getByRole("textbox", { name: "From date", exact: true });
       await from.fill("10.11.2026");
