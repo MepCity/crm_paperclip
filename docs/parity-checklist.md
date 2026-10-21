@@ -963,16 +963,16 @@ disabled above 500 rows with the limit written in the menu label.
 
 ### Campaigns list
 
-Implemented; QA pending (MEP-805).
+Implemented; closing QA findings fixed in MEP-976 (pass).
 
 | Inventory | Implementation | Verification |
 | --- | --- | --- |
 | SH-18 | Registered in registry.ts after Calls; shell entry and create-records row live | `registry.test.ts`, `shell.test.tsx`, `campaigns-list.spec.ts` |
 | CL-01, CL-02, CL-02.1 – CL-02.8 | Single All Campaigns tab; view menu with four service views, Dropdown toggle, New / Manage Custom View (M11, inert) | `campaigns-list.spec.ts` |
 | CL-03 – CL-11, CL-40 | Filter, Sort, presentation icons and refresh as in Accounts | `campaigns-list.spec.ts` |
-| CL-12, CL-13 | Create Campaign opens the create route; arrow is `laterModule` M6 | `campaigns-list.spec.ts` |
-| CL-14, CL-14.1 – CL-14.9 | Nine Actions rows in reference order, no Deduplicate; Sheet view `laterModule` P3 | `campaigns-list.spec.ts` |
-| CL-15 – CL-31 | Filter panel groups from the module definition | `list-filters.test.ts`, `campaigns-list.spec.ts` |
+| CL-12, CL-13 | Create Campaign opens the create route; arrow opens the Import Campaigns menu (Accounts pattern, pass) | `campaigns-list.spec.ts` |
+| CL-14, CL-14.1 – CL-14.9 | Nine Actions rows in reference order, no Deduplicate; Manage Tags opens the tags page, Export Campaigns opens the CSV export, Print View submenu opens (pass); Sheet view `laterModule` P3 | `campaigns-list.spec.ts` |
+| CL-15 – CL-31 | Filter panel groups from the module definition; Expected Response / Numbers sent filter as number fields (pass) | `list-filters.test.ts`, `campaigns-list.spec.ts` |
 | CL-32 – CL-39 | View Settings `laterModule` M11; alphabet picker; empty text and Total Records 0 | `campaigns-list.spec.ts` |
 
 Provisional rules: the populated table body is the Accounts table (not observed in the reference).
