@@ -14,6 +14,7 @@ describe("transfer browser boundary", () => {
       "Contacts",
       "Accounts",
       "Deals",
+      "Campaigns",
       "Tasks",
       "Events",
       "Calls",
