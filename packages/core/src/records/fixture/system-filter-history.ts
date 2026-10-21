@@ -1,4 +1,3 @@
-import { randomUUID } from "node:crypto";
 import { activityParentIds, activityParentModules, activityRules } from "../activities";
 import type { RecordData } from "../contract";
 import type { HistoryEventKind, HistoryRef, RecordHistoryEvent } from "../history";
@@ -24,7 +23,7 @@ export function relatedFilterHistory(
     payload: RecordHistoryEvent["payload"] = null,
   ) => {
     events.push({
-      id: randomUUID(),
+      id: globalThis.crypto.randomUUID(),
       schemaVersion: 1,
       stream,
       subject: { module, recordId: id, ...(name ? { name } : {}) },
