@@ -99,8 +99,30 @@ function flatNavLinks(): NavLink[] {
   return moduleNavLinks("flat").sort((a, b) => rank(a.id) - rank(b.id));
 }
 
+/** Documents is not a record module (no list/detail engine); it sits after Deals in the Sales group. */
+const documentsLink: NavLink = {
+  id: "documents",
+  label: "Documents",
+  icon: Icons.folder,
+  href: (slug: string) => moduleTabPath(slug, "Documents"),
+  activePrefix: (slug: string) => moduleTabPath(slug, "Documents"),
+  match: "prefix",
+};
+
+function withDocumentsAfterDeals(links: NavLink[]): NavLink[] {
+  const dealsIndex = links.findIndex((link) => link.id === "deals");
+  if (dealsIndex === -1) return [...links, documentsLink];
+  return [...links.slice(0, dealsIndex + 1), documentsLink, ...links.slice(dealsIndex + 1)];
+}
+
 function navGroup(group: "sales" | "activities", label: string): NavGroup {
-  return { id: group, label, icon: Icons.folder, links: moduleNavLinks(group) };
+  const links = moduleNavLinks(group);
+  return {
+    id: group,
+    label,
+    icon: Icons.folder,
+    links: group === "sales" ? withDocumentsAfterDeals(links) : links,
+  };
 }
 
 export const shellNav: NavConfig = {
