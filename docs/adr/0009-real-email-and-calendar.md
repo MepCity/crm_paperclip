@@ -241,6 +241,10 @@ Test mailbox rule (board decision, 2026-10-21):
   Write tests use `ZZTEST` records, an approved action list and a deletion
   list, in a board-set window, and only after the rule 2 exception is added
   to AGENTS.md.
+- Board answers Q12 to Q14 (2026-10-21): the CTO proposes the window and the
+  final action list after R1 to R10 and the board approves; a notice that
+  reaches only the board's own user or test address is accepted, anything
+  else stops; undeletable logs and counters are accepted.
 
 CTO recommendation (pending board decision): D and C for unit tests, GreenMail
 (or a comparable test server; to be chosen at implementation after checking
