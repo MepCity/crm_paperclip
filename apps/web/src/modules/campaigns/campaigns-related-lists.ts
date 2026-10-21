@@ -201,7 +201,7 @@ export function createCampaignsRelatedLists(
       id: "notes",
       renderBody: notesCardBody("Campaigns"),
       title: "Notes",
-      moduleKey: "M6",
+      moduleKey: "M2",
       order: 2,
       targetId: "related-list-notes",
       countBadge: badgeValue(badges.notes),

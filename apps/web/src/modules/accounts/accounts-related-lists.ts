@@ -138,7 +138,7 @@ export function createAccountsRelatedLists(
       id: "notes",
       renderBody: notesCardBody("Accounts"),
       title: "Notes",
-      moduleKey: "M6",
+      moduleKey: "M2",
       order: 1,
       targetId: "related-list-notes",
       countBadge: notesBadge,

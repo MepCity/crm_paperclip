@@ -116,7 +116,7 @@ export function createDealsRelatedLists(
       id: "notes",
       renderBody: notesCardBody("Deals"),
       title: "Notes",
-      moduleKey: "M6",
+      moduleKey: "M2",
       order: 1,
       targetId: "related-list-notes",
       railAction: {

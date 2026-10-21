@@ -43,7 +43,7 @@ describe("accountsRelatedLists definition", () => {
     expect(structuralLists).toHaveLength(15);
 
     const expectedOrder = [
-      { order: 1, id: "notes", title: "Notes", moduleKey: "M6" },
+      { order: 1, id: "notes", title: "Notes", moduleKey: "M2" },
       { order: 2, id: "connected-records", title: "Connected Records", moduleKey: "P3" },
       { order: 3, id: "attachments", title: "Attachments", moduleKey: "M6" },
       { order: 4, id: "deals", title: "Deals", moduleKey: "M4" },

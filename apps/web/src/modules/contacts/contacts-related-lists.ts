@@ -76,7 +76,7 @@ export function createContactsRelatedLists(
       id: "notes",
       renderBody: notesCardBody("Contacts"),
       title: "Notes",
-      moduleKey: "M6",
+      moduleKey: "M2",
       order: 1,
       targetId: "related-list-notes",
       railAction: {

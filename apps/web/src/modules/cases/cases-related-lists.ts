@@ -78,7 +78,7 @@ export const casesRelatedLists: readonly RelatedListDefinition[] = [
     id: "notes",
     renderBody: notesCardBody("Cases"),
     title: "Notes",
-    moduleKey: "M6",
+    moduleKey: "M2",
     order: 2,
     targetId: "related-list-notes",
     railAction: { id: "notes-add", label: "Add", onAction: openNotesComposer },
