@@ -110,3 +110,27 @@ This note assigns research questions, not documentation findings; it does not
 change the write-only flow verdicts above. After R1 approval, R2 proceeds
 with public documentation and a gap record, with no mail-area capture. R3's
 record-detail Emails related-list captures continue as planned.
+
+## 7. R2 message-view documentation follow-up
+
+R2 (MEP-1011), 2026-10-21, is documentation-only under R1's approved access-gap
+decision. See [email-message.md](specs/email-message.md) for dated D1–D3 source
+locators, documented capabilities and explicit observation limits.
+
+- W2/W3/W18: reply/reply-all/forward prefills, quote format, attachment carry-over,
+  draft timing and validation/results remain unverified. No compose or reply
+  surface was opened. The related-list thread announcement does not prove the
+  mail-area thread layout or grouping algorithm.
+- W12/W19: reading side effects (receipt/remote tracking), permission-filtered
+  conversation history and persistence of the correspondence scope choice
+  remain open. No message was opened and no scope choice was changed.
+- Additional write flow: response-reminder creation from sent-message detail
+  (D2, Add ResponseWatch on sent emails). The guide describes a Reply-adjacent
+  dropdown, Add Reminder, time/message inputs and Create. This settles the
+  capability only; exact validation and resulting notification state remain
+  unobserved. Never run it in the reference CRM.
+- Context-pane deal/activity/note creation is documented by D1 but is a write,
+  not a safe way to inspect linked-record context; no such entry was clicked.
+- R9 should check message loading/empty/error guidance and any documented
+  reading side effects, leaving undocumented behaviour as a gap. No additional
+  mail route, sync, preference, permission or connection change is authorized.
