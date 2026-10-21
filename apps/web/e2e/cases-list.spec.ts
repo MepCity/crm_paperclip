@@ -206,3 +206,56 @@ test("Cases view menu and Actions links match the shared list flows", async ({
   await expect(page).toHaveURL(/\/tab\/Cases\/print\?viewId=/);
   await expect(page.locator('[data-print-kind="list"]')).toBeVisible();
 });
+
+test("Cases related-module filter applies with and without Notes", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Cases"));
+  const headers = { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin };
+  const created = await page.request.post("/crm/v2.2/Cases", {
+    headers,
+    data: {
+      data: [{ Subject: "Synthetic related filter case", Status: "New", Case_Origin: "Web" }],
+    },
+  });
+  expect(created.status()).toBe(200);
+  const id = (await created.json()).data[0].details.id;
+  const note = await page.request.post("/crm/v2.2/Notes", {
+    headers,
+    data: {
+      data: [
+        {
+          Parent_Id: { module: "Cases", id },
+          Note_Title: "Synthetic related note",
+          Note_Content: "Synthetic content",
+        },
+      ],
+    },
+  });
+  expect(note.status()).toBe(200);
+  await page.reload();
+  const list = page.locator(".module-list-page");
+  const total = list
+    .getByRole("group", { name: "Records summary" })
+    .locator('[data-part="total-value"]');
+  await expect(total).toHaveText("61");
+
+  // Emails stays a later-module row; Notes is live.
+  await expect(list.getByRole("checkbox", { name: "Emails", exact: true })).toHaveAttribute(
+    "data-later-module",
+    "M10",
+  );
+  const notes = list.getByRole("checkbox", { name: "Notes", exact: true });
+  await notes.scrollIntoViewIfNeeded();
+  await list.getByText("Notes", { exact: true }).last().click();
+  await expect(list.getByText("Any Notes")).toBeVisible();
+  await list.getByRole("button", { name: "Apply Filter" }).click();
+  // The seed already has one case with a note, so assert the partition rather than a fixed count.
+  await expect(total).not.toHaveText("61");
+  const withNotes = Number(await total.textContent());
+  expect(withNotes).toBeGreaterThanOrEqual(1);
+  await list.getByRole("button", { name: /Notes presence/ }).click();
+  await page.getByRole("option", { name: "without", exact: true }).click();
+  await list.getByRole("button", { name: "Apply Filter" }).click();
+  await expect(total).toHaveText(String(61 - withNotes));
+});

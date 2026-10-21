@@ -10,6 +10,7 @@ import type {
   ModuleApiName,
   ModuleMetadata,
   RecordData,
+  RelatedModuleFilter,
   SortSpec,
   SystemFiltersValue,
 } from "@crm/core/records";
@@ -39,6 +40,7 @@ import { FilterPanel } from "./filter-panel";
 import { ListToolbar } from "./list-toolbar";
 import { MassUpdateDialog } from "./mass-update-dialog";
 import { massUpdateFieldsInLayoutOrder } from "./mass-update-fields";
+import type { RelatedModuleDraft } from "./related-module-filter-editor";
 import { SelectionBar } from "./selection-bar";
 import { SelectionTagsDialog } from "./selection-tags-dialog";
 import type { SystemFilterDraft } from "./system-filter-editor";
@@ -251,6 +253,12 @@ function ModuleListScreenLoaded({
     null,
   );
   const [appliedSystemFilters, setAppliedSystemFilters] = useState<SystemFiltersValue | null>(null);
+  const [appliedRelatedModules, setAppliedRelatedModules] = useState<RelatedModuleFilter[] | null>(
+    null,
+  );
+  const [appliedRelatedDrafts, setAppliedRelatedDrafts] = useState<
+    Record<string, RelatedModuleDraft>
+  >({});
   const [appliedSystemDrafts, setAppliedSystemDrafts] = useState<Record<string, SystemFilterDraft>>(
     {},
   );
@@ -300,6 +308,8 @@ function ModuleListScreenLoaded({
     setAppliedCampaignFilter(null);
     setAppliedSystemFilters(null);
     setAppliedSystemDrafts({});
+    setAppliedRelatedModules(null);
+    setAppliedRelatedDrafts({});
     setLetter(null);
     setFilterSelection([]);
     setFilterApplyError(null);
@@ -326,12 +336,14 @@ function ModuleListScreenLoaded({
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
       ...(appliedCampaignFilter ? { campaignFilter: appliedCampaignFilter } : {}),
       ...(appliedSystemFilters ? { systemFilters: appliedSystemFilters } : {}),
+      ...(appliedRelatedModules ? { relatedModules: appliedRelatedModules } : {}),
       ...(config.activityRibbon ? { includeActivitySummary: true } : {}),
     };
   }, [
     appliedActivityFilter,
     appliedCampaignFilter,
     appliedSystemFilters,
+    appliedRelatedModules,
     columnApiNames,
     config.allDayField,
     config.activityRibbon,
@@ -348,8 +360,16 @@ function ModuleListScreenLoaded({
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
       ...(appliedCampaignFilter ? { campaignFilter: appliedCampaignFilter } : {}),
       ...(appliedSystemFilters ? { systemFilters: appliedSystemFilters } : {}),
+      ...(appliedRelatedModules ? { relatedModules: appliedRelatedModules } : {}),
     }),
-    [appliedActivityFilter, appliedCampaignFilter, appliedSystemFilters, listCriteria, viewId],
+    [
+      appliedActivityFilter,
+      appliedCampaignFilter,
+      appliedSystemFilters,
+      appliedRelatedModules,
+      listCriteria,
+      viewId,
+    ],
   );
 
   const list = useRecordList(
@@ -396,6 +416,7 @@ function ModuleListScreenLoaded({
       error.fieldErrors.filters ??
       error.fieldErrors.activityFilter ??
       error.fieldErrors.campaignFilter ??
+      error.fieldErrors.relatedModules ??
       Object.entries(error.fieldErrors).find(([key]) => key.startsWith("systemFilters."))?.[1];
     return messages?.[0] ?? error.message;
   }, [countValidationError, listValidationError]);
@@ -535,6 +556,8 @@ function ModuleListScreenLoaded({
     campaignFilter?: CampaignFilterValue | null,
     systemFilters?: SystemFiltersValue | null,
     systemDrafts?: Record<string, SystemFilterDraft>,
+    relatedModules?: RelatedModuleFilter[] | null,
+    relatedDrafts?: Record<string, RelatedModuleDraft>,
   ) {
     const inputs = applied.map((row) => ({
       field: row.itemId,
@@ -549,6 +572,8 @@ function ModuleListScreenLoaded({
     setAppliedCampaignFilter(campaignFilter ?? null);
     setAppliedSystemFilters(systemFilters ?? null);
     setAppliedSystemDrafts(systemDrafts ?? {});
+    setAppliedRelatedModules(relatedModules ?? null);
+    setAppliedRelatedDrafts(relatedDrafts ?? {});
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
       navigate({ ...searchState, page: LIST_PAGE_DEFAULT });
@@ -562,6 +587,8 @@ function ModuleListScreenLoaded({
     setAppliedCampaignFilter(null);
     setAppliedSystemFilters(null);
     setAppliedSystemDrafts({});
+    setAppliedRelatedModules(null);
+    setAppliedRelatedDrafts({});
     setFilterApplyError(null);
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
@@ -576,7 +603,8 @@ function ModuleListScreenLoaded({
       (appliedCriteria !== undefined ||
         appliedActivityFilter !== null ||
         appliedCampaignFilter !== null ||
-        appliedSystemFilters !== null)
+        appliedSystemFilters !== null ||
+        appliedRelatedModules !== null)
     ) {
       clearPanelFilters();
     }
@@ -587,7 +615,8 @@ function ModuleListScreenLoaded({
       appliedCriteria === undefined &&
       appliedActivityFilter === null &&
       appliedCampaignFilter === null &&
-      appliedSystemFilters === null
+      appliedSystemFilters === null &&
+      appliedRelatedModules === null
     ) {
       clearPanelFilters();
     }
@@ -987,6 +1016,7 @@ function ModuleListScreenLoaded({
             initialActivityFilter={appliedActivityFilter}
             initialCampaignFilter={appliedCampaignFilter}
             initialSystemDrafts={appliedSystemDrafts}
+            initialRelatedDrafts={appliedRelatedDrafts}
             userOptions={users.data?.map((user) => ({ id: user.userId, label: user.name }))}
             selectedIds={filterSelection}
             onSelectionChange={handleFilterSelectionChange}
