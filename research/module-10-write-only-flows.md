@@ -87,3 +87,26 @@ own text.
 | Sandbox required (docs do not cover) | W6, W7 (account model), W8, W10 |
 | Out of scope for Module 10 | W16 |
 | Night test only if sandbox refused | N1, N2, N3, N4 (N5 never needed) |
+
+## 6. R9 documentation-only follow-up from R1
+
+CTO decision, 2026-10-21 (MEP-1010): R1 is closed as an access gap. The capture
+user has no mail tab in the rail; two click-free probes show access denied.
+Retain the evidence in [email-inbox.md](specs/email-inbox.md). No further mail
+entry route, application switch, permission, setting, connection or session
+change is authorized.
+
+R9 must use public documentation only, with dated source rows, for:
+
+- The role/license prerequisites for access to the mail area (W7, W19).
+- Available sent, draft, scheduled and tracked list views and their documented
+  behaviour (W3, W4, W12); none was observed in R1.
+- Whether list loading initiates synchronization and any documented sync path
+  (W8). No sync is triggered to verify this. Missing documentation remains an
+  explicit gap, not a basis for a live experiment.
+- The documented no-connected-mailbox empty state, retaining any visual gap.
+
+This note assigns research questions, not documentation findings; it does not
+change the write-only flow verdicts above. After R1 approval, R2 proceeds
+with public documentation and a gap record, with no mail-area capture. R3's
+record-detail Emails related-list captures continue as planned.
