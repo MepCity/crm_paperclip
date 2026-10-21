@@ -112,9 +112,15 @@ export interface WireSystemFilters {
   touched?: { actor_ids?: readonly string[]; period: import("@crm/core/records").FilterPeriod };
   untouched?: { actor_ids?: readonly string[]; period: import("@crm/core/records").FilterPeriod };
 }
+export interface WireRelatedModule {
+  module: import("@crm/core/records").RelatedFilterModule;
+  presence: "with" | "without";
+  criteria: readonly WireCriteria[];
+}
 export type WireRestrictions = {
   system_filters?: WireSystemFilters;
   campaign_filter?: { campaign_ids: readonly string[]; member_statuses?: readonly string[] };
+  related_modules?: readonly WireRelatedModule[];
   filters?: WireCriteria;
   search?: string;
   activity_filter?: import("@crm/core/records").ActivityFilterValue;
