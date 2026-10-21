@@ -1751,3 +1751,39 @@ it("requests the hidden all-day field for Meetings without adding a visible colu
     /\/tab\/Meetings\/[^/]+\/edit$/,
   );
 });
+
+it("keeps system filters in list/count queries across panel toggles and clears them", async () => {
+  const records = createFixtureRecordService(ctx);
+  const config = {
+    ...leadsListPageConfig,
+    filterGroups: [
+      {
+        id: "system",
+        label: "System Defined Filters",
+        items: [{ id: "locked", label: "Locked", systemEditor: "locked" as const }],
+      },
+    ],
+  };
+  const listSpy = vi.spyOn(records, "list");
+  const countSpy = vi.spyOn(records, "count");
+  const service = createClientRecordService(records, {
+    listUsers: async () => [{ userId: ctx.userId, name: "User", email: "user@example.test" }],
+  });
+  const user = userEvent.setup();
+  render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, { wrapper: wrapper(service) });
+  await screen.findByRole("table", { name: "Records" });
+  await user.click(screen.getByRole("checkbox", { name: "Locked" }));
+  await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+  await waitFor(() => {
+    expect(listSpy.mock.calls.at(-1)?.[1]?.systemFilters).toEqual({ locked: { locked: true } });
+    expect(countSpy.mock.calls.at(-1)?.[1]?.systemFilters).toEqual({ locked: { locked: true } });
+  });
+  await user.click(screen.getByRole("button", { name: "Filter" }));
+  await user.click(screen.getByRole("button", { name: "Filter" }));
+  expect((screen.getByRole("checkbox", { name: "Locked" }) as HTMLInputElement).checked).toBe(true);
+  await user.click(screen.getByRole("button", { name: "Clear" }));
+  await waitFor(() => {
+    expect(listSpy.mock.calls.at(-1)?.[1]?.systemFilters).toBeUndefined();
+    expect(countSpy.mock.calls.at(-1)?.[1]?.systemFilters).toBeUndefined();
+  });
+});

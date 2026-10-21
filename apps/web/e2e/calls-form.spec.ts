@@ -89,6 +89,26 @@ test("Inbound switches the form to record mode with a required duration", async 
   await expect(page.locator("[data-form-field=Call_Duration]")).toBeVisible();
 });
 
+test("a Missed call with Completed status saves with a duration", async ({ page, pageErrors }) => {
+  const org = await openCreate(page);
+  await pickCallFrom(page);
+  await page.getByRole("button", { name: "Call Type", exact: true }).click();
+  await page.getByRole("option", { name: "Missed", exact: true }).click();
+  await page.getByRole("button", { name: "Outgoing Call Status", exact: true }).click();
+  await page.getByRole("option", { name: "Completed", exact: true }).click();
+  const duration = page.locator("[data-form-field=Call_Duration]");
+  await expect(duration).toBeVisible();
+  await duration.getByRole("textbox", { name: "Call Duration minutes" }).fill("01");
+  await duration.getByRole("textbox", { name: "Call Duration seconds" }).fill("05");
+  await page.getByRole("textbox", { name: "Call Start Time date" }).fill("30.11.2030");
+  await page.getByRole("textbox", { name: "Call Start Time time" }).fill("10:30");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Calls/\\d+$`), {
+    timeout: 60_000,
+  });
+  ignoreFailedResponses(pageErrors, [400]);
+});
+
 test("creates a scheduled call and opens its detail", async ({ page, pageErrors }) => {
   const org = await openCreate(page);
   await pickCallFrom(page);
