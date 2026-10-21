@@ -173,3 +173,23 @@ Open questions
 1. Help page paths for W1, W3-W10, W12, W14, W15, W18 are still not resolved; the W1 attachment and W15 quota figures were not re-verified on the pages themselves.
 2. W2 has no first-party source.
 3. W8 and the mail-area access prerequisites stay documented gaps.
+
+## 9. R7 template list observation limits (MEP-1017)
+
+The click-free templates list capture shows New Template, a template-name link,
+a favorite star, select-all, folder links, a module selector, a stats cell, an
+unnamed document action and a folder-reorder icon. No control was operated.
+See [email-templates.md](specs/email-templates.md) for the inventory and paint
+gate outcome; visible presence does not establish working behaviour.
+
+- W9/N4: create/edit/clone/delete, editor autosave, merge fields, attachment
+  handling, folder creation/move/sharing and preview validation remain
+  unobservable without a write or a proven separate read-only preview entry.
+  Offscreen Preview/Analytics markup is not such proof. No template was opened.
+- Favorite changes and folder reordering persist state and were not attempted.
+  Selection-armed bulk move/delete, and saving any filter or module preference,
+  also remain forbidden. Merely seeing the selection or filter controls does not
+  authorize testing them.
+- R9 documentation may establish capabilities, but exact editor validation, draft
+  creation on open, preview side effects and save results remain explicit gaps
+  unless independently documented. No reference CRM write test is authorized.
