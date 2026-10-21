@@ -847,6 +847,13 @@ export function createFixtureRecordService(
             },
           };
         }
+        if (["attachment_added", "attachment_deleted"].includes(event.kind)) {
+          const noteId = event.payload?.noteId;
+          if (typeof noteId === "string") {
+            const note = state.modules.get("Notes")?.records.get(noteId);
+            if (!note || !noteParentVisible(note.fields)) return null;
+          }
+        }
         if (
           ["attachment_added", "attachment_deleted"].includes(event.kind) &&
           options?.canReadField?.("Attachments", "File_Name") !== false

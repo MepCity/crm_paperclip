@@ -138,7 +138,9 @@ export function fixtureHistoryReader(
           (query.actorId != null && event.actor.id !== query.actorId) ||
           (query.from != null && Date.parse(event.occurredAt) < Date.parse(query.from)) ||
           (query.to != null && Date.parse(event.occurredAt) >= Date.parse(query.to)) ||
-          !(isAttachmentTombstone(event) || canRead(event.subject.module, event.subject.recordId))
+          !(isAttachmentTombstone(event)
+            ? (permissions.canReadRecord?.(event.subject.module, event.subject.recordId) ?? true)
+            : canRead(event.subject.module, event.subject.recordId))
         )
           continue;
         const changes = event.changes.filter((change) => visibleChange(event, change));

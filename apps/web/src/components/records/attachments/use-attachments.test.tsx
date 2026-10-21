@@ -58,7 +58,7 @@ test("events grow after loadMore (timeline covers only loaded pages)", async () 
 });
 
 for (const module of ["Cases", "Solutions"] as const) {
-  test(`${module}: loads rows and timeline events through the scoped attachment endpoint`, async () => {
+  test(`${module}: loads rows through the scoped attachment endpoint`, async () => {
     apiFetch.mockReset();
     apiFetch.mockResolvedValue({
       data: [
