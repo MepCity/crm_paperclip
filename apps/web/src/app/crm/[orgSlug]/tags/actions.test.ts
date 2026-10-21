@@ -165,3 +165,31 @@ it("allows managing the Solutions catalogue and reports an empty catalogue", asy
     canManage: true,
   });
 });
+
+it.each(["Cases", "Solutions"])(
+  "keeps the %s catalogue isolated between organizations",
+  async (module) => {
+    const { readTagCatalogueAction, mutateTagCatalogueAction } = await import("./actions");
+    const created = await mutateTagCatalogueAction("synthetic", module, {
+      kind: "create",
+      name: "Private",
+    });
+    if (created.status !== "success") throw new Error("Create failed");
+    const tag = required(created.tags[0]);
+    session.ctx = { ...session.ctx, orgId: randomUUID() };
+    expect(await readTagCatalogueAction("synthetic", module)).toMatchObject({
+      status: "success",
+      tags: [],
+    });
+    expect(
+      await mutateTagCatalogueAction("synthetic", module, {
+        kind: "rename",
+        id: tag.id,
+        name: "Hijacked",
+      }),
+    ).toMatchObject({ status: "error" });
+    expect(
+      await mutateTagCatalogueAction("synthetic", module, { kind: "delete", id: tag.id }),
+    ).toMatchObject({ status: "error" });
+  },
+);

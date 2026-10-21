@@ -27,6 +27,10 @@ test("list config names the link column, labels and Actions rows for Cases", () 
     "Sheet view",
     "Print View",
   ]);
+  const manageTags = casesListPageConfig.inventory?.actions.find((a) => a.id === "tags");
+  expect(manageTags?.laterModule).toBeUndefined();
+  const exportAction = casesListPageConfig.inventory?.actions.find((a) => a.id === "export");
+  expect(exportAction?.laterModule).toBe("M6");
   const massEmail = casesListPageConfig.inventory?.actions.find((a) => a.id === "mass-email");
   expect(massEmail?.laterModule).toBe("M10");
   const approve = casesListPageConfig.inventory?.actions.find((a) => a.id === "approve");

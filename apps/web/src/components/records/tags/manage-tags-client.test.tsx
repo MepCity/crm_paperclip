@@ -102,3 +102,29 @@ test("uses the service management capability to hide creation", async () => {
   await screen.findByText(/There are currently no available Tags/);
   expect(screen.queryByRole("button", { name: "New Tag" })).toBeNull();
 });
+
+test.each(["Cases", "Solutions"])(
+  "shows an empty %s catalogue and a load failure",
+  async (module) => {
+    vi.mocked(readTagCatalogueAction).mockResolvedValueOnce({
+      status: "success",
+      tags: [],
+      capacity: 100,
+      canManage: true,
+    });
+    render(
+      <ManageTagsClient orgSlug="synthetic" module={module} moduleName={module} onBack={vi.fn()} />,
+    );
+    expect(await screen.findByText("Tags used : 0 / 100")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "New Tag" })).toBeTruthy();
+    cleanup();
+    vi.mocked(readTagCatalogueAction).mockResolvedValueOnce({
+      status: "error",
+      message: "Unavailable",
+    });
+    render(
+      <ManageTagsClient orgSlug="synthetic" module={module} moduleName={module} onBack={vi.fn()} />,
+    );
+    expect((await screen.findByRole("alert")).textContent).toBe("Unavailable");
+  },
+);
