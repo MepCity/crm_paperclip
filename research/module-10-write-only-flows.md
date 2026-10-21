@@ -168,3 +168,29 @@ Open questions
 1. Resolve exact help page paths for every row above.
 2. W2, W11, W13, W16, W17, W19 remain unchecked.
 3. W8 and the mail-area access prerequisites stay documented gaps.
+
+## R6 calendar settings prerequisite and write gaps
+
+R6 (MEP-1015), click-free capture `m10r6-booking-base`, observed an internal
+booking-administration prerequisite: organization business hours are not
+configured. The dialog offers Configure Business Hours and Cancel; neither was
+clicked. The public booking page was never opened. Both the base and the single
+permitted retry failed the strict paint gate. The retry also increased refused
+telemetry POST count from 1 to 2, invoking the stop rule; CEO disposition is
+tracked in MEP-1043. See [calendar-settings.md](specs/calendar-settings.md).
+
+- W10: provider connection, synchronization direction and conflict/deletion
+  rules remain unknown. No connection or sync was initiated.
+- Working-hours configuration is a persisted organization setting. Do not
+  configure it to reveal the booking list. The hours editor, validation and
+  post-save state remain unobserved.
+- Calendar-wide default reminder changes and meeting-provider setup persist
+  preferences or connections. No values were changed; Events reminder fields
+  do not establish calendar-wide defaults.
+- Booking-page create/edit/publish and public reservation submission are writes.
+  None was attempted. The internal list is obscured by the prerequisite; its
+  columns and empty/error states remain unknown.
+- R9 documentation follow-up: business-hours prerequisite, booking-list
+  structure, calendar working-hours/default-reminder settings, provider choices
+  and sync behaviour. Record dated public source locators and limits. Missing
+  documentation stays an open question; it never authorizes a live write.
