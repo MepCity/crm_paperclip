@@ -217,8 +217,28 @@ connector in an optional integration tier; Mailpit for outbound in `pnpm dev`;
 synthetic message fixtures (RFC 5322 samples with threads, attachments,
 encodings, bounces, ICS invites) committed under the module's test folder,
 with invented addresses on reserved domains (`example.com`). Live-provider
-checks are a manual board-run smoke with a board-owned test mailbox, never in
-CI.
+checks are a manual smoke, never in CI.
+
+Test mailbox rule (board decision, 2026-10-21):
+
+- A sandbox is not required. The only address any real send may go to, from
+  our system or in a reference CRM write test, is the board's test address.
+  It is given only in the board's decision comment on the Paperclip issue and
+  is never written into the repository, specs, fixtures, seeds, committed
+  config or commits (AGENTS.md rule 3); a manual smoke reads it from there or
+  from a git-ignored `.env.local` variable.
+- No email, invitation or notification may reach anyone registered in the
+  reference CRM (customers, leads, contacts, users, team members). Our seeds
+  and demo data therefore never hold real addresses, and the outbox refuses
+  any real send in development unless the recipient equals the configured
+  test address (an allow-list of one, checked in the sender, with a test).
+- Before any write test in the reference CRM, its workflow rules, assignment
+  rules, notification settings and owner/team notices are checked read-only;
+  an action that could fire one is not run and goes to the board
+  (`research/module-10-night-test-protocol-draft.md`, sections 0 and 4.2).
+  Write tests use `ZZTEST` records, an approved action list and a deletion
+  list, in a board-set window, and only after the rule 2 exception is added
+  to AGENTS.md.
 
 CTO recommendation (pending board decision): D and C for unit tests, GreenMail
 (or a comparable test server; to be chosen at implementation after checking
@@ -292,8 +312,8 @@ first as in the research plan.
 | Q9 | Open and click tracking: off by default, on by setting, or not built in the first version? |
 | Q10 | Is the worker pulled forward from Phase 4 to the start of Module 10 (needed for real mail)? |
 | Q11 | Is a native calendar plus ICS invitations acceptable for the first calendar release, with external calendar sync later? |
-| Q12 | Research path: pursue a vendor sandbox first, a night test last, or build to documentation and standards only (see the protocol draft)? |
-| Q13 | Rules that fire on email and calendar records cannot be listed from the metadata export; may an administrator read the rule list (read-only viewing) for the protocol? |
+| Q12 | Answered 2026-10-21: sandbox optional; a live test window with the board's test address as the only recipient, after the read-only rule check and the AGENTS.md exception. Open: the window and the final action list. |
+| Q13 | Answered 2026-10-21: the rule, assignment and notification check is mandatory and read-only before any write; a rule that could fire stops that action and goes to the board. Open: may a notice to the board's own user (record owner, Notify Email) be accepted? |
 | Q14 | Does the board accept that audit trail entries and analytics counters from a live write test cannot be removed, if a night test is ever chosen? |
 
 ## Alternatives not chosen now
