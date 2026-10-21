@@ -81,6 +81,23 @@ describe("http transfer client", () => {
     expect(client.sampleCsvUrl(module)).toBe(`/crm/v2.2/${module}/actions/import_sample?org=acme`);
   });
 
+  it.each(["Solutions", "Cases"] as const)("%s posts the shared export payload", async (module) => {
+    const { client, calls } = setup();
+    await client.runExport({ module, fields: { include: ["id"] }, viewId: "example-view" });
+    expect(calls).toEqual([
+      {
+        path: `/crm/v2.2/${module}/actions/export`,
+        options: expect.objectContaining({
+          method: "POST",
+          body: {
+            fields: { include: ["id"] },
+            viewId: "example-view",
+          },
+        }),
+      },
+    ]);
+  });
+
   it("builds download URLs and reads the decoded file name", async () => {
     const { client, raw } = setup();
     expect(client.exportDownloadUrl("e1")).toBe("/crm/v9/settings/exports/e1/download?org=acme");

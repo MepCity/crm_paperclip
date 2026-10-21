@@ -44,7 +44,9 @@ const initialFieldLabels = [
   "Type",
 ];
 
-const fieldModuleKeys: Readonly<Record<string, ModuleKey>> = {};
+const fieldModuleKeys: Readonly<Record<string, ModuleKey>> = {
+  "Product Name": "P2",
+};
 
 const relatedModuleRows: readonly [string, ModuleKey][] = [
   ["Calls", "M5"],
@@ -55,11 +57,15 @@ const relatedModuleRows: readonly [string, ModuleKey][] = [
 ];
 
 function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | undefined {
+  if (field.apiName === "Product_Name") {
+    // Unregistered target Products (P2): no text-match editor, drawn with laterModule="P2"
+    return undefined;
+  }
   const special =
     field.apiName === "Connected_To__s" ? "multilookup" : field.apiName === "Tag" ? "tag" : null;
   if (!special && field.dataType !== "autonumber" && !(field.dataType in filterOperators))
     return undefined;
-  // Product Name targets Products (P2, unregistered): lookups match by text; autonumbers match as text.
+  // Autonumbers (Solution/Case Number) match as text.
   const fieldType =
     special ?? (field.dataType === "autonumber" ? "text" : (field.dataType as FilterFieldType));
   return {
@@ -100,15 +106,39 @@ export function buildCasesFilterGroups(input: Input): readonly FilterGroup[] {
     {
       id: "system",
       label: "System Defined Filters",
-      items: systemRows.map(([label, moduleKey], index) => {
-        // Evaluated on the server at import time: no client-only resolver; none of these keys is a live module.
-        const laterModule = moduleKey;
-        return {
-          id: `system-${index}`,
-          label,
-          ...(laterModule ? { laterModule } : { disabled: true }),
-        };
-      }),
+      items: systemRows.map(([label, moduleKey], index) => ({
+        id: `system-${index}`,
+        label,
+        ...(moduleKey
+          ? { laterModule: moduleKey }
+          : {
+              systemEditor: (
+                {
+                  Locked: "locked",
+                  "Record Action": "record_action",
+                  "Related Records Action": "related_records_action",
+                  "Touched Records": "touched",
+                  "Untouched Records": "untouched",
+                } as const
+              )[
+                label as
+                  | "Locked"
+                  | "Record Action"
+                  | "Related Records Action"
+                  | "Touched Records"
+                  | "Untouched Records"
+              ],
+              systemOptions: {
+                relatedModules: [
+                  { id: "Notes", label: "Notes" },
+                  { id: "Attachments", label: "Attachments" },
+                  { id: "Tasks", label: "Tasks" },
+                  { id: "Events", label: "Meetings" },
+                  { id: "Calls", label: "Calls" },
+                ],
+              },
+            }),
+      })),
     },
     {
       id: "fields",

@@ -64,7 +64,7 @@ export const casesListPageConfig: ModuleListScreenConfig = {
       { id: "mass-email", label: "Mass Email", laterModule: "M10" },
       { id: "approve", label: "Approve Cases", laterModule: "P3" },
       { id: "client-script", label: "Create Client Script", laterModule: "M11" },
-      { id: "export", label: "Export Cases", laterModule: "M6" },
+      { id: "export", label: "Export Cases" },
       { id: "sheet", label: "Sheet view", laterModule: "P3" },
       { id: "print", label: "Print View", submenuIndicator: true },
     ],

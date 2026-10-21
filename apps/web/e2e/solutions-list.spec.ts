@@ -1,6 +1,7 @@
 import { signUpNewUser } from "./support/auth";
-import { moduleListDefaultPath } from "./support/crm-paths";
+import { moduleListDefaultPath, moduleTagsPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
+import { exerciseSystemFilters } from "./support/system-filters";
 import { expect, test } from "./support/test";
 
 test("Solutions shell entry, views, columns and sorting", async ({ page }) => {
@@ -111,9 +112,45 @@ test("Solutions Actions menu and later-module controls stay inert", async ({ pag
     "Sheet view",
     "Print View",
   ]);
-  await page
-    .getByRole("menuitem", { name: "Create Client Script", exact: true })
-    .click({ force: true });
-  await expect(page.getByRole("menu")).toBeVisible();
-  expect(page.url()).toBe(before);
+  await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click({ force: true });
+  await expect(page).toHaveURL(moduleTagsPath(org.slug, "Solutions"));
+});
+
+test("Solutions applies and clears all five system filters with matching list/count requests", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseSystemFilters(page, org.slug, "Solutions", 25);
+});
+
+test("Solutions Actions exports through the shared dialog", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Solutions"));
+  const list = page.locator(".module-list-page");
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+  await list.getByRole("button", { name: "Actions", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Export Solutions", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Export Solutions", exact: true });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: /Select view/ })).toContainText("All Solutions");
+  await expect(dialog.getByRole("radio", { name: "All fields", exact: true })).toBeChecked();
+  await expect(dialog.getByRole("radio", { name: "Choose fields", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("radio", { name: "Exclude fields", exact: true })).toBeVisible();
+  await expect(dialog.getByText("CSV", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("UTF-8", { exact: true })).toBeVisible();
+  const responsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes("/crm/v2.2/Solutions/actions/export") &&
+      response.request().method() === "POST",
+  );
+  await dialog.getByRole("button", { name: "Export", exact: true }).click();
+  const response = await responsePromise;
+  expect(response.status()).toBe(200);
+  expect(await response.json()).toMatchObject({ module: "Solutions", status: "completed" });
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText("Export completed", { exact: true })).toBeVisible();
+  await page.goto(`/crm/${org.slug}/tab/Solutions/import`);
+  await expect(page.getByRole("heading", { name: "Page not found", exact: true })).toBeVisible();
 });

@@ -72,11 +72,11 @@ test("Cases field rows follow KL-24 - KL-31 then DOM-only catalogue, then alphab
   expect(items.find((i) => i.id === "Tag")?.editor?.fieldType).toBe("tag");
   expect(items.find((i) => i.id === "Status")?.editor?.fieldType).toBe("picklist");
 
-  // Product Name is a Products (P2) lookup: it filters by text match
+  // Product Name has laterModule="P2" and no text-match editor
   const productItem = items.find((i) => i.id === "Product_Name");
-  expect(productItem?.laterModule).toBeUndefined();
-  expect(productItem?.editor?.fieldType).toBe("lookup");
-  expect(productItem?.disabled).toBeUndefined();
+  expect(productItem?.laterModule).toBe("P2");
+  expect(productItem?.editor).toBeUndefined();
+  expect(productItem?.disabled).toBe(true);
 });
 
 test("Cases Filter By Related Modules has Calls, Emails, Meetings, Notes, Tasks with laterModule", () => {
@@ -91,4 +91,27 @@ test("Cases Filter By Related Modules has Calls, Emails, Meetings, Notes, Tasks 
     "Tasks",
   ]);
   expect(relatedGroup?.items.map((i) => i.laterModule)).toEqual(["M5", "M10", "M5", "M6", "M5"]);
+});
+
+test("Cases enables five system editors, keeps email deferred and maps Meetings to Events", () => {
+  const rows = casesFilterGroups[0]?.items ?? [];
+  expect(rows[0]?.laterModule).toBe("M10");
+  expect(rows.slice(1).map((row) => row.systemEditor)).toEqual([
+    "locked",
+    "record_action",
+    "related_records_action",
+    "touched",
+    "untouched",
+  ]);
+  expect(rows.slice(1).every((row) => !row.disabled && !row.laterModule)).toBe(true);
+  expect(
+    rows.find((row) => row.systemEditor === "related_records_action")?.systemOptions
+      ?.relatedModules,
+  ).toEqual([
+    { id: "Notes", label: "Notes" },
+    { id: "Attachments", label: "Attachments" },
+    { id: "Tasks", label: "Tasks" },
+    { id: "Events", label: "Meetings" },
+    { id: "Calls", label: "Calls" },
+  ]);
 });

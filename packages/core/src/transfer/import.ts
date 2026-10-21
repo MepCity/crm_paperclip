@@ -24,6 +24,8 @@ export const defaultMatch: Record<TransferModule, string> = {
   Tasks: "id",
   Events: "id",
   Calls: "id",
+  Solutions: "id",
+  Cases: "id",
 };
 const managed = new Set([
   "id",

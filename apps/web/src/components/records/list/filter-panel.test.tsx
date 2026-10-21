@@ -355,3 +355,68 @@ test("seeds CampaignFilterEditor from initialCampaignFilter", async () => {
     memberStatuses: ["Sent"],
   });
 });
+
+test("all five system editors gate Apply, emit one combined payload and discard drafts on Clear", async () => {
+  const user = userEvent.setup();
+  const onApply = vi.fn();
+  const onClear = vi.fn();
+  const kinds = [
+    "locked",
+    "record_action",
+    "related_records_action",
+    "touched",
+    "untouched",
+  ] as const;
+  function Harness() {
+    const [selectedIds, onSelectionChange] = useState<string[]>([]);
+    return (
+      <FilterPanel
+        {...props}
+        groups={[
+          {
+            id: "system",
+            label: "System Defined Filters",
+            items: kinds.map((kind) => ({
+              id: kind,
+              label: kind,
+              systemEditor: kind,
+              systemOptions: { relatedModules: [{ id: "Notes", label: "Notes" }] },
+            })),
+          },
+        ]}
+        selectedIds={selectedIds}
+        onSelectionChange={onSelectionChange}
+        onApply={onApply}
+        onClear={onClear}
+      />
+    );
+  }
+  render(<Harness />);
+  for (const kind of kinds) await user.click(screen.getByRole("checkbox", { name: kind }));
+  expect((screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement).disabled).toBe(
+    true,
+  );
+  await user.click(screen.getByRole("button", { name: /related_records_action module/ }));
+  await user.click(screen.getByRole("option", { name: "Notes" }));
+  await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+  const filters = onApply.mock.calls[0]?.[3];
+  expect(Object.keys(filters)).toEqual([
+    "locked",
+    "recordAction",
+    "relatedRecordsAction",
+    "touched",
+    "untouched",
+  ]);
+  expect(filters.locked).toEqual({ locked: true });
+  expect(filters.recordAction.action).toBe("created");
+  expect(filters.relatedRecordsAction).toMatchObject({ action: "added", module: "Notes" });
+  expect(filters.touched.period).toEqual(filters.untouched.period);
+  expect(filters.touched.period).toEqual(filters.recordAction.period);
+  await user.click(screen.getByRole("button", { name: "Clear" }));
+  expect(onClear).toHaveBeenCalledOnce();
+  expect(screen.queryByRole("button", { name: "Apply Filter" })).toBeNull();
+  await user.click(screen.getByRole("checkbox", { name: "related_records_action" }));
+  expect((screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement).disabled).toBe(
+    true,
+  );
+});

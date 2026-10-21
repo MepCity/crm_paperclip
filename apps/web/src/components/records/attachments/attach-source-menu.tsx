@@ -23,13 +23,13 @@ export function AttachSourceMenu({ onAttach }: AttachSourceMenuProps) {
   const Chevron = open ? Icons.chevronUp : Icons.chevronDown;
   return (
     <MenuTrigger isOpen={open} onOpenChange={setOpen}>
-      <Button variant="secondary" size="compact" className="flex items-center gap-1.5">
-        <span>Attach</span>
-        <Chevron
-          aria-hidden
-          data-chevron={open ? "up" : "down"}
-          className="size-3 text-text-muted"
-        />
+      <Button
+        variant="relatedAction"
+        size="relatedAction"
+        className="w-(--size-detail-attach-width) gap-1.5"
+      >
+        <span data-related-action-label>Attach</span>
+        <Chevron aria-hidden data-chevron={open ? "up" : "down"} className="size-3 shrink-0" />
       </Button>
       <Menu
         aria-label="Attach source"

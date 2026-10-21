@@ -90,6 +90,32 @@ describe("Calls activity foundation", () => {
     expect(completed.fields.Call_Duration_in_seconds).toBe(330);
   });
 
+  it("duration requirement matches the form matrix for every type × status", async () => {
+    const service = make();
+    const { Call_Duration: _, ...bare } = input();
+    for (const type of ["Outbound", "Inbound", "Missed"]) {
+      for (const status of ["Scheduled", "Completed", "Cancelled", "Overdue"]) {
+        const required = type === "Inbound" || status === "Completed";
+        const attempt = service.create("Calls", {
+          ...bare,
+          Call_Type: type,
+          Outgoing_Call_Status: status,
+        });
+        if (required) await expect(attempt).rejects.toBeInstanceOf(ValidationError);
+        else await expect(attempt).resolves.toBeDefined();
+        if (required)
+          await expect(
+            service.create("Calls", {
+              ...bare,
+              Call_Type: type,
+              Outgoing_Call_Status: status,
+              Call_Duration: "01:05",
+            }),
+          ).resolves.toMatchObject({ fields: { Call_Duration_in_seconds: 65 } });
+      }
+    }
+  });
+
   it("supports list, get, create, update and delete", async () => {
     const service = make();
     const created = await service.create("Calls", input({ Subject: "Example Call" }));

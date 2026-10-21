@@ -132,30 +132,7 @@ describe("inventory text filters", () => {
     readOnly: false,
     unique: false,
   });
-  const fields = new Map([
-    ["Product_Name", def("Product_Name", "lookup")],
-    ["Solution_Number", def("Solution_Number", "autonumber")],
-  ]);
-  it("Product Name lookup matches the referenced record name as text", () => {
-    const criterion: Criteria = { field: "Product_Name", comparator: "contains", value: "widg" };
-    validateCriteria(criterion, fields);
-    expect(
-      matches(record("Product_Name", { id: "p1", name: "Widget Pro" }), criterion, runtime, fields),
-    ).toBe(true);
-    expect(
-      matches(record("Product_Name", { id: "p2", name: "Gadget" }), criterion, runtime, fields),
-    ).toBe(false);
-  });
-  it("Product Name stored as module+id only has no name to match but is present", () => {
-    const ref = { module: "Products", id: "p9" };
-    const contains: Criteria = { field: "Product_Name", comparator: "contains", value: "widg" };
-    expect(matches(record("Product_Name", ref), contains, runtime, fields)).toBe(false);
-    const notEmpty: Criteria = { field: "Product_Name", comparator: "is_not_empty", value: null };
-    const empty: Criteria = { field: "Product_Name", comparator: "is_empty", value: null };
-    expect(matches(record("Product_Name", ref), notEmpty, runtime, fields)).toBe(true);
-    expect(matches(record("Product_Name", ref), empty, runtime, fields)).toBe(false);
-    expect(matches(record("Product_Name", null), empty, runtime, fields)).toBe(true);
-  });
+  const fields = new Map([["Solution_Number", def("Solution_Number", "autonumber")]]);
   it("Solution Number autonumber matches as text", () => {
     const criterion: Criteria = { field: "Solution_Number", comparator: "contains", value: "1002" };
     validateCriteria(criterion, fields);
