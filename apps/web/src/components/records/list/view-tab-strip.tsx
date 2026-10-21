@@ -91,7 +91,7 @@ export function ViewTabStrip({
             placement="bottom start"
             appearance="measured"
             tall
-            widthPx={searchable ? 320 : undefined}
+            widthPx={320}
             header={
               searchable ? (
                 <TextField
