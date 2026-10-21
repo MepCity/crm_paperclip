@@ -6,6 +6,7 @@ export const TRANSFER_MODULES = [
   "Contacts",
   "Accounts",
   "Deals",
+  "Campaigns",
   "Tasks",
   "Events",
   "Calls",
