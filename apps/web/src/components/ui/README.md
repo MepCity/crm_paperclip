@@ -423,6 +423,10 @@ what the "no colour constants" rule forbids.
 | `--size-form-list-padding` | `6px` | record-detail.md › Standard picklist › padding above and below | from spec |
 | `--size-form-country-height` | `270px` | record-detail.md › Country panel › panel height | from spec |
 | `--size-form-owner-height` | `179px` | record-detail.md › Owner dropdown › panel height | from spec |
+| `--size-choice-viewport-inset` | `12px` | Overlay collision boundary | interim viewport safety inset; not reference-measured |
+| `--size-form-panel-min-width` | `110px` | record-detail.md › Standard picklist › Salutation panel | smallest observed panel; content may expand |
+| `--size-form-panel-search-min-width` | `303px` | record-detail.md › Country panel | measured width; interim mapping for narrow module selectors |
+| `--size-form-panel-owner-min-width` | `299.5px` | record-detail.md › Owner dropdown | measured width; interim mapping for activity owner triggers |
 | `--size-form-prefix-width` | `110px` | record-detail.md › Composite inputs › Salutation panel width | from spec |
 | `--size-form-prefix-divider-offset` | `94px` | record-detail.md › Composite inputs › Salutation divider from outer left | from spec |
 | `--size-form-prefix-caret-gap` | `11px` | record-detail.md › Composite inputs › Salutation caret before divider | from spec |
@@ -1170,3 +1174,18 @@ and restores the trigger. `TextField.variant="search"` supplies an unbordered qu
 inside its caller's shared selector/query frame, including prefix content for the
 Record Name badge. Both use existing tokens; geometry is interim under Module 2's
 visual parity rule. Existing text-field variants are unchanged.
+
+
+### Choice panel sizing
+
+`RecordChoice` uses the trigger as a minimum rather than a fixed width. Ordinary
+lists grow to their content; searchable/owner lists have separate measured minimum
+widths. Prefix controls keep their trigger geometry without locking the panel.
+React Aria flips/shifts overlays at viewport edges; panel widths are also capped
+by a viewport inset. Ordinary choice labels wrap at the cap. Owner name/email lines retain the reference
+ellipsis for unusually long values. Owner rows retain the avatar, name, secondary email and selected check.
+
+`Select`, `ComboBox`, and `SearchableSelect` use the selection panel boundary;
+filter multi-select and sort panels retain their measured widths. Generic popovers
+receive only a viewport cap, with no new minimum width. Lookup search windows
+remain dialogs. See `docs/choice-panel-audit.md` for coverage and evidence gaps.

@@ -43,7 +43,7 @@ const styles = {
     "data-disabled:opacity-50 data-focus-visible:ring-2 data-focus-visible:ring-focus-ring " +
     "data-hovered:bg-surface-hover data-pressed:bg-surface-pressed",
   popover:
-    "max-h-60 overflow-auto rounded-md border border-border bg-surface shadow-lg outline-none",
+    "selection-panel max-h-60 overflow-auto rounded-md border border-border bg-surface shadow-lg outline-none",
   status: "flex items-center gap-2 px-3 py-2 text-sm text-text-muted",
   listbox: "p-1 outline-none",
   description: "text-sm text-text-muted",

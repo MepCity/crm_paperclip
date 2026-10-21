@@ -1,5 +1,7 @@
 "use client";
 
+import "./record-input.css";
+
 import { type ReactNode, useId, useState } from "react";
 import { Button, ListBox, type Selection } from "react-aria-components";
 import { Icons } from "./icon";
@@ -131,7 +133,7 @@ export function SearchableSelect<T extends object>({
           hideTitle
           offset={offset}
           placement="bottom start"
-          className={popoverClassName}
+          className={`selection-panel ${popoverClassName ?? ""}`}
           contentClassName={contentClassName}
         >
           <div className={searchClassName}>

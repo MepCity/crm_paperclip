@@ -1348,3 +1348,16 @@ customization and Phase 3 controls.
   `research/specs/csv-import-export.md`. No new reference inspection performed.
 - Import remains unavailable for both modules. Actual reference export behavior
   remains an open question; this implementation does not claim observed parity.
+
+
+### Shared choice panels (MEP-980)
+
+- Shared owner/search/type panels can exceed narrow triggers, with viewport collision
+  handling and readable option labels. Owner rows retain avatar, selected check,
+  name and email; default search placeholder is `Search Users`.
+- Numeric regressions: `apps/web/e2e/choice-panels.spec.ts` (Tasks and Meetings,
+  1470/900 px viewports, ±1 px search/row dimensions, clipping and viewport checks).
+- Reference gaps remain: activity-specific open panel widths, narrow viewport
+  wrapping, and owner secondary typography. Current activity values reuse the
+  nearest measured record-form family; they are not certified activity parity.
+- Inventory and evidence limits: `docs/choice-panel-audit.md`.
