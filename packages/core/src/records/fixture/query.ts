@@ -56,6 +56,21 @@ const TEXT_TYPES = new Set([
 const CRITERIA_UNITS = new Set(["days", "weeks", "months"]);
 const fieldByName = new Map(leadsMetadata.fields.map((field) => [field.apiName, field]));
 
+// A stored lookup reference (even with no resolvable name, e.g. an unregistered
+// Products target saved by id only) counts as present for emptiness checks.
+function isLookupRef(
+  fields: Map<string, { dataType: string }>,
+  field: string,
+  raw: unknown,
+): boolean {
+  return (
+    fields.get(field)?.dataType === "lookup" &&
+    typeof raw === "object" &&
+    raw !== null &&
+    "id" in raw
+  );
+}
+
 function dateOnlyStart(value: string): number {
   return Date.parse(`${value}T00:00:00.000Z`);
 }
@@ -550,9 +565,9 @@ export function matches(
     case "not_equal":
       return !matchesEqual(criteria.field, value, criteria.value, dayRuntime, fields);
     case "is_empty":
-      return value === null || value === "";
+      return isLookupRef(fields, criteria.field, raw) ? false : value === null || value === "";
     case "is_not_empty":
-      return value !== null && value !== "";
+      return isLookupRef(fields, criteria.field, raw) ? true : value !== null && value !== "";
     case "starts_with":
     case "ends_with":
       return (
