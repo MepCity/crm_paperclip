@@ -83,7 +83,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
     >
       <aside
         aria-label="Folders"
-        className="flex w-56 shrink-0 flex-col rounded-lg border border-border bg-surface px-3 py-3"
+        className="flex w-64 shrink-0 flex-col rounded-lg border border-border bg-surface px-3 py-3"
       >
         {myFolders.map((folder) => (
           <FolderRow
@@ -122,120 +122,122 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
         </button>
       </aside>
 
-      <main className="flex min-w-0 flex-1 flex-col rounded-lg border border-border bg-surface">
-        <header className="flex items-center justify-between border-b border-border px-4 py-3">
-          <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm">
-            <Icons.chevronRight className="size-4 text-text-muted" aria-hidden="true" />
-            {/* Collection step: ancestor behaviour unobserved, inert. */}
-            <InertButton label="Apps">
-              <span className="px-1 text-sm">Apps</span>
-            </InertButton>
-            {crumbs.map((crumb) => {
-              const last = crumb.depth === crumbs.length - 1;
-              return (
-                <span key={crumb.depth} className="flex items-center gap-1">
-                  <Icons.chevronRight className="size-4 text-text-muted" aria-hidden="true" />
-                  {last ? (
-                    <span aria-current="page" className="flex items-center gap-1 font-semibold">
-                      {crumb.label}
-                      {/* Current-folder menu: entries unobserved, inert. */}
-                      <Icons.chevronDown className="size-3" aria-hidden="true" />
-                    </span>
-                  ) : (
-                    <button
-                      type="button"
-                      className="text-text-muted"
-                      onClick={() => setTrail(trail.slice(0, crumb.depth))}
-                    >
-                      {crumb.label}
-                    </button>
-                  )}
-                </span>
-              );
-            })}
-          </nav>
-          <div className="flex items-center gap-1">
-            {/* Sort, filter and view controls: behaviour not observed, inert. */}
-            <InertButton label="Sort">
-              <Icons.sort className="size-4" />
-            </InertButton>
-            <InertButton label="Filter">
-              <Icons.filter className="size-4" />
-            </InertButton>
-            <InertButton label="View">
-              <Icons.viewTypeList className="size-4" />
+      <div className="flex min-w-0 flex-1 rounded-lg border border-border bg-surface">
+        <main className="flex min-w-0 flex-1 flex-col">
+          <header className="flex items-center justify-between border-b border-border px-4 py-3">
+            <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm">
+              <Icons.chevronRight className="size-4 text-text-muted" aria-hidden="true" />
+              {/* Collection step: ancestor behaviour unobserved, inert. */}
+              <InertButton label="Apps">
+                <span className="px-1 text-sm">Apps</span>
+              </InertButton>
+              {crumbs.map((crumb) => {
+                const last = crumb.depth === crumbs.length - 1;
+                return (
+                  <span key={crumb.depth} className="flex items-center gap-1">
+                    <Icons.chevronRight className="size-4 text-text-muted" aria-hidden="true" />
+                    {last ? (
+                      <span aria-current="page" className="flex items-center gap-1 font-semibold">
+                        {crumb.label}
+                        {/* Current-folder menu: entries unobserved, inert. */}
+                        <Icons.chevronDown className="size-3" aria-hidden="true" />
+                      </span>
+                    ) : (
+                      <button
+                        type="button"
+                        className="text-text-muted"
+                        onClick={() => setTrail(trail.slice(0, crumb.depth))}
+                      >
+                        {crumb.label}
+                      </button>
+                    )}
+                  </span>
+                );
+              })}
+            </nav>
+            <div className="flex items-center gap-1">
+              {/* Sort, filter and view controls: behaviour not observed, inert. */}
+              <InertButton label="Sort">
+                <Icons.sort className="size-4" />
+              </InertButton>
+              <InertButton label="Filter">
+                <Icons.filter className="size-4" />
+              </InertButton>
+              <InertButton label="View">
+                <Icons.viewTypeList className="size-4" />
+              </InertButton>
+            </div>
+          </header>
+
+          <div className="flex items-center border-b border-border py-2 pl-16 pr-6 text-sm font-semibold text-text-muted">
+            <span className="flex-1">Name</span>
+            <span className="flex w-64 items-center gap-1">
+              Last Modified
+              <Icons.columnSortDesc className="size-3" aria-label="Sorted descending" />
+            </span>
+            {/* Column configuration: unobserved, inert. */}
+            <InertButton label="Columns">
+              <CirclePlus />
             </InertButton>
           </div>
-        </header>
 
-        <div className="flex items-center border-b border-border px-6 py-2 text-sm font-semibold text-text-muted">
-          <span className="flex-1">Name</span>
-          <span className="flex w-64 items-center gap-1">
-            Last Modified
-            <Icons.columnSortDesc className="size-3" aria-label="Sorted descending" />
-          </span>
-          {/* Column configuration: unobserved, inert. */}
-          <InertButton label="Columns">
-            <CirclePlus />
-          </InertButton>
-        </div>
-
-        <ul aria-label="Documents" className="flex-1">
-          {items.map((row) => (
-            <li
-              key={row.id}
-              className="flex items-center border-b border-border px-6 py-4 text-base"
-            >
-              <div className="flex flex-1 items-center gap-3">
-                {row.kind === "folder" ? (
-                  <Icons.folder className="size-7 text-success" aria-hidden="true" />
-                ) : (
-                  <Icons.file className="size-7 text-text-muted" aria-hidden="true" />
-                )}
-                <div>
+          <ul aria-label="Documents" className="flex-1">
+            {items.map((row) => (
+              <li
+                key={row.id}
+                className="flex items-center border-b border-border py-4 pl-16 pr-6 text-base"
+              >
+                <div className="flex flex-1 items-center gap-3">
                   {row.kind === "folder" ? (
-                    <button
-                      type="button"
-                      className="font-semibold text-accent-blue"
-                      onClick={() => setTrail([...trail, row])}
-                    >
-                      {row.name}
-                    </button>
+                    <Icons.folder className="size-7 text-success" aria-hidden="true" />
                   ) : (
-                    <span className="font-semibold">{row.name}</span>
+                    <Icons.file className="size-7 text-text-muted" aria-hidden="true" />
                   )}
-                  <div className="text-sm text-text-muted">Uploaded by {row.uploadedBy}</div>
+                  <div>
+                    {row.kind === "folder" ? (
+                      <button
+                        type="button"
+                        className="font-semibold text-accent-blue"
+                        onClick={() => setTrail([...trail, row])}
+                      >
+                        {row.name}
+                      </button>
+                    ) : (
+                      <span className="font-semibold">{row.name}</span>
+                    )}
+                    <div className="text-sm text-text-muted">Uploaded by {row.uploadedBy}</div>
+                  </div>
                 </div>
-              </div>
-              <div className="w-64 text-sm">
-                <div className="text-text-muted">
-                  {dateFormat.format(new Date(row.modifiedAt))} by {row.modifiedBy}
+                <div className="w-64 text-sm">
+                  <div className="text-text-muted">
+                    {dateFormat.format(new Date(row.modifiedAt))} by {row.modifiedBy}
+                  </div>
                 </div>
-              </div>
-              <span className="size-7" aria-hidden="true" />
-            </li>
-          ))}
-        </ul>
-      </main>
+                <span className="size-7" aria-hidden="true" />
+              </li>
+            ))}
+          </ul>
+        </main>
 
-      <aside
-        aria-label="Side strip"
-        className="flex w-16 shrink-0 flex-col items-center gap-4 rounded-lg border border-border bg-surface py-3 text-xs"
-      >
-        {/* Details pane and assistant: panel behaviour not observed, inert. */}
-        <InertButton label="Details">
-          <span className="flex flex-col items-center gap-1">
-            <Icons.info className="size-4" />
-            <span className="text-xs">Details</span>
-          </span>
-        </InertButton>
-        <InertButton label="Assistant">
-          <span className="flex flex-col items-center gap-1">
-            <Icons.sparkles className="size-4" />
-            <span className="text-xs">Assistant</span>
-          </span>
-        </InertButton>
-      </aside>
+        <aside
+          aria-label="Side strip"
+          className="flex w-16 shrink-0 flex-col items-center gap-4 border-l border-border py-3 text-xs"
+        >
+          {/* Details pane and assistant: panel behaviour not observed, inert. */}
+          <InertButton label="Details">
+            <span className="flex flex-col items-center gap-1">
+              <Icons.info className="size-4" />
+              <span className="text-xs">Details</span>
+            </span>
+          </InertButton>
+          <InertButton label="Assistant">
+            <span className="flex flex-col items-center gap-1">
+              <Icons.sparkles className="size-4" />
+              <span className="text-xs">Assistant</span>
+            </span>
+          </InertButton>
+        </aside>
+      </div>
     </div>
   );
 }
