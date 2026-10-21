@@ -157,6 +157,7 @@ test("Campaigns Actions menu and later-module controls stay inert", async ({ pag
   await responseRow.scrollIntoViewIfNeeded();
   await responseRow.getByText("Expected Response", { exact: true }).click();
   await list.getByRole("textbox", { name: "Expected Response value" }).fill("1");
+  await page.keyboard.press("Tab");
   await list.getByRole("button", { name: "Apply Filter" }).click();
   await expect(list.getByRole("button", { name: "Clear", exact: true })).toBeVisible();
 });
