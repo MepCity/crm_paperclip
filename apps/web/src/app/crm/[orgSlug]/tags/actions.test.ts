@@ -24,7 +24,7 @@ beforeEach(() => {
   session.ctx.orgId = randomUUID();
 });
 
-it.each(["Leads", "Contacts", "Accounts", "Deals"])(
+it.each(["Leads", "Contacts", "Accounts", "Deals", "Cases", "Solutions"])(
   "saves, reads and removes module-scoped %s memberships through the fixture service",
   async (module) => {
     const service = createFixtureRecordService(session.ctx);
@@ -107,7 +107,7 @@ it("does not expose or remove another organization's tag", async () => {
   expect(await original.tags.listRecordTags("Leads", record.id)).toHaveLength(1);
 });
 
-it.each(["Leads", "Contacts", "Accounts", "Deals"])(
+it.each(["Leads", "Contacts", "Accounts", "Deals", "Cases", "Solutions"])(
   "manages %s catalogue and keeps record projections consistent",
   async (module) => {
     const { readTagCatalogueAction, mutateTagCatalogueAction } = await import("./actions");

@@ -182,4 +182,17 @@ describe("RelatedCasesCardBody", () => {
     fireEvent.click(next);
     expect(hookState.calls.at(-1)?.query).toMatchObject({ page: 2 });
   });
+  it("reaches the 101st case on page 2 and can go back", () => {
+    hookState.module = { data: { fields: caseFields }, isLoading: false, isError: false };
+    hookState.list = {
+      data: { records: [{ id: "case-100", fields: { Subject: "Case 101" } }], moreRecords: true },
+      isLoading: false,
+      isError: false,
+    };
+    renderCard("Account_Name");
+    fireEvent.click(screen.getByRole("button", { name: "Next" }));
+    expect(hookState.calls.at(-1)?.query).toMatchObject({ page: 2 });
+    fireEvent.click(screen.getByRole("button", { name: "Previous" }));
+    expect(hookState.calls.at(-1)?.query).toMatchObject({ page: 1 });
+  });
 });
