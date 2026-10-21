@@ -67,6 +67,7 @@ describe("Attachments record contract", () => {
       "Contacts",
       "Accounts",
       "Deals",
+      "Campaigns",
       "Cases",
       "Solutions",
     ]);

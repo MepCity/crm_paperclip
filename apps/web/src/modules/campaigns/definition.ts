@@ -42,6 +42,7 @@ export const campaignsScreenDefinition: ModuleScreenDefinition = {
   form: {
     rules: campaignsFormRules,
     inventoryChrome: true,
+    inventoryFooterPinned: true,
   },
   detail: {
     header: campaignsRecordHeaderIdentity,
