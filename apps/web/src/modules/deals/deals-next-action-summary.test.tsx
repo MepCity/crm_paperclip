@@ -77,3 +77,16 @@ test("no open activities renders nothing (closed-only or empty)", () => {
   const { container } = show();
   expect(container.querySelector("[data-deals-next-action-summary]")).toBeNull();
 });
+
+test("picks the nearest activity even when it is the 101st row", () => {
+  const rows = Array.from({ length: 101 }, (_, i) => ({
+    id: `t${i}`,
+    subject: `Task ${i}`,
+    date: i === 100 ? "2026-01-01" : "2026-06-01",
+  }));
+  open = [cat("task", rows)];
+  show();
+  expect(screen.getByRole("link", { name: "Task 100" }).getAttribute("href")).toBe(
+    "/tab/Tasks/t100",
+  );
+});
