@@ -57,6 +57,12 @@
   width: var(--size-form-page-save-new-width);
 }
 
+.record-form-shell[data-form-layout="call"] .record-form-strip__action--save-new {
+  order: -1;
+  width: auto;
+  padding-inline: var(--space-4);
+}
+
 .record-form-strip__action--save {
   width: var(--size-form-page-save-width);
 }

@@ -5,6 +5,7 @@ import type {
   RecordData,
   RecordService,
 } from "@crm/core/records";
+import { lookupTargetModules } from "@crm/core/records";
 import { resolveModuleScreenByApiName } from "./registry";
 
 type CreatePrefillService = Pick<RecordService, "getModule" | "get">;
@@ -20,6 +21,7 @@ async function prefillValueForField(
   service: CreatePrefillService,
   field: FieldDefinition,
   text: string,
+  moduleHint?: string,
 ): Promise<FieldValue | undefined> {
   switch (field.dataType) {
     case "text":
@@ -41,7 +43,11 @@ async function prefillValueForField(
     case "boolean":
       return text === "true";
     case "lookup": {
-      const targetModule = field.lookup?.module;
+      const allowed = lookupTargetModules(field);
+      const targetModule =
+        moduleHint && allowed.includes(moduleHint as ModuleApiName)
+          ? (moduleHint as ModuleApiName)
+          : field.lookup?.module;
       if (!targetModule) return undefined;
       let record: RecordData | undefined;
       try {
@@ -80,7 +86,12 @@ export async function resolveCreatePrefillParams(
   for (const [name, text] of requested) {
     const field = metadata.fields.find((item) => item.apiName === name);
     if (!field?.views.create || field.readOnly) continue;
-    const value = await prefillValueForField(service, field, text);
+    const value = await prefillValueForField(
+      service,
+      field,
+      text,
+      params[`${name}_module`] as string | undefined,
+    );
     if (value !== undefined) values[name] = value;
   }
   return Object.keys(values).length > 0 ? values : undefined;
