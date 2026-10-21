@@ -4,7 +4,7 @@ import { formatDate, formatDateTime } from "@crm/core/format";
 import type { FieldValue, ModuleApiName, RecordData } from "@crm/core/records";
 import { activityState } from "@crm/core/records/activities";
 import { useEffect, useMemo, useState } from "react";
-import { useRecordList, useUsers, useViews } from "@/lib/api/client/hooks";
+import { useAllRecordPages, useUsers, useViews } from "@/lib/api/client/hooks";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import {
   type ActivityKind,
@@ -42,48 +42,14 @@ function useActivityList(module: ModuleApiName, parentModule: string, parentId: 
     [parentModule, parentId],
   );
   const query = useMemo(
-    () => ({
-      viewId: viewId ?? "pending",
-      page: 1,
-      perPage: PAGE_SIZE,
-      filters: filters ?? undefined,
-    }),
+    () => ({ viewId: viewId ?? "pending", perPage: PAGE_SIZE, filters: filters ?? undefined }),
     [viewId, filters],
   );
-  // Load every page: ask for the next one while the previous reported more records.
-  const queryKey = `${viewId}|${JSON.stringify(filters)}`;
-  const [paging, setPaging] = useState<{ key: string; pages: RecordData[][]; more: boolean }>({
-    key: queryKey,
-    pages: [],
-    more: true,
-  });
-  const fresh = paging.key === queryKey;
-  const pages = fresh ? paging.pages : [];
-  const done = fresh && pages.length > 0 && !paging.more;
-  const page = done ? pages.length : pages.length + 1;
-  const list = useRecordList(
-    module,
-    { ...query, page },
-    { enabled: viewId !== null && filters !== null },
-  );
-  const data = list.data;
-  useEffect(() => {
-    if (done || !data || data.page !== page) return;
-    setPaging((prev) => {
-      const base = prev.key === queryKey ? prev.pages : [];
-      if (base.length + 1 !== page) return prev;
-      return {
-        key: queryKey,
-        pages: [...base, [...data.records]],
-        more: data.moreRecords === true,
-      };
-    });
-  }, [data, page, queryKey, done]);
-  const records = useMemo(() => pages.flat() as readonly RecordData[], [pages]);
+  const list = useAllRecordPages(module, query, { enabled: viewId !== null && filters !== null });
+  const records = useMemo(() => (list.data ?? []) as readonly RecordData[], [list.data]);
   return {
     records,
-    isLoading:
-      views.isLoading || (viewId !== null && filters !== null && (list.isLoading || !done)),
+    isLoading: views.isLoading || (viewId !== null && filters !== null && list.isLoading),
     isError: views.isError || list.isError,
   };
 }
