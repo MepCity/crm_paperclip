@@ -93,8 +93,12 @@ export function createMailService(context: OrgContext, options: MailServiceOptio
       const addresses = new Set(
         [...row.from, ...row.to, ...row.cc].map((p) => normalizeMailAddress(p.address)),
       );
-      const matches = new Map<string, { module: MailRecordModule; recordId: string }>();
+      const matches = new Map<
+        string,
+        { module: MailRecordModule; recordId: string; ambiguous: boolean }
+      >();
       for (const address of addresses) {
+        const addressMatches = new Map<string, { module: MailRecordModule; recordId: string }>();
         for (const match of await options.recordAddressLookup.findByAddress(ctx.orgId, address)) {
           if (
             match.organizationId !== ctx.orgId ||
@@ -102,7 +106,14 @@ export function createMailService(context: OrgContext, options: MailServiceOptio
             !["leads", "contacts", "accounts"].includes(match.module)
           )
             continue;
-          matches.set(JSON.stringify([match.module, match.recordId]), match);
+          addressMatches.set(JSON.stringify([match.module, match.recordId]), match);
+        }
+        for (const [key, match] of addressMatches) {
+          matches.set(key, {
+            module: match.module,
+            recordId: match.recordId,
+            ambiguous: addressMatches.size > 1 || matches.get(key)?.ambiguous === true,
+          });
         }
       }
       const links: MailRecordLink[] = [];
@@ -114,7 +125,7 @@ export function createMailService(context: OrgContext, options: MailServiceOptio
             module: match.module,
             recordId: match.recordId,
             source: "auto",
-            ambiguous: matches.size > 1,
+            ambiguous: match.ambiguous,
           }),
         );
       }

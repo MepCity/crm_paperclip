@@ -64,7 +64,9 @@ async function setup() {
   await repository.upsertMessage(message());
   await repository.upsertMessage(message("org-b"));
   const canReadRecord = vi.fn(() => true);
-  const findByAddress = vi.fn(async (): Promise<RecordAddressMatch[]> => []);
+  const findByAddress = vi.fn(
+    async (_orgId: string, _address: string): Promise<RecordAddressMatch[]> => [],
+  );
   const options = { repository, canReadRecord, recordAddressLookup: { findByAddress } };
   return {
     repository,
@@ -340,38 +342,42 @@ describe("mail user boundary", () => {
 describe("record linking", () => {
   it("normalizes exact email matches, deduplicates, links all ambiguous matches and excludes domains/BCC/other tenants", async () => {
     const { owner, findByAddress } = await setup();
-    findByAddress.mockImplementation(async () => [
-      {
-        organizationId: "org-a",
-        module: "leads",
-        recordId: "lead-1",
-        address: " sender@EXAMPLE.com ",
-      },
-      {
-        organizationId: "org-a",
-        module: "contacts",
-        recordId: "contact-1",
-        address: "sender@example.com",
-      },
-      {
-        organizationId: "org-a",
-        module: "contacts",
-        recordId: "contact-1",
-        address: "sender@example.com",
-      },
-      {
-        organizationId: "org-a",
-        module: "accounts",
-        recordId: "domain",
-        address: "other@example.com",
-      },
-      {
-        organizationId: "org-b",
-        module: "leads",
-        recordId: "foreign",
-        address: "sender@example.com",
-      },
-    ]);
+    findByAddress.mockImplementation(async (_orgId, address) =>
+      address === "sender@example.com"
+        ? [
+            {
+              organizationId: "org-a",
+              module: "leads",
+              recordId: "lead-1",
+              address: " sender@EXAMPLE.com ",
+            },
+            {
+              organizationId: "org-a",
+              module: "contacts",
+              recordId: "contact-1",
+              address: "sender@example.com",
+            },
+            {
+              organizationId: "org-a",
+              module: "contacts",
+              recordId: "contact-1",
+              address: "sender@example.com",
+            },
+            {
+              organizationId: "org-a",
+              module: "accounts",
+              recordId: "domain",
+              address: "other@example.com",
+            },
+            {
+              organizationId: "org-b",
+              module: "leads",
+              recordId: "foreign",
+              address: "sender@example.com",
+            },
+          ]
+        : [],
+    );
     const links = await owner.linkParticipants("msg");
     expect(links).toHaveLength(2);
     expect(links.every((r) => r.ambiguous && r.source === "auto")).toBe(true);
@@ -391,17 +397,73 @@ describe("record linking", () => {
     expect(await owner.listLinks("msg")).toHaveLength(1);
   });
 
+  it("keeps distinct addresses with unique records unambiguous", async () => {
+    const { owner, findByAddress } = await setup();
+    findByAddress.mockImplementation(async (organizationId, address) => [
+      {
+        organizationId,
+        module: "contacts",
+        recordId: address === "sender@example.com" ? "sender" : "reader",
+        address,
+      },
+    ]);
+    expect(await owner.linkParticipants("msg")).toEqual([
+      {
+        organizationId: "org-a",
+        messageId: "msg",
+        module: "contacts",
+        recordId: "sender",
+        source: "auto",
+        ambiguous: false,
+      },
+      {
+        organizationId: "org-a",
+        messageId: "msg",
+        module: "contacts",
+        recordId: "reader",
+        source: "auto",
+        ambiguous: false,
+      },
+    ]);
+  });
+
+  it("preserves ambiguity only for records found through a duplicate address", async () => {
+    const { owner, findByAddress, repository } = await setup();
+    await repository.upsertMessage({
+      ...message("org-a", "mixed"),
+      providerMessageKey: "mixed",
+      cc: [{ address: "unique@example.com" }],
+    });
+    // Give the second address a unique match for the record already found ambiguously.
+    findByAddress.mockImplementation(async (organizationId, address) =>
+      (address === "sender@example.com"
+        ? ["common", "duplicate"]
+        : address === "reader@example.org"
+          ? ["common"]
+          : ["unique"]
+      ).map((recordId) => ({ organizationId, module: "contacts" as const, recordId, address })),
+    );
+    const links = await owner.linkParticipants("mixed");
+    expect(links.map(({ recordId, ambiguous }) => ({ recordId, ambiguous }))).toEqual([
+      { recordId: "common", ambiguous: true },
+      { recordId: "duplicate", ambiguous: true },
+      { recordId: "unique", ambiguous: false },
+    ]);
+  });
+
   it("single matches are unambiguous; empty lookup adds no links", async () => {
     const { owner, findByAddress } = await setup();
     expect(await owner.linkParticipants("msg")).toEqual([]);
-    findByAddress.mockImplementation(async () => [
-      {
-        organizationId: "org-a",
-        module: "accounts",
-        recordId: "account",
-        address: "sender@example.com",
-      },
-    ]);
+    findByAddress.mockImplementation(async (_orgId, address) =>
+      address === "sender@example.com"
+        ? Array.from({ length: 2 }, () => ({
+            organizationId: "org-a",
+            module: "accounts" as const,
+            recordId: "account",
+            address,
+          }))
+        : [],
+    );
     expect(await owner.linkParticipants("msg")).toMatchObject([
       { module: "accounts", ambiguous: false },
     ]);

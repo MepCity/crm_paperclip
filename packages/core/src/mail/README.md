@@ -32,9 +32,10 @@ The configured address is not stored by this module.
   issue's explicit staging boundary while ADR 0002 remains unaccepted.
 - Thread source and headers are modeled; thread reconciliation/merging and
   provider cursor semantics belong to connector/sync issues.
-- Automatic linking marks all discovered associations ambiguous when more
-  than one distinct record matches the participants. Manual associations are
-  preserved when auto-linking repeats. Unlink removes the current association;
+- Automatic linking marks an association ambiguous only when at least one
+  normalized participant address that found it matches multiple distinct records.
+  Different addresses with unique matches remain unambiguous. Manual associations
+  are preserved when auto-linking repeats. Unlink removes the current association;
   an explicit later `linkParticipants` call may rediscover it. Persistent manual
   exclusions across future sync runs need a connector policy decision.
 - Metadata for an inbound attachment over 20 MiB must be `not_stored` with no
