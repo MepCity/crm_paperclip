@@ -210,6 +210,48 @@ test("Activities lists and record detail do not render copied extra elements", a
 // required bar. Create is measured; Edit is assumed equal (open question).
 async function expectCallFormVisual(page: Page) {
   await expectNoFormChrome(page);
+
+  // 1. Section headings: Call Information ink x≈350.5, y≈155.5; Purpose Of Outgoing Call x≈351.
+  const heading1 = await box(page.getByRole("heading", { name: "Call Information", exact: true }));
+  near(heading1.x, 350.5);
+  near(heading1.y, 155.5);
+  const heading2 = await box(
+    page.getByRole("heading", { name: "Purpose Of Outgoing Call", exact: true }),
+  );
+  near(heading2.x, 351);
+
+  // 2. Vertical positions: Call From/To y=198 (h 32), Related To y=268, then 55 px steps.
+  const whoRow = await box(page.locator('[data-form-field="Who_Id"] [data-record-form-row]'));
+  near(whoRow.y, 198);
+  near(whoRow.height, 32);
+
+  const whatRow = await box(page.locator('[data-form-field="What_Id"] [data-record-form-row]'));
+  near(whatRow.y, 268);
+
+  const typeRow = await box(page.locator('[data-form-field="Call_Type"] [data-record-form-row]'));
+  near(typeRow.y, 322);
+
+  const statusRow = await box(
+    page.locator('[data-form-field="Outgoing_Call_Status"] [data-record-form-row]'),
+  );
+  near(statusRow.y, 377);
+
+  const startRow = await box(
+    page.locator('[data-form-field="Call_Start_Time"] [data-record-form-row]'),
+  );
+  near(startRow.y, 432);
+
+  const ownerRow = await box(page.locator('[data-form-field="Owner"] [data-record-form-row]'));
+  near(ownerRow.y, 487);
+
+  const subjectRow = await box(page.locator('[data-form-field="Subject"] [data-record-form-row]'));
+  near(subjectRow.y, 542);
+
+  const reminderRow = await box(
+    page.locator('[data-form-field="Reminder"] [data-record-form-row]'),
+  );
+  near(reminderRow.y, 596);
+
   const row = page.locator('[data-form-field="Call_Type"] [data-record-form-row]');
   const rowStyle = await row.evaluate((el) => {
     const cs = getComputedStyle(el);
@@ -232,16 +274,14 @@ async function expectCallFormVisual(page: Page) {
     return { width: s.width, height: s.height };
   });
   expect(bar.width).toBe("3px");
-  await expect(page.getByRole("heading", { name: "Call Information", exact: true })).toBeVisible();
-  await expect(
-    page.getByRole("heading", { name: "Purpose Of Outgoing Call", exact: true }),
-  ).toBeVisible();
+
   // Title band is white (#FFFFFF), not Task's pale fill.
   const band = await page
     .locator("[data-record-form-strip]")
     .evaluate((el) => getComputedStyle(el).backgroundColor);
   expect(band).toBe("rgb(255, 255, 255)");
-  // Call Start Time: date 210 px, time 76 px, 9 px gap.
+
+  // 7. Call Start Time: date 210 px, time 76 px, 9 px gap, divider #C8CDD6 at x=758–759.
   const dt = page.locator('[data-form-field="Call_Start_Time"] .record-form-datetime');
   const parts = await dt.evaluate((el) =>
     [...el.children].map((c) => c.getBoundingClientRect()).map((r) => ({ x: r.x, w: r.width })),
@@ -250,11 +290,45 @@ async function expectCallFormVisual(page: Page) {
   near(date.w, 210);
   near(time.w, 76);
   near(time.x - (date.x + date.w), 9);
+
+  const dtDivider = await dt.evaluate((el) => {
+    const s = getComputedStyle(el, "::after");
+    const r = el.getBoundingClientRect();
+    return {
+      x: r.x + Number.parseFloat(s.left),
+      w: Number.parseFloat(s.width),
+      color: s.backgroundColor,
+    };
+  });
+  near(dtDivider.x, 758);
+  near(dtDivider.w, 1);
+  expect(dtDivider.color).toBe("rgb(200, 205, 214)");
+
   // No Repeat field; Reminder is a dropdown, not a toggle.
   await expect(page.getByRole("switch", { name: "Repeat" })).toHaveCount(0);
   await expect(page.getByRole("switch", { name: "Reminder" })).toHaveCount(0);
-  // Related To lookup shows its magnifier.
-  await expect(page.locator('[data-form-field="What_Id"] svg').first()).toBeVisible();
+
+  // 4. Related To: no module prefix dropdown; plain label + input + magnifier.
+  await expect(page.locator('[data-form-field="What_Id"] .record-prefix-select')).toHaveCount(0);
+  await expect(page.locator('[data-form-field="What_Id"] input')).toBeVisible();
+  await expect(page.locator('[data-form-field="What_Id"] .record-input-end')).toBeVisible();
+
+  // 3. Call From/To selector: Contact arrow x≈506–515.
+  const whoCaret = await box(page.locator('[data-form-field="Who_Id"] .record-form-caret'));
+  expect(whoCaret.x).toBeGreaterThanOrEqual(505);
+  expect(whoCaret.x).toBeLessThanOrEqual(515);
+
+  // 5 & 6. Lookup and Owner right cells: #F0F4FF fill.
+  for (const field of ["Who_Id", "What_Id", "Owner"]) {
+    const endCell = page.locator(`[data-form-field="${field}"] .record-input-end`);
+    await expect(endCell).toBeVisible();
+    const cellStyle = await endCell.evaluate((el) => {
+      const s = getComputedStyle(el);
+      return { bg: s.backgroundColor, bl: s.borderLeftWidth };
+    });
+    expect(cellStyle.bg).toBe("rgb(240, 244, 255)");
+    expect(cellStyle.bl).not.toBe("0px");
+  }
 }
 
 async function openCallCreate(page: Page) {
@@ -268,6 +342,16 @@ async function openCallCreate(page: Page) {
 
 test("Create Call matches the measured layout", async ({ page }) => {
   await openCallCreate(page);
+  // 8. Opening focus on Call From/To (Who_Id), not Call Owner.
+  await expect(page.locator('[data-form-field="Who_Id"] input')).toBeFocused();
+  await expect(page.locator('[data-form-field="Who_Id"] [data-record-form-row]')).toHaveCSS(
+    "border-color",
+    "rgb(84, 100, 242)",
+  );
+  await expect(page.locator('[data-form-field="Owner"] [data-record-form-row]')).not.toHaveCSS(
+    "border-color",
+    "rgb(84, 100, 242)",
+  );
   await expectCallFormVisual(page);
   await saveVisualScreenshot(page, "our-call-create.png");
 });
