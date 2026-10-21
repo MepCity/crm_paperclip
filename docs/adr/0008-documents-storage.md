@@ -4,6 +4,7 @@
 - Date: 2026-10-20
 - Issue: MEP-929; umbrella: MEP-921
 - Review: Platform Lead approved; CTO decision recorded below
+- Addendum A (MEP-1022): read capability source, proposed by Platform Lead, awaiting CTO
 - Scope: Architecture draft only; no migrations, implementation or permission grants
 
 ## Evidence and decision boundary
@@ -422,7 +423,7 @@ existing read-port code, record recovery or storage adapters.
 | Open gate | Reviewer / decision owner |
 | --- | --- |
 | §1 separate service/tables, shared blob catalogue and physical keys/RLS; reconcile pending ADR 0002 | Platform Lead → CTO |
-| U2 group/role precedence, restricted inheritance, last Admin, CRM capability mapping and lock glyph meaning | Platform Lead + UI Lead → CTO; glyph needs safe evidence |
+| U2 group/role precedence, restricted inheritance, last Admin, CRM capability mapping and lock glyph meaning (read capability source: see Addendum A, MEP-1022) | Platform Lead + UI Lead → CTO; glyph needs safe evidence |
 | U1/U4/U7 names, collisions, move grants and transaction scope | Platform Lead + UI Lead → CTO |
 | U3/U5 upload/preview budgets and allowed types; no generic plan ceiling inferred | Platform Lead + UI Lead; CTO accepts policy changes |
 | U6 checkout authority, version retention/numbering, native editor scope | Platform Lead → CTO |
@@ -447,3 +448,136 @@ attachment pin/revoke/delete interactions; retained shared-blob cleanup; missing
 versus empty and network failure mappings; both sort directions/ties; fixture/HTTP
 port round trips and permission checks before pagination. Those tests belong to
 approved implementation slices, not to this documentation-only issue.
+
+## Addendum A — U2 read capability source (MEP-1022)
+
+- Status: Proposed by Platform Lead; CTO decision pending
+- Scope: only the "CRM capability" step of the §2 server boundary for **reads**
+  (`listFolders`, `listItems`, `listItemsByName`, `getItem`). Write grants,
+  group/role precedence, restricted inheritance, last Admin and the lock glyph
+  stay U2.
+
+### Decision
+
+Choose **C, shaped as A**: a per-actor Documents capability with an injectable
+source, combined with the folder/item policy (option B) that the core service
+already applies.
+
+- Capability layer (this addendum): "may this actor use Documents at all in
+  this organization?" It answers with a boolean per request and is the only
+  input of `canReadDocuments(ctx)`.
+- Folder/item layer (unchanged, §2 option B): `memberships.canRead`, item
+  `grants` and the owner-only My projection, inside `@crm/core/documents`.
+  A capability of `true` never widens what this layer returns; an
+  organization admin with no membership still sees only its own My tree.
+
+Why not A alone: `main` has no profile or permission store, and creating one is
+data-model work under ADR 0002. Why not B alone: membership cannot express "the
+Documents module is switched off for this member", which the reference CRM
+models as a profile permission. The interface below is the profile-permission
+shape (A); until a profile store exists its source is a code constant (C).
+
+### Interface
+
+File: `apps/web/src/server/documents/access.ts` (server only; never imported by
+client code, never exposed in a DTO).
+
+```ts
+import type { OrgContext } from "@crm/core";
+
+/** CRM capability step of ADR 0008 §2. Re-evaluated on every read. */
+export interface DocumentsAccessSource {
+  /** true when the actor's profile has the Documents module enabled. */
+  documentsEnabled(ctx: OrgContext): boolean | Promise<boolean>;
+}
+
+/** Interim source: no profile store yet, every organization member is enabled. */
+export const documentsAccessSource: DocumentsAccessSource = {
+  documentsEnabled: () => true,
+};
+
+export async function canReadDocuments(ctx: OrgContext): Promise<boolean> {
+  if (ctx.role === "admin") return true;
+  if (ctx.role !== "member") return false;
+  return (await documentsAccessSource.documentsEnabled(ctx)) === true;
+}
+```
+
+Exact truth table (`ctx` is already the authorized OrgContext from
+`requireOrgContext`; no session or a foreign/invalid org header never reaches
+this function):
+
+| `ctx.role` | `documentsEnabled(ctx)` | `canReadDocuments` |
+| --- | --- | --- |
+| `admin` | not called | `true` (administrator profile always has the module) |
+| `member` | `true` | `true` |
+| `member` | `false`, or anything other than `true` | `false` |
+| any other runtime value | not called | `false` |
+
+Rules:
+
+- `getDocumentsService(ctx)` passes this `canReadDocuments` to
+  `createDocumentsService`. Route handlers do not check roles themselves.
+- `false` makes the core service throw its existing `NotFoundError`, so the
+  route returns the same 404 envelope as an unknown id. Not 403: a member
+  without the module must not learn which ids exist.
+- Tests switch the capability off with
+  `vi.spyOn(documentsAccessSource, "documentsEnabled").mockResolvedValue(false)`
+  (restore after each test). No environment flag, header, query parameter or
+  request body may switch it.
+- Admin-always-true applies to this capability step only; §2 "organization
+  admin is not implicitly folder Admin" still holds in the folder/item layer.
+
+### Fixture requirement for the route tests
+
+The interim fixture snapshot in `apps/web/src/server/documents/service.ts`
+gains one synthetic foreign-tenant space with a root folder and one file
+(`organizationId: "org-foreign"`, ids `folder-foreign` and `file-foreign`), and
+a team membership row for the caller in that foreign space. The core service
+must drop them by `organizationId`, so the route tests prove tenant isolation
+through the real handler path, not only in core unit tests.
+
+### Required route tests (`apps/web/src/server/documents/routes.test.ts`)
+
+"Same 404 envelope" means equal status **and** deep-equal JSON body against the
+response for an unknown id (`folder-missing`, `file-missing`) taken in the same
+test with the capability on.
+
+a. Member with the capability off: `GET documents/folders`,
+   `GET documents/folders/folder-team/items`, `GET documents/folders/folder-team/items?sort_by=name&sort_order=asc`
+   and `GET documents/items/file-a` each return the same 404 envelope as the
+   unknown-id response. `listFolders` returns 404, not `200 {data:[]}`.
+b. Valid session and valid `X-CRM-ORG`, capability on (admin and member):
+   `folders/folder-foreign/items` and `items/file-foreign` return the same 404
+   envelope; `GET documents/folders` does not contain `folder-foreign`.
+c. Member with the capability on and admin: `folders`, `folders/folder-team/items`
+   and `items/file-a` return 200 with the existing data assertions. Admin with
+   the capability source returning `false` still gets 200 (proves the admin row
+   of the table and that the source is not called for admin).
+d. Unchanged: no session → 401; missing `X-CRM-ORG` → 400; unknown org slug →
+   404, all before the capability is evaluated (assert `documentsEnabled` was
+   not called).
+
+Core unit tests keep injecting `canReadDocuments` directly; the table above is
+covered by a small `access.test.ts` (four rows of the truth table).
+
+### Replacement trigger
+
+When the Customization module (profiles and module permissions) lands with an
+accepted data-model ADR, only `documentsAccessSource` is replaced by a reader of
+the actor's profile Documents permission, keyed by `(orgId, userId)` and read on
+every request (no cached allow across actors or orgs, per §5). The
+`canReadDocuments` signature, the 404 rule and the route tests above stay. If
+that ADR decides that administrators can lose the module, the admin row changes
+there, not here.
+
+### Open questions
+
+- **AQ1 — admin always enabled.** Assumed from the reference CRM's
+  administrator profile; not captured for Documents specifically. Revisit with
+  the profile store.
+- **AQ2 — tab hidden vs 404.** How the web shell hides the Documents tab for a
+  member without the capability is UI scope (MEP-996+, UI Lead); this addendum
+  only fixes the server answer.
+- **AQ3 — write capability.** Whether the same flag also gates writes, or a
+  separate "create/edit" permission exists, stays U2.
