@@ -318,3 +318,20 @@ Cache enabled; script loads 3 cache / 262 network / 0 failed; file chooser/downl
 ## Final research disposition
 
 The bounded research is complete for review, with limitations retained rather than replaced by invented UI. Initial export appearance/defaults are observed in all four modules, with Deals closure unverified. Import first-screen access is forbidden by MEP-739; its content remains public-documentation evidence. Import History is observed only in its empty state (H-I). Export History remains unobserved (H-E); populated histories, status rows, retention, undo and download behaviour remain documentation-only. UI Lead should compare the numbered inventories with the local evidence, then the parent implementation owner can reconcile CSV tasks against these observed defaults and explicit open questions. Any further evidence access requires a separate decision; this specification authorizes none.
+
+## Solutions and Cases export — interim rule (MEP-968)
+
+Solutions and Cases lists now use the shared Export dialog and transfer service.
+Their reference CRM export behavior remains **not observed; not selected**
+(SL-14.7 / KL-14.9). This is an interim rule authorized by the board, not a new
+reference observation. No additional reference research or export was performed.
+
+Use the observed-module dialog pattern: title `Export Solutions` / `Export Cases`,
+current view selected by default, All fields selected, Choose fields (200 maximum)
+and Exclude fields (20 maximum), CSV format and UTF-8 encoding. Existing synchronous
+service limits remain 30,000 rows, decimal 25 MB and 500 selected IDs. Support
+metadata-driven field projection, selected records or a view, download, history
+and retry through the existing API paths. Import pages, previews, execution and
+sample CSVs remain unavailable for these two modules. Open question: verify their
+actual reference export dialog and behavior only through future authorized,
+read-only evidence; retain this interim behavior until then.

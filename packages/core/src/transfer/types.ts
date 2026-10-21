@@ -1,16 +1,16 @@
 import type { RecordServiceFactory } from "../records/contract";
 import type { OrgContext } from "../tenancy/types";
 
-export const TRANSFER_MODULES = [
+export const IMPORT_MODULES = [
   "Leads",
   "Contacts",
   "Accounts",
   "Deals",
-  "Campaigns",
   "Tasks",
   "Events",
   "Calls",
 ] as const;
+export const TRANSFER_MODULES = [...IMPORT_MODULES, "Solutions", "Cases"] as const;
 export type TransferModule = (typeof TRANSFER_MODULES)[number];
 export type ImportMode = "add" | "update" | "both";
 export type Charset = "UTF-8" | "ISO-8859-1";

@@ -78,7 +78,6 @@ test("shows the empty state without memberships", () => {
   state.members = [];
   render(<CampaignMembershipsCardBody {...props} />);
   expect(screen.getByText("No records found")).toBeTruthy();
-  expect(screen.getByText("No records found").className).toContain("text-left");
 });
 
 test("Remove asks for confirmation and deletes only the membership", async () => {

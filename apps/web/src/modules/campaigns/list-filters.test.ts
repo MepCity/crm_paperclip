@@ -21,7 +21,6 @@ test("first ten field rows follow CL-22 - CL-31, the rest are alphabetical", () 
       campaignField("Start_Date", { label: "Start Date", dataType: "date" }),
       campaignField("Connected_To__s", { label: "Connected To", dataType: "multi_module_lookup" }),
       campaignField("Tag", { label: "Tag" }),
-      campaignField("Expected_Response", { label: "Expected Response", dataType: "bigint" }),
     ],
     users: [],
     linkField: "Campaign_Name",
@@ -47,5 +46,4 @@ test("first ten field rows follow CL-22 - CL-31, the rest are alphabetical", () 
   expect(items.find((i) => i.id === "Tag")?.editor?.fieldType).toBe("tag");
   expect(items.find((i) => i.id === "Expected_Revenue")?.editor?.currencyCode).toBe("TRY");
   expect(items.find((i) => i.id === "Type")?.editor?.fieldType).toBe("picklist");
-  expect(items.find((i) => i.id === "Expected_Response")?.editor?.fieldType).toBe("integer");
 });

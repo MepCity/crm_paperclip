@@ -80,15 +80,36 @@ export function buildSolutionsFilterGroups(input: Input): readonly FilterGroup[]
     {
       id: "system",
       label: "System Defined Filters",
-      items: systemRows.map(([label, moduleKey], index) => {
-        // Evaluated on the server at import time: no client-only resolver; none of these keys is a live module.
-        const laterModule = moduleKey;
-        return {
-          id: `system-${index}`,
-          label,
-          ...(laterModule ? { laterModule } : { disabled: true }),
-        };
-      }),
+      items: systemRows.map(([label, moduleKey], index) => ({
+        id: `system-${index}`,
+        label,
+        ...(moduleKey
+          ? { laterModule: moduleKey }
+          : {
+              systemEditor: (
+                {
+                  Locked: "locked",
+                  "Record Action": "record_action",
+                  "Related Records Action": "related_records_action",
+                  "Touched Records": "touched",
+                  "Untouched Records": "untouched",
+                } as const
+              )[
+                label as
+                  | "Locked"
+                  | "Record Action"
+                  | "Related Records Action"
+                  | "Touched Records"
+                  | "Untouched Records"
+              ],
+              systemOptions: {
+                relatedModules: [
+                  { id: "Notes", label: "Notes" },
+                  { id: "Attachments", label: "Attachments" },
+                ],
+              },
+            }),
+      })),
     },
     {
       id: "fields",

@@ -62,7 +62,7 @@ function text(value: FieldValue | undefined): string {
 
 function EmptyState({ children }: { children: string }) {
   return (
-    <div data-part="empty" className="py-8 text-left text-md text-text-empty">
+    <div data-part="empty" className="py-8 text-center text-md text-text-empty">
       {children}
     </div>
   );

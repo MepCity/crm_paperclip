@@ -21,10 +21,11 @@ export const defaultMatch: Record<TransferModule, string> = {
   Contacts: "Email",
   Accounts: "Account_Name",
   Deals: "Deal_Name",
-  Campaigns: "Campaign_Name",
   Tasks: "id",
   Events: "id",
   Calls: "id",
+  Solutions: "id",
+  Cases: "id",
 };
 const managed = new Set([
   "id",

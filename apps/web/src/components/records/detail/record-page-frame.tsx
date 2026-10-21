@@ -163,6 +163,7 @@ export function RecordPageFrame({
   sidePanel,
 }: RecordPageFrameProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
+  const scrollTopRef = useRef<HTMLButtonElement>(null);
   const pendingTargetRef = useRef<RelatedListEntry | null>(null);
   const programmaticTargetRef = useRef<string | null>(null);
   const [scrolled, setScrolled] = useState(false);
@@ -212,6 +213,34 @@ export function RecordPageFrame({
       scroller.removeEventListener("keydown", clearProgrammatic);
     };
   }, []);
+
+  // Reserve the measured gap above a visible footer even when its rows wrap.
+  useEffect(() => {
+    const scroller = scrollRef.current;
+    const button = scrollTopRef.current;
+    if (!scroller || !button || !scrolled) return;
+    const frame = scroller.closest("[data-record-frame]");
+    const footer = scroller.querySelector("[data-record-footer]");
+    if (!frame || !footer) return;
+    const place = () => {
+      const frameBox = frame.getBoundingClientRect();
+      const footerBox = footer.getBoundingClientRect();
+      const style = getComputedStyle(button);
+      const gap = Number.parseFloat(style.getPropertyValue("--size-record-scroll-footer-gap"));
+      const baseline = Number.parseFloat(style.getPropertyValue("--size-record-scroll-bottom"));
+      const bottom = Math.max(baseline, frameBox.bottom - footerBox.top + gap);
+      button.style.bottom = `${bottom}px`;
+    };
+    place();
+    scroller.addEventListener("scroll", place, { passive: true });
+    const observer = new ResizeObserver(place);
+    observer.observe(scroller);
+    observer.observe(footer);
+    return () => {
+      scroller.removeEventListener("scroll", place);
+      observer.disconnect();
+    };
+  }, [scrolled]);
 
   function handleScroll(event: React.UIEvent<HTMLDivElement>) {
     const scroller = event.currentTarget;
@@ -407,6 +436,7 @@ export function RecordPageFrame({
         <Button
           variant="icon"
           size="compact"
+          ref={scrollTopRef}
           aria-label={scrollTopLabel}
           onPress={() => {
             if (scrollRef.current) {
@@ -419,7 +449,7 @@ export function RecordPageFrame({
             }
             setScrolled(false);
           }}
-          className="absolute right-(--size-record-scroll-offset) bottom-(--size-record-scroll-offset) size-(--size-record-scroll-top) rounded-full! border border-panel-border bg-surface! shadow-md"
+          className="absolute right-(--size-record-scroll-right) bottom-(--size-record-scroll-bottom) size-(--size-record-scroll-top) rounded-full! border border-panel-border bg-surface! shadow-md"
         >
           <Icons.chevronUp aria-hidden className="h-4 w-4" />
         </Button>

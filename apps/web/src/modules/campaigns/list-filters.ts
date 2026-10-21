@@ -31,10 +31,8 @@ const initialFieldLabels = [
 function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | undefined {
   const special =
     field.apiName === "Connected_To__s" ? "multilookup" : field.apiName === "Tag" ? "tag" : null;
-  // bigint columns (Expected Response, Numbers sent) filter like the other number fields.
-  const dataType = field.dataType === "bigint" ? "integer" : field.dataType;
-  if (!special && !(dataType in filterOperators)) return undefined;
-  const fieldType = special ?? (dataType as FilterFieldType);
+  if (!special && !(field.dataType in filterOperators)) return undefined;
+  const fieldType = special ?? (field.dataType as FilterFieldType);
   return {
     fieldType,
     ...(fieldType === "picklist"
