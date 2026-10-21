@@ -747,3 +747,62 @@ test("currency help opens on click or keyboard, dismisses and never edits the am
   expect((screen.getByRole("textbox", { name: "Amount" }) as HTMLInputElement).value).toBe("125");
   expect(change).not.toHaveBeenCalled();
 });
+
+test("text suggestions open, filter, select with keyboard, and preserve custom text", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <Controlled
+      type="text"
+      suggestions={["Email", "Call", "Meeting", "Send Letter", "Product Demo"]}
+      onChange={change}
+    />,
+  );
+  const input = screen.getByRole("combobox", { name: "Example" });
+  await user.click(input);
+  expect(screen.getAllByRole("option")).toHaveLength(5);
+  await user.type(input, "mee");
+  expect(screen.getAllByRole("option")).toHaveLength(1);
+  await user.keyboard("{ArrowDown}{Enter}");
+  expect(input).toHaveValue("Meeting");
+  expect(change).toHaveBeenLastCalledWith("Meeting");
+  await user.click(input);
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("listbox")).toBeNull();
+  await user.clear(input);
+  await user.type(input, "Custom follow up");
+  await user.tab();
+  expect(input).toHaveValue("Custom follow up");
+  expect(change).toHaveBeenLastCalledWith("Custom follow up");
+});
+
+test("calendar chooses a model day, dismisses, and keeps invalid and partial text", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="date" calendar initial="2026-11-10" onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" });
+  await user.click(input);
+  const day = screen.getByRole("button", { name: /November 15, 2026/ });
+  await user.click(day);
+  expect(input).toHaveValue("15.11.2026");
+  expect(change).toHaveBeenLastCalledWith("2026-11-15");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await user.click(input);
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await user.clear(input);
+  await user.type(input, "31.02.2026");
+  expect(input).toHaveValue("31.02.2026");
+  expect(change).toHaveBeenLastCalledWith("2026-02-31");
+  await user.clear(input);
+  await user.type(input, "12.0");
+  expect(input).toHaveValue("12.0");
+  expect(change).toHaveBeenLastCalledWith("12.0");
+});
+
+test("a date without an observed calendar rule stays a text field", async () => {
+  const user = userEvent.setup();
+  render(<Controlled type="date" />);
+  await user.click(screen.getByRole("textbox", { name: "Example" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+});

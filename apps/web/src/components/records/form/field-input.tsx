@@ -17,8 +17,10 @@ import { laterModuleProps, type ModuleKey, useLaterModule } from "@/components/u
 import { NumberField } from "@/components/ui/number-field";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { RecordChoice } from "@/components/ui/record-choice";
+import { SuggestionField } from "@/components/ui/suggestion-field";
 import { Switch } from "@/components/ui/switch";
 import { TextArea } from "@/components/ui/text-area";
+import { TextCalendarField } from "@/components/ui/text-calendar-field";
 import { TextField, type TextFieldProps } from "@/components/ui/text-field";
 import type { ClientRecordService } from "@/lib/api/client/provider";
 import {
@@ -61,6 +63,8 @@ export interface FieldInputProps {
   currencyInformation?: string;
   currencyHelp?: NonNullable<FormRules["currencyHelp"]>[string];
   textPrefix?: string;
+  suggestions?: readonly string[];
+  calendar?: boolean;
   /** Business range of a numeric entry; metadata carries no minimum or maximum. */
   numberLimits?: NumberLimits;
   /** Picker shape for this lookup field, when it differs from the target module's configuration. */
@@ -133,6 +137,7 @@ type DateFieldProps = Omit<TextFieldProps, "value" | "onChange"> & {
    */
   value: string;
   onModelChange: (value: FieldValue) => void;
+  calendar?: boolean;
 };
 
 /**
@@ -149,15 +154,16 @@ type DateFieldProps = Omit<TextFieldProps, "value" | "onChange"> & {
  * our own write as an outside write would clear the text the moment somebody deletes a character
  * from a date that is already filled in.
  */
-function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
+function DateField({ value, onModelChange, calendar, ...textField }: DateFieldProps) {
   const [written, setWritten] = useState(value);
   const [entry, setEntry] = useState(() => calendarShapeToDisplayDate(value));
   if (written !== value) {
     setWritten(value);
     setEntry(calendarShapeToDisplayDate(value));
   }
+  const Control = calendar ? TextCalendarField : TextField;
   return (
-    <TextField
+    <Control
       {...textField}
       type="text"
       value={entry}
@@ -191,6 +197,8 @@ export function FieldInput({
   currencyInformation,
   currencyHelp,
   textPrefix,
+  suggestions,
+  calendar,
   numberLimits,
   lookupPicker,
   placeholder,
@@ -248,6 +256,17 @@ export function FieldInput({
     case "email":
     case "phone":
     case "website":
+      if (field.dataType === "text" && suggestions) {
+        return (
+          <SuggestionField
+            {...common}
+            value={text}
+            suggestions={suggestions}
+            maxLength={field.maxLength}
+            onChange={(next) => onChange(next === "" ? null : next)}
+          />
+        );
+      }
       return (
         <TextField
           {...common}
@@ -289,7 +308,13 @@ export function FieldInput({
       );
     case "date":
       return (
-        <DateField {...common} value={text} onModelChange={onChange} placeholder={placeholder} />
+        <DateField
+          {...common}
+          value={text}
+          onModelChange={onChange}
+          placeholder={placeholder}
+          calendar={calendar}
+        />
       );
     // A `bigint` field is a long integer, so the form keeps it as digit text end to end: parsing it
     // into a JavaScript number would round the last digits away, and the service only accepts decimal

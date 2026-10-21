@@ -149,7 +149,7 @@ test("an empty save asks for the Subject", async ({ page }) => {
 
 test("creates a task and edits it from the record route", async ({ page }) => {
   const org = await openCreate(page);
-  await page.getByRole("textbox", { name: "Subject", exact: true }).fill("Call back");
+  await page.getByRole("combobox", { name: "Subject", exact: true }).fill("Call back");
   await page.getByRole("textbox", { name: "Due Date", exact: true }).fill("30.11.2026");
   await page.getByRole("button", { name: "Status", exact: true }).click();
   await page.getByRole("option", { name: "In Progress", exact: true }).click();
@@ -173,12 +173,12 @@ test("creates a task and edits it from the record route", async ({ page }) => {
       path: `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/activity-task-edit.png`,
     });
   }
-  await expect(page.getByRole("textbox", { name: "Subject", exact: true })).toHaveValue(
+  await expect(page.getByRole("combobox", { name: "Subject", exact: true })).toHaveValue(
     "Call back",
   );
   await expect(page.getByRole("switch", { name: "Reminder" })).toBeChecked();
   await expect(page.getByRole("switch", { name: "Repeat" })).toBeChecked();
-  await page.getByRole("textbox", { name: "Subject", exact: true }).fill("Call back later");
+  await page.getByRole("combobox", { name: "Subject", exact: true }).fill("Call back later");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Tasks/${id}$`), {
     timeout: 60_000,
@@ -234,7 +234,7 @@ async function pickRecord(page: Page, lookupName: string): Promise<string> {
 
 test("Who and What types pick a lead and a deal, save, and survive an edit", async ({ page }) => {
   const org = await openCreate(page);
-  await page.getByRole("textbox", { name: "Subject", exact: true }).fill("Follow up");
+  await page.getByRole("combobox", { name: "Subject", exact: true }).fill("Follow up");
 
   await page
     .getByRole("button", { name: /module$/ })
@@ -264,4 +264,55 @@ test("Who and What types pick a lead and a deal, save, and survive an edit", asy
   await expect(page.getByRole("button", { name: /module$/ }).nth(1)).toContainText("Deal");
   await expect(page.locator("[data-form-field=Who_Id] input")).toHaveValue(lead);
   await expect(page.locator("[data-form-field=What_Id] input")).toHaveValue(deal);
+});
+
+test("Task Subject suggestions and Due Date calendar supplement editable text", async ({
+  page,
+}) => {
+  await openCreate(page);
+  const subject = page.getByRole("combobox", { name: "Subject", exact: true });
+  await subject.click();
+  await expect(page.getByRole("option")).toHaveText([
+    "Email",
+    "Call",
+    "Meeting",
+    "Send Letter",
+    "Product Demo",
+  ]);
+  const inputBox = await subject.boundingBox();
+  const panelBox = await page.locator(".record-choice-panel").boundingBox();
+  expect(inputBox).not.toBeNull();
+  expect(panelBox).not.toBeNull();
+  // TF-07 open-panel geometry is unobserved: board interim rule is exactly the input width.
+  expect(inputBox?.width).toBeCloseTo(279, 0);
+  expect(Math.abs((panelBox?.width ?? 0) - (inputBox?.width ?? 0))).toBeLessThanOrEqual(1);
+  if (process.env.PAPERCLIP_RUN_SCRATCH_DIR)
+    await page.screenshot({
+      path: `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/task-subject-suggestions.png`,
+    });
+  await subject.fill("mee");
+  await expect(page.getByRole("option")).toHaveText(["Meeting"]);
+  await subject.press("ArrowDown");
+  await subject.press("Enter");
+  await expect(subject).toHaveValue("Meeting");
+  await subject.fill("Custom follow up");
+  const due = page.getByRole("textbox", { name: "Due Date", exact: true });
+  await due.fill("10.11.2026");
+  await due.click();
+  const calendar = page.getByRole("dialog", { name: "Due Date calendar" });
+  await expect(calendar).toBeVisible();
+  const calendarBox = await calendar.locator("..").boundingBox();
+  expect(calendarBox).not.toBeNull();
+  expect(calendarBox?.width).toBeGreaterThanOrEqual(279);
+  if (process.env.PAPERCLIP_RUN_SCRATCH_DIR)
+    await page.screenshot({
+      path: `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/task-due-date-calendar.png`,
+    });
+  await calendar.getByRole("button", { name: /November 15, 2026/ }).click();
+  await expect(due).toHaveValue("15.11.2026");
+  await expect(calendar).toBeHidden();
+  await expect(subject).toHaveValue("Custom follow up");
+  await due.fill("31.02.2026");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("Please enter a valid Due Date.")).toBeVisible();
 });

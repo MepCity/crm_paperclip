@@ -680,6 +680,8 @@ function LoadedRecordForm({
           }
           options={isState && emptyCountry ? [] : undefined}
           textPrefix={rules.textPrefixes?.[field.apiName]}
+          suggestions={rules.textSuggestions?.[field.apiName]}
+          calendar={rules.calendarFields?.includes(field.apiName)}
           numberLimits={rules.numberLimits?.[field.apiName]}
           lookupPicker={rules.lookupPickers?.[field.apiName]}
           lookupRecordHref={
