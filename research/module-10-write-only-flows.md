@@ -138,10 +138,10 @@ locators, documented capabilities and explicit observation limits.
 ## 8. R9 public-documentation check (MEP-1019)
 
 Checked 2026-10-21 by web search over first-party help material only. No
-reference CRM access, no capture. Search results returned redirect links, so
-exact page paths were not resolved; the locator column names the help topic
-only (no host, no product name). Every row therefore needs a path re-check by
-the CTO or a follow-up run before the board relies on it. Vendor figures come
+reference CRM access, no capture. R9b (MEP-1033, 2026-10-22) resolved
+paths only for W13, W17 and W19 (host and product name omitted); all other
+rows stay "path not resolved" because searches returned community threads or
+redirect links, not first-party help pages. Vendor figures come
 from search summaries, not from a page read in full. Third-party pages were
 ignored.
 
@@ -159,12 +159,17 @@ ignored.
 | W14 | partly | help: email insights | Delivery Failure status exists. Bounce reasons and blocked-address vocabulary not found. |
 | W15 | yes for limits | help: mass email limits | Per 24 h in org time zone: 250 / 500 / 1,000 / 2,000 by edition; count includes mass mail, macros, autoresponders and schedulers; an add-on raises it. Preview and review step not found. |
 | W18 | partly | help: attachments and large files | Template cap above; large-file link option exists. Per-message cap for ordinary mail not confirmed. |
-| W2, W11, W13, W16, W17, W19 | not checked | n/a | Not covered in this short run; verdicts in section 1 unchanged. |
+| W2 | no | none found (first-party) | Only user-community threads surfaced (reply and reply-all offered on sent mail inside a record; forward reported missing). Community threads are not counted as a source. Prefix, quote format, attachment carry-over not documented. |
+| W11 | own template | section 1 (our own mail spec) | No public check needed: the completion mail is our own template per section 1. |
+| W13 | partly | help: email sharing, `/crm/help/<mail-integration>/email-sharing` (path read from the search result; page not read in full) | Admins can exclude up to 10 domains from being added to records (search summary of the page). Matching rule for several records with one address not found. |
+| W16 | out of scope | n/a | Module 12 (automation) scope. |
+| W17 | partly | help: meetings FAQ, `/portal/en/kb/crm-v2-1/faqs/activity-management/articles/<meetings-module-faq>` (path read from the search result; page not read in full) | Deleting a recurring event offers "delete all future events"; recurrence end defaults to Never. Editing a single occurrence vs this-and-following, drag/resize and conflict warning not found. |
+| W19 | partly | help: email sharing, `/crm/help/<mail-integration>/email-sharing` (page not read in full) | Per-user sharing modes Private / Custom / Complete; org data-sharing default for CRM-sent mail Public Read/Write/Delete with Private and Public Read Only options (community announcement, 2024). Profile action grants not found. |
 
 Conflicts: none seen. Mass email numbers came from a search summary that also
 cited a third-party page; the first-party figure is the one recorded.
 
 Open questions
-1. Resolve exact help page paths for every row above.
-2. W2, W11, W13, W16, W17, W19 remain unchecked.
+1. Help page paths for W1, W3-W10, W12, W14, W15, W18 are still not resolved; the W1 attachment and W15 quota figures were not re-verified on the pages themselves.
+2. W2 has no first-party source.
 3. W8 and the mail-area access prerequisites stay documented gaps.
