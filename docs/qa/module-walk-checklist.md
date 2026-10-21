@@ -26,8 +26,8 @@ Sources: `list-views.md`, `record-detail.md`, `app-shell.md`, `tags.md`, `notes.
 ### Filter panel
 - [ ] Look: panel layout and field groups match the spec.
 - [ ] Behaviour: operators follow the field type; the value control follows the operator.
-- [ ] Behaviour: apply and clear update the list; a no-match result shows the empty state.
-- [ ] Validation: incomplete criteria show the spec's message and placement.
+- [ ] Behaviour: apply and clear change the list as the filter section of the spec or checklist describes; where the Apply result is listed as open, record an open question.
+- [ ] Validation: incomplete criteria are handled; the exact message is not fixed by the sources (the checklist lists filter validation as open research), so record an open question instead of a finding.
 - [ ] Keyboard: panel opens from the keyboard and closes with Esc; focus order follows the visual order.
 
 ### Create / edit form
@@ -46,9 +46,9 @@ Sources: `list-views.md`, `record-detail.md`, `app-shell.md`, `tags.md`, `notes.
 
 ### Empty and error states
 - [ ] Empty list and empty search show the spec's empty state.
-- [ ] Unknown record id shows the spec's error page.
-- [ ] A failed request shows the spec's error feedback.
-- [ ] The screen recovers after the failure without a reload.
+- [ ] Unknown record id: check only if the spec defines it; otherwise record an open question.
+- [ ] A failed request: feedback matches the spec if it defines one; otherwise record an open question.
+- [ ] Recovery after a failed request: open question unless the spec defines it.
 - [ ] Keyboard: error and empty-state actions are reachable.
 
 ## Leads
@@ -64,8 +64,8 @@ Sources: `leads.md`, `leads-fields-and-layout.md`, `leads-write-behaviour.md`, `
 ### Filter panel
 - [ ] Look: panel layout and field groups match the spec.
 - [ ] Behaviour: operators follow the field type; the value control follows the operator.
-- [ ] Behaviour: apply and clear update the list; a no-match result shows the empty state.
-- [ ] Validation: incomplete criteria show the spec's message and placement.
+- [ ] Behaviour: apply and clear change the list as the filter section of the spec or checklist describes; where the Apply result is listed as open, record an open question.
+- [ ] Validation: incomplete criteria are handled; the exact message is not fixed by the sources (the checklist lists filter validation as open research), so record an open question instead of a finding.
 - [ ] Keyboard: panel opens from the keyboard and closes with Esc; focus order follows the visual order.
 
 ### Create / edit form
@@ -84,7 +84,7 @@ Sources: `leads.md`, `leads-fields-and-layout.md`, `leads-write-behaviour.md`, `
 
 ### Related lists
 - [ ] Look: card headers, column sets and row layout match the spec.
-- [ ] Behaviour: open, add and link/unlink actions listed in the spec work.
+- [ ] Behaviour: only the related-list actions this module's spec lists work (open, and add/link/unlink if listed); anything else is an open question.
 - [ ] Behaviour: an empty related list shows the spec's empty state.
 - [ ] Behaviour: counts and ordering update after an add or a removal.
 - [ ] Keyboard: related-list actions and row links are reachable.
@@ -93,14 +93,14 @@ Sources: `leads.md`, `leads-fields-and-layout.md`, `leads-write-behaviour.md`, `
 - [ ] Look: entries, date grouping and icons match the spec.
 - [ ] Behaviour: history and notes entries (where the spec lists them) appear in the spec's order.
 - [ ] Behaviour: adding a note (where the spec allows it) shows it immediately.
-- [ ] Validation: an empty note is handled as the spec says.
-- [ ] Keyboard: note editor and entry actions are reachable.
+- [ ] Validation: empty-note handling, only if the notes spec defines it; otherwise an open question.
+- [ ] Keyboard: timeline entries and their controls are reachable.
 
 ### Empty and error states
 - [ ] Empty list and empty search show the spec's empty state.
-- [ ] Unknown record id shows the spec's error page.
-- [ ] A failed request shows the spec's error feedback.
-- [ ] The screen recovers after the failure without a reload.
+- [ ] Unknown record id: check only if the spec defines it; otherwise record an open question.
+- [ ] A failed request: feedback matches the spec if it defines one; otherwise record an open question.
+- [ ] Recovery after a failed request: open question unless the spec defines it.
 - [ ] Keyboard: error and empty-state actions are reachable.
 
 ### Convert lead
@@ -129,8 +129,8 @@ Sources: `contacts.md`, `contacts-form.md`, `contacts-record-detail.md`, `global
 ### Filter panel
 - [ ] Look: panel layout and field groups match the spec.
 - [ ] Behaviour: operators follow the field type; the value control follows the operator.
-- [ ] Behaviour: apply and clear update the list; a no-match result shows the empty state.
-- [ ] Validation: incomplete criteria show the spec's message and placement.
+- [ ] Behaviour: apply and clear change the list as the filter section of the spec or checklist describes; where the Apply result is listed as open, record an open question.
+- [ ] Validation: incomplete criteria are handled; the exact message is not fixed by the sources (the checklist lists filter validation as open research), so record an open question instead of a finding.
 - [ ] Keyboard: panel opens from the keyboard and closes with Esc; focus order follows the visual order.
 
 ### Create / edit form
@@ -149,7 +149,7 @@ Sources: `contacts.md`, `contacts-form.md`, `contacts-record-detail.md`, `global
 
 ### Related lists
 - [ ] Look: card headers, column sets and row layout match the spec.
-- [ ] Behaviour: open, add and link/unlink actions listed in the spec work.
+- [ ] Behaviour: only the related-list actions this module's spec lists work (open, and add/link/unlink if listed); anything else is an open question.
 - [ ] Behaviour: an empty related list shows the spec's empty state.
 - [ ] Behaviour: counts and ordering update after an add or a removal.
 - [ ] Keyboard: related-list actions and row links are reachable.
@@ -158,14 +158,14 @@ Sources: `contacts.md`, `contacts-form.md`, `contacts-record-detail.md`, `global
 - [ ] Look: entries, date grouping and icons match the spec.
 - [ ] Behaviour: history and notes entries (where the spec lists them) appear in the spec's order.
 - [ ] Behaviour: adding a note (where the spec allows it) shows it immediately.
-- [ ] Validation: an empty note is handled as the spec says.
-- [ ] Keyboard: note editor and entry actions are reachable.
+- [ ] Validation: empty-note handling, only if the notes spec defines it; otherwise an open question.
+- [ ] Keyboard: timeline entries and their controls are reachable.
 
 ### Empty and error states
 - [ ] Empty list and empty search show the spec's empty state.
-- [ ] Unknown record id shows the spec's error page.
-- [ ] A failed request shows the spec's error feedback.
-- [ ] The screen recovers after the failure without a reload.
+- [ ] Unknown record id: check only if the spec defines it; otherwise record an open question.
+- [ ] A failed request: feedback matches the spec if it defines one; otherwise record an open question.
+- [ ] Recovery after a failed request: open question unless the spec defines it.
 - [ ] Keyboard: error and empty-state actions are reachable.
 
 ### Global search layer
@@ -201,8 +201,8 @@ Sources: `accounts.md`, `accounts-form.md`, `accounts-record-detail.md`; checkli
 ### Filter panel
 - [ ] Look: panel layout and field groups match the spec.
 - [ ] Behaviour: operators follow the field type; the value control follows the operator.
-- [ ] Behaviour: apply and clear update the list; a no-match result shows the empty state.
-- [ ] Validation: incomplete criteria show the spec's message and placement.
+- [ ] Behaviour: apply and clear change the list as the filter section of the spec or checklist describes; where the Apply result is listed as open, record an open question.
+- [ ] Validation: incomplete criteria are handled; the exact message is not fixed by the sources (the checklist lists filter validation as open research), so record an open question instead of a finding.
 - [ ] Keyboard: panel opens from the keyboard and closes with Esc; focus order follows the visual order.
 
 ### Create / edit form
@@ -221,7 +221,7 @@ Sources: `accounts.md`, `accounts-form.md`, `accounts-record-detail.md`; checkli
 
 ### Related lists
 - [ ] Look: card headers, column sets and row layout match the spec.
-- [ ] Behaviour: open, add and link/unlink actions listed in the spec work.
+- [ ] Behaviour: only the related-list actions this module's spec lists work (open, and add/link/unlink if listed); anything else is an open question.
 - [ ] Behaviour: an empty related list shows the spec's empty state.
 - [ ] Behaviour: counts and ordering update after an add or a removal.
 - [ ] Keyboard: related-list actions and row links are reachable.
@@ -230,14 +230,14 @@ Sources: `accounts.md`, `accounts-form.md`, `accounts-record-detail.md`; checkli
 - [ ] Look: entries, date grouping and icons match the spec.
 - [ ] Behaviour: history and notes entries (where the spec lists them) appear in the spec's order.
 - [ ] Behaviour: adding a note (where the spec allows it) shows it immediately.
-- [ ] Validation: an empty note is handled as the spec says.
-- [ ] Keyboard: note editor and entry actions are reachable.
+- [ ] Validation: empty-note handling, only if the notes spec defines it; otherwise an open question.
+- [ ] Keyboard: timeline entries and their controls are reachable.
 
 ### Empty and error states
 - [ ] Empty list and empty search show the spec's empty state.
-- [ ] Unknown record id shows the spec's error page.
-- [ ] A failed request shows the spec's error feedback.
-- [ ] The screen recovers after the failure without a reload.
+- [ ] Unknown record id: check only if the spec defines it; otherwise record an open question.
+- [ ] A failed request: feedback matches the spec if it defines one; otherwise record an open question.
+- [ ] Recovery after a failed request: open question unless the spec defines it.
 - [ ] Keyboard: error and empty-state actions are reachable.
 ## Deals
 Sources: `deals.md`, `deals-form.md`, `deals-record-detail.md`, `deals-pipeline.md`, `deals-kanban-settings.md`; checklist "Module 4 — Deals".
@@ -252,8 +252,8 @@ Sources: `deals.md`, `deals-form.md`, `deals-record-detail.md`, `deals-pipeline.
 ### Filter panel
 - [ ] Look: panel layout and field groups match the spec.
 - [ ] Behaviour: operators follow the field type; the value control follows the operator.
-- [ ] Behaviour: apply and clear update the list; a no-match result shows the empty state.
-- [ ] Validation: incomplete criteria show the spec's message and placement.
+- [ ] Behaviour: apply and clear change the list as the filter section of the spec or checklist describes; where the Apply result is listed as open, record an open question.
+- [ ] Validation: incomplete criteria are handled; the exact message is not fixed by the sources (the checklist lists filter validation as open research), so record an open question instead of a finding.
 - [ ] Keyboard: panel opens from the keyboard and closes with Esc; focus order follows the visual order.
 
 ### Create / edit form
@@ -272,7 +272,7 @@ Sources: `deals.md`, `deals-form.md`, `deals-record-detail.md`, `deals-pipeline.
 
 ### Related lists
 - [ ] Look: card headers, column sets and row layout match the spec.
-- [ ] Behaviour: open, add and link/unlink actions listed in the spec work.
+- [ ] Behaviour: only the related-list actions this module's spec lists work (open, and add/link/unlink if listed); anything else is an open question.
 - [ ] Behaviour: an empty related list shows the spec's empty state.
 - [ ] Behaviour: counts and ordering update after an add or a removal.
 - [ ] Keyboard: related-list actions and row links are reachable.
@@ -281,14 +281,14 @@ Sources: `deals.md`, `deals-form.md`, `deals-record-detail.md`, `deals-pipeline.
 - [ ] Look: entries, date grouping and icons match the spec.
 - [ ] Behaviour: history and notes entries (where the spec lists them) appear in the spec's order.
 - [ ] Behaviour: adding a note (where the spec allows it) shows it immediately.
-- [ ] Validation: an empty note is handled as the spec says.
-- [ ] Keyboard: note editor and entry actions are reachable.
+- [ ] Validation: empty-note handling, only if the notes spec defines it; otherwise an open question.
+- [ ] Keyboard: timeline entries and their controls are reachable.
 
 ### Empty and error states
 - [ ] Empty list and empty search show the spec's empty state.
-- [ ] Unknown record id shows the spec's error page.
-- [ ] A failed request shows the spec's error feedback.
-- [ ] The screen recovers after the failure without a reload.
+- [ ] Unknown record id: check only if the spec defines it; otherwise record an open question.
+- [ ] A failed request: feedback matches the spec if it defines one; otherwise record an open question.
+- [ ] Recovery after a failed request: open question unless the spec defines it.
 - [ ] Keyboard: error and empty-state actions are reachable.
 
 ### Stage (Kanban) board
@@ -324,8 +324,8 @@ Sources: `activities.md`, `activities-form.md`, `activities-record-detail.md`, `
 ### Filter panel
 - [ ] Look: panel layout and field groups match the spec.
 - [ ] Behaviour: operators follow the field type; the value control follows the operator.
-- [ ] Behaviour: apply and clear update the list; a no-match result shows the empty state.
-- [ ] Validation: incomplete criteria show the spec's message and placement.
+- [ ] Behaviour: apply and clear change the list as the filter section of the spec or checklist describes; where the Apply result is listed as open, record an open question.
+- [ ] Validation: incomplete criteria are handled; the exact message is not fixed by the sources (the checklist lists filter validation as open research), so record an open question instead of a finding.
 - [ ] Keyboard: panel opens from the keyboard and closes with Esc; focus order follows the visual order.
 
 ### Create / edit form
@@ -344,7 +344,7 @@ Sources: `activities.md`, `activities-form.md`, `activities-record-detail.md`, `
 
 ### Related lists
 - [ ] Look: card headers, column sets and row layout match the spec.
-- [ ] Behaviour: open, add and link/unlink actions listed in the spec work.
+- [ ] Behaviour: only the related-list actions this module's spec lists work (open, and add/link/unlink if listed); anything else is an open question.
 - [ ] Behaviour: an empty related list shows the spec's empty state.
 - [ ] Behaviour: counts and ordering update after an add or a removal.
 - [ ] Keyboard: related-list actions and row links are reachable.
@@ -353,14 +353,14 @@ Sources: `activities.md`, `activities-form.md`, `activities-record-detail.md`, `
 - [ ] Look: entries, date grouping and icons match the spec.
 - [ ] Behaviour: history and notes entries (where the spec lists them) appear in the spec's order.
 - [ ] Behaviour: adding a note (where the spec allows it) shows it immediately.
-- [ ] Validation: an empty note is handled as the spec says.
-- [ ] Keyboard: note editor and entry actions are reachable.
+- [ ] Validation: empty-note handling, only if the notes spec defines it; otherwise an open question.
+- [ ] Keyboard: timeline entries and their controls are reachable.
 
 ### Empty and error states
 - [ ] Empty list and empty search show the spec's empty state.
-- [ ] Unknown record id shows the spec's error page.
-- [ ] A failed request shows the spec's error feedback.
-- [ ] The screen recovers after the failure without a reload.
+- [ ] Unknown record id: check only if the spec defines it; otherwise record an open question.
+- [ ] A failed request: feedback matches the spec if it defines one; otherwise record an open question.
+- [ ] Recovery after a failed request: open question unless the spec defines it.
 - [ ] Keyboard: error and empty-state actions are reachable.
 
 ### Activity cards on parent records
@@ -382,8 +382,8 @@ Sources: `activities.md`, `activities-form.md`, `activities-record-detail.md`, `
 ### Filter panel
 - [ ] Look: panel layout and field groups match the spec.
 - [ ] Behaviour: operators follow the field type; the value control follows the operator.
-- [ ] Behaviour: apply and clear update the list; a no-match result shows the empty state.
-- [ ] Validation: incomplete criteria show the spec's message and placement.
+- [ ] Behaviour: apply and clear change the list as the filter section of the spec or checklist describes; where the Apply result is listed as open, record an open question.
+- [ ] Validation: incomplete criteria are handled; the exact message is not fixed by the sources (the checklist lists filter validation as open research), so record an open question instead of a finding.
 - [ ] Keyboard: panel opens from the keyboard and closes with Esc; focus order follows the visual order.
 
 ### Create / edit form
@@ -402,7 +402,7 @@ Sources: `activities.md`, `activities-form.md`, `activities-record-detail.md`, `
 
 ### Related lists
 - [ ] Look: card headers, column sets and row layout match the spec.
-- [ ] Behaviour: open, add and link/unlink actions listed in the spec work.
+- [ ] Behaviour: only the related-list actions this module's spec lists work (open, and add/link/unlink if listed); anything else is an open question.
 - [ ] Behaviour: an empty related list shows the spec's empty state.
 - [ ] Behaviour: counts and ordering update after an add or a removal.
 - [ ] Keyboard: related-list actions and row links are reachable.
@@ -411,14 +411,14 @@ Sources: `activities.md`, `activities-form.md`, `activities-record-detail.md`, `
 - [ ] Look: entries, date grouping and icons match the spec.
 - [ ] Behaviour: history and notes entries (where the spec lists them) appear in the spec's order.
 - [ ] Behaviour: adding a note (where the spec allows it) shows it immediately.
-- [ ] Validation: an empty note is handled as the spec says.
-- [ ] Keyboard: note editor and entry actions are reachable.
+- [ ] Validation: empty-note handling, only if the notes spec defines it; otherwise an open question.
+- [ ] Keyboard: timeline entries and their controls are reachable.
 
 ### Empty and error states
 - [ ] Empty list and empty search show the spec's empty state.
-- [ ] Unknown record id shows the spec's error page.
-- [ ] A failed request shows the spec's error feedback.
-- [ ] The screen recovers after the failure without a reload.
+- [ ] Unknown record id: check only if the spec defines it; otherwise record an open question.
+- [ ] A failed request: feedback matches the spec if it defines one; otherwise record an open question.
+- [ ] Recovery after a failed request: open question unless the spec defines it.
 - [ ] Keyboard: error and empty-state actions are reachable.
 
 ### Activity cards on parent records
@@ -440,8 +440,8 @@ Sources: `activities.md`, `activities-form.md`, `activities-record-detail.md`, `
 ### Filter panel
 - [ ] Look: panel layout and field groups match the spec.
 - [ ] Behaviour: operators follow the field type; the value control follows the operator.
-- [ ] Behaviour: apply and clear update the list; a no-match result shows the empty state.
-- [ ] Validation: incomplete criteria show the spec's message and placement.
+- [ ] Behaviour: apply and clear change the list as the filter section of the spec or checklist describes; where the Apply result is listed as open, record an open question.
+- [ ] Validation: incomplete criteria are handled; the exact message is not fixed by the sources (the checklist lists filter validation as open research), so record an open question instead of a finding.
 - [ ] Keyboard: panel opens from the keyboard and closes with Esc; focus order follows the visual order.
 
 ### Create / edit form
@@ -460,7 +460,7 @@ Sources: `activities.md`, `activities-form.md`, `activities-record-detail.md`, `
 
 ### Related lists
 - [ ] Look: card headers, column sets and row layout match the spec.
-- [ ] Behaviour: open, add and link/unlink actions listed in the spec work.
+- [ ] Behaviour: only the related-list actions this module's spec lists work (open, and add/link/unlink if listed); anything else is an open question.
 - [ ] Behaviour: an empty related list shows the spec's empty state.
 - [ ] Behaviour: counts and ordering update after an add or a removal.
 - [ ] Keyboard: related-list actions and row links are reachable.
@@ -469,14 +469,14 @@ Sources: `activities.md`, `activities-form.md`, `activities-record-detail.md`, `
 - [ ] Look: entries, date grouping and icons match the spec.
 - [ ] Behaviour: history and notes entries (where the spec lists them) appear in the spec's order.
 - [ ] Behaviour: adding a note (where the spec allows it) shows it immediately.
-- [ ] Validation: an empty note is handled as the spec says.
-- [ ] Keyboard: note editor and entry actions are reachable.
+- [ ] Validation: empty-note handling, only if the notes spec defines it; otherwise an open question.
+- [ ] Keyboard: timeline entries and their controls are reachable.
 
 ### Empty and error states
 - [ ] Empty list and empty search show the spec's empty state.
-- [ ] Unknown record id shows the spec's error page.
-- [ ] A failed request shows the spec's error feedback.
-- [ ] The screen recovers after the failure without a reload.
+- [ ] Unknown record id: check only if the spec defines it; otherwise record an open question.
+- [ ] A failed request: feedback matches the spec if it defines one; otherwise record an open question.
+- [ ] Recovery after a failed request: open question unless the spec defines it.
 - [ ] Keyboard: error and empty-state actions are reachable.
 
 ### Activity cards on parent records
@@ -498,8 +498,8 @@ Sources: `campaigns.md`; checklist "Module 7 — Campaigns".
 ### Filter panel
 - [ ] Look: panel layout and field groups match the spec.
 - [ ] Behaviour: operators follow the field type; the value control follows the operator.
-- [ ] Behaviour: apply and clear update the list; a no-match result shows the empty state.
-- [ ] Validation: incomplete criteria show the spec's message and placement.
+- [ ] Behaviour: apply and clear change the list as the filter section of the spec or checklist describes; where the Apply result is listed as open, record an open question.
+- [ ] Validation: incomplete criteria are handled; the exact message is not fixed by the sources (the checklist lists filter validation as open research), so record an open question instead of a finding.
 - [ ] Keyboard: panel opens from the keyboard and closes with Esc; focus order follows the visual order.
 
 ### Create / edit form
@@ -518,7 +518,7 @@ Sources: `campaigns.md`; checklist "Module 7 — Campaigns".
 
 ### Related lists
 - [ ] Look: card headers, column sets and row layout match the spec.
-- [ ] Behaviour: open, add and link/unlink actions listed in the spec work.
+- [ ] Behaviour: only the related-list actions this module's spec lists work (open, and add/link/unlink if listed); anything else is an open question.
 - [ ] Behaviour: an empty related list shows the spec's empty state.
 - [ ] Behaviour: counts and ordering update after an add or a removal.
 - [ ] Keyboard: related-list actions and row links are reachable.
@@ -527,14 +527,14 @@ Sources: `campaigns.md`; checklist "Module 7 — Campaigns".
 - [ ] Look: entries, date grouping and icons match the spec.
 - [ ] Behaviour: history and notes entries (where the spec lists them) appear in the spec's order.
 - [ ] Behaviour: adding a note (where the spec allows it) shows it immediately.
-- [ ] Validation: an empty note is handled as the spec says.
-- [ ] Keyboard: note editor and entry actions are reachable.
+- [ ] Validation: empty-note handling, only if the notes spec defines it; otherwise an open question.
+- [ ] Keyboard: timeline entries and their controls are reachable.
 
 ### Empty and error states
 - [ ] Empty list and empty search show the spec's empty state.
-- [ ] Unknown record id shows the spec's error page.
-- [ ] A failed request shows the spec's error feedback.
-- [ ] The screen recovers after the failure without a reload.
+- [ ] Unknown record id: check only if the spec defines it; otherwise record an open question.
+- [ ] A failed request: feedback matches the spec if it defines one; otherwise record an open question.
+- [ ] Recovery after a failed request: open question unless the spec defines it.
 - [ ] Keyboard: error and empty-state actions are reachable.
 
 ### Campaign links from earlier modules
@@ -556,8 +556,8 @@ Sources: `cases.md`; checklist "Module 8 — Cases and Solutions".
 ### Filter panel
 - [ ] Look: panel layout and field groups match the spec.
 - [ ] Behaviour: operators follow the field type; the value control follows the operator.
-- [ ] Behaviour: apply and clear update the list; a no-match result shows the empty state.
-- [ ] Validation: incomplete criteria show the spec's message and placement.
+- [ ] Behaviour: apply and clear change the list as the filter section of the spec or checklist describes; where the Apply result is listed as open, record an open question.
+- [ ] Validation: incomplete criteria are handled; the exact message is not fixed by the sources (the checklist lists filter validation as open research), so record an open question instead of a finding.
 - [ ] Keyboard: panel opens from the keyboard and closes with Esc; focus order follows the visual order.
 
 ### Create / edit form
@@ -576,7 +576,7 @@ Sources: `cases.md`; checklist "Module 8 — Cases and Solutions".
 
 ### Related lists
 - [ ] Look: card headers, column sets and row layout match the spec.
-- [ ] Behaviour: open, add and link/unlink actions listed in the spec work.
+- [ ] Behaviour: only the related-list actions this module's spec lists work (open, and add/link/unlink if listed); anything else is an open question.
 - [ ] Behaviour: an empty related list shows the spec's empty state.
 - [ ] Behaviour: counts and ordering update after an add or a removal.
 - [ ] Keyboard: related-list actions and row links are reachable.
@@ -585,14 +585,14 @@ Sources: `cases.md`; checklist "Module 8 — Cases and Solutions".
 - [ ] Look: entries, date grouping and icons match the spec.
 - [ ] Behaviour: history and notes entries (where the spec lists them) appear in the spec's order.
 - [ ] Behaviour: adding a note (where the spec allows it) shows it immediately.
-- [ ] Validation: an empty note is handled as the spec says.
-- [ ] Keyboard: note editor and entry actions are reachable.
+- [ ] Validation: empty-note handling, only if the notes spec defines it; otherwise an open question.
+- [ ] Keyboard: timeline entries and their controls are reachable.
 
 ### Empty and error states
 - [ ] Empty list and empty search show the spec's empty state.
-- [ ] Unknown record id shows the spec's error page.
-- [ ] A failed request shows the spec's error feedback.
-- [ ] The screen recovers after the failure without a reload.
+- [ ] Unknown record id: check only if the spec defines it; otherwise record an open question.
+- [ ] A failed request: feedback matches the spec if it defines one; otherwise record an open question.
+- [ ] Recovery after a failed request: open question unless the spec defines it.
 - [ ] Keyboard: error and empty-state actions are reachable.
 
 ### Cases links and CSV export
@@ -614,8 +614,8 @@ Sources: `solutions.md`; checklist "Module 8 — Cases and Solutions".
 ### Filter panel
 - [ ] Look: panel layout and field groups match the spec.
 - [ ] Behaviour: operators follow the field type; the value control follows the operator.
-- [ ] Behaviour: apply and clear update the list; a no-match result shows the empty state.
-- [ ] Validation: incomplete criteria show the spec's message and placement.
+- [ ] Behaviour: apply and clear change the list as the filter section of the spec or checklist describes; where the Apply result is listed as open, record an open question.
+- [ ] Validation: incomplete criteria are handled; the exact message is not fixed by the sources (the checklist lists filter validation as open research), so record an open question instead of a finding.
 - [ ] Keyboard: panel opens from the keyboard and closes with Esc; focus order follows the visual order.
 
 ### Create / edit form
@@ -634,7 +634,7 @@ Sources: `solutions.md`; checklist "Module 8 — Cases and Solutions".
 
 ### Related lists
 - [ ] Look: card headers, column sets and row layout match the spec.
-- [ ] Behaviour: open, add and link/unlink actions listed in the spec work.
+- [ ] Behaviour: only the related-list actions this module's spec lists work (open, and add/link/unlink if listed); anything else is an open question.
 - [ ] Behaviour: an empty related list shows the spec's empty state.
 - [ ] Behaviour: counts and ordering update after an add or a removal.
 - [ ] Keyboard: related-list actions and row links are reachable.
@@ -643,14 +643,14 @@ Sources: `solutions.md`; checklist "Module 8 — Cases and Solutions".
 - [ ] Look: entries, date grouping and icons match the spec.
 - [ ] Behaviour: history and notes entries (where the spec lists them) appear in the spec's order.
 - [ ] Behaviour: adding a note (where the spec allows it) shows it immediately.
-- [ ] Validation: an empty note is handled as the spec says.
-- [ ] Keyboard: note editor and entry actions are reachable.
+- [ ] Validation: empty-note handling, only if the notes spec defines it; otherwise an open question.
+- [ ] Keyboard: timeline entries and their controls are reachable.
 
 ### Empty and error states
 - [ ] Empty list and empty search show the spec's empty state.
-- [ ] Unknown record id shows the spec's error page.
-- [ ] A failed request shows the spec's error feedback.
-- [ ] The screen recovers after the failure without a reload.
+- [ ] Unknown record id: check only if the spec defines it; otherwise record an open question.
+- [ ] A failed request: feedback matches the spec if it defines one; otherwise record an open question.
+- [ ] Recovery after a failed request: open question unless the spec defines it.
 - [ ] Keyboard: error and empty-state actions are reachable.
 
 ### CSV export
