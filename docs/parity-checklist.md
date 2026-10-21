@@ -1150,6 +1150,9 @@ buttons and everything outside the print page.
 
 ## Module 8 — Cases and Solutions
 
+Defect dispositions below were reconciled from issue decisions and merged code
+on `main` at `921f5e07` (MEP-1009); no new capture or runtime QA was performed.
+
 ### Cases list
 
 Closing QA 1/2 (MEP-901) compared the running list, view menu, Actions menu,
@@ -1160,19 +1163,21 @@ reference account had no Cases rows.
 | Inventory | Closing QA result | Verification |
 | --- | --- | --- |
 | KL-01, KL-02, KL-02.1–KL-02.9, KL-40 | Passed: All Cases tab, eight system views in reference order, active check mark and refresh control | Browser walkthrough; `cases-list.spec.ts` |
-| KL-02.10–KL-02.12 | **Visual defect:** M11 controls are inert as expected, but the menu is visibly narrower than the saved capture; the Dropdown row wraps and pushes the following controls downward | Browser walkthrough; `cases-list.spec.ts` |
+| KL-02.10–KL-02.12 | **Closed by MEP-936:** custom-view menu width corrected; Dropdown stays on one line. M11 controls remain inert | `99392b65`; `view-tab-strip.tsx`; `cases-list.spec.ts` |
 | KL-03–KL-12 | Toolbar order and four visible columns passed; Filter, Sort, Refresh and Create route worked. Alternate presentation modes were not established by the empty reference list | Browser walkthrough; `cases-list.spec.ts` |
-| KL-13 | **Defect:** Create chevron is marked `data-later-module="M6"` and opens nothing, although the Module 8 gate requires M1–M8 controls to work | Browser click; `cases-list.spec.ts` currently asserts inactivity |
-| KL-14, KL-14.1–KL-14.11 | **Defects:** menu order passes; M6 Manage Tags and Export are inert; M8 Drafts closes without opening a flow, and Print View opens no captured submenu or page | Browser clicks; `cases-list.spec.ts` covers order only |
+| KL-13 | **Open / gate-accepted question:** Create chevron remains M6 and inert; its reference menu contents were not observable. Explicitly excluded from MEP-933/MEP-936; not closed by those fixes | `module-list-screen.tsx` (`moreLaterModule`); MEP-1005 |
+| KL-14, KL-14.1–KL-14.11 | **Closed:** Manage Tags by MEP-974/MEP-933; Export by MEP-968; Drafts route and Print View submenu / Print Default view by MEP-936. **Open:** Print Using Canvas remains M6 | `list-config.ts`; `module-list-screen.tsx`; `print-modules.ts`; `cases-list.spec.ts`; `inventory-manage-tags.spec.ts` |
 | KL-15–KL-31, KL-35, KL-38–KL-39 | Passed: system/field filter sections, alphabet picker, filter-produced empty state and Total Records 0 | Browser walkthrough; `cases-list.spec.ts` |
 | KL-32–KL-37 | Passed: M11 View Settings inert; Case Number, Subject, Status and Priority headings; populated columns provisional | Browser walkthrough; `cases-list.spec.ts` |
 | KL-41–KL-56 | Cases/Solutions routes rendered; Solutions and Cases are ungrouped top-level rail rows (reference order Solutions, Cases) below the Sales/Activities groups, Campaigns stays under Sales; each module row has its own glyph (interim Lucide choice, reference glyph inventory pending spec); hover look unmeasured (open question); later phase entries remain placeholders | Browser walkthrough; `shell.test.tsx` |
 | Populated selection bar | Passed: one selected row shows Clear, Send Email, Tags and Mass Update; no reference row or selection bar could be observed | Browser walkthrough; provisional |
 
-The Cases filter catalogue also marks Calls, Meetings and Tasks as M5 and Notes
-as M6 with `data-later-module`; these controls remain inert. This is a gate
-defect under the M8 threshold. The saved reference list is empty, so populated
-row, selection-bar and paging design remain provisional.
+**Open / follow-up:** Filter By Related Modules still marks Calls, Meetings and
+Tasks as M5 and Notes as M6; these rows remain inert in `cases/list-filters.ts`.
+MEP-994 explicitly deferred them to research MEP-998; implementation is tracked
+by MEP-1007 (contract/server) and MEP-1008 (editor/wiring), opened from MEP-1006.
+Emails stays M10. The saved reference list is empty, so populated row,
+selection-bar and paging design remain provisional.
 
 ### Cases record detail
 
@@ -1187,9 +1192,14 @@ provisional. Closing QA compared it with the running Accounts detail pattern.
 | GK-4 | Passed: Timeline opens and shows history/filter controls | Browser walkthrough; `cases-detail.spec.ts` |
 | GK-5 | Passed: rail and six cards render in the provisional order | Browser walkthrough; `cases-detail.spec.ts` |
 
-**Gate defect:** Notes/Attachments actions still carry M6 and activity actions
-still carry M5 `data-later-module` markers and remain inert on the Cases detail.
-M11/P3/M10 detail placeholders stayed inert when clicked.
+**Closed:** real Attachments cards and Attach for Cases/Solutions by MEP-973
+(`c8494314`); Notes rail selection and Add composer by MEP-994 (`5e9a98b2`,
+merged through MEP-936). Cases activity bodies use the existing live parent
+activity flow. **Open / accepted scope exception:** Column View and Expand
+remain M5 and inert, explicitly excluded by the MEP-994 CTO decision;
+`LIVE_MODULE_KEYS` was not broadened. M11/P3/M10 detail placeholders remain inert.
+Evidence: both modules' related-list definitions, `notes-card-body.tsx`,
+`parent-activity-cards.tsx` and `cases-detail.spec.ts`.
 
 ### Solutions record detail
 
@@ -1214,19 +1224,24 @@ fixture contains records, and the empty state was reached with a field filter.
 The local list was compared beside `m8-solutions-list-base`,
 `m8-solutions-list-views` and `m8-solutions-list-actions`.
 
-Defect: SL-17–SL-21 (the five system filters), SL-30 (Product Name) and SL-31
-(Solution Number) are disabled in the local filter panel. The reference paints
-ordinary unchecked boxes for them. The inventory assigns them to Module 8.
-Disabling them prevents those list filters from being used. The local QA
-screenshot is attached to MEP-902.
+The disabled-filter finding from MEP-902 has the following disposition,
+verified against the current `main` filter definitions and merged fixes:
 
-Defect: SL-14.4 (Manage Tags) is marked `data-later-module="M6"` and does not
-open the delivered Tags flow. SL-14.7 (Export Solutions) and the populated
-selection bar's Tags action also carry M6 markers. Module 6 falls inside the
-Module 8 live-control threshold; these controls need a working action rather
-than a later-module placeholder. SL-13's create-menu arrow is also an inert M6
-control, but its reference menu contents were not observed and remain an open
-question.
+| Inventory | Disposition | Verification |
+| --- | --- | --- |
+| SL-17–SL-21 | **Closed by MEP-955 / MEP-958:** five system-filter editors enabled; separated from MEP-933 | `d365278d`; `solutions/list-filters.ts`; `system-filter-editor.tsx`; `solutions-list.spec.ts` |
+| SL-31 | **Closed by MEP-933:** Solution Number supports text operators and server-side autonumber matching; same fix for Case Number | `e4e59c5e` branch merged by `1803400e`; `inventory-selection-tags-filter.spec.ts` |
+| SL-30 | **Open / board-deferred to P2:** Product Name has no editor and remains disabled with P2 marker until Products supports reference matching; tracked by MEP-982 | `solutions/list-filters.ts`; MEP-933 final scope decision |
+
+**Closed:** SL-14.4 Manage Tags by MEP-974/MEP-933; selection-bar Tags for
+Solutions and Cases by MEP-933 (`selectionTags: true`); SL-14.7 Export Solutions
+and Export Cases by MEP-968 (`2ece36de`, merged by `8c1c455b`). Evidence:
+both list configs, `inventory-manage-tags.spec.ts` and
+`inventory-selection-tags-filter.spec.ts`.
+**Open / gate-accepted question:** SL-13's Create chevron remains inert M6;
+its reference menu contents were not observed, and MEP-933 explicitly excluded
+it. Solutions Print View also remains open: no submenu is configured and
+`PRINT_LIST_MODULES` excludes Solutions; MEP-936 fixed Cases only.
 
 ### Solutions create / edit form
 
@@ -1259,11 +1274,14 @@ required-field errors, locked Solution Number, Status options, Save, Save and
 New, Cancel and edit persistence. Visual comparison used `m8f-solutions-create`
 and `m8f-solutions-status`.
 
-Defect: the local Create form is confined to a narrow card, with Question and
-Answer ending well before the right edge and the form-view footer directly
-under the fields. The reference form spans the content area; its text fields
-are wider and its footer sits at the bottom of the page. The local QA screenshot
-is attached to MEP-902. This is a visible layout difference at normal zoom.
+**Closed by MEP-956** (separated from MEP-933): Solutions-specific form layout
+extends the card to the page bottom, restores Question/Answer row spacing and
+anchors the footer at the bottom right. Implementation `fdfee013` and geometry
+regression `e0e74f0d` are on `main` through merge `7a60b0bf`. Evidence:
+`form.css` scoped to `data-form-layout="solutions"`, Solutions form definition
+and `solutions-form.spec.ts`. The implementation handoff records a remaining
+9 px Question/Answer width difference, retained as an **open visual residual**;
+exact pixel parity is not claimed.
 
 Provisional: Edit reuses Create, required-field error wording and navigation
 follow Accounts, and the Solution Number is generated locally. The reference
@@ -1300,26 +1318,34 @@ reference account.
 
 ### Module 8 gate
 
+Board accepted the gate in MEP-1005 (main `0d55db30`); Filter By Related Modules
+Calls/Meetings/Notes/Tasks is tracked by MEP-1007 and MEP-1008, opened from
+MEP-1006; Emails waits for Module 10.
+
 Closing QA 1/2 (MEP-901): `origin/main` was `523636e4` (2026-10-20
 04:48:03 +0300). Eleven required issues appeared as first-parent merge commits.
 MEP-843 entered `main` through the MEP-861 and MEP-862 branch merges; its service
 commit and merge commits are ancestors of `origin/main`, though no separate
 first-parent MEP-843 line exists. The running Cases list, form, detail and
 Accounts/Contacts/Deals card flows passed. Leads and Campaigns lists opened;
-surrounding parent-detail cards remained present. Cases defects: M5/M6 controls
-still marked `data-later-module` and inert on Cases screens; M8 Drafts and Print
-View have no visible result; the custom-view menu is visibly too narrow.
+surrounding parent-detail cards remained present. The defects recorded at that
+QA snapshot are reconciled above: MEP-936 closes the narrow view menu and Cases
+Drafts / default print flow; MEP-973/MEP-974/MEP-933/MEP-994 close the delivered
+attachment, tag and Notes actions. Remaining M5/M6 exceptions are listed
+explicitly rather than treated as closed.
 
-Closing QA 2/2 (MEP-902) found three Solutions defect groups: disabled M8
-filters, inert M6 actions and the Create form layout/footer placement. The
+Closing QA 2/2 (MEP-902) originally found disabled filters, inert M6 actions and
+the Create form layout/footer defects. MEP-933, MEP-955/MEP-958, MEP-956 and
+MEP-968 close the implemented portions as mapped above; Product Name, Create
+chevrons and the unimplemented print controls remain open/deferred. The
 Solutions create → validation → save → detail → edit → list flow and Case
 `Solution` text → detail flow passed locally. Across Cases and Solutions list,
 create and detail screens, 133 visible `data-later-module` controls were
 clicked without navigation or dialogs. Cases list/detail, Accounts and
 Contacts lists, and the required Activities specs passed in the targeted
 end-to-end run. Solutions detail and Edit are provisional because the reference
-account has no Solutions records. CTO owns the Module 8 gate and any
-consolidated correction scope.
+account has no Solutions records. These are historical QA results, not a new
+browser/test run for this documentation update.
 
 Provisional/open: populated Cases table and selection bar; complete Cases and
 Solutions record details; Edit form equals Create; optional Email for Email
