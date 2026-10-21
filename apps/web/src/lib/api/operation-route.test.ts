@@ -75,6 +75,21 @@ describe("operationRoute", () => {
     expect(Object.keys(body).sort()).toEqual(["code", "details", "message", "status"]);
   });
 
+  it("answers an over-limit related-modules body with 400 and the error shape", async () => {
+    const { decodeRelatedModules } = await import("./wire/codec");
+    const run = vi.fn(async () => {
+      decodeRelatedModules(Array(4).fill({ module: "Calls", presence: "with", criteria: [] }));
+      return { body: {} };
+    });
+    const response = await operationRoute({ run } as unknown as Operation)(post(), {
+      params: Promise.resolve({}),
+    });
+    expect(response.status).toBe(400);
+    const body = await response.json();
+    expect(body.status).toBe("error");
+    expect(Object.keys(body).sort()).toEqual(["code", "details", "message", "status"]);
+  });
+
   it("rejects a missing organization header before running the operation", async () => {
     const run = vi.fn();
     const response = await operationRoute({ run } as unknown as Operation)(
