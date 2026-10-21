@@ -219,6 +219,15 @@ export interface FormDynamicState {
 
 export interface FormRules {
   owner: string;
+  /**
+   * Replaces Save and New: saves, then opens a create form of `module` prefilled with `params`.
+   * Provisional (the reference action was never invoked).
+   */
+  followUp?: {
+    label: string;
+    module: string;
+    params: (values: Readonly<Record<string, FieldValue | undefined>>) => Record<string, string>;
+  };
   /** Per-mode view overrides for fields whose export view disagrees with the reference form. */
   viewOverrides?: Readonly<Record<string, Partial<Record<FormMode, boolean>>>>;
   /** Row label shown instead of the export label (also used in validation messages). */

@@ -272,3 +272,17 @@ test("laterModule controls do not navigate or open dialogs (CF-01, CF-22, CF-23,
   await expect(page).toHaveURL(url);
   await expect(page.getByRole("dialog")).toHaveCount(0);
 });
+
+test("Create Form Views footer sits at the bottom edge of the form view (CF-22, CF-23)", async ({
+  page,
+}) => {
+  await openCreate(page);
+  const footer = page.locator("[data-record-form-inventory-footer]");
+  await expect(footer).toBeVisible();
+  const box = await footer.boundingBox();
+  const viewport = page.viewportSize();
+  expect(box).not.toBeNull();
+  expect(
+    Math.abs((box?.y ?? 0) + (box?.height ?? 0) - (viewport?.height ?? 0)),
+  ).toBeLessThanOrEqual(48);
+});

@@ -8,6 +8,7 @@ export const ATTACHMENT_CARD_MODULES = [
   "Contacts",
   "Accounts",
   "Deals",
+  "Campaigns",
   "Cases",
   "Solutions",
 ] as const;
@@ -18,7 +19,6 @@ export const ATTACHMENT_PARENT_MODULES: readonly string[] = [
   "Notes",
   "Tasks",
   "Events",
-  "Campaigns",
 ];
 
 export type AttachmentCardModule = (typeof ATTACHMENT_CARD_MODULES)[number];
