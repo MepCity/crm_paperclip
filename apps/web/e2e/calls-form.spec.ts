@@ -135,15 +135,13 @@ test("Save and Create Follow-up Task saves the call and opens a prefilled Task f
   );
   const who = await pickCallFrom(page);
   const whatField = page.locator("[data-form-field=What_Id]");
-  await whatField.getByRole("button", { name: /module$/ }).click();
-  await page.getByRole("option", { name: "Deal", exact: true }).click();
   await whatField.getByRole("button", { name: /^Open .* lookup$/ }).click();
   const dialog = page.getByRole("dialog");
   const radio = dialog.getByRole("radio").first();
   await expect(radio).toBeVisible();
   const what = (await radio.getAttribute("aria-label")) ?? "";
   await dialog.getByRole("row", { name: what }).click();
-  await dialog.getByRole("button", { name: "Done", exact: true }).click();
+  await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(whatField.locator("input")).toHaveValue(what);
   await page.getByRole("textbox", { name: "Subject", exact: true }).fill("Intro call");
   await page.getByRole("textbox", { name: "Call Start Time date" }).fill("30.11.2030");

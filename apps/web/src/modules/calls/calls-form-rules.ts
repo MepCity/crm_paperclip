@@ -80,6 +80,7 @@ function lookupParams(
 }
 
 export const callsFormRules: FormRules = {
+  initialFocus: "Who_Id",
   owner: "Owner",
   // Provisional: the reference action was never invoked (`activities-form.md` CF-02).
   followUp: {
@@ -102,6 +103,7 @@ export const callsFormRules: FormRules = {
   },
   labelOverrides: { Who_Id: "Call From/To" },
   lookupLabelFields: ["Who_Id"],
+  suppressLookupPrefix: ["What_Id"],
   durationFields: ["Call_Duration"],
   dynamic: callsFormDynamicState,
   defaultValues: buildCallsFormDefaults,

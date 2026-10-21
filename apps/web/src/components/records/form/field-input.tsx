@@ -49,6 +49,8 @@ export interface FieldInputProps {
   variant?: "activity";
   /** Module selected by a label-side selector; suppresses the input prefix selector. */
   lookupModule?: string;
+  /** Suppresses the polymorphic prefix select inside the input (CF-08, Activities Call form). */
+  suppressPolymorphicPrefix?: boolean;
   value: FieldValue;
   onChange: (value: FieldValue) => void;
   errorMessage?: string;
@@ -180,6 +182,7 @@ export function FieldInput({
   field,
   variant,
   lookupModule,
+  suppressPolymorphicPrefix,
   value,
   onChange,
   errorMessage,
@@ -484,7 +487,7 @@ export function FieldInput({
             value={displayText}
             laterModule={targetLaterModule}
             prefix={
-              isPolymorphic && lookupModule === undefined ? (
+              isPolymorphic && lookupModule === undefined && !suppressPolymorphicPrefix ? (
                 <div className="record-prefix-select">
                   <RecordChoice
                     id={`${controlId}-module`}
