@@ -10,7 +10,7 @@ Provide the persistent navigation needed to reach Leads and identify the current
 | --- | --- | --- |
 | Left navigation rail | Persistent full-height menu beside the main content. A top product selector and a `Hide Menu` control precede navigation. Home is visibly selected on the Home route; Leads is selected after following its link. The menu can be hidden, but the resulting collapsed state was not captured. | needed for Module 1: persistent rail, active module, hide control |
 | Pinned links | Home, Workqueue, Reports, Analytics, Agents, and MCP Server appear above the teamspace section, in that order. | needed for Module 1: Home entry; later: other links |
-| Teamspace navigation | A named teamspace selector, a local Search box, and grouped module links appear below pinned links. Sales is expanded and shows Leads, Contacts, Accounts, Deals, Documents, Campaigns. Activities is expanded and shows Tasks, Meetings, Calls. Integrations is expanded and shows Visits. Price Books and Products appear in additional regions lower in the rail. | needed for Module 1: teamspace container, Sales group, Leads link; later: other groups, links, local search |
+| Teamspace navigation | A named teamspace selector, a local Search box, and grouped module links appear below pinned links. Sales is expanded and shows Leads, Contacts, Accounts, Deals, Documents, Campaigns. Activities is expanded and shows Tasks, Meetings, Calls. Integrations is expanded and shows Visits. Flat module rows follow Integrations; see the Teamspace navigation inventory below for their exact order. | needed for Module 1: teamspace container, Sales group, Leads link; later: other groups, links, local search |
 | Teamspace overflow | `More Actions` opens New Teamspace, Create Folder, Add Modules, Manage CRM Teamspace, and View All Teamspace. No option was executed. | later |
 | Top bar | Current page title at left. At right: global record search, quick-create `+`, assistant shortcut, notifications, calendar, extensions/store, settings, user avatar, and applications menu. Calendar and settings have navigable links; their destinations were not opened. | needed for Module 1: page title; later: the other entries unless Leads workflows explicitly require them |
 | Bottom utility strip | Persistent utility controls include pins, chat, channels, threads, contacts, announcements, reminders, recent items, accessibility, and help. | later |
@@ -18,7 +18,63 @@ Provide the persistent navigation needed to reach Leads and identify the current
 
 The current interface has **no horizontal module tab bar**. The rail and its groups serve that navigation role. Module links use `/crm/<org>/tab/<Module>/...`; the Leads rail link targets `/tab/Leads`, and following it resolved to `/tab/Leads/custom-view/<viewId>/list`. Home uses `/tab/Home/begin`. `<org>` and `<viewId>` are placeholders, not literal values.
 
-The module metadata records 33 `show_as_tab` entries. In `sequence_number` order they are: Home (1), Workqueue (2), Leads (3), Contacts (4), Accounts (5), Deals (6), Tasks / Meetings / Calls (7), Reports (8), Analytics (9), Products (10), Quotes (11), Sales Orders (12), Purchase Orders (13), Invoices (14), Feeds / SalesInbox (15), Campaigns (17), Vendors (18), Price Books (19), Cases (20), Solutions (21), Documents (22), Forecasts (23), Visits (24), Social (25), Emails (35), CommandCenter (56), Automation Cadences (106), Cadences Followups (107), Entity Cadences (108), and My Jobs (119). Feeds is marked `visible: false`; the other 32 are marked visible. This metadata order is not the rendered rail order. Only the Home and Leads route/selection were verified. See the external research workspace's `metadata/modules.json` for full module configuration and `metadata/profiles.json` for the two configured profile types; the captures do not establish profile-specific menu differences.
+The module metadata records 33 `show_as_tab` entries. In `sequence_number` order they are: Home (1), Workqueue (2), Leads (3), Contacts (4), Accounts (5), Deals (6), Tasks / Meetings / Calls (7), Reports (8), Analytics (9), Products (10), Quotes (11), Sales Orders (12), Purchase Orders (13), Invoices (14), Feeds / SalesInbox (15), Campaigns (17), Vendors (18), Price Books (19), Cases (20), Solutions (21), Documents (22), Forecasts (23), Visits (24), Social (25), Emails (35), CommandCenter (56), Automation Cadences (106), Cadences Followups (107), Entity Cadences (108), and My Jobs (119). Feeds is marked `visible: false`; the other 32 are marked visible. This metadata order is not the rendered rail order. The original Home research verified Home and Leads route/selection; the inventory below additionally uses the existing Cases and Solutions active screenshots. See the external research workspace's `metadata/modules.json` for full module configuration and `metadata/profiles.json` for the two configured profile types; the captures do not establish profile-specific menu differences.
+
+### Teamspace navigation
+
+This inventory supplements the shell measurements below (MEP-967). It uses only the existing `home-main`, `home-leads-navigation`, `m8-cases-list-base`, and `m8-solutions-list-base` captures. No new capture or reference interaction was performed. Screenshot inspection establishes glyph silhouettes and indentation; the matching accessibility trees establish named groups, unnamed flat regions, and ordering even when rows are outside the screenshot viewport. This is the captured teamspace order, not metadata sequence or a promise that every profile has the same menu.
+
+| Block order | Kind | Label | Children / flat-row order | Evidence |
+| --- | --- | --- | --- | --- |
+| 1 | Expanded group | Sales | Leads → Contacts → Accounts → Deals → Documents → Campaigns | Both Home captures: screenshot and accessibility tree |
+| 2 | Expanded group | Activities | Tasks → Meetings → Calls | Both Home captures: screenshot and accessibility tree |
+| 3 | Expanded group | Integrations | Visits | Both Home captures; Visits also visible in Solutions capture |
+| 4 | Flat rows, each in an unnamed region | No group heading | 1. Price Books → 2. Products → 3. Quotes → 4. Invoices → 5. Sales Orders → 6. Solutions → 7. Social → 8. Forecasts → 9. Purchase Orders → 10. Vendors → 11. SalesInbox → 12. Cases → 13. My Jobs → 14. Services | Cases and Solutions accessibility trees; overlapping screenshots show Price Books through Cases in Solutions and Products through Services in Cases |
+
+Flat rows align with group headings, not with indented children. Preserve the group boundaries: Visits is the final Integrations child; Price Books starts the flat sequence. The Cases capture also shows **Projects after Services** (and names it in the accessibility tree). It is outside this issue's requested inventory through Services, not evidence that Services is the final available module. The Solutions tree has an unnamed region after Services without a named child.
+
+#### Module glyph inventory
+
+These are neutral drawing descriptions, not source assets or icon-library identifiers. Redraw with original paths. Approximate CSS footprints refer to the shared shell geometry established below: module glyphs occupy about **16 × 16 px**; expanded group folder glyphs about **14 × 14 px**. Nested glyphs sit at x 48–64 and flat glyphs around x 20–36 in the 320 px rail. These are visual footprints, not measured SVG viewBoxes. The later Cases/Solutions images corroborate the same arrangement; their module-specific content remains outside these measurements.
+
+All module rows below use a muted blue-grey line glyph (approximately `#7D8AA7`) when unselected. **Selected glyph evidence exists only for Leads, Cases, and Solutions**, which turn approximately white (`#FFFFFF`) while keeping the same silhouette, on the `#31446F` row fill with white semibold label. Other modules' active glyph colours are unobserved; applying the same treatment would be an implementation assumption requiring confirmation, not a separately observed state. Group headings keep a solid blue folder (`#5464F2`), a pale label and an upward chevron in the observed expanded state; no selected-group state was captured. No module uses an emoji or a letter monogram in this inventory.
+
+Every row in the table inherits the approximate 16 × 16 px footprint and unselected colour above. “Unobserved” in the last column means no active screenshot for that module, not absence of an active style.
+
+| Module | Original glyph drawing description | Screenshot evidence | Active state evidence |
+| --- | --- | --- | --- |
+| Leads | Concentric incomplete target rings with a short diagonal arrow pointing into the centre from the upper right | `home-main`, `home-leads-navigation` | White target in Leads capture; muted target in Home |
+| Contacts | Circular outline enclosing a round head and curved shoulders | Both Home captures | Unobserved |
+| Accounts | Two adjoining building outlines of unequal height, with small window bars and a common baseline | Both Home captures | Unobserved |
+| Deals | Wallet outline with a raised/sloping rear flap and a small dot on its front panel | Both Home captures | Unobserved |
+| Documents | Two overlapping rounded page rectangles with short interior horizontal strokes | Both Home captures | Unobserved |
+| Campaigns | Side-facing megaphone with a flared mouth, short rear body and downward handle | Both Home captures | Unobserved |
+| Tasks | Clipboard outline with a small top clip and a central check mark | Both Home captures | Unobserved |
+| Meetings | Calendar outline with two top binding tabs, a header rule and small date marks | Both Home captures | Unobserved |
+| Calls | Diagonal telephone handset with rounded ends | Both Home captures | Unobserved |
+| Visits | Desktop monitor outline with stand and a small person silhouette overlapping the lower right | Both Home captures, `m8-solutions-list-base` | Unobserved |
+| Price Books | Diagonal price-tag outline with a small round hole near the upper end and an inset parallel edge | Both Home captures, `m8-solutions-list-base` | Unobserved |
+| Products | Rounded package/box outline with a lid line and a small central downward tab | Cases and Solutions captures | Unobserved |
+| Quotes | Upright receipt/page with short horizontal lines, a jagged lower edge and a small right-side rolled tab | Cases and Solutions captures | Unobserved |
+| Invoices | Upright lined page with a curled/rolled lower-left edge | Cases and Solutions captures | Unobserved |
+| Sales Orders | Page outline with a curled upper-right edge and a currency-like mark overlapping the lower right; exact interior mark remains uncertain | Cases and Solutions captures | Unobserved |
+| Solutions | Page/speech-panel outline with short lines and a small round mark at the lower right | Cases and Solutions captures | White in Solutions; muted in Cases |
+| Social | Four small round nodes linked around a central diamond-shaped space | Cases and Solutions captures | Unobserved |
+| Forecasts | Rounded chart-panel outline containing a rising zigzag arrow; lower-left edge is open/extended | Cases and Solutions captures | Unobserved |
+| Purchase Orders | Shopping cart with sloping basket, upper-left handle and two small wheels | Cases and Solutions captures | Unobserved |
+| Vendors | Small storefront outline with roof/awning, side posts and a central doorway | Cases and Solutions captures | Unobserved |
+| SalesInbox | Envelope outline with diagonal flap lines and a small upper-right accent; accent detail remains uncertain | Cases and Solutions captures | Unobserved |
+| Cases | Horizontal ticket outline with inward semicircular notches on both sides and two small interior dots | Cases and Solutions captures | White in Cases; muted in Solutions |
+| My Jobs | Briefcase outline with top handle, horizontal seam and small central clasp | `m8-cases-list-base` | Unobserved |
+| Services | Upturned hand/palm outline below two small rounded forms; exact upper forms remain uncertain | `m8-cases-list-base` | Unobserved |
+
+#### Evidence limits and deferred capture plan
+
+The Sales Orders interior mark, SalesInbox accent, and Services upper forms are too small to specify exact contours confidently. Keep those details unresolved; do not replace them with guessed generic icons. First inspect the existing local screenshots at native resolution and enlarge only the rail region locally; this does not create new reference evidence or authorize asset reuse. This inventory records the readable silhouette only.
+
+If exact detail still cannot be resolved, a **future, separately authorized research pass** may use the capture tool to load the neutral module paths `/crm/<org>/tab/SalesOrders`, `/crm/<org>/tab/SalesInbox`, and `/crm/<org>/tab/Services` with **no `--click`, no field input, no toggles and no preference changes**. Take the initial screenshot with the write block enabled, inspect only visible rail glyphs, and check `meta.json` for blocked requests. If the row is outside the captured viewport, record that limitation rather than changing rail layout, saved view, or scroll preferences to expose it. A route-only capture is a proposed evidence attempt, not a guarantee that the glyph will become visible. No such capture was run under this issue's “existing captures only” scope.
+
+**Hover remains an open question:** none of these four captures isolates pointer hover from selection or focus. The trailing ellipsis on active Leads and the plus beside Sales in `home-leads-navigation` do not establish their appearance trigger. Hover fill, glyph recolouring, tooltip text/delay, and hover-only row actions are unverified; do not label the active fill as a hover token.
 
 ### Visual layout
 
@@ -171,11 +227,15 @@ The following are request *shapes* observed in the sanitized capture network fil
 
 ## Capture refs
 
+The Teamspace navigation inventory also uses `m8-cases-list-base` and `m8-solutions-list-base` (existing screenshots and accessibility trees only). Their active rows and lower flat rows supplement the Home captures; no new reference interaction was performed for this update.
+
 The Visual layout measurements use `home-main`, `home-leads-navigation`, `home-more-actions`, and `home-search`; `home-quick-create` shows the same shell geometry as `home-main`.
 
 `home-main` (initial Home and layout), `home-more-actions` (teamspace overflow), `home-quick-create` (same Home state after an unintended positional click was blocked), `home-search` (global search overlay), `home-leads-navigation` (Leads route and active rail state). All captures remained in the local research workspace. No raw capture or customer value is included here. `home-quick-create` records a blocked `PUT` to `/crm/v9/org/actions/onboarding_status`; `home-leads-navigation` records a blocked `PUT` to `/crm/v9/settings/user_view_preference`. Neither write completed. No `skippedClicks` were recorded.
 
 ## Open questions
+
+The Teamspace navigation inventory above additionally leaves exact small glyph details, unobserved module active states, and hover behaviour open; its deferred capture plan was not executed.
 
 1. What is the normal Home view after onboarding is completed, and which dashboard components, if any, are configured? The captured account remained on `/tab/Home/begin`; Skip would have changed onboarding state, so it was not used.
 2. Which of the 33 metadata `show_as_tab` modules can appear in this team's grouped rail, and how are module overflow and ordering controlled? Metadata sequence differs from the visible pinned/teamspace order. Feeds is `show_as_tab: true` but `visible: false`.

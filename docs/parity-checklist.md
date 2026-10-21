@@ -1163,7 +1163,7 @@ reference account had no Cases rows.
 | KL-14, KL-14.1–KL-14.11 | **Defects:** menu order passes; M6 Manage Tags and Export are inert; M8 Drafts closes without opening a flow, and Print View opens no captured submenu or page | Browser clicks; `cases-list.spec.ts` covers order only |
 | KL-15–KL-31, KL-35, KL-38–KL-39 | Passed: system/field filter sections, alphabet picker, filter-produced empty state and Total Records 0 | Browser walkthrough; `cases-list.spec.ts` |
 | KL-32–KL-37 | Passed: M11 View Settings inert; Case Number, Subject, Status and Priority headings; populated columns provisional | Browser walkthrough; `cases-list.spec.ts` |
-| KL-41–KL-56 | Cases/Solutions routes and surrounding rail entries rendered; later phase entries remain placeholders | Browser walkthrough; `shell.test.tsx` |
+| KL-41–KL-56 | Cases/Solutions routes rendered; Solutions and Cases are ungrouped top-level rail rows (reference order Solutions, Cases) below the Sales/Activities groups, Campaigns stays under Sales; each module row has its own glyph (interim Lucide choice, reference glyph inventory pending spec); hover look unmeasured (open question); later phase entries remain placeholders | Browser walkthrough; `shell.test.tsx` |
 | Populated selection bar | Passed: one selected row shows Clear, Send Email, Tags and Mass Update; no reference row or selection bar could be observed | Browser walkthrough; provisional |
 
 The Cases filter catalogue also marks Calls, Meetings and Tasks as M5 and Notes
