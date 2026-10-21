@@ -109,7 +109,6 @@ export function buildInvitation(input: InvitationInput): string {
   ];
 
   if (input.allDay) {
-    const endExclusive = new Date(input.end.getTime() + 86_400_000);
     lines.push(`DTSTART;VALUE=DATE:${formatDate(input.start)}`);
     lines.push(`DTEND;VALUE=DATE:${formatDate(input.end)}`);
   } else {
