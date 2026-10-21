@@ -36,7 +36,11 @@ describe("print-modules", () => {
 
   it("pins the relation between list and preview modules", () => {
     const shared = PRINT_LIST_MODULES.filter((m) => PRINT_PREVIEW_MODULES.includes(m));
+    const previewOnly = PRINT_PREVIEW_MODULES.filter((m) => !PRINT_LIST_MODULES.includes(m));
+    const listOnly = PRINT_LIST_MODULES.filter((m) => !PRINT_PREVIEW_MODULES.includes(m));
     expect(shared).toEqual(["Leads", "Contacts", "Accounts"]);
+    expect(previewOnly).toEqual(["Deals"]);
+    expect(listOnly).toEqual(["Cases"]);
     // Deals: record print only (the reference Deals list has no Print View entry).
     expect(supportsRecordPrint("Deals")).toBe(true);
     expect(supportsListPrint("Deals")).toBe(false);
