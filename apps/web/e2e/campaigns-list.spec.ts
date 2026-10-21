@@ -1,5 +1,5 @@
 import { signUpNewUser } from "./support/auth";
-import { moduleListDefaultPath } from "./support/crm-paths";
+import { moduleCreatePath, moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
@@ -149,15 +149,55 @@ test("Campaigns Actions menu and later-module controls stay inert", async ({ pag
   ]);
   await page.keyboard.press("Escape");
   await page.keyboard.press("Escape");
+});
 
-  // CL-30 Expected Response number filter applies
+test("Campaigns Expected Response filter keeps matching rows only", async ({ page }) => {
+  await page.setViewportSize({ width: 1470, height: 835 });
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  const listPath = moduleListDefaultPath(org.slug, "Campaigns");
+  await page.goto(moduleCreatePath(org.slug, "Campaigns"));
+  for (const [name, response] of [
+    ["Synthetic Response Low", "100"],
+    ["Synthetic Response High", "900"],
+  ] as const) {
+    await page.getByRole("textbox", { name: "Campaign Name", exact: true }).fill(name);
+    await page.getByRole("textbox", { name: "Expected Response", exact: true }).fill(response);
+    await page.locator('[data-form-field="Type"]').getByRole("button", { name: "Type" }).click();
+    await page.getByRole("option", { name: "Conference", exact: true }).click();
+    await page.getByRole("button", { name: "Save and New", exact: true }).click();
+    await expect(page.getByRole("textbox", { name: "Campaign Name", exact: true })).toHaveValue("");
+  }
+  await page.goto(listPath);
+  const list = page.locator(".module-list-page");
+  const table = list.getByRole("table", { name: "Records" });
+  await expect(
+    table.getByRole("link", { name: "Synthetic Response Low", exact: true }),
+  ).toBeVisible();
+  await expect(
+    table.getByRole("link", { name: "Synthetic Response High", exact: true }),
+  ).toBeVisible();
+
   const responseRow = list
     .getByRole("listitem")
     .filter({ has: page.getByRole("checkbox", { name: "Expected Response", exact: true }) });
   await responseRow.scrollIntoViewIfNeeded();
   await responseRow.getByText("Expected Response", { exact: true }).click();
-  await list.getByRole("textbox", { name: "Expected Response value" }).fill("1");
+  await list.getByRole("textbox", { name: "Expected Response value" }).fill("900");
   await page.keyboard.press("Tab");
   await list.getByRole("button", { name: "Apply Filter" }).click();
-  await expect(list.getByRole("button", { name: "Clear", exact: true })).toBeVisible();
+  await expect(
+    table.getByRole("link", { name: "Synthetic Response High", exact: true }),
+  ).toBeVisible();
+  await expect(
+    table.getByRole("link", { name: "Synthetic Response Low", exact: true }),
+  ).toHaveCount(0);
+
+  await list.getByRole("button", { name: "Clear", exact: true }).click();
+  await expect(
+    table.getByRole("link", { name: "Synthetic Response Low", exact: true }),
+  ).toBeVisible();
+  await expect(
+    table.getByRole("link", { name: "Synthetic Response High", exact: true }),
+  ).toBeVisible();
 });
