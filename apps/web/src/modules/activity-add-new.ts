@@ -50,6 +50,8 @@ export function activityPrefillFields(
       return { What_Id: ref("Accounts", parent.id, f.Account_Name) };
     case "Deals":
       return { What_Id: ref("Deals", parent.id, f.Deal_Name) };
+    case "Campaigns":
+      return { What_Id: ref("Campaigns", parent.id, f.Campaign_Name) };
     default:
       return {};
   }

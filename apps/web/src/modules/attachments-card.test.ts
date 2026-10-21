@@ -1,9 +1,12 @@
 import { ATTACHMENT_CARD_MODULES, supportsAttachmentCard } from "@crm/core/attachments/modules";
 import { describe, expect, it } from "vitest";
 import { accountsRelatedLists } from "./accounts/accounts-related-lists";
+import { campaignsRelatedLists } from "./campaigns/campaigns-related-lists";
+import { casesRelatedLists } from "./cases/cases-related-lists";
 import { contactsRelatedLists } from "./contacts/contacts-related-lists";
 import { dealsRelatedLists } from "./deals/deals-related-lists";
 import { createLeadsRelatedLists } from "./leads/leads-related-lists";
+import { solutionsRelatedLists } from "./solutions/solutions-related-lists";
 import type { RelatedListDefinition } from "./types";
 
 describe("attachments card contract", () => {
@@ -13,6 +16,9 @@ describe("attachments card contract", () => {
       Contacts: contactsRelatedLists,
       Accounts: accountsRelatedLists,
       Deals: dealsRelatedLists,
+      Campaigns: campaignsRelatedLists,
+      Cases: casesRelatedLists,
+      Solutions: solutionsRelatedLists,
     };
 
     for (const module of ATTACHMENT_CARD_MODULES) {
@@ -29,7 +35,15 @@ describe("attachments card contract", () => {
         recordPath: () => "/",
         definition: attachments,
       });
-      expect(element).toBeDefined();
+      expect(element).toMatchObject({
+        props: { parentModule: module, parentId: "rec-1", targetId: "related-list-attachments" },
+      });
+      if (module === "Cases" || module === "Solutions") {
+        expect(attachments?.moduleKey).toBe("M8");
+        expect(
+          attachments?.upperControls?.find((control) => control.id === "attach")?.moduleKey,
+        ).toBeUndefined();
+      }
     }
   });
 });

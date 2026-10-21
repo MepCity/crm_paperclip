@@ -17,7 +17,6 @@ export function generateFixtureCampaigns(
     );
     Object.assign(fields, {
       id,
-      Locked__s: index === 125,
       Campaign_Name: `Campaign ${String(index + 1).padStart(3, "0")}`,
       Type: campaignsPicklists.Type?.[(index + seed) % 13]?.storedValue ?? null,
       Status: campaignsPicklists.Status?.[index % 5]?.storedValue ?? null,

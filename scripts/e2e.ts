@@ -213,10 +213,12 @@ async function main(): Promise<number> {
       E2E_PORT: String(port),
     };
 
-    console.log("e2e: building the production bundle");
-    const buildCode = await timeE2eStage("next build", () => run("next", ["build"], env));
-    if (interrupted) return interruptedExitCode;
-    if (buildCode !== 0) return 1;
+    if (process.env.MEP_E2E_DEV_LOGIN !== "1") {
+      console.log("e2e: building the production bundle");
+      const buildCode = await timeE2eStage("next build", () => run("next", ["build"], env));
+      if (interrupted) return interruptedExitCode;
+      if (buildCode !== 0) return 1;
+    }
     console.log(`e2e: running Playwright against http://127.0.0.1:${port}`);
     playwrightStageStarted = true;
     const playwrightArgs = ["test", ...process.argv.slice(2)];

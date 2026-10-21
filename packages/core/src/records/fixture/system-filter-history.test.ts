@@ -34,6 +34,8 @@ describe("system filter seeded locks", () => {
       expect(locked.records.length).toBeGreaterThan(0);
       for (const record of locked.records) {
         expect(detailIds).not.toContain(record.id);
+        expect(record.fields).not.toHaveProperty("Locked__s");
+        expect((await service.get(module, record.id)).fields).not.toHaveProperty("Locked__s");
         await expect(
           service.update(module, record.id, { [field]: "Blocked edit" }),
         ).rejects.toBeInstanceOf(RecordLockedError);

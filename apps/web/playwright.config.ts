@@ -27,7 +27,10 @@ export default defineConfig({
   },
   projects: [{ name: "chromium", use: { ...devices["Desktop Chrome"] } }],
   webServer: {
-    command: `next start --hostname 127.0.0.1 --port ${port}`,
+    command:
+      process.env.MEP_E2E_DEV_LOGIN === "1"
+        ? `PORT=${port} tsx ../../scripts/dev.ts`
+        : `next start --hostname 127.0.0.1 --port ${port}`,
     url: `http://127.0.0.1:${port}/api/health`,
     reuseExistingServer: false,
     timeout: 60_000,

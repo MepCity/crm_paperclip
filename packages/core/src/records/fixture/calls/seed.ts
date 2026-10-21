@@ -37,7 +37,6 @@ export function generateFixtureCalls(
     const unset = seconds === 0 && type !== "Inbound" && outgoing !== "Completed";
     Object.assign(fields, {
       id,
-      Locked__s: index === 125,
       Subject: `Call ${String(index + 1).padStart(3, "0")}`,
       Call_Type: type,
       Call_Purpose: pick("Call_Purpose", index, 2),

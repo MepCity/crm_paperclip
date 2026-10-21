@@ -167,12 +167,16 @@ export function createFixtureRecordService(
           name,
           {
             records: new Map(
-              bundle.generateSeed(now).map((record) => [
+              bundle.generateSeed(now).map((record, index) => [
                 record.id,
                 {
                   ...record,
                   fields: {
                     ...record.fields,
+                    // Internal lock state is separate from exported module fields.
+                    ...(["Calls", "Events", "Campaigns"].includes(name)
+                      ? { Locked__s: index === 125 }
+                      : {}),
                     ...(bundle.metadata.fields.some((field) => field.apiName === "Owner")
                       ? { Owner: ctx.userId }
                       : {}),
