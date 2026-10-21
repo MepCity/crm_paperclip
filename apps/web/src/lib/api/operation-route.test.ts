@@ -16,7 +16,7 @@ vi.mock("@/lib/records", () => ({ getRecordService: vi.fn(() => records) }));
 import { getSession } from "@crm/core";
 import { getRecordService } from "@/lib/records";
 import { operationRoute } from "./operation-route";
-import type { Operation } from "./wire/operations";
+import { type Operation, operations } from "./wire/operations";
 
 const origin = "http://crm.test";
 
@@ -75,19 +75,32 @@ describe("operationRoute", () => {
     expect(Object.keys(body).sort()).toEqual(["code", "details", "message", "status"]);
   });
 
-  it("answers an over-limit related-modules body with 400 and the error shape", async () => {
-    const { decodeRelatedModules } = await import("./wire/codec");
-    const run = vi.fn(async () => {
-      decodeRelatedModules(Array(4).fill({ module: "Calls", presence: "with", criteria: [] }));
-      return { body: {} };
+  it.each([
+    ["fourth row", Array(4).fill({ module: "Calls", presence: "with", criteria: [] })],
+    [
+      "sixth child criterion",
+      [
+        {
+          module: "Calls",
+          presence: "with",
+          criteria: Array(6).fill({ field: "Subject", comparator: "equal", value: "x" }),
+        },
+      ],
+    ],
+  ])("answers a %s with the existing HTTP 400 error shape", async (_label, relatedModules) => {
+    const request = new Request(`${origin}/crm/v2.2/Cases/actions/count?cvid=all-cases`, {
+      method: "POST",
+      headers: { "X-CRM-ORG": "acme", Origin: origin, "Content-Type": "application/json" },
+      body: JSON.stringify({ related_modules: relatedModules }),
     });
-    const response = await operationRoute({ run } as unknown as Operation)(post(), {
-      params: Promise.resolve({}),
+    const response = await operationRoute(operations.count)(request, {
+      params: Promise.resolve({ module: "Cases" }),
     });
     expect(response.status).toBe(400);
     const body = await response.json();
     expect(body.status).toBe("error");
     expect(Object.keys(body).sort()).toEqual(["code", "details", "message", "status"]);
+    expect(body.details.fields.relatedModules).toEqual([expect.any(String)]);
   });
 
   it("rejects a missing organization header before running the operation", async () => {
