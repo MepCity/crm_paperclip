@@ -368,7 +368,7 @@ function LoadedRecordForm({
       const row = rootRef.current?.querySelector<HTMLElement>(`[data-form-field="${focusTarget}"]`);
       row
         ?.querySelector<HTMLElement>(
-          "button:not(:disabled),input:not(:disabled),textarea:not(:disabled)",
+          "[data-record-form-control-slot] input:not(:disabled),[data-record-form-control-slot] button:not(:disabled),[data-record-form-control-slot] textarea:not(:disabled)",
         )
         ?.focus();
     });
@@ -659,6 +659,7 @@ function LoadedRecordForm({
           hideLabel
           variant={config.variant}
           lookupModule={lookupModule}
+          suppressPolymorphicPrefix={rules.suppressLookupPrefix?.includes(field.apiName)}
           field={{ ...field, label }}
           value={isState && emptyCountry ? null : (values[field.apiName] ?? null)}
           onChange={(next) => change(field.apiName, next)}
