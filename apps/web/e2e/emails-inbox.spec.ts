@@ -8,9 +8,11 @@ test("email folders and messages persist in URL and browser history", async ({ p
   const org = await createOrganization(page);
   await page.goto(`/crm/${org.slug}/tab/Emails`);
   await expect(page.getByRole("heading", { name: "Select a message" })).toBeVisible();
-  // Selection is local; it must not send a request, including route requests.
+  // Selection is local. Ignore prefetches from existing shell navigation links.
   const requests: string[] = [];
-  page.on("request", (request) => requests.push(request.url()));
+  page.on("request", (request) => {
+    if (request.headers()["next-router-prefetch"] !== "1") requests.push(request.url());
+  });
   await page.getByRole("button", { name: /Project overview/ }).click();
   await expect(page).toHaveURL(/folder=inbox&message=conversation-1$/);
   const reader = page.getByRole("region", { name: "Reading pane" });
