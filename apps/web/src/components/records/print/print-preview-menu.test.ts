@@ -30,5 +30,5 @@ test("module support matches the board decision", () => {
   expect(supportsRecordPrint("Deals")).toBe(true);
   expect(supportsRecordPrint("Tasks")).toBe(false);
   expect(supportsListPrint("Deals")).toBe(false);
-  expect(PRINT_LIST_MODULES).toEqual(["Leads", "Contacts", "Accounts"]);
+  expect(PRINT_LIST_MODULES).toEqual(["Leads", "Contacts", "Accounts", "Cases"]);
 });

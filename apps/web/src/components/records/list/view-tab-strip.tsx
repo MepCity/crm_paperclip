@@ -90,6 +90,7 @@ export function ViewTabStrip({
             aria-label="Custom views"
             placement="bottom start"
             appearance="measured"
+            tall
             widthPx={searchable ? 320 : undefined}
             header={
               searchable ? (
