@@ -1,4 +1,5 @@
 import { cleanup, fireEvent, screen } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { render } from "@/test/render";
 import { DateTimeInput } from "./datetime-input";
@@ -44,3 +45,27 @@ describe("DateTimeInput", () => {
     expect(onChange).toHaveBeenLastCalledWith("2026-05-12T00:00:00.000Z");
   });
 });
+
+for (const dateOnly of [false, true]) {
+  it(`selects a calendar day and preserves ${dateOnly ? "all-day UTC storage" : "the local time"}`, async () => {
+    const user = userEvent.setup();
+    const onChange = vi.fn();
+    render(
+      <DateTimeInput
+        id="from"
+        label="From"
+        dateOnly={dateOnly}
+        value={dateOnly ? "2026-11-10T00:00:00.000Z" : new Date(2026, 10, 10, 9, 30).toISOString()}
+        onChange={onChange}
+      />,
+    );
+    await user.click(screen.getByLabelText("From date"));
+    await user.click(screen.getByRole("button", { name: /November 15, 2026/ }));
+    expect(screen.getByLabelText("From date")).toHaveProperty("value", "15.11.2026");
+    expect(onChange).toHaveBeenLastCalledWith(
+      dateOnly ? "2026-11-15T00:00:00.000Z" : new Date(2026, 10, 15, 9, 30).toISOString(),
+    );
+    expect(screen.queryByRole("dialog")).toBeNull();
+    if (!dateOnly) expect(screen.getByLabelText("From time")).toHaveProperty("value", "09:30");
+  });
+}

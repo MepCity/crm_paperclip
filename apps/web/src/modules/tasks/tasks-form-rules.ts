@@ -39,7 +39,6 @@ export function buildTasksFormDefaults(metadata?: ModuleMetadata): Record<string
 export const tasksFormRules: FormRules = {
   owner: "Owner",
   textSuggestions: { Subject: ["Email", "Call", "Meeting", "Send Letter", "Product Demo"] },
-  calendarFields: ["Due_Date"],
   omitted: TASKS_FORM_OMITTED_FIELDS,
   lookupLabelFields: ["Who_Id", "What_Id"],
   subduedToggles: ["Recurring_Activity"],

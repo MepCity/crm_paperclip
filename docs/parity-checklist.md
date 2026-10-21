@@ -3,6 +3,17 @@
 One section per module. Each row is a capability of the reference CRM that
 the module's research found, assigned to the module that delivers it.
 
+### Task Subject suggestions and shared form calendars (MEP-981)
+
+| Inventory | Evidence and interim implementation | Open question |
+| --- | --- | --- |
+| TF-07 | Tasks metadata confirms Email, Call, Meeting, Send Letter, Product Demo in that order. Board finding (2026-10-21) confirms opening on focus/click. Filtering, keyboard selection, editable custom text and an input-width panel follow the issue acceptance contract. Ordinary dropdown row tokens are reused. | The popup was not opened in the existing captures; exact row spacing, filtering and empty-result rendering remain unobserved. This is an interim rule, not a measured popup parity claim. |
+| TF-08 | Board finding confirms click-to-open calendar and day selection. Reuse the shared calendar body; preserve DD.MM.YYYY text, YYYY-MM-DD model, partial text and impossible-day validation. No painted calendar icon, as observed. | Calendar interior geometry and navigation are not observed; shared calendar styling is interim. |
+| MF date/time and Title | Board scope extension (2026-10-21): From/To use the shared calendar and retain the existing time entry and all-day conversion. Title stays free text. | Time-picker behaviour and Title suggestions remain unobserved. |
+| CF-16 and Call Start Time | Board scope extension: date/time fields use the shared calendar, preserving the time. Call Subject stays free text. | Call Subject suggestions and a separate time picker remain unobserved. |
+| All module date/datetime fields | Board scope extension explicitly requires the shared calendar for every form date and datetime, including Campaigns Start/End Date, Contacts Date of Birth and Deals Closing Date. No module opt-in is required. | Calendar interior geometry remains interim; this is board-directed behaviour, not a claim of observed cross-module equivalence. |
+
+
 ## How to read this file
 
 - **The specs win.** `research/specs/` describes behaviour, look and request
@@ -1337,13 +1348,3 @@ customization and Phase 3 controls.
   `research/specs/csv-import-export.md`. No new reference inspection performed.
 - Import remains unavailable for both modules. Actual reference export behavior
   remains an open question; this implementation does not claim observed parity.
-
-### Task Subject suggestions and Due Date calendar (MEP-981)
-
-| Inventory | Evidence and interim implementation | Open question |
-| --- | --- | --- |
-| TF-07 | Tasks metadata confirms Email, Call, Meeting, Send Letter, Product Demo in that order. Board finding (2026-10-21) confirms opening on focus/click. Filtering, keyboard selection, editable custom text and an input-width panel follow the issue acceptance contract. Ordinary dropdown row tokens are reused. | The popup was not opened in the existing captures; exact row spacing, filtering and empty-result rendering remain unobserved. This is an interim rule, not a measured popup parity claim. |
-| TF-08 | Board finding confirms click-to-open calendar and day selection. Reuse the shared calendar body; preserve DD.MM.YYYY text, YYYY-MM-DD model, partial text and impossible-day validation. No painted calendar icon, as observed. | Calendar interior geometry and navigation are not observed; shared calendar styling is interim. |
-| MF date/time and Title | Existing capture records date/time text and no painted calendar icon; no matching Title suggestion popup observed. Keep current controls. | Whether From/To dates share the Task calendar; time-picker behaviour; whether Title has suggestions. |
-| CF-16 and Call Start Time | Subject popup and calendar opening are not observed; keep current controls. | Whether Call Subject has suggestions, and whether date/time fields share the Task calendar or a time picker. |
-| Other module date/datetime fields | Contacts and Deals form specs explicitly leave calendar opening unobserved. Calendar activation is scoped to Tasks Due_Date through form rules. | Cross-module calendar equivalence is unproven; do not infer it from the field data type alone. |

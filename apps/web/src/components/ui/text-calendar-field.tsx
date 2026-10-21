@@ -2,16 +2,8 @@
 
 import "./record-input.css";
 import { parseDate } from "@internationalized/date";
-import { useRef, useState } from "react";
-import {
-  Calendar,
-  Dialog,
-  FieldError,
-  Input,
-  Label,
-  Popover,
-  TextField,
-} from "react-aria-components";
+import { useId, useRef, useState } from "react";
+import { Calendar, FieldError, Input, Label, Popover, TextField } from "react-aria-components";
 import { calendarShapeToDisplayDate, displayDateToModelShape } from "@/lib/records/calendar-date";
 import { CalendarContent } from "./date-picker";
 import type { TextFieldProps } from "./text-field";
@@ -27,7 +19,9 @@ export function TextCalendarField({
   ...props
 }: TextFieldProps) {
   const input = useRef<HTMLInputElement>(null);
+  const calendarId = useId();
   const [open, setOpen] = useState(false);
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
   let selected = null;
   try {
     const shape = displayDateToModelShape(value ?? "");
@@ -47,18 +41,24 @@ export function TextCalendarField({
         className="record-control"
         aria-haspopup="dialog"
         aria-expanded={open}
+        aria-controls={open ? calendarId : undefined}
         onClick={() => {
-          if (!props.isDisabled && !props.isReadOnly) setOpen(true);
+          if (!props.isDisabled && !props.isReadOnly) {
+            setKeyboardOpen(false);
+            setOpen(true);
+          }
         }}
         onKeyDown={(event) => {
           if (event.altKey && event.key === "ArrowDown" && !props.isDisabled && !props.isReadOnly) {
             event.preventDefault();
+            setKeyboardOpen(true);
             setOpen(true);
           }
         }}
       />
       <FieldError className="record-form-validation-error">{errorMessage}</FieldError>
       <Popover
+        isNonModal
         triggerRef={input}
         isOpen={open}
         onOpenChange={setOpen}
@@ -66,8 +66,14 @@ export function TextCalendarField({
         className="rounded-md border border-border bg-surface shadow-lg outline-none"
         style={{ minWidth: "var(--trigger-width)" }}
       >
-        <Dialog aria-label={`${label} calendar`} className="p-3 outline-none">
+        <section
+          id={calendarId}
+          role="dialog"
+          aria-label={`${label} calendar`}
+          className="p-3 outline-none"
+        >
           <Calendar
+            autoFocus={keyboardOpen}
             aria-label={label}
             value={selected}
             onChange={(day) => {
@@ -78,7 +84,7 @@ export function TextCalendarField({
           >
             <CalendarContent />
           </Calendar>
-        </Dialog>
+        </section>
       </Popover>
     </TextField>
   );

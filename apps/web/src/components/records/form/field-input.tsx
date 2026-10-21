@@ -64,7 +64,6 @@ export interface FieldInputProps {
   currencyHelp?: NonNullable<FormRules["currencyHelp"]>[string];
   textPrefix?: string;
   suggestions?: readonly string[];
-  calendar?: boolean;
   /** Business range of a numeric entry; metadata carries no minimum or maximum. */
   numberLimits?: NumberLimits;
   /** Picker shape for this lookup field, when it differs from the target module's configuration. */
@@ -137,7 +136,6 @@ type DateFieldProps = Omit<TextFieldProps, "value" | "onChange"> & {
    */
   value: string;
   onModelChange: (value: FieldValue) => void;
-  calendar?: boolean;
 };
 
 /**
@@ -154,16 +152,15 @@ type DateFieldProps = Omit<TextFieldProps, "value" | "onChange"> & {
  * our own write as an outside write would clear the text the moment somebody deletes a character
  * from a date that is already filled in.
  */
-function DateField({ value, onModelChange, calendar, ...textField }: DateFieldProps) {
+function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
   const [written, setWritten] = useState(value);
   const [entry, setEntry] = useState(() => calendarShapeToDisplayDate(value));
   if (written !== value) {
     setWritten(value);
     setEntry(calendarShapeToDisplayDate(value));
   }
-  const Control = calendar ? TextCalendarField : TextField;
   return (
-    <Control
+    <TextCalendarField
       {...textField}
       type="text"
       value={entry}
@@ -198,7 +195,6 @@ export function FieldInput({
   currencyHelp,
   textPrefix,
   suggestions,
-  calendar,
   numberLimits,
   lookupPicker,
   placeholder,
@@ -308,13 +304,7 @@ export function FieldInput({
       );
     case "date":
       return (
-        <DateField
-          {...common}
-          value={text}
-          onModelChange={onChange}
-          placeholder={placeholder}
-          calendar={calendar}
-        />
+        <DateField {...common} value={text} onModelChange={onChange} placeholder={placeholder} />
       );
     // A `bigint` field is a long integer, so the form keeps it as digit text end to end: parsing it
     // into a JavaScript number would round the last digits away, and the service only accepts decimal

@@ -24,7 +24,7 @@ export function SuggestionField({
   errorMessage,
   maxLength,
   ...props
-}: Omit<TextFieldProps, "errorMessage"> & {
+}: Omit<TextFieldProps, "errorMessage" | "validate"> & {
   suggestions: readonly string[];
   errorMessage?: string;
 }) {
@@ -50,7 +50,7 @@ export function SuggestionField({
         style={{ width: "var(--trigger-width)" }}
         placement="bottom start"
       >
-        <ListBox className="record-choice-list">
+        <ListBox<{ id: string; label: string }> className="record-choice-list">
           {(item) => (
             <ListBoxItem id={item.id} textValue={item.label} className="record-choice-row">
               {item.label}
