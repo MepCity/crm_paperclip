@@ -1,12 +1,12 @@
-# Email on record detail — partial research
+# Email on record detail
 
-Status: partial; Contact base and the single authorized retry both failed the
-diagnostic gate. MEP-1023 authorized that retry; it is now exhausted. CTO
-decision interaction `55016c58-04b1-4b96-accf-987d39cbfa1f` is pending.
-No further capture or click is authorized by this partial spec.
-MEP-1020/1021 resolved only the earlier Lead stop. The existing Lead
-retry remains accepted; no new Lead capture is authorized or needed.
-Issue: MEP-1012 / M10-R3. Research date: 2026-10-21.
+Status: complete within the CEO-authorized read-only evidence boundary,
+2026-10-21. Issue: MEP-1012 / M10-R3. Ready for UI Lead approval.
+Decision source: CEO issue comment `e5f0ac94` (2026-10-21 20:49 UTC).
+The Contact retry is accepted as the resting-state base; its diagnostic
+messages are retained as known pageerrors. Contact inspection is offline only,
+using the three accepted captures named below. No new capture or click was made.
+The obsolete CTO question was withdrawn after this decision.
 
 ## Purpose and evidence boundary
 
@@ -282,9 +282,9 @@ R3 does not re-open that record or claim these are fresh capture results.
 
 This historical evidence shows tabs inside an Emails card, not a separately
 painted Drafts card. Metadata's separate related-list definition must not be
-converted into a second visible card without evidence. The current Contact delta below establishes only the failed-gate resting
-viewport. Drafts contents, message rows and email timeline events remain
-unestablished.
+converted into a second visible card without evidence. The current Contact retry establishes the resting viewport under the CEO
+decision. The offline closure below distinguishes the inherited Drafts page
+from record-related mail; it does not invent message or timeline contents.
 
 ### Contact base delta — m10r3-contact-detail-base (failed gate)
 
@@ -487,7 +487,7 @@ record mutation is observed. This first Contact capture defines the module's
 path/count set. The single authorized retry below preserves that entire set.
 The stop is the new diagnostic, not an alleged new Contact request versus Lead paths.
 
-### Contact single retry delta — m10r3-contact-detail-retry-base (failed gate)
+### Contact single retry delta — m10r3-contact-detail-retry-base (accepted by CEO)
 
 This existing capture was made at 2026-10-21 20:15:05 UTC, after the first
 Contact meta at 20:09:19 UTC: more than five minutes apart, the same
@@ -508,9 +508,12 @@ contains `XMLHttpRequest` and the new `Cannot read properties of undefined
 (reading '_sortableParentData')`. The latter is absent from the accepted
 Contact baseline `m7-campaign-links-contact-detail`. No failed JavaScript GET
 is recorded. Controls **537** and API entries **77** pass the numeric
-thresholds, but do not waive this new diagnostic. The gate fails again;
-there is no third capture or click. R3 remains incomplete pending the CTO
-interaction above; no plan exception or inherited-evidence closure is assumed.
+thresholds. The diagnostic originally failed the gate. The subsequent CEO
+decision accepts this capture for the resting state: `_sortableParentData`
+and `XMLHttpRequest` belong to the accepted sortable initialization error
+family. These remain known pageerrors and an open question, not evidence
+of a healthy drag-and-drop component. No third Contact capture or click is
+permitted. The sent and blocked request comparison below is unchanged.
 
 All three sent POST paths, counts and statuses match the Contact base exactly.
 All seven blocked paths also match, each once; order alone differs. These
@@ -618,12 +621,75 @@ potential navigation candidates only. Both labels pass the tool's exported
 matched controls have a visible box and were checked against the screenshot.
 Four raw controls have the exact Emails label (two visible rail elements and
 two offscreen related-card elements); matching by label alone is ambiguous. No candidate is promoted to a click list: the
-failed gate prohibits interaction and preference persistence is unestablished.
+CEO prohibits further Contact access and preference persistence is unestablished.
 No selector is executed or proposed. Send Email matches `send` and is forbidden;
 Compose Email is forbidden by the plan. Drafts/Scheduled selection, related-card
 expansion and opening any draft or message remain unobserved. No alternate
 route is inferred. The missing Emails/Drafts/timeline evidence is retained as
 an explicit research gap, not fabricated from offscreen controls.
+
+### CEO-authorized offline closure — accepted Module 6/7 captures
+
+All three screenshots and local controls/meta files were inspected offline.
+Their historical clicks are not replayed. Their original blockedRequests totals
+are 3, 16 and 16 respectively; these are historical tool refusals, not new calls.
+No new baseline or request-count exception is inferred from them.
+
+| # | Region / control | Observed state and evidence limit | Source | Module | Contacts ref |
+| --- | --- | --- | --- | --- | --- |
+| IH-01 | Drafts page header Back | Visible arrow; not activated in R3 | seen (m6-contacts-drafts) | M10 | new |
+| IH-02 | Drafts title information icon | Visible; no tooltip established | seen (m6-contacts-drafts) | M10 | new |
+| IH-03 | Drafts page Help | Named link at header right; not opened | seen (m6-contacts-drafts) | Shared | new |
+| IH-04 | Criteria Hide | Expanded criteria card; never toggled | seen (m6-contacts-drafts) | M10 | new |
+| IH-05 | Criteria index | First criterion number textbox; no input | seen (m6-contacts-drafts) | M10 | new |
+| IH-06 | Criteria field | Initial None selector; not changed | seen (m6-contacts-drafts) | M10 | new |
+| IH-07 | Criteria operator | Initial None; visually inactive; not changed | seen (m6-contacts-drafts) | M10 | new |
+| IH-08 | Criteria value | Empty, visually inactive input; no input | seen (m6-contacts-drafts) | M10 | new |
+| IH-09 | Criteria add row | Plus affordance from controls; result not exercised | seen (m6-contacts-drafts) | M10 | new |
+| IH-10 | Criteria Search | Visually disabled button; never submitted | seen (m6-contacts-drafts) | M10 | new |
+| IH-11 | Contact header Send Email | Visible in both resting/menu screenshots; no activation | seen (m6-contacts-detail-more; m7-campaign-links-contact-detail) | M10 | D-05 |
+| IH-12 | Contact related rail Emails | Visible link; card below viewport | seen (m6-contacts-detail-more; m7-campaign-links-contact-detail) | M10 | D-23 |
+| IH-13 | Contact Timeline tab | Visible, Overview selected; no email event visible | seen (m6-contacts-detail-more; m7-campaign-links-contact-detail) | Shared | D-34 |
+| IH-14 | More Options Mail Merge | Visible historical menu item; write guard forbids activation | seen (m6-contacts-detail-more) | M10 | new |
+
+The Drafts screenshot has Contacts as its module context, a separate Drafts
+heading, a criteria card and an empty result panel. The empty state states that
+no records are available. No row controls are shown. This proves only the
+initial search-page result, not that the selected Contact has no drafts, nor
+that a Drafts tab inside the Emails card is empty. The controls file includes a
+criteria wrapper and an add-row affordance; no criterion is chosen or typed.
+
+The two Contact screenshots show the record header, rail, business card and
+beginning of Contact Information. Both show populated email-address links as
+structure only; values are not copied. In the menu screenshot Mail Merge is
+visible. Neither screenshot exposes an Emails card, a Drafts tab result, or
+Timeline history. Their offscreen DOM includes Compose Email/Mails/Drafts/
+Scheduled; this is consistent with EC-03–06 but is not new painted-card evidence.
+There is no email timeline row to inventory in the authorized inherited set.
+
+Scoped raw reconciliation (one-based file ordinals, never selectors):
+
+| Capture | Delta row → raw ordinals | Inherited/non-delta exclusions | Total |
+| --- | --- | --- | --- |
+| m6-contacts-drafts | IH-01→108; IH-02→109; IH-03→110; IH-04→111; IH-05→113; IH-06→114; IH-07→115; IH-08→116; IH-09→117; IH-10→118–119 | 1–107, 112 (criteria wrapper), 120–150 | 150 = 11 mapped + 139 excluded; 10 delta rows |
+| m6-contacts-detail-more | IH-11→121–122; IH-12→170–171; IH-13→193; IH-14→521 | 1–120, 123–169, 172–192, 194–520, 522–560 | 560 = 6 mapped + 554 excluded; 4 delta rows |
+| m7-campaign-links-contact-detail | IH-11→121–122; IH-12→170–171; IH-13→193 | 1–120, 123–169, 172–192, 194–552 | 552 = 5 mapped + 547 excluded; 3 delta rows |
+
+Exclusions here mean inherited shell/record controls, unrelated module controls,
+data wrappers or offscreen content, not missing controls. The original accepted
+inventories own the rest; this table covers only the new R3 email delta.
+
+### Lead offline navigation decision
+
+The accepted Lead screenshot and controls were checked again without reference
+access. Emails rail selector `[data-zcqa="newleft__Emails"]` and Timeline
+selector `[data-zcqa="newleft_timeline"]` each match one named control.
+Both labels pass `DANGEROUS_TEXT`. However, neither the screenshot nor the
+control attributes establish that activation avoids persisted navigation state;
+card expansion is also prohibited. Accordingly neither is an authorized click.
+The card is offscreen and no safe alternative selector/route is proven.
+CEO decision item 4 permits this explicit not-observed closure. Executed click
+list stays empty, with no new capture, scroll, toggle, message or editor opening.
 
 ## Fields and metadata
 
@@ -637,7 +703,7 @@ field export is present, per the approved plan; R8 owns the missing model.
 | Module | Exported email/draft relations | Fresh R3 detail evidence |
 | --- | --- | --- |
 | Leads | Both | Existing retry accepted under MEP-1020/1021; card offscreen |
-| Contacts | Both | Click-free base captured; new pageerror stops continuation |
+| Contacts | Both | Retry resting state accepted by CEO; offline closure below |
 | Accounts | Both | No board-written record address available |
 | Deals | Both | No board-written record address available |
 
@@ -649,7 +715,7 @@ No schema, field constraints or request payload is inferred.
 ## Actions and click list
 
 Executed click list: **empty (0 selectors / 0 clicks)**. No selector was executed. Offline Contact candidate tests below passed,
-but the failed gate and unresolved persistence exclude both from a click list. Send Email is
+but the Contact access boundary and unresolved persistence exclude both from a click list. Send Email is
 excluded by the tool's dangerous-text guard (`send`) and the plan. Compose
 Email is forbidden by the plan regardless of whether its text matches the
 regular expression. Address links may open compose and are not clicked.
@@ -747,7 +813,8 @@ This fails the gate even though a screenshot exists. No failed JavaScript
 request is needed to establish the failure. No tool failure, missing meta,
 unknown click or user-initiated write occurred.
 
-The Contact resting viewport is now captured but fails the diagnostic gate.
+The Contact retry resting viewport is accepted by the CEO decision; known
+pageerrors remain recorded.
 No fresh Emails/Drafts empty, loading, permission or error state is verified.
 The inherited Contact empty Mails area does not establish Drafts emptiness or
 an empty timeline. Email sent/received/opened/clicked/replied/bounced history
@@ -761,26 +828,32 @@ Compose/send, draft create/save/delete/resume, schedule/cancel, association and
 tracking-result history need separate documentation or a board decision. No
 sandbox, night test or reference write is authorized by this spec.
 
-## Open questions
+## Open questions and gate handoff
 
-1. Contact address resolved by the board: `captures/board-contact-probe/address.txt`;
-   the click-free base is now captured. Account/Deal addresses are not supplied.
-   Contact continuation is blocked by the new diagnostic, not missing input.
-2. Resolved: MEP-1020/1021 accept the existing retry using the earlier
-   `m7-campaign-links-lead-detail` baseline errors and the blocked telemetry
-   exception. The initial probe remains failed; no new Lead capture is made.
-3. Does Emails navigation only scroll, and can it be used without persistence?
-   Persistence has not been established; no click is made.
-4. Which email/draft columns, counters, empty states, ownership and scope choices
-   are actually visible? Metadata and inherited evidence do not settle them.
-5. Which email events appear in Timeline, with what grouping, ordering and
-   permission rules? No message was opened or created to obtain an example.
+R3 is complete under the CEO decision. The following are bounded evidence
+limits for the Module 10 gate summary, not requests for further reference access.
 
-6. MEP-1023 resolved the first Contact stop by authorizing one retry. That
-   retry failed on new `_sortableParentData`; no third capture/click. CTO
-   interaction `55016c58-04b1-4b96-accf-987d39cbfa1f` awaits a decision on
-   safe closure boundaries or a separately approved plan/tooling change.
-   Questions 3–5 remain open; R3 is incomplete and R4 stays gated.
+1. Account/Deal screen evidence: not observed because no board-written record
+   address was supplied. Metadata proves related-list definitions only.
+2. Lead Emails/Drafts contents: not observed because the card is outside the
+   screenshot. The visible Emails rail control does not prove non-persistence;
+   no safe, proven navigation candidate is available. DOM-only tabs cannot
+   establish a painted card, its contents or empty state.
+3. Contact Emails/Drafts contents: the older Contact spec establishes the empty
+   Mails card and tabs; the three CEO-authorized offline captures add the
+   separate Drafts search page below. They do not show populated record mail,
+   current Drafts-tab contents, counters, ownership, correspondence scope,
+   pagination or mail-column ordering. No more Contact captures/clicks allowed.
+4. Email timeline rows: not observed in these captures; all three inherited
+   screenshots show either Overview or the Drafts page, not Timeline content.
+   Event labels, direction/status icons, grouping, order and permissions remain
+   unknown. Creating/opening messages to obtain a row is forbidden.
+5. Known Contact pageerrors: `_sortableParentData` / `XMLHttpRequest` are accepted
+   for resting-state research by the CEO, not verified as fixed. Whether they
+   affect offscreen cards remains unknown; this issue does not test them.
+6. Resolved decisions: MEP-1020/1021 accept the Lead retry; MEP-1023 allowed the
+   single Contact retry; CEO comment `e5f0ac94` accepts that Contact retry and
+   authorizes this offline closure. The renewed CTO question is withdrawn.
 
 ## Capture refs
 
@@ -799,8 +872,13 @@ sandbox, night test or reference write is authorized by this spec.
   20:09:19 UTC; 530 controls / 77 API entries; provisional Contact delta,
   gate fails on new setMethods pageerror. The one authorized retry follows.
 - `m10r3-contact-detail-retry-base`: existing click-free retry, `--wait 25000`,
-  2026-10-21 20:15:05 UTC; 537 controls / 77 API entries; gate fails on new
-  `_sortableParentData`. No third capture or click.
+  2026-10-21 20:15:05 UTC; 537 controls / 77 API entries; originally failed on
+  `_sortableParentData`, subsequently accepted by CEO for the resting state.
+  No third capture or click.
+- `m6-contacts-drafts`: accepted historical Drafts search page; screenshot,
+  controls/meta and inventory read offline, no replay.
+- `m6-contacts-detail-more`: accepted historical Contact menu screenshot;
+  controls/meta read offline, no replay.
 - `m7-campaign-links-contact-detail`: existing diagnostics-aware Contact
   baseline, 87 API entries, sortable/XMLHttpRequest/path errors; offline only.
 
@@ -810,12 +888,13 @@ sandbox, night test or reference write is authorized by this spec.
 sections, unique inventory numbers, exhaustive raw-control reconciliation,
 neutral content, relative links and `git diff --check`. No application code
 changed; application tests and biome/typecheck are unnecessary for this task.
-`docs/parity-checklist.md` is unchanged. This is a partial deliverable, not a
-completed UI Lead handoff. Each Lead capture reconciles 462 raw controls to
+`docs/parity-checklist.md` is unchanged. This is the completed UI Lead handoff
+under the CEO-authorized boundary, with gate questions above. Each Lead capture reconciles 462 raw controls to
 86 structural rows (132 raw entries mapped), with 330 excluded raw entries.
 Contact reconciles 530 raw controls to 82 structural rows (135 raw entries
 mapped), with 395 excluded. Contact retry reconciles 537 raw controls to
-80 structural rows (133 raw entries mapped), with 404 excluded. Neither
-Contact diagnostic gate is accepted.
+80 structural rows (133 raw entries mapped), with 404 excluded. The initial Contact probe remains failed; the retry is accepted by CEO.
+Inherited-capture reconciliation below is scoped to the email delta only; it
+does not repeat the older captures' full shell/module inventories.
 No implementation/CI parity claim is made. The main merge includes unrelated
 checklist updates; this issue authors no checklist edit.

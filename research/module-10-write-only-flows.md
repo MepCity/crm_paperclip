@@ -145,7 +145,10 @@ painted Lead baseline errors and blocked-telemetry count exception. No new Lead
 capture is made. The board subsequently supplied the Contact address; the
 click-free `m10r3-contact-detail-base` was captured with `--wait 25000`. Its
 new `setMethods` pageerror triggers DUR under MEP-1020; MEP-1023 owns the
-offline safe-continuation review. No retry or click was attempted. Send Email
+offline safe-continuation review. That issue authorized one click-free retry.
+The retry was captured, initially stopped on a new diagnostic, then accepted
+by CEO comment `e5f0ac94` on MEP-1012 as the resting-state base. No third
+Contact capture or click is allowed. Send Email
 and the Emails rail entry are visible, while the card and timeline email rows
 remain unobserved. Historical Contact evidence shows Compose Email and
 Mails/Drafts/Scheduled tabs, but does not establish current draft contents.
@@ -162,3 +165,12 @@ Mails/Drafts/Scheduled tabs, but does not establish current draft contents.
   scheduled-mail placement and history events with dated sources; missing UI
   evidence stays a gap. This note requests documentation only and grants no
   sandbox, night-test, message-open, sync or preference-change permission.
+
+
+R3 final boundary (CEO decision, 2026-10-21): the accepted historical
+`m6-contacts-drafts` shows a separate Drafts search page with criteria and an
+empty result area, not a record-card Drafts result. `m6-contacts-detail-more`
+and `m7-campaign-links-contact-detail` show Overview, not email history.
+Record draft contents and email timeline events remain not observed with these
+reasons and move to the Module 10 gate questions. R9 retains the documentation
+follow-up above; no additional reference access or write is authorized.
