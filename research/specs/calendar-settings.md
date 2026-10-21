@@ -4,7 +4,8 @@
 
 Investigate calendar synchronization, working hours, default reminders, booking
 page administration and meeting providers without changing the reference CRM.
-This is a partial evidence record, not an implementation-ready screen spec.
+This is a documentation-completed research deliverable with explicit access gaps;
+unobserved screens are not accepted as visual parity evidence.
 The booking route exposes a missing-business-hours prerequisite rather than a
 booking list. No configuration, connection, preference or public booking page
 was opened. R6 no longer depends on R5 approval under the CEO decision on
@@ -44,8 +45,9 @@ are described here, not counted as interactive controls.
 - **STOP (plan rule 7):** refused telemetry POST count increased from 1 to 2.
   No successful non-GET request was captured. Even though the additional
   request was refused telemetry, the count increase invokes the strict stop
-  rule; no rollback or further retry was attempted. CEO decision task MEP-1043
-  is the first-class blocker for MEP-1015.
+  rule; no rollback or further retry was attempted. CEO decision MEP-1043
+  subsequently closed the blocker: documentation-only completion, explicit access
+  gaps, no new R6 capture.
 
 ## Control inventory — base
 
@@ -176,23 +178,82 @@ are writes; neither was attempted. Synchronization setup and meeting-provider
 connections are also writes. See the R6 section in
 [the write-only register](../module-10-write-only-flows.md).
 
-## Open questions and bounded continuation
+## Documentation-only completion — CEO decision MEP-1043
 
-1. Can the booking list be documented sufficiently without configuring business
-   hours? Keep the prerequisite as observed; do not change the reference CRM.
-2. Which existing read-only settings routes expose calendar synchronization,
-   working hours, default reminders and provider choices without an editor?
-   These areas were not captured in this stopped probe.
-3. What does the booking list show once its prerequisite is met? Columns,
-   status indicators, pagination, filters and blank/error states are unknown.
-4. Which providers and synchronization rules are supported in this session?
-   The empty provider export cannot answer this.
-5. The page error recurred on the single allowed retry. How should remaining
-   research proceed without another live probe or configuring the environment?
+Decision dated 2026-10-21: complete R6 from existing offline evidence and public
+documentation, retain access gaps, then submit to UI Lead. No new capture,
+reference click, browser/session intervention or configuration is authorized.
 
-The CEO owns deciding a documentation-only continuation or a bounded
-correction issue after the stop evidence; no configuration write is requested
-or implied. UI Lead review follows when the research deliverable is complete.
+### Offline navigation audit
+
+Existing `m6-setup/controls.json` was scanned by accessible name only. Calendar
+(raw entry 8) is a named utility entry, not a settings link. Calendar Booking
+(entries 39–40, one logical link) points to the already-probed internal booking
+route. Activity Reminders (entry 258) is a utility button, not evidence of a
+default-reminder settings route. No named direct link containing synchronization,
+business hours or meeting-provider settings was found in this file. This is a
+file-level search result, not proof that such routes do not exist. No links were
+followed. The captured Company Settings navigation in CS-10 is a possible parent,
+not a verified business-hours destination. No URL or selector was invented.
+
+### Public source register
+
+First-party pages read on 2026-10-22 (local date). Locators omit vendor hostnames
+and product names deliberately. They identify public documentation, never a
+reference-session endpoint. No API was called and no documentation image was
+copied. Source IDs below are independent of the capture inventory.
+
+| ID | Public locator / section |
+| --- | --- |
+| D1 | Help topic Calendar Management; `/portal/en/kb/crm/organization-settings/calendar-management/articles/manage-calendar`; Set Calendar Preferences |
+| D2 | Help topic FAQs on Calendar Booking; `/portal/en/kb/crm/faqs/activity-management/articles/faqs-on-calendar-booking`; booking types, permissions, participant reminders, deactivation |
+| D3 | Help topic Using Calendar Synchronization via CalDAV; `/portal/en/kb/crm/organization-settings/calendar-management/articles/use-calendar-synchronization-via-caldav`; introductory synchronization description and initial-sync note |
+| D4 | Developer reference Get Calendar Preferences; `/crm/developer/docs/api/v8/get-calendar-preferences.html`; meeting preferences and reminders descriptions |
+| D5 | Help topic FAQs on Business Hours; questions 1 (custom hours), 3 (hours versus shifts), 11 (shift outside organization hours); topic locator only because the published path includes a prohibited product name |
+
+### Documented scope and access gaps
+
+Every row is **documented, not observed** unless marked **access gap**.
+Documented controls are not added to the seen CS inventory.
+
+| # | Area / control or behaviour | Source | Finding and limit | Contacts ref |
+| --- | --- | --- | --- | --- |
+| CD-01 | Calendar preferences entry and sections | D1 | Options > Preferences; activity selection, CalDAV, unavailability, color coding, reminders and notifications. Personal preferences, saved with Done. No layout or current values verified. | new |
+| CD-02 | Personal working hours | D1 | Week start, day start/end and two weekly holidays; distinct from organization hours. No current schedule or complete time-option set verified. | new |
+| CD-03 | Organization business hours | D5 | Setup > General > Company Settings > Business hours; presets or custom hours, week start and same/different daily hours. Shifts define user schedules; out-of-range shifts prevent saving changed organization hours. Exact validation copy unknown. | new |
+| CD-04 | Default reminders | D1, D2 | Intervals for meetings, appointments and all-day meetings; email reminder switch and assignment notifications. New event reminders inherit host preferences. Full interval choices and actual defaults remain gaps. | new |
+| CD-05 | Synchronization options | D1, D3 | CalDAV access and cross-product unavailability synchronization are documented; other services use marketplace management. CalDAV supports two-way meetings with iOS. This does not establish general provider conflict/deletion rules or session configuration. | new |
+| CD-06 | Booking administration | D2 | Individual/user and team bookings, permission-dependent access, a More menu with Edit, participant reminder interval/custom value, and activation control are documented. Exact columns, filters, pagination and blank/error screens remain access gaps. | new |
+| CD-07 | Meeting providers | D4, local Events metadata | API reference describes a meeting-service configuration collection; metadata has no provider options. Documentation reviewed does not establish an exhaustive offered-provider set for this session. **Access gap**: no provider list inferred from a sample or notification channels. | new |
+| CD-08 | Missing-hours prerequisite | Existing captures only | Observed prerequisite retained despite failed paint gates. No reviewed public source settles its dismissal, validation or post-configuration routing. Those remain **access gaps**. | new |
+
+D1 and D2 differ in calendar activity coverage: D1 allows activity selection
+including tasks/appointments, while D2's older calendar FAQ says only calls and
+meetings appear. This R6 settings pass does not resolve edition/version
+differences or override the calendar-view spec. CalDAV initial-sync limits in D3
+do not establish the behaviour of other providers; no universal sync limit is
+adopted. Provider configuration in D4 is separate from reminder delivery channels.
+
+### Implementation boundary and gate questions
+
+Under the CEO decision, implementation issues reproduce the observed prerequisite
+dialogue. Settings and booking administration use documented behaviour and
+existing Module 1–9 components. This does not certify unobserved layouts.
+The Module 10 gate summary must explicitly list:
+
+1. Booking-list columns, status presentation, filters/search/sort, pagination,
+   empty/error states and the post-business-hours route remain unobserved.
+2. Full working-hours/reminder option sets, current defaults and exact validation
+   messages are not established by the reviewed sources.
+3. Meeting-provider choices, integration availability in this session, sync
+   conflict/recurrence/deletion semantics and provider-specific setup errors remain
+   gaps. CalDAV documentation cannot settle every provider.
+4. The two failed paint gates remain failures; documentation does not repair them.
+
+These are accepted research limits for UI Lead review, not requests to configure
+the reference CRM. Business-hours configuration, reminder changes, connection,
+synchronization, booking activation/edit/publish and public reservations remain
+forbidden. No additional task or live probe is required by MEP-1043.
 
 ## Verification and handoff limits
 
@@ -203,6 +264,8 @@ or implied. UI Lead review follows when the research deliverable is complete.
 - `research/specs/verify.mjs` does not exist. Documentation-only change: no
   application, browser-test, build or full-suite run was performed.
 - Screenshots and raw captures remain local only; the neutral spec is uploaded
-  as the issue artifact. This records partial research, not completed R6 parity.
-- Remaining scope and exact CEO action are assigned in MEP-1043; MEP-1015 is
-  blocked on that decision. UI Lead remains the eventual spec approver.
+  as the issue artifact. Research completion retains the access gaps above;
+  it does not establish visual parity for unobserved screens.
+- CEO continuation steps 1–5 are applied: retry result retained, offline links
+  audited, public sources recorded, implementation boundary stated, write-only
+  register aligned. UI Lead is the spec approver; MEP-1043 is resolved.

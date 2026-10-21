@@ -181,8 +181,9 @@ booking-administration prerequisite: organization business hours are not
 configured. The dialog offers Configure Business Hours and Cancel; neither was
 clicked. The public booking page was never opened. Both the base and the single
 permitted retry failed the strict paint gate. The retry also increased refused
-telemetry POST count from 1 to 2, invoking the stop rule; CEO disposition is
-tracked in MEP-1043. See [calendar-settings.md](specs/calendar-settings.md).
+telemetry POST count from 1 to 2, invoking the stop rule. CEO decision MEP-1043
+closed the blocker with documentation-only completion and explicit access gaps;
+no further R6 capture or configuration is authorized. See [calendar-settings.md](specs/calendar-settings.md).
 
 - W10: provider connection, synchronization direction and conflict/deletion
   rules remain unknown. No connection or sync was initiated.
@@ -195,7 +196,13 @@ tracked in MEP-1043. See [calendar-settings.md](specs/calendar-settings.md).
 - Booking-page create/edit/publish and public reservation submission are writes.
   None was attempted. The internal list is obscured by the prerequisite; its
   columns and empty/error states remain unknown.
-- R9 documentation follow-up: business-hours prerequisite, booking-list
-  structure, calendar working-hours/default-reminder settings, provider choices
-  and sync behaviour. Record dated public source locators and limits. Missing
-  documentation stays an open question; it never authorizes a live write.
+- R6 documentation completion: calendar-settings.md records dated D1–D5 public
+  source locators, offline navigation audit and documented/not-observed rows.
+  Personal hours, organization business hours, reminders, booking categories and
+  CalDAV capabilities are documented. Provider options, full list structure,
+  defaults and exact error states remain access gaps.
+- Implementation uses the observed prerequisite plus documented behaviour and
+  existing Module 1–9 components, per MEP-1043. The Module 10 gate summary must
+  list the remaining gaps from calendar-settings.md. Documentation does not
+  authorize changing hours, reminders, activation, connections or synchronization.
+  No separate follow-up issue or additional live R6 probe is required.
