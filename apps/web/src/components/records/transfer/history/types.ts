@@ -24,7 +24,13 @@ export interface ExportHistoryProps {
   moduleLabel(m: TransferModule): string;
 }
 
-export const TRANSFER_MODULES: TransferModule[] = ["Leads", "Contacts", "Accounts", "Deals"];
+export const TRANSFER_MODULES: TransferModule[] = [
+  "Leads",
+  "Contacts",
+  "Accounts",
+  "Deals",
+  "Campaigns",
+];
 
 export const IMPORT_STATUS_LABELS: Record<ImportJob["status"], string> = {
   completed: "Completed",

@@ -260,8 +260,16 @@ function comparatorFits(
     }
     return false;
   }
-  if (NUMBER_TYPES.has(field.dataType)) {
-    const number = (item: FieldValue) => typeof item === "number" && acceptsFieldValue(field, item);
+  // bigint columns store digit strings; the filter panel sends plain numbers for them while
+  // existing string equality keeps working.
+  if (
+    NUMBER_TYPES.has(field.dataType) ||
+    (field.dataType === "bigint" && (typeof value === "number" || isValueList(value)))
+  ) {
+    // bigint columns store digit strings; criteria carry plain numbers like the other number fields.
+    const number = (item: FieldValue) =>
+      typeof item === "number" &&
+      (field.dataType === "bigint" ? Number.isSafeInteger(item) : acceptsFieldValue(field, item));
     if (comparator === "between" || comparator === "not_between")
       return (
         isValueList(value) &&
@@ -522,7 +530,12 @@ export function matches(
       ? typeof raw.name === "string"
         ? raw.name
         : null
-      : raw;
+      : fields.get(criteria.field)?.dataType === "bigint" &&
+          typeof raw === "string" &&
+          typeof criteria.value !== "string" &&
+          /^-?\d+$/.test(raw)
+        ? Number(raw)
+        : raw;
   const dayRuntime =
     fields.get(criteria.field)?.dataType === "date"
       ? {
