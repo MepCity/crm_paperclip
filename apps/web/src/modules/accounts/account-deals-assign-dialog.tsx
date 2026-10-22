@@ -58,7 +58,7 @@ export function AccountDealsAssignDialog({
       for (const id of selected) {
         await update.mutateAsync({
           id,
-          input: { Account_Name: { id: account.id, name: account.name } },
+          input: { Account_Name: { module: "Accounts", id: account.id, name: account.name } },
         });
       }
       setSelected(new Set());
