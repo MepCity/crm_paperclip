@@ -1,12 +1,15 @@
-# Customization — Modules and Fields (R1 partial research)
+# Customization — Modules and Fields (R1 research)
 
 ## Purpose and status
 
 Inspect the module administration list and the initial read-only tabs for Leads.
-This draft preserves one captured list state. **Research is incomplete:** the
-base fails the mandatory paint gate, so no module link or tab was clicked.
-It is not approved implementation evidence. CTO must decide the continuation;
-no claim is made about unobserved Leads screens.
+The initial module-list capture is accepted as painted by the CTO decision of
+2026-10-22. The `_sortableParentData` page error is known sorting-library noise
+on these settings pages when the screenshot is fully painted; a genuinely
+blank or partial image still fails. This revision adds the Leads initial Layouts screen. Research remains
+**incomplete**: the inherited blocked-request delta rule stopped further tab
+captures. CTO must disposition that delta before continuation. No editor or
+persisted preference was operated.
 
 Module 2+ parity applies: inventory and behaviour only, without pixel metrics,
 typography, colours or frontend request shapes. No reference assets are copied.
@@ -30,14 +33,16 @@ Shared-to cells contain profile-scope text; last-modified cells can contain an
 avatar and date or be blank. Dates, profile values and identities are not copied.
 Ten system-module rows are visible, from Home to Reports. Further rows exist
 outside the table viewport and are excluded from the visible inventory.
-The resting screenshot shows a Tasks-row drag grip and ellipsis without any
-hover/click step. Their appearance trigger remains unknown.
+The resting screenshot shows a Tasks-row drag grip and ellipsis in a hover
+state (CTO classification); the capture requested no hover/click step.
+The Tasks last-modified date is the capture day. This is not attributed to our
+inspection: no settings write is evidenced. Earlier email-settings captures do
+not provide a comparable Modules table, so an earlier date cannot be verified.
 
 ## Control inventory — initial module list
 
 All rows below have source **seen, `m11r1-modules-base` screenshot**, reconciled
-against one-based `controls.json` entries. Seen means visible in the failed-gate
-image, not accepted paint evidence. A dash denotes a screenshot-only control.
+against one-based `controls.json` entries. The image is accepted as painted by the CTO decision. A dash denotes a screenshot-only control.
 Duplicate framework wrappers/anchors count as one logical control. Behaviour
 is limited to resting appearance; no controls were operated.
 
@@ -89,7 +94,7 @@ is limited to resting appearance; no controls were operated.
 | MF-44 | Table / Home / Status | Status switch | 283, 284 | Appears on; enabled/disabled distinction not verified. Never toggled | M11 | new |
 | MF-45 | Table / Workqueue / Teamspace | Teamspace count link | — | Visible in screenshot; destination unverified, not opened | M11 | new |
 | MF-46 | Table / Workqueue / Status | Status switch | 286, 287 | Appears on; enabled/disabled distinction not verified. Never toggled | M11 | new |
-| MF-47 | Table / Leads / first column | Leads | 289, 290 | Module configuration link; not opened. Leads href targets the layouts list. | M11 | new |
+| MF-47 | Table / Leads / first column | Leads | 289, 290 | Module configuration link; opened once in the continuation, landing on Layouts. | M11 | new |
 | MF-48 | Table / Leads / Teamspace | Teamspace count link | — | Visible in screenshot; destination unverified, not opened | M11 | new |
 | MF-49 | Table / Leads / Status | Status switch | 291, 292 | Appears on; enabled/disabled distinction not verified. Never toggled | M11 | new |
 | MF-50 | Table / Leads / Status | Information glyph | 293 | Visible; tooltip/content unobserved | M11 | new |
@@ -106,8 +111,8 @@ is limited to resting appearance; no controls were operated.
 | MF-61 | Table / Tasks / first column | Tasks | 311, 312 | Module configuration link; not opened | M11 | new |
 | MF-62 | Table / Tasks / Teamspace | Teamspace count link | — | Visible in screenshot; destination unverified, not opened | M11 | new |
 | MF-63 | Table / Tasks / Status | Status switch | 314, 315 | Appears on; enabled/disabled distinction not verified. Never toggled | M11 | new |
-| MF-64 | Table / Tasks / left edge | Drag grip | — | Visible in screenshot; never dragged | M11 | new |
-| MF-65 | Table / Tasks / beside name | More menu | 313 | Visible in initial screenshot; not opened | M11 | new |
+| MF-64 | Table / Tasks / left edge | Drag grip | — | Hover-state control; never dragged | M11 | new |
+| MF-65 | Table / Tasks / beside name | More menu | 313 | Hover-state control; not opened | M11 | new |
 | MF-66 | Table / Meetings / first column | Meetings | 317, 318 | Module configuration link; not opened | M11 | new |
 | MF-67 | Table / Meetings / Teamspace | Teamspace count link | — | Visible in screenshot; destination unverified, not opened | M11 | new |
 | MF-68 | Table / Meetings / Status | Status switch | 319, 320 | Appears on; enabled/disabled distinction not verified. Never toggled | M11 | new |
@@ -147,6 +152,118 @@ below the table clipping edge, regardless of their page-coordinate geometry.
 The table scroll thumb, row drag grip and Teamspace links are included from
 the image even though the collector does not expose separate entries.
 
+## Leads — initial Layouts screen
+
+Source: **seen, `m11r1-leads-layouts` screenshot**, reconciled with its
+one-based `controls.json` entries. The screenshot is fully painted. The module
+list is replaced by a module-navigation sidebar; Leads is selected. The content
+has a Leads heading, nine tabs and the selected Layouts list. **Custom Views is
+not visible among these nine tabs**; record-list custom views must not be
+inferred as a settings tab.
+
+The table has Name, Shared To, Last Modified and Status columns. One default
+layout row is visible. The last-modified cell is blank in this state; sharing
+scope is displayed as text. No identifiers, scope values or record values are
+retained. The layout name opens an editor and was not clicked. Table and
+content scroll containers fit their contents; no scrollbars are visible there.
+The sidebar fits all seventeen displayed module entries. No preferences changed.
+
+| # | Position | Control | Raw entries | Observed behaviour / limit | Owning module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- |
+| ML-01 | Top utility strip | Search records | 3 | Not opened or typed | Shell | Contacts shell |
+| ML-02 | Top utility strip | Quick create | 4 | Not opened or typed | Shell | Contacts shell |
+| ML-03 | Top utility strip | Assistant | 6 | Not opened or typed | Shell | Contacts shell |
+| ML-04 | Top utility strip | Notifications | 7 | Not opened or typed | Shell | Contacts shell |
+| ML-05 | Top utility strip | Calendar | 8 | Not opened or typed | Shell | Contacts shell |
+| ML-06 | Top utility strip | Marketplace | 11 | Not opened or typed | Shell | Contacts shell |
+| ML-07 | Top utility strip | Setup | 14 | Not opened or typed | Shell | Contacts shell |
+| ML-08 | Top utility strip | Profile | 17, 18 | Not opened or typed | Shell | Contacts shell |
+| ML-09 | Top utility strip | Applications menu | 21, 22, 23, 24 | Not opened or typed | Shell | Contacts shell |
+| ML-10 | Sidebar header | Back to Modules | 26, 103, 104 | Back affordance visible; not clicked | M11 | new |
+| ML-11 | Sidebar header right | Module search icon | 27, 105 | Not opened; input behaviour unobserved | M11 | new |
+| ML-12 | Sidebar, top to bottom | Leads | 28 | Selected | M11 | new |
+| ML-13 | Sidebar, top to bottom | Contacts | 29 | Module navigation; not opened | M11 | new |
+| ML-14 | Sidebar, top to bottom | Accounts | 30 | Module navigation; not opened | M11 | new |
+| ML-15 | Sidebar, top to bottom | Deals | 31 | Module navigation; not opened | M11 | new |
+| ML-16 | Sidebar, top to bottom | Tasks | 32 | Module navigation; not opened | M11 | new |
+| ML-17 | Sidebar, top to bottom | Meetings | 33 | Module navigation; not opened | M11 | new |
+| ML-18 | Sidebar, top to bottom | Calls | 34 | Module navigation; not opened | M11 | new |
+| ML-19 | Sidebar, top to bottom | Products | 35 | Module navigation; not opened | M11 | new |
+| ML-20 | Sidebar, top to bottom | Quotes | 36 | Module navigation; not opened | M11 | new |
+| ML-21 | Sidebar, top to bottom | Sales Orders | 37 | Module navigation; not opened | M11 | new |
+| ML-22 | Sidebar, top to bottom | Purchase Orders | 38 | Module navigation; not opened | M11 | new |
+| ML-23 | Sidebar, top to bottom | Invoices | 39 | Module navigation; not opened | M11 | new |
+| ML-24 | Sidebar, top to bottom | Campaigns | 40 | Module navigation; not opened | M11 | new |
+| ML-25 | Sidebar, top to bottom | Vendors | 41 | Module navigation; not opened | M11 | new |
+| ML-26 | Sidebar, top to bottom | Price Books | 42 | Module navigation; not opened | M11 | new |
+| ML-27 | Sidebar, top to bottom | Cases | 43 | Module navigation; not opened | M11 | new |
+| ML-28 | Sidebar, top to bottom | Solutions | 44 | Module navigation; not opened | M11 | new |
+| ML-29 | Module tab strip, left to right | Layouts | 45, 46 | Selected on entry | M11 | new |
+| ML-30 | Module tab strip, left to right | Layout Rules | 47, 48 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
+| ML-31 | Module tab strip, left to right | Validation Rules | 49, 50 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
+| ML-32 | Module tab strip, left to right | Fields | 51, 52 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
+| ML-33 | Module tab strip, left to right | Record Locking Configuration | 53, 54 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
+| ML-34 | Module tab strip, left to right | Map Dependency Fields | 55, 56 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
+| ML-35 | Module tab strip, left to right | Links | 57, 58 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
+| ML-36 | Module tab strip, left to right | Buttons | 59, 60 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
+| ML-37 | Module tab strip, left to right | Summary | 61, 62 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
+| ML-38 | Content right edge | Contextual help | 63 | Not opened | M11 | new |
+| ML-39 | Above table right | Create New Layout | 64, 65 | Creation entry; forbidden, not opened | M11 | new |
+| ML-40 | Table, Name column | Default layout name link | 67, 68 | Editor destination; forbidden, not opened | M11 | new |
+| ML-41 | Table, beside layout name | More menu | 69 | Forbidden, not opened | M11 | new |
+| ML-42 | Table, Status column | Layout status switch | 70, 71 | Appears on; never toggled; availability unverified | M11 | new |
+| ML-43 | Bottom utility strip | My Pins | 90 | Not opened | Shell | Contacts shell |
+| ML-44 | Bottom utility strip | Chats | 91 | Not opened | Shell | Contacts shell |
+| ML-45 | Bottom utility strip | Contacts | 92 | Not opened | Shell | Contacts shell |
+| ML-46 | Bottom utility strip | Command palette | 93 | Not opened | Shell | Contacts shell |
+| ML-47 | Bottom utility strip | Announcements | 94 | Not opened | Shell | Contacts shell |
+| ML-48 | Bottom utility strip | Motivator | 95 | Not opened | Shell | Contacts shell |
+| ML-49 | Bottom utility strip | Sticky Notes | 96 | Not opened | Shell | Contacts shell |
+| ML-50 | Bottom utility strip | Activity Reminders | 97 | Not opened | Shell | Contacts shell |
+| ML-51 | Bottom utility strip | Recent Items | 98 | Not opened | Shell | Contacts shell |
+| ML-52 | Bottom utility strip | Accessibility | 99 | Not opened | Shell | Contacts shell |
+| ML-53 | Bottom utility strip | Help | 100 | Not opened | Shell | Contacts shell |
+
+### Reconciliation — Leads Layouts
+
+`controls.json` 109 → inventory 53 logical controls;
+72 raw entries represented; 37 excluded.
+Arithmetic: 72 + 37 = 109. Duplicate represented entries:
+19. No screenshot-only control was needed.
+
+Excluded entries: 1, 2, 5, 9, 10, 12, 13, 15, 16, 19, 20, 25, 66, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 101, 102, 106, 107, 108, 109.
+Reasons: hidden/zero-area shell and overlay placeholders (1–2, 9–10,
+12–13, 15–16, 19–20, 25, 72–88, 101–102); navigation container 5;
+static table-row wrapper 66; bottom-strip wrapper 89; body and nonoverflowing
+scroll containers 106–109. Screenshot inspection confirms no missing visible
+controls in these exclusions. Back-icon descendants and search-icon SVG are
+reconciled with their logical parent controls.
+
+### Capture and request delta — continuation
+
+- `m11r1-leads-layouts`: start `/crm/<org>/settings/modules`, one exact
+  exported Leads selector clicked; final neutral route
+  `/crm/<org>/settings/modules/Leads/layouts`. Captured 2026-10-22 20:24:32 UTC.
+- Complete screenshot, aria, page, controls, network, meta and progress evidence
+  retained in the research workspace. Ready gate passed (113 ms); failed script
+  loads: zero. The same known `_sortableParentData` noise appears; screenshot
+  is fully painted. No other page error is recorded.
+- One live attempt. A preceding sandbox denial occurred at output-directory
+  creation, before browser attachment; it was not a reference-screen attempt.
+- One click, name Leads, result clicked. No skipped clicks, editor, toggle,
+  drag, hover, scroll, popup, file chooser, download or print occurred. No extra
+  shared-browser tabs were closed by this agent.
+- Successful non-GET set is unchanged: page-initiated passive/read
+  `PageLayout.do` once and visitor `triggers` once, both 200.
+- Refused reminder and notification paths: once each (unchanged).
+  Refused telemetry `urlMonitor`: twice (unchanged); `logs`: three times
+  (baseline once, **+2**). New refused telemetry paths: `/:id/clientmetricslog`
+  once and `/:id/telemetry/customMetrics` once. Total refusals: **9 vs 5**.
+- **STOP:** the inherited new-path/increased-count rule applies even though
+  the new requests are refused telemetry. No further tab capture or replay was
+  attempted. No successful settings write or reference mutation is evidenced.
+  CTO must decide whether these refused passive diagnostics permit continuation.
+
 ## Fields and metadata
 
 This is a configuration list, not a Lead record form. The list search is a text
@@ -160,14 +277,13 @@ No current record values, layout identifiers or profile identifiers are copied.
 ## Actions, filters, sorting and flows
 
 1. Click-free navigation to `/crm/<org>/settings/modules` draws the list.
-2. Inspect the screenshot and diagnostics before any proposed open-only click.
-3. Stop because the paint gate fails; do not open Leads or any tab.
+2. Open the Leads module-name link to inspect its initial layouts list.
+3. Audit the request delta; stop before any tab click because the inherited
+   new-path/increased-count rule is triggered.
 
 No search, sorting, filtering, reordering, status switch, panel preference,
-creation or editor action was tested. No Save-capable editor was opened.
+creation or editor action is tested. No Save-capable editor is opened.
 Empty results, validation, loading/recovery and permission errors are unobserved.
-The Leads link exposes a layouts-list destination; this is route provenance
-only and does not certify that the destination is safe or painted.
 
 ## Capture refs, paint gate and safety audit
 
@@ -176,16 +292,15 @@ only and does not certify that the destination is safe or painted.
 - Complete folder contains screenshot.png, aria.yml, page.txt, network.json,
   controls.json, meta.json and progress.json. Raw evidence remains local in the
   research workspace and is never committed or uploaded with customer data.
-- Heading/tab present; 469 controls; 50 API calls. **Paint gate FAILED** because
+- Heading/tab present; 469 controls; 50 API calls. **Paint accepted by CTO** despite
   diagnostics include `pageerror Cannot read properties of undefined (reading
   '_sortableParentData')`. No failed script load was reported (`scriptLoads.failed`
-  is zero); that does not negate the page error.
+  is zero). The full screenshot is painted; this specific error is known noise.
 - Click list: empty. Selector checks: not applicable, zero click candidates.
   No hover, scroll, field fill, toggle, drag, Escape or retry occurred.
-- One attempt per screen per run is the stricter current issue rule. Therefore
-  the five-minute retry in the inherited rule was not spent in this heartbeat.
-  A subsequent run may consider the one delayed retry only after CTO resolves
-  the successful visitor POST uncertainty below. A second failed gate must stop.
+- The original run stopped at its gate. CTO reviewed the screenshot and
+  authorized continuation without repeating the module-list capture. Each new
+  target screen has at most one live capture attempt in this run.
 - Tool reached `done`; no empty-folder, missing-meta or leaked-tab failure was
   reported. Eight existing targets were hidden by the relay; none were closed
   by this agent. No popup, print, download or file chooser was reported.
@@ -206,42 +321,39 @@ not successful writes and not permission to invoke them:
 
 | Method / neutral path | Count | Status | Evidence / limit |
 | --- | --- | --- | --- |
-| POST `/crm/<org>/PageLayout.do` | 1 | 200 | Request has an action string; response contains features and module collections. Consistent with a layout read; action value is not retained by the shape log. |
-| POST `/visitor/v2/<workspace>/livevisitors/<id>/triggers` | 1 | 200 | Visitor-widget response has URL/object/data keys and encrypted visitor information. Exact side effects cannot be established from shape-only evidence. |
+| POST `/crm/<org>/PageLayout.do` | 1 | 200 | Request has an action string; response contains features and module collections. Page-initiated, passive/read (CTO decision); action value is not retained by the shape log. |
+| POST `/visitor/v2/<workspace>/livevisitors/<id>/triggers` | 1 | 200 | Visitor-widget response has URL/object/data keys and encrypted visitor information. Page-initiated, passive/read visitor trace (CTO decision). |
 
-The visitor request is not counted as a refused request or silently assumed to
-be harmless telemetry. It occurred during click-free page loading; no manual
-request was issued. Whether it is only a permitted passive visit trace or has
-another persisted effect is **unknown**. No reference mutation is proven, but
-further live inspection is stopped pending CTO safety disposition. Do not
-attempt rollback, inspect the widget through another channel or replay requests.
-
-Only one base capture exists, so there is no subsequent path/count delta to
-compare. No manual retry of a refused request occurred. A future capture must
-compare both the successful non-GET set and these refused path/counts, and
-invoke the inherited stop rule on any new path or increased count.
+CTO classified both successful POSTs as page-initiated, passive/read on
+2026-10-22: the first reads module/layout data; the second is the embedded
+support widget's automatic visit trace. No click triggered either. The former
+visitor-effect question is closed; this classification does not authorize
+manual requests, replay or any settings write. Refused requests remain refused.
 
 ## Open questions and unobserved states
 
-1. Is the successful visitor-widget POST only a passive visit trace, or does
-   it persist another effect? CTO must resolve this before any new capture.
-2. Can a delayed, separate-run retry pass the paint gate? If it fails again,
-   stop rather than pursuing module navigation or repairing the reference app.
-3. Leads initial tab set, selected tab, layouts list, Fields and Custom Views
-   availability remain unobserved. The issue's example tab names are targets
-   for investigation, not observed controls.
-4. Initial controls, list columns, search/filter behaviour, empty/error and
-   permission states on every Leads settings tab remain unknown.
-5. Status-switch availability differences, information tooltips, Teamspace
-   link destinations and the Tasks-row more-menu contents are unobserved.
-6. Create/edit/save, validation, field/layout changes, module visibility,
+1. CTO disposition of the refused telemetry delta is required before further
+   live capture. This is distinct from the already-closed successful visitor
+   POST question and already-accepted sorting-library paint noise.
+2. The first states of Layout Rules, Validation Rules, Fields, Record Locking
+   Configuration, Map Dependency Fields, Links, Buttons and Summary are not
+   captured. Their tab labels alone are not evidence of their contents.
+3. Search/filter, empty, permission and error behaviour on those tabs remains
+   unknown. No Custom Views tab is visible in the observed module tab set.
+4. Status-switch availability, information tooltips, Teamspace destinations,
+   contextual help and more-menu contents are unobserved and outside the
+   authorized open-only tab continuation.
+5. Create/edit/save, validation, field/layout changes, module visibility,
    deletion and reorder outcomes are not observable within this issue's
-   read-only boundary. Do not infer their behaviour from this list image.
+   read-only boundary. Do not infer them from a resting list image.
+6. An earlier Modules-table capture showing the Tasks date was not found among
+   the preceding email-settings evidence; no causal attribution is made.
 
 ## Verification and handoff
 
-Screenshot inspected and raw-control mappings checked for unique coverage.
-Repository diff whitespace and neutral-language/privacy checks passed
-before handoff. Documentation only: no application tests, typecheck or e2e are
-needed. `research/specs/verify.mjs` is absent. This partial draft and its access
-gap go to CTO for continuation; the original research acceptance is not met.
+Both captured states have screenshot inspection and unique raw-control mapping.
+The prior module-list inventory is preserved; the continuation adds a complete
+Layouts inventory. Privacy/neutral-language and whitespace checks are required
+before publication. Documentation only: no application tests, typecheck or e2e.
+`research/specs/verify.mjs` is absent. Acceptance remains incomplete until the
+remaining eight initial tab screens are captured after CTO safety disposition.
