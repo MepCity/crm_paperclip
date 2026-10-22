@@ -136,6 +136,18 @@ const normalizeInput = (
   );
 };
 
+export type ConvertTarget = { reuseId: string; update?: RecordInput } | { create: RecordInput };
+export interface ConvertLeadInput {
+  account?: ConvertTarget;
+  contact?: ConvertTarget;
+  deal?: ConvertTarget;
+}
+export interface ConvertLeadResult {
+  accountId: string | null;
+  contactId: string | null;
+  dealId: string | null;
+}
+
 export interface FixtureRecordServiceOptions extends FixtureHistoryPermissions {
   actorName?: string;
   source?: HistorySource;
@@ -158,6 +170,8 @@ export function createFixtureRecordService(
   options?: FixtureRecordServiceOptions,
 ): RecordService & {
   readonly attachmentLifecycle: ReturnType<typeof fixtureAttachmentLifecycle>;
+  /** Core-only conversion coordinator; no wire contract yet (Module 4 owns the endpoint). */
+  convertLead(leadId: string, input: ConvertLeadInput): Promise<ConvertLeadResult>;
   readonly history: RecordHistoryService;
   readonly tags: TagService;
   readonly recycleBin: RecycleBinService;
@@ -825,7 +839,109 @@ export function createFixtureRecordService(
   };
 
   const attachmentLifecycle = fixtureAttachmentLifecycle(hookContext);
+  const convertLead = async (leadId: string, input: ConvertLeadInput) => {
+    assertModuleWritable("Leads");
+    recordFor("Leads", leadId);
+    return atomic(
+      { module: "Leads", recordId: leadId, kind: "record_converted", mechanism: "convert" },
+      () => {
+        const lead = recordFor("Leads", leadId);
+        assertWritable(lead);
+        if (lead.fields.Converted__s === true)
+          throw new ValidationError({ Converted__s: ["This lead is already converted."] });
+        const stamp = clock().toISOString();
+        const refs: Record<string, FieldValue> = {};
+        const ids: Record<string, string | null> = {};
+        const targets = [
+          ["Accounts", input.account, "Converted_Account", "accountId"],
+          ["Contacts", input.contact, "Converted_Contact", "contactId"],
+          ["Deals", input.deal, "Converted_Deal", "dealId"],
+        ] as const;
+        for (const [module, target, leadField, resultKey] of targets) {
+          ids[resultKey] = null;
+          if (!target) continue;
+          const bundle = bundleFor(module);
+          const moduleState = moduleStore(module);
+          let record: RecordData;
+          if ("reuseId" in target) {
+            const existing = recordFor(module, target.reuseId);
+            if (target.update) {
+              assertWritable(existing);
+              const normalized = normalizeInput(
+                target.update,
+                stringFieldNames(bundle),
+                bundle.metadata.fields,
+              );
+              validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
+              const fields: Record<string, FieldValue> = {
+                ...copy(existing.fields),
+                ...normalized,
+                Modified_By: ctx.userId,
+                Modified_Time: stamp,
+              };
+              bundle.applyRules?.(fields, normalized, copy(existing.fields), hookContext);
+              fields[bundle.displayNameField] = bundle.fullName(fields);
+              record = { id: existing.id, fields };
+              moduleState.records.set(record.id, record);
+            } else record = existing;
+          } else {
+            const normalized = normalizeInput(
+              target.create,
+              stringFieldNames(bundle),
+              bundle.metadata.fields,
+            );
+            validateInput(
+              normalized,
+              false,
+              relaxRequired(bundle, normalized),
+              bundle.managedFields,
+            );
+            const id = String(moduleState.nextId++);
+            const fields: Record<string, FieldValue> = Object.fromEntries(
+              bundle.metadata.fields.map((field) => [field.apiName, null]),
+            );
+            Object.assign(fields, normalized, bundle.createDefaults(stamp), {
+              id,
+              Owner: normalized.Owner ?? lead.fields.Owner ?? ctx.userId,
+              Created_By: ctx.userId,
+              Modified_By: ctx.userId,
+            });
+            if (bundle.autoNumberField)
+              assignAutoNumber(moduleState, bundle.autoNumberField, fields);
+            bundle.applyRules?.(fields, normalized, undefined, hookContext);
+            fields[bundle.displayNameField] = bundle.fullName(fields);
+            record = { id, fields };
+            moduleState.records.set(id, record);
+            bundle.afterWrite?.(record, undefined, hookContext);
+          }
+          ids[resultKey] = record.id;
+          refs[leadField] = {
+            module,
+            id: record.id,
+            name: String(record.fields[bundle.displayNameField] ?? record.id),
+          };
+        }
+        moduleStore("Leads").records.set(leadId, {
+          id: leadId,
+          fields: {
+            ...copy(lead.fields),
+            ...refs,
+            Converted__s: true,
+            Converted_Date_Time: stamp,
+            Modified_By: ctx.userId,
+            Modified_Time: stamp,
+          },
+        });
+        return {
+          accountId: ids.accountId ?? null,
+          contactId: ids.contactId ?? null,
+          dealId: ids.dealId ?? null,
+        };
+      },
+    );
+  };
   return {
+    convertLead,
     attachmentLifecycle: {
       ...attachmentLifecycle,
       publish(id, data) {
