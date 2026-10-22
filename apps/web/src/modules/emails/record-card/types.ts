@@ -22,6 +22,7 @@ export interface EmailRecordCardViewModel {
 export interface EmailsRecordCardProps {
   parentModule?: EmailParentModule;
   recordId?: string;
+  recipientEmail?: string;
   targetId?: string;
   subtabRowEndControl?: RelatedListControlDefinition;
   initialTab?: EmailTabKey;
