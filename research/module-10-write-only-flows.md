@@ -229,8 +229,12 @@ gate outcome; visible presence does not establish working behaviour.
 
 ## R10 rule-check safety gap (MEP-1016)
 
-The read-only workflow-list probe does not establish configured rules, active
-states, triggers, actions or recipient roles. The other rule/notification
+The workflow response shape establishes one configured rule and a non-null
+last-execution field. Its active state, module, triggers, actions and recipient
+roles remain unknown. MEP-1102 closes that UI route. One subsequent click-free
+assignment-list capture shows no rule rows but triggers the request-baseline
+stop rule; it establishes no absence or safe notification configuration. No
+further capture or retry was performed. The other rule/notification
 categories remain unverified. See
 [the R10 exposure register](specs/email-calendar-rule-check.md): unknown counts
 as yes for test-write eligibility. The W16 implementation scope remains Module

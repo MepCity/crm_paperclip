@@ -1,8 +1,9 @@
 # Email and calendar — rule, assignment and notification check
 
 Status: M10-R10 / MEP-1016. Evidence date: 2026-10-22 UTC.
-Both permitted captures fail the paint gate; research stopped after the single
-retry. Further capture requires a reviewed continuation.
+Both workflow captures fail the paint gate. MEP-1102 closes that route;
+the assignment continuation then triggered the non-GET stop rule. No further
+capture is permitted pending CTO disposition.
 
 **Incomplete safety check: no test write is cleared by this document.**
 Approval: CTO; feeds ADR 0009 Topic 8 and the night-test protocol section 4.2.
@@ -30,7 +31,43 @@ sortable-parent state, and a JSON parse/model resolution failure on the workflow
 route. Script-load counters report zero failed scripts. These counters do not
 override the page errors or missing workflow heading. There is no earlier
 comparable workflow-list base to establish an API-call ratio; no ratio is invented.
-There is no visible record link. Whether the underlying list contains data is unknown.
+There is no visible record link. Existing response-shape evidence nevertheless
+establishes one configured workflow rule, as detailed below.
+
+## Workflow diagnosis and existing response-shape evidence
+
+Platform Lead reviewed the two existing captures in MEP-1102. The workflow
+route model reads a messaging-integration property from an undefined integration
+state, then its error handler tries to parse the error text as JSON. The route
+reports LR 420 / model failure and abandons rendering. Both captures reproduce
+this chain; script-load failure is zero. The shared sortable-parent error also
+occurs on other settings pages and does not identify this route's cause.
+
+The workflow list GET returns 200 in both captures. Its response shape records
+an array of **one rule**, with last_executed_time of type string rather than
+null. This supports prior execution, not current activation or delivery to a
+recipient. Active state, module, trigger, actions and recipients remain unknown.
+No values, names, identifiers or addresses are recovered or inferred.
+
+Shape-only field inventory (not a frontend request contract):
+
+- Rule: created_time, modified_time, last_executed_time, name, description,
+  source, editable, deletable, id; module with api_name and id; created_by and
+  modified_by with name and id.
+- Trigger: execute_when.type; execute_when.details.trigger_module with api_name
+  and id; execute_when.details.repeat.
+- State: status.active; lock.status, lock.locked_by and lock.message.
+- Pagination: info.per_page, count, page and more_records.
+- Rule-count response: scheduled_actions_per_rule_limit, total_rules_limit,
+  active_rules_configured, rules_per_process_limit, total_actions_per_rule_limit,
+  total_rules_limit_per_module, active_rules_limit, total_rules_configured and
+  active_rules_limit_per_module. Numeric types establish no actual limits.
+
+No third workflow capture, rule editor, module selector, integration-frame
+allowance or tool change is permitted by this continuation. Existing network
+shapes and metadata are the only evidence for that route. The metadata export
+failure does not negate the observed configured rule. Every exposure category
+continues to count as yes until its risk is resolved.
 
 ## Control inventory
 
@@ -119,8 +156,8 @@ capture. No identity or address is recorded.
 
 | # | Rule or setting category | Module scope to check | Trigger | Action type | Recipient role | Active? | Could fire on a test write (yes/no/unknown) | Gate / evidence |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| E-01 | Workflow rules | All modules; Emails, Events, Leads, Contacts, Accounts, Deals and Cases first | unknown (create/edit/field/date not established) | unknown | unknown | unknown | unknown | Treat as yes; workflow list did not paint |
-| E-02 | Assignment rules | All supported modules, not enumerated | unknown | unknown | unknown | unknown | unknown | Treat as yes; list not captured; metadata null |
+| E-01 | Workflow rules | All modules; Emails, Events, Leads, Contacts, Accounts, Deals and Cases first | unknown (create/edit/field/date not established) | unknown | unknown | unknown | unknown | Treat as yes; one rule with prior execution; UI did not paint |
+| E-02 | Assignment rules | All supported modules, not enumerated | unknown | unknown | unknown | unknown | unknown | Treat as yes; assignment base stopped; no rows drawn; metadata null |
 | E-03 | Owner notifications | All affected modules, not enumerated | unknown | unknown | unknown | unknown | unknown | Treat as yes; settings not captured |
 | E-04 | Mention and follower notifications | All affected modules, not enumerated | unknown | unknown | unknown | unknown | unknown | Treat as yes; settings not captured |
 | E-05 | Reminder mail | Events and other supported activities, not enumerated | unknown | unknown | unknown | unknown | unknown | Treat as yes; blocked shell reminder poll proves no configuration |
@@ -160,13 +197,110 @@ non-GET path or excess count was found. This is a paint-gate stop, not evidence
 that a write occurred. No third capture, alternative route or rule editor was
 attempted. Tool cleanup completed normally for both runs.
 
-Remaining research after reviewed restoration: workflow lists across all modules
-(with the seven priority modules first), assignment lists, owner/mention/follower
-and reminder settings, email alerts, scheduled actions, approval lists and
-response rules. Only named read-only navigation or click-free direct paths are
-permitted; base capture, offline selector checks, per-base request accounting,
-inventory and unknown-as-yes rules still apply. No configuration change is a
-valid recovery action.
+### Assignment continuation: stop-rule result
+
+MEP-1102 allowed the other already-scoped routes to be checked independently.
+One click-free assignment base was captured with --wait 25000. Direct navigation
+came from the existing workflow-base rail href, not a guessed path. No selector,
+click, typing, toggle, scroll or editor opening was used. Cleanup completed;
+no tool-failure condition was reported.
+
+The screenshot shows Assignment Rules, tabs for Rules (selected), Thresholds and
+an assistant area, introductory text and Create Assignment Rule. No configured
+rule row is drawn. The rules GET has response shape null; this does not establish
+absence across modules or notification settings. No module or recipient values
+are inferred. The rail automatically shows the Automation region; no rail
+control was operated. The bottom utility strip is now visible.
+
+There are 314 controls, 41 API calls and one pageerror for sortable-parent state.
+The heading is present, but the strict no-pageerror gate fails. Independently,
+the request baseline changed, so no retry is allowed or planned:
+
+| Method | Neutral path | Count | Result / change from workflow base |
+| --- | --- | --- | --- |
+| POST | /crm/<org>/ActivityReminder.do | 1 | blocked; unchanged |
+| POST | /crm/<org>/crminotification.do | 1 | blocked; new notification status poll |
+| POST | /murphy/:id/telemetry/urlMonitor | 2 | blocked; unchanged |
+| POST | /murphy/:id/telemetry/logs | 1 | blocked; new telemetry path |
+| POST | /visitor/v2/<tenant>/livevisitors/<id>/triggers | 1 | network HTTP 200; new relative to workflow base |
+
+The exception-telemetry path from the workflow base is absent. Five blocked
+POST attempts are distinct from the one completed network POST. The latter is
+the shell visitor-trigger category anticipated by plan rule 6; passive browsing
+traces are allowed by the read-only rule. Its request is stored only as a text
+body shape and its response as encrypted visitor-information structure. Neither
+establishes a record/preference mutation or any notification delivery. It still
+falls outside this issue's existing baseline and therefore triggers rule 7.
+No request was replayed. CEO was notified with a DUR comment. No retry, rollback,
+third workflow capture or further route was attempted.
+
+### Assignment delta inventory
+
+All behaviour is not observed. Existing top/header controls retain the R rows;
+changed rail visibility and new assignment controls are enumerated below.
+Contacts references use contacts.md. Raw entries are one-based in the assignment
+controls.json; screenshot-only controls have no raw match. This is a resting
+structure inventory, not a claim that the paint gate passed.
+
+| # | Difference / control | Raw entries | Source | Contacts ref |
+| --- | --- | --- | --- | --- |
+| A-01 | Header: reuse R-01–R-04 | 3–9 | seen (m10r10-assignment-rules-base) | same structure |
+| A-02 | Top bar: reuse R-27–R-35 | 234,235,237–239,242,245,248–249,252–255 | seen (m10r10-assignment-rules-base) | same structure |
+| A-03 | Rail: Wizards | 79,80 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-04 | Rail: Kiosk Studio | 81,82 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-05 | Rail: Canvas | 83,84 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-06 | Rail: Customize Home page | 85,86 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-07 | Rail: Translations | 87,88 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-08 | Rail: Templates | 89,90 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-09 | Rail: Teamspace | 91,92 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-10 | Rail: Automation group | 93,94 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-11 | Rail: Workflow Rules | 96,97 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-12 | Rail: Actions | 98,99 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-13 | Rail: Schedules | 100,101 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-14 | Rail: Assignment (selected) | 102,103 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-15 | Rail: Scoring Rules | 104,105 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-16 | Rail: Cadences | 106,107 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-17 | Rail: Process Management group | 108,109 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-18 | Rail: Blueprint | 111,112 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-19 | Rail: Approval Processes | 113,114 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-20 | Rail: Review Processes | 115,116 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-21 | Rail: Connected Workflow | 117,118 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-22 | Rail: Experience Center group | 119,120 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-23 | Rail: Signals | 122,123 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-24 | Rail: CommandCenter | 124,125 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-25 | Rail: Segmentation (partially clipped) | 126,127 | seen (m10r10-assignment-rules-base) | new visibility |
+| A-26 | Rules tab (selected) | 258–260 | seen (m10r10-assignment-rules-base) | new |
+| A-27 | Thresholds tab | 261–263 | seen (m10r10-assignment-rules-base) | new |
+| A-28 | Assistant tab | 264–266 | seen (m10r10-assignment-rules-base) | new |
+| A-29 | Contextual help | 269 | seen (m10r10-assignment-rules-base) | new |
+| A-30 | Create Assignment Rule (not clicked; write) | 270–271 | seen (m10r10-assignment-rules-base) | new |
+| A-31 | Utility strip: My Pins | none | seen (m10r10-assignment-rules-base) | shared utility structure |
+| A-32 | Utility strip: Chats | none | seen (m10r10-assignment-rules-base) | shared utility structure |
+| A-33 | Utility strip: Contacts | none | seen (m10r10-assignment-rules-base) | shared utility structure |
+| A-34 | Utility strip: Notebook icon | none | seen (m10r10-assignment-rules-base) | shared utility structure |
+| A-35 | Utility strip: Announcement icon | none | seen (m10r10-assignment-rules-base) | shared utility structure |
+| A-36 | Utility strip: Analytics icon | none | seen (m10r10-assignment-rules-base) | shared utility structure |
+| A-37 | Utility strip: Arrow icon | none | seen (m10r10-assignment-rules-base) | shared utility structure |
+| A-38 | Utility strip: Clock icon | none | seen (m10r10-assignment-rules-base) | shared utility structure |
+| A-39 | Utility strip: History icon | none | seen (m10r10-assignment-rules-base) | shared utility structure |
+| A-40 | Utility strip: Accessibility icon | none | seen (m10r10-assignment-rules-base) | shared utility structure |
+| A-41 | Utility strip: Help | none | seen (m10r10-assignment-rules-base) | shared utility structure |
+| A-42 | Utility strip: Bin icon | none | seen (m10r10-assignment-rules-base) | shared utility structure |
+
+Assignment reconciliation: **314 raw entries → 53 logical controls using 78 raw
+entries; 236 excluded raw entries**. A-01 represents four header controls and
+A-02 nine top-bar controls. The 23 rail controls, five content controls and 12
+screenshot-only utility controls bring the total to 53. Excluded entries are the
+complement of the raw mappings above: containers, headings/descriptive text,
+clipped-out rail links, hidden dialogs/loaders and duplicated accordion bodies.
+R-05–R-26 are now outside the visible rail region. Screenshot-only utility
+controls are recorded rather than silently omitted from the DOM reconciliation.
+
+Remaining categories are still gaps: workflow details across all modules,
+assignment notification behaviour, owner/mention/follower and reminder settings,
+email alerts, schedules, approvals and auto-response lists. CTO must determine
+disposition from this stopped check before any further capture. Unknown remains
+yes; no test write is cleared.
 
 ## Write-only flows and open questions
 
@@ -176,9 +310,9 @@ approval or auto-response, sending a test alert, or waiting for a newly schedule
 action to fire are not performed. Public documentation can explain possible
 triggers, but cannot identify this environment's enabled rules or recipients.
 
-1. Can the workflow list be rendered through the existing capture/session
-   without any preference, rule, permission, account or browser-session change?
-2. Once read-only rendering is restored, which configured rules are active for
+1. Workflow rendering is closed under MEP-1102. CTO must decide how to retain
+   the configured-rule gap without changing the capture tool or reference state.
+2. Which configured rules are active for
    each module, and what triggers, actions and recipient roles does each list
    expose without opening an editor?
 3. Can the remaining categories be inspected as read-only lists? If a list
@@ -194,3 +328,6 @@ triggers, but cannot identify this environment's enabled rules or recipients.
   captured 2026-10-22T19:59:47.404Z; screenshot inspected; paint gate failed.
 - Route discovery only: m10r7-email-templates-base, settings rail href for
   Workflow Rules. Its template data and inventory are not reused here.
+- m10r10-assignment-rules-base — click-free /crm/<org>/settings/assignment-rules,
+  --wait 25000; captured 2026-10-22T20:05:29.227Z; screenshot inspected;
+  paint gate failed (pageerror), request-baseline stop; no retry.
