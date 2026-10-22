@@ -13,6 +13,7 @@ import type { OrgContext } from "../tenancy/types";
 import { buildImportNotifyEmail } from "../transfer/notify-email";
 import type { ImportJob } from "../transfer/types";
 import { createMailService, type MailServiceOptions } from "./service";
+import { mailSyncJobDefinition } from "./sync";
 import {
   MAX_INBOUND_ATTACHMENT_BYTES,
   type MailboxAccount,
@@ -40,7 +41,7 @@ export const mailSendJobDefinition = {
   retrySafe: false,
 } as const;
 export function createMailJobCatalog(): JobCatalog {
-  return new JobCatalog([mailSendJobDefinition]);
+  return new JobCatalog([mailSendJobDefinition, mailSyncJobDefinition]);
 }
 
 export interface OutboundAttachment {
