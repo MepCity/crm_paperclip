@@ -11,6 +11,7 @@ import {
 import { useRecordCount, useViews } from "@/lib/api/client/hooks";
 import { moduleRecordPath } from "@/lib/crm-paths";
 import { useParentActivityBadges } from "@/lib/records/use-parent-activities";
+import { AccountDealsAssignDialog } from "./account-deals-assign-dialog";
 import {
   openAccountCreateWithParentAccount,
   openCaseCreateWithAccountName,
@@ -58,6 +59,7 @@ export function AccountRecordScreen({ definition, ...props }: AccountRecordScree
     [relatedBadges, activityBadges],
   );
   const [hierarchyOpen, setHierarchyOpen] = useState(false);
+  const [dealsAssignOpen, setDealsAssignOpen] = useState(false);
   const [activeRecord, setActiveRecord] = useState<RecordData | null>(null);
   const triggerRef = useRef<HTMLElement | null>(null);
 
@@ -77,6 +79,10 @@ export function AccountRecordScreen({ definition, ...props }: AccountRecordScree
             openAccountCreateWithParentAccount(props.orgSlug, record, (path) => router.push(path)),
           onCasesNew: () =>
             openCaseCreateWithAccountName(props.orgSlug, record, (path) => router.push(path)),
+          onDealsAssign: () => {
+            setActiveRecord(record);
+            setDealsAssignOpen(true);
+          },
           onDealsNew: () =>
             openDealCreateWithAccountName(props.orgSlug, record, (path) => router.push(path)),
         },
@@ -99,6 +105,13 @@ export function AccountRecordScreen({ definition, ...props }: AccountRecordScree
         buildRelatedLists={buildRelatedLists}
         linkedContactSummaryPath={contactRecordPath}
       />
+      {dealsAssignOpen ? (
+        <AccountDealsAssignDialog
+          isOpen
+          onClose={() => setDealsAssignOpen(false)}
+          account={{ id: props.recordId, name: accountName }}
+        />
+      ) : null}
       {hierarchyOpen ? (
         <ContactHierarchyModal
           isOpen={hierarchyOpen}
