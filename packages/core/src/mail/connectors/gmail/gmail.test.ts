@@ -193,6 +193,7 @@ describe("gmail connector", () => {
     await connector.storeRefreshToken(mb, SECRET);
     expect((await connector.listChanges(mb, null).catch((e) => e)).code).toBe("auth_revoked");
     mode = "429";
+    await connector.storeRefreshToken(mb, SECRET);
     const e429 = await connector.listChanges(mb, null).catch((e) => e);
     expect([e429.code, e429.retryAfterSeconds]).toEqual(["retryable", 17]);
     mode = "503";
@@ -244,5 +245,63 @@ describe("gmail connector", () => {
     const before = calls.length;
     expect((await connector.listChanges(mb, null).catch((e) => e)).code).toBe("disconnected");
     expect(calls.length).toBe(before);
+  });
+
+  const failing = (extra: (req: HttpRequest) => HttpResponse) =>
+    setup((req) => (req.url.includes("/token") ? json(200, { access_token: ACCESS }) : extra(req)));
+
+  it("parses Retry-After as an HTTP date, floors at 0, and ignores garbage", async () => {
+    const cases: [string, number | null][] = [
+      [new Date(Date.now() + 60_000).toUTCString(), 60],
+      [new Date(Date.now() - 60_000).toUTCString(), 0],
+      ["soon", null],
+    ];
+    for (const [header, expected] of cases) {
+      const { connector } = failing(() => json(429, {}, { "retry-after": header }));
+      await connector.storeRefreshToken(mb, SECRET);
+      const e = await connector.listChanges(mb, null).catch((x) => x);
+      expect(e.code).toBe("retryable");
+      if (expected === 60) expect(e.retryAfterSeconds).toBeGreaterThanOrEqual(58);
+      if (expected === 60) expect(e.retryAfterSeconds).toBeLessThanOrEqual(60);
+      else expect(e.retryAfterSeconds ?? null).toBe(expected);
+    }
+  });
+
+  it("treats 403 rate-limit reasons as retryable and other 403 as permanent", async () => {
+    for (const reason of ["rateLimitExceeded", "userRateLimitExceeded"]) {
+      const { connector } = failing(() => json(403, { error: { errors: [{ reason }] } }));
+      await connector.storeRefreshToken(mb, SECRET);
+      const e = await connector.listChanges(mb, null).catch((x) => x);
+      expect(e.code).toBe("retryable");
+      expect(JSON.stringify(e)).not.toContain(reason);
+      expect(String(e.message)).not.toContain(reason);
+    }
+    const { connector } = failing(() =>
+      json(403, { error: { errors: [{ reason: "forbidden" }] } }),
+    );
+    await connector.storeRefreshToken(mb, SECRET);
+    expect((await connector.listChanges(mb, null).catch((x) => x)).code).toBe("permanent");
+    const bad = failing(() => ({ status: 403, headers: {}, body: "<html>" }));
+    await bad.connector.storeRefreshToken(mb, SECRET);
+    expect((await bad.connector.listChanges(mb, null).catch((x) => x)).code).toBe("permanent");
+  });
+
+  it("keeps auth_revoked without new token requests until the token is stored again", async () => {
+    let revoked = true;
+    const { connector, calls } = setup((req) =>
+      req.url.includes("/token")
+        ? revoked
+          ? json(400, { error: "invalid_grant" })
+          : json(200, { access_token: ACCESS })
+        : standard(req),
+    );
+    await connector.storeRefreshToken(mb, SECRET);
+    expect((await connector.listChanges(mb, null).catch((e) => e)).code).toBe("auth_revoked");
+    const before = calls.length;
+    expect((await connector.listChanges(mb, null).catch((e) => e)).code).toBe("auth_revoked");
+    expect(calls.length).toBe(before);
+    revoked = false;
+    await connector.storeRefreshToken(mb, SECRET);
+    await expect(connector.listChanges(mb, null)).resolves.toBeDefined();
   });
 });

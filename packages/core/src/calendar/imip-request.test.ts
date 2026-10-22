@@ -421,16 +421,11 @@ describe("parseImipRequest", () => {
     expectInvalid(emptyOrg, "organizer");
   });
 
-  it("validates DTSTART and DTEND are required and properly formed", () => {
+  it("validates DTSTART is required in REQUEST and properly formed", () => {
     const noStart = makeIcs({
       event: ["UID:test@example.com", "DTEND:20261008T140000Z", "ORGANIZER:mailto:a@example.com"],
     });
     expectInvalid(noStart, "start");
-
-    const noEnd = makeIcs({
-      event: ["UID:test@example.com", "DTSTART:20261008T130000Z", "ORGANIZER:mailto:a@example.com"],
-    });
-    expectInvalid(noEnd, "end");
 
     for (const bad of ["bad-date", "20261301T120000Z", "20260230T120000Z"]) {
       const badStart = makeIcs({
@@ -443,6 +438,224 @@ describe("parseImipRequest", () => {
       });
       expectInvalid(badStart, "start");
     }
+  });
+
+  it("supports DURATION in REQUEST (PT1H30M, P1D, P1W, TZID)", () => {
+    // 1. UTC date-time with PT1H30M
+    const textUtc = makeIcs({
+      event: [
+        "UID:dur-1@example.com",
+        "DTSTART:20261008T130000Z",
+        "DURATION:PT1H30M",
+        "SUMMARY:Sync with duration",
+        "ORGANIZER:mailto:host@example.com",
+      ],
+    });
+    const parsedUtc = parseImipRequest(textUtc);
+    expect(parsedUtc.start).toBe("2026-10-08T13:00:00Z");
+    expect(parsedUtc.end).toBe("2026-10-08T14:30:00Z");
+
+    // 2. All-day with P1D
+    const textDay = makeIcs({
+      event: [
+        "UID:dur-2@example.com",
+        "DTSTART:20261008",
+        "DURATION:P1D",
+        "SUMMARY:Full day event",
+        "ORGANIZER:mailto:host@example.com",
+      ],
+    });
+    const parsedDay = parseImipRequest(textDay);
+    expect(parsedDay.start).toBe("2026-10-08");
+    expect(parsedDay.end).toBe("2026-10-09");
+    expect(parsedDay.allDay).toBe(true);
+
+    // 3. All-day with P1W (7 days)
+    const textWeek = makeIcs({
+      event: [
+        "UID:dur-3@example.com",
+        "DTSTART:20261008",
+        "DURATION:P1W",
+        "SUMMARY:One week workshop",
+        "ORGANIZER:mailto:host@example.com",
+      ],
+    });
+    const parsedWeek = parseImipRequest(textWeek);
+    expect(parsedWeek.start).toBe("2026-10-08");
+    expect(parsedWeek.end).toBe("2026-10-15");
+    expect(parsedWeek.allDay).toBe(true);
+
+    // 4. Local TZID with PT2H
+    const textTz = makeIcs({
+      event: [
+        "UID:dur-4@example.com",
+        "DTSTART;TZID=America/New_York:20261008T090000",
+        "DURATION:PT2H",
+        "SUMMARY:Morning workshop",
+        "ORGANIZER:mailto:host@example.com",
+      ],
+    });
+    const parsedTz = parseImipRequest(textTz);
+    expect(parsedTz.start).toBe("2026-10-08T09:00:00");
+    expect(parsedTz.end).toBe("2026-10-08T11:00:00");
+    expect(parsedTz.tzid).toBe("America/New_York");
+  });
+
+  it("defaults end for all-day REQUEST when DTEND and DURATION are omitted (1 day)", () => {
+    // Compact date format YYYYMMDD
+    const text1 = makeIcs({
+      event: [
+        "UID:no-end-allday-1@example.com",
+        "DTSTART:20261008",
+        "SUMMARY:All-day conference",
+        "ORGANIZER:mailto:host@example.com",
+      ],
+    });
+    const parsed1 = parseImipRequest(text1);
+    expect(parsed1.start).toBe("2026-10-08");
+    expect(parsed1.end).toBe("2026-10-09");
+    expect(parsed1.allDay).toBe(true);
+
+    // With VALUE=DATE parameter
+    const text2 = makeIcs({
+      event: [
+        "UID:no-end-allday-2@example.com",
+        "DTSTART;VALUE=DATE:20261231",
+        "SUMMARY:New Year Eve",
+        "ORGANIZER:mailto:host@example.com",
+      ],
+    });
+    const parsed2 = parseImipRequest(text2);
+    expect(parsed2.start).toBe("2026-12-31");
+    expect(parsed2.end).toBe("2027-01-01");
+    expect(parsed2.allDay).toBe(true);
+  });
+
+  it("defaults end for date-time REQUEST when DTEND and DURATION are omitted (end = start)", () => {
+    const text = makeIcs({
+      event: [
+        "UID:no-end-dt-1@example.com",
+        "DTSTART:20261008T130000Z",
+        "SUMMARY:Zero-duration milestone",
+        "ORGANIZER:mailto:host@example.com",
+      ],
+    });
+    const parsed = parseImipRequest(text);
+    expect(parsed.start).toBe("2026-10-08T13:00:00Z");
+    expect(parsed.end).toBe("2026-10-08T13:00:00Z");
+    expect(parsed.allDay).toBeUndefined();
+  });
+
+  it("allows CANCEL without DTSTART and DTEND", () => {
+    const text = makeIcs({
+      method: "CANCEL",
+      event: [
+        "UID:cancel-notime@example.com",
+        "SEQUENCE:1",
+        "SUMMARY:Cancelled entire series",
+        "ORGANIZER:mailto:boss@example.com",
+      ],
+    });
+    const parsed = parseImipRequest(text);
+    expect(parsed.method).toBe("CANCEL");
+    expect(parsed.uid).toBe("cancel-notime@example.com");
+    expect(parsed.sequence).toBe(1);
+    expect(parsed.start).toBeUndefined();
+    expect(parsed.end).toBeUndefined();
+  });
+
+  it("allows CANCEL with DTSTART only or with DURATION", () => {
+    // DTSTART only
+    const textStartOnly = makeIcs({
+      method: "CANCEL",
+      event: [
+        "UID:cancel-startonly@example.com",
+        "DTSTART:20261008T130000Z",
+        "SUMMARY:Cancelled instance",
+        "ORGANIZER:mailto:boss@example.com",
+      ],
+    });
+    const parsedStartOnly = parseImipRequest(textStartOnly);
+    expect(parsedStartOnly.method).toBe("CANCEL");
+    expect(parsedStartOnly.start).toBe("2026-10-08T13:00:00Z");
+    expect(parsedStartOnly.end).toBeUndefined();
+
+    // DTSTART + DURATION
+    const textDur = makeIcs({
+      method: "CANCEL",
+      event: [
+        "UID:cancel-dur@example.com",
+        "DTSTART:20261008T130000Z",
+        "DURATION:PT1H",
+        "SUMMARY:Cancelled 1h meeting",
+        "ORGANIZER:mailto:boss@example.com",
+      ],
+    });
+    const parsedDur = parseImipRequest(textDur);
+    expect(parsedDur.method).toBe("CANCEL");
+    expect(parsedDur.start).toBe("2026-10-08T13:00:00Z");
+    expect(parsedDur.end).toBe("2026-10-08T14:00:00Z");
+  });
+
+  it("rejects when both DTEND and DURATION are present", () => {
+    const textReq = makeIcs({
+      method: "REQUEST",
+      event: [
+        "UID:both-1@example.com",
+        "DTSTART:20261008T130000Z",
+        "DTEND:20261008T140000Z",
+        "DURATION:PT1H",
+        "ORGANIZER:mailto:a@example.com",
+      ],
+    });
+    expectInvalid(textReq, "end");
+    expectInvalid(textReq, "duration");
+
+    const textCancel = makeIcs({
+      method: "CANCEL",
+      event: [
+        "UID:both-2@example.com",
+        "DTSTART:20261008T130000Z",
+        "DTEND:20261008T140000Z",
+        "DURATION:PT1H",
+        "ORGANIZER:mailto:a@example.com",
+      ],
+    });
+    expectInvalid(textCancel, "end");
+    expectInvalid(textCancel, "duration");
+  });
+
+  it("validates DURATION format and constraints", () => {
+    // Malformed DURATION values
+    for (const bad of ["P", "PT", "invalid", "P1M", "PT1H30X", "-PT1H"]) {
+      const text = makeIcs({
+        event: [
+          "UID:bad-dur@example.com",
+          "DTSTART:20261008T130000Z",
+          `DURATION:${bad}`,
+          "ORGANIZER:mailto:a@example.com",
+        ],
+      });
+      expectInvalid(text, "duration");
+    }
+
+    // Time unit duration on all-day event
+    const badAllDayDur = makeIcs({
+      event: [
+        "UID:bad-allday-dur@example.com",
+        "DTSTART:20261008",
+        "DURATION:PT1H",
+        "ORGANIZER:mailto:a@example.com",
+      ],
+    });
+    expectInvalid(badAllDayDur, "duration");
+
+    // DURATION without DTSTART in CANCEL
+    const durNoStartCancel = makeIcs({
+      method: "CANCEL",
+      event: ["UID:dur-no-start@example.com", "DURATION:PT1H", "ORGANIZER:mailto:a@example.com"],
+    });
+    expectInvalid(durNoStartCancel, "duration");
   });
 
   it("validates ATTENDEE mailto and PARTSTAT", () => {
