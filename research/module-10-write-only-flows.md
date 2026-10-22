@@ -134,3 +134,95 @@ locators, documented capabilities and explicit observation limits.
 - R9 should check message loading/empty/error guidance and any documented
   reading side effects, leaving undocumented behaviour as a gap. No additional
   mail route, sync, preference, permission or connection change is authorized.
+
+## 8. R9 public-documentation check (MEP-1019)
+
+Checked 2026-10-21 by web search over first-party help material only. No
+reference CRM access, no capture. R9b (MEP-1033, 2026-10-22) resolved
+paths only for W13, W17 and W19 (host and product name omitted); all other
+rows stay "path not resolved" because searches returned community threads or
+redirect links, not first-party help pages. Vendor figures come
+from search summaries, not from a page read in full. Third-party pages were
+ignored.
+
+| Flow | Public doc enough? | Topic locator (checked 2026-10-21) | What the source proves / limit |
+| --- | --- | --- | --- |
+| W1 | partly | help: composing emails; template attachment limits | Template attachments: up to 10 files, 3 MB total. Composer limits depend on edition or the mailbox provider. No validation message text. |
+| W3 | partly | help: email drafts; drafts API reference | Drafts can be saved and created through an API for Leads, Contacts, Deals. No auto-save timing or ownership rule. |
+| W4 | partly | help: scheduling emails | Scheduled mail waits in an Outbox and can be edited, rescheduled or cancelled; paid editions only. Time zone and past-time rules not found. |
+| W5, W6 | partly (W6: no) | help: scheduling meetings and invitees | Invitation mail has an RSVP section (Yes / Maybe / No); host is notified; participant status window and an invited-meetings related list exist. Full state vocabulary and external-invitee reply handling not found. |
+| W7 | partly | help: mailbox configuration (OAuth, IMAP) | OAuth for the large providers; custom IMAP/SMTP with host, port and SSL/TLS; app-specific password when 2FA is on; each user authorizes their own mailbox. Role/licence prerequisites for mail-area access not found. |
+| W8 | no | none found | No documented first-sync window, folder set or matching rule; whether list loading starts a sync is not documented. Stays a gap; no sync is triggered. |
+| W9 | partly | help: template merge fields | Merge fields use `${Module.Field}` syntax and a `#` picker; user lookup fields exist. Editor validation and preview not covered. |
+| W10 | partly | help: calendar integrations | Two-way sync with a major external calendar via a marketplace integration; others via plugin or API. Direction rules, conflict handling, recurrence and deletion propagation not found. |
+| W12 | partly | help: email insights | Status lifecycle: In Queue, Delivered, Delivery Failure, Opened. Tracking is limited for some send routes. Click tracking and bot-open handling not found. |
+| W14 | partly | help: email insights | Delivery Failure status exists. Bounce reasons and blocked-address vocabulary not found. |
+| W15 | yes for limits | help: mass email limits | Per 24 h in org time zone: 250 / 500 / 1,000 / 2,000 by edition; count includes mass mail, macros, autoresponders and schedulers; an add-on raises it. Preview and review step not found. |
+| W18 | partly | help: attachments and large files | Template cap above; large-file link option exists. Per-message cap for ordinary mail not confirmed. |
+| W2 | no | none found (first-party) | Only user-community threads surfaced (reply and reply-all offered on sent mail inside a record; forward reported missing). Community threads are not counted as a source. Prefix, quote format, attachment carry-over not documented. |
+| W11 | own template | section 1 (our own mail spec) | No public check needed: the completion mail is our own template per section 1. |
+| W13 | partly | help: email sharing, `/crm/help/<mail-integration>/email-sharing` (path read from the search result; page not read in full) | Admins can exclude up to 10 domains from being added to records (search summary of the page). Matching rule for several records with one address not found. |
+| W16 | out of scope | n/a | Module 12 (automation) scope. |
+| W17 | partly | help: meetings FAQ, `/portal/en/kb/crm-v2-1/faqs/activity-management/articles/<meetings-module-faq>` (path read from the search result; page not read in full) | Deleting a recurring event offers "delete all future events"; recurrence end defaults to Never. Editing a single occurrence vs this-and-following, drag/resize and conflict warning not found. |
+| W19 | partly | help: email sharing, `/crm/help/<mail-integration>/email-sharing` (page not read in full) | Per-user sharing modes Private / Custom / Complete; org data-sharing default for CRM-sent mail Public Read/Write/Delete with Private and Public Read Only options (community announcement, 2024). Profile action grants not found. |
+
+Conflicts: none seen. Mass email numbers came from a search summary that also
+cited a third-party page; the first-party figure is the one recorded.
+
+Open questions
+1. Help page paths for W1, W3-W10, W12, W14, W15, W18 are still not resolved; the W1 attachment and W15 quota figures were not re-verified on the pages themselves.
+2. W2 has no first-party source.
+3. W8 and the mail-area access prerequisites stay documented gaps.
+
+## R6 calendar settings prerequisite and write gaps
+
+R6 (MEP-1015), click-free capture `m10r6-booking-base`, observed an internal
+booking-administration prerequisite: organization business hours are not
+configured. The dialog offers Configure Business Hours and Cancel; neither was
+clicked. The public booking page was never opened. Both the base and the single
+permitted retry failed the strict paint gate. The retry also increased refused
+telemetry POST count from 1 to 2, invoking the stop rule. CEO decision MEP-1043
+closed the blocker with documentation-only completion and explicit access gaps;
+no further R6 capture or configuration is authorized. See [calendar-settings.md](specs/calendar-settings.md).
+
+- W10: provider connection, synchronization direction and conflict/deletion
+  rules remain unknown. No connection or sync was initiated.
+- Working-hours configuration is a persisted organization setting. Do not
+  configure it to reveal the booking list. The hours editor, validation and
+  post-save state remain unobserved.
+- Calendar-wide default reminder changes and meeting-provider setup persist
+  preferences or connections. No values were changed; Events reminder fields
+  do not establish calendar-wide defaults.
+- Booking-page create/edit/publish and public reservation submission are writes.
+  None was attempted. The internal list is obscured by the prerequisite; its
+  columns and empty/error states remain unknown.
+- R6 documentation completion: calendar-settings.md records dated D1–D5 public
+  source locators, offline navigation audit and documented/not-observed rows.
+  Personal hours, organization business hours, reminders, booking categories and
+  CalDAV capabilities are documented. Provider options, full list structure,
+  defaults and exact error states remain access gaps.
+- Implementation uses the observed prerequisite plus documented behaviour and
+  existing Module 1–9 components, per MEP-1043. The Module 10 gate summary must
+  list the remaining gaps from calendar-settings.md. Documentation does not
+  authorize changing hours, reminders, activation, connections or synchronization.
+  No separate follow-up issue or additional live R6 probe is required.
+
+## 9. R7 template list observation limits (MEP-1017)
+
+The click-free templates list capture shows New Template, a template-name link,
+a favorite star, select-all, folder links, a module selector, a stats cell, an
+unnamed document action and a folder-reorder icon. No control was operated.
+See [email-templates.md](specs/email-templates.md) for the inventory and paint
+gate outcome; visible presence does not establish working behaviour.
+
+- W9/N4: create/edit/clone/delete, editor autosave, merge fields, attachment
+  handling, folder creation/move/sharing and preview validation remain
+  unobservable without a write or a proven separate read-only preview entry.
+  Offscreen Preview/Analytics markup is not such proof. No template was opened.
+- Favorite changes and folder reordering persist state and were not attempted.
+  Selection-armed bulk move/delete, and saving any filter or module preference,
+  also remain forbidden. Merely seeing the selection or filter controls does not
+  authorize testing them.
+- R9 documentation may establish capabilities, but exact editor validation, draft
+  creation on open, preview side effects and save results remain explicit gaps
+  unless independently documented. No reference CRM write test is authorized.

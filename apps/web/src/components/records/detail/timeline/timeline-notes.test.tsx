@@ -27,7 +27,7 @@ const fieldEvent: TimelineEvent = {
   actorName: "Bob",
 };
 
-describe("note timeline events", () => {
+describe("note timeline rows", () => {
   it("interleaves note and field events chronologically", () => {
     render(
       <TimelineHistory

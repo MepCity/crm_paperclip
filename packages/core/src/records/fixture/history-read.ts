@@ -37,6 +37,18 @@ export function fixtureHistoryReader(
       return false;
     }
   };
+  // Direct attachment deletion preserves its rows (ADR 0006 §4); the stream's own parent
+  // access already gates them, so a vanished attachment record must not hide them.
+  const isAttachmentTombstone = (event: RecordHistoryEvent) => {
+    if (event.subject.module !== "Attachments" || !event.kind.startsWith("attachment_"))
+      return false;
+    try {
+      assertRecord(event.subject.module, event.subject.recordId);
+      return false;
+    } catch {
+      return true;
+    }
+  };
   const visibleValue = (value: FieldValue): boolean => {
     if (!value || typeof value !== "object") return true;
     if (
@@ -126,7 +138,9 @@ export function fixtureHistoryReader(
           (query.actorId != null && event.actor.id !== query.actorId) ||
           (query.from != null && Date.parse(event.occurredAt) < Date.parse(query.from)) ||
           (query.to != null && Date.parse(event.occurredAt) >= Date.parse(query.to)) ||
-          !canRead(event.subject.module, event.subject.recordId)
+          !(isAttachmentTombstone(event)
+            ? (permissions.canReadRecord?.(event.subject.module, event.subject.recordId) ?? true)
+            : canRead(event.subject.module, event.subject.recordId))
         )
           continue;
         const changes = event.changes.filter((change) => visibleChange(event, change));

@@ -249,6 +249,12 @@ importers:
         specifier: ^4.3.3
         version: 4.3.3
 
+  apps/worker:
+    dependencies:
+      '@crm/core':
+        specifier: workspace:*
+        version: link:../../packages/core
+
   packages/core:
     dependencies:
       '@crm/db':

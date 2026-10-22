@@ -217,6 +217,28 @@ export function createFixtureRecordService(
         seedAutoNumbers(seedContext.moduleStore(name), bundle.autoNumberField);
       bundle.afterSeed?.(seedContext);
     }
+    // Seeded notes get their parent-stream row up front, as if created through the service.
+    const notes = store.modules.get("Notes");
+    const seedEvents = relatedFilterHistory(
+      new Map(),
+      store.modules,
+      [],
+      {
+        sequence: 0,
+        occurredAt: new Date(0).toISOString(),
+        actor: { id: "system", name: "System" },
+        source: "manual",
+      },
+      "seed",
+    )
+      .filter((event) => event.kind === "note_added")
+      .map((event) => {
+        // Date the row at the note's own creation so seeds never count as recent activity.
+        const created = notes?.records.get(event.subject.recordId)?.fields.Created_Time;
+        const at = typeof created === "string" ? Date.parse(created) : Number.NaN;
+        return { ...event, occurredAt: new Date(Number.isNaN(at) ? 0 : at).toISOString() };
+      });
+    if (seedEvents.length) fixtureHistoryStore(store.history).appendBatch(seedEvents);
     stores.set(ctx.orgId, store);
   }
   const state = store;
@@ -846,6 +868,18 @@ export function createFixtureRecordService(
                   : "",
             },
           };
+        }
+        if (["attachment_added", "attachment_deleted"].includes(event.kind)) {
+          const noteId = event.payload?.noteId;
+          if (typeof noteId === "string") {
+            const note = state.modules.get("Notes")?.records.get(noteId);
+            if (
+              !note ||
+              !noteParentVisible(note.fields) ||
+              options?.canReadRecord?.("Notes", noteId) === false
+            )
+              return null;
+          }
         }
         if (
           ["attachment_added", "attachment_deleted"].includes(event.kind) &&

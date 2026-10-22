@@ -6,7 +6,7 @@ import {
   normalizeContactsEventKind,
 } from "./contacts-timeline";
 
-test("defines observed subtabs and interim shared filter options without copying events", () => {
+test("defines observed subtabs and interim shared filter options", () => {
   expect(CONTACTS_TIMELINE_SUBTABS).toEqual([
     { id: "history", label: "History" },
     { id: "interactions", label: "Interactions" },
