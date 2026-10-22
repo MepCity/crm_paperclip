@@ -90,7 +90,20 @@ test("Cases Filter By Related Modules has Calls, Emails, Meetings, Notes, Tasks 
     "Notes",
     "Tasks",
   ]);
-  expect(relatedGroup?.items.map((i) => i.laterModule)).toEqual(["M5", "M10", "M5", "M6", "M5"]);
+  expect(relatedGroup?.items.map((i) => i.laterModule)).toEqual([
+    undefined,
+    "M10",
+    undefined,
+    undefined,
+    undefined,
+  ]);
+  expect(relatedGroup?.items.map((i) => i.relatedModule?.module)).toEqual([
+    "Calls",
+    undefined,
+    "Meetings",
+    "Notes",
+    "Tasks",
+  ]);
 });
 
 test("Cases enables five system editors, keeps email deferred and maps Meetings to Events", () => {

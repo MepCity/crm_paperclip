@@ -3,7 +3,7 @@ import { spawnSync } from "node:child_process";
 import { fileURLToPath } from "node:url";
 
 const root = fileURLToPath(new URL("..", import.meta.url));
-const projects = [".", "packages/db", "packages/core", "apps/web"];
+const projects = [".", "packages/db", "packages/core", "apps/web", "apps/worker"];
 
 let failed = false;
 for (const project of projects) {

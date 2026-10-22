@@ -206,3 +206,143 @@ test("Cases view menu and Actions links match the shared list flows", async ({
   await expect(page).toHaveURL(/\/tab\/Cases\/print\?viewId=/);
   await expect(page.locator('[data-print-kind="list"]')).toBeVisible();
 });
+
+test("Cases related-module filter applies with and without Notes", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Cases"));
+  const headers = { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin };
+  const created = await page.request.post("/crm/v2.2/Cases", {
+    headers,
+    data: {
+      data: [{ Subject: "Synthetic related filter case", Status: "New", Case_Origin: "Web" }],
+    },
+  });
+  expect(created.status()).toBe(200);
+  const id = (await created.json()).data[0].details.id;
+  const note = await page.request.post("/crm/v2.2/Notes", {
+    headers,
+    data: {
+      data: [
+        {
+          Parent_Id: { module: "Cases", id },
+          Note_Title: "Synthetic related note",
+          Note_Content: "Synthetic content",
+        },
+      ],
+    },
+  });
+  expect(note.status()).toBe(200);
+  await page.reload();
+  const list = page.locator(".module-list-page");
+  const total = list
+    .getByRole("group", { name: "Records summary" })
+    .locator('[data-part="total-value"]');
+  await expect(total).toHaveText("61");
+
+  // Emails stays a later-module row; Notes is live.
+  await expect(list.getByRole("checkbox", { name: "Emails", exact: true })).toHaveAttribute(
+    "data-later-module",
+    "M10",
+  );
+  const notes = list.getByRole("checkbox", { name: "Notes", exact: true });
+  await notes.scrollIntoViewIfNeeded();
+  await list.getByText("Notes", { exact: true }).last().click();
+  await expect(list.getByText("Any Notes")).toBeVisible();
+  await list.getByRole("button", { name: "Apply Filter" }).click();
+  // The seed already has one case with a note, so assert the partition rather than a fixed count.
+  await expect(total).not.toHaveText("61");
+  const withNotes = Number(await total.textContent());
+  expect(withNotes).toBeGreaterThanOrEqual(1);
+  await list.getByRole("button", { name: /Notes presence/ }).click();
+  await page.getByRole("option", { name: "without", exact: true }).click();
+  await list.getByRole("button", { name: "Apply Filter" }).click();
+  await expect(total).toHaveText(String(61 - withNotes));
+});
+
+test("Cases related-module filter with child criteria for Calls, Meetings, Notes and Tasks", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Cases"));
+  const headers = { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin };
+  const created = await page.request.post("/crm/v2.2/Cases", {
+    headers,
+    data: {
+      data: [{ Subject: "Synthetic child criteria case", Status: "New", Case_Origin: "Web" }],
+    },
+  });
+  expect(created.status()).toBe(200);
+  const parent = { module: "Cases", id: (await created.json()).data[0].details.id };
+  const children = [
+    [
+      "Calls",
+      "Calls",
+      "Subject",
+      {
+        Call_Type: "Outbound",
+        Call_Start_Time: "2026-01-15T10:00:00.000Z",
+        Call_Duration: "05:00",
+        Subject: "Zzrf Calls",
+        What_Id: parent,
+      },
+    ],
+    [
+      "Meetings",
+      "Events",
+      "Title",
+      {
+        Event_Title: "Zzrf Meetings",
+        Meeting_Venue__s: "In-office",
+        Start_DateTime: "2026-01-15T12:00:00.000Z",
+        End_DateTime: "2026-01-15T13:00:00.000Z",
+        What_Id: parent,
+      },
+    ],
+    [
+      "Notes",
+      "Notes",
+      "Note Title",
+      {
+        Parent_Id: parent,
+        Note_Title: "Zzrf Notes",
+        Note_Content: "Synthetic content",
+      },
+    ],
+    ["Tasks", "Tasks", "Subject", { Subject: "Zzrf Tasks", What_Id: parent }],
+  ] as const;
+  for (const [, apiModule, , input] of children) {
+    const response = await page.request.post(`/crm/v2.2/${apiModule}`, {
+      headers,
+      data: { data: [input] },
+    });
+    expect(response.status()).toBe(200);
+  }
+  await page.reload();
+  const list = page.locator(".module-list-page");
+  const total = list
+    .getByRole("group", { name: "Records summary" })
+    .locator('[data-part="total-value"]');
+  await expect(total).toHaveText("61");
+
+  for (const [label, , fieldLabel] of children) {
+    const checkbox = list.getByRole("checkbox", { name: label, exact: true });
+    await checkbox.scrollIntoViewIfNeeded();
+    await list.getByText(label, { exact: true }).last().click();
+    await list.getByRole("button", { name: "+ Add Field" }).click();
+    await expect(page.getByRole("listbox"), label).toBeVisible();
+    const option = page.getByRole("option", { name: fieldLabel, exact: true });
+    await expect(option, `${label} option`).toBeVisible();
+    await option.click();
+    await list.getByPlaceholder("Type here").fill(`Zzrf ${label}`);
+    await list.getByRole("button", { name: "Apply Filter" }).click();
+    await expect(total).toHaveText("1");
+    await list.getByRole("button", { name: new RegExp(`${label} presence`) }).click();
+    await page.getByRole("option", { name: "without", exact: true }).click();
+    await list.getByRole("button", { name: "Apply Filter" }).click();
+    await expect(total).toHaveText("60");
+    await list.getByRole("button", { name: "Clear", exact: true }).click();
+    await expect(total).toHaveText("61");
+  }
+});

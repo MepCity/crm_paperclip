@@ -379,7 +379,9 @@ retained; they are not invented application error states.
    it as an experiment. Keep documented properties separate from captured UI.
 4. D6 and H47 identity remain unresolved because their exported DOM carries no
    useful semantic label. No unknown-icon click or tooltip hover was used.
-5. Write-dependent states, permission errors and preview-type conflicts retain
+5. D8/D21 breadcrumb arrow: the dropdown behind it was never opened, so its
+   entries are unknown; the arrow is rendered inert until passive evidence exists.
+6. Write-dependent states, permission errors and preview-type conflicts retain
    the explicit owners and open questions in `documents-write-flows.md`.
 
 These are recorded evidence limits, not claims that those capabilities are

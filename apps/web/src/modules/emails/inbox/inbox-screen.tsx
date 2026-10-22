@@ -71,8 +71,10 @@ export function InboxScreen({
   folderParam,
   messageParam,
   onNavigate,
+  loadState,
 }: {
   model: InboxViewModel;
+  loadState?: "loading" | "error";
   folderParam: string | null;
   messageParam: string | null;
   onNavigate: (folder: EmailFolder, messageId?: string) => void;
@@ -82,7 +84,7 @@ export function InboxScreen({
     folderParam,
     messageParam,
   );
-  if (!model.connected) {
+  if (!loadState && !model.connected) {
     return (
       <EmptyState
         title="No mailbox connected"
@@ -127,7 +129,13 @@ export function InboxScreen({
           className="min-w-0 border-b border-border lg:w-80 lg:shrink-0 lg:border-r lg:border-b-0"
         >
           <h2 className="border-b border-border p-4 text-lg font-semibold">{folderLabel}</h2>
-          {conversations.length === 0 ? (
+          {loadState ? (
+            <div role={loadState === "error" ? "alert" : "status"}>
+              <EmptyState
+                title={loadState === "loading" ? "Loading emails..." : "Unable to load emails"}
+              />
+            </div>
+          ) : conversations.length === 0 ? (
             <EmptyState title={`No messages in ${folderLabel}`} />
           ) : (
             <ul aria-label={`${folderLabel} messages`}>
@@ -173,7 +181,7 @@ export function InboxScreen({
           )}
         </section>
         <section aria-label="Reading pane" className="min-w-0 flex-1 p-4">
-          {selected ? (
+          {!loadState && selected ? (
             <article key={selected.id}>
               <h2 className="mb-4 break-words text-xl font-semibold">{selected.subject}</h2>
               <div className="space-y-3">
