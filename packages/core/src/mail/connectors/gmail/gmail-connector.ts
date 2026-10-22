@@ -38,15 +38,34 @@ export interface GmailConnectorOptions {
   now?: () => number;
 }
 
-const retryAfter = (res: HttpResponse): number | null => {
-  const n = Number(res.headers["retry-after"]);
-  return Number.isFinite(n) && n >= 0 ? n : null;
+const retryAfter = (res: HttpResponse, nowMs: number): number | null => {
+  const raw = res.headers["retry-after"];
+  if (raw === undefined || raw.trim() === "") return null;
+  const n = Number(raw);
+  if (Number.isFinite(n)) return n >= 0 ? n : null;
+  const date = Date.parse(raw);
+  if (Number.isNaN(date)) return null;
+  return Math.max(0, Math.floor((date - nowMs) / 1000));
 };
 
-function classify(res: HttpResponse): ConnectorError | null {
+const RATE_LIMIT_REASONS = new Set(["rateLimitExceeded", "userRateLimitExceeded"]);
+
+/** Reads only the error reason; the body itself never reaches the error. */
+function isRateLimited403(res: HttpResponse): boolean {
+  try {
+    const parsed = JSON.parse(res.body) as { error?: { errors?: { reason?: unknown }[] } };
+    return (parsed.error?.errors ?? []).some(
+      (e) => typeof e.reason === "string" && RATE_LIMIT_REASONS.has(e.reason),
+    );
+  } catch {
+    return false;
+  }
+}
+
+function classify(res: HttpResponse, nowMs: number): ConnectorError | null {
   if (res.status >= 200 && res.status < 300) return null;
-  if (res.status === 429 || res.status >= 500) {
-    return new ConnectorError("retryable", retryAfter(res));
+  if (res.status === 429 || res.status >= 500 || (res.status === 403 && isRateLimited403(res))) {
+    return new ConnectorError("retryable", retryAfter(res, nowMs));
   }
   return new ConnectorError("permanent");
 }
@@ -60,6 +79,8 @@ export function createGmailConnector(options: GmailConnectorOptions): MailConnec
   /** Access tokens live in memory only, keyed by credentialRef. */
   const access = new Map<string, { token: string; expiresAt: number }>();
   const dead = new Set<string>();
+  /** Refresh token rejected; no more token requests until it is stored again. */
+  const revoked = new Set<string>();
 
   const aad = (m: ConnectorMailbox) => ({ organizationId: m.organizationId, purpose: PURPOSE });
 
@@ -93,8 +114,11 @@ export function createGmailConnector(options: GmailConnectorOptions): MailConnec
       headers: { "content-type": "application/x-www-form-urlencoded" },
       body,
     });
-    if (res.status === 400 || res.status === 401) throw new ConnectorError("auth_revoked");
-    const err = classify(res);
+    if (res.status === 400 || res.status === 401) {
+      revoked.add(m.credentialRef);
+      throw new ConnectorError("auth_revoked");
+    }
+    const err = classify(res, now());
     if (err) throw err;
     let parsed: { access_token?: string; expires_in?: number };
     try {
@@ -112,6 +136,7 @@ export function createGmailConnector(options: GmailConnectorOptions): MailConnec
 
   async function token(m: ConnectorMailbox): Promise<string> {
     if (dead.has(m.credentialRef)) throw new ConnectorError("disconnected");
+    if (revoked.has(m.credentialRef)) throw new ConnectorError("auth_revoked");
     const cached = access.get(m.credentialRef);
     if (cached && cached.expiresAt > now()) return cached.token;
     return refresh(m);
@@ -137,11 +162,14 @@ export function createGmailConnector(options: GmailConnectorOptions): MailConnec
       });
       if (res.status === 401) {
         access.delete(m.credentialRef);
-        if (attempt === 1) throw new ConnectorError("auth_revoked");
+        if (attempt === 1) {
+          revoked.add(m.credentialRef);
+          throw new ConnectorError("auth_revoked");
+        }
         bearer = await refresh(m);
         continue;
       }
-      const err = classify(res);
+      const err = classify(res, now());
       if (err) throw Object.assign(err, { httpStatus: res.status });
       try {
         return JSON.parse(res.body);
@@ -173,6 +201,7 @@ export function createGmailConnector(options: GmailConnectorOptions): MailConnec
   return {
     async storeRefreshToken(m, refreshToken) {
       dead.delete(m.credentialRef);
+      revoked.delete(m.credentialRef);
       await credentials.put(m.credentialRef, secretBox.seal(refreshToken, aad(m)));
     },
 
