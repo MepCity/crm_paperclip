@@ -1,0 +1,175 @@
+import { afterEach, describe, expect, it, vi } from "vitest";
+
+const ctx = {
+  orgId: "org-example",
+  orgSlug: "example",
+  orgName: "Example",
+  userId: "user-example",
+  role: "admin" as const,
+};
+vi.mock("@crm/core", async (original) => ({
+  ...(await original<typeof import("@crm/core")>()),
+  getSession: vi.fn(async () => ({ user: { id: ctx.userId } })),
+  requireOrgContext: vi.fn(async (_h: Headers, slug: string) => {
+    if (slug !== ctx.orgSlug) {
+      const { NotFoundError } = await import("@crm/core/errors");
+      throw new NotFoundError();
+    }
+    return ctx;
+  }),
+}));
+
+import { getSession } from "@crm/core";
+import { GET } from "@/app/crm/v2.2/mail/conversations/route";
+import { createMailSeed } from "./seed";
+import { mailReadSource } from "./service";
+
+const request = (folder = "inbox", headers = { "X-CRM-ORG": "example" }) =>
+  GET(new Request(`http://crm.test/crm/v2.2/mail/conversations?folder=${folder}`, { headers }), {});
+afterEach(() => vi.restoreAllMocks());
+
+describe("mail conversation read route", () => {
+  it.each(["inbox", "sent", "drafts", "scheduled"])("reads %s", async (folder) => {
+    const response = await request(folder);
+    expect(response.status).toBe(200);
+    expect(response.headers.get("cache-control")).toBe("no-store");
+    const body = await response.json();
+    expect(body.connected).toBe(true);
+    expect(body.data).toHaveLength(folder === "inbox" || folder === "sent" ? 1 : 0);
+    if (body.data.length) expect(body.data[0].folder).toBe(folder);
+  });
+  it("rejects unknown or missing folder", async () => {
+    for (const folder of ["unknown", ""]) {
+      const response = await request(folder);
+      expect(response.status).toBe(400);
+      expect(await response.json()).toMatchObject({ code: "INVALID_FOLDER" });
+    }
+  });
+  it("requires session and tenant before reading", async () => {
+    const source = vi.spyOn(mailReadSource, "create");
+    vi.mocked(getSession).mockResolvedValueOnce(null as never);
+    expect((await request()).status).toBe(401);
+    expect((await request("inbox", {} as never)).status).toBe(400);
+    expect((await request("inbox", { "X-CRM-ORG": "other" })).status).toBe(404);
+    expect(source).not.toHaveBeenCalled();
+  });
+  it("groups a thread, keeps chronological messages and any-unread state", async () => {
+    const { data } = await (await request()).json();
+    expect(data[0]).toMatchObject({
+      id: "thread-demo",
+      unread: true,
+      messages: [
+        {
+          id: "message-demo-1",
+          body: "Synthetic message body.",
+          attachments: [{ sizeLabel: "1.2 KB" }],
+        },
+        { id: "message-demo-2" },
+      ],
+    });
+    expect(JSON.stringify(data)).not.toMatch(/bodyRef|credentialRef|providerMessageKey|bcc/);
+  });
+  it.each(["disconnected", "error", "missing"])(
+    "is disconnected for %s mailbox",
+    async (status) => {
+      const seed = await createMailSeed(ctx);
+      const read = seed.repository.read.bind(seed.repository);
+      seed.repository.read = async (org) => {
+        const data = await read(org);
+        return {
+          ...data,
+          mailboxes:
+            status === "missing"
+              ? []
+              : data.mailboxes.map((m) => ({ ...m, status: status as "error" | "disconnected" })),
+        };
+      };
+      vi.spyOn(mailReadSource, "create").mockResolvedValue({
+        ...seed,
+        recordAddressLookup: { findByAddress: async () => [] },
+        canReadRecord: () => false,
+        readContent: async () => ({ body: "", unread: false }),
+      });
+      expect(await (await request()).json()).toEqual({ connected: false, data: [] });
+    },
+  );
+  it("enforces core private/shared and current linked-record access even for admin", async () => {
+    const seed = await createMailSeed(ctx);
+    const repository = seed.repository;
+    await repository.createMailbox({
+      organizationId: ctx.orgId,
+      id: "other-mailbox",
+      ownerUserId: "other-user",
+      provider: "google",
+      status: "connected",
+      credentialRef: null,
+      lastSyncAt: null,
+      lastError: null,
+    });
+    const template = (await repository.read(ctx.orgId)).messages[0];
+    if (!template) throw new Error("Missing seed message.");
+    for (const id of ["private", "shared", "unreadable"]) {
+      await repository.upsertMessage({
+        ...template,
+        id,
+        providerMessageKey: id,
+        mailboxId: "other-mailbox",
+        threadId: null,
+        sentAt: "2026-02-01T10:00:00+02:00",
+      });
+      if (id !== "private") {
+        await repository.setShared(ctx.orgId, id, true);
+        await repository.putLink({
+          organizationId: ctx.orgId,
+          messageId: id,
+          module: "leads",
+          recordId: id,
+          source: "manual",
+          ambiguous: false,
+        });
+      }
+    }
+    const readContent = vi.fn(async (_id: string) => ({ body: "Authorized body", unread: false }));
+    let allowed = true;
+    vi.spyOn(mailReadSource, "create").mockResolvedValue({
+      repository,
+      recordAddressLookup: { findByAddress: async () => [] },
+      canReadRecord: (_ctx, _module, id) => allowed && id === "shared",
+      readContent,
+    });
+    const { data } = await (await request()).json();
+    expect(data.map((c: { id: string }) => c.id)).toEqual(["shared", "thread-demo"]);
+    expect(readContent.mock.calls.flat()).not.toContain("private");
+    expect(readContent.mock.calls.flat()).not.toContain("unreadable");
+    allowed = false;
+    expect((await (await request()).json()).data.map((c: { id: string }) => c.id)).toEqual([
+      "thread-demo",
+    ]);
+  });
+  it("rejects foreign-tenant rows even if the repository returns them", async () => {
+    const seed = await createMailSeed(ctx);
+    const foreign = await createMailSeed({ ...ctx, orgId: "foreign-org" });
+    const foreignRows = await foreign.repository.read("foreign-org");
+    const read = seed.repository.read.bind(seed.repository);
+    seed.repository.read = async (org) => {
+      const local = await read(org);
+      return {
+        ...local,
+        messages: [
+          ...local.messages,
+          ...foreignRows.messages.map((m) => ({ ...m, id: `foreign-${m.id}` })),
+        ],
+      };
+    };
+    const readContent = vi.fn(async (_id: string) => ({ body: "Example", unread: false }));
+    vi.spyOn(mailReadSource, "create").mockResolvedValue({
+      ...seed,
+      recordAddressLookup: { findByAddress: async () => [] },
+      canReadRecord: () => true,
+      readContent,
+    });
+    const { data } = await (await request()).json();
+    expect(data).toHaveLength(1);
+    expect(readContent.mock.calls.flat().some((id) => id.startsWith("foreign-"))).toBe(false);
+  });
+});

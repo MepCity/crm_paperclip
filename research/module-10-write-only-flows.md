@@ -206,3 +206,23 @@ no further R6 capture or configuration is authorized. See [calendar-settings.md]
   list the remaining gaps from calendar-settings.md. Documentation does not
   authorize changing hours, reminders, activation, connections or synchronization.
   No separate follow-up issue or additional live R6 probe is required.
+
+## 9. R7 template list observation limits (MEP-1017)
+
+The click-free templates list capture shows New Template, a template-name link,
+a favorite star, select-all, folder links, a module selector, a stats cell, an
+unnamed document action and a folder-reorder icon. No control was operated.
+See [email-templates.md](specs/email-templates.md) for the inventory and paint
+gate outcome; visible presence does not establish working behaviour.
+
+- W9/N4: create/edit/clone/delete, editor autosave, merge fields, attachment
+  handling, folder creation/move/sharing and preview validation remain
+  unobservable without a write or a proven separate read-only preview entry.
+  Offscreen Preview/Analytics markup is not such proof. No template was opened.
+- Favorite changes and folder reordering persist state and were not attempted.
+  Selection-armed bulk move/delete, and saving any filter or module preference,
+  also remain forbidden. Merely seeing the selection or filter controls does not
+  authorize testing them.
+- R9 documentation may establish capabilities, but exact editor validation, draft
+  creation on open, preview side effects and save results remain explicit gaps
+  unless independently documented. No reference CRM write test is authorized.

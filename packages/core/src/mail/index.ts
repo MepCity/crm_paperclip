@@ -1,3 +1,4 @@
+export * from "./outbox";
 export { assertRecipientAllowed } from "./recipient-policy";
 export {
   forwardRecipients,
