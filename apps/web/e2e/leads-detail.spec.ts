@@ -523,6 +523,33 @@ test.describe("Lead record detail page", () => {
     expectEdge(statusBox.height, STATUS_HEIGHT);
   });
 
+  test("Timeline History shows a row after an inline edit (MEP-1027)", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openFirstLeadFromList(page, org.slug);
+    const row = page.locator('[data-detail-field="Company"]');
+    await row.scrollIntoViewIfNeeded();
+    await row.hover();
+    await row.getByRole("button", { name: "Edit Company value" }).click();
+    const input = row.getByRole("textbox");
+    await input.fill("History Co");
+    await input.press("Enter");
+    await expect(row).toContainText("History Co");
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    const history = frame.locator("[data-timeline-history]");
+    await expect(history).toBeVisible();
+    await expect(history.getByText("No logs found")).toHaveCount(0);
+    await expect(history.getByText(/Company changed from .* to History Co/)).toBeVisible();
+    await page.reload();
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    await expect(history.getByText(/Company changed from .* to History Co/)).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("Timeline tab switches to History, opens filter panel, and returns to Overview without errors", async ({
     page,
   }) => {

@@ -12,6 +12,7 @@ export function emailsCard(
     createElement(EmailsRecordCard, {
       parentModule,
       recordId: record?.id,
+      recipientEmail: typeof record?.fields.Email === "string" ? record.fields.Email : undefined,
       targetId: definition.targetId,
       subtabRowEndControl: definition.subtabRowEndControl,
       ...(loader ? { loader } : {}),
