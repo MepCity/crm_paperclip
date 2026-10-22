@@ -49,6 +49,7 @@ import {
   removeAttachmentIds,
 } from "./attachments/hooks";
 import { assignAutoNumber, seedAutoNumbers } from "./auto-number";
+import { leadConvertMapping } from "./convert-mapping";
 import {
   automaticMaster,
   duplicateGroups,
@@ -719,6 +720,37 @@ export function createFixtureRecordService(
       }
     });
 
+  /** Synchronous insert shared by create and the conversion coordinator; callers validate first. */
+  const insertRecord = (module: string, normalized: Record<string, FieldValue>): RecordData => {
+    const bundle = bundleFor(module);
+    const moduleState = moduleStore(module);
+    const id = String(moduleState.nextId++);
+    const fields: Record<string, FieldValue> = Object.fromEntries(
+      bundle.metadata.fields.map((field) => [field.apiName, null]),
+    );
+    const stamp = clock().toISOString();
+    Object.assign(fields, normalized, bundle.createDefaults(stamp), {
+      id,
+      ...(bundle.metadata.fields.some((field) => field.apiName === "Owner")
+        ? { Owner: normalized.Owner ?? ctx.userId }
+        : {}),
+      Created_By: ctx.userId,
+      Modified_By: ctx.userId,
+    });
+    if (bundle.autoNumberField) assignAutoNumber(moduleState, bundle.autoNumberField, fields);
+    bundle.applyRules?.(fields, normalized, undefined, hookContext);
+    assertNoteParentVisible(module, fields);
+    fields[bundle.displayNameField] = bundle.fullName(fields);
+    const record = { id, fields };
+    assertUniqueFieldValues(
+      bundle.metadata.fields,
+      projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
+    );
+    moduleState.records.set(id, record);
+    bundle.afterWrite?.(record, undefined, hookContext);
+    return copy(resolveRead(module, record));
+  };
+
   const merge = async (module: string, input: MergeInput): Promise<RecordData> => {
     assertModuleWritable(module);
     const bundle = bundleFor(module);
@@ -841,7 +873,81 @@ export function createFixtureRecordService(
   const attachmentLifecycle = fixtureAttachmentLifecycle(hookContext);
   const convertLead = async (leadId: string, input: ConvertLeadInput) => {
     assertModuleWritable("Leads");
-    recordFor("Leads", leadId);
+    const sourceLead = recordFor("Leads", leadId);
+    if (!input.contact)
+      throw new ValidationError({ contact: ["Choose or create a contact to convert into."] });
+    const targets = [
+      ["Accounts", input.account, "Converted_Account", "accountId"],
+      ["Contacts", input.contact, "Converted_Contact", "contactId"],
+      ["Deals", input.deal, "Converted_Deal", "dealId"],
+    ] as const;
+    const lookup = (module: string, id: string, name?: FieldValue): FieldValue => ({
+      module,
+      id,
+      ...(typeof name === "string" ? { name } : {}),
+    });
+    /** Explicit input wins over the mapped lead values; links are added by the caller. */
+    const explicitInput = (
+      module: "Accounts" | "Contacts" | "Deals",
+      lead: RecordData,
+      target: NonNullable<(typeof targets)[number][1]>,
+    ): RecordInput => {
+      if ("reuseId" in target) return target.update ?? {};
+      const bundle = bundleFor(module);
+      const defaults: Record<string, FieldValue> = {};
+      for (const [to, from] of Object.entries(leadConvertMapping[module])) {
+        const value = lead.fields[from];
+        if (value != null && bundle.metadata.fields.some((field) => field.apiName === to))
+          defaults[to] = value;
+      }
+      return { ...defaults, Owner: lead.fields.Owner ?? ctx.userId, ...target.create };
+    };
+    const linkFields = (
+      module: "Accounts" | "Contacts" | "Deals",
+      account: FieldValue | undefined,
+      contact: FieldValue | undefined,
+    ): Record<string, FieldValue> => ({
+      ...(module !== "Accounts" && account ? { Account_Name: account } : {}),
+      ...(module === "Deals" && contact ? { Contact_Name: contact } : {}),
+    });
+    // Validate like create/update before staging anything (async work stays outside atomic).
+    for (const [module, target] of targets) {
+      if (!target) continue;
+      assertModuleWritable(module);
+      const bundle = bundleFor(module);
+      const stringFields = stringFieldNames(bundle);
+
+      if ("reuseId" in target) {
+        const existing = recordFor(module, target.reuseId);
+        if (!target.update) continue;
+        const normalized = normalizeInput(target.update, stringFields, bundle.metadata.fields);
+        validateInput(
+          normalized,
+          true,
+          relaxRequired(bundle, { ...existing.fields, ...normalized }),
+          bundle.managedFields,
+        );
+        validateReferences(module, normalized);
+        await validateOwner(normalized);
+        continue;
+      }
+      const normalized = normalizeInput(
+        explicitInput(module, sourceLead, target),
+        stringFields,
+        bundle.metadata.fields,
+      );
+      const linked = {
+        ...linkFields(
+          module,
+          input.account ? lookup("Accounts", "0") : undefined,
+          input.contact ? lookup("Contacts", "0") : undefined,
+        ),
+        ...normalized,
+      };
+      validateInput(linked, false, relaxRequired(bundle, linked), bundle.managedFields);
+      validateReferences(module, normalized);
+      await validateOwner(normalized);
+    }
     return atomic(
       { module: "Leads", recordId: leadId, kind: "record_converted", mechanism: "convert" },
       () => {
@@ -852,74 +958,58 @@ export function createFixtureRecordService(
         const stamp = clock().toISOString();
         const refs: Record<string, FieldValue> = {};
         const ids: Record<string, string | null> = {};
-        const targets = [
-          ["Accounts", input.account, "Converted_Account", "accountId"],
-          ["Contacts", input.contact, "Converted_Contact", "contactId"],
-          ["Deals", input.deal, "Converted_Deal", "dealId"],
-        ] as const;
+        let account: FieldValue | undefined;
+        let contact: FieldValue | undefined;
         for (const [module, target, leadField, resultKey] of targets) {
           ids[resultKey] = null;
           if (!target) continue;
           const bundle = bundleFor(module);
           const moduleState = moduleStore(module);
+          const links = linkFields(module, account, contact);
           let record: RecordData;
           if ("reuseId" in target) {
             const existing = recordFor(module, target.reuseId);
-            if (target.update) {
-              assertWritable(existing);
-              const normalized = normalizeInput(
-                target.update,
-                stringFieldNames(bundle),
-                bundle.metadata.fields,
-              );
-              validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
-              const fields: Record<string, FieldValue> = {
-                ...copy(existing.fields),
-                ...normalized,
-                Modified_By: ctx.userId,
-                Modified_Time: stamp,
-              };
-              bundle.applyRules?.(fields, normalized, copy(existing.fields), hookContext);
-              fields[bundle.displayNameField] = bundle.fullName(fields);
-              record = { id: existing.id, fields };
-              moduleState.records.set(record.id, record);
-            } else record = existing;
-          } else {
+            assertWritable(existing);
+            // A reused contact keeps an account it already has.
+            const newLinks = Object.fromEntries(
+              Object.entries(links).filter(([name]) => existing.fields[name] == null),
+            );
             const normalized = normalizeInput(
-              target.create,
+              { ...newLinks, ...explicitInput(module, lead, target) },
               stringFieldNames(bundle),
               bundle.metadata.fields,
             );
-            validateInput(
-              normalized,
-              false,
-              relaxRequired(bundle, normalized),
-              bundle.managedFields,
-            );
-            const id = String(moduleState.nextId++);
-            const fields: Record<string, FieldValue> = Object.fromEntries(
-              bundle.metadata.fields.map((field) => [field.apiName, null]),
-            );
-            Object.assign(fields, normalized, bundle.createDefaults(stamp), {
-              id,
-              Owner: normalized.Owner ?? lead.fields.Owner ?? ctx.userId,
-              Created_By: ctx.userId,
+            const fields: Record<string, FieldValue> = {
+              ...copy(existing.fields),
+              ...normalized,
               Modified_By: ctx.userId,
-            });
-            if (bundle.autoNumberField)
-              assignAutoNumber(moduleState, bundle.autoNumberField, fields);
-            bundle.applyRules?.(fields, normalized, undefined, hookContext);
+              Modified_Time: stamp,
+            };
+            bundle.applyRules?.(fields, normalized, copy(existing.fields), hookContext);
             fields[bundle.displayNameField] = bundle.fullName(fields);
-            record = { id, fields };
-            moduleState.records.set(id, record);
-            bundle.afterWrite?.(record, undefined, hookContext);
+            if (JSON.stringify(fields) === JSON.stringify(existing.fields)) record = existing;
+            else {
+              assertUniqueFieldValues(
+                bundle.metadata.fields,
+                projectRecordsWithOverrides(moduleState.records, new Map([[existing.id, fields]])),
+              );
+              record = { id: existing.id, fields };
+              bundle.afterWrite?.(record, copy(existing), hookContext);
+              moduleState.records.set(record.id, record);
+            }
+          } else {
+            const normalized = normalizeInput(
+              { ...links, ...explicitInput(module, lead, target) },
+              stringFieldNames(bundle),
+              bundle.metadata.fields,
+            );
+            record = insertRecord(module, normalized);
           }
           ids[resultKey] = record.id;
-          refs[leadField] = {
-            module,
-            id: record.id,
-            name: String(record.fields[bundle.displayNameField] ?? record.id),
-          };
+          const ref = lookup(module, record.id, record.fields[bundle.displayNameField]);
+          refs[leadField] = ref;
+          if (module === "Accounts") account = ref;
+          if (module === "Contacts") contact = ref;
         }
         moduleStore("Leads").records.set(leadId, {
           id: leadId,
@@ -1238,34 +1328,7 @@ export function createFixtureRecordService(
       validateInput(normalized, false, relaxRequired(bundle, normalized), bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
-      return atomic({ module, mechanism: "create" }, () => {
-        const moduleState = moduleStore(module);
-        const id = String(moduleState.nextId++);
-        const fields: Record<string, FieldValue> = Object.fromEntries(
-          bundle.metadata.fields.map((field) => [field.apiName, null]),
-        );
-        const stamp = clock().toISOString();
-        Object.assign(fields, normalized, bundle.createDefaults(stamp), {
-          id,
-          ...(bundle.metadata.fields.some((field) => field.apiName === "Owner")
-            ? { Owner: normalized.Owner ?? ctx.userId }
-            : {}),
-          Created_By: ctx.userId,
-          Modified_By: ctx.userId,
-        });
-        if (bundle.autoNumberField) assignAutoNumber(moduleState, bundle.autoNumberField, fields);
-        bundle.applyRules?.(fields, normalized, undefined, hookContext);
-        assertNoteParentVisible(module, fields);
-        fields[bundle.displayNameField] = bundle.fullName(fields);
-        const record = { id, fields };
-        assertUniqueFieldValues(
-          bundle.metadata.fields,
-          projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
-        );
-        moduleState.records.set(id, record);
-        bundle.afterWrite?.(record, undefined, hookContext);
-        return copy(resolveRead(module, record));
-      });
+      return atomic({ module, mechanism: "create" }, () => insertRecord(module, normalized));
     },
     async update(module, id, input) {
       assertModuleWritable(module);

@@ -70,7 +70,10 @@ describe("convertLead", () => {
     const lead = await service.create("Leads", { Last_Name: "Reuse", Company: "Example" });
     const account = await service.create("Accounts", { Account_Name: "Quiet" });
     const before = (await events(service, "Accounts", account.id)).length;
-    await service.convertLead(lead.id, { account: { reuseId: account.id } });
+    await service.convertLead(lead.id, {
+      account: { reuseId: account.id },
+      contact: { create: { Last_Name: "Reuse" } },
+    });
     expect((await events(service, "Accounts", account.id)).length).toBe(before);
   });
 
@@ -83,7 +86,6 @@ describe("convertLead", () => {
     });
     const lead = await service.create("Leads", { Last_Name: "Rollback", Company: "Example" });
     const before = (await events(service, "Leads", lead.id)).length;
-    const accounts = (await service.count("Accounts", { viewId: "" }).catch(() => null)) ?? null;
     fail = true;
     await expect(
       service.convertLead(lead.id, { contact: { create: { Last_Name: "Rollback" } } }),
@@ -93,7 +95,6 @@ describe("convertLead", () => {
     expect(read.fields.Converted__s).not.toBe(true);
     expect(read.fields.Converted_Contact ?? null).toBeNull();
     expect((await events(service, "Leads", lead.id)).length).toBe(before);
-    void accounts;
   });
 
   it("rejects an already converted lead", async () => {
@@ -103,5 +104,73 @@ describe("convertLead", () => {
     await expect(
       service.convertLead(lead.id, { contact: { create: { Last_Name: "Twice" } } }),
     ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("carries mapped lead values, explicit input wins, and links the targets", async () => {
+    const service = make();
+    const lead = await service.create("Leads", {
+      Last_Name: "Mapped",
+      First_Name: "Ann",
+      Company: "Mapped Co",
+      Email: "ann@example.com",
+      Phone: "555-0101",
+      Website: "https://example.com",
+    });
+    const result = await service.convertLead(lead.id, {
+      account: { create: { Phone: "555-9999" } },
+      contact: { create: {} },
+      deal: {
+        create: { Deal_Name: "Mapped deal", Stage: "Qualification", Closing_Date: "2026-12-01" },
+      },
+    });
+    const account = await service.get("Accounts", result.accountId as string);
+    expect(account.fields).toMatchObject({
+      Account_Name: "Mapped Co",
+      Website: "https://example.com",
+      Phone: "555-9999",
+    });
+    const contact = await service.get("Contacts", result.contactId as string);
+    expect(contact.fields).toMatchObject({
+      Last_Name: "Mapped",
+      Email: "ann@example.com",
+      Phone: "555-0101",
+      Account_Name: { module: "Accounts", id: result.accountId },
+    });
+    const deal = await service.get("Deals", result.dealId as string);
+    expect(deal.fields).toMatchObject({
+      Account_Name: { module: "Accounts", id: result.accountId },
+      Contact_Name: { module: "Contacts", id: result.contactId },
+    });
+  });
+
+  it("rejects a conversion without a contact target", async () => {
+    const service = make();
+    const lead = await service.create("Leads", { Last_Name: "NoContact", Company: "Example" });
+    await expect(
+      service.convertLead(lead.id, { account: { create: { Account_Name: "X" } } }),
+    ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("rejects an invalid owner or reference without writing anything", async () => {
+    const service = make();
+    const lead = await service.create("Leads", { Last_Name: "Invalid", Company: "Example" });
+    await expect(
+      service.convertLead(lead.id, { contact: { create: { Owner: "stranger" } } }),
+    ).rejects.toBeInstanceOf(ValidationError);
+    await expect(
+      service.convertLead(lead.id, {
+        contact: { create: {} },
+        deal: {
+          create: {
+            Deal_Name: "Bad",
+            Stage: "Qualification",
+            Account_Name: { module: "Accounts", id: "missing" },
+          },
+        },
+      }),
+    ).rejects.toBeDefined();
+    const read = await service.get("Leads", lead.id);
+    expect(read.fields.Converted__s).not.toBe(true);
+    expect(read.fields.Converted_Contact ?? null).toBeNull();
   });
 });
