@@ -95,6 +95,12 @@ describe("mail fixtures: threading", () => {
     const known2 = [toKnown(root.threadKey, [m1, m2])];
     const r3 = resolveThread(m3, known2);
     expect(r3).toEqual({ threadKey: root.threadKey, source: "headers" });
+
+    // The fixture carries both headers; remove In-Reply-To to exercise References.
+    expect(resolveThread({ ...m3, inReplyTo: null }, known2)).toEqual({
+      threadKey: root.threadKey,
+      source: "headers",
+    });
   });
 
   it("04 has no threading headers and falls back to the subject (same subject, shared participants, within window)", () => {
@@ -113,9 +119,17 @@ describe("mail fixtures: threading", () => {
 describe("mail fixtures: addresses", () => {
   for (const file of files) {
     it(`${file}: From/To/Cc normalize to non-null addresses`, () => {
-      const list = participants(readHeaders(file));
-      expect(list.length).toBeGreaterThan(0);
-      for (const raw of list) expect(normalizeAddress(raw), raw).not.toBeNull();
+      const headers = readHeaders(file);
+      for (const name of ["from", "to"]) {
+        expect(headers.has(name), `${file}: missing ${name}`).toBe(true);
+      }
+      for (const name of ["from", "to", "cc"]) {
+        const value = headers.get(name);
+        if (value === undefined) continue;
+        const addresses = splitList(value);
+        expect(addresses.length, `${file}: empty ${name}`).toBeGreaterThan(0);
+        for (const raw of addresses) expect(normalizeAddress(raw), raw).not.toBeNull();
+      }
     });
   }
 
