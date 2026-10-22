@@ -6,16 +6,12 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Icons } from "@/components/ui/icon";
 import { resolveLaterModule } from "@/components/ui/later-module";
-import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import type { RelatedListControlDefinition } from "@/modules/types";
+import { MailCompose } from "../compose/mail-compose";
+import { composeMailboxes, fixtureComposePort } from "../compose/port";
 import type { EmailConversation } from "../inbox/view-model";
-import {
-  COMPOSE_EMAIL_TOOLTIP,
-  EMAIL_CARD_TABS,
-  EMPTY_STATE_TEXT,
-  loadEmailRecordCardFixture,
-} from "./fixtures";
+import { EMAIL_CARD_TABS, EMPTY_STATE_TEXT, loadEmailRecordCardFixture } from "./fixtures";
 import type {
   EmailParentModule,
   EmailRecordCardLoader,
@@ -69,10 +65,12 @@ export function EmailsRecordCard({
   subtabRowEndControl,
   initialTab = "mails",
   onTabChange,
-  tooltipOpen,
+  recipientEmail,
   load,
   loader,
 }: EmailsRecordCardProps) {
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [sent, setSent] = useState(false);
   const [activeTab, setActiveTab] = useState<EmailTabKey>(initialTab);
 
   const isCustomLoader = loader !== undefined || load !== undefined;
@@ -164,20 +162,30 @@ export function EmailsRecordCard({
           <h3 className="text-md font-bold text-text-strong">Emails</h3>
         </div>
         <div className="flex items-center gap-2">
-          <TooltipTrigger delay={0} closeDelay={0} isOpen={tooltipOpen}>
-            <Button
-              variant="relatedAction"
-              size="relatedAction"
-              isDisabled
-              aria-label="Compose Email"
-            >
-              <span data-related-action-label>Compose Email</span>
-            </Button>
-            <Tooltip>{COMPOSE_EMAIL_TOOLTIP}</Tooltip>
-          </TooltipTrigger>
+          <Button
+            variant="relatedAction"
+            size="relatedAction"
+            aria-label="Compose Email"
+            onPress={() => {
+              setSent(false);
+              setComposeOpen(true);
+            }}
+          >
+            <span data-related-action-label>Compose Email</span>
+          </Button>
         </div>
       </div>
 
+      {composeOpen && (
+        <MailCompose
+          initialTo={recipientEmail}
+          mailboxes={composeMailboxes}
+          port={fixtureComposePort}
+          onClose={() => setComposeOpen(false)}
+          onSent={() => setSent(true)}
+        />
+      )}
+      {sent && <p role="status">Message sent (fixture)</p>}
       <div>
         <div className="flex items-center justify-between gap-4 border-b border-panel-border pt-2">
           <div role="tablist" aria-label="Email folders" className="flex gap-4">

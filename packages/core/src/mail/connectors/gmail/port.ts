@@ -19,6 +19,8 @@ export interface ConnectorMailbox {
   organizationId: string;
   id: string;
   credentialRef: string;
+  /** Omitted by legacy callers to scan both supported folders. */
+  folder?: Exclude<MailFolder, "draft">;
 }
 
 export interface ChangeSet {
