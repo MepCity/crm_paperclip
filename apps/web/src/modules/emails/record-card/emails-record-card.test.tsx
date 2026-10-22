@@ -1,4 +1,4 @@
-import { cleanup, screen, within } from "@testing-library/react";
+import { act, cleanup, screen, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
 import { isValidElement } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
@@ -7,6 +7,7 @@ import { contactsRelatedLists } from "@/modules/contacts/contacts-related-lists"
 import { dealsRelatedLists } from "@/modules/deals/deals-related-lists";
 import { createLeadsRelatedLists } from "@/modules/leads/leads-related-lists";
 import { render } from "@/test/render";
+import type { EmailConversation } from "../inbox/view-model";
 import { emailsCard } from "./emails-card";
 import { EmailsRecordCard } from "./emails-record-card";
 import {
@@ -14,7 +15,58 @@ import {
   EMAIL_CARD_TABS,
   EMPTY_STATE_TEXT,
   emptyEmailRecordCardFixture,
+  loadEmailRecordCardFixture,
 } from "./fixtures";
+import type { EmailRecordCardLoader } from "./types";
+
+function deferred<T>() {
+  let resolve!: (val: T) => void;
+  let reject!: (reason: Error) => void;
+  const promise = new Promise<T>((yes, no) => {
+    resolve = yes;
+    reject = no;
+  });
+  return { promise, resolve, reject };
+}
+
+const sampleConversations: EmailConversation[] = [
+  {
+    id: "conv-1",
+    folder: "inbox",
+    subject: "Contract discussion",
+    snippet: "Let's review the updated contract terms.",
+    unread: true,
+    messages: [
+      {
+        id: "msg-1",
+        from: { name: "Alice Smith", address: "alice@example.com" },
+        to: [{ name: "Alex Morgan", address: "alex@example.com" }],
+        cc: [],
+        date: "2026-10-21T10:00:00Z",
+        body: "Let's review the updated contract terms.",
+        attachments: [],
+      },
+    ],
+  },
+  {
+    id: "conv-2",
+    folder: "inbox",
+    subject: "Product roadmap update",
+    snippet: "Here is the timeline for Q4 delivery.",
+    unread: false,
+    messages: [
+      {
+        id: "msg-2",
+        from: { name: "Bob Jones", address: "bob@example.com" },
+        to: [{ name: "Alex Morgan", address: "alex@example.com" }],
+        cc: [],
+        date: "2026-10-20T14:30:00Z",
+        body: "Here is the timeline for Q4 delivery.",
+        attachments: [],
+      },
+    ],
+  },
+];
 
 afterEach(cleanup);
 
@@ -130,6 +182,121 @@ describe("EmailsRecordCard component", () => {
     expect(sentBtn).toBeTruthy();
     expect(sentBtn.getAttribute("data-later-module")).toBe("M10");
   });
+
+  it("shows loading state while loader is unresolved", async () => {
+    const pending = deferred<EmailConversation[]>();
+    const loader = vi.fn<EmailRecordCardLoader>(() => pending.promise);
+    render(<EmailsRecordCard parentModule="Contacts" recordId="rec-1" loader={loader} />);
+
+    expect(loader).toHaveBeenCalledWith("Contacts", "rec-1");
+    const statusEl = screen.getByRole("status");
+    expect(statusEl.textContent).toBe("Loading emails...");
+    expect(screen.queryByText(EMPTY_STATE_TEXT)).toBeNull();
+
+    await act(async () => pending.resolve([]));
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.getByText(EMPTY_STATE_TEXT)).toBeTruthy();
+  });
+
+  it("shows error state with inbox error text pattern when loader rejects", async () => {
+    const loader = vi.fn<EmailRecordCardLoader>().mockRejectedValue(new Error("network failure"));
+    render(<EmailsRecordCard parentModule="Contacts" loader={loader} />);
+
+    const alertEl = await screen.findByRole("alert");
+    expect(alertEl.textContent).toBe("Unable to load emails");
+    expect(screen.queryByText("network failure")).toBeNull();
+    expect(screen.queryByText(EMPTY_STATE_TEXT)).toBeNull();
+  });
+
+  it("shows empty state when loader resolves with empty list", async () => {
+    const loader = vi.fn<EmailRecordCardLoader>().mockResolvedValue([]);
+    render(<EmailsRecordCard parentModule="Contacts" loader={loader} />);
+
+    const empty = await screen.findByText(EMPTY_STATE_TEXT);
+    expect(empty).toBeTruthy();
+    expect(empty.getAttribute("data-part")).toBe("empty");
+    expect(screen.queryByRole("status")).toBeNull();
+    expect(screen.queryByRole("alert")).toBeNull();
+  });
+
+  it("default loader keeps the empty state without loading delay and loadEmailRecordCardFixture returns empty list", async () => {
+    const result = await loadEmailRecordCardFixture("Contacts", "rec-1");
+    expect(result).toEqual([]);
+
+    render(<EmailsRecordCard parentModule="Contacts" />);
+    const empty = screen.getByText(EMPTY_STATE_TEXT);
+    expect(empty).toBeTruthy();
+    expect(empty.getAttribute("data-part")).toBe("empty");
+    expect(screen.queryByRole("status")).toBeNull();
+  });
+
+  it("renders conversation list with sender, subject, snippet, date and unread in bold", async () => {
+    const loader = vi.fn<EmailRecordCardLoader>().mockResolvedValue(sampleConversations);
+    render(<EmailsRecordCard parentModule="Contacts" loader={loader} />);
+
+    const list = await screen.findByRole("list", { name: "Emails list" });
+    expect(list).toBeTruthy();
+
+    // Unread row
+    const unreadRow = screen.getByRole("button", { name: /Contract discussion/ });
+    expect(unreadRow.textContent).toContain("Alice Smith");
+    expect(unreadRow.textContent).toContain("Contract discussion");
+    expect(unreadRow.textContent).toContain("Let's review the updated contract terms.");
+    expect(unreadRow.textContent).toContain("Unread");
+    expect(unreadRow.className).toContain("font-semibold");
+
+    // Read row
+    const readRow = screen.getByRole("button", { name: /Product roadmap update/ });
+    expect(readRow.textContent).toContain("Bob Jones");
+    expect(readRow.textContent).toContain("Product roadmap update");
+    expect(readRow.textContent).toContain("Here is the timeline for Q4 delivery.");
+    expect(readRow.textContent).not.toContain("Unread");
+    expect(readRow.className).toContain("font-normal");
+  });
+
+  it("clicking a row does nothing (no navigation)", async () => {
+    const user = userEvent.setup();
+    const loader = vi.fn<EmailRecordCardLoader>().mockResolvedValue(sampleConversations);
+    render(<EmailsRecordCard parentModule="Contacts" loader={loader} />);
+
+    const row = await screen.findByRole("button", { name: /Contract discussion/ });
+    const originalHref = window.location.href;
+    await user.click(row);
+    expect(window.location.href).toBe(originalHref);
+  });
+
+  it("drafts and scheduled tabs show empty state even when emails are loaded in mails tab", async () => {
+    const user = userEvent.setup();
+    const loader = vi.fn<EmailRecordCardLoader>().mockResolvedValue(sampleConversations);
+    render(<EmailsRecordCard parentModule="Contacts" loader={loader} />);
+
+    await screen.findByRole("list", { name: "Emails list" });
+
+    // Switch to Drafts
+    const draftsTab = screen.getByRole("tab", { name: "Drafts" });
+    await user.click(draftsTab);
+    expect(screen.queryByRole("list", { name: "Emails list" })).toBeNull();
+    expect(screen.getByText(EMPTY_STATE_TEXT)).toBeTruthy();
+
+    // Switch to Scheduled
+    const scheduledTab = screen.getByRole("tab", { name: "Scheduled" });
+    await user.click(scheduledTab);
+    expect(screen.queryByRole("list", { name: "Emails list" })).toBeNull();
+    expect(screen.getByText(EMPTY_STATE_TEXT)).toBeTruthy();
+
+    // Switch back to Mails
+    const mailsTab = screen.getByRole("tab", { name: "Mails" });
+    await user.click(mailsTab);
+    expect(await screen.findByRole("list", { name: "Emails list" })).toBeTruthy();
+  });
+
+  it("supports load prop as an alias for loader", async () => {
+    const load = vi.fn<EmailRecordCardLoader>().mockResolvedValue(sampleConversations);
+    render(<EmailsRecordCard parentModule="Deals" recordId="deal-99" load={load} />);
+
+    expect(load).toHaveBeenCalledWith("Deals", "deal-99");
+    expect(await screen.findByRole("list", { name: "Emails list" })).toBeTruthy();
+  });
 });
 
 describe("emailsCard factory", () => {
@@ -160,6 +327,28 @@ describe("emailsCard factory", () => {
         expect((element.props as Record<string, unknown>).recordId).toBe("rec-test");
         expect((element.props as Record<string, unknown>).targetId).toBe("related-list-emails");
       }
+    }
+  });
+
+  it("passes custom loader when provided to emailsCard", () => {
+    const customLoader: EmailRecordCardLoader = async () => [];
+    const renderCard = emailsCard("Leads", customLoader);
+    const element = renderCard({
+      record: { id: "rec-test", fields: {} },
+      orgSlug: "org-1",
+      recordPath: () => "#",
+      definition: {
+        id: "emails",
+        title: "Emails",
+        moduleKey: "M10",
+        order: 4,
+        targetId: "related-list-emails",
+      },
+    });
+
+    expect(isValidElement(element)).toBe(true);
+    if (isValidElement(element)) {
+      expect((element.props as Record<string, unknown>).loader).toBe(customLoader);
     }
   });
 
