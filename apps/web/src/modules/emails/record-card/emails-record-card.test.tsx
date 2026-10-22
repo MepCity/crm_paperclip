@@ -9,48 +9,17 @@ import { createLeadsRelatedLists } from "@/modules/leads/leads-related-lists";
 import { render } from "@/test/render";
 import { emailsCard } from "./emails-card";
 import { EmailsRecordCard } from "./emails-record-card";
-import {
-  COMPOSE_EMAIL_TOOLTIP,
-  EMAIL_CARD_TABS,
-  EMPTY_STATE_TEXT,
-  emptyEmailRecordCardFixture,
-} from "./fixtures";
+import { EMAIL_CARD_TABS, EMPTY_STATE_TEXT, emptyEmailRecordCardFixture } from "./fixtures";
 
 afterEach(cleanup);
 
 describe("EmailsRecordCard component", () => {
-  it("renders card header with title 'Emails' and disabled Compose Email button with tooltip", () => {
-    const { unmount } = render(
-      <EmailsRecordCard parentModule="Contacts" targetId="related-list-emails" />,
+  it("opens compose with the record email prefilled", async () => {
+    render(<EmailsRecordCard parentModule="Contacts" recipientEmail="record@example.com" />);
+    await userEvent.setup().click(screen.getByRole("button", { name: "Compose Email" }));
+    expect((screen.getByRole("textbox", { name: "To" }) as HTMLInputElement).value).toBe(
+      "record@example.com",
     );
-
-    const section = screen.getByRole("region", { name: "Emails" });
-    expect(section).toBeTruthy();
-    expect(section.getAttribute("id")).toBe("related-list-emails");
-    expect(section.getAttribute("data-related-card")).toBe("emails");
-
-    const header = within(section).getByRole("heading", { name: "Emails" });
-    expect(header).toBeTruthy();
-
-    const composeBtn = within(section).getByRole("button", { name: "Compose Email" });
-    expect(composeBtn).toBeTruthy();
-    expect(
-      composeBtn.hasAttribute("disabled") || composeBtn.getAttribute("aria-disabled") === "true",
-    ).toBe(true);
-
-    unmount();
-
-    // With tooltip open
-    render(
-      <EmailsRecordCard
-        parentModule="Contacts"
-        targetId="related-list-emails"
-        tooltipOpen={true}
-      />,
-    );
-    const tooltip = screen.getByRole("tooltip");
-    expect(tooltip).toBeTruthy();
-    expect(tooltip.textContent).toBe(COMPOSE_EMAIL_TOOLTIP);
   });
 
   it("renders tabs Mails, Drafts, Scheduled with Mails selected first and empty state", () => {
@@ -141,7 +110,7 @@ describe("emailsCard factory", () => {
       expect(typeof renderCard).toBe("function");
 
       const element = renderCard({
-        record: { id: "rec-test", fields: {} },
+        record: { id: "rec-test", fields: { Email: "person@example.com" } },
         orgSlug: "org-1",
         recordPath: () => "#",
         definition: {
@@ -158,6 +127,9 @@ describe("emailsCard factory", () => {
         expect(element.type).toBe(EmailsRecordCard);
         expect((element.props as Record<string, unknown>).parentModule).toBe(mod);
         expect((element.props as Record<string, unknown>).recordId).toBe("rec-test");
+        expect((element.props as Record<string, unknown>).recipientEmail).toBe(
+          "person@example.com",
+        );
         expect((element.props as Record<string, unknown>).targetId).toBe("related-list-emails");
       }
     }

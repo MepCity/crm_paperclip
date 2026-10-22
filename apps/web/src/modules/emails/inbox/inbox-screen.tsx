@@ -1,11 +1,14 @@
 "use client";
 
 import { formatDateTime } from "@crm/core/format";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Icons } from "@/components/ui/icon";
 import { DEFAULT_FORMAT } from "@/lib/locale";
+import { MailCompose } from "../compose/mail-compose";
+import { composeMailboxes, fixtureComposePort } from "../compose/port";
 import {
   type EmailAddress,
   type EmailFolder,
@@ -79,6 +82,8 @@ export function InboxScreen({
   messageParam: string | null;
   onNavigate: (folder: EmailFolder, messageId?: string) => void;
 }) {
+  const [composeOpen, setComposeOpen] = useState(false);
+  const [sent, setSent] = useState(false);
   const { folder, conversations, selected } = resolveInboxSelection(
     model,
     folderParam,
@@ -95,6 +100,27 @@ export function InboxScreen({
   const folderLabel = emailFolders.find((item) => item.id === folder)?.label;
   return (
     <div className="m-3 overflow-x-auto rounded-md border border-border bg-surface text-text">
+      <div className="flex items-center justify-between border-b border-border p-3">
+        <Button
+          variant="primary"
+          isDisabled={Boolean(loadState)}
+          onPress={() => {
+            setSent(false);
+            setComposeOpen(true);
+          }}
+        >
+          Compose
+        </Button>
+        {sent && <p role="status">Message sent (fixture)</p>}
+      </div>
+      {composeOpen && (
+        <MailCompose
+          mailboxes={composeMailboxes}
+          port={fixtureComposePort}
+          onClose={() => setComposeOpen(false)}
+          onSent={() => setSent(true)}
+        />
+      )}
       <div className="flex min-h-96 min-w-0 flex-col lg:flex-row">
         <nav
           aria-label="Email folders"

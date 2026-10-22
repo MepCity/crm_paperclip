@@ -186,12 +186,10 @@ describe("RelatedCardsContainer with Contacts card set", () => {
     const casesSection = screen.getByRole("region", { name: "Cases" });
     expect(casesSection.querySelector("[data-later-module]")).toBeNull();
 
-    // D-79 to D-82 (MEP-1049): Emails card is live with disabled Compose Email and interactive tabs
+    // D-79 to D-82 (MEP-1049): Emails card opens compose and has interactive tabs
     const composeEmailBtn = screen.getByRole("button", { name: "Compose Email" });
-    expect(
-      composeEmailBtn.hasAttribute("disabled") ||
-        composeEmailBtn.getAttribute("aria-disabled") === "true",
-    ).toBe(true);
+    expect(composeEmailBtn.hasAttribute("disabled")).toBe(false);
+    expect(composeEmailBtn.getAttribute("aria-disabled")).not.toBe("true");
     expect(screen.getByRole("tab", { name: "Mails" }).getAttribute("aria-selected")).toBe("true");
     expect(screen.getByRole("tab", { name: "Drafts" }).getAttribute("aria-selected")).toBe("false");
     expect(screen.getByRole("tab", { name: "Scheduled" }).getAttribute("aria-selected")).toBe(
