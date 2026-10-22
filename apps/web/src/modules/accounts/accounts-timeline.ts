@@ -1,8 +1,4 @@
-import type {
-  TimelineEvent,
-  TimelineFilterOption,
-  TimelineSubtab,
-} from "@/components/records/detail/timeline";
+import type { TimelineFilterOption, TimelineSubtab } from "@/components/records/detail/timeline";
 import {
   LEADS_TIMELINE_MODULE_OPTIONS,
   LEADS_TIMELINE_SOURCE_OPTIONS,
@@ -17,7 +13,6 @@ export const ACCOUNTS_TIMELINE_MODULE_OPTIONS: readonly TimelineFilterOption[] =
   LEADS_TIMELINE_MODULE_OPTIONS;
 export const ACCOUNTS_TIMELINE_SOURCE_OPTIONS: readonly TimelineFilterOption[] =
   LEADS_TIMELINE_SOURCE_OPTIONS;
-export const ACCOUNTS_TIMELINE_EMPTY_EVENTS: readonly TimelineEvent[] = [];
 
 export function normalizeAccountsEventKind(kind: string): string {
   return kind === "account_image_upload" ? "image_upload" : kind;
