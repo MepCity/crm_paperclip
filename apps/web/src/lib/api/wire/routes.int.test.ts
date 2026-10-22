@@ -15,6 +15,10 @@ const handlers = [
     () => import("@/app/crm/v2.2/[module]/actions/duplicate_groups/route"),
   ],
   [operations.merge, () => import("@/app/crm/v2.2/[module]/actions/merge/route")],
+  [
+    operations.convertLead,
+    () => import("@/app/crm/v2.2/[module]/[recordId]/actions/convert/route"),
+  ],
   [operations.deduplicate, () => import("@/app/crm/v2.2/[module]/actions/deduplicate/route")],
   [operations.currencies, () => import("@/app/crm/v2.2/org/currencies/route")],
   [operations.module, () => import("@/app/crm/v2.2/settings/modules/[module]/route")],
@@ -406,6 +410,7 @@ describe("operation routes", () => {
           operations.search,
           operations.duplicateGroups,
           operations.merge,
+          operations.convertLead,
           operations.deduplicate,
           operations.create,
           operations.update,
@@ -426,6 +431,30 @@ describe("operation routes", () => {
       if (op === operations.record)
         expect(body.data[0]).toMatchObject({ id: created.id, Last_Name: "Handler Example" });
     }
+  });
+  it("converts a lead through the authenticated route and rejects bad requests", async () => {
+    const lead = await getRecordService(a.ctx).create("Leads", {
+      Last_Name: "Route Convert",
+      Company: "Route Co",
+    });
+    const anonymous = await call(operations.convertLead, undefined, { recordId: lead.id });
+    expect(anonymous.status).toBe(401);
+    const invalid = await call(operations.convertLead, a, {
+      recordId: lead.id,
+      body: { account: { create: {} } },
+    });
+    expect(invalid.status).toBe(400);
+    const response = await call(operations.convertLead, a, {
+      recordId: lead.id,
+      body: { contact: { create: {} } },
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ accountId: null, dealId: null });
+    const again = await call(operations.convertLead, a, {
+      recordId: lead.id,
+      body: { contact: { create: {} } },
+    });
+    expect(again.status).toBe(400);
   });
   it("serves, creates and updates Kanban views through the routes", async () => {
     const list = await call(operations.kanbanViews, a, { module: "Deals" });

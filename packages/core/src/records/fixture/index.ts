@@ -21,6 +21,7 @@ import {
 } from "../activities";
 import { validateCampaignFilter } from "../campaigns";
 import type {
+  ConvertLeadInput,
   DuplicateGroup,
   FieldDefinition,
   FieldValue,
@@ -137,18 +138,6 @@ const normalizeInput = (
   );
 };
 
-export type ConvertTarget = { reuseId: string; update?: RecordInput } | { create: RecordInput };
-export interface ConvertLeadInput {
-  account?: ConvertTarget;
-  contact?: ConvertTarget;
-  deal?: ConvertTarget;
-}
-export interface ConvertLeadResult {
-  accountId: string | null;
-  contactId: string | null;
-  dealId: string | null;
-}
-
 export interface FixtureRecordServiceOptions extends FixtureHistoryPermissions {
   actorName?: string;
   source?: HistorySource;
@@ -171,8 +160,6 @@ export function createFixtureRecordService(
   options?: FixtureRecordServiceOptions,
 ): RecordService & {
   readonly attachmentLifecycle: ReturnType<typeof fixtureAttachmentLifecycle>;
-  /** Core-only conversion coordinator; no wire contract yet (Module 4 owns the endpoint). */
-  convertLead(leadId: string, input: ConvertLeadInput): Promise<ConvertLeadResult>;
   readonly history: RecordHistoryService;
   readonly tags: TagService;
   readonly recycleBin: RecycleBinService;
