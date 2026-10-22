@@ -2,6 +2,12 @@ import { randomBytes } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import {
   createAesGcmSecretBox,
+  DEFAULT_SECRET_BOX_ACTIVE_KEY_ID_ENV,
+  DEFAULT_SECRET_BOX_KEYS_ENV,
+  loadSecretBoxFromEnv,
+  loadSecretBoxKeyRingFromEnv,
+  loadSecretBoxKeysFromEnv,
+  loadSecretBoxOptionsFromEnv,
   parseSecretBoxKeys,
   type SecretAad,
   SecretBoxError,
@@ -111,5 +117,140 @@ describe("key ring", () => {
   it("rejects invalid rings in the constructor", () => {
     expect(() => box({ k1 }, "missing")).toThrow();
     expect(() => box({ k1: randomBytes(8) }, "k1")).toThrow();
+  });
+});
+
+describe("defensive copying", () => {
+  it("isolates the key map and key buffers against caller mutation after construction", () => {
+    const key = Buffer.from(k1);
+    const map = new Map<string, Buffer>([["k1", key]]);
+    const b = createAesGcmSecretBox({ keys: map, activeKeyId: "k1" });
+
+    const sealedBefore = b.seal(plain, aad);
+
+    // Caller mutates the Map
+    map.delete("k1");
+    map.set("k1", randomBytes(32));
+    map.set("other", randomBytes(32));
+
+    // Caller mutates the key Buffer in place
+    key[0] = (key[0] ?? 0) ^ 0xff;
+    key.fill(0);
+
+    // Box remains fully functional with original keys
+    expect(b.open(sealedBefore, aad)).toBe(plain);
+    const sealedAfter = b.seal(plain, aad);
+    expect(b.open(sealedAfter, aad)).toBe(plain);
+
+    // Verify sealedAfter is decrypted by an independent box initialized with original k1
+    const freshBox = createAesGcmSecretBox({
+      keys: new Map([["k1", k1]]),
+      activeKeyId: "k1",
+    });
+    expect(freshBox.open(sealedAfter, aad)).toBe(plain);
+  });
+});
+
+describe("environment loading", () => {
+  const k1Base64 = k1.toString("base64");
+  const k2Base64 = k2.toString("base64");
+
+  it("loads key ring and active key id from environment variables", () => {
+    const env = {
+      [DEFAULT_SECRET_BOX_KEYS_ENV]: `k1:${k1Base64}, k2:${k2Base64}`,
+      [DEFAULT_SECRET_BOX_ACTIVE_KEY_ID_ENV]: "k2",
+    };
+
+    const options = loadSecretBoxKeyRingFromEnv(env);
+    expect(options.activeKeyId).toBe("k2");
+    expect([...options.keys.keys()]).toEqual(["k1", "k2"]);
+    expect(options.keys.get("k1")).toEqual(k1);
+    expect(options.keys.get("k2")).toEqual(k2);
+
+    const b = loadSecretBoxFromEnv(env);
+    const sealed = b.seal(plain, aad);
+    expect(sealed.startsWith("v1.k2.")).toBe(true);
+    expect(b.open(sealed, aad)).toBe(plain);
+  });
+
+  it("supports aliases and custom env variable names", () => {
+    const env = {
+      CUSTOM_KEYS: `k1:${k1Base64}`,
+      CUSTOM_ACTIVE: "k1",
+    };
+    const opts = { keysEnvVar: "CUSTOM_KEYS", activeKeyIdEnvVar: "CUSTOM_ACTIVE" };
+
+    const fromOpts = loadSecretBoxOptionsFromEnv(env, opts);
+    const fromKeys = loadSecretBoxKeysFromEnv(env, opts);
+    expect(fromOpts.activeKeyId).toBe("k1");
+    expect(fromKeys.activeKeyId).toBe("k1");
+
+    const b = loadSecretBoxFromEnv(env, opts);
+    expect(b.open(b.seal(plain, aad), aad)).toBe(plain);
+  });
+
+  it("rejects missing or empty env variables without leaking secret material", () => {
+    const cases = [
+      {},
+      { [DEFAULT_SECRET_BOX_KEYS_ENV]: "" },
+      { [DEFAULT_SECRET_BOX_KEYS_ENV]: "   " },
+      { [DEFAULT_SECRET_BOX_KEYS_ENV]: `k1:${k1Base64}` },
+      {
+        [DEFAULT_SECRET_BOX_KEYS_ENV]: `k1:${k1Base64}`,
+        [DEFAULT_SECRET_BOX_ACTIVE_KEY_ID_ENV]: "",
+      },
+      {
+        [DEFAULT_SECRET_BOX_KEYS_ENV]: `k1:${k1Base64}`,
+        [DEFAULT_SECRET_BOX_ACTIVE_KEY_ID_ENV]: "   ",
+      },
+    ];
+
+    for (const badEnv of cases) {
+      try {
+        loadSecretBoxFromEnv(badEnv);
+        expect.unreachable("expected error");
+      } catch (e) {
+        const message = (e as Error).message;
+        expect(message).toMatch(/required/);
+        expect(message).not.toContain(k1Base64);
+      }
+    }
+  });
+
+  it("rejects invalid key ring or mismatched active key id without leaking secret material", () => {
+    const badCases: Record<string, string>[] = [
+      {
+        [DEFAULT_SECRET_BOX_KEYS_ENV]: "not-valid",
+        [DEFAULT_SECRET_BOX_ACTIVE_KEY_ID_ENV]: "k1",
+      },
+      {
+        [DEFAULT_SECRET_BOX_KEYS_ENV]: `k1:${k1Base64}!`,
+        [DEFAULT_SECRET_BOX_ACTIVE_KEY_ID_ENV]: "k1",
+      },
+      {
+        [DEFAULT_SECRET_BOX_KEYS_ENV]: `k1:${randomBytes(16).toString("base64")}`,
+        [DEFAULT_SECRET_BOX_ACTIVE_KEY_ID_ENV]: "k1",
+      },
+      {
+        [DEFAULT_SECRET_BOX_KEYS_ENV]: `k1:${k1Base64}`,
+        [DEFAULT_SECRET_BOX_ACTIVE_KEY_ID_ENV]: "non_existent_key",
+      },
+      {
+        [DEFAULT_SECRET_BOX_KEYS_ENV]: `k1:${k1Base64}`,
+        [DEFAULT_SECRET_BOX_ACTIVE_KEY_ID_ENV]: "invalid.id.with.dots",
+      },
+    ];
+
+    for (const badEnv of badCases) {
+      try {
+        loadSecretBoxFromEnv(badEnv);
+        expect.unreachable("expected error");
+      } catch (e) {
+        const error = e as Error;
+        const text = `${error.message} ${error.stack}`;
+        expect(text).not.toContain(k1Base64);
+        expect(text).not.toContain(k2Base64);
+      }
+    }
   });
 });
