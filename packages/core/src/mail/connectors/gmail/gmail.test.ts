@@ -218,6 +218,20 @@ describe("gmail connector", () => {
     expect(err.message).not.toContain(SECRET);
   });
 
+  it("limits initial and incremental queries to the requested folder", async () => {
+    const { connector, calls } = setup((req) =>
+      req.url.includes("/history?") ? json(200, { history: [] }) : standard(req),
+    );
+    await connector.storeRefreshToken(mb, SECRET);
+    const box = { ...mb, folder: "inbox" as const };
+    expect((await connector.listChanges(box, null)).messageIds).toEqual(["m1", "m2"]);
+    await connector.listChanges(box, "500");
+    expect(
+      calls.some((c) => c.url.includes("labelIds=SENT") || c.url.includes("labelId=SENT")),
+    ).toBe(false);
+    expect(calls.some((c) => c.url.includes("labelId=INBOX"))).toBe(true);
+  });
+
   it("sends raw MIME as base64url", async () => {
     const { connector, calls } = setup((req) =>
       req.url.includes("/token")
