@@ -255,6 +255,36 @@ test.describe("Deals record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("contact roles dialogs cancel and save role edits", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
+    const card = page.locator("#related-list-contact-roles");
+    await card.getByRole("button", { name: "Add Contacts Roles" }).click();
+    const add = page.getByRole("dialog", { name: "Add Contacts Roles" });
+    await expect(add.getByRole("button", { name: /Contact Name/ })).toBeVisible();
+    await add.getByRole("button", { name: "Cancel" }).click();
+    await expect(add).toHaveCount(0);
+    await card.getByRole("button", { name: "Edit All" }).click();
+    const edit = page.getByRole("dialog", { name: "Edit All" });
+    await expect(edit.locator("tbody tr")).toHaveCount(2);
+    await edit
+      .getByRole("button", { name: /Role Name for/ })
+      .first()
+      .click();
+    await page.getByRole("option", { name: "Technical Buyer", exact: true }).click();
+    await edit.getByRole("button", { name: "Save" }).click();
+    await expect(edit).toHaveCount(0);
+    await expect(card.locator("tbody tr").first()).toContainText("Technical Buyer");
+    await page.reload();
+    await expect(card.locator("tbody tr").first()).toContainText("Technical Buyer");
+    await card.getByRole("button", { name: "Edit All" }).click();
+    await expect(page.getByRole("dialog", { name: "Edit All" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("rail scrolls to stage history card", async ({ page, pageErrors }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
