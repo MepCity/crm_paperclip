@@ -18,7 +18,6 @@ import {
   MEETINGS_DELETE_CONFIRM_TITLE,
 } from "./meetings-record-more-options";
 import {
-  MEETINGS_TIMELINE_EMPTY_EVENTS,
   MEETINGS_TIMELINE_MODULE_OPTIONS,
   MEETINGS_TIMELINE_SOURCE_OPTIONS,
   MEETINGS_TIMELINE_SUBTABS,
@@ -62,7 +61,6 @@ export const meetingsScreenDefinition: ModuleScreenDefinition = {
       subtabs: MEETINGS_TIMELINE_SUBTABS,
       modules: MEETINGS_TIMELINE_MODULE_OPTIONS,
       sources: MEETINGS_TIMELINE_SOURCE_OPTIONS,
-      events: MEETINGS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeMeetingsEventKind,
       upcomingAutomatedActions: { label: "Upcoming Automated Actions", laterModule: "M11" },
     },

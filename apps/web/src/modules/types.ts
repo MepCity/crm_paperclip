@@ -13,11 +13,7 @@ import type { ComponentType, ReactNode } from "react";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailSection } from "@/components/records/detail/details-card";
 import type { RecordCommand, RecordMenuGroup } from "@/components/records/detail/record-header";
-import type {
-  TimelineEvent,
-  TimelineFilterOption,
-  TimelineSubtab,
-} from "@/components/records/detail/timeline";
+import type { TimelineFilterOption, TimelineSubtab } from "@/components/records/detail/timeline";
 import type { FormRules } from "@/components/records/form/form-model";
 import type { FilterGroup } from "@/components/records/list/filter-panel";
 import type { ModuleListScreenConfig } from "@/components/records/list/module-list-screen";
@@ -285,7 +281,6 @@ export interface ModuleScreenDefinition {
       subtabs: readonly TimelineSubtab[];
       modules: readonly TimelineFilterOption[];
       sources: readonly TimelineFilterOption[];
-      events: readonly TimelineEvent[];
       normalizeEventKind: (kind: string) => string;
       upcomingAutomatedActions?: { label: string; laterModule: ModuleKey };
     };
