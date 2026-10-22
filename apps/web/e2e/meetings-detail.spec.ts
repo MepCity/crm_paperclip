@@ -1,7 +1,7 @@
 import { signUpNewUser } from "./support/auth";
 import { moduleListDefaultPath, moduleRecordPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
-import { expect, test } from "./support/test";
+import { expect, ignoreFailedResponses, test } from "./support/test";
 
 async function openMeeting(page: import("@playwright/test").Page, orgSlug: string) {
   await page.goto(moduleListDefaultPath(orgSlug, "Meetings"));
@@ -126,6 +126,29 @@ test.describe("Meetings record detail", () => {
     await page.keyboard.press("Escape");
     await page.locator("[data-record-frame]").getByRole("tab", { name: "Timeline" }).click();
     await expect(page.locator("[data-timeline-history]").getByText("No logs found")).toBeVisible();
+  });
+
+  test("Timeline History shows a row after an inline edit", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openMeeting(page, org.slug);
+    const titleRow = page.locator('[data-detail-field="Event_Title"]');
+    await titleRow.hover();
+    await titleRow.getByRole("button", { name: "Edit Title value" }).click();
+    const input = titleRow.getByRole("textbox");
+    await input.fill("History Meeting Title");
+    await input.press("Enter");
+    await expect(titleRow).toContainText("History Meeting Title");
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    const history = frame.locator("[data-timeline-history]");
+    await expect(history).toBeVisible();
+    await expect(history.getByText("No logs found")).toHaveCount(0);
+    await expect(history.getByText(/Title changed from .* to History Meeting Title/)).toBeVisible();
+    await page.reload();
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    await expect(history.getByText(/Title changed from .* to History Meeting Title/)).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
   });
 
   test("right panel loads the linked contact and shared relation sections", async ({ page }) => {
