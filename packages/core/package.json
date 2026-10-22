@@ -24,7 +24,10 @@
     "./records/system-filters": "./src/records/system-filters.ts",
     "./records/related-module-filters": "./src/records/related-module-filters.ts",
     "./records/system-filters-contract-suite": "./src/records/system-filters-contract-suite.ts",
-    "./documents": "./src/documents/index.ts"
+    "./documents": "./src/documents/index.ts",
+    "./mail/service": "./src/mail/service.ts",
+    "./mail/repository": "./src/mail/repository.ts",
+    "./mail/types": "./src/mail/types.ts"
   },
   "dependencies": {
     "@crm/db": "workspace:*",
