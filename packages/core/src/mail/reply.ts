@@ -1,19 +1,8 @@
+import { normalizeSubject } from "../mail-threading/headers";
 import { normalizeMailAddress } from "./service";
 import type { MailMessage, MailParticipant } from "./types";
 
-/**
- * Strips any number of leading reply or forward prefixes (e.g. Re:, RE:, Fwd:, FW:, Fw:, Re[2]:),
- * case-insensitively with optional whitespace, and trims the remaining subject.
- */
-export function normalizeSubject(subject?: string | null): string {
-  if (!subject) return "";
-  let s = subject.trim();
-  const prefixRegex = /^(?:re|fwd|fw)(?:\s*\[\d+\])?\s*:\s*/i;
-  while (prefixRegex.test(s)) {
-    s = s.replace(prefixRegex, "").trim();
-  }
-  return s;
-}
+export { normalizeSubject };
 
 /**
  * Produces a standardized reply subject: "Re: " + normalized subject.
@@ -189,9 +178,9 @@ export function buildAttributionLine(options: QuoteAttribution): string {
   }
 
   if (authorStr) {
-    line = line.replace("{author}", authorStr).replace("{fromName}", authorStr);
+    line = line.replace("{author}", authorStr);
   } else {
-    line = line.replace("{author}", "someone").replace("{fromName}", "someone");
+    line = line.replace("{author}", "someone");
   }
 
   return line.trim();
