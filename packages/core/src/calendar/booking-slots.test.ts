@@ -29,7 +29,7 @@ describe("availableBookingSlots", () => {
     const r = availableBookingSlots(mk({}));
     expect(r).toHaveLength(9);
     expect(r[0]).toEqual({ start: ist9, end: ist9 + H });
-    expect(r[8].end).toBe(ist9 + 9 * H);
+    expect(r[8]?.end).toBe(ist9 + 9 * H);
   });
 
   it("handles a lunch break with two intervals", () => {
@@ -60,13 +60,13 @@ describe("availableBookingSlots", () => {
 
   it("respects minimum notice", () => {
     const r = availableBookingSlots(mk({ now: ist9, minNoticeMinutes: 150 }));
-    expect(r[0].start).toBe(ist9 + 3 * H);
+    expect(r[0]?.start).toBe(ist9 + 3 * H);
   });
 
   it("clips to [from,to) and skips closed days", () => {
     const r = availableBookingSlots(mk({ from: ist9 + 30 * M, to: ist9 + 3 * H, stepMinutes: 30 }));
-    expect(r[0].start).toBe(ist9 + 30 * M);
-    expect(r[r.length - 1].end).toBe(ist9 + 3 * H);
+    expect(r[0]?.start).toBe(ist9 + 30 * M);
+    expect(r.at(-1)?.end).toBe(ist9 + 3 * H);
     // 2026-06-01 is Monday; only Sunday open => nothing
     const closed = availableBookingSlots(
       mk({ hours: { timeZone: IST, days: { 0: [{ start: "09:00", end: "18:00" }] } } }),
@@ -77,7 +77,7 @@ describe("availableBookingSlots", () => {
   it("supports step smaller than duration", () => {
     const r = availableBookingSlots(mk({ stepMinutes: 30 }));
     expect(r).toHaveLength(17);
-    expect(r[1].start - r[0].start).toBe(30 * M);
+    expect((r[1]?.start ?? 0) - (r[0]?.start ?? 0)).toBe(30 * M);
   });
 
   it("America/New_York spring forward: gap hour skipped", () => {
@@ -90,8 +90,8 @@ describe("availableBookingSlots", () => {
       }),
     );
     expect(r).toHaveLength(2);
-    expect(r[0].start).toBe(Date.UTC(2026, 2, 8, 6, 0)); // 01:00 EST
-    expect(r[1].start).toBe(Date.UTC(2026, 2, 8, 7, 0)); // 03:00 EDT
+    expect(r[0]?.start).toBe(Date.UTC(2026, 2, 8, 6, 0)); // 01:00 EST
+    expect(r[1]?.start).toBe(Date.UTC(2026, 2, 8, 7, 0)); // 03:00 EDT
   });
 
   it("America/New_York fall back: repeated hour counted once", () => {
@@ -105,7 +105,7 @@ describe("availableBookingSlots", () => {
     );
     expect(r).toHaveLength(4);
     expect(new Set(r.map((s) => s.start)).size).toBe(4);
-    expect(r[0].start).toBe(Date.UTC(2026, 10, 1, 4, 0));
+    expect(r[0]?.start).toBe(Date.UTC(2026, 10, 1, 4, 0));
   });
 
   it("Europe/Istanbul around the zone's historic transition dates stays stable", () => {
@@ -113,7 +113,7 @@ describe("availableBookingSlots", () => {
       mk({ from: Date.UTC(2026, 2, 29, 0, 0), to: Date.UTC(2026, 2, 30, 0, 0) }),
     );
     expect(r).toHaveLength(9);
-    expect(r[0].start).toBe(Date.UTC(2026, 2, 29, 6, 0));
+    expect(r[0]?.start).toBe(Date.UTC(2026, 2, 29, 6, 0));
   });
 
   it("rejects invalid input", () => {
