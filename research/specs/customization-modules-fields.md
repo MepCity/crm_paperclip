@@ -6,10 +6,12 @@ Inspect the module administration list and the initial read-only tabs for Leads.
 The initial module-list capture is accepted as painted by the CTO decision of
 2026-10-22. The `_sortableParentData` page error is known sorting-library noise
 on these settings pages when the screenshot is fully painted; a genuinely
-blank or partial image still fails. This revision adds the Leads initial Layouts screen. Research remains
-**incomplete**: the inherited blocked-request delta rule stopped further tab
-captures. CTO must disposition that delta before continuation. No editor or
-persisted preference was operated.
+blank or partial image still fails. The Leads initial Layouts screen is preserved. Research remains **incomplete**:
+Links fails the paint gate; Layout Rules had a tool-only selector failure, and
+Buttons/Summary were not attempted after the stop. The CTO decision at 20:28 UTC
+permits the remaining initial tabs: refused telemetry deltas are known noise,
+not reference changes. This continuation records successful captures and any
+one-attempt tool failures explicitly. No editor or persisted preference was operated.
 
 Module 2+ parity applies: inventory and behaviour only, without pixel metrics,
 typography, colours or frontend request shapes. No reference assets are copied.
@@ -199,14 +201,14 @@ The sidebar fits all seventeen displayed module entries. No preferences changed.
 | ML-27 | Sidebar, top to bottom | Cases | 43 | Module navigation; not opened | M11 | new |
 | ML-28 | Sidebar, top to bottom | Solutions | 44 | Module navigation; not opened | M11 | new |
 | ML-29 | Module tab strip, left to right | Layouts | 45, 46 | Selected on entry | M11 | new |
-| ML-30 | Module tab strip, left to right | Layout Rules | 47, 48 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
-| ML-31 | Module tab strip, left to right | Validation Rules | 49, 50 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
-| ML-32 | Module tab strip, left to right | Fields | 51, 52 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
-| ML-33 | Module tab strip, left to right | Record Locking Configuration | 53, 54 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
-| ML-34 | Module tab strip, left to right | Map Dependency Fields | 55, 56 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
-| ML-35 | Module tab strip, left to right | Links | 57, 58 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
-| ML-36 | Module tab strip, left to right | Buttons | 59, 60 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
-| ML-37 | Module tab strip, left to right | Summary | 61, 62 | Visible tab; not opened because safety delta stopped continuation | M11 | new |
+| ML-30 | Module tab strip, left to right | Layout Rules | 47, 48 | Visible navigation tab; continuation evidence below | M11 | new |
+| ML-31 | Module tab strip, left to right | Validation Rules | 49, 50 | Visible navigation tab; continuation evidence below | M11 | new |
+| ML-32 | Module tab strip, left to right | Fields | 51, 52 | Visible navigation tab; continuation evidence below | M11 | new |
+| ML-33 | Module tab strip, left to right | Record Locking Configuration | 53, 54 | Visible navigation tab; continuation evidence below | M11 | new |
+| ML-34 | Module tab strip, left to right | Map Dependency Fields | 55, 56 | Visible navigation tab; continuation evidence below | M11 | new |
+| ML-35 | Module tab strip, left to right | Links | 57, 58 | Visible navigation tab; continuation evidence below | M11 | new |
+| ML-36 | Module tab strip, left to right | Buttons | 59, 60 | Visible navigation tab; continuation evidence below | M11 | new |
+| ML-37 | Module tab strip, left to right | Summary | 61, 62 | Visible navigation tab; continuation evidence below | M11 | new |
 | ML-38 | Content right edge | Contextual help | 63 | Not opened | M11 | new |
 | ML-39 | Above table right | Create New Layout | 64, 65 | Creation entry; forbidden, not opened | M11 | new |
 | ML-40 | Table, Name column | Default layout name link | 67, 68 | Editor destination; forbidden, not opened | M11 | new |
@@ -259,10 +261,349 @@ reconciled with their logical parent controls.
   Refused telemetry `urlMonitor`: twice (unchanged); `logs`: three times
   (baseline once, **+2**). New refused telemetry paths: `/:id/clientmetricslog`
   once and `/:id/telemetry/customMetrics` once. Total refusals: **9 vs 5**.
-- **STOP:** the inherited new-path/increased-count rule applies even though
-  the new requests are refused telemetry. No further tab capture or replay was
-  attempted. No successful settings write or reference mutation is evidenced.
-  CTO must decide whether these refused passive diagnostics permit continuation.
+- The previous run stopped at this delta. CTO subsequently classified refused
+  telemetry changes as known noise and authorized continuation. These requests
+  never left the browser; no successful settings write is evidenced.
+- Current stop rule: a new successful 2xx non-GET path/count outside the accepted
+  PageLayout/visitor exceptions; a genuinely blank/partial image; or a click
+  opening an editor, menu or modal instead of a tab. Close unexpected overlays
+  with Escape/Cancel without saving. A tool-failed tab is skipped for this run.
+
+
+## Leads — Validation Rules
+
+Source: **seen, `m11r1-leads-validation-rules` screenshot**, reconciled with its one-based
+`controls.json`. The tab is fully painted. An empty rules table has Field Name, Validate Using,
+Executes On, Last Modified and Status columns. A static empty-state message
+occupies the table body. No rule rows or status switches are present.
+
+| # | Position | Control | Raw entries | Observed behaviour / limit | Owning module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- |
+| VR-01 | Top utility strip | Search records | 3 | Not opened or typed | Shell | Contacts shell |
+| VR-02 | Top utility strip | Quick create | 4 | Not opened or typed | Shell | Contacts shell |
+| VR-03 | Top utility strip | Assistant | 6 | Not opened or typed | Shell | Contacts shell |
+| VR-04 | Top utility strip | Notifications | 7 | Not opened or typed | Shell | Contacts shell |
+| VR-05 | Top utility strip | Calendar | 8 | Not opened or typed | Shell | Contacts shell |
+| VR-06 | Top utility strip | Marketplace | 11 | Not opened or typed | Shell | Contacts shell |
+| VR-07 | Top utility strip | Setup | 14 | Not opened or typed | Shell | Contacts shell |
+| VR-08 | Top utility strip | Profile | 17, 18 | Not opened or typed | Shell | Contacts shell |
+| VR-09 | Top utility strip | Applications menu | 21, 22, 23, 24 | Not opened or typed | Shell | Contacts shell |
+| VR-10 | Sidebar header | Back to Modules | 26, 98, 99 | Back affordance visible; not clicked | M11 | new |
+| VR-11 | Sidebar header right | Module search icon | 27, 100 | Not opened; input behaviour unobserved | M11 | new |
+| VR-12 | Sidebar, top to bottom | Leads | 28 | Selected | M11 | new |
+| VR-13 | Sidebar, top to bottom | Contacts | 29 | Module navigation; not opened | M11 | new |
+| VR-14 | Sidebar, top to bottom | Accounts | 30 | Module navigation; not opened | M11 | new |
+| VR-15 | Sidebar, top to bottom | Deals | 31 | Module navigation; not opened | M11 | new |
+| VR-16 | Sidebar, top to bottom | Tasks | 32 | Module navigation; not opened | M11 | new |
+| VR-17 | Sidebar, top to bottom | Meetings | 33 | Module navigation; not opened | M11 | new |
+| VR-18 | Sidebar, top to bottom | Calls | 34 | Module navigation; not opened | M11 | new |
+| VR-19 | Sidebar, top to bottom | Products | 35 | Module navigation; not opened | M11 | new |
+| VR-20 | Sidebar, top to bottom | Quotes | 36 | Module navigation; not opened | M11 | new |
+| VR-21 | Sidebar, top to bottom | Sales Orders | 37 | Module navigation; not opened | M11 | new |
+| VR-22 | Sidebar, top to bottom | Purchase Orders | 38 | Module navigation; not opened | M11 | new |
+| VR-23 | Sidebar, top to bottom | Invoices | 39 | Module navigation; not opened | M11 | new |
+| VR-24 | Sidebar, top to bottom | Campaigns | 40 | Module navigation; not opened | M11 | new |
+| VR-25 | Sidebar, top to bottom | Vendors | 41 | Module navigation; not opened | M11 | new |
+| VR-26 | Sidebar, top to bottom | Price Books | 42 | Module navigation; not opened | M11 | new |
+| VR-27 | Sidebar, top to bottom | Cases | 43 | Module navigation; not opened | M11 | new |
+| VR-28 | Sidebar, top to bottom | Solutions | 44 | Module navigation; not opened | M11 | new |
+| VR-29 | Module tab strip, left to right | Layouts | 45, 46 | Visible navigation tab; not operated in this capture | M11 | new |
+| VR-30 | Module tab strip, left to right | Layout Rules | 47, 48 | Visible navigation tab; not operated in this capture | M11 | new |
+| VR-31 | Module tab strip, left to right | Validation Rules | 49, 50 | Selected initial state | M11 | new |
+| VR-32 | Module tab strip, left to right | Fields | 51, 52 | Visible navigation tab; not operated in this capture | M11 | new |
+| VR-33 | Module tab strip, left to right | Record Locking Configuration | 53, 54 | Visible navigation tab; not operated in this capture | M11 | new |
+| VR-34 | Module tab strip, left to right | Map Dependency Fields | 55, 56 | Visible navigation tab; not operated in this capture | M11 | new |
+| VR-35 | Module tab strip, left to right | Links | 57, 58 | Visible navigation tab; not operated in this capture | M11 | new |
+| VR-36 | Module tab strip, left to right | Buttons | 59, 60 | Visible navigation tab; not operated in this capture | M11 | new |
+| VR-37 | Module tab strip, left to right | Summary | 61, 62 | Visible navigation tab; not operated in this capture | M11 | new |
+| VR-38 | Content right edge | Contextual help | 64 | Not opened | M11 | new |
+| VR-39 | Bottom utility strip | My Pins | 86 | Not opened | Shell | Contacts shell |
+| VR-40 | Bottom utility strip | Chats | 87 | Not opened | Shell | Contacts shell |
+| VR-41 | Bottom utility strip | Contacts | 88 | Not opened | Shell | Contacts shell |
+| VR-42 | Bottom utility strip | Command palette | 89 | Not opened | Shell | Contacts shell |
+| VR-43 | Bottom utility strip | Announcements | 90 | Not opened | Shell | Contacts shell |
+| VR-44 | Bottom utility strip | Motivator | 91 | Not opened | Shell | Contacts shell |
+| VR-45 | Bottom utility strip | Sticky Notes | 92 | Not opened | Shell | Contacts shell |
+| VR-46 | Bottom utility strip | Activity Reminders | 93 | Not opened | Shell | Contacts shell |
+| VR-47 | Bottom utility strip | Recent Items | 94 | Not opened | Shell | Contacts shell |
+| VR-48 | Bottom utility strip | Accessibility | 95 | Not opened | Shell | Contacts shell |
+| VR-49 | Bottom utility strip | Help | 96 | Not opened | Shell | Contacts shell |
+| VR-50 | Content above table, right | Create New Validation Rule | 65, 66 | Creation entry; forbidden, not opened | M11 | new |
+
+Reconciliation: 104 raw entries → 50 logical controls;
+67 represented + 37 excluded = 104.
+Excluded entries: 1, 2, 5, 9, 10, 12, 13, 15, 16, 19, 20, 25, 63, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 97, 101, 102, 103, 104.
+Exclusions are static descriptions/table wrappers, navigation/utility containers,
+hidden zero-area overlays, body and scroll-region wrappers, as checked
+against the screenshot. Screen-specific overflow controls are listed separately.
+
+## Leads — Fields
+
+Source: **seen, `m11r1-leads-fields` screenshot**, reconciled with its one-based
+`controls.json`. The tab is fully painted with Field Listing selected. Field Permissions and
+AI Governance are visible subordinate tabs; neither was opened. The empty search
+is above a table with Fields, Data Type and Custom Field columns. Ten whole rows
+and part of the next row are visible; further definitions extend below the
+content viewport. The visible field labels are plain text, not separate controls.
+No custom-field marker is visible on the initial rows. Metadata remains the model
+source; a partial screen list does not establish the complete field set.
+
+| # | Position | Control | Raw entries | Observed behaviour / limit | Owning module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- |
+| FL-01 | Top utility strip | Search records | 3 | Not opened or typed | Shell | Contacts shell |
+| FL-02 | Top utility strip | Quick create | 4 | Not opened or typed | Shell | Contacts shell |
+| FL-03 | Top utility strip | Assistant | 6 | Not opened or typed | Shell | Contacts shell |
+| FL-04 | Top utility strip | Notifications | 7 | Not opened or typed | Shell | Contacts shell |
+| FL-05 | Top utility strip | Calendar | 8 | Not opened or typed | Shell | Contacts shell |
+| FL-06 | Top utility strip | Marketplace | 11 | Not opened or typed | Shell | Contacts shell |
+| FL-07 | Top utility strip | Setup | 14 | Not opened or typed | Shell | Contacts shell |
+| FL-08 | Top utility strip | Profile | 17, 18 | Not opened or typed | Shell | Contacts shell |
+| FL-09 | Top utility strip | Applications menu | 21, 22, 23, 24 | Not opened or typed | Shell | Contacts shell |
+| FL-10 | Sidebar header | Back to Modules | 26, 103, 104 | Back affordance visible; not clicked | M11 | new |
+| FL-11 | Sidebar header right | Module search icon | 27, 105 | Not opened; input behaviour unobserved | M11 | new |
+| FL-12 | Sidebar, top to bottom | Leads | 28 | Selected | M11 | new |
+| FL-13 | Sidebar, top to bottom | Contacts | 29 | Module navigation; not opened | M11 | new |
+| FL-14 | Sidebar, top to bottom | Accounts | 30 | Module navigation; not opened | M11 | new |
+| FL-15 | Sidebar, top to bottom | Deals | 31 | Module navigation; not opened | M11 | new |
+| FL-16 | Sidebar, top to bottom | Tasks | 32 | Module navigation; not opened | M11 | new |
+| FL-17 | Sidebar, top to bottom | Meetings | 33 | Module navigation; not opened | M11 | new |
+| FL-18 | Sidebar, top to bottom | Calls | 34 | Module navigation; not opened | M11 | new |
+| FL-19 | Sidebar, top to bottom | Products | 35 | Module navigation; not opened | M11 | new |
+| FL-20 | Sidebar, top to bottom | Quotes | 36 | Module navigation; not opened | M11 | new |
+| FL-21 | Sidebar, top to bottom | Sales Orders | 37 | Module navigation; not opened | M11 | new |
+| FL-22 | Sidebar, top to bottom | Purchase Orders | 38 | Module navigation; not opened | M11 | new |
+| FL-23 | Sidebar, top to bottom | Invoices | 39 | Module navigation; not opened | M11 | new |
+| FL-24 | Sidebar, top to bottom | Campaigns | 40 | Module navigation; not opened | M11 | new |
+| FL-25 | Sidebar, top to bottom | Vendors | 41 | Module navigation; not opened | M11 | new |
+| FL-26 | Sidebar, top to bottom | Price Books | 42 | Module navigation; not opened | M11 | new |
+| FL-27 | Sidebar, top to bottom | Cases | 43 | Module navigation; not opened | M11 | new |
+| FL-28 | Sidebar, top to bottom | Solutions | 44 | Module navigation; not opened | M11 | new |
+| FL-29 | Module tab strip, left to right | Layouts | 45, 46 | Visible navigation tab; not operated in this capture | M11 | new |
+| FL-30 | Module tab strip, left to right | Layout Rules | 47, 48 | Visible navigation tab; not operated in this capture | M11 | new |
+| FL-31 | Module tab strip, left to right | Validation Rules | 49, 50 | Visible navigation tab; not operated in this capture | M11 | new |
+| FL-32 | Module tab strip, left to right | Fields | 51, 52 | Selected initial state | M11 | new |
+| FL-33 | Module tab strip, left to right | Record Locking Configuration | 53, 54 | Visible navigation tab; not operated in this capture | M11 | new |
+| FL-34 | Module tab strip, left to right | Map Dependency Fields | 55, 56 | Visible navigation tab; not operated in this capture | M11 | new |
+| FL-35 | Module tab strip, left to right | Links | 57, 58 | Visible navigation tab; not operated in this capture | M11 | new |
+| FL-36 | Module tab strip, left to right | Buttons | 59, 60 | Visible navigation tab; not operated in this capture | M11 | new |
+| FL-37 | Module tab strip, left to right | Summary | 61, 62 | Visible navigation tab; not operated in this capture | M11 | new |
+| FL-38 | Module tab strip, right | Fields help | 106 | Not opened | M11 | new |
+| FL-39 | Bottom utility strip | My Pins | 91 | Not opened | Shell | Contacts shell |
+| FL-40 | Bottom utility strip | Chats | 92 | Not opened | Shell | Contacts shell |
+| FL-41 | Bottom utility strip | Contacts | 93 | Not opened | Shell | Contacts shell |
+| FL-42 | Bottom utility strip | Command palette | 94 | Not opened | Shell | Contacts shell |
+| FL-43 | Bottom utility strip | Announcements | 95 | Not opened | Shell | Contacts shell |
+| FL-44 | Bottom utility strip | Motivator | 96 | Not opened | Shell | Contacts shell |
+| FL-45 | Bottom utility strip | Sticky Notes | 97 | Not opened | Shell | Contacts shell |
+| FL-46 | Bottom utility strip | Activity Reminders | 98 | Not opened | Shell | Contacts shell |
+| FL-47 | Bottom utility strip | Recent Items | 99 | Not opened | Shell | Contacts shell |
+| FL-48 | Bottom utility strip | Accessibility | 100 | Not opened | Shell | Contacts shell |
+| FL-49 | Bottom utility strip | Help | 101 | Not opened | Shell | Contacts shell |
+| FL-50 | Content subtab strip, left | Field Listing | 63, 64 | Selected initial subtab | M11 | new |
+| FL-51 | Content subtab strip, middle | Field Permissions | 65, 66 | Visible subordinate tab; not opened | M11 | new |
+| FL-52 | Content subtab strip, right | AI Governance | 67, 68 | Visible subordinate tab; not opened | M11 | new |
+| FL-53 | Above table, left | Search Fields or Data Types | 69, 107 | Empty search input with glyph; not typed | M11 | new |
+| FL-54 | Above table, right | Create and Edit Fields | 70, 71 | Editor entry; forbidden, not opened | M11 | new |
+
+Reconciliation: 111 raw entries → 54 logical controls;
+75 represented + 36 excluded = 111.
+Excluded entries: 1, 2, 5, 9, 10, 12, 13, 15, 16, 19, 20, 25, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 102, 108, 109, 110, 111.
+Exclusions are static descriptions/table wrappers, navigation/utility containers,
+hidden zero-area overlays, body and scroll-region wrappers, as checked
+against the screenshot. Screen-specific overflow controls are listed separately.
+
+
+## Leads — Record Locking Configuration
+
+Source: **seen, `m11r1-leads-record-locking` screenshot**, reconciled with its one-based
+`controls.json`. The fully painted initial state contains explanatory text and a Configure Now
+entry, rather than a configured-rules table. The text describes restricting
+changes to locked records; configuration details and allowed actions are
+unobserved. The help control is beside the main tab strip.
+
+| # | Position | Control | Raw entries | Observed behaviour / limit | Owning module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- |
+| RL-01 | Top utility strip | Search records | 3 | Not opened or typed | Shell | Contacts shell |
+| RL-02 | Top utility strip | Quick create | 4 | Not opened or typed | Shell | Contacts shell |
+| RL-03 | Top utility strip | Assistant | 6 | Not opened or typed | Shell | Contacts shell |
+| RL-04 | Top utility strip | Notifications | 7 | Not opened or typed | Shell | Contacts shell |
+| RL-05 | Top utility strip | Calendar | 8 | Not opened or typed | Shell | Contacts shell |
+| RL-06 | Top utility strip | Marketplace | 11 | Not opened or typed | Shell | Contacts shell |
+| RL-07 | Top utility strip | Setup | 14 | Not opened or typed | Shell | Contacts shell |
+| RL-08 | Top utility strip | Profile | 17, 18 | Not opened or typed | Shell | Contacts shell |
+| RL-09 | Top utility strip | Applications menu | 21, 22, 23, 24 | Not opened or typed | Shell | Contacts shell |
+| RL-10 | Sidebar header | Back to Modules | 26, 99, 100 | Back affordance visible; not clicked | M11 | new |
+| RL-11 | Sidebar header right | Module search icon | 27, 101 | Not opened; input behaviour unobserved | M11 | new |
+| RL-12 | Sidebar, top to bottom | Leads | 28 | Selected | M11 | new |
+| RL-13 | Sidebar, top to bottom | Contacts | 29 | Module navigation; not opened | M11 | new |
+| RL-14 | Sidebar, top to bottom | Accounts | 30 | Module navigation; not opened | M11 | new |
+| RL-15 | Sidebar, top to bottom | Deals | 31 | Module navigation; not opened | M11 | new |
+| RL-16 | Sidebar, top to bottom | Tasks | 32 | Module navigation; not opened | M11 | new |
+| RL-17 | Sidebar, top to bottom | Meetings | 33 | Module navigation; not opened | M11 | new |
+| RL-18 | Sidebar, top to bottom | Calls | 34 | Module navigation; not opened | M11 | new |
+| RL-19 | Sidebar, top to bottom | Products | 35 | Module navigation; not opened | M11 | new |
+| RL-20 | Sidebar, top to bottom | Quotes | 36 | Module navigation; not opened | M11 | new |
+| RL-21 | Sidebar, top to bottom | Sales Orders | 37 | Module navigation; not opened | M11 | new |
+| RL-22 | Sidebar, top to bottom | Purchase Orders | 38 | Module navigation; not opened | M11 | new |
+| RL-23 | Sidebar, top to bottom | Invoices | 39 | Module navigation; not opened | M11 | new |
+| RL-24 | Sidebar, top to bottom | Campaigns | 40 | Module navigation; not opened | M11 | new |
+| RL-25 | Sidebar, top to bottom | Vendors | 41 | Module navigation; not opened | M11 | new |
+| RL-26 | Sidebar, top to bottom | Price Books | 42 | Module navigation; not opened | M11 | new |
+| RL-27 | Sidebar, top to bottom | Cases | 43 | Module navigation; not opened | M11 | new |
+| RL-28 | Sidebar, top to bottom | Solutions | 44 | Module navigation; not opened | M11 | new |
+| RL-29 | Module tab strip, left to right | Layouts | 45, 46 | Visible navigation tab; not operated in this capture | M11 | new |
+| RL-30 | Module tab strip, left to right | Layout Rules | 47, 48 | Visible navigation tab; not operated in this capture | M11 | new |
+| RL-31 | Module tab strip, left to right | Validation Rules | 49, 50 | Visible navigation tab; not operated in this capture | M11 | new |
+| RL-32 | Module tab strip, left to right | Fields | 51, 52 | Visible navigation tab; not operated in this capture | M11 | new |
+| RL-33 | Module tab strip, left to right | Record Locking Configuration | 53, 54 | Selected initial state | M11 | new |
+| RL-34 | Module tab strip, left to right | Map Dependency Fields | 55, 56 | Visible navigation tab; not operated in this capture | M11 | new |
+| RL-35 | Module tab strip, left to right | Links | 57, 58 | Visible navigation tab; not operated in this capture | M11 | new |
+| RL-36 | Module tab strip, left to right | Buttons | 59, 60 | Visible navigation tab; not operated in this capture | M11 | new |
+| RL-37 | Module tab strip, left to right | Summary | 61, 62 | Visible navigation tab; not operated in this capture | M11 | new |
+| RL-38 | Module tab strip, right | Record locking help | 63 | Not opened | M11 | new |
+| RL-39 | Bottom utility strip | My Pins | 87 | Not opened | Shell | Contacts shell |
+| RL-40 | Bottom utility strip | Chats | 88 | Not opened | Shell | Contacts shell |
+| RL-41 | Bottom utility strip | Contacts | 89 | Not opened | Shell | Contacts shell |
+| RL-42 | Bottom utility strip | Command palette | 90 | Not opened | Shell | Contacts shell |
+| RL-43 | Bottom utility strip | Announcements | 91 | Not opened | Shell | Contacts shell |
+| RL-44 | Bottom utility strip | Motivator | 92 | Not opened | Shell | Contacts shell |
+| RL-45 | Bottom utility strip | Sticky Notes | 93 | Not opened | Shell | Contacts shell |
+| RL-46 | Bottom utility strip | Activity Reminders | 94 | Not opened | Shell | Contacts shell |
+| RL-47 | Bottom utility strip | Recent Items | 95 | Not opened | Shell | Contacts shell |
+| RL-48 | Bottom utility strip | Accessibility | 96 | Not opened | Shell | Contacts shell |
+| RL-49 | Bottom utility strip | Help | 97 | Not opened | Shell | Contacts shell |
+| RL-50 | Content upper left | Configure Now | 64, 65 | Configuration entry; forbidden, not opened | M11 | new |
+
+Reconciliation: 104 raw entries → 50 logical controls;
+67 represented + 37 excluded = 104.
+Excluded entries: 1, 2, 5, 9, 10, 12, 13, 15, 16, 19, 20, 25, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 98, 102, 103, 104.
+Exclusions are static descriptions/table wrappers, navigation/utility containers,
+hidden zero-area overlays, body and scroll-region wrappers, as checked
+against the screenshot. Screen-specific overflow controls are listed separately.
+
+
+## Leads — Map Dependency Fields
+
+Source: **seen, `m11r1-leads-dependencies` screenshot**, reconciled with its one-based
+`controls.json`. The fully painted state has introductory text, a layout dropdown and a creation
+button. The table has Parent Field, Child Field and Last Modified columns, with
+a static empty mapping message. The introductory text describes dependencies
+between supported choice-field types, with multi-select choices as children.
+No mapping rows or row actions are visible. The default layout is preselected;
+its option list and switching behaviour were not inspected.
+
+| # | Position | Control | Raw entries | Observed behaviour / limit | Owning module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- |
+| MD-01 | Top utility strip | Search records | 3 | Not opened or typed | Shell | Contacts shell |
+| MD-02 | Top utility strip | Quick create | 4 | Not opened or typed | Shell | Contacts shell |
+| MD-03 | Top utility strip | Assistant | 6 | Not opened or typed | Shell | Contacts shell |
+| MD-04 | Top utility strip | Notifications | 7 | Not opened or typed | Shell | Contacts shell |
+| MD-05 | Top utility strip | Calendar | 8 | Not opened or typed | Shell | Contacts shell |
+| MD-06 | Top utility strip | Marketplace | 11 | Not opened or typed | Shell | Contacts shell |
+| MD-07 | Top utility strip | Setup | 14 | Not opened or typed | Shell | Contacts shell |
+| MD-08 | Top utility strip | Profile | 17, 18 | Not opened or typed | Shell | Contacts shell |
+| MD-09 | Top utility strip | Applications menu | 21, 22, 23, 24 | Not opened or typed | Shell | Contacts shell |
+| MD-10 | Sidebar header | Back to Modules | 26, 102, 103 | Back affordance visible; not clicked | M11 | new |
+| MD-11 | Sidebar header right | Module search icon | 27, 104 | Not opened; input behaviour unobserved | M11 | new |
+| MD-12 | Sidebar, top to bottom | Leads | 28 | Selected | M11 | new |
+| MD-13 | Sidebar, top to bottom | Contacts | 29 | Module navigation; not opened | M11 | new |
+| MD-14 | Sidebar, top to bottom | Accounts | 30 | Module navigation; not opened | M11 | new |
+| MD-15 | Sidebar, top to bottom | Deals | 31 | Module navigation; not opened | M11 | new |
+| MD-16 | Sidebar, top to bottom | Tasks | 32 | Module navigation; not opened | M11 | new |
+| MD-17 | Sidebar, top to bottom | Meetings | 33 | Module navigation; not opened | M11 | new |
+| MD-18 | Sidebar, top to bottom | Calls | 34 | Module navigation; not opened | M11 | new |
+| MD-19 | Sidebar, top to bottom | Products | 35 | Module navigation; not opened | M11 | new |
+| MD-20 | Sidebar, top to bottom | Quotes | 36 | Module navigation; not opened | M11 | new |
+| MD-21 | Sidebar, top to bottom | Sales Orders | 37 | Module navigation; not opened | M11 | new |
+| MD-22 | Sidebar, top to bottom | Purchase Orders | 38 | Module navigation; not opened | M11 | new |
+| MD-23 | Sidebar, top to bottom | Invoices | 39 | Module navigation; not opened | M11 | new |
+| MD-24 | Sidebar, top to bottom | Campaigns | 40 | Module navigation; not opened | M11 | new |
+| MD-25 | Sidebar, top to bottom | Vendors | 41 | Module navigation; not opened | M11 | new |
+| MD-26 | Sidebar, top to bottom | Price Books | 42 | Module navigation; not opened | M11 | new |
+| MD-27 | Sidebar, top to bottom | Cases | 43 | Module navigation; not opened | M11 | new |
+| MD-28 | Sidebar, top to bottom | Solutions | 44 | Module navigation; not opened | M11 | new |
+| MD-29 | Module tab strip, left to right | Layouts | 45, 46 | Visible navigation tab; not operated in this capture | M11 | new |
+| MD-30 | Module tab strip, left to right | Layout Rules | 47, 48 | Visible navigation tab; not operated in this capture | M11 | new |
+| MD-31 | Module tab strip, left to right | Validation Rules | 49, 50 | Visible navigation tab; not operated in this capture | M11 | new |
+| MD-32 | Module tab strip, left to right | Fields | 51, 52 | Visible navigation tab; not operated in this capture | M11 | new |
+| MD-33 | Module tab strip, left to right | Record Locking Configuration | 53, 54 | Visible navigation tab; not operated in this capture | M11 | new |
+| MD-34 | Module tab strip, left to right | Map Dependency Fields | 55, 56 | Selected initial state | M11 | new |
+| MD-35 | Module tab strip, left to right | Links | 57, 58 | Visible navigation tab; not operated in this capture | M11 | new |
+| MD-36 | Module tab strip, left to right | Buttons | 59, 60 | Visible navigation tab; not operated in this capture | M11 | new |
+| MD-37 | Module tab strip, left to right | Summary | 61, 62 | Visible navigation tab; not operated in this capture | M11 | new |
+| MD-38 | Content introduction, right | Dependency help | 65 | Not opened | M11 | new |
+| MD-39 | Bottom utility strip | My Pins | 90 | Not opened | Shell | Contacts shell |
+| MD-40 | Bottom utility strip | Chats | 91 | Not opened | Shell | Contacts shell |
+| MD-41 | Bottom utility strip | Contacts | 92 | Not opened | Shell | Contacts shell |
+| MD-42 | Bottom utility strip | Command palette | 93 | Not opened | Shell | Contacts shell |
+| MD-43 | Bottom utility strip | Announcements | 94 | Not opened | Shell | Contacts shell |
+| MD-44 | Bottom utility strip | Motivator | 95 | Not opened | Shell | Contacts shell |
+| MD-45 | Bottom utility strip | Sticky Notes | 96 | Not opened | Shell | Contacts shell |
+| MD-46 | Bottom utility strip | Activity Reminders | 97 | Not opened | Shell | Contacts shell |
+| MD-47 | Bottom utility strip | Recent Items | 98 | Not opened | Shell | Contacts shell |
+| MD-48 | Bottom utility strip | Accessibility | 99 | Not opened | Shell | Contacts shell |
+| MD-49 | Bottom utility strip | Help | 100 | Not opened | Shell | Contacts shell |
+| MD-50 | Above table, left | Layout selector | 66, 67, 68, 108 | Default layout selected; not opened or changed | M11 | new |
+| MD-51 | Above table, right | Create Map Dependency | 69, 70 | Creation entry; forbidden, not opened | M11 | new |
+
+Reconciliation: 108 raw entries → 51 logical controls;
+71 represented + 37 excluded = 108.
+Excluded entries: 1, 2, 5, 9, 10, 12, 13, 15, 16, 19, 20, 25, 63, 64, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 101, 105, 106, 107.
+Exclusions are static descriptions/table wrappers, navigation/utility containers,
+hidden zero-area overlays, body and scroll-region wrappers, as checked
+against the screenshot. Screen-specific overflow controls are listed separately.
+
+
+## Leads — Links failure state (paint gate failed)
+
+Source: **seen, `m11r1-leads-links` screenshot**. One unique Links tab click
+reached `/crm/<org>/settings/modules/Leads/custom-link`. The module sidebar,
+heading, tab strip and Links content disappeared. The content card is blank
+except for a static `[object Object]` error rendering. The top and bottom shell
+remain. This is a **failed paint gate**, not an empty Links list or an accepted
+reference design. No dialog, editor or menu appeared. No retry or recovery
+navigation was attempted; live inspection stopped, so Buttons and Summary were
+not opened.
+
+Pre-click readiness succeeded (44 ms; no failed scripts), but that only proves
+the source tab was ready. Two `XMLHttpRequest` page errors appear in addition
+to known sorting-library noise. A refused POST to the neutral path
+`/crm/v9/settings/profiles/actions/get_assigned` is new; it did not leave the
+browser. Its refusal may relate to the rendering failure, but causation is
+unproven. No guard was relaxed, request replayed or capture tool changed.
+Successful non-GET calls remain the two accepted passive/read exceptions.
+
+The inventory below covers **only the failed screen's visible shell controls**.
+It does not substitute for the intended Links initial-screen inventory.
+
+| # | Position | Control | Raw entries | Observed behaviour / limit | Owning module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- |
+| LE-01 | Top utility strip | Search records | 3 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-02 | Top utility strip | Quick create | 4 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-03 | Top utility strip | Assistant | 6 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-04 | Top utility strip | Notifications | 7 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-05 | Top utility strip | Calendar | 8 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-06 | Top utility strip | Marketplace | 11 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-07 | Top utility strip | Setup | 14 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-08 | Top utility strip | Profile | 17, 18 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-09 | Top utility strip | Applications menu | 21, 22, 23, 24 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-10 | Bottom utility strip | My Pins | 43 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-11 | Bottom utility strip | Chats | 44 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-12 | Bottom utility strip | Contacts | 45 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-13 | Bottom utility strip | Command palette | 46 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-14 | Bottom utility strip | Announcements | 47 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-15 | Bottom utility strip | Motivator | 48 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-16 | Bottom utility strip | Sticky Notes | 49 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-17 | Bottom utility strip | Activity Reminders | 50 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-18 | Bottom utility strip | Recent Items | 51 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-19 | Bottom utility strip | Accessibility | 52 | Visible shell control; not operated | Shell | Contacts shell |
+| LE-20 | Bottom utility strip | Help | 53 | Visible shell control; not operated | Shell | Contacts shell |
+
+Reconciliation: 55 raw entries → 20 logical controls;
+24 represented + 31 excluded = 55.
+Excluded entries: 1, 2, 5, 9, 10, 12, 13, 15, 16, 19, 20, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 54, 55.
+Exclusions: shell containers, hidden/zero-area overlay placeholders, the static
+error-text node (25), body and content-card wrappers. No content control survives.
 
 ## Fields and metadata
 
@@ -278,12 +619,14 @@ No current record values, layout identifiers or profile identifiers are copied.
 
 1. Click-free navigation to `/crm/<org>/settings/modules` draws the list.
 2. Open the Leads module-name link to inspect its initial layouts list.
-3. Audit the request delta; stop before any tab click because the inherited
-   new-path/increased-count rule is triggered.
+3. Open only the authorized tab headings; inspect each image and successful
+   non-GET set. A failed target is not retried in the same run.
 
 No search, sorting, filtering, reordering, status switch, panel preference,
 creation or editor action is tested. No Save-capable editor is opened.
-Empty results, validation, loading/recovery and permission errors are unobserved.
+Validation Rules and Map Dependency Fields have observed initial empty states.
+Search-produced empty results, save validation, loading/recovery and permission
+errors are unobserved. The Links failure is documented separately below.
 
 ## Capture refs, paint gate and safety audit
 
@@ -330,30 +673,65 @@ support widget's automatic visit trace. No click triggered either. The former
 visitor-effect question is closed; this classification does not authorize
 manual requests, replay or any settings write. Refused requests remain refused.
 
+## Continuation capture audit — 2026-10-22
+
+All captures start at `/crm/<org>/settings/modules/Leads/layouts`. Only one
+attempt per target was made. No editor, modal, menu, search/filter change,
+creation action, switch, drag, preference change, popup, download, print or
+file chooser was operated. No shared-browser tabs were closed. Failed-script
+count is zero for each capture. Blocked requests remained blocked.
+
+| Capture folder under `captures/` | Target / result | Controls | Refused requests | Successful non-GET |
+| --- | --- | --- | --- | --- |
+| `m11r1-leads-layout-rules` | No click; ambiguous selector; Layouts remains | 107 | 7 | PageLayout/read ×1; visitor/passive ×1; both 200 |
+| `m11r1-leads-validation-rules` | Clicked; fully painted | 104 | 3 | PageLayout/read ×1; visitor/passive ×1; both 200 |
+| `m11r1-leads-fields` | Clicked; fully painted | 111 | 3 | PageLayout/read ×1; visitor/passive ×1; both 200 |
+| `m11r1-leads-record-locking` | Clicked; fully painted | 104 | 3 | PageLayout/read ×1; visitor/passive ×1; both 200 |
+| `m11r1-leads-dependencies` | Clicked; fully painted | 108 | 2 | PageLayout/read ×1; visitor/passive ×1; both 200 |
+| `m11r1-leads-links` | Clicked; paint failed; STOP | 55 | 4 | PageLayout/read ×1; visitor/passive ×1; both 200 |
+
+The refused-request changes are known noise under CTO's current rule, except
+that the Links profile-assignment refusal is retained as failure evidence.
+No successful settings-write delta is present. The stop is caused by the
+visibly blank Links content, independently of request-count comparisons.
+A pre-click ready probe or tool exit code alone does not establish final paint.
+
 ## Open questions and unobserved states
 
-1. CTO disposition of the refused telemetry delta is required before further
-   live capture. This is distinct from the already-closed successful visitor
-   POST question and already-accepted sorting-library paint noise.
-2. The first states of Layout Rules, Validation Rules, Fields, Record Locking
-   Configuration, Map Dependency Fields, Links, Buttons and Summary are not
-   captured. Their tab labels alone are not evidence of their contents.
-3. Search/filter, empty, permission and error behaviour on those tabs remains
-   unknown. No Custom Views tab is visible in the observed module tab set.
+1. Links fails the paint gate: blank content with an object-rendering error.
+   CTO must determine the safe next step before further live research. A new
+   refused profile-assignment request and two request errors are recorded; no
+   successful-write delta is observed. Buttons and Summary remain unobserved.
+2. Layout Rules could not be opened in this continuation: the text selector
+   matched three elements, so the tool ran no click. The screenshot remains
+   Layouts. A later run must use the exported unique `#formRulesLI` selector;
+   no retry was made in this run. This target is not acceptance evidence.
+3. Search/filter, empty-result, permission and error behaviour beyond the
+   observed initial states remains unknown. Custom Views is not a visible tab.
 4. Status-switch availability, information tooltips, Teamspace destinations,
-   contextual help and more-menu contents are unobserved and outside the
-   authorized open-only tab continuation.
+   contextual help and more-menu contents remain unobserved.
 5. Create/edit/save, validation, field/layout changes, module visibility,
-   deletion and reorder outcomes are not observable within this issue's
-   read-only boundary. Do not infer them from a resting list image.
-6. An earlier Modules-table capture showing the Tasks date was not found among
-   the preceding email-settings evidence; no causal attribution is made.
+   deletion and reorder outcomes are not observable within this read-only scope.
+6. No earlier comparable Modules table was found for the Tasks date; no causal
+   attribution is made.
 
 ## Verification and handoff
 
-Both captured states have screenshot inspection and unique raw-control mapping.
-The prior module-list inventory is preserved; the continuation adds a complete
-Layouts inventory. Privacy/neutral-language and whitespace checks are required
-before publication. Documentation only: no application tests, typecheck or e2e.
-`research/specs/verify.mjs` is absent. Acceptance remains incomplete until the
-remaining eight initial tab screens are captured after CTO safety disposition.
+The module-list and Layouts inventories are preserved. Each successful new tab
+has its own screenshot inspection and numbered inventory, including shared shell
+controls, reconciled against raw controls. No capture screenshot or raw data is
+committed or uploaded: these may contain customer/account information.
+
+Layout Rules remains incomplete after a single tool-failed attempt with no click.
+The failed Layout Rules capture folder contains a fully painted Layouts image, not a Layout Rules
+state; it must not be counted as that tab's inventory. A later run can use the
+exported unique selector. Links is separately documented as a failed render, with shell-only inventory.
+Buttons and Summary were not attempted after the paint failure. Successful tab
+states are initial and read-only.
+
+Documentation verification covers raw-index uniqueness and arithmetic,
+privacy/neutral-language scanning and `git diff --check`. No application tests,
+typecheck or e2e are warranted for this documentation-only change.
+`research/specs/verify.mjs` is absent. Acceptance remains incomplete: Layout Rules and Links need valid initial-screen
+evidence; Buttons and Summary are still unobserved. CTO owns disposition of the
+paint failure and routing the remaining work in a later run.
