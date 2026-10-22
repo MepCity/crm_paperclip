@@ -13,8 +13,13 @@ function fixtureSnapshot(ctx: OrgContext): DocumentsSnapshot {
       { organizationId: "org-foreign", id: "space-foreign", kind: "team", associated: true },
     ],
     nodes: [
-      node(organizationId, "folder-my", "space-my", null, "folder", "My Folders"),
-      node(organizationId, "folder-team", "space-team", null, "folder", "Team Folder"),
+      node(organizationId, "folder-my", "space-my", null, "folder", "My Folders", undefined, {
+        title: "Workspace Files",
+      }),
+      node(organizationId, "folder-app", "space-my", "folder-my", "folder", "Workspace Files"),
+      node(organizationId, "folder-team", "space-team", null, "folder", "Team Folder", undefined, {
+        locked: true,
+      }),
       node(organizationId, "folder-empty", "space-team", "folder-team", "folder", "Empty"),
       node(
         organizationId,
@@ -59,6 +64,7 @@ function node(
   kind: "folder" | "file",
   name: string,
   modifiedAt = "2026-01-01T00:00:00Z",
+  extra: { title?: string; locked?: boolean } = {},
 ) {
   return {
     organizationId,
@@ -67,7 +73,8 @@ function node(
     parentId,
     kind,
     name,
-    locked: false,
+    locked: extra.locked ?? false,
+    ...(extra.title === undefined ? {} : { title: extra.title }),
     state: "active" as const,
     ready: true,
     restricted: false,
