@@ -8,8 +8,7 @@ import { ApiProvider } from "@/lib/api/client/provider";
 import { decodeTimelineQuery, encodeTimelineEvent } from "@/lib/api/wire/timelines";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { render } from "@/test/render";
-import { RecordTimelineHistory, reconcileHistory } from "./record-timeline-history";
-import type { TimelineEvent } from "./types";
+import { RecordTimelineHistory } from "./record-timeline-history";
 
 const event = (id: string, extra: Partial<RecordHistoryEvent> = {}): RecordHistoryEvent => ({
   id,
@@ -67,13 +66,13 @@ const props = {
   applyLabel: "Apply Filter",
   onApply: () => {},
 };
-function setup(events: readonly TimelineEvent[] = [], module = "Accounts") {
+function setup(module = "Accounts") {
   const service = createHttpRecordService({ orgSlug: "sample" });
   const list = vi.spyOn(service, "listHistory").mockResolvedValue(page([]));
   const renderHistory = () =>
     render(
       <ApiProvider orgSlug="sample" service={service}>
-        <RecordTimelineHistory {...props} events={events} module={module} recordId="record" />
+        <RecordTimelineHistory {...props} module={module} recordId="record" />
       </ApiProvider>,
     );
   return { service, list, renderHistory };
@@ -87,7 +86,7 @@ describe("record Timeline History", () => {
   it.each(["Leads", "Contacts", "Accounts", "Deals", "Tasks", "Events", "Calls", "Campaigns"])(
     "loads the empty stream for %s",
     async (module) => {
-      const { list, renderHistory } = setup([], module);
+      const { list, renderHistory } = setup(module);
       renderHistory();
       expect(screen.getByRole("status").textContent).toContain("Loading");
       await screen.findByText("No logs found");
@@ -246,49 +245,5 @@ describe("record Timeline History", () => {
       sources: ["manual"],
     });
     expect(encodeTimelineEvent(event("wire")).field_history).toHaveLength(1);
-  });
-
-  it("reconciles note and attachment identities without losing distinct operations", () => {
-    const note = event("note-event", {
-      kind: "note_added",
-      subject: { module: "Notes", recordId: "n" },
-      changes: [],
-    });
-    const attachment = event("attachment-event", {
-      kind: "attachment_added",
-      subject: { module: "Attachments", recordId: "a" },
-      changes: [],
-    });
-    const transitional: TimelineEvent[] = [
-      {
-        id: "note-n",
-        moduleId: "notes",
-        kind: "note",
-        title: "Note added",
-        actorName: "Sample",
-        at: note.occurredAt,
-      },
-      {
-        id: "attachment-a",
-        moduleId: "attachments",
-        kind: "attachment",
-        title: "Attachment added",
-        actorName: "Sample",
-        at: note.occurredAt,
-      },
-      {
-        id: "attachment-deleted-a",
-        moduleId: "attachments",
-        kind: "attachment",
-        title: "Attachment deleted",
-        actorName: "Sample",
-        at: note.occurredAt,
-      },
-    ];
-    expect(
-      reconcileHistory([note, attachment], transitional, { perPage: 25 }).map((e) => e.id),
-    ).toEqual(["note-event", "attachment-event", "attachment-deleted-a"]);
-    expect(reconcileHistory([], transitional, { perPage: 25, sources: ["api"] })).toEqual([]);
-    expect(reconcileHistory([], transitional, { perPage: 25, modules: ["Events"] })).toEqual([]);
   });
 });

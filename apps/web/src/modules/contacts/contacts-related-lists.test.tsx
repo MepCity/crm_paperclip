@@ -186,19 +186,16 @@ describe("RelatedCardsContainer with Contacts card set", () => {
     const casesSection = screen.getByRole("region", { name: "Cases" });
     expect(casesSection.querySelector("[data-later-module]")).toBeNull();
 
-    // D-79 Emails Compose Email (M10)
+    // D-79 to D-82 (MEP-1049): Emails card is live with disabled Compose Email and interactive tabs
     const composeEmailBtn = screen.getByRole("button", { name: "Compose Email" });
-    expect(composeEmailBtn.getAttribute("data-later-module")).toBe("M10");
-
-    // D-80 to D-82 Emails subtabs (M10)
-    expect(screen.getByRole("tab", { name: "Mails" }).getAttribute("data-later-module")).toBe(
-      "M10",
-    );
-    expect(screen.getByRole("tab", { name: "Drafts" }).getAttribute("data-later-module")).toBe(
-      "M10",
-    );
-    expect(screen.getByRole("tab", { name: "Scheduled" }).getAttribute("data-later-module")).toBe(
-      "M10",
+    expect(
+      composeEmailBtn.hasAttribute("disabled") ||
+        composeEmailBtn.getAttribute("aria-disabled") === "true",
+    ).toBe(true);
+    expect(screen.getByRole("tab", { name: "Mails" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByRole("tab", { name: "Drafts" }).getAttribute("aria-selected")).toBe("false");
+    expect(screen.getByRole("tab", { name: "Scheduled" }).getAttribute("aria-selected")).toBe(
+      "false",
     );
 
     // D-87, D-88 Social links (M15) in two-panel layout
