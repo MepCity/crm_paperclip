@@ -13,6 +13,7 @@ import type {
   RelatedListRailChromeDefinition,
   RelatedListTableColumnDefinition,
 } from "../types";
+import { DealsContactRolesCard } from "./contact-roles-dialog";
 
 export const dealsRelatedListRail: RelatedListRailChromeDefinition = {
   organizeAriaLabel: "Organize Deal Details",
@@ -347,6 +348,13 @@ export function createDealsRelatedLists(
     },
     {
       id: "contact-roles",
+      renderCard: (context) =>
+        context.record
+          ? createElement(DealsContactRolesCard, {
+              context: { ...context, record: context.record },
+              definition: context.definition,
+            })
+          : undefined,
       renderBody: ({ record, recordPath }) =>
         record
           ? createElement(ContactRolesCardBody, {

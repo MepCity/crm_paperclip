@@ -121,6 +121,20 @@ export const outboxItemSchema = z
   .strict();
 export type OutboxItem = z.infer<typeof outboxItemSchema>;
 
+export const mailboxSyncStateSchema = z
+  .object({
+    organizationId: id,
+    mailboxId: id,
+    folder: mailFolderSchema,
+    cursor: z.string().nullable(),
+    lastSyncedAt: instant.nullable(),
+    lastError: z
+      .enum(["auth_revoked", "retryable", "permanent", "disconnected", "storage_failed"])
+      .nullable(),
+  })
+  .strict();
+export type MailboxSyncState = z.infer<typeof mailboxSyncStateSchema>;
+
 export interface MailSnapshot {
   mailboxes: readonly MailboxAccount[];
   threads: readonly MailThread[];
@@ -134,6 +148,18 @@ export interface MailSnapshot {
 export interface MailRepository {
   read(organizationId: string): Promise<MailSnapshot>;
   createMailbox(input: CreateMailboxAccount): Promise<MailboxAccount>;
+  getSyncState(
+    organizationId: string,
+    mailboxId: string,
+    folder: MailFolder,
+  ): Promise<MailboxSyncState>;
+  putSyncState(input: MailboxSyncState): Promise<MailboxSyncState>;
+  setMailboxStatus(
+    organizationId: string,
+    mailboxId: string,
+    status: MailboxAccount["status"],
+    lastError: string | null,
+  ): Promise<void>;
   putThread(input: MailThread): Promise<MailThread>;
   /** Insert-only by tenant/mailbox/provider key. A replay returns the original unchanged. */
   upsertMessage(input: UpsertMailMessage): Promise<MailMessage>;

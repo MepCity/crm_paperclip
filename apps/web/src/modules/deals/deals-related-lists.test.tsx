@@ -1,6 +1,7 @@
-import { cleanup, screen, within } from "@testing-library/react";
+import type { RecordData } from "@crm/core/records";
+import { cleanup, screen, waitFor, within } from "@testing-library/react";
 import { userEvent } from "@testing-library/user-event";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RelatedCardsContainer } from "@/components/records/detail/related-cards-container";
 import { resolveLaterModule } from "@/components/ui/later-module";
@@ -13,6 +14,60 @@ import {
   dealsRelatedLists,
 } from "./deals-related-lists";
 
+const dialogState = vi.hoisted(() => ({
+  roles: [] as RecordData[],
+  contacts: [] as RecordData[],
+  loading: false,
+  failed: false,
+  create: vi.fn(),
+  update: vi.fn(),
+}));
+vi.mock("@/lib/api/client/hooks", () => ({
+  useModule: () => ({
+    data: {
+      fields: [
+        {
+          apiName: "Contact_Role",
+          picklist: [
+            { storedValue: "-None-", displayValue: "-None-" },
+            { storedValue: "Purchasing", displayValue: "Purchasing" },
+            { storedValue: "Evaluator", displayValue: "Evaluator" },
+          ],
+        },
+      ],
+    },
+    isLoading: dialogState.loading,
+    isError: dialogState.failed,
+  }),
+  useViews: () => ({ data: [{ id: "contacts", isDefault: true }] }),
+  useAllRecordPages: (module: string) => ({
+    data: module === "Contact_Roles" ? dialogState.roles : dialogState.contacts,
+  }),
+  useRecordList: (module: string) => ({
+    data: { records: module === "Contact_Roles" ? dialogState.roles : dialogState.contacts },
+  }),
+  useCreateRecord: () => ({ mutateAsync: dialogState.create }),
+  useUpdateRecord: () => ({ mutateAsync: dialogState.update }),
+}));
+beforeEach(() => {
+  dialogState.roles = [
+    {
+      id: "role-1",
+      fields: {
+        Contact: { module: "Contacts", id: "linked", name: "Existing Contact" },
+        Contact_Role: "Purchasing",
+      },
+    },
+  ];
+  dialogState.contacts = [
+    { id: "linked", fields: { Full_Name: "Existing Contact" } },
+    { id: "new", fields: { Full_Name: "New Contact" } },
+  ];
+  dialogState.loading = false;
+  dialogState.failed = false;
+  dialogState.create.mockReset().mockResolvedValue({});
+  dialogState.update.mockReset().mockResolvedValue({});
+});
 afterEach(cleanup);
 
 function mapRailEntries(lists: typeof dealsRelatedLists) {
@@ -210,5 +265,91 @@ describe("RecordPageFrame with Deals rail metadata", () => {
     expect(competitorsLink.getAttribute("data-later-module")).toBe("P3");
     await user.click(competitorsLink);
     expect(competitorsLink.getAttribute("aria-disabled")).toBe("true");
+  });
+});
+
+const deal: RecordData = {
+  id: "deal-1",
+  fields: { Account_Name: { module: "Accounts", id: "account-1" } },
+};
+function renderContactRoles() {
+  render(
+    <RelatedCardsContainer
+      relatedLists={dealsRelatedLists.filter((card) => card.id === "contact-roles")}
+      context={{ record: deal, orgSlug: "test", recordPath: (_module, id) => `/records/${id}` }}
+    />,
+  );
+  return screen.getByRole("region", { name: "Contact Roles" });
+}
+
+describe("Contact Roles dialogs", () => {
+  it("opens both dialogs from the card and closes with Cancel or Escape without writes", async () => {
+    const user = userEvent.setup();
+    const card = renderContactRoles();
+    await user.click(within(card).getByRole("button", { name: "Add Contacts Roles" }));
+    expect(screen.getByRole("dialog", { name: "Add Contacts Roles" })).toBeTruthy();
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    await user.click(within(card).getByRole("button", { name: "Edit All" }));
+    expect(screen.getByRole("dialog", { name: "Edit All" })).toBeTruthy();
+    await user.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+    expect(dialogState.create).not.toHaveBeenCalled();
+    expect(dialogState.update).not.toHaveBeenCalled();
+  });
+
+  it("adds an unlinked contact and metadata role using the record service", async () => {
+    const user = userEvent.setup();
+    const card = renderContactRoles();
+    await user.click(within(card).getByRole("button", { name: "Add Contacts Roles" }));
+    expect(screen.getByRole("button", { name: "Save" }).hasAttribute("disabled")).toBe(true);
+    await user.click(screen.getByRole("button", { name: /Contact Name/ }));
+    expect(screen.queryByRole("option", { name: "Existing Contact" })).toBeNull();
+    await user.click(screen.getByRole("option", { name: "New Contact" }));
+    await user.click(screen.getByRole("button", { name: /Role Name/ }));
+    await user.click(screen.getByRole("option", { name: "Evaluator" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() =>
+      expect(dialogState.create).toHaveBeenCalledWith({
+        Deal: { module: "Deals", id: "deal-1" },
+        Contact: { module: "Contacts", id: "new" },
+        Contact_Role: "Evaluator",
+      }),
+    );
+    expect(screen.queryByRole("dialog")).toBeNull();
+  });
+
+  it("edits only changed rows and keeps an error visible on failure for retry", async () => {
+    const user = userEvent.setup();
+    dialogState.update.mockRejectedValueOnce(new Error("failed"));
+    const card = renderContactRoles();
+    await user.click(within(card).getByRole("button", { name: "Edit All" }));
+    expect(screen.getByRole("button", { name: "Save" }).hasAttribute("disabled")).toBe(true);
+    await user.click(screen.getByRole("button", { name: /Role Name for Existing Contact/ }));
+    await user.click(screen.getByRole("option", { name: "Evaluator" }));
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    expect((await screen.findByRole("alert")).textContent).toContain(
+      "Unable to save contact roles",
+    );
+    expect(dialogState.update).toHaveBeenCalledWith({
+      id: "role-1",
+      input: { Contact_Role: "Evaluator" },
+    });
+    await user.click(screen.getByRole("button", { name: "Save" }));
+    await waitFor(() => expect(screen.queryByRole("dialog")).toBeNull());
+  });
+
+  it("shows empty and read failure states without enabling Save", async () => {
+    const user = userEvent.setup();
+    dialogState.roles = [];
+    const card = renderContactRoles();
+    await user.click(within(card).getByRole("button", { name: "Edit All" }));
+    expect(within(screen.getByRole("dialog")).getByText("No records found")).toBeTruthy();
+    expect(screen.getByRole("button", { name: "Save" }).hasAttribute("disabled")).toBe(true);
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
+    dialogState.failed = true;
+    await user.click(within(card).getByRole("button", { name: "Add Contacts Roles" }));
+    expect(screen.getByRole("alert").textContent).toContain("Unable to load contact roles");
+    expect(screen.getByRole("button", { name: "Save" }).hasAttribute("disabled")).toBe(true);
   });
 });

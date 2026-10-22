@@ -147,6 +147,35 @@ test.describe("Contacts record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("Timeline History shows a row after an inline edit (MEP-1027)", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openContactDetail(page, org.slug, REPORT_ONLY_RECORD_ID);
+    const row = page
+      .getByRole("region", { name: "Business card" })
+      .locator('[data-detail-field="Department"]');
+    await row.scrollIntoViewIfNeeded();
+    await row.hover();
+    await row.getByRole("button", { name: "Edit Department value" }).click();
+    const input = row.getByRole("textbox");
+    await input.fill("History Dept");
+    await input.press("Enter");
+    await expect(row).toContainText("History Dept");
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    const history = frame.locator("[data-timeline-history]");
+    await expect(history).toBeVisible();
+    await expect(history.getByText("No logs found")).toHaveCount(0);
+    await expect(history.getByText(/Department changed from .* to History Dept/)).toBeVisible();
+    await page.reload();
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    await expect(history.getByText(/Department changed from .* to History Dept/)).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("Reporting Contacts card lists direct reports and supports New", async ({
     page,
     pageErrors,

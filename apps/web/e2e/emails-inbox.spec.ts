@@ -36,3 +36,24 @@ test("email folders and messages persist in URL and browser history", async ({ p
   await page.getByRole("button", { name: "Scheduled 0" }).click();
   await expect(page.getByRole("heading", { name: "No messages in Scheduled" })).toBeVisible();
 });
+
+test("compose validates recipients and sends through the fixture port", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(`/crm/${org.slug}/tab/Emails`);
+  await page.getByRole("button", { name: "Compose", exact: true }).click();
+  const compose = page.getByRole("dialog", { name: "Compose Email" });
+  await expect(compose).toBeVisible();
+  await compose.getByRole("button", { name: "Send", exact: true }).click();
+  await expect(compose.getByRole("alert")).toHaveText("Add at least one recipient.");
+  await compose.getByRole("textbox", { name: "To", exact: true }).fill("recipient@example.com");
+  await compose.getByRole("button", { name: "Cc", exact: true }).click();
+  await compose.getByRole("textbox", { name: "Cc", exact: true }).fill("copy@example.com");
+  await compose.getByRole("textbox", { name: "Subject" }).fill("Fixture composition");
+  await compose.getByRole("textbox", { name: "Message", exact: true }).fill("Synthetic mail body");
+  await compose.getByRole("button", { name: "Send", exact: true }).click();
+  await expect(compose).not.toBeVisible();
+  await expect(
+    page.getByRole("status").filter({ hasText: "Message sent (fixture)" }),
+  ).toBeVisible();
+});
