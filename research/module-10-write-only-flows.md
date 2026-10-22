@@ -226,3 +226,19 @@ gate outcome; visible presence does not establish working behaviour.
 - R9 documentation may establish capabilities, but exact editor validation, draft
   creation on open, preview side effects and save results remain explicit gaps
   unless independently documented. No reference CRM write test is authorized.
+
+## R10 rule-check safety gap (MEP-1016)
+
+The read-only workflow-list probe does not establish configured rules, active
+states, triggers, actions or recipient roles. The other rule/notification
+categories remain unverified. See
+[the R10 exposure register](specs/email-calendar-rule-check.md): unknown counts
+as yes for test-write eligibility. The W16 implementation scope remains Module
+12; its notification-risk check is required now for Module 10 safety.
+
+Do not create/edit a record to discover a workflow, run assignment, trigger an
+approval/auto-response, send a test alert or create a scheduled action to observe
+its delivery. No such action was attempted. Public documentation cannot prove
+this environment's active configuration. Restore read-only evidence first;
+residual unknowns stay gated for CTO/board disposition under the existing
+read-only rule. This addendum authorizes no write or editor opening.
