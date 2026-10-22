@@ -45,3 +45,18 @@ The configured address is not stored by this module.
   limits, leases and atomic enqueue belong to the worker/outbound issues.
 - SecretBox, disconnect/secret deletion, OAuth, and safe translation of provider
   failures are separate integration responsibilities.
+
+## Gmail connector (`connectors/gmail/`)
+
+`MailConnector` (list changes by history-id cursor, fetch, send raw MIME,
+revoke, disconnect) is implemented for Gmail over an injected `HttpTransport`;
+core never calls the network. Config comes from env names `GMAIL_OAUTH_CLIENT_ID`,
+`GMAIL_OAUTH_CLIENT_SECRET` and `GMAIL_OAUTH_SCOPES` (space separated), read with
+`readGmailConfig`; no values are committed. The refresh token is stored only as
+SecretBox ciphertext in a `CredentialStore` under the mailbox's `credentialRef`;
+access tokens stay in memory. A 401 triggers one refresh, then `auth_revoked`;
+429/5xx are `retryable` with `retryAfterSeconds`. Errors carry no provider body.
+The initial window is 30 days of Inbox + Sent; an expired history id falls back
+to it. Attachments within the 20 MiB limit get a provider locator `blobRef`
+(bytes are fetched later); larger ones are `not_stored`. `syncMailbox` is
+replay-safe. The store is in-memory only until ADR 0002 is accepted.
