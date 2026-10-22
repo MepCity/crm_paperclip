@@ -8,20 +8,25 @@ export interface ImipReply {
   dtstamp: Date | null;
 }
 
-const PARTSTATS: readonly IcsPartstat[] = ["ACCEPTED", "DECLINED", "TENTATIVE", "NEEDS-ACTION"];
+export const PARTSTATS: readonly IcsPartstat[] = [
+  "ACCEPTED",
+  "DECLINED",
+  "TENTATIVE",
+  "NEEDS-ACTION",
+];
 
-function fail(field: string, message: string): never {
+export function fail(field: string, message: string): never {
   throw new ValidationError({ [field]: [message] });
 }
 
-interface ContentLine {
+export interface ContentLine {
   name: string;
   params: Map<string, string>;
   value: string;
 }
 
 /** RFC 5545 §3.1 unfolding: a line starting with space/tab continues the previous one. */
-function unfold(text: string): string[] {
+export function unfold(text: string): string[] {
   const out: string[] = [];
   for (const raw of text.split(/\r\n|\r|\n/)) {
     if ((raw.startsWith(" ") || raw.startsWith("\t")) && out.length > 0) {
@@ -34,12 +39,12 @@ function unfold(text: string): string[] {
 }
 
 /** RFC 5545 §3.3.11 TEXT unescaping. */
-function unescapeText(value: string): string {
+export function unescapeText(value: string): string {
   return value.replace(/\\([\\;,nN])/g, (_m, c: string) => (c === "n" || c === "N" ? "\n" : c));
 }
 
 /** Split on `sep` characters that are outside double quotes. */
-function splitOutsideQuotes(input: string, sep: string): string[] {
+export function splitOutsideQuotes(input: string, sep: string): string[] {
   const parts: string[] = [];
   let current = "";
   let quoted = false;
@@ -56,7 +61,7 @@ function splitOutsideQuotes(input: string, sep: string): string[] {
   return parts;
 }
 
-function parseLine(line: string): ContentLine | null {
+export function parseLine(line: string): ContentLine | null {
   let quoted = false;
   let colon = -1;
   for (let i = 0; i < line.length; i++) {
