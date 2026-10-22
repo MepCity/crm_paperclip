@@ -1,9 +1,11 @@
 import { ConflictError, NotFoundError, parseInput } from "../errors";
 import {
+  type MailboxSyncState,
   type MailRepository,
   type MailSnapshot,
   mailAttachmentMetaSchema,
   mailboxAccountSchema,
+  mailboxSyncStateSchema,
   mailMessageSchema,
   mailRecordLinkSchema,
   mailThreadSchema,
@@ -20,6 +22,7 @@ export function createInMemoryMailRepository(): MailRepository {
     links: [],
     outbox: [],
   };
+  const syncStates = new Map<string, MailboxSyncState>();
   function mailbox(organizationId: string, id: string) {
     const row = data.mailboxes.find((m) => m.organizationId === organizationId && m.id === id);
     if (!row) throw new NotFoundError();
@@ -54,6 +57,30 @@ export function createInMemoryMailRepository(): MailRepository {
       }
       data.mailboxes.push(row);
       return structuredClone(row);
+    },
+    async getSyncState(organizationId, mailboxId, folder) {
+      mailbox(organizationId, mailboxId);
+      return structuredClone(
+        syncStates.get(JSON.stringify([organizationId, mailboxId, folder])) ?? {
+          organizationId,
+          mailboxId,
+          folder,
+          cursor: null,
+          lastSyncedAt: null,
+          lastError: null,
+        },
+      );
+    },
+    async putSyncState(input) {
+      const row = parseInput(mailboxSyncStateSchema, input);
+      mailbox(row.organizationId, row.mailboxId);
+      syncStates.set(JSON.stringify([row.organizationId, row.mailboxId, row.folder]), row);
+      return structuredClone(row);
+    },
+    async setMailboxStatus(organizationId, mailboxId, status, lastError) {
+      const box = mailbox(organizationId, mailboxId);
+      const updated = parseInput(mailboxAccountSchema, { ...box, status, lastError });
+      Object.assign(box, updated);
     },
     async putThread(input) {
       const row = parseInput(mailThreadSchema, input);
