@@ -47,10 +47,11 @@ function makeFormatter(timeZone: string): Intl.DateTimeFormat {
 /** Wall-clock fields of an instant, expressed as a UTC-based epoch ms. */
 function wallOf(fmt: Intl.DateTimeFormat, epoch: number): number {
   const p: Record<string, number> = {};
+  const g = (k: string): number => p[k] ?? 0;
   for (const part of fmt.formatToParts(new Date(epoch))) {
     if (part.type !== "literal") p[part.type] = Number(part.value);
   }
-  return Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second);
+  return Date.UTC(g("year"), g("month") - 1, g("day"), g("hour"), g("minute"), g("second"));
 }
 
 /**
