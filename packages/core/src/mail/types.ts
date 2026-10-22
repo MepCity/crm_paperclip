@@ -3,7 +3,7 @@ import { z } from "zod";
 const id = z.string().min(1).max(256);
 const instant = z.string().datetime({ offset: true });
 export const mailFolderSchema = z.enum(["inbox", "sent", "draft"]);
-export const mailRecordModuleSchema = z.enum(["leads", "contacts", "accounts"]);
+export const mailRecordModuleSchema = z.enum(["leads", "contacts", "accounts", "deals"]);
 export type MailFolder = z.infer<typeof mailFolderSchema>;
 export type MailRecordModule = z.infer<typeof mailRecordModuleSchema>;
 export const MAX_INBOUND_ATTACHMENT_BYTES = 20 * 1024 * 1024;

@@ -12,7 +12,7 @@ API error codec (`400` validation/conflict, `401` session, `403` ownership,
 | DELETE | `/crm/v2.2/mail/messages/{id}/links` | `{ module, recordId }` | `{ id, module, recordId, linked: false }` |
 
 `id` identifies the message, never the queue job. `module` accepts `leads`,
-`contacts`, or `accounts`. Both linking and unlinking require current record
+`contacts`, `accounts`, or `deals`. Both linking and unlinking require current record
 read access and message ownership; sharing also requires message ownership.
 There is no admin ownership bypass.
 
@@ -45,3 +45,29 @@ request records the schedule and enqueues the job for that time; this adapter
 alone does not send email. Durable storage, connected account provisioning,
 trusted attachment upload resolution and worker wiring require their own
 approved implementation slices.
+
+## Conversation reads
+
+`GET /crm/v2.2/mail/conversations` accepts exactly one scope:
+
+- `folder=inbox|sent|drafts|scheduled` (existing folder list).
+- `module=Leads|Contacts|Accounts|Deals&recordId=<id>` (record list).
+
+Incomplete record scope, unsupported module, blank/overlong record id, or a
+folder combined with record scope returns the shared 400 validation shape.
+Missing folder scope retains the existing `INVALID_FOLDER` response. A missing
+or unreadable target record returns 404, including when no mailbox is connected.
+
+Both scopes return `{ connected, data }`. Record reads select only messages
+linked to that tenant/module/record and readable through the core mail service;
+private messages remain owner-only, including for admins. An unlinked message
+in a linked thread is excluded. Conversations sort newest first; messages within
+each conversation sort oldest first. A conversation spanning folders uses its
+newest included message's folder. Empty/disconnected responses match folder
+reads. No read state or record links are changed by these GETs.
+
+The browser port exposes `fetchRecordConversations(module, recordId, fetchFn?)`
+and the organization-bound factory exposes the same operation. Both use the
+same response guards as folder reads. Deal links are supported manually;
+automatic participant address matching stays limited to leads, contacts and
+accounts under ADR 0009.
