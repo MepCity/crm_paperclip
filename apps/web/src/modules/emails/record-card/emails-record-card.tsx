@@ -11,11 +11,7 @@ import type { RelatedListControlDefinition } from "@/modules/types";
 import { MailCompose } from "../compose/mail-compose";
 import { composeMailboxes, fixtureComposePort } from "../compose/port";
 import type { EmailConversation } from "../inbox/view-model";
-import {
-  EMAIL_CARD_TABS,
-  EMPTY_STATE_TEXT,
-  loadEmailRecordCardFixture,
-} from "./fixtures";
+import { EMAIL_CARD_TABS, EMPTY_STATE_TEXT, loadEmailRecordCardFixture } from "./fixtures";
 import type {
   EmailParentModule,
   EmailRecordCardLoader,
