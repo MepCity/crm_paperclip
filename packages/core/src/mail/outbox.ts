@@ -51,7 +51,11 @@ export interface OutboundAttachment {
   blobRef: string;
 }
 
-/** What the sender port receives. Never contains credentials; the adapter resolves them. */
+/**
+ * What the sender port receives. Never contains credentials; the adapter resolves them.
+ * Contract: the adapter always sends with the mailbox's authenticated address; `message.from`
+ * only supplies a display name and its address part is ignored.
+ */
 export interface MailSendRequest {
   organizationId: string;
   mailboxId: string;
@@ -170,43 +174,79 @@ export function createMailOutbox(context: OrgContext, options: OutboxOptions) {
       if (existing && existing.mailboxId !== body.mailboxId) {
         throw new ConflictError("This idempotency key was used for another mailbox.");
       }
-      const draft = await repo.upsertMessage({
-        organizationId: ctx.orgId,
-        id: `${outboxId}-draft`,
-        mailboxId: body.mailboxId,
-        threadId: null,
-        providerMessageKey: `outbox:${outboxId}`,
-        messageIdHeader: null,
-        inReplyTo: null,
-        references: [],
-        subject: body.subject,
-        from: [body.from],
+      const signature = (v: unknown) => JSON.stringify(v);
+      const wanted = signature({
         to: body.to,
         cc: body.cc,
         bcc: body.bcc,
-        sentAt: null,
-        receivedAt: null,
-        folder: "draft",
+        from: [body.from],
+        subject: body.subject,
         summary: body.summary,
         bodyRef: body.bodyRef,
+        scheduledAt: body.scheduledAt ? Date.parse(body.scheduledAt) : null,
+        attachments: body.attachments.map((a) => [a.id, a.name, a.size, a.contentType, a.blobRef]),
       });
-      for (const file of body.attachments) {
-        await repo.putAttachment({
-          organizationId: ctx.orgId,
-          id: `${outboxId}-${file.id}`,
-          messageId: draft.id,
-          name: file.name,
-          size: file.size,
-          contentType: file.contentType,
-          storage: "stored",
-          blobRef: file.blobRef,
+      let draftId = `${outboxId}-draft`;
+      if (existing) {
+        const data = await repo.read(ctx.orgId);
+        const stored = data.messages.find((m) => m.id === existing.messageId);
+        const files = data.attachments
+          .filter((a) => a.messageId === existing.messageId)
+          .map((a) => [a.id.slice(outboxId.length + 1), a.name, a.size, a.contentType, a.blobRef]);
+        const have = signature({
+          to: stored?.to,
+          cc: stored?.cc,
+          bcc: stored?.bcc,
+          from: stored?.from,
+          subject: stored?.subject,
+          summary: stored?.summary,
+          bodyRef: stored?.bodyRef,
+          scheduledAt: existing.scheduledAt ? Date.parse(existing.scheduledAt) : null,
+          attachments: files,
         });
+        if (have !== wanted) {
+          throw new ConflictError("This idempotency key was used for different content.");
+        }
+        draftId = existing.messageId;
+      } else {
+        const draft = await repo.upsertMessage({
+          organizationId: ctx.orgId,
+          id: `${outboxId}-draft`,
+          mailboxId: body.mailboxId,
+          threadId: null,
+          providerMessageKey: `outbox:${outboxId}`,
+          messageIdHeader: null,
+          inReplyTo: null,
+          references: [],
+          subject: body.subject,
+          from: [body.from],
+          to: body.to,
+          cc: body.cc,
+          bcc: body.bcc,
+          sentAt: null,
+          receivedAt: null,
+          folder: "draft",
+          summary: body.summary,
+          bodyRef: body.bodyRef,
+        });
+        for (const file of body.attachments) {
+          await repo.putAttachment({
+            organizationId: ctx.orgId,
+            id: `${outboxId}-${file.id}`,
+            messageId: draft.id,
+            name: file.name,
+            size: file.size,
+            contentType: file.contentType,
+            storage: "stored",
+            blobRef: file.blobRef,
+          });
+        }
       }
       const item: OutboxItem = existing ?? {
         organizationId: ctx.orgId,
         id: outboxId,
         mailboxId: body.mailboxId,
-        messageId: draft.id,
+        messageId: draftId,
         status: "queued",
         attempts: 0,
         nextAttemptAt: null,
@@ -380,7 +420,8 @@ export function createMailSendHandler(options: OutboxOptions) {
       if (result.status === "rejected") {
         const reason = safeCode.test(result.reason) ? result.reason : "rejected";
         if (result.retryable) {
-          await put(sending, { status: "queued", lastError: reason });
+          const last = c.job.attempts >= c.job.maxAttempts;
+          await put(sending, { status: last ? "failed" : "queued", lastError: reason });
           throw new JobExecutionError({ code: "transient", retryable: true });
         }
         await put(sending, { status: "failed", lastError: reason });

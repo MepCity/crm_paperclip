@@ -99,6 +99,29 @@ describe("mail outbox compose", () => {
     expect(jobs[0]?.payload).toEqual({ outboxId: "send-1" });
     expect((await s.repository.read("org-a")).outbox).toHaveLength(1);
   });
+  it("replay with different content conflicts and leaves draft and files untouched", async () => {
+    const s = await setup();
+    const file = {
+      id: "f1",
+      name: "a.pdf",
+      size: 10,
+      contentType: "application/pdf",
+      blobRef: "blob-1",
+    };
+    await s.outbox.compose(s.mail({ attachments: [file] }));
+    const before = await s.repository.read("org-a");
+    for (const over of [
+      { to: [{ address: "other@example.test" }], attachments: [file] },
+      { subject: "Changed", attachments: [file] },
+      { attachments: [file, { ...file, id: "f2" }] },
+    ]) {
+      await expect(s.outbox.compose(s.mail(over))).rejects.toMatchObject({ name: "ConflictError" });
+    }
+    expect(await s.repository.read("org-a")).toEqual(before);
+    const same = await s.outbox.compose(s.mail({ attachments: [file] }));
+    expect(same.id).toBe("send-1");
+    expect((await s.repository.read("org-a")).outbox).toHaveLength(1);
+  });
   it("rejects a mailbox that is not the caller's, other tenants' and disconnected ones", async () => {
     const s = await setup();
     await expect(s.outbox.compose(s.mail({ mailboxId: "box-org-a-other" }))).rejects.toBeInstanceOf(
@@ -269,6 +292,26 @@ describe("mail.send handler", () => {
     expect((await soft.repository.read("org-a")).outbox[0]).toMatchObject({
       status: "queued",
       lastError: "rejected",
+    });
+  });
+  it("marks the outbox failed when the last attempt gets a retryable rejection", async () => {
+    const s = await setup(async () => ({ status: "rejected", reason: "busy", retryable: true }));
+    await s.outbox.compose(s.mail());
+    const [job] = await s.queue.claim({ workerId: "w", limit: 1, leaseMs: 60000 });
+    if (!job) throw new Error("no job");
+    const last = { ...job, attempts: job.maxAttempts };
+    await expect(
+      s.handler.run({
+        organizationId: job.organizationId,
+        job: last,
+        fence: fence(job),
+        signal: new AbortController().signal,
+        checkpoint: async () => {},
+      }),
+    ).rejects.toMatchObject({ failure: { code: "transient" } });
+    expect((await s.repository.read("org-a")).outbox[0]).toMatchObject({
+      status: "failed",
+      lastError: "busy",
     });
   });
   it("cancels when the mailbox disconnects and never calls the sender", async () => {
