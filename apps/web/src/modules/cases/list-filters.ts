@@ -1,4 +1,4 @@
-import type { FieldDefinition } from "@crm/core/records";
+import type { FieldDefinition, RelatedFilterModule } from "@crm/core/records";
 import type { FilterEditorDefinition } from "@/components/records/list/filter-editor";
 import type { FilterGroup } from "@/components/records/list/filter-panel";
 import type { ModuleKey } from "@/components/ui/later-module";
@@ -48,12 +48,102 @@ const fieldModuleKeys: Readonly<Record<string, ModuleKey>> = {
   "Product Name": "P2",
 };
 
-const relatedModuleRows: readonly [string, ModuleKey][] = [
-  ["Calls", "M5"],
-  ["Emails", "M10"],
-  ["Meetings", "M5"],
-  ["Notes", "M6"],
-  ["Tasks", "M5"],
+const relatedModuleRows: readonly {
+  label: string;
+  laterModule?: ModuleKey;
+  module?: RelatedFilterModule;
+  fieldModule?: string;
+  fieldLabels?: readonly string[];
+}[] = [
+  {
+    label: "Calls",
+    module: "Calls",
+    fieldModule: "Calls",
+    fieldLabels: [
+      "Call Agenda",
+      "Call Duration",
+      "Call Duration (in seconds)",
+      "Call Owner",
+      "Call Purpose",
+      "Call Result",
+      "Call Start Time",
+      "Call Type",
+      "Caller ID",
+      "Created By",
+      "Created Time",
+      "Dialled Number",
+      "Last Activity Time",
+      "Modified By",
+      "Modified Time",
+      "Outgoing Call Status",
+      "Scheduled in CRM",
+      "Subject",
+      "Tag",
+    ],
+  },
+  { label: "Emails", laterModule: "M10" },
+  {
+    label: "Meetings",
+    module: "Meetings",
+    fieldModule: "Events",
+    fieldLabels: [
+      "All day",
+      "Check-In Address",
+      "Check-In By",
+      "Check-In City",
+      "Check-In Country",
+      "Check-In State",
+      "Check-In Sub-Locality",
+      "Check-In Time",
+      "Checked In Status",
+      "Created By",
+      "Created Time",
+      "From",
+      "Host",
+      "Last Activity Time",
+      "Location",
+      "Meeting Venue",
+      "Modified By",
+      "Modified Time",
+      "Provider",
+      "Tag",
+      "Title",
+      "To",
+      "Zip Code",
+    ],
+  },
+  {
+    label: "Notes",
+    module: "Notes",
+    fieldModule: "Notes",
+    fieldLabels: [
+      "Created By",
+      "Created Time",
+      "Modified By",
+      "Modified Time",
+      "Note Owner",
+      "Note Title",
+    ],
+  },
+  {
+    label: "Tasks",
+    module: "Tasks",
+    fieldModule: "Tasks",
+    fieldLabels: [
+      "Closed Time",
+      "Created By",
+      "Created Time",
+      "Due Date",
+      "Last Activity Time",
+      "Modified By",
+      "Modified Time",
+      "Priority",
+      "Status",
+      "Subject",
+      "Tag",
+      "Task Owner",
+    ],
+  },
 ];
 
 function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | undefined {
@@ -158,15 +248,22 @@ export function buildCasesFilterGroups(input: Input): readonly FilterGroup[] {
     {
       id: "related",
       label: "Filter By Related Modules",
-      items: relatedModuleRows.map(([label, moduleKey], index) => {
-        // Evaluated on the server at import time: no client-only resolver; none of these keys is a live module.
-        const laterModule = moduleKey;
-        return {
-          id: `related-${index}`,
-          label,
-          ...(laterModule ? { laterModule } : { disabled: true }),
-        };
-      }),
+      items: relatedModuleRows.map((row, index) => ({
+        id: `related-${index}`,
+        label: row.label,
+        ...(row.module && row.fieldModule && row.fieldLabels
+          ? {
+              relatedModule: {
+                module: row.module,
+                fieldModule: row.fieldModule,
+                parentLabel: "Cases",
+                fieldLabels: row.fieldLabels,
+              },
+            }
+          : row.laterModule
+            ? { laterModule: row.laterModule }
+            : { disabled: true }),
+      })),
     },
   ];
 }
