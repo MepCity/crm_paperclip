@@ -1,4 +1,8 @@
 import { createHash, randomUUID } from "node:crypto";
+import {
+  type InvitationProcessor,
+  processMessageCalendarParts,
+} from "../calendar/invitation-store";
 import { type Job, JobExecutionError, type JobQueue } from "../jobs";
 import { matchRecordLinks } from "../mail-threading/links";
 import type { RecordEmail } from "../mail-threading/types";
@@ -19,6 +23,11 @@ export interface MailSyncOptions {
   connector: MailConnector;
   recordAddressLookup: RecordAddressLookup;
   now?: () => Date;
+  /** Incoming iTIP handling. `calendarParts` returns the text/calendar bodies of a stored message. */
+  invitations?: {
+    processor: InvitationProcessor;
+    calendarParts(message: MailMessage): Promise<readonly string[]>;
+  };
 }
 
 /** Trusted inbound boundary: exact tenant/address matching, excluding BCC (ADR 0009). */
@@ -63,6 +72,20 @@ async function linkMessage(
   }
 }
 
+/** Calendar problems never fail the sync: they are counted in the processor stats. */
+async function processInvitations(options: MailSyncOptions, message: MailMessage) {
+  const inv = options.invitations;
+  if (!inv || message.folder !== "inbox") return;
+  let parts: readonly string[];
+  try {
+    parts = await inv.calendarParts(message);
+  } catch {
+    inv.processor.stats.parseFailures++;
+    return;
+  }
+  await processMessageCalendarParts(inv.processor, message.organizationId, message.id, parts);
+}
+
 type SyncContext = {
   organizationId: string;
   job: Job;
@@ -102,7 +125,10 @@ export function createMailSyncHandler(options: MailSyncOptions) {
               folder,
             },
             state.cursor,
-            (message) => linkMessage(options, message, c.checkpoint),
+            async (message) => {
+              await linkMessage(options, message, c.checkpoint);
+              await processInvitations(options, message);
+            },
             c.checkpoint,
           );
           await c.checkpoint();

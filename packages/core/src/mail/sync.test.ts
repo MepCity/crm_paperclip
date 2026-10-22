@@ -1,10 +1,11 @@
 import { describe, expect, it, vi } from "vitest";
+import { createInvitationProcessor } from "../calendar/invitation-store";
 import { fence, InMemoryJobQueue, safeFailure } from "../jobs";
 import { mapGmailMessage } from "./connectors/gmail/mapping";
 import { ConnectorError, type MailConnector } from "./connectors/gmail/port";
 import { createMailJobCatalog } from "./outbox";
 import { createInMemoryMailRepository } from "./repository";
-import { createMailboxSyncScheduler, createMailSyncHandler } from "./sync";
+import { createMailboxSyncScheduler, createMailSyncHandler, type MailSyncOptions } from "./sync";
 import type { MailRepository, RecordAddressMatch } from "./types";
 
 const org = { organizationId: "org" };
@@ -28,7 +29,10 @@ function mapped(id: string, folder = "INBOX") {
     },
   });
 }
-async function setup(matches: RecordAddressMatch[] = []) {
+async function setup(
+  matches: RecordAddressMatch[] = [],
+  invitations?: MailSyncOptions["invitations"],
+) {
   const repository = createInMemoryMailRepository();
   for (const organizationId of ["org", "other"])
     await repository.createMailbox({
@@ -63,6 +67,7 @@ async function setup(matches: RecordAddressMatch[] = []) {
     connector,
     recordAddressLookup: { findByAddress: vi.fn(async () => matches) },
     now: () => now,
+    ...(invitations ? { invitations } : {}),
   };
   async function run(repo: MailRepository = repository) {
     await scheduler.enqueueMailboxSync("box");
@@ -264,5 +269,23 @@ describe("inbound sync jobs", () => {
       s.queue,
     ).enqueueMailboxSync("box");
     expect(otherTenant.id).not.toBe(jobs[0]?.id);
+  });
+});
+
+describe("incoming invitations during sync", () => {
+  const ics =
+    "BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//Example//EN\r\nMETHOD:REQUEST\r\nBEGIN:VEVENT\r\nUID:e@example.com\r\nDTSTAMP:20261005T090000Z\r\nDTSTART:20261008T130000Z\r\nDTEND:20261008T140000Z\r\nSUMMARY:S\r\nORGANIZER:mailto:a@example.com\r\nATTENDEE:mailto:b@example.org\r\nEND:VEVENT\r\nEND:VCALENDAR\r\n";
+  it("stores the request, survives bad parts and does not repeat on re-sync", async () => {
+    const processor = createInvitationProcessor();
+    const s = await setup([], {
+      processor,
+      calendarParts: async (m) =>
+        m.id.includes("m1") ? [ics] : ["BEGIN:VCALENDAR\r\nMETHOD:REPLY\r\n"],
+    });
+    const { job } = await s.run();
+    expect(job?.status).toBe("succeeded");
+    expect(processor.stats).toMatchObject({ requestStored: 1, parseFailures: 1 });
+    await s.run();
+    expect(processor.stats).toMatchObject({ requestStored: 1, parseFailures: 1, duplicates: 2 });
   });
 });
