@@ -3,6 +3,8 @@ import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { DocumentsScreen } from "./documents-screen";
+import { fixtureDocumentsPort } from "./fixture-port";
+import type { DocumentItem, DocumentsPort } from "./port";
 
 afterEach(cleanup);
 
@@ -61,7 +63,7 @@ describe("DocumentsScreen", () => {
     expect(screen.queryByText("No items available.")).toBeNull();
   });
 
-  it("shows disabled select-all and row actions, and a sub-folder menu", async () => {
+  it("shows disabled select-all and row actions; breadcrumb arrow is inert", async () => {
     const user = userEvent.setup();
     render(<DocumentsScreen />);
     await user.click(await screen.findByRole("button", { name: "Workspace Files" }));
@@ -71,9 +73,51 @@ describe("DocumentsScreen", () => {
     );
     expect(screen.getAllByRole("button", { name: "More actions" }).length).toBe(3);
     await user.click(screen.getByRole("button", { name: "Sub folders" }));
-    const menu = screen.getByRole("menu", { name: "Sub folders" });
-    await user.click(within(menu).getByRole("menuitem", { name: "Contracts" }));
-    await screen.findByText("Signed agreement.pdf");
     expect(screen.queryByRole("menu")).toBeNull();
+  });
+
+  it("shows an error state when folders fail to load", async () => {
+    const port = { ...fixtureDocumentsPort, listFolders: () => Promise.reject(new Error("x")) };
+    render(<DocumentsScreen port={port} />);
+    expect((await screen.findByRole("alert")).textContent).toContain("could not be loaded");
+  });
+
+  it("shows an error state and no rows when items fail to load", async () => {
+    const port = { ...fixtureDocumentsPort, listItems: () => Promise.reject(new Error("x")) };
+    render(<DocumentsScreen port={port} />);
+    expect((await screen.findByRole("alert")).textContent).toContain("could not be loaded");
+    expect(
+      within(screen.getByRole("list", { name: "Documents" })).queryAllByRole("listitem"),
+    ).toHaveLength(0);
+  });
+
+  it("ignores a late response of a previous folder", async () => {
+    let releaseA: (rows: readonly DocumentItem[]) => void = () => {};
+    const port: DocumentsPort = {
+      ...fixtureDocumentsPort,
+      listItems: (id, sort) =>
+        id === "my"
+          ? new Promise((resolve) => {
+              releaseA = resolve;
+            })
+          : fixtureDocumentsPort.listItems(id, sort),
+    };
+    const user = userEvent.setup();
+    render(<DocumentsScreen port={port} />);
+    await user.click(await screen.findByRole("button", { name: /Sales Team/ }));
+    await screen.findByText("Quarterly targets.xlsx");
+    releaseA([
+      {
+        id: "late",
+        name: "Late row",
+        kind: "file",
+        uploadedBy: "a",
+        modifiedBy: "b",
+        modifiedAt: "2026-01-01T00:00:00Z",
+        parentId: "my",
+      },
+    ]);
+    await Promise.resolve();
+    expect(screen.queryByText("Late row")).toBeNull();
   });
 });

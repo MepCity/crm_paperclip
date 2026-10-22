@@ -56,13 +56,17 @@ export function DocumentsHttpScreen({ orgSlug }: { orgSlug: string }) {
 /** Original empty-folder illustration (not the reference asset). */
 function EmptyIllustration() {
   return (
-    <svg width="96" height="80" viewBox="0 0 96 80" fill="none" aria-hidden="true">
-      <path
-        d="M8 20a6 6 0 0 1 6-6h20l8 8h40a6 6 0 0 1 6 6v36a6 6 0 0 1-6 6H14a6 6 0 0 1-6-6V20Z"
-        className="fill-surface-selected stroke-border"
-        strokeWidth="2"
-      />
-      <path d="M8 34h80" className="stroke-border" strokeWidth="2" />
+    <svg width="112" height="96" viewBox="0 0 112 96" fill="none" aria-hidden="true">
+      <g transform="rotate(-8 56 48)">
+        <path
+          d="M10 24a6 6 0 0 1 6-6h24l8 9h48a6 6 0 0 1 6 6v40a6 6 0 0 1-6 6H16a6 6 0 0 1-6-6V24Z"
+          className="fill-accent-blue opacity-60"
+        />
+        <path
+          d="M10 38a6 6 0 0 1 6-6h80a6 6 0 0 1 6 6v36a6 6 0 0 1-6 6H16a6 6 0 0 1-6-6V38Z"
+          className="fill-accent-blue"
+        />
+      </g>
     </svg>
   );
 }
@@ -75,14 +79,22 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
   const [items, setItems] = useState<readonly DocumentItem[]>([]);
   // Folder id the current `items` belong to; null while a folder is loading.
   const [loadedId, setLoadedId] = useState<string | null>(null);
-  const [menuOpen, setMenuOpen] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   const rootId = selectedRoot ?? folders.find((folder) => folder.section === "my")?.id ?? "";
   const currentId = trail.length > 0 ? (trail[trail.length - 1] as DocumentItem).id : rootId;
 
   useEffect(() => {
     let live = true;
-    port.listFolders().then((rows) => live && setFolders(rows));
+    port
+      .listFolders()
+      .then((rows) => live && setFolders(rows))
+      .catch(() => {
+        if (!live) return;
+        setFolders([]);
+        setItems([]);
+        setFailed(true);
+      });
     return () => {
       live = false;
     };
@@ -92,11 +104,20 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
     if (!currentId) return;
     let live = true;
     setLoadedId(null);
-    port.listItems(currentId, DEFAULT_SORT).then((rows) => {
-      if (!live) return;
-      setItems(rows);
-      setLoadedId(currentId);
-    });
+    setItems([]);
+    setFailed(false);
+    port
+      .listItems(currentId, DEFAULT_SORT)
+      .then((rows) => {
+        if (!live) return;
+        setItems(rows);
+        setLoadedId(currentId);
+      })
+      .catch(() => {
+        if (!live) return;
+        setItems([]);
+        setFailed(true);
+      });
     return () => {
       live = false;
     };
@@ -109,11 +130,10 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
   function selectRoot(id: string) {
     setSelectedRoot(id);
     setTrail([]);
-    setMenuOpen(false);
   }
 
-  const isEmpty = loadedId === currentId && items.length === 0;
-  const subFolders = items.filter((row) => row.kind === "folder");
+  const shown = loadedId === currentId ? items : [];
+  const isEmpty = !failed && loadedId === currentId && items.length === 0;
 
   const crumbs: { label: string; depth: number }[] = [
     { label: (trail.length === 0 ? root?.title : undefined) ?? root?.name ?? "", depth: 0 },
@@ -186,44 +206,10 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
                         className="relative flex items-center gap-1 font-semibold"
                       >
                         {crumb.label}
-                        {/* D21: sub-folder menu; entries are our own reading (open question). */}
-                        <button
-                          type="button"
-                          aria-label="Sub folders"
-                          aria-haspopup="menu"
-                          aria-expanded={menuOpen}
-                          className="inline-flex min-h-7 min-w-5 items-center justify-center"
-                          onClick={() => setMenuOpen(!menuOpen)}
-                        >
+                        {/* D21: dropdown content never observed (open question): inert arrow. */}
+                        <InertButton label="Sub folders">
                           <Icons.chevronDown className="size-3" aria-hidden="true" />
-                        </button>
-                        {menuOpen ? (
-                          <div
-                            role="menu"
-                            aria-label="Sub folders"
-                            className="absolute left-0 top-full z-10 mt-1 min-w-48 rounded border border-border bg-surface py-1 text-sm font-normal shadow"
-                          >
-                            {subFolders.length === 0 ? (
-                              <div className="px-3 py-1.5 text-text-muted">No sub folders</div>
-                            ) : (
-                              subFolders.map((row) => (
-                                <div key={row.id} role="none">
-                                  <button
-                                    type="button"
-                                    role="menuitem"
-                                    className="w-full px-3 py-1.5 text-left"
-                                    onClick={() => {
-                                      setTrail([...trail, row]);
-                                      setMenuOpen(false);
-                                    }}
-                                  >
-                                    {row.name}
-                                  </button>
-                                </div>
-                              ))
-                            )}
-                          </div>
-                        ) : null}
+                        </InertButton>
                       </span>
                     ) : (
                       <button
@@ -231,7 +217,6 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
                         className="text-text-muted"
                         onClick={() => {
                           setTrail(trail.slice(0, crumb.depth));
-                          setMenuOpen(false);
                         }}
                       >
                         {crumb.label}
@@ -255,7 +240,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
             </div>
           </header>
 
-          {isEmpty ? null : (
+          {isEmpty || failed ? null : (
             <div className="flex items-center border-b border-border py-2 pl-4 pr-6 text-sm font-semibold text-text-muted">
               {/* D18: selection model unobserved, visible but disabled. */}
               <span className="w-12">
@@ -275,6 +260,12 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
             </div>
           )}
 
+          {failed ? (
+            <p role="alert" className="px-4 py-6 text-sm text-danger">
+              Documents could not be loaded.
+            </p>
+          ) : null}
+
           {isEmpty ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 text-text-muted">
               <EmptyIllustration />
@@ -282,8 +273,8 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
             </div>
           ) : null}
 
-          <ul aria-label="Documents" className={isEmpty ? "hidden" : "flex-1"}>
-            {items.map((row) => (
+          <ul aria-label="Documents" className={isEmpty || failed ? "hidden" : "flex-1"}>
+            {shown.map((row) => (
               <li
                 key={row.id}
                 className="flex items-center border-b border-border py-4 pl-16 pr-6 text-base"

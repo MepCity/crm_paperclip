@@ -2,7 +2,7 @@ import { z } from "zod";
 
 const id = z.string().min(1).max(256);
 const instant = z.string().datetime({ offset: true });
-export const mailFolderSchema = z.enum(["inbox", "sent"]);
+export const mailFolderSchema = z.enum(["inbox", "sent", "draft"]);
 export const mailRecordModuleSchema = z.enum(["leads", "contacts", "accounts"]);
 export type MailFolder = z.infer<typeof mailFolderSchema>;
 export type MailRecordModule = z.infer<typeof mailRecordModuleSchema>;
