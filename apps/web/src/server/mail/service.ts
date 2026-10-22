@@ -4,7 +4,7 @@ import { createMailService, type MailServiceOptions } from "@crm/core/mail/servi
 import type { MailParticipant } from "@crm/core/mail/types";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import type { EmailConversation, EmailFolder } from "@/modules/emails/inbox/view-model";
-import { createMailSeed } from "./seed";
+import { getMailState } from "./state";
 
 export interface MailReadSource extends MailServiceOptions {
   /** Interim body/read-state adapter, consulted only after core authorizes a message. */
@@ -12,7 +12,7 @@ export interface MailReadSource extends MailServiceOptions {
 }
 
 async function fixtureSource(ctx: OrgContext): Promise<MailReadSource> {
-  const { repository, content } = await createMailSeed(ctx);
+  const { repository, content } = await getMailState(ctx);
   return {
     repository,
     recordAddressLookup: { findByAddress: async () => [] },

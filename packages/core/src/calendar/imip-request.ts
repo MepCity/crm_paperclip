@@ -1,3 +1,4 @@
+import { ValidationError } from "../errors";
 import type { IcsPartstat } from "./ics";
 import { type ContentLine, fail, PARTSTATS, parseLine, unescapeText, unfold } from "./imip-reply";
 
@@ -13,13 +14,10 @@ export interface ImipOrganizer {
   name?: string;
 }
 
-export interface ImipRequest {
-  method: "REQUEST" | "CANCEL";
+export interface ImipRequestBase {
   uid: string;
   sequence: number;
   summary: string;
-  start: string;
-  end: string;
   allDay?: boolean;
   tzid?: string;
   location?: string;
@@ -27,10 +25,132 @@ export interface ImipRequest {
   attendees: ImipAttendee[];
 }
 
+export interface ImipInviteRequest extends ImipRequestBase {
+  method: "REQUEST";
+  start: string;
+  end: string;
+}
+
+export interface ImipCancelRequest extends ImipRequestBase {
+  method: "CANCEL";
+  start?: string;
+  end?: string;
+}
+
+export type ImipRequest = ImipInviteRequest | ImipCancelRequest;
+
 interface ParsedDateTime {
   iso: string;
   isDateOnly: boolean;
   isUtc: boolean;
+}
+
+interface ParsedDuration {
+  weeks: number;
+  days: number;
+  hours: number;
+  minutes: number;
+  seconds: number;
+  isNegative: boolean;
+  totalSeconds: number;
+  hasTimeComponents: boolean;
+}
+
+function parseIcsDuration(value: string): ParsedDuration {
+  const v = value.trim();
+
+  // 1. dur-week: (["+"] / "-") "P" 1*DIGIT "W"
+  const weekMatch = /^([+-])?P(\d+)W$/i.exec(v);
+  if (weekMatch) {
+    const isNegative = weekMatch[1] === "-";
+    const weeks = Number(weekMatch[2]);
+    const totalSeconds = (isNegative ? -1 : 1) * weeks * 7 * 86400;
+    return {
+      weeks,
+      days: weeks * 7,
+      hours: 0,
+      minutes: 0,
+      seconds: 0,
+      isNegative,
+      totalSeconds,
+      hasTimeComponents: false,
+    };
+  }
+
+  // 2. dur-date / dur-time: (["+"] / "-") "P" [1*DIGIT "D"] ["T" [1*DIGIT "H"] [1*DIGIT "M"] [1*DIGIT "S"]]
+  const dtMatch = /^([+-])?P(?:(\d+)D)?(?:T(?=.)(?:(\d+)H)?(?:(\d+)M)?(?:(\d+)S)?)?$/i.exec(v);
+  if (dtMatch) {
+    const isNegative = dtMatch[1] === "-";
+    const daysStr = dtMatch[2];
+    const hoursStr = dtMatch[3];
+    const minutesStr = dtMatch[4];
+    const secondsStr = dtMatch[5];
+
+    if (!daysStr && !hoursStr && !minutesStr && !secondsStr) {
+      fail("duration", "DURATION is malformed.");
+    }
+
+    const days = daysStr ? Number(daysStr) : 0;
+    const hours = hoursStr ? Number(hoursStr) : 0;
+    const minutes = minutesStr ? Number(minutesStr) : 0;
+    const seconds = secondsStr ? Number(secondsStr) : 0;
+    const hasTimeComponents = Boolean(hoursStr || minutesStr || secondsStr);
+    const totalSeconds =
+      (isNegative ? -1 : 1) * (days * 86400 + hours * 3600 + minutes * 60 + seconds);
+
+    return {
+      weeks: 0,
+      days,
+      hours,
+      minutes,
+      seconds,
+      isNegative,
+      totalSeconds,
+      hasTimeComponents,
+    };
+  }
+
+  fail("duration", "DURATION is malformed.");
+}
+
+function formatDateOnly(dt: Date): string {
+  const y = String(dt.getUTCFullYear()).padStart(4, "0");
+  const mo = String(dt.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(dt.getUTCDate()).padStart(2, "0");
+  return `${y}-${mo}-${d}`;
+}
+
+function formatDateTime(dt: Date, isUtc: boolean): string {
+  const y = String(dt.getUTCFullYear()).padStart(4, "0");
+  const mo = String(dt.getUTCMonth() + 1).padStart(2, "0");
+  const d = String(dt.getUTCDate()).padStart(2, "0");
+  const h = String(dt.getUTCHours()).padStart(2, "0");
+  const mi = String(dt.getUTCMinutes()).padStart(2, "0");
+  const s = String(dt.getUTCSeconds()).padStart(2, "0");
+  return `${y}-${mo}-${d}T${h}:${mi}:${s}${isUtc ? "Z" : ""}`;
+}
+
+function addDurationToStart(start: ParsedDateTime, durationSeconds: number): string {
+  if (start.isDateOnly) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(start.iso);
+    const y = m ? Number(m[1]) : 0;
+    const mo = m ? Number(m[2]) : 1;
+    const d = m ? Number(m[3]) : 1;
+    const dt = new Date(Date.UTC(y, mo - 1, d));
+    dt.setUTCSeconds(dt.getUTCSeconds() + durationSeconds);
+    return formatDateOnly(dt);
+  }
+
+  const m = /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2}):(\d{2})/.exec(start.iso);
+  const y = m ? Number(m[1]) : 0;
+  const mo = m ? Number(m[2]) : 1;
+  const d = m ? Number(m[3]) : 1;
+  const h = m ? Number(m[4]) : 0;
+  const mi = m ? Number(m[5]) : 0;
+  const s = m ? Number(m[6]) : 0;
+  const dt = new Date(Date.UTC(y, mo - 1, d, h, mi, s));
+  dt.setUTCSeconds(dt.getUTCSeconds() + durationSeconds);
+  return formatDateTime(dt, start.isUtc);
 }
 
 function parseIcsDateOrDateTime(value: string, field: "start" | "end"): ParsedDateTime {
@@ -147,20 +267,36 @@ export function parseImipRequest(icsText: string): ImipRequest {
   const summary = sumLine ? unescapeText(sumLine.value).trim() : "";
 
   const startLine = props.find((p) => p.name === "DTSTART");
-  if (!startLine) fail("start", "DTSTART is required.");
   const endLine = props.find((p) => p.name === "DTEND");
-  if (!endLine) fail("end", "DTEND is required.");
+  const durationLine = props.find((p) => p.name === "DURATION");
 
-  const startParsed = parseIcsDateOrDateTime(startLine.value, "start");
-  const endParsed = parseIcsDateOrDateTime(endLine.value, "end");
+  if (endLine && durationLine) {
+    throw new ValidationError({
+      end: ["Both DTEND and DURATION cannot be specified."],
+      duration: ["Both DTEND and DURATION cannot be specified."],
+    });
+  }
 
-  const isAllDay =
-    startParsed.isDateOnly ||
-    endParsed.isDateOnly ||
-    startLine.params.get("VALUE")?.toUpperCase() === "DATE" ||
-    endLine.params.get("VALUE")?.toUpperCase() === "DATE";
+  const startParsed = startLine ? parseIcsDateOrDateTime(startLine.value, "start") : undefined;
+  const endParsed = endLine ? parseIcsDateOrDateTime(endLine.value, "end") : undefined;
+  const duration = durationLine ? parseIcsDuration(durationLine.value) : undefined;
 
-  const rawTzid = startLine.params.get("TZID") ?? endLine.params.get("TZID");
+  if (duration?.isNegative) {
+    fail("duration", "DURATION must be positive or zero.");
+  }
+
+  if (startParsed?.isDateOnly && duration?.hasTimeComponents) {
+    fail("duration", "DURATION must not contain time units for all-day events.");
+  }
+
+  const isAllDay = Boolean(
+    startParsed?.isDateOnly ||
+      endParsed?.isDateOnly ||
+      startLine?.params.get("VALUE")?.toUpperCase() === "DATE" ||
+      endLine?.params.get("VALUE")?.toUpperCase() === "DATE",
+  );
+
+  const rawTzid = startLine?.params.get("TZID") ?? endLine?.params.get("TZID");
   const tzid = rawTzid ? unescapeText(rawTzid).trim() : undefined;
 
   const locLine = props.find((p) => p.name === "LOCATION");
@@ -208,17 +344,61 @@ export function parseImipRequest(icsText: string): ImipRequest {
     });
   }
 
-  return {
-    method,
+  if (method === "REQUEST") {
+    if (!startParsed) {
+      fail("start", "DTSTART is required.");
+    }
+
+    let endIso: string;
+    if (endParsed) {
+      endIso = endParsed.iso;
+    } else if (duration) {
+      endIso = addDurationToStart(startParsed, duration.totalSeconds);
+    } else if (isAllDay || startParsed.isDateOnly) {
+      endIso = addDurationToStart(startParsed, 86400);
+    } else {
+      endIso = startParsed.iso;
+    }
+
+    const req: ImipInviteRequest = {
+      method: "REQUEST",
+      uid,
+      sequence,
+      summary,
+      start: startParsed.iso,
+      end: endIso,
+      ...(isAllDay ? { allDay: true } : {}),
+      ...(tzid && !startParsed.isUtc ? { tzid } : {}),
+      ...(location ? { location } : {}),
+      organizer,
+      attendees,
+    };
+    return req;
+  }
+
+  if (duration && !startParsed) {
+    fail("duration", "DURATION requires DTSTART.");
+  }
+
+  let endIso: string | undefined;
+  if (endParsed) {
+    endIso = endParsed.iso;
+  } else if (duration && startParsed) {
+    endIso = addDurationToStart(startParsed, duration.totalSeconds);
+  }
+
+  const cancelReq: ImipCancelRequest = {
+    method: "CANCEL",
     uid,
     sequence,
     summary,
-    start: startParsed.iso,
-    end: endParsed.iso,
+    ...(startParsed ? { start: startParsed.iso } : {}),
+    ...(endIso ? { end: endIso } : {}),
     ...(isAllDay ? { allDay: true } : {}),
-    ...(tzid && !startParsed.isUtc ? { tzid } : {}),
+    ...(tzid && !startParsed?.isUtc ? { tzid } : {}),
     ...(location ? { location } : {}),
     organizer,
     attendees,
   };
+  return cancelReq;
 }

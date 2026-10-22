@@ -12,10 +12,11 @@ export function parseReferences(headerValue: string | null | undefined): string[
   return out;
 }
 
-const PREFIX = /^(?:(?:re|fwd?|aw|wg)\s*:\s*|\[[^\]]*\]\s*)/i;
+const PREFIX = /^(?:(?:re|fwd?|aw|wg)(?:\s*\[\d+\])?\s*:\s*|\[[^\]]*\]\s*)/i;
 
 /** Strips repeated reply/forward prefixes and leading list tags, collapses whitespace. */
-export function normalizeSubject(subject: string): string {
+export function normalizeSubject(subject?: string | null): string {
+  if (!subject) return "";
   let s = subject.replace(/\s+/g, " ").trim();
   for (;;) {
     const next = s.replace(PREFIX, "").trim();

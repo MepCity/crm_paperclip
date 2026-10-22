@@ -28,7 +28,10 @@
     "./mail/service": "./src/mail/service.ts",
     "./mail/repository": "./src/mail/repository.ts",
     "./mail/types": "./src/mail/types.ts",
-    "./jobs": "./src/jobs/index.ts"
+    "./jobs": "./src/jobs/index.ts",
+    "./mail/outbox": "./src/mail/outbox.ts",
+    "./mail/recipient-list": "./src/mail/recipient-list.ts",
+    "./mail/recipient-policy": "./src/mail/recipient-policy.ts"
   },
   "dependencies": {
     "@crm/db": "workspace:*",
