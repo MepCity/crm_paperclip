@@ -1388,3 +1388,60 @@ customization and Phase 3 controls.
   wrapping, and owner secondary typography. Current activity values reuse the
   nearest measured record-form family; they are not certified activity parity.
 - Inventory and evidence limits: `docs/choice-panel-audit.md`.
+
+## Module 9 — Documents
+
+Specs: `research/specs/documents.md` (MEP-922/MEP-928), `research/specs/documents-write-flows.md`
+(MEP-927). ADR 0008 records the storage and access architecture; its open
+questions U1–U13 gate the write flows. Implemented issues on `main`: MEP-930
+(read-only main screen), MEP-989 (core service and types), MEP-995 (HTTP routes
+and port), MEP-996 (folder empty state, D18–D21 controls, HTTP port wiring),
+MEP-1022 (ADR 0008 Addendum A — read capability source).
+
+### Read-only scope — done (MEP-930, MEP-989, MEP-995, MEP-996)
+
+| # | Capability | Spec section | Evidence / tests |
+| --- | --- | --- | --- |
+| D-01 | Shell entry: Documents registered after Deals in the Sales group; navigation route `/tab/Documents` resolves | `documents.md` › H17, Metadata | `shell.test.tsx`; `nav.ts`; `documents-main.spec.ts` |
+| D-02 | Main screen layout: narrow folder pane (My Folders highlighted, Team Folders disclosure and one entry with lock glyph, external file-service link D5) beside the embedded listing | `documents.md` › Layout and fields, D1–D5 | `documents-screen.tsx`; `documents-screen.test.tsx`; `documents-main.spec.ts` |
+| D-03 | Listing header: breadcrumb (D6–D8), sort (D9), filter (D10) and list-view (D11) utility icons; Name / Last Modified columns with descending sort indicator; column-management icon (D14) | `documents.md` › D6–D14, Actions, filters, views | `documents-screen.tsx`; `documents-main.spec.ts` |
+| D-04 | Populated root: one folder row with folder icon, name, uploader byline and modification date/modifier; select-all (D18) and row more-actions (D19) exposed in frame ARIA | `documents.md` › D15, D18–D19 (MEP-928 frame evidence) | `documents-screen.tsx`; `documents-screen.test.tsx` |
+| D-05 | Existing-folder navigation: clicking the folder row opens a child breadcrumb (D20–D21) and renders the empty-folder illustration with heading "No items available."; Name/Last Modified header and D18/D19 absent in empty state; Sort/Filter/List and Details/assistant strip remain | `documents.md` › MEP-928 completed continuation | `documents-screen.tsx`; `documents-main.spec.ts` |
+| D-06 | Right utility strip: Details (D16, `key_infopanel`) and assistant (D17) drawn; not toggled | `documents.md` › D16–D17, MEP-928 icon reconciliation | `documents-screen.tsx` |
+| D-07 | Documents core service: `DocumentsService` types (`DocumentFolder`, `DocumentFile`, `DocumentSpace`), read methods and fixture adapter | `documents.md` › Metadata; ADR 0008 §1–§2 | `packages/core/src/documents/service.ts`; `documents.test.ts` (MEP-989) |
+| D-08 | HTTP read routes: `GET /api/crm/v2.2/documents/folders`, `/folders/[id]/items`, `/items/[id]`; access-gated by session org and role | ADR 0008 §5 option B; `documents-write-flows.md` › Access and folder flows | `apps/web/src/server/documents/routes.test.ts`; `access.test.ts`; `http-port.test.ts` (MEP-995) |
+| D-09 | ADR 0008 Addendum A accepted: read capability source and tenant route wiring confirmed; U2 group/role precedence gates write flows, not reads | ADR 0008 Addendum A (MEP-1022) | `docs/adr/0008-documents-storage.md` |
+
+Open research (not defects): D4 team-folder entry has no safe unique exported selector and was not navigated (U2). D6 persistence unknown; not toggled. D11/D14 options, header sort cycle and reset remain unverified (U10). D16 exact content and persistence unproven (U11). Populated file rows, file detail, preview and format support are not observed (U5).
+
+### Write flows — open / deferred (ADR 0008 U1–U13)
+
+All write operations are gated on unresolved ADR 0008 questions. Each flow
+below carries the relevant U-number(s). None is implemented; all are
+**open / deferred** pending CTO gate decisions on U1–U13.
+
+| Flow | ADR 0008 gate | Spec section |
+| --- | --- | --- |
+| Team-folder creation, association/removal and member editor (D3 plus) | U1 name rules; U2 lock/member/role-precedence | `documents-write-flows.md` › Create, edit and associate team folders |
+| Subfolder creation and upload sources (+ New, Upload files, cloud import) | U1 name/duplicate; U3 sources and plan limits; U4 same-name handling | `documents-write-flows.md` › Ordinary subfolders and upload sources |
+| File preview and download | U5 preview limits, unsupported/oversize errors | `documents-write-flows.md` › Preview and download |
+| File versioning and check-out / check-in | U6 retention, numbering, checkout authority | `documents-write-flows.md` › Versions and check-out |
+| File / folder rename and move | U7 embedded rename sequence, move collision/cycle | `documents-write-flows.md` › Rename and move |
+| Move to Trash, restore and permanent deletion | U8 active retention policy, restore collisions | `documents-write-flows.md` › Trash, restore, unlink and permanent deletion |
+| Internal and external file/folder sharing | U9 link types, validation, revocation | `documents-write-flows.md` › Sharing and links |
+| Sort / filter / view preference persistence (D9, D10, D11) | U10 view state persistence and column options | `documents-write-flows.md` › Sorting, filtering, view and Details |
+| Details pane (D16) content and persistence | U11 file/folder/no-selection contents | `documents-write-flows.md` › Sorting, filtering, view and Details |
+| Attach > Documents picker on record detail | U12 picker contract, attachment/document identity and lifecycle | `documents-write-flows.md` › Relationship to record attachments; ADR 0008 §4 (still Proposed) |
+| All flows: literal validation, success/error text, empty/loading/partial/permission states | U13 wording and UI | `documents-write-flows.md` › Validation, success and errors |
+
+**Attach > Documents source** on record detail (AT-02 in M6 Attachments card) is
+drawn inert (`laterModule="M9"`) and stays disconnected until U12 is decided;
+see ADR 0008 §4 (Proposed, not accepted).
+
+### Module 9 gate
+
+Module gate is **not complete**. The read-only scope (rows D-01–D-09 above) is
+implemented and QA-verified as part of MEP-930/MEP-995/MEP-996. All write flows
+(upload, new folder, rename, move, Trash, share, versions, record-attach) are
+deferred pending CTO resolution of ADR 0008 open questions U1–U13. The gate
+will not be marked complete until those flows are implemented and QA-verified.
