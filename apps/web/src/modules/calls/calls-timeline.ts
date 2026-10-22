@@ -1,8 +1,4 @@
-import type {
-  TimelineEvent,
-  TimelineFilterOption,
-  TimelineSubtab,
-} from "@/components/records/detail/timeline";
+import type { TimelineFilterOption, TimelineSubtab } from "@/components/records/detail/timeline";
 import {
   TASKS_TIMELINE_MODULE_OPTIONS,
   TASKS_TIMELINE_SOURCE_OPTIONS,
@@ -17,8 +13,6 @@ export const CALLS_TIMELINE_MODULE_OPTIONS: readonly TimelineFilterOption[] =
 
 export const CALLS_TIMELINE_SOURCE_OPTIONS: readonly TimelineFilterOption[] =
   TASKS_TIMELINE_SOURCE_OPTIONS;
-
-export const CALLS_TIMELINE_EMPTY_EVENTS: readonly TimelineEvent[] = [];
 
 export function normalizeCallsEventKind(kind: string): string {
   return kind;

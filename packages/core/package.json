@@ -27,7 +27,8 @@
     "./documents": "./src/documents/index.ts",
     "./mail/service": "./src/mail/service.ts",
     "./mail/repository": "./src/mail/repository.ts",
-    "./mail/types": "./src/mail/types.ts"
+    "./mail/types": "./src/mail/types.ts",
+    "./jobs": "./src/jobs/index.ts"
   },
   "dependencies": {
     "@crm/db": "workspace:*",

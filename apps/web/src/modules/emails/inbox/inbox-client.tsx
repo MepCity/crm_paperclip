@@ -1,14 +1,54 @@
 "use client";
 
 import { useSearchParams } from "next/navigation";
-import { inboxFixture } from "./fixture";
+import { useEffect, useState } from "react";
+import { loadInboxFixture } from "./fixture-loader";
 import { InboxScreen } from "./inbox-screen";
+import { type EmailFolder, emailFolders, type InboxViewModel } from "./view-model";
 
-export function InboxClient() {
+export type InboxLoader = (folder: EmailFolder) => Promise<InboxViewModel>;
+
+type LoadState = {
+  folder: EmailFolder;
+  load: InboxLoader;
+  status: "loading" | "error" | "ready";
+  model: InboxViewModel;
+};
+
+const emptyModel: InboxViewModel = { connected: true, conversations: [] };
+
+export function InboxClient({ load = loadInboxFixture }: { load?: InboxLoader }) {
   const params = useSearchParams();
+  const folder = emailFolders.find((item) => item.id === params.get("folder"))?.id ?? "inbox";
+  const [state, setState] = useState<LoadState | null>(null);
+
+  useEffect(() => {
+    let live = true;
+    setState((previous) => ({
+      folder,
+      load,
+      status: "loading",
+      model: previous?.model ?? emptyModel,
+    }));
+    async function fetchFolder() {
+      try {
+        const model = await load(folder);
+        if (live) setState({ folder, load, status: "ready", model });
+      } catch {
+        if (live) setState({ folder, load, status: "error", model: emptyModel });
+      }
+    }
+    void fetchFolder();
+    return () => {
+      live = false;
+    };
+  }, [folder, load]);
+
+  const status = state?.folder === folder && state.load === load ? state.status : "loading";
   return (
     <InboxScreen
-      model={inboxFixture}
+      model={state?.model ?? emptyModel}
+      loadState={status === "ready" ? undefined : status}
       folderParam={params.get("folder")}
       messageParam={params.get("message")}
       onNavigate={(folder, messageId) => {
@@ -16,7 +56,7 @@ export function InboxClient() {
         next.set("folder", folder);
         if (messageId) next.set("message", messageId);
         else next.delete("message");
-        // Next integrates native history with useSearchParams; no mail or route fetch is needed.
+        // Next integrates native history with useSearchParams; message selection stays local.
         window.history.pushState(null, "", `?${next.toString()}`);
       }}
     />

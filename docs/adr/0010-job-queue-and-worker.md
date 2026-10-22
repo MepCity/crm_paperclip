@@ -1,6 +1,6 @@
 # ADR 0010 — PostgreSQL job queue and worker
 
-- Status: Proposed
+- Status: Accepted (direction A; Q2–Q7 open)
 - Date: 2026-10-22
 - Issue: MEP-1038; umbrella: MEP-1036
 - Decision owners: Platform Lead and CTO, after independent QA review
