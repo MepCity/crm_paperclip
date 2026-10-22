@@ -83,7 +83,11 @@ async function processInvitations(options: MailSyncOptions, message: MailMessage
     inv.processor.stats.parseFailures++;
     return;
   }
-  await processMessageCalendarParts(inv.processor, message.organizationId, message.id, parts);
+  // The mailbox record has no address field: its own addresses are the recipients of its inbox mail.
+  await processMessageCalendarParts(inv.processor, message.organizationId, message.id, parts, {
+    sender: message.from[0]?.address ?? "",
+    mailboxAddresses: [...message.to, ...message.cc, ...message.bcc].map((x) => x.address),
+  });
 }
 
 type SyncContext = {

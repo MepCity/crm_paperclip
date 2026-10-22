@@ -70,6 +70,8 @@ export interface InvitationSyncStats {
   replyStale: number;
   replyUnknownEvent: number;
   replyUnknownAttendee: number;
+  replySenderMismatch: number;
+  requestOwnOrganizer: number;
   requestStored: number;
   cancelStored: number;
   parseFailures: number;
@@ -82,6 +84,8 @@ export function emptyInvitationSyncStats(): InvitationSyncStats {
     replyStale: 0,
     replyUnknownEvent: 0,
     replyUnknownAttendee: 0,
+    replySenderMismatch: 0,
+    requestOwnOrganizer: 0,
     requestStored: 0,
     cancelStored: 0,
     parseFailures: 0,
@@ -112,16 +116,33 @@ function methodOf(ics: string): string | null {
   return m?.[1] ? m[1].toUpperCase() : null;
 }
 
+/** Who sent the message and which addresses belong to the receiving mailbox. */
+export interface MessageAddressContext {
+  sender: string;
+  mailboxAddresses: readonly string[];
+}
+
+const normalizeAddress = (a: string) =>
+  a
+    .trim()
+    .replace(/^mailto:/i, "")
+    .toLowerCase();
+
 /** Processes one text/calendar body of a synced message. Never throws on bad calendar data. */
 export async function processCalendarPart(
   p: InvitationProcessor,
   organizationId: string,
   ics: string,
+  context?: MessageAddressContext,
 ): Promise<void> {
   try {
     const method = methodOf(ics);
     if (method === "REPLY") {
       const reply = parseImipReply(ics);
+      if (context && normalizeAddress(context.sender) !== normalizeAddress(reply.attendee.email)) {
+        p.stats.replySenderMismatch++;
+        return;
+      }
       const state = await p.states.get(organizationId, reply.uid);
       if (!state) {
         p.stats.replyUnknownEvent++;
@@ -136,6 +157,11 @@ export async function processCalendarPart(
       else p.stats.replyUnknownAttendee++;
     } else if (method === "REQUEST" || method === "CANCEL") {
       const request = parseImipRequest(ics);
+      const organizer = normalizeAddress(request.organizer.email);
+      if (context?.mailboxAddresses.some((a) => normalizeAddress(a) === organizer)) {
+        p.stats.requestOwnOrganizer++;
+        return;
+      }
       await p.incoming.put(organizationId, request);
       if (request.method === "REQUEST") p.stats.requestStored++;
       else p.stats.cancelStored++;
@@ -150,11 +176,12 @@ export async function processMessageCalendarParts(
   organizationId: string,
   messageId: string,
   parts: readonly string[],
+  context?: MessageAddressContext,
 ): Promise<void> {
   if (parts.length === 0) return;
   if (!(await p.processed.markIfNew(organizationId, messageId))) {
     p.stats.duplicates++;
     return;
   }
-  for (const ics of parts) await processCalendarPart(p, organizationId, ics);
+  for (const ics of parts) await processCalendarPart(p, organizationId, ics, context);
 }
