@@ -32,6 +32,12 @@ afterEach(() => {
 
 describe("ModuleFieldsPage and ModuleLayoutsPage", () => {
   it("renders Fields page for Leads, Contacts, Accounts, and Deals from fixture metadata", async () => {
+    const expectedFieldByModule: Record<string, string> = {
+      Leads: "Lead Status",
+      Contacts: "Department",
+      Accounts: "Account Name",
+      Deals: "Amount",
+    };
     for (const mod of ["Leads", "Contacts", "Accounts", "Deals"]) {
       const pageEl = await ModuleFieldsPage({
         params: Promise.resolve({ orgSlug: "test-org", module: mod }),
@@ -39,6 +45,7 @@ describe("ModuleFieldsPage and ModuleLayoutsPage", () => {
       const { unmount } = render(pageEl);
       expect(screen.getByRole("heading", { name: mod })).toBeDefined();
       expect(screen.getByRole("tab", { name: "Fields" })).toBeDefined();
+      expect(screen.getByRole("cell", { name: expectedFieldByModule[mod] })).toBeDefined();
       unmount();
     }
   });
