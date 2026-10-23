@@ -89,7 +89,7 @@ export function SettingsPersonalScreen({
           type="button"
           role="tab"
           aria-selected="true"
-          className="border-b-2 border-primary py-3 text-sm font-medium"
+          className="border-b-2 border-primary py-3 text-sm font-semibold"
         >
           Personal Settings
         </button>
