@@ -35,7 +35,9 @@ export async function modulePageMetadata({ params }: RouteProps) {
 async function renderModuleRoute(props: RouteProps, kind: ModuleRouteKind) {
   const route = await props.params;
   const definition = requireModuleScreen(route.moduleTab);
-  if ((kind === "detail" || kind === "merge") && route.recordId === "create") notFound();
+  if ((kind === "detail" || kind === "merge" || kind === "convert") && route.recordId === "create")
+    notFound();
+  if (kind === "convert" && definition.apiName !== "Leads") notFound();
   if (kind === "print" && !supportsRecordPrint(definition.apiName)) notFound();
   if (kind === "print-list" && !supportsListPrint(definition.apiName)) notFound();
   const printViewId =
@@ -77,6 +79,7 @@ export const moduleDetailPage = (props: RouteProps) => renderModuleRoute(props, 
 export const moduleCreatePage = (props: RouteProps) => renderModuleRoute(props, "create");
 export const moduleEditPage = (props: RouteProps) => renderModuleRoute(props, "edit");
 export const moduleClonePage = (props: RouteProps) => renderModuleRoute(props, "clone");
+export const moduleConvertPage = (props: RouteProps) => renderModuleRoute(props, "convert");
 export const moduleMergePage = (props: RouteProps) => renderModuleRoute(props, "merge");
 export const moduleDeduplicatePage = (props: RouteProps) => renderModuleRoute(props, "deduplicate");
 export const moduleTagsPage = (props: RouteProps) => renderModuleRoute(props, "tags");
