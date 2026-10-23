@@ -164,6 +164,30 @@ export const settingsNav: readonly NavLink[] = [
     group: "General",
   },
   {
+    id: "personal-settings",
+    label: "Personal Settings",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/personal-settings`,
+    match: "exact",
+    group: "General",
+  },
+  {
+    id: "company-details",
+    label: "Company Details",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/company-details`,
+    match: "exact",
+    group: "General",
+  },
+  {
+    id: "currencies",
+    label: "Currencies",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/currencies`,
+    match: "exact",
+    group: "General",
+  },
+  {
     id: "calendar-booking",
     label: "Calendar Booking",
     icon: Icons.calendar,
@@ -203,6 +227,14 @@ export const settingsNav: readonly NavLink[] = [
     href: (slug) => `/crm/${slug}/settings/modules`,
     match: "exact",
     group: "Customization",
+  },
+  {
+    id: "assignment-rules",
+    label: "Assignment Rules",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/assignment-rules`,
+    match: "exact",
+    group: "Automation",
   },
 ];
 

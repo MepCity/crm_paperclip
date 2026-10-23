@@ -171,17 +171,22 @@ describe("shellNav", () => {
 });
 
 describe("settingsNav", () => {
-  it("defines general, members, calendar booking and data administration links in order", () => {
+  it("defines settings links in group order", () => {
     expect(settingsNav.map((link) => link.id)).toEqual([
       "general",
       "members",
+      "personal-settings",
+      "company-details",
+      "currencies",
       "calendar-booking",
       "email",
       "import-history",
       "export-history",
       "modules-and-fields",
+      "assignment-rules",
     ]);
-    const [general, members, calendarBooking] = settingsNav;
+    const [general, members] = settingsNav;
+    const calendarBooking = settingsNav.find((link) => link.id === "calendar-booking");
 
     expect(general).toEqual({
       id: "general",
@@ -218,6 +223,9 @@ describe("settingsNav", () => {
     expect(generalLinks.map((link) => link.label)).toEqual([
       "General",
       "Members",
+      "Personal Settings",
+      "Company Details",
+      "Currencies",
       "Calendar Booking",
     ]);
 
@@ -231,6 +239,18 @@ describe("settingsNav", () => {
     expect(isNavLinkActive(bookingLink, "acme", path)).toBe(true);
     expect(isNavLinkActive(bookingLink, "acme", "/crm/acme/settings")).toBe(false);
     expect(isNavLinkActive(bookingLink, "acme", `${path}/subpage`)).toBe(false);
+  });
+
+  it("resolves company, currency and personal settings without matching sibling routes", () => {
+    for (const id of ["company-details", "currencies", "personal-settings"]) {
+      const link = settingsNav.find((entry) => entry.id === id);
+      expect(link).toBeDefined();
+      if (!link) continue;
+      const path = `/crm/example/settings/${id}`;
+      expect(link.href("example")).toBe(path);
+      expect(isNavLinkActive(link, "example", path)).toBe(true);
+      expect(isNavLinkActive(link, "example", "/crm/example/settings")).toBe(false);
+    }
   });
 
   it("exposes Email under Channels and keeps it active on configuration subtabs", () => {

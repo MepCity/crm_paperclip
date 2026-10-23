@@ -43,6 +43,9 @@ export function MailCompose({
       ? createHttpComposePort(orgSlug)
       : (port ?? fixtureComposePort);
   const [mailboxId, setMailboxId] = useState(mailboxes[0]?.id ?? "");
+  const activeMailboxId = mailboxes.some((m) => m.id === mailboxId)
+    ? mailboxId
+    : (mailboxes[0]?.id ?? "");
   const [values, setValues] = useState({ To: initialTo, Cc: "", Bcc: "" });
   const [visible, setVisible] = useState({ Cc: false, Bcc: false });
   const [subject, setSubject] = useState("");
@@ -61,7 +64,7 @@ export function MailCompose({
     subject ||
     body ||
     files.length ||
-    mailboxId !== (mailboxes[0]?.id ?? "");
+    activeMailboxId !== (mailboxes[0]?.id ?? "");
   function changed() {
     setError("");
   }
@@ -82,7 +85,7 @@ export function MailCompose({
       setError(count ? "Use at most 100 recipients." : "Add at least one recipient.");
       return;
     }
-    const mailbox = mailboxes.find((item) => item.id === mailboxId);
+    const mailbox = mailboxes.find((item) => item.id === activeMailboxId);
     if (!mailbox) {
       setError("Select a connected mailbox.");
       return;
@@ -92,7 +95,7 @@ export function MailCompose({
     setError("");
     const input: ComposeMailInput = {
       idempotencyKey: intent,
-      mailboxId,
+      mailboxId: activeMailboxId,
       from: { address: mailbox.address, ...(mailbox.name ? { name: mailbox.name } : {}) },
       to: parsed[0]?.recipients ?? [],
       cc: parsed[1]?.recipients ?? [],
@@ -144,7 +147,7 @@ export function MailCompose({
             <Select
               label="From"
               items={mailboxes}
-              value={mailboxId}
+              value={activeMailboxId}
               onChange={(key) => {
                 changed();
                 setMailboxId(String(key));

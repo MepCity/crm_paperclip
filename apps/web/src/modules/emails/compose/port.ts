@@ -7,7 +7,7 @@ export interface MailComposePort {
 export type ComposeMailbox = { id: string; address: string; name?: string };
 
 // Fixture-only configuration. Never reads a real mailbox or invokes a transport.
-export const composeMailboxes: readonly ComposeMailbox[] = [
+export const fixtureComposeMailboxes: readonly ComposeMailbox[] = [
   { id: "fixture-mailbox", address: "alex@example.com", name: "Alex Morgan" },
 ];
 export const fixtureComposePort: MailComposePort = {
