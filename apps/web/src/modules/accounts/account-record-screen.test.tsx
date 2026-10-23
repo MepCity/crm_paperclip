@@ -171,6 +171,27 @@ describe("AccountRecordScreen with real RecordDetailScreen", () => {
     expect(navigation.push).toHaveBeenCalledWith("/crm/account-screen-org/tab/Deals/create");
   });
 
+  it("opens the Assign dialog on the Deals card, Cancel closes it, Assign links a deal", async () => {
+    const user = userEvent.setup();
+    const service = createService();
+    renderScreen(service, "500000000000000000");
+    const dealsCard = await screen.findByRole("region", { name: "Deals" });
+    await user.click(within(dealsCard).getByRole("button", { name: "Assign" }));
+    const dialog = await screen.findByRole("dialog", { name: "Assign Deals" });
+    await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Assign Deals" })).toBeNull());
+
+    await user.click(within(dealsCard).getByRole("button", { name: "Assign" }));
+    const again = await screen.findByRole("dialog", { name: "Assign Deals" });
+    const boxes = await within(again).findAllByRole("checkbox");
+    expect(within(again).getByRole("button", { name: "Assign" }).hasAttribute("disabled")).toBe(
+      true,
+    );
+    await user.click(boxes[0] as HTMLElement);
+    await user.click(within(again).getByRole("button", { name: "Assign" }));
+    await waitFor(() => expect(screen.queryByRole("dialog", { name: "Assign Deals" })).toBeNull());
+  });
+
   it("shows the Deals card empty state for an account without deals", async () => {
     const service = createService();
     renderScreen(service, "500000000000000249");

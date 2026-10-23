@@ -5,8 +5,10 @@ import "./filter-panel.css";
 import type {
   ActivityFilterValue,
   CampaignFilterValue,
+  RelatedModuleFilter,
   SystemFiltersValue,
 } from "@crm/core/records";
+import { MAX_RELATED_MODULE_FILTERS } from "@crm/core/records/related-module-filters";
 import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -29,6 +31,14 @@ import {
   isFilterComplete,
 } from "./filter-editor";
 import {
+  initialRelatedModuleDraft,
+  type RelatedModuleDraft,
+  type RelatedModuleFilterConfig,
+  RelatedModuleFilterEditor,
+  relatedModuleIsComplete,
+  relatedModuleValue,
+} from "./related-module-filter-editor";
+import {
   initialSystemFilterDraft,
   isSystemFilterComplete,
   type SystemEditorKind,
@@ -45,6 +55,8 @@ export interface FilterItem {
   editor?: FilterEditorDefinition;
   systemEditor?: "activities" | "campaigns" | SystemEditorKind;
   systemOptions?: SystemEditorOptions;
+  /** Related-module row (Filter By Related Modules): editor config supplied by the module. */
+  relatedModule?: RelatedModuleFilterConfig;
   laterModule?: ModuleKey;
 }
 
@@ -66,6 +78,7 @@ export interface FilterPanelProps {
   initialActivityFilter?: ActivityFilterValue | null;
   initialCampaignFilter?: CampaignFilterValue | null;
   initialSystemDrafts?: Readonly<Record<string, SystemFilterDraft>>;
+  initialRelatedDrafts?: Readonly<Record<string, RelatedModuleDraft>>;
   userOptions?: readonly MultiSelectOption[];
   timeZone?: string;
   campaignOptions?: readonly MultiSelectOption[];
@@ -75,6 +88,8 @@ export interface FilterPanelProps {
     campaignFilter?: CampaignFilterValue | null,
     systemFilters?: SystemFiltersValue | null,
     systemDrafts?: Record<string, SystemFilterDraft>,
+    relatedModules?: RelatedModuleFilter[] | null,
+    relatedDrafts?: Record<string, RelatedModuleDraft>,
   ) => void;
   onClear?: () => void;
   /** Shown above the footer actions when a server-side filter validation fails. */
@@ -106,6 +121,7 @@ export function FilterPanel({
   initialActivityFilter = null,
   initialCampaignFilter = null,
   initialSystemDrafts = {},
+  initialRelatedDrafts = {},
   userOptions = [],
   timeZone = DEFAULT_TIME_ZONE,
   campaignOptions,
@@ -115,6 +131,9 @@ export function FilterPanel({
 }: FilterPanelProps) {
   const [systemDrafts, setSystemDrafts] = useState<Record<string, SystemFilterDraft>>(() => ({
     ...initialSystemDrafts,
+  }));
+  const [relatedDrafts, setRelatedDrafts] = useState<Record<string, RelatedModuleDraft>>(() => ({
+    ...initialRelatedDrafts,
   }));
   const tagModule = groups
     .flatMap((group) => group.items)
@@ -160,6 +179,10 @@ export function FilterPanel({
       const entries = Object.entries(current).filter(([id]) => selectedIds.includes(id));
       return entries.length === Object.keys(current).length ? current : Object.fromEntries(entries);
     });
+    setRelatedDrafts((current) => {
+      const entries = Object.entries(current).filter(([id]) => selectedIds.includes(id));
+      return entries.length === Object.keys(current).length ? current : Object.fromEntries(entries);
+    });
     setDrafts((current) => {
       const entries = Object.entries(current).filter(([id]) => selectedIds.includes(id));
       return entries.length === Object.keys(current).length ? current : Object.fromEntries(entries);
@@ -190,12 +213,19 @@ export function FilterPanel({
   const selectedSystemItems = groups
     .flatMap((group) => group.items)
     .filter((item) => selectedIds.includes(item.id) && isSystemItem(item));
+  const selectedRelatedItems = groups
+    .flatMap((group) => group.items)
+    .filter((item) => selectedIds.includes(item.id) && item.relatedModule);
   const hasSelectedItems =
     selectedSystemItems.length > 0 ||
+    selectedRelatedItems.length > 0 ||
     selectedFieldItems.length > 0 ||
     Boolean(selectedActivityItem) ||
     Boolean(selectedCampaignItem);
   const completed =
+    selectedRelatedItems.every((item) =>
+      relatedModuleIsComplete(relatedDrafts[item.id] ?? initialRelatedModuleDraft()),
+    ) &&
     selectedSystemItems.every((item) =>
       isSystemFilterComplete(
         item.systemEditor as SystemEditorKind,
@@ -274,7 +304,14 @@ export function FilterPanel({
                       variant="filter"
                       label={item.label}
                       labelClassName="w-(--size-list-filter-label-width)"
-                      isDisabled={item.disabled}
+                      isDisabled={
+                        item.disabled ||
+                        Boolean(
+                          item.relatedModule &&
+                            !selectedIds.includes(item.id) &&
+                            selectedRelatedItems.length >= MAX_RELATED_MODULE_FILTERS,
+                        )
+                      }
                       laterModule={item.laterModule}
                       isSelected={selectedIds.includes(item.id)}
                       onChange={(selected) => {
@@ -285,6 +322,14 @@ export function FilterPanel({
                               next[item.id] = initialSystemFilterDraft(
                                 item.systemEditor as SystemEditorKind,
                               );
+                            else delete next[item.id];
+                            return next;
+                          });
+                        }
+                        if (item.relatedModule) {
+                          setRelatedDrafts((current) => {
+                            const next = { ...current };
+                            if (selected) next[item.id] = initialRelatedModuleDraft();
                             else delete next[item.id];
                             return next;
                           });
@@ -322,6 +367,17 @@ export function FilterPanel({
                         }
                         users={userOptions}
                         {...item.systemOptions}
+                      />
+                    )}
+                    {selectedIds.includes(item.id) && item.relatedModule && (
+                      <RelatedModuleFilterEditor
+                        label={item.label}
+                        config={item.relatedModule}
+                        draft={relatedDrafts[item.id] ?? initialRelatedModuleDraft()}
+                        onChange={(draft) =>
+                          setRelatedDrafts((current) => ({ ...current, [item.id]: draft }))
+                        }
+                        users={userOptions}
                       />
                     )}
                     {selectedIds.includes(item.id) && item.editor && (
@@ -401,7 +457,57 @@ export function FilterPanel({
                       }
                     : undefined;
 
-                  if (selectedSystemItems.length > 0) {
+                  const appliedRelatedDrafts = Object.fromEntries(
+                    selectedRelatedItems.map((item) => [
+                      item.id,
+                      relatedDrafts[item.id] ?? initialRelatedModuleDraft(),
+                    ]),
+                  );
+                  const appliedRelated =
+                    selectedRelatedItems.length > 0
+                      ? selectedRelatedItems.flatMap((item) =>
+                          item.relatedModule
+                            ? [
+                                relatedModuleValue(
+                                  item.relatedModule,
+                                  appliedRelatedDrafts[item.id] ?? initialRelatedModuleDraft(),
+                                ),
+                              ]
+                            : [],
+                        )
+                      : null;
+                  if (selectedRelatedItems.length > 0) {
+                    const systemDraftEntries = Object.fromEntries(
+                      selectedSystemItems.map((item) => [
+                        item.id,
+                        systemDrafts[item.id] ??
+                          initialSystemFilterDraft(item.systemEditor as SystemEditorKind),
+                      ]),
+                    );
+                    const now = new Date();
+                    onApply(
+                      applied,
+                      selectedActivityItem ? activityFilterToCriteria(activityDraft) : undefined,
+                      appliedCampaign,
+                      selectedSystemItems.length > 0
+                        ? Object.assign(
+                            {},
+                            ...selectedSystemItems.map((item) =>
+                              systemFilterValue(
+                                item.systemEditor as SystemEditorKind,
+                                systemDraftEntries[item.id] ??
+                                  initialSystemFilterDraft(item.systemEditor as SystemEditorKind),
+                                now,
+                                timeZone,
+                              ),
+                            ),
+                          )
+                        : undefined,
+                      systemDraftEntries,
+                      appliedRelated,
+                      appliedRelatedDrafts,
+                    );
+                  } else if (selectedSystemItems.length > 0) {
                     const now = new Date();
                     const appliedDrafts = Object.fromEntries(
                       selectedSystemItems.map((item) => [
@@ -451,6 +557,7 @@ export function FilterPanel({
               onPress={() => {
                 setDrafts({});
                 setSystemDrafts({});
+                setRelatedDrafts({});
                 setActivityDraft(initialActivityFilter ?? DEFAULT_ACTIVITY_FILTER);
                 setCampaignDraft(initialCampaignFilter ?? DEFAULT_CAMPAIGN_FILTER);
                 onSelectionChange([]);

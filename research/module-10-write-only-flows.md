@@ -174,7 +174,7 @@ Open questions
 2. W2 has no first-party source.
 3. W8 and the mail-area access prerequisites stay documented gaps.
 
-## 9. R5 settings observation and write-only follow-up
+## R5 settings observation and write-only follow-up
 
 R5 (MEP-1014), 2026-10-22: a click-free email-settings entry shows the
 Compose Settings form, but the base and single five-minute retry both fail the paint gate. CEO
@@ -197,3 +197,76 @@ this entry makes no new documentation verdict. A runtime failure is not a
 reason to connect a mailbox, change preferences, retry a blocked write or
 open an editor. Remaining read-only research requires a paint-gate decision
 before another capture series.
+
+## R6 calendar settings prerequisite and write gaps
+
+R6 (MEP-1015), click-free capture `m10r6-booking-base`, observed an internal
+booking-administration prerequisite: organization business hours are not
+configured. The dialog offers Configure Business Hours and Cancel; neither was
+clicked. The public booking page was never opened. Both the base and the single
+permitted retry failed the strict paint gate. The retry also increased refused
+telemetry POST count from 1 to 2, invoking the stop rule. CEO decision MEP-1043
+closed the blocker with documentation-only completion and explicit access gaps;
+no further R6 capture or configuration is authorized. See [calendar-settings.md](specs/calendar-settings.md).
+
+- W10: provider connection, synchronization direction and conflict/deletion
+  rules remain unknown. No connection or sync was initiated.
+- Working-hours configuration is a persisted organization setting. Do not
+  configure it to reveal the booking list. The hours editor, validation and
+  post-save state remain unobserved.
+- Calendar-wide default reminder changes and meeting-provider setup persist
+  preferences or connections. No values were changed; Events reminder fields
+  do not establish calendar-wide defaults.
+- Booking-page create/edit/publish and public reservation submission are writes.
+  None was attempted. The internal list is obscured by the prerequisite; its
+  columns and empty/error states remain unknown.
+- R6 documentation completion: calendar-settings.md records dated D1–D5 public
+  source locators, offline navigation audit and documented/not-observed rows.
+  Personal hours, organization business hours, reminders, booking categories and
+  CalDAV capabilities are documented. Provider options, full list structure,
+  defaults and exact error states remain access gaps.
+- Implementation uses the observed prerequisite plus documented behaviour and
+  existing Module 1–9 components, per MEP-1043. The Module 10 gate summary must
+  list the remaining gaps from calendar-settings.md. Documentation does not
+  authorize changing hours, reminders, activation, connections or synchronization.
+  No separate follow-up issue or additional live R6 probe is required.
+
+## 9. R7 template list observation limits (MEP-1017)
+
+The click-free templates list capture shows New Template, a template-name link,
+a favorite star, select-all, folder links, a module selector, a stats cell, an
+unnamed document action and a folder-reorder icon. No control was operated.
+See [email-templates.md](specs/email-templates.md) for the inventory and paint
+gate outcome; visible presence does not establish working behaviour.
+
+- W9/N4: create/edit/clone/delete, editor autosave, merge fields, attachment
+  handling, folder creation/move/sharing and preview validation remain
+  unobservable without a write or a proven separate read-only preview entry.
+  Offscreen Preview/Analytics markup is not such proof. No template was opened.
+- Favorite changes and folder reordering persist state and were not attempted.
+  Selection-armed bulk move/delete, and saving any filter or module preference,
+  also remain forbidden. Merely seeing the selection or filter controls does not
+  authorize testing them.
+- R9 documentation may establish capabilities, but exact editor validation, draft
+  creation on open, preview side effects and save results remain explicit gaps
+  unless independently documented. No reference CRM write test is authorized.
+
+## R10 rule-check safety gap (MEP-1016)
+
+The workflow response shape establishes one configured rule and a non-null
+last-execution field. Its active state, module, triggers, actions and recipient
+roles remain unknown. MEP-1102 closes that UI route. One subsequent click-free
+assignment-list capture shows no rule rows but triggers the request-baseline
+stop rule; it establishes no absence or safe notification configuration. No
+further capture or retry was performed. The other rule/notification
+categories remain unverified. See
+[the R10 exposure register](specs/email-calendar-rule-check.md): unknown counts
+as yes for test-write eligibility. The W16 implementation scope remains Module
+12; its notification-risk check is required now for Module 10 safety.
+
+Do not create/edit a record to discover a workflow, run assignment, trigger an
+approval/auto-response, send a test alert or create a scheduled action to observe
+its delivery. No such action was attempted. Public documentation cannot prove
+this environment's active configuration. Restore read-only evidence first;
+residual unknowns stay gated for CTO/board disposition under the existing
+read-only rule. This addendum authorizes no write or editor opening.

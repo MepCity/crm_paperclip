@@ -102,8 +102,10 @@ export function matchesSystemFilters(
   events: readonly RecordHistoryEvent[],
 ): boolean {
   if (filters.locked && (record.fields.Locked__s === true) !== filters.locked.locked) return false;
+  // Sequence 0 marks seed-time rows (seeded notes); they are not user activity.
   const stream = events.filter(
-    (event) => event.stream.module === module && event.stream.recordId === record.id,
+    (event) =>
+      event.sequence > 0 && event.stream.module === module && event.stream.recordId === record.id,
   );
   const inScope = (event: RecordHistoryEvent, filter: NonNullable<SystemFiltersValue["touched"]>) =>
     Date.parse(event.occurredAt) >= Date.parse(filter.period.from) &&

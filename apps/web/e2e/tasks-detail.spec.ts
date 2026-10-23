@@ -108,6 +108,33 @@ test.describe("Tasks record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("Timeline History shows a row after an inline edit", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openTaskFromList(page, org.slug);
+    const subjectRow = page.locator('[data-detail-field="Subject"]');
+    await subjectRow.hover();
+    await subjectRow.getByRole("button", { name: "Edit Subject value" }).click();
+    const input = subjectRow.getByRole("textbox");
+    await input.fill("History Task Subject");
+    await input.press("Enter");
+    await expect(subjectRow).toContainText("History Task Subject");
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    const history = frame.locator("[data-timeline-history]");
+    await expect(history).toBeVisible();
+    await expect(history.getByText("No logs found")).toHaveCount(0);
+    await expect(
+      history.getByText(/Subject changed from .* to History Task Subject/),
+    ).toBeVisible();
+    await page.reload();
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    await expect(
+      history.getByText(/Subject changed from .* to History Task Subject/),
+    ).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("right panel shows person, Deal Summary and Open Activities", async ({
     page,
     pageErrors,

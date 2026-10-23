@@ -3,8 +3,7 @@
 import { supportsAttachmentCard } from "@crm/core/attachments/modules";
 import type { ModuleApiName } from "@crm/core/records";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
-import { useCallback, useMemo, useState, useSyncExternalStore } from "react";
-import type { TimelineEvent } from "@/components/records/detail/timeline";
+import { useCallback, useMemo, useState } from "react";
 import { toast } from "@/components/ui/toast";
 import { apiFetch, CRM_ORG_HEADER } from "@/lib/api/client/fetch";
 import { useOrgSlug } from "@/lib/api/client/provider";
@@ -64,29 +63,6 @@ function toRow(item: WireAttachment): AttachmentRow {
   };
 }
 
-// Deleted attachments leave no record behind (permanent delete), so their Timeline
-// events live in this session-scoped store. Provisional rule (OQ-04).
-interface DeletedEvent {
-  key: string;
-  event: TimelineEvent;
-}
-let deletedEvents: readonly DeletedEvent[] = [];
-const listeners = new Set<() => void>();
-function recordDeleted(entry: DeletedEvent) {
-  deletedEvents = [...deletedEvents, entry];
-  for (const listener of listeners) listener();
-}
-function subscribe(listener: () => void) {
-  listeners.add(listener);
-  return () => {
-    listeners.delete(listener);
-  };
-}
-
-export function resetDeletedAttachmentEvents() {
-  deletedEvents = [];
-}
-
 function attachmentsKey(orgSlug: string, module: string, id: string) {
   return ["attachments", orgSlug, module, id] as const;
 }
@@ -99,7 +75,6 @@ function uploadError(status: number): string {
 
 export interface UseAttachments {
   rows: AttachmentRow[];
-  events: readonly TimelineEvent[];
   loading: boolean;
   error: string | null;
   hasMore: boolean;
@@ -136,15 +111,8 @@ export function useAttachments(
     },
     getNextPageParam: (last, all) => (last.more ? all.length + 1 : undefined),
   });
-  // Timeline "added" events derive from `loaded`, so they cover only the pages fetched so far
-  // (the first 20 until "Show more"), not the whole list.
   const loaded = useMemo(() => query.data?.pages.flatMap((page) => page.items) ?? [], [query.data]);
   const [uploading, setUploading] = useState<UploadState[]>([]);
-  const deleted = useSyncExternalStore(
-    subscribe,
-    () => deletedEvents,
-    () => deletedEvents,
-  );
   const refresh = useCallback(async () => {
     await Promise.all([
       queryClient.invalidateQueries({ queryKey: key }),
@@ -225,42 +193,14 @@ export function useAttachments(
       await apiFetch(orgSlug, attachmentsPath(parentModule, parentId, row.id), {
         method: "DELETE",
       });
-      recordDeleted({
-        key: `${parentModule}:${parentId}`,
-        event: {
-          id: `attachment-deleted-${row.id}`,
-          at: new Date().toISOString(),
-          kind: "attachment",
-          moduleId: "attachments",
-          title: `Attachment deleted: ${row.fileName}`,
-          actorName: "You",
-        },
-      });
       await refresh();
     },
     [orgSlug, parentModule, parentId, refresh],
   );
 
   const rows = useMemo(() => loaded.map(toRow), [loaded]);
-  const events = useMemo(() => {
-    const added = loaded.map(
-      (item): TimelineEvent => ({
-        id: `attachment-${item.id}`,
-        at: item.Created_Time,
-        kind: "attachment",
-        moduleId: "attachments",
-        title: `Attachment added: ${item.File_Name}`,
-        actorName: item.Created_By?.name ?? "",
-        actorId: item.Created_By?.id,
-      }),
-    );
-    const mine = deleted.filter((d) => d.key === `${parentModule}:${parentId}`).map((d) => d.event);
-    return [...added, ...mine];
-  }, [loaded, deleted, parentModule, parentId]);
-
   return {
     rows,
-    events,
     loading: query.isLoading,
     error: query.isError ? "Could not load attachments." : null,
     hasMore: Boolean(query.hasNextPage),

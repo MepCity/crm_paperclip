@@ -15,7 +15,6 @@ import {
   CONTACTS_DELETE_CONFIRM_TITLE,
 } from "./contacts-record-more-options";
 import {
-  CONTACTS_TIMELINE_EMPTY_EVENTS,
   CONTACTS_TIMELINE_MODULE_OPTIONS,
   CONTACTS_TIMELINE_SOURCE_OPTIONS,
   CONTACTS_TIMELINE_SUBTABS,
@@ -77,7 +76,6 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
       subtabs: CONTACTS_TIMELINE_SUBTABS,
       modules: CONTACTS_TIMELINE_MODULE_OPTIONS,
       sources: CONTACTS_TIMELINE_SOURCE_OPTIONS,
-      events: CONTACTS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeContactsEventKind,
       upcomingAutomatedActions: {
         label: "Show Upcoming Automated Actions",
