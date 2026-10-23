@@ -1,6 +1,7 @@
 # ADR 0012 — Persistence foundation independent of record storage
 
-- Status: Proposed
+- Status: Accepted (CTO, 2026-10-23): §§2–5 for the bounded families in §6,
+  with the §7 exclusions; §8 recommendations adopted as written
 - Date: 2026-10-23
 - Issue: MEP-1186; split authorized by CTO in MEP-1184
 - Deciders: Platform Lead and CTO, after independent review
