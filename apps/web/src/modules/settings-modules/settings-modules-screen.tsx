@@ -17,6 +17,7 @@ import {
   UserPlus,
   Users,
 } from "lucide-react";
+import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { fixtureModuleListPort } from "./fixture-port";
 import type { ModuleListPort, ModuleSummary } from "./port";
@@ -43,7 +44,13 @@ const MODULE_ICONS: Record<string, LucideIcon> = {
   Reports: BarChart3,
 };
 
-export function SettingsModulesScreen({ port = fixtureModuleListPort }: { port?: ModuleListPort }) {
+export function SettingsModulesScreen({
+  port = fixtureModuleListPort,
+  orgSlug,
+}: {
+  port?: ModuleListPort;
+  orgSlug?: string;
+}) {
   const [rows, setRows] = useState<ModuleSummary[] | null>(null);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState("");
@@ -164,7 +171,16 @@ export function SettingsModulesScreen({ port = fixtureModuleListPort }: { port?:
                     <td className="px-4 py-4">
                       <span className="flex items-center gap-2">
                         <ModuleIcon apiName={r.apiName} />
-                        {r.displayLabel}
+                        {orgSlug && r.apiName === "Leads" ? (
+                          <Link
+                            href={`/crm/${orgSlug}/settings/modules/Leads/fields`}
+                            className="text-accent-blue"
+                          >
+                            {r.displayLabel}
+                          </Link>
+                        ) : (
+                          r.displayLabel
+                        )}
                       </span>
                     </td>
                     <td className="px-4 py-4">{r.moduleName}</td>
