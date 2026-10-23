@@ -1,14 +1,15 @@
 "use client";
 
 import { formatDateTime } from "@crm/core/format";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Icons } from "@/components/ui/icon";
 import { DEFAULT_FORMAT } from "@/lib/locale";
+import { fetchComposeMailboxes } from "../compose/http-port";
 import { MailCompose } from "../compose/mail-compose";
-import { composeMailboxes, fixtureComposePort } from "../compose/port";
+import type { ComposeMailbox } from "../compose/port";
 import {
   type EmailAddress,
   type EmailFolder,
@@ -83,7 +84,24 @@ export function InboxScreen({
   onNavigate: (folder: EmailFolder, messageId?: string) => void;
 }) {
   const [composeOpen, setComposeOpen] = useState(false);
+  const [mailboxes, setMailboxes] = useState<readonly ComposeMailbox[]>([]);
   const [sent, setSent] = useState(false);
+
+  useEffect(() => {
+    if (!composeOpen) return;
+    let active = true;
+    void fetchComposeMailboxes()
+      .then((data) => {
+        if (active) setMailboxes(data);
+      })
+      .catch(() => {
+        if (active) setMailboxes([]);
+      });
+    return () => {
+      active = false;
+    };
+  }, [composeOpen]);
+
   const { folder, conversations, selected } = resolveInboxSelection(
     model,
     folderParam,
@@ -115,8 +133,7 @@ export function InboxScreen({
       </div>
       {composeOpen && (
         <MailCompose
-          mailboxes={composeMailboxes}
-          port={fixtureComposePort}
+          mailboxes={mailboxes}
           onClose={() => setComposeOpen(false)}
           onSent={() => setSent(true)}
         />

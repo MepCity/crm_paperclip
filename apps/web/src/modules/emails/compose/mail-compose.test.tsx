@@ -2,14 +2,19 @@ import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 import { render } from "@/test/render";
 import { MailCompose } from "./mail-compose";
-import { composeMailboxes, type MailComposePort } from "./port";
+import { fixtureComposeMailboxes, type MailComposePort } from "./port";
 
 afterEach(cleanup);
 function setup(port: MailComposePort = { send: vi.fn().mockResolvedValue({ id: "sent" }) }) {
   const onClose = vi.fn();
   const onSent = vi.fn();
   render(
-    <MailCompose mailboxes={composeMailboxes} port={port} onClose={onClose} onSent={onSent} />,
+    <MailCompose
+      mailboxes={fixtureComposeMailboxes}
+      port={port}
+      onClose={onClose}
+      onSent={onSent}
+    />,
   );
   return { port, onClose, onSent };
 }
@@ -211,4 +216,17 @@ test("existing fixture mounts use HTTP in organization routes", async () => {
     window.history.replaceState(null, "", "/");
     vi.unstubAllGlobals();
   }
+});
+
+test("disables Send and rejects submission when no mailboxes are available", async () => {
+  const port = { send: vi.fn() };
+  render(<MailCompose mailboxes={[]} port={port} onClose={vi.fn()} onSent={vi.fn()} />);
+  const sendButton = screen.getByRole("button", { name: "Send" });
+  expect(sendButton.hasAttribute("disabled")).toBe(true);
+  fill("To", "person@example.com");
+  const form = sendButton.closest("form");
+  expect(form).toBeTruthy();
+  if (form) fireEvent.submit(form);
+  expect(await screen.findByText("Select a connected mailbox.")).toBeTruthy();
+  expect(port.send).not.toHaveBeenCalled();
 });
