@@ -28,6 +28,19 @@ describe("SettingsModulesScreen", () => {
     expect(screen.getByRole("switch", { name: "Leads status" })).toHaveProperty("disabled", true);
   });
 
+  it("shows icons per row, avatar only with a date, legend icons", async () => {
+    render(<SettingsModulesScreen port={fixtureModuleListPort} />);
+    await screen.findAllByText("Leads");
+    const rows = screen.getAllByRole("row").slice(1);
+    for (const r of rows) {
+      expect(r.querySelectorAll('[data-testid="module-icon"]')).toHaveLength(1);
+      const has = (r.querySelectorAll("td")[4]?.textContent ?? "") !== "";
+      expect(r.querySelectorAll('[data-testid="modifier-avatar"]').length).toBe(has ? 1 : 0);
+    }
+    expect(screen.getByTestId("legend-custom")).toBeDefined();
+    expect(screen.getByTestId("legend-team")).toBeDefined();
+  });
+
   it("filters by search and shows empty state", async () => {
     render(<SettingsModulesScreen port={fixtureModuleListPort} />);
     await screen.findAllByText("Leads");

@@ -1,6 +1,22 @@
 "use client";
 
-import { Search } from "lucide-react";
+import {
+  BarChart3,
+  Briefcase,
+  Building2,
+  Calendar,
+  CheckSquare,
+  Home,
+  LayoutGrid,
+  type LucideIcon,
+  Network,
+  Phone,
+  Search,
+  Settings,
+  User,
+  UserPlus,
+  Users,
+} from "lucide-react";
 import { useEffect, useMemo, useState } from "react";
 import { fixtureModuleListPort } from "./fixture-port";
 import type { ModuleListPort, ModuleSummary } from "./port";
@@ -14,6 +30,18 @@ const heads = [
   "Last Modified",
   "Status",
 ];
+
+const MODULE_ICONS: Record<string, LucideIcon> = {
+  Home,
+  Leads: UserPlus,
+  Contacts: Users,
+  Accounts: Building2,
+  Deals: Briefcase,
+  Tasks: CheckSquare,
+  Meetings: Calendar,
+  Calls: Phone,
+  Reports: BarChart3,
+};
 
 export function SettingsModulesScreen({ port = fixtureModuleListPort }: { port?: ModuleListPort }) {
   const [rows, setRows] = useState<ModuleSummary[] | null>(null);
@@ -81,11 +109,14 @@ export function SettingsModulesScreen({ port = fixtureModuleListPort }: { port?:
             />
           </div>
           <span className="flex items-center gap-1.5 text-sm text-text-muted">
-            <span aria-hidden="true" className="size-3 rounded-sm border border-text-muted" />
+            <span aria-hidden="true" data-testid="legend-custom" className="relative size-4">
+              <LayoutGrid className="size-4 text-text-muted" />
+              <Settings className="absolute -bottom-1 -right-1 size-2 text-text-muted" />
+            </span>
             Custom Module
           </span>
           <span className="flex items-center gap-1.5 text-sm text-text-muted">
-            <span aria-hidden="true" className="size-3 rounded-full bg-success" />
+            <Network aria-hidden="true" data-testid="legend-team" className="size-4 text-success" />
             Team Module
           </span>
           <div className="ml-auto flex items-center gap-4">
@@ -130,11 +161,29 @@ export function SettingsModulesScreen({ port = fixtureModuleListPort }: { port?:
               ) : (
                 shown.map((r) => (
                   <tr key={r.apiName} className="border-b border-border last:border-0">
-                    <td className="px-4 py-4">{r.displayLabel}</td>
+                    <td className="px-4 py-4">
+                      <span className="flex items-center gap-2">
+                        <ModuleIcon apiName={r.apiName} />
+                        {r.displayLabel}
+                      </span>
+                    </td>
                     <td className="px-4 py-4">{r.moduleName}</td>
                     <td className="px-4 py-4 text-accent-blue">{r.teamspaceCount} Teamspaces</td>
                     <td className="px-4 py-4">{r.sharedTo}</td>
-                    <td className="px-4 py-4">{r.lastModifiedAt ?? ""}</td>
+                    <td className="px-4 py-4">
+                      {r.lastModifiedAt ? (
+                        <span className="flex items-center gap-2">
+                          <span
+                            aria-hidden="true"
+                            data-testid="modifier-avatar"
+                            className="flex size-6 items-center justify-center rounded-full bg-border text-text-muted"
+                          >
+                            <User className="size-3.5" />
+                          </span>
+                          {r.lastModifiedAt}
+                        </span>
+                      ) : null}
+                    </td>
                     <td className="px-4 py-4">
                       <button
                         type="button"
@@ -158,5 +207,18 @@ export function SettingsModulesScreen({ port = fixtureModuleListPort }: { port?:
         </div>
       </div>
     </div>
+  );
+}
+
+function ModuleIcon({ apiName }: { apiName: string }) {
+  const Icon = MODULE_ICONS[apiName] ?? LayoutGrid;
+  return (
+    <span
+      data-testid="module-icon"
+      aria-hidden="true"
+      className="flex size-6 items-center justify-center rounded-md bg-surface-muted text-text-muted"
+    >
+      <Icon className="size-4" />
+    </span>
   );
 }
