@@ -49,6 +49,9 @@ test("top bar holds settings link scoped to the org and the user menu", () => {
   expect(within(banner).getByRole("link", { name: "Settings" }).getAttribute("href")).toBe(
     "/crm/acme/settings",
   );
+  expect(within(banner).getByRole("link", { name: "Calendar" }).getAttribute("href")).toBe(
+    "/crm/acme/calendar",
+  );
   expect(within(banner).getByRole("button", { name: "User menu" })).toBeTruthy();
 });
 
