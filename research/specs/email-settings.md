@@ -1,6 +1,6 @@
 # Email and mailbox settings — read-only research
 
-Status: blocked on MEP-1160 after a new responded BCC settings POST.
+Status: bounded research complete with accepted gaps; awaiting UI Lead approval.
 MEP-1051 accepted the original three runtime errors as the R5 baseline.
 Resting-page observations only; write and setup states remain explicit gaps.
 Issue: MEP-1014. Observed 2026-10-22 and 2026-10-23 (local dates).
@@ -687,7 +687,7 @@ Click/step lists remain empty.
 Capture refs added: `m10r5-bcc-dropbox-base` (all six evidence files retained
 in the research workspace; no screenshot or address committed).
 
-### Current disposition after the BCC stop
+### Historical disposition at the BCC stop
 
 MEP-1160 is the CEO-owned safety/scope decision dependency. The source issue
 was confirmed `blocked` with that dependency. No further capture is performed.
@@ -708,3 +708,49 @@ handoff; the upstream addition is an unrelated research spec. `git diff --check`
 relative links and added-content privacy checks pass.
 `research/specs/verify.mjs` absent; documentation only, no application tests.
 No parity-checklist change, no manual push, no automatic-push/CI claim.
+
+
+## Final disposition — MEP-1160 accepted scope closure
+
+The CEO closed MEP-1160 during this run: **no further R5 capture**. Existing
+BCC screenshot/controls may be used offline. The remaining settings pages
+are accepted explicit gaps; no more probes or decision tasks are required
+for this research delivery. This section supersedes all historical blocked
+waits above. It completes the bounded research, not the missing functional
+settings contract. The partial spec and write-only artifact go to UI Lead.
+
+| Surface / state | Evidence / remaining gap | Reason and disposition |
+| --- | --- | --- |
+| Compose resting form | Original captures retained | Known errors accepted by MEP-1051; choices/save states untested |
+| Signatures | Add New Signature presence only; existing state unreliable | Model error and editor/write requirement; accepted setup/write gap |
+| Mailbox connected list/provider setup | Configure Email entry only | Get Started/Configure requires setup; not clicked; accepted gap |
+| Email Sharing resting table | New capture and delta inventory above | Observed; choices, preferences, mass changes/save states remain write gaps |
+| Organization Emails resting page | New capture and delta inventory above | Observed; add/verify/edit/delete require writes; accepted gaps |
+| Custom Email Fields resting page | New capture and delta inventory above | Observed off-state switch; changing/syncing requires writes; accepted gap |
+| Email Parser | Loading probe only | Data did not load; tool blocked EmailParserAction; accepted by MEP-1159 |
+| BCC Dropbox resting page | Existing capture, offline delta inventory above | New responded POST caused full DUR; offline evidence accepted by MEP-1160 |
+| BCC configuration and write outcomes | Not exercised | Regeneration, domain/search-pattern changes, verification and delivery require writes; accepted gaps |
+| Email Deliverability | Not visited | Full DUR; remaining capture scope closed by MEP-1160 |
+| Email Intelligence / tracking | Not visited | Full DUR; remaining capture scope closed by MEP-1160 |
+| Unsubscribe Link | Not visited | Full DUR; remaining capture scope closed by MEP-1160 |
+| Incoming rules | No direct read-only page established | Full DUR/access gap; accepted by MEP-1160 |
+| Outgoing rules | No direct read-only page established | Full DUR/access gap; accepted by MEP-1160 |
+| Forwarding | No direct read-only page established | Full DUR/setup gap; accepted by MEP-1160 |
+| Disclaimers | No direct read-only page established | Full DUR/access gap; accepted by MEP-1160 |
+| Limits | No direct read-only page established | Full DUR/access gap; accepted by MEP-1160 |
+
+**BCC open question and implementation constraint (MEP-1160):** page load may
+initialize settings automatically. Our implementation must read this state
+through GET only; no automatic creation until a board decision. The captured
+HTTP 200 does not settle whether the reference created or returned settings.
+No additional live check, endpoint replay, mail send or rollback is authorized.
+The CEO recorded the low-confidence change concern to the board in MEP-1160.
+
+Every observed control remains `not clicked`; executed click list `[]` and
+its offline selector/DANGEROUS_TEXT checks remain passing. Capture refs above
+cover all eight R5 captures (three retained, five new); there are no captures
+of the three remaining top-level settings pages. Screenshots stay local.
+Current main is merged before final handoff; targeted documentation checks are
+recorded in the issue comment. No application changes/tests or parity update.
+UI Lead approval is the next live path; no unresolved research dependency
+remains after MEP-1160's scope closure.

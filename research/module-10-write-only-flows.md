@@ -366,3 +366,24 @@ guard to investigate. Deliverability, Intelligence and Unsubscribe remain
 unvisited after this full stop; rules, forwarding, disclaimers and limits
 without a direct read-only route remain explicit gaps. The accepted Parser
 gap and Compose/mailbox setup gaps are unchanged.
+
+
+### R5 final accepted gaps (MEP-1160 resolved)
+
+The CEO closed R5 captures after the BCC stop. No new capture or retry.
+The existing BCC screenshot/controls are used offline, all actions not clicked.
+The complete page-by-page gap table is in
+[the final R5 spec](specs/email-settings.md#final-disposition--mep-1160-accepted-scope-closure).
+Email Deliverability, Email Intelligence, Unsubscribe Link, incoming rules,
+outgoing rules, forwarding, disclaimers and limits close as explicit DUR/access
+or setup gaps. Parser is already accepted as a blocked-data gap by MEP-1159.
+Configure Email/provider/connection states and Compose/signature editor/save
+states remain setup/write gaps. No functional absence is inferred.
+
+BCC page load may initialize settings automatically. **Our implementation
+reads through GET only; no automatic creation until a board decision**
+(MEP-1160). The observed POST 200 does not prove or exclude persistent effect.
+The CEO recorded the low-confidence change concern to the board. Do not probe,
+replay, regenerate, verify an address or send mail to resolve it. This final
+scope closure supersedes the historical MEP-1160 wait above; the partial spec
+and this artifact are ready for the existing UI Lead approval gate.
