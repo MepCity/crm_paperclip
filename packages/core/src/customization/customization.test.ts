@@ -10,7 +10,13 @@ import {
   type LayoutDefinition,
   type ModuleBaseline,
   resolveEffectiveModule,
+  viewWithApiNames,
 } from "./index";
+
+function present<T>(value: T | undefined): T {
+  if (value === undefined) throw new Error("Missing test fixture");
+  return value;
+}
 
 function field(id: string, extra: Partial<BaselineField> = {}): BaselineField {
   return {
@@ -35,7 +41,9 @@ function layout(ids = ["name", "description"]): LayoutDefinition {
     id: "default",
     label: "Default",
     isDefault: true,
-    sections: [{ id: "info", label: "Information", columnCount: 2, columns: [ids, []] }],
+    sections: [
+      { id: "info", label: "Information", columnCount: 2, fields: ids, columns: [ids, []] },
+    ],
   };
 }
 function baseline(extra: Partial<ModuleBaseline> = {}): ModuleBaseline {
@@ -60,6 +68,7 @@ function baseline(extra: Partial<ModuleBaseline> = {}): ModuleBaseline {
     customFieldTypes: ["text", "integer", "picklist"],
     supportedColumnCounts: [1, 2],
     reservedApiNames: ["id"],
+    externalCriteriaFields: [],
     capabilities: { edit: true, formula: true, export: false },
     engineCapabilities: { edit: true, formula: false, export: true },
     ...extra,
@@ -280,6 +289,158 @@ describe("effective metadata resolver", () => {
     expect(resolveEffectiveModule(base).views[0]?.criteria).toEqual(base.views[0]?.criteria);
     expect(resolveEffectiveModule(base).fields[0]?.apiName).toBe("Record_Name");
   });
+
+  it("preserves nested external criteria in baseline and replacement views", () => {
+    const external = {
+      field: "Common_Status",
+      comparator: "equal" as const,
+      value: { token: "ANY" },
+    };
+    const base = baseline({
+      externalCriteriaFields: ["Common_Status"],
+      fields: [field("name", { apiName: "Record_Name" }), field("description")],
+    });
+    const view = {
+      ...present(base.views[0]),
+      criteria: {
+        groupOperator: "and" as const,
+        group: [
+          { field: "name", comparator: "contains" as const, value: "sample" },
+          { groupOperator: "or" as const, group: [external] },
+        ],
+      },
+    };
+    base.views = [view];
+    for (const overlay of [undefined, snapshot({ views: [view] })]) {
+      const result = resolveEffectiveModule(base, overlay);
+      expect(result.externalCriteriaFields).toEqual(["Common_Status"]);
+      expect(result.views[0]?.criteria).toEqual(view.criteria);
+      expect(viewWithApiNames(result, present(result.views[0]))).toEqual({
+        ...view,
+        columns: ["Record_Name"],
+        sort: { field: "Record_Name", order: "asc" },
+        criteria: {
+          ...view.criteria,
+          group: [
+            { field: "Record_Name", comparator: "contains", value: "sample" },
+            { groupOperator: "or", group: [external] },
+          ],
+        },
+      });
+      expect(viewWithApiNames(result, present(result.views[0]))).not.toBe(result.views[0]);
+    }
+  });
+
+  it.each(["columns", "sort", "unknown criterion", "invalid comparator", "typed criterion"])(
+    "rejects invalid view reference: %s in baseline and overlay",
+    (kind) => {
+      const base = baseline({ externalCriteriaFields: ["Common_Status"] });
+      const original = { ...present(base.views[0]), systemDefined: false };
+      const variants = {
+        columns: { columns: ["Common_Status"] },
+        sort: { sort: { field: "Common_Status", order: "asc" } },
+        "unknown criterion": { criteria: { field: "Unknown", comparator: "equal", value: null } },
+        "invalid comparator": {
+          criteria: { field: "Common_Status", comparator: "invalid", value: null },
+        },
+        "typed criterion": { criteria: { field: "name", comparator: "equal", value: 42 } },
+      };
+      const view = { ...original, ...variants[kind as keyof typeof variants] } as typeof original;
+      expect(() => viewWithApiNames(resolveEffectiveModule(base), view)).toThrow(ValidationError);
+      expect(() => resolveEffectiveModule({ ...base, views: [view] })).toThrow(ValidationError);
+      expect(() =>
+        resolveEffectiveModule(
+          base,
+          snapshot({ views: [...base.views, { ...view, id: "other" }] }),
+        ),
+      ).toThrow(ValidationError);
+    },
+  );
+
+  it.each(["stable", "Record_Name", "id", "retired", "custom", "Custom_API"])(
+    "rejects external criterion collision with %s",
+    (name) => {
+      const base = baseline({
+        fields: [
+          field("stable", { apiName: "Record_Name" }),
+          field("retired", { lifecycle: "retired" }),
+        ],
+        layouts: [layout(["stable"])],
+        views: [],
+        externalCriteriaFields: [name],
+      });
+      expect(() =>
+        resolveEffectiveModule(
+          base,
+          snapshot({ fields: [{ ...custom(), apiName: "Custom_API" }] }),
+        ),
+      ).toThrow(ValidationError);
+    },
+  );
+
+  it("rejects duplicate external names and missing required metadata", () => {
+    expect(() =>
+      resolveEffectiveModule(
+        baseline({ externalCriteriaFields: ["Common_Status", "Common_Status"] }),
+      ),
+    ).toThrow(ValidationError);
+    const base = baseline();
+    const { externalCriteriaFields: _, ...missing } = base;
+    expect(() => resolveEffectiveModule(missing as ModuleBaseline)).toThrow(ValidationError);
+    const { fields: __, ...section } = present(present(base.layouts[0]).sections[0]);
+    expect(() =>
+      resolveEffectiveModule(
+        baseline({
+          layouts: [{ ...layout(), sections: [section] }],
+        } as unknown as Partial<ModuleBaseline>),
+      ),
+    ).toThrow(ValidationError);
+  });
+
+  it("keeps ordered section membership independent of columns and visibility", () => {
+    const base = baseline({ fields: [...baseline().fields, field("hidden", { views: hidden })] });
+    const section = { ...present(layout().sections[0]), fields: ["hidden", "description", "name"] };
+    const ordered = { ...layout(), sections: [section] };
+    for (const overlay of [undefined, snapshot({ layouts: [ordered] })]) {
+      const result = resolveEffectiveModule({ ...base, layouts: [ordered] }, overlay);
+      expect(result.layouts[0]?.sections[0]).toEqual(section);
+      expect(Object.isFrozen(result.layouts[0]?.sections[0]?.fields)).toBe(true);
+    }
+    const repeated = {
+      ...ordered,
+      sections: [section, { ...section, id: "second", columns: [[], []] }],
+    };
+    expect(
+      resolveEffectiveModule({ ...base, layouts: [repeated] }).layouts[0]?.sections,
+    ).toHaveLength(2);
+  });
+
+  it.each(["unknown", "retired", "duplicate", "outside", "required without placement"])(
+    "rejects invalid section membership: %s",
+    (kind) => {
+      const base = baseline({
+        fields: [...baseline().fields, field("retired", { lifecycle: "retired" })],
+      });
+      const section = present(layout().sections[0]);
+      const variants = {
+        unknown: { fields: [...section.fields, "missing"] },
+        retired: { fields: [...section.fields, "retired"] },
+        duplicate: { fields: [...section.fields, "description"] },
+        outside: { fields: ["name"] },
+        "required without placement": { columns: [["description"], []] },
+      };
+      const changed = {
+        ...layout(),
+        sections: [{ ...section, ...variants[kind as keyof typeof variants] }],
+      };
+      expect(() => resolveEffectiveModule({ ...base, layouts: [changed] })).toThrow(
+        ValidationError,
+      );
+      expect(() => resolveEffectiveModule(base, snapshot({ layouts: [changed] }))).toThrow(
+        ValidationError,
+      );
+    },
+  );
 
   it("rejects invalid constraints and unsupported property shapes", () => {
     for (const patch of [

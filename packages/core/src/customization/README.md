@@ -11,7 +11,12 @@ network writes. Consumers must not enable settings editing from this adapter.
   An allowlist cannot override system-required, read-only or length invariants.
 - Snapshots contain only organization changes. Missing layouts/views inherit
   the baseline; supplied arrays replace them. Array positions define section,
-  column, field and view order. Field patches merge by stable field ID;
+  column, field and view order. Section `fields` preserves ordered membership
+  independently from `columns`, including hidden and unplaced fields. Every
+  member is an active field ID, unique within its section; column entries must
+  belong to that section. Cross-section membership may repeat (the Calls
+  fixture repeats Description); column placement remains globally unique.
+  Field patches merge by stable field ID;
   `views` and `picklist` properties replace their complete property value.
   Unknown keys and explicit undefined patch properties are rejected.
 - Names are case-sensitive, as in the existing record contract. Active and
@@ -22,8 +27,14 @@ network writes. Consumers must not enable settings editing from this adapter.
   column counts come from the registered baseline. Required fields need create
   and edit visibility plus placement, unless the baseline supplies a server
   value. Visibility is presentation, not field-level authorization.
-- Saved views use stable field IDs. The resolver translates criteria to API
-  names before calling the existing record engine's typed criteria validator.
+- Saved views use stable field IDs. `externalCriteriaFields` is required on
+  baselines and carried through effective reads. It declares unique API names
+  outside all field IDs, API names (including retired/custom fields) and reserved
+  names. These names are accepted only in criteria leaves, unchanged, with a
+  known comparator and no inferred field type. Columns and sorts remain strict
+  active IDs. `viewWithApiNames(effective, view)` translates columns, sorts and
+  nested criteria to API names, validating catalog leaves with the record engine.
+  Baseline and replacement overlay views follow the same rules.
   System views cannot be removed, changed or introduced by an overlay.
 - Capabilities are the baseline/engine intersection. Caller authorization must
   narrow them in slice E; `CustomizationPort` is an internal metadata boundary,
