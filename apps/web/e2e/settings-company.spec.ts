@@ -9,15 +9,15 @@ test("Company Details opens from settings with read-only controls and menu desti
   const org = await createOrganization(page);
   await page.goto(`/crm/${org.slug}/settings`);
   const main = page.locator("#main-content");
-  await expect(main.getByRole("link", { name: "Personal Settings", exact: true })).toHaveAttribute(
-    "href",
-    `/crm/${org.slug}/settings/personal-settings`,
-  );
-  await expect(main.getByRole("link", { name: "Currencies", exact: true })).toHaveAttribute(
+  const settingsNav = page.getByRole("navigation", { name: "Settings navigation" });
+  await expect(
+    settingsNav.getByRole("link", { name: "Personal Settings", exact: true }),
+  ).toHaveAttribute("href", `/crm/${org.slug}/settings/personal-settings`);
+  await expect(settingsNav.getByRole("link", { name: "Currencies", exact: true })).toHaveAttribute(
     "href",
     `/crm/${org.slug}/settings/currencies`,
   );
-  await main.getByRole("link", { name: "Company Details", exact: true }).click();
+  await settingsNav.getByRole("link", { name: "Company Details", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/settings/company-details$`));
   await expect(main.getByRole("heading", { name: "Example Company" })).toBeVisible();
   await expect(main.getByText("Time Zone", { exact: true })).toBeVisible();
