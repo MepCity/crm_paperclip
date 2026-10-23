@@ -174,6 +174,30 @@ Open questions
 2. W2 has no first-party source.
 3. W8 and the mail-area access prerequisites stay documented gaps.
 
+## R5 settings observation and write-only follow-up
+
+R5 (MEP-1014), 2026-10-22: a click-free email-settings entry shows the
+Compose Settings form, but the base and single five-minute retry both fail the paint gate. CEO
+decision MEP-1051 owns the next step. See
+[email-settings.md](specs/email-settings.md). No field, toggle or tab was clicked.
+This is no evidence of successful settings loading, signature absence or a
+particular mailbox connection state.
+
+| Flow | Resting evidence | Still unobserved; never test in the reference CRM |
+| --- | --- | --- |
+| Compose preferences | Font-family/font-size and sender/reply-to closed selectors; sample preview | Save timing, option lists, validation, cross-editor persistence, success/error feedback |
+| Signature management | Add New Signature entry; signature model-processing error | Create/edit/delete, editor, association to sender, insertion defaults and resulting preview |
+| Mailbox configuration (W7/W8) | Email subtab link only | Connect, disconnect, reconfigure, authorization, sync and connection results |
+| Tracking (W12) and sharing (W19) | Email Intelligence and Email Sharing navigation labels only | Tracking switches, consent, saved sharing and downstream effects |
+| Inbound/outbound processing and forwarding | Email Parser / BCC Dropbox navigation labels only | Rule creation, forwarding targets, disclaimers, automatic processing and notifications |
+| Deliverability / unsubscribe (W14/W15) | Email Deliverability / Unsubscribe Link navigation labels only | Saved configuration, verification, limits, unsubscribe generation and recipient effects |
+
+Use public documentation for these write behaviours and record its limits;
+this entry makes no new documentation verdict. A runtime failure is not a
+reason to connect a mailbox, change preferences, retry a blocked write or
+open an editor. Remaining read-only research requires a paint-gate decision
+before another capture series.
+
 ## R6 calendar settings prerequisite and write gaps
 
 R6 (MEP-1015), click-free capture `m10r6-booking-base`, observed an internal
@@ -246,6 +270,123 @@ its delivery. No such action was attempted. Public documentation cannot prove
 this environment's active configuration. Restore read-only evidence first;
 residual unknowns stay gated for CTO/board disposition under the existing
 read-only rule. This addendum authorizes no write or editor opening.
+
+
+### R5 continuation safety stop (MEP-1158)
+
+MEP-1051 accepts the three known R5 runtime errors; it does not relax the
+request-baseline rule. The click-free `m10r5-mailbox-settings-base` capture
+on 2026-10-23 shows Configure Email, three static capability columns, Help
+and Get Started. Get Started was not clicked; provider selection, credentials,
+connection, authorization, synchronization and connection results remain
+unobserved. No connected-mailbox list is established from this entry screen.
+The refused urlMonitor telemetry POST count rose from 1 to 2, so rule 7
+stopped research immediately without retry or another settings capture.
+CEO decision MEP-1158 owns further read-only coverage. Existing write-only
+restrictions and the earlier R5 follow-up table remain applicable; the
+original MEP-1051 decision wait is historical and resolved.
+
+
+### R5 bounded continuation decision (MEP-1158)
+
+The historical request-count stop above is resolved by MEP-1158. Its exception
+covers only variable counts on four refused, unanswered request paths during
+click-free R5 base loads; it authorizes no field, toggle, setup or write action.
+The settings spec records the additional resting-page evidence and per-capture
+accounting. Existing Compose/signature and mailbox Configure Email gaps remain
+explicit: no Get Started, Configure, connection, provider, credential,
+authorization, signature editor or preference change is attempted.
+
+- Email Sharing: mass update, row selection, sharing changes, excluded domains,
+  recipient scope and the Preferences editor remain untested. Visible sharing
+  states do not establish choice lists, validation, propagation or save results.
+- Organization Emails: adding/verifying/removing addresses, sender/reply-to
+  selection and verification delivery remain unobserved. The initial page's
+  verification prerequisite is explanatory evidence only.
+- Custom Email Fields: enabling/disabling conversation inclusion and any
+  resulting synchronization remain forbidden; the off-state switch was not
+  clicked. Described related-list, composer, report and filtering capabilities
+  are stated page content, not exercised outcomes.
+- Incoming/outgoing rules, forwarding, disclaimers and limits only receive
+  observed coverage if directly present in the authorized resting pages.
+  A missing direct read-only route remains an access/setup gap; no guessed
+  configuration editor or setup flow is entered to discover it.
+
+
+### R5 new parser-path stop (MEP-1159)
+
+The MEP-1158 continuation captured three additional resting settings pages,
+then stopped at `m10r5-email-parser-base` (2026-10-23). The capture tool refused
+one new `POST /crm/<org>/EmailParserAction.do` (`emailParser` legacy action).
+The page remained a loading skeleton; no parser form or rule list is proved.
+No non-GET response, click or retry occurred. MEP-1158's four variable refused
+classes do not cover this new path. MEP-1159 is the CEO-owned decision path.
+
+Email Parser setup/rule creation, parsing execution/results, BCC forwarding,
+BCC Dropbox configuration, deliverability configuration/limits, tracking and
+intelligence changes, unsubscribe setup and any rules, forwarding, disclaimers
+or limits requiring setup stay explicit gaps. BCC Dropbox, Email Deliverability,
+Email Intelligence and Unsubscribe Link were not visited after DUR. No guard
+bypass, endpoint replay, Configure/Get Started or write-only experiment is
+authorized. Compose/signature and mailbox setup gaps remain unchanged.
+
+
+### R5 parser gap disposition (MEP-1159 resolved)
+
+The CEO subsequently accepted Email Parser as an explicit gap: data did not
+load because the tool blocked the request. No retry or guard change. Five
+refused/unanswered classes may vary on the remaining click-free R5 pages:
+urlMonitor, reminder, notification, logs, EmailParserAction. A new refused path
+makes its page an explicit gap and permits the next named page; this does
+not permit the refused request to reach the reference CRM. New/increased
+responded non-GET, new runtime/script error, tool failure or suspected change
+still stops all R5. The final settings spec records the remaining four pages.
+This supersedes the historical MEP-1159 decision wait above; every write/setup
+restriction remains in force.
+
+
+### R5 BCC automatic POST safety gap (MEP-1160)
+
+Under MEP-1159 the next single click-free page was BCC Dropbox. Its load
+recorded a new responded `POST /crm/v8/settings/bcc_dropbox` (one, HTTP 200),
+plus the existing visitor POST. No field or action was used. The tool retains
+only response structure, so the call's semantics/persistent effect are unknown;
+a successful response alone does not prove a reference setting changed.
+The new responded path triggers the full R5 stop, unlike a refused-path gap.
+A new refused telemetry customMetrics POST was also recorded. No retry,
+rollback or further reference navigation occurred. MEP-1160 owns disposition.
+
+The resting page's generated-address display, copy icon, Regenerate, vCard,
+Exclude Domains and Edit Search Pattern are inventoried in email-settings.md.
+No address is retained. Regeneration, address verification, BCC delivery,
+search-pattern edits, automatic record creation/association, domain exclusions
+and downloads remain untested. Seeing an address does not prove whether this
+load generated it. Do not send a BCC test, replay the endpoint or change the
+guard to investigate. Deliverability, Intelligence and Unsubscribe remain
+unvisited after this full stop; rules, forwarding, disclaimers and limits
+without a direct read-only route remain explicit gaps. The accepted Parser
+gap and Compose/mailbox setup gaps are unchanged.
+
+
+### R5 final accepted gaps (MEP-1160 resolved)
+
+The CEO closed R5 captures after the BCC stop. No new capture or retry.
+The existing BCC screenshot/controls are used offline, all actions not clicked.
+The complete page-by-page gap table is in
+[the final R5 spec](specs/email-settings.md#final-disposition--mep-1160-accepted-scope-closure).
+Email Deliverability, Email Intelligence, Unsubscribe Link, incoming rules,
+outgoing rules, forwarding, disclaimers and limits close as explicit DUR/access
+or setup gaps. Parser is already accepted as a blocked-data gap by MEP-1159.
+Configure Email/provider/connection states and Compose/signature editor/save
+states remain setup/write gaps. No functional absence is inferred.
+
+BCC page load may initialize settings automatically. **Our implementation
+reads through GET only; no automatic creation until a board decision**
+(MEP-1160). The observed POST 200 does not prove or exclude persistent effect.
+The CEO recorded the low-confidence change concern to the board. Do not probe,
+replay, regenerate, verify an address or send mail to resolve it. This final
+scope closure supersedes the historical MEP-1160 wait above; the partial spec
+and this artifact are ready for the existing UI Lead approval gate.
 
 ## 8. R3 record-detail observation boundary
 

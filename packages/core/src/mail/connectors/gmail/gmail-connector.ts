@@ -4,6 +4,7 @@ import {
   type ChangeSet,
   ConnectorError,
   type ConnectorMailbox,
+  GmailDeliveryUnknownError,
   type MailConnector,
   type MappedMessage,
 } from "./port";
@@ -89,6 +90,7 @@ export function createGmailConnector(options: GmailConnectorOptions): MailConnec
       return await transport(req);
     } catch {
       // Transport errors may embed request details; surface a safe class only.
+      if (req.url === `${API}/messages/send`) throw new GmailDeliveryUnknownError();
       throw new ConnectorError("retryable");
     }
   }
@@ -148,10 +150,14 @@ export function createGmailConnector(options: GmailConnectorOptions): MailConnec
     method: "GET" | "POST",
     url: string,
     json?: unknown,
+    signal?: AbortSignal,
   ): Promise<unknown> {
+    const isDelivery = url === `${API}/messages/send`;
     let bearer = await token(m);
     for (let attempt = 0; attempt < 2; attempt++) {
+      if (signal?.aborted) throw new ConnectorError("retryable");
       const res = await send({
+        ...(signal ? { signal } : {}),
         method,
         url,
         headers: {
@@ -174,6 +180,7 @@ export function createGmailConnector(options: GmailConnectorOptions): MailConnec
       try {
         return JSON.parse(res.body);
       } catch {
+        if (isDelivery) throw new GmailDeliveryUnknownError();
         throw new ConnectorError("permanent");
       }
     }
@@ -266,10 +273,12 @@ export function createGmailConnector(options: GmailConnectorOptions): MailConnec
       }
     },
 
-    async sendRaw(m, rawMime) {
+    async sendRaw(m, rawMime, signal) {
       const raw = Buffer.from(rawMime, "utf8").toString("base64url");
-      const data = (await call(m, "POST", `${API}/messages/send`, { raw })) as { id?: string };
-      if (!data.id) throw new ConnectorError("permanent");
+      const data = (await call(m, "POST", `${API}/messages/send`, { raw }, signal)) as {
+        id?: string;
+      };
+      if (typeof data?.id !== "string" || !data.id) throw new GmailDeliveryUnknownError();
       return { providerMessageKey: data.id };
     },
 
