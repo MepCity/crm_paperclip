@@ -1,16 +1,17 @@
 # Email and mailbox settings — read-only research
 
-Status: blocked after two failed paint probes; decision owner CEO (MEP-1051).
+Status: blocked by the non-GET count stop rule; CEO decision MEP-1158.
+MEP-1051 accepted the original three runtime errors as the R5 baseline.
 Partial observation only; not an implementation-ready settings contract.
-Issue: MEP-1014. Observed 2026-10-22 (local date).
+Issue: MEP-1014. Observed 2026-10-22 and 2026-10-23 (local dates).
 
 ## Purpose and scope
 
 Describe email settings reachable through direct navigation or named settings
 links under section 4.5 of the
 [approved research plan](../module-10-email-calendar-research-plan.md).
-The later sequencing decision allows R5 independently of R4. It does not
-relax the paint gate, stop rule or read-only restriction.
+The later sequencing decision allows R5 independently of R4. MEP-1051 later accepts only the three known runtime errors for R5; the
+stop rule and read-only restriction remain unchanged.
 
 The entry route was established from the Email link in the retained `m6-setup`
 controls. A new click-free capture of `/crm/<org>/settings/email-configuration`
@@ -280,3 +281,95 @@ no documentation findings are asserted by this capture-only run.
 - Deliver partial evidence with an explicit blocked decision path, not a
   completed research claim. The remaining settings coverage is listed in
   MEP-1051; no parity-checklist change.
+
+
+## R5 continuation after MEP-1051 (2026-10-23)
+
+MEP-1051 accepts the two original captures as evidence and allows the known
+sortable-parent, proofing-global and signature-model errors on R5 pages.
+New page errors still stop research. MEP-1013 is complete; only the capture
+serve process was present before this run. No old capture or spent click
+was repeated. Current `origin/main` was merged; the write-only addenda from
+both branches were preserved.
+
+### Mailbox configuration base and delta inventory
+
+Source for all following rows: `seen (m10r5-mailbox-settings-base)`.
+Direct route: `/crm/<org>/settings/email-configuration/email-settings?action=mailSelect`,
+from the original base's named Email link (entry 279). No click executed.
+Completed 2026-10-23 01:20:05 UTC with `--wait 25000`.
+
+The Email configuration subtab is selected by route. The main card shows
+Configure Email, a help link, short introductory text, three illustrated
+capability columns (record context, sending/receiving, synchronization),
+and Get Started. There is no connected-mailbox table, credential field or
+provider picker in this resting screen. This is an observed setup entry,
+not proof of mailbox state elsewhere. Illustrations remain reference evidence;
+implementation must create its own assets. Get Started was never clicked:
+opening a connection workflow is outside this read-only run.
+
+| # | Delta against Compose base | Position / type | Behaviour | Owner | Contacts ref | Control entries |
+| --- | --- | --- | --- | --- | --- | --- |
+| MB-01 | Reuse ES-01–ES-47 with Email selected instead of Compose | Same setup rail, shell and tab rows | not clicked | Same as base | Same as base | Same indices as base |
+| MB-02 | Remove ES-48–ES-53 | Compose fields and signature action absent | not observed on this route | M10 | new | None |
+| MB-03 | Get Started replaces Compose form | Main card, centered action link below capability columns | not clicked; connection flow forbidden | M10 | new | 287 |
+| MB-04 | Reuse ES-54–ES-64 | Bottom utility strip | not clicked | Shared shell | SH-35–SH-45 | 304–314, respectively |
+| MB-05 | Heading Help replaces Compose Settings Help (ES-65) | Right of Configure Email heading; link | not clicked | M10 | new | Screenshot-only |
+| MB-06 | Reuse ES-66 | Far-right bottom trash-bin icon | not clicked | Shared shell | SH-46 | Screenshot-only |
+
+Screenshot and controls inspected offline. Reconciliation: 330 entries →
+59 indexed controls plus two screenshot-only controls = **61 controls**.
+102 entries assigned, 43 nested representations collapsed, 228 excluded:
+59 + 43 + 228 = 330. Excluded indices:
+`1–2, 10–36, 55, 74, 81–233, 236, 240–241, 243–244, 246–247, 250–251, 256–257, 286, 288–303, 315–330`.
+Exclusion reasons match the Compose base: hidden/clipped navigation,
+wrappers, inactive dialogs, zero-size scaffolding and scroll containers.
+All reused indexed control names were checked against their base mappings.
+
+### Paint and request accounting
+
+Configure Email heading present; 330 controls; 42 API records, exceeding
+half of 51 in the earlier base. Only the accepted sortable-parent pageerror
+remains; no new pageerror or failed JavaScript GET is recorded. Script
+loads: 261 network, 2 cache, 0 failed. Paint criteria pass under MEP-1051;
+this does not override the independent network stop below.
+
+| Non-GET class | Original base | Mailbox base | Result |
+| --- | --- | --- | --- |
+| Proofing activities POST | 1 | 0 | Reduced |
+| Shell visitor-trigger POST | 1 | 1 | Same |
+| Blocked reminder POST | 1 | 1 | Same |
+| Blocked notification POST | 1 | 1 | Same |
+| Blocked exceptions telemetry POST | 1 | 0 | Absent |
+| Blocked logs telemetry POST | 1 | 1 | Same |
+| Blocked urlMonitor telemetry POST | 1 | 2 | **DUR: count increased** |
+
+Five blocked requests total. Response entries and blocked attempts are counted
+separately, without double counting. No new non-GET path was seen, but the
+urlMonitor count increase alone invokes rule 7, even though both attempts
+were refused. No request was retried individually, no rollback attempted,
+and no further capture was made. No tool error, leaked tab, popup, download,
+file chooser, print or automatic Escape was reported.
+
+Executed click list remains `[]`; selector/DANGEROUS_TEXT check passes for
+the empty list. All fields, switches, links, Get Started and help remain
+not clicked. No credentials or addresses were entered or copied.
+
+### Current remaining scope and disposition
+
+MEP-1158 is assigned to the CEO for a bounded continuation decision or
+explicit gap disposition. Until it resolves, no new R5 capture is authorized.
+Remaining read-only pages: Email Sharing, Organization Emails, Custom Email
+Fields, Email Parser, BCC Dropbox, Email Deliverability, Email Intelligence,
+Unsubscribe Link, plus safely reachable rules, forwarding, disclaimers and
+limits. The coverage table above describes the original run; mailbox setup
+now has the limited resting-screen evidence in this addendum. Signature state,
+write outcomes and all unvisited settings forms remain open questions.
+The original MEP-1051 paint blocker is resolved, superseded by MEP-1158;
+this is still a partial spec, awaiting eventual UI Lead approval.
+
+Capture refs added: `m10r5-mailbox-settings-base` (screenshot, aria, page,
+controls, network, meta in the research workspace; no screenshot committed).
+Verification: inventory arithmetic and mapped control names passed;
+`git diff --check` passed. `research/specs/verify.mjs` is absent.
+Documentation only; application tests and CI were not run or claimed.

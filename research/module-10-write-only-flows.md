@@ -270,3 +270,18 @@ its delivery. No such action was attempted. Public documentation cannot prove
 this environment's active configuration. Restore read-only evidence first;
 residual unknowns stay gated for CTO/board disposition under the existing
 read-only rule. This addendum authorizes no write or editor opening.
+
+
+### R5 continuation safety stop (MEP-1158)
+
+MEP-1051 accepts the three known R5 runtime errors; it does not relax the
+request-baseline rule. The click-free `m10r5-mailbox-settings-base` capture
+on 2026-10-23 shows Configure Email, three static capability columns, Help
+and Get Started. Get Started was not clicked; provider selection, credentials,
+connection, authorization, synchronization and connection results remain
+unobserved. No connected-mailbox list is established from this entry screen.
+The refused urlMonitor telemetry POST count rose from 1 to 2, so rule 7
+stopped research immediately without retry or another settings capture.
+CEO decision MEP-1158 owns further read-only coverage. Existing write-only
+restrictions and the earlier R5 follow-up table remain applicable; the
+original MEP-1051 decision wait is historical and resolved.
