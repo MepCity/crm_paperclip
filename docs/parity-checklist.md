@@ -1445,3 +1445,23 @@ implemented and QA-verified as part of MEP-930/MEP-995/MEP-996. All write flows
 (upload, new folder, rename, move, Trash, share, versions, record-attach) are
 deferred pending CTO resolution of ADR 0008 open questions U1–U13. The gate
 will not be marked complete until those flows are implemented and QA-verified.
+
+## Module 13 — Reports and Analytics (R1 research)
+
+Source: `research/specs/reports.md` (MEP-1211). Research only; no implementation
+or module gate is claimed. Module 2+ inventory parity applies.
+
+| # | Surface | Evidence / status | Remaining boundary |
+| --- | --- | --- | --- |
+| RP-01 | Reports populated All Reports list, toolbar, columns and row affordances | `m13r1-reports-main`; H01–H47, R01–R07 inventory | Search, category persistence, selection and favorite actions untested |
+| RP-02 | Report folders / folder contents / empty list | Open U1–U3; no report-folder pane or safe folder link in captured state | No view preference changed; no folder created; empty report result is distinct |
+| RP-03 | Existing report view with empty result | `m13r1-report-detail`; V01–V10 inventory; one navigation-link click | Other report types, populated data, filters, sorting and menu actions unobserved |
+| RP-04 | Analytics initial overview and visible card regions | `m13r1-analytics-entry`; A01–A12 inventory; zero clicks | Automatic metadata PUT blocked; runtime errors; detailed dashboard research is R2 |
+| RP-05 | Metadata and read-only safety | Module index entries present; no dedicated field schemas; all capture meta audited | No writes, export, scheduling, sharing, favorites or preference changes authorized |
+
+All three captures remain local in the research workspace. Guarded background
+requests: reminder/status/telemetry in every capture; an additional automatic
+Analytics metadata update was blocked on entry. No guard was relaxed and no
+reference mutation is evidenced. U1–U7 remain research questions rather than
+approved product behaviour. First recommended implementation slice is the
+observed read-only Reports list only, pending UI Lead review.
