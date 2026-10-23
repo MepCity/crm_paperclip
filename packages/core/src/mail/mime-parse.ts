@@ -147,11 +147,12 @@ function parseHeaderParams(raw: string | undefined): HeaderParams {
           if (m[1]) bytes.push(Number.parseInt(m[1], 16));
           else bytes.push((m[2] as string).charCodeAt(0) & 0xff);
         }
-        flush();
       } else {
+        flush();
         out += v;
       }
     });
+    flush();
     params.set(key, out);
   }
   return { value, params };

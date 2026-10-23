@@ -85,6 +85,15 @@ describe("parseMimeMessage", () => {
     expect(m.attachments[0]?.filename).toBe("résumé final.txt");
   });
 
+  it("joins a multi-byte character split across RFC 2231 segments", () => {
+    const m = parseMimeMessage(
+      crlf(
+        "Content-Type: multipart/mixed; boundary=z\n\n--z\nContent-Type: application/octet-stream\nContent-Disposition: attachment;\n filename*0*=utf-8''r%C3;\n filename*1*=%A9sum.txt\n\ndata\n--z--\n",
+      ),
+    );
+    expect(m.attachments[0]?.filename).toBe("résum.txt");
+  });
+
   it("handles LF-only input", () => {
     const m = parseMimeMessage(
       'Content-Type: multipart/alternative; boundary="q"\n\n--q\nContent-Type: text/plain\n\nA\n--q--\n',
@@ -106,6 +115,15 @@ describe("parseMimeMessage", () => {
     for (let i = 0; i < 25; i++) {
       raw = `Content-Type: multipart/mixed; boundary="b${i}"\r\n\r\n--b${i}\r\n${raw}\r\n--b${i}--\r\n`;
     }
+    expect(() => parseMimeMessage(raw)).toThrow(MimeParseError);
+  });
+
+  it("rejects more than 500 parts", () => {
+    const parts = Array.from(
+      { length: 501 },
+      () => "--b\r\nContent-Type: text/plain\r\n\r\nx\r\n",
+    ).join("");
+    const raw = `Content-Type: multipart/mixed; boundary="b"\r\n\r\n${parts}--b--\r\n`;
     expect(() => parseMimeMessage(raw)).toThrow(MimeParseError);
   });
 });
