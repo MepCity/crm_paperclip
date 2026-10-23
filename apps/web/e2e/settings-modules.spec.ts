@@ -26,7 +26,7 @@ test("Leads Fields sub-page opens from the module list and searches", async ({ p
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(`/crm/${org.slug}/settings/modules`);
-  await page.getByRole("link", { name: "Leads", exact: true }).click();
+  await page.locator("#main-content").getByRole("link", { name: "Leads", exact: true }).click();
   await expect(page.getByRole("columnheader", { name: "Data Type" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Create and Edit Fields" })).toBeDisabled();
   await page.getByRole("searchbox", { name: "Search Fields or Data Types" }).fill("zzz");
