@@ -9,7 +9,27 @@
  */
 
 /** The locale and the time zone a value is rendered in. */
-export type FormatOptions = { locale: string; timeZone: string };
+export type FormatOptions = {
+  locale: string;
+  timeZone: string;
+  /** Overrides the locale's decimal separator. Set together with `groupSeparator`. */
+  decimalSeparator?: string;
+  groupSeparator?: string;
+  /** Overrides the locale's date layout, e.g. `dd.MM.yyyy`. */
+  datePattern?: string;
+  /** Overrides the locale's clock. */
+  clock?: 12 | 24;
+  /** Replaces the `Intl` currency symbol, keyed by ISO 4217 code. */
+  currencySymbols?: Readonly<Record<string, string>>;
+};
+
+export {
+  type DatePattern,
+  DOTTED_DAY_FIRST_FORMAT,
+  FormatSettingError,
+  formatOptionsFromOrganization,
+  type OrganizationFormat,
+} from "./organization";
 
 /** A calendar day, `"YYYY-MM-DD"`: no time of day and no time zone. */
 export type CalendarDate = string;
@@ -44,6 +64,35 @@ const RELATIVE_UNITS: readonly (readonly [
   ["second", SECOND],
 ];
 
+import { renderDatePattern, validateSeparators } from "./organization";
+
+/** Zero-padded day, month and year of `value` in `timeZone`. */
+function patternParts(value: Date, timeZone: string) {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).formatToParts(value);
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((candidate) => candidate.type === type)?.value ?? "";
+  return { day: get("day"), month: get("month"), year: get("year") };
+}
+
+/** The time of day as `h:mm AM` or `HH:mm`. */
+function clockTime(value: Date, timeZone: string, clock: 12 | 24): string {
+  const parts = new Intl.DateTimeFormat("en-GB", {
+    timeZone,
+    hour: clock === 12 ? "numeric" : "2-digit",
+    minute: "2-digit",
+    hourCycle: clock === 12 ? "h12" : "h23",
+  }).formatToParts(value);
+  const get = (type: Intl.DateTimeFormatPartTypes) =>
+    parts.find((candidate) => candidate.type === type)?.value ?? "";
+  const time = `${get("hour")}:${get("minute")}`;
+  return clock === 12 ? `${time} ${get("dayPeriod").toUpperCase()}` : time;
+}
+
 /**
  * Formats a calendar day, or the day an instant falls on in `options.timeZone`.
  * A `"YYYY-MM-DD"` string is a calendar day and stays on that day in every time zone.
@@ -57,7 +106,13 @@ export function formatDate(
   const day = typeof value === "string" ? calendarDay(value) : undefined;
   if (day !== undefined) {
     // A calendar day has no time of day, so it is rendered in UTC and cannot shift a day.
+    if (options.datePattern !== undefined) {
+      return renderDatePattern(options.datePattern, patternParts(new Date(day), "UTC"));
+    }
     return render(options.locale, "UTC", { dateStyle: "medium" }, day);
+  }
+  if (options.datePattern !== undefined) {
+    return renderDatePattern(options.datePattern, patternParts(instant(value), options.timeZone));
   }
   return render(options.locale, options.timeZone, { dateStyle: "medium" }, instant(value));
 }
@@ -93,6 +148,14 @@ export function formatDateTime(
   options: FormatOptions,
 ): string {
   if (value === null || value === undefined) return "";
+  if (options.datePattern !== undefined || options.clock !== undefined) {
+    const date = instant(value);
+    const day =
+      options.datePattern === undefined
+        ? render(options.locale, options.timeZone, { dateStyle: "medium" }, date)
+        : renderDatePattern(options.datePattern, patternParts(date, options.timeZone));
+    return `${day} ${clockTime(date, options.timeZone, options.clock ?? 12)}`;
+  }
   return render(
     options.locale,
     options.timeZone,
@@ -124,6 +187,11 @@ export function formatNumericDate(
 ): string {
   if (value === null || value === undefined) return "";
   const day = typeof value === "string" ? calendarDay(value) : undefined;
+  if (options.datePattern !== undefined) {
+    return day === undefined
+      ? renderDatePattern(options.datePattern, patternParts(instant(value), options.timeZone))
+      : renderDatePattern(options.datePattern, patternParts(new Date(day), "UTC"));
+  }
   const part = numericParts(
     day === undefined ? options : { ...options, timeZone: "UTC" },
     false,
@@ -138,6 +206,14 @@ export function formatNumericDateTime(
   options: FormatOptions,
 ): string {
   if (value === null || value === undefined) return "";
+  if (options.datePattern !== undefined || options.clock !== undefined) {
+    const date = instant(value);
+    const day = renderDatePattern(
+      options.datePattern ?? "dd.MM.yyyy",
+      patternParts(date, options.timeZone),
+    );
+    return `${day} ${clockTime(date, options.timeZone, options.clock ?? 12)}`;
+  }
   const part = numericParts(options, true, instant(value));
   return `${part("day")}.${part("month")}.${part("year")} ${part("hour")}:${part("minute")} ${part("dayPeriod").toUpperCase()}`;
 }
@@ -148,6 +224,8 @@ export function formatTime(
   options: FormatOptions,
 ): string {
   if (value === null || value === undefined) return "";
+  if (options.clock !== undefined)
+    return clockTime(instant(value), options.timeZone, options.clock);
   return render(options.locale, options.timeZone, { timeStyle: "short" }, instant(value));
 }
 
@@ -179,10 +257,14 @@ export function formatNumber(
   options: FormatOptions & { minimumFractionDigits?: number; maximumFractionDigits?: number },
 ): string {
   if (value === null || value === undefined) return "";
-  return new Intl.NumberFormat(options.locale, {
-    minimumFractionDigits: options.minimumFractionDigits,
-    maximumFractionDigits: options.maximumFractionDigits,
-  }).format(finite(value));
+  return withSeparators(
+    new Intl.NumberFormat(options.locale, {
+      minimumFractionDigits: options.minimumFractionDigits,
+      maximumFractionDigits: options.maximumFractionDigits,
+    }),
+    finite(value),
+    options,
+  );
 }
 
 /**
@@ -195,8 +277,11 @@ export function formatCurrency(
   options: FormatOptions,
 ): string {
   if (value === null || value === undefined) return "";
-  return new Intl.NumberFormat(options.locale, { style: "currency", currency }).format(
+  return withSeparators(
+    new Intl.NumberFormat(options.locale, { style: "currency", currency }),
     finite(value),
+    options,
+    currency,
   );
 }
 
@@ -206,11 +291,47 @@ export function formatPercent(
   options: FormatOptions & { maximumFractionDigits?: number },
 ): string {
   if (value === null || value === undefined) return "";
-  return new Intl.NumberFormat(options.locale, {
-    style: "percent",
-    // `Intl` rounds a percentage to a whole number; one decimal keeps 0.125 readable.
-    maximumFractionDigits: options.maximumFractionDigits ?? 1,
-  }).format(finite(value));
+  return withSeparators(
+    new Intl.NumberFormat(options.locale, {
+      style: "percent",
+      // `Intl` rounds a percentage to a whole number; one decimal keeps 0.125 readable.
+      maximumFractionDigits: options.maximumFractionDigits ?? 1,
+    }),
+    finite(value),
+    options,
+  );
+}
+
+/**
+ * Formats with `formatter`, then swaps in the explicit separators and currency symbol of
+ * `options`. With none of them set the result is `formatter.format(value)` unchanged.
+ */
+function withSeparators(
+  formatter: Intl.NumberFormat,
+  value: number,
+  options: FormatOptions,
+  currency?: string,
+): string {
+  const symbol = currency === undefined ? undefined : options.currencySymbols?.[currency];
+  const { decimalSeparator, groupSeparator } = options;
+  if (decimalSeparator === undefined && groupSeparator === undefined && symbol === undefined) {
+    return formatter.format(value);
+  }
+  if (decimalSeparator !== undefined && groupSeparator !== undefined) {
+    validateSeparators(decimalSeparator, groupSeparator);
+  }
+  return formatter
+    .formatToParts(value)
+    .map((part) => {
+      if (part.type === "decimal" && decimalSeparator !== undefined) return decimalSeparator;
+      if (part.type === "group" && groupSeparator !== undefined) return groupSeparator;
+      if (part.type === "currency" && symbol !== undefined) return symbol;
+      // A replaced symbol is text such as "TL", so its gap is a plain space.
+      if (part.type === "literal" && symbol !== undefined)
+        return part.value.replace(/\u00a0/g, " ");
+      return part.value;
+    })
+    .join("");
 }
 
 function render(
