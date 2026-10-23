@@ -293,3 +293,150 @@ search semantics, favorites, report execution or Analytics persistence in this
 slice. U1–U3 gate those behaviours; the report/detail and Analytics cards are
 follow-up slices after evidence review. This is a scope recommendation, not
 implementation authorization or a completed module gate.
+
+## R2 — Analytics evidence audit and navigation boundary (MEP-1224)
+
+### Scope and acceptance boundary
+
+R2 re-inspects the retained R1 Analytics screenshot, ARIA, controls and request
+ledger. It does **not** reopen Analytics: R1 already records an automatic
+metadata PUT, and this issue forbids retrying an automatic blocked write.
+The existing overview is evidence for one dashboard's resting structure only.
+It is not evidence for a dashboard list, selector options or a successfully
+initialized Analytics service. No dashboard identifier or route was guessed.
+
+The numbered A01–A12 and H01–H47 inventories above remain the complete visible
+control inventory for that retained screenshot. R2 adds component detail below;
+it introduces no newly observed controls and does not renumber R1 entries.
+
+### Existing dashboard — component inventory and states
+
+Source for every row: `m13r1-analytics-entry`, visually re-inspected in R2.
+Owner: Module 13. Chart regions are not proven buttons or navigation links.
+All entries are **unoperated**; chart drilldown, tooltips and selection remain
+unknown. Titles below describe structure without reproducing customer values.
+
+| # / R1 ref | Position | Type / visible state | Behaviour boundary |
+| --- | --- | --- | --- |
+| AC01 / A10.01 | First row, first card | Lead-volume KPI; heading and empty illustration | Empty card, not an empty dashboard; no period control visible |
+| AC02 / A10.02 | First row, second card | Revenue KPI; truncated heading and empty illustration | No error/retry label observed |
+| AC03 / A10.03 | First row, third card | Pipeline KPI; heading and single aggregate | No selectable row or visible period picker |
+| AC04 / A10.04 | First row, fourth card | Account KPI; aggregate, colored comparison percentage, previous-period caption/value | Comparison is displayed text, not an observed period selector |
+| AC05 / A11.01 | Second row, left card | Lead-target semicircular gauge, needle, current/target endpoints and remaining caption | Target values omitted; no editing control observed |
+| AC06 / A11.02 | Second row, wide right card | Revenue-target horizontal bar; organization category, amount axis, target marker and achieved legend | Legend is not proven interactive; scope is displayed, not changed |
+| AC07 / A12.01 | Third row, left edge | Performance-monitor heading and partial card | Export contains period/metric cells below the viewport; full table not screenshot-certified |
+| AC08 / A12.02 | Third row, middle edge | Lead-source heading and partial chart region | Chart type, categories and legend not visible enough to establish |
+| AC09 / A12.03 | Third row, right edge | Representative scorecard heading and clipped column headings | Export indicates owner and amount columns; rows are below the utility strip and not certified visible |
+
+A01–A09 cover the top toolbar: category dropdown, overview combobox, favorite,
+user-scope badge, refresh, Add Component, Create Dashboard, actions and help.
+H01–H47 cover the shell, screen edges and bottom utilities. No separate filter
+or period-selector control is painted. This does not prove their absence from
+other dashboards or unopened menus. None was clicked, selected or changed.
+
+Per-card refresh entries are exported but not painted in the screenshot.
+Their hover state is **not observed**, and they are not added as visible
+controls. Card wrappers still report loading despite painted charts: do not
+implement a permanent loading state from this instrumentation attribute.
+
+Controls reconciliation: the retained Analytics export has 232 entries.
+Entries 1–108 are shell controls, duplicate wrappers, title/presentation nodes
+or zero-area placeholders, covered by H01–H35 or excluded for those reasons.
+Entries 109–127 and 214–219 map to A01–A09, with duplicate SVG/wrapper and
+scroll-container entries excluded. Entries 128–181 and 220–232 map to
+AC01–AC09; nested wrappers, noninteractive data text, unpainted refresh nodes
+and scroll containers are excluded as additional controls. Entries 182–184
+are below-viewport scorecard data; 185–200 and 213 are zero-area placeholders;
+201 is a utility wrapper and 202–212 map to H36–H46. H47 is screenshot-only.
+No below-viewport identity, number, period value or customer content is copied.
+
+### R1 open questions revisited
+
+| Question | R2 finding | Consequence |
+| --- | --- | --- |
+| U1 — report-folder panel | R1 has no folder navigation link; folder cells are text | Panel show/hide is a prohibited preference change; do not infer folder routes |
+| U2 — report categories | All Reports is a combobox, not a navigation link | Opening/selecting it falls outside the navigation-links-only scope; option catalogue and persistence remain unknown |
+| U5 — Analytics entry | Existing evidence confirms the automatic metadata PUT was blocked once in R1 | No R2 Analytics entry or retry; purpose, successful initialization and completeness remain unverified |
+
+Dashboard list, existing-dashboard selection, lower-card contents, all
+filter/period options, tooltip/drilldown behaviour, loading completion and
+permission/error states remain open. No safe existing-dashboard link is exposed
+in the retained closed-selector state. The overview itself does not establish
+a dashboard-list schema, empty-list message or pagination contract.
+
+### Suggested next implementation slice
+
+Retain the R1 recommendation: implement the observed read-only Reports list
+with synthetic definitions and existing-report navigation first. R2 does not
+unlock dashboard selection, filtering, favorites, persistence or refresh.
+A later Analytics presentation slice may use AC01–AC06 as a bounded resting
+layout reference only after UI Lead accepts the incomplete initialization
+boundary. Full dashboard/list behaviour needs separately approved evidence;
+never loosen the capture write guards to obtain it.
+
+### R2 capture ledger and stop condition
+
+**Research closed with accepted access gaps; not full Analytics approval.** Exactly one
+new capture ran. Before it, one-minute load was 10.28 (informational only).
+A passive readiness probe was supplied; no click, hover, scroll, toggle,
+selector choice, field entry or preference change was requested.
+
+| Capture | Requested clicks / steps | Ready gate | API calls | Blocked requests | Disposition |
+| --- | --- | --- | --- | --- | --- |
+| `m13r2-reports-base` | 0 / 0 | Failed: generic combobox probe matched three DOM elements | 40 | 7 | Exit 2; stop, no repeat or deeper capture |
+| `m13r1-analytics-entry` (retained evidence only) | 0 / 0 in R1 | No explicit ready probe in R1; runtime errors recorded | 51 | 4 in R1 | Not recaptured; metadata update remains blocked boundary |
+
+All six new base evidence files exist. Screenshot inspection confirms a Reports
+title, populated rows and no report-folder pane; the control export contains
+50 existing-report links and 298 total entries. These satisfy the Reports
+content indicators (R1 baseline: 40 API calls), but **do not override the failed
+tool readiness gate**. The broad probe was ambiguous; it does not establish
+that the Reports body failed to render. A sortable-function pageerror also
+remains. No retry or alternative route was attempted after the failure.
+
+The new screenshot uses H01–H47 and R01–R07 above, with thirteen painted rows.
+The export is unchanged from R1 except one additional row action:
+
+| # | Region / position | Control / type | Observed behaviour | Source / owner |
+| --- | --- | --- | --- | --- |
+| R08 | Seventh visible report row, after name | Ellipsis icon / row actions | Visible in resting capture; never opened; menu unknown | `m13r2-reports-base`, raw 137 / Module 13 |
+
+R1 raw entries before 137 keep their indices; later entries shift by one.
+The 297 shared export entries retain R1's mapping/exclusions. R08 adds one
+visible control; it is not evidence for an authorized menu-opening flow.
+
+Blocked ledger: reminder retrieval POST once, notification-status POST once,
+telemetry log POST twice, telemetry URL-monitor POST twice, telemetry client
+metrics POST once. No new business-write attempt is recorded in this Reports
+capture. The successful request ledger contains one external visitor-trigger
+POST, count one, also present with count one in R1 Reports and Analytics.
+It is recorded as background traffic, not asserted to be a CRM write or an
+approved business-write contract. No new non-GET route family or excess count
+was found. No export, download, print, popup action or file chooser occurred.
+
+U1 remains only partially evidenced (pane absent again); U2 is unanswered;
+U5's blocked boundary is confirmed from retained evidence, not resolved.
+### R2 closure decision and permitted implementation boundary
+
+UI Lead's MEP-1230 decision accepts the retained Reports evidence as
+**readiness-gate violation with content independently verified**. The ambiguous
+probe is not evidence of a render failure. No new Reports capture is required
+or authorized by that decision; the failed attempt is not retried.
+
+Analytics remains closed under the no-retry rule. Dashboard list, period/filter
+options, lower-card contents and U1/U2/U5 close as **access gaps**, remaining
+open/unverified in this specification. This closes the bounded research task,
+not those behavioural questions. No additional capture ran after the decision;
+R2 totals remain one new capture, zero requested clicks and zero steps.
+
+Only AC01–AC06 may inform a limited resting presentation, with an incomplete
+initialization caveat. Dashboard selection, filtering, favorites, persistence
+and refresh remain outside the implementation boundary. The recommended first
+slice remains the read-only Reports list with synthetic definitions and
+existing-report navigation. Full dashboard behaviour requires new evidence
+separately approved by the board. This decision grants neither implementation
+authorization nor permission to relax any capture guard.
+
+Verification for this documentation-only closure: reviewed the complete
+MEP-1230 decision against the capture ledger, component inventory and checklist;
+checked the Markdown diff. No application, unit or e2e code changed.
