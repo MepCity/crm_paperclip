@@ -327,6 +327,18 @@ export interface CurrencyDefinition {
   prefixSymbol: boolean;
 }
 
+export type ConvertTarget = { reuseId: string; update?: RecordInput } | { create: RecordInput };
+export interface ConvertLeadInput {
+  account?: ConvertTarget;
+  contact?: ConvertTarget;
+  deal?: ConvertTarget;
+}
+export interface ConvertLeadResult {
+  accountId: string | null;
+  contactId: string | null;
+  dealId: string | null;
+}
+
 /**
  * update, massUpdate, changeOwner and delete reject Locked__s === true with
  * RecordLockedError. Batch operations validate all targets before writing;
@@ -339,6 +351,8 @@ export interface RecordService {
     fields: readonly string[],
   ): Promise<readonly DuplicateGroup[]>;
   merge(module: ModuleApiName, input: MergeInput): Promise<RecordData>;
+  /** Converts a lead into account/contact/deal targets under one history operation. */
+  convertLead(leadId: string, input: ConvertLeadInput): Promise<ConvertLeadResult>;
   deduplicate(module: ModuleApiName, fields: readonly string[]): Promise<DeduplicateResult>;
   getHomeCurrency(): Promise<CurrencyDefinition>;
   getModule(module: ModuleApiName): Promise<ModuleMetadata>;
