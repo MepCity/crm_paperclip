@@ -285,3 +285,47 @@ stopped research immediately without retry or another settings capture.
 CEO decision MEP-1158 owns further read-only coverage. Existing write-only
 restrictions and the earlier R5 follow-up table remain applicable; the
 original MEP-1051 decision wait is historical and resolved.
+
+
+### R5 bounded continuation decision (MEP-1158)
+
+The historical request-count stop above is resolved by MEP-1158. Its exception
+covers only variable counts on four refused, unanswered request paths during
+click-free R5 base loads; it authorizes no field, toggle, setup or write action.
+The settings spec records the additional resting-page evidence and per-capture
+accounting. Existing Compose/signature and mailbox Configure Email gaps remain
+explicit: no Get Started, Configure, connection, provider, credential,
+authorization, signature editor or preference change is attempted.
+
+- Email Sharing: mass update, row selection, sharing changes, excluded domains,
+  recipient scope and the Preferences editor remain untested. Visible sharing
+  states do not establish choice lists, validation, propagation or save results.
+- Organization Emails: adding/verifying/removing addresses, sender/reply-to
+  selection and verification delivery remain unobserved. The initial page's
+  verification prerequisite is explanatory evidence only.
+- Custom Email Fields: enabling/disabling conversation inclusion and any
+  resulting synchronization remain forbidden; the off-state switch was not
+  clicked. Described related-list, composer, report and filtering capabilities
+  are stated page content, not exercised outcomes.
+- Incoming/outgoing rules, forwarding, disclaimers and limits only receive
+  observed coverage if directly present in the authorized resting pages.
+  A missing direct read-only route remains an access/setup gap; no guessed
+  configuration editor or setup flow is entered to discover it.
+
+
+### R5 new parser-path stop (MEP-1159)
+
+The MEP-1158 continuation captured three additional resting settings pages,
+then stopped at `m10r5-email-parser-base` (2026-10-23). The capture tool refused
+one new `POST /crm/<org>/EmailParserAction.do` (`emailParser` legacy action).
+The page remained a loading skeleton; no parser form or rule list is proved.
+No non-GET response, click or retry occurred. MEP-1158's four variable refused
+classes do not cover this new path. MEP-1159 is the CEO-owned decision path.
+
+Email Parser setup/rule creation, parsing execution/results, BCC forwarding,
+BCC Dropbox configuration, deliverability configuration/limits, tracking and
+intelligence changes, unsubscribe setup and any rules, forwarding, disclaimers
+or limits requiring setup stay explicit gaps. BCC Dropbox, Email Deliverability,
+Email Intelligence and Unsubscribe Link were not visited after DUR. No guard
+bypass, endpoint replay, Configure/Get Started or write-only experiment is
+authorized. Compose/signature and mailbox setup gaps remain unchanged.

@@ -1,8 +1,8 @@
 # Email and mailbox settings — read-only research
 
-Status: blocked by the non-GET count stop rule; CEO decision MEP-1158.
+Status: blocked on MEP-1159 after the MEP-1158 bounded continuation.
 MEP-1051 accepted the original three runtime errors as the R5 baseline.
-Partial observation only; not an implementation-ready settings contract.
+Resting-page observations only; write and setup states remain explicit gaps.
 Issue: MEP-1014. Observed 2026-10-22 and 2026-10-23 (local dates).
 
 ## Purpose and scope
@@ -355,7 +355,7 @@ Executed click list remains `[]`; selector/DANGEROUS_TEXT check passes for
 the empty list. All fields, switches, links, Get Started and help remain
 not clicked. No credentials or addresses were entered or copied.
 
-### Current remaining scope and disposition
+### Historical remaining scope and disposition before MEP-1158
 
 MEP-1158 is assigned to the CEO for a bounded continuation decision or
 explicit gap disposition. Until it resolves, no new R5 capture is authorized.
@@ -373,3 +373,227 @@ controls, network, meta in the research workspace; no screenshot committed).
 Verification: inventory arithmetic and mapped control names passed;
 `git diff --check` passed. `research/specs/verify.mjs` is absent.
 Documentation only; application tests and CI were not run or claimed.
+
+
+## R5 safe continuation under MEP-1158 (2026-10-23)
+
+This section supersedes the historical MEP-1158 wait and request-count stop
+above. CEO decision MEP-1158 permits only click-free base captures, one per
+remaining page, no retries. Counts may vary only for refused, unanswered
+urlMonitor, reminder, notification and logs requests. Every capture reports
+these counts. A new blocked path, new responded non-GET path, visitor count
+above one, new error outside the three MEP-1051 baseline errors, or a tool
+failure still stops research. Existing Compose and mailbox captures are reused.
+No clicks, searches, field changes, setup entry or preference editor is used.
+Click list `[]`; offline selector and DANGEROUS_TEXT checks pass for this empty
+list. Every control below is **not clicked**; presence does not prove behaviour.
+
+### Email Sharing — delta inventory
+
+Source: `seen (m10r5-email-sharing-base)`. Direct route:
+`/crm/<org>/settings/email-configuration/email-sharing`.
+Setup shell and both tab rows match the original base; Email Sharing is the
+route-selected subtab. The main card contains a permissions heading, brief
+explanation, user/profile search, Mass Update, Preferences, and a user table.
+Columns are user identity/role/status, configuration type, sharing, excluded
+domains and shared-with scope. Identity values are omitted. Three rows are
+visible: two enabled closed sharing selectors and one disabled selector;
+two shared-with scope entries are visible. No configured-account conclusion
+is inferred from this table. No row or selection was operated.
+
+| # | Delta against Compose base | Position / type | Behaviour | Owner | Contacts ref | Control entries |
+| --- | --- | --- | --- | --- | --- | --- |
+| SH-01 | Reuse ES-01–ES-47; Email Sharing selected | Rail, shell and tab rows | not clicked | Same as base | Same as base | Same as base |
+| SH-02 | Remove ES-48–ES-53 | Compose fields absent | not observed | M10 | new | None |
+| SH-03 | Permissions heading Help | Main heading, right; link | not clicked | M10 | new | 287 |
+| SH-04 | Search User, Profile | Above table, left; search/combobox representation | not clicked | M10 | new | 288–291 |
+| SH-05 | Mass Update | Above table, right; button | not clicked; write | M10 | new | 292–293 |
+| SH-06 | Preferences | Above table, right; navigation link | not clicked; preference editor not inspected | M10 | new | 294–295 |
+| SH-07 | Select all users | Table header, left; checkbox | not clicked | M10 | new | 296–297 |
+| SH-08 | Column filter icon | Table header, right | not clicked; unnamed | M10 | new | 298 |
+| SH-09 | First visible row sharing selector | Sharing column; closed dropdown | not clicked | M10 | new | 299–300 |
+| SH-10 | First visible row shared-with scope | Shared-with column | not clicked | M10 | new | 302 |
+| SH-11 | Second visible row sharing selector | Sharing column; closed dropdown | not clicked | M10 | new | 303–304 |
+| SH-12 | Second visible row shared-with scope | Shared-with column | not clicked | M10 | new | 306 |
+| SH-13 | Third visible row sharing selector | Sharing column; disabled closed dropdown | not clicked | M10 | new | 307–308 |
+| SH-14 | Shared-with information icon | Table header, after label | not clicked | M10 | new | Screenshot-only |
+| SH-15 | Reuse ES-54–ES-64 | Bottom utility strip | not clicked | Shared shell | SH-35–SH-45 | 334–344 |
+| SH-16 | Reuse ES-66 | Bottom trash-bin icon | not clicked | Shared shell | SH-46 | Screenshot-only |
+
+Reconciliation: 361 entries → 69 indexed controls plus two screenshot-only
+controls = **71 controls**. 121 assigned entries, 52 nested representations
+collapsed, 240 excluded; 69 + 52 + 240 = 361. Exclusions retain the base's
+hidden/clipped rail and shell scaffolding; additionally excluded are result
+wrapper 286, zero-size domain controls 301/305/309, inactive modal/popover
+entries 310–332, utility wrapper 333, decorative search/arrow elements
+345–347, and offscreen/container entries 348–361. No table identity is copied.
+Heading present, 42 API records, no failed JavaScript load, only the accepted
+sortable-parent pageerror: paint passes under MEP-1051. Responded non-GET:
+visitor POST 1 only. Blocked reminder 1, notification 1, logs 1, urlMonitor 1;
+4 total. No new path, new error or tool failure; MEP-1158 safety checks pass.
+Capture completed 2026-10-23 01:24:48 UTC, `--wait 25000`; screenshot inspected.
+Capture refs added: `m10r5-email-sharing-base` (screenshot, controls, aria,
+page, network, meta retained locally; no screenshot committed).
+
+
+### Organization Emails — delta inventory
+
+Source: `seen (m10r5-organization-emails-base)`. Direct route:
+`/crm/<org>/settings/email-configuration/organization-emails`.
+Organization Emails is selected. The resting card has an address-management
+heading, Help, explanatory text and Add Email Address; no address rows are
+visible. The explanation describes department sender/reply-to use and a
+verification prerequisite; this text is evidence of a stated prerequisite,
+not an exercised verification flow. No address or credential is retained.
+
+| # | Delta against Compose base | Position / type | Behaviour | Owner | Contacts ref | Control entries |
+| --- | --- | --- | --- | --- | --- | --- |
+| OR-01 | Reuse ES-01–ES-47; Organization Emails selected | Rail, shell and tab rows | not clicked | Same as base | Same as base | Same as base |
+| OR-02 | Remove ES-48–ES-53 | Compose form absent | not observed | M10 | new | None |
+| OR-03 | Organization addresses Help | Main heading, right; link | not clicked | M10 | new | 287 |
+| OR-04 | Add Email Address | Below explanation; button | not clicked; write/setup entry | M10 | new | 288–289 |
+| OR-05 | Reuse ES-54–ES-64 | Bottom utility strip | not clicked | Shared shell | SH-35–SH-45 | 309–319 |
+| OR-06 | Reuse ES-66 | Bottom trash-bin icon | not clicked | Shared shell | SH-46 | Screenshot-only |
+
+Reconciliation: 334 entries → 60 indexed controls plus one screenshot-only
+control = **61 controls**. 104 assigned entries, 44 collapsed nested
+representations, 230 excluded: 60 + 44 + 230 = 334. Base shell exclusions
+are reused; additionally exclude result wrapper 286, zero-size dialogs and
+containers 290–308, and offscreen/container entries 320–334.
+Heading present, 42 API records; only accepted sortable-parent pageerror;
+no failed script load. Paint passes under MEP-1051. Responded non-GET:
+visitor POST 1 only. Blocked reminder 1, notification 1, logs 1, urlMonitor 2;
+5 total. MEP-1158 allows this refused count variation; all other safety checks
+pass. Completed 2026-10-23 01:26:00 UTC, `--wait 25000`; screenshot inspected.
+Capture refs added: `m10r5-organization-emails-base` (all six evidence files
+retained in the research workspace).
+
+
+### Custom Email Fields — delta inventory
+
+Source: `seen (m10r5-custom-email-fields-base)`. Direct route:
+`/crm/<org>/settings/email-configuration/custom-email-fields-preference`.
+Custom Email Fields is selected. A preferences heading has an off-state
+switch beside it and Help at the right. Explanatory text describes including
+custom-email-field conversations in record related lists, composer suggestions,
+email reporting and latest-email-status filtering. A highlighted note states
+that primary/secondary email sharing permissions also apply. These are stated
+capabilities, never tested. No custom field picker is visible in this state.
+The toggle remains **not clicked**; no synchronization was initiated.
+
+| # | Delta against Compose base | Position / type | Behaviour | Owner | Contacts ref | Control entries |
+| --- | --- | --- | --- | --- | --- | --- |
+| CF-01 | Reuse ES-01–ES-47; Custom Email Fields selected | Rail, shell and tab rows | not clicked | Same as base | Same as base | Same as base |
+| CF-02 | Remove ES-48–ES-53 | Compose fields absent | not observed | M10 | new | None |
+| CF-03 | Custom email preferences switch | Beside main heading; off-state toggle | not clicked; persisted preference | M10 | new | 287–288 |
+| CF-04 | Preferences heading Help | Main heading, right | not clicked | M10 | new | Screenshot-only |
+| CF-05 | Reuse ES-54–ES-64 | Bottom utility strip | not clicked | Shared shell | SH-35–SH-45 | 308–318 |
+| CF-06 | Reuse ES-66 | Bottom trash-bin icon | not clicked | Shared shell | SH-46 | Screenshot-only |
+
+Reconciliation: 332 entries → 59 indexed controls plus two screenshot-only
+controls = **61 controls**. 103 assigned entries, 44 collapsed nested
+representations, 229 excluded: 59 + 44 + 229 = 332. Base shell exclusions
+remain; additionally exclude result wrapper 286, hidden dialogs/containers
+289–307 and offscreen/container entries 319–332. Static paragraphs, bullet
+points and the highlighted note are not controls.
+Heading present, 41 API records; only accepted sortable-parent pageerror;
+no failed JavaScript load. Paint passes under MEP-1051. Responded non-GET:
+visitor POST 1 only. Blocked reminder 1, notification 1, logs 1, urlMonitor 2;
+5 total. MEP-1158 safety checks pass. Completed 2026-10-23 01:27:38 UTC,
+`--wait 25000`; screenshot inspected.
+Capture refs added: `m10r5-custom-email-fields-base` (all six evidence files
+retained locally).
+
+
+### Email Parser — stopped base; no completed screen contract
+
+Source: `seen (m10r5-email-parser-base)`. Direct route:
+`/crm/<org>/settings/email-parser`, taken from base entry 263, no click.
+Completed 2026-10-23 01:28:49 UTC with `--wait 25000`.
+The screenshot shows a full-page loading skeleton and Loading indicator;
+there is no visible usable settings control or module heading. Do not infer
+parser fields, rule rows, empty state or successful navigation from underlying
+DOM entries. The 285 collected entries are all excluded from the visible
+inventory because they are behind the loading surface or zero-size/offscreen.
+Screenshot inspected. No reference assets or text blocks are copied.
+
+| # | Delta against Compose base | Position / type | Behaviour | Owner | Contacts ref | Control entries |
+| --- | --- | --- | --- | --- | --- | --- |
+| LD-01 | All functional base controls obscured by loader | Full-page loading surface | no interaction; not a completed settings state | M10/shared loader | new | 1–285 excluded |
+
+Reconciliation: **285 entries → 0 visible controls, 285 excluded**, no
+assigned or collapsed entries. LD-01 describes the visible state; it is not
+an interactive inventory item. The screenshot contains no additional
+interactive control. This is failed-probe evidence only, not a skeleton
+handed off for implementation or QA as a completed screen.
+
+| Request class | Email Parser count | Safety result |
+| --- | --- | --- |
+| Responded non-GET | 0 | No response-bearing write recorded |
+| Blocked reminder POST | 1 | Allowed variable class |
+| Blocked notification POST | 0 | Absent |
+| Blocked logs POST | 0 | Absent |
+| Blocked urlMonitor POST | 2 | Allowed variable class |
+| **Blocked `/crm/<org>/EmailParserAction.do` POST** | **1** | **New path outside MEP-1158: DUR** |
+
+Four blocked attempts total; parser legacy action is `emailParser`.
+There is no response for the refused parser request. No request is replayed
+individually. 26 API records and 285 controls were collected; JavaScript
+loads have zero failures. Only the accepted sortable-parent pageerror remains.
+The visible heading requirement fails; the page did not paint. The independent
+new-path stop rule applies immediately, so there is no paint retry. No tool
+error, leaked tab, download, file chooser, popup, print or automatic Escape
+was reported. Clicks, steps and skipped-click lists are empty.
+
+Capture refs added: `m10r5-email-parser-base` (all six files retained locally).
+No BCC Dropbox or later page was captured after this stop.
+
+### Current coverage, open gaps and disposition
+
+MEP-1159 is the new CEO-owned decision dependency. R5 is stopped until the
+CEO records explicit gap acceptance or another bounded, read-only continuation
+decision. This does not authorize changing the capture guard or replaying
+the refused endpoint. The existing UI Lead approval gate remains for eventual
+research completion; this partial delivery does not enter final approval.
+
+| Surface | Current evidence | Remaining limit |
+| --- | --- | --- |
+| Compose / signatures | Original captures, known errors accepted by MEP-1051 | Signature model, editor, choices, save/validation remain gaps |
+| Mailbox | Configure Email resting entry | Configure/Get Started and everything after setup remain unobserved |
+| Email Sharing | Resting permissions table | Search, filters, bulk action, choices, preferences and save effects untested |
+| Organization Emails | Introductory address page | Add/verify/edit/delete and verification results unobserved |
+| Custom Email Fields | Resting off-state preference | Enabling, synchronization and downstream outcomes untested |
+| Email Parser | Failed loading probe; new blocked path | Entire functional page remains unobserved |
+| BCC Dropbox | Original navigation link only | Not visited after DUR |
+| Email Deliverability | Original navigation link only | Not visited after DUR; notes and limits unobserved |
+| Email Intelligence | Original navigation link only | Not visited after DUR; tracking options unobserved |
+| Unsubscribe Link | Original navigation link only | Not visited after DUR; configuration unobserved |
+| Incoming/outgoing rules, forwarding, disclaimers, limits | No dedicated directly reachable form established | Explicit access/setup gaps; do not infer absence |
+
+Open questions carried forward: functional parser access without a blocked
+request; scope disposition for the five uncompleted top-level pages; exact
+write outcomes and signature representation; read-only reachability of rules,
+forwarding, disclaimers and limits. Setup/write-dependent items remain in
+[module-10-write-only-flows.md](../module-10-write-only-flows.md). No public
+documentation claims were added by this capture-only continuation.
+
+Final click list remains `[]`; all fields, toggles, search, selection, Help,
+Preferences, Add Email Address and setup actions are **not clicked**. Offline
+selector/DANGEROUS_TEXT checks pass for the empty list. No account identifiers,
+addresses or customer values were retained in this spec. No reference state
+change was observed. No parity-checklist change.
+
+
+### Continuation verification
+
+- Current `origin/main` merge: already up to date.
+- `git diff --check`, base-to-delta control-name mappings, assigned-index
+  uniqueness, all three reconciliation counts, relative links and added-content
+  privacy-pattern checks passed. Parser has zero visible interactive controls;
+  all 285 underlying entries are excluded from the functional inventory.
+- Every new screenshot was inspected. All four captures used `--wait 25000`;
+  no capture was retried. No tool failure or tab leak was reported.
+- `research/specs/verify.mjs` is absent. Documentation only; no application
+  tests, full test run or local verify. Automatic push/CI not verified.
+- MEP-1014 `blocked` status and MEP-1159 dependency were confirmed by API.
+  UI Lead approval remains pending until the scope decision is resolved.
