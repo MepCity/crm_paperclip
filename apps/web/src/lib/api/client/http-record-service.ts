@@ -1,4 +1,6 @@
 import type {
+  ConvertLeadResult,
+  ConvertTarget,
   DeduplicateResult,
   DuplicateGroup,
   GroupSummary,
@@ -258,6 +260,27 @@ export function createHttpRecordService({
         method: operations.merge.method,
         body: { ...input, values: encodeInput(input.values, metadata) },
       })) as RecordData;
+    },
+    async convertLead(leadId, input) {
+      const target = async (module: string, value: ConvertTarget | undefined) => {
+        if (!value) return undefined;
+        const metadata = await loadModuleMetadata(module);
+        return "reuseId" in value
+          ? {
+              reuseId: value.reuseId,
+              ...(value.update ? { update: encodeInput(value.update, metadata) } : {}),
+            }
+          : { create: encodeInput(value.create, metadata) };
+      };
+      const [account, contact, deal] = await Promise.all([
+        target("Accounts", input.account),
+        target("Contacts", input.contact),
+        target("Deals", input.deal),
+      ]);
+      return (await request(
+        operationPath(operations.convertLead, { module: "Leads", recordId: leadId }),
+        { method: operations.convertLead.method, body: { account, contact, deal } },
+      )) as ConvertLeadResult;
     },
     async deduplicate(module, fields) {
       return (await request(operationPath(operations.deduplicate, { module }), {
