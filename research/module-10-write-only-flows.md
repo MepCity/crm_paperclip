@@ -329,3 +329,40 @@ or limits requiring setup stay explicit gaps. BCC Dropbox, Email Deliverability,
 Email Intelligence and Unsubscribe Link were not visited after DUR. No guard
 bypass, endpoint replay, Configure/Get Started or write-only experiment is
 authorized. Compose/signature and mailbox setup gaps remain unchanged.
+
+
+### R5 parser gap disposition (MEP-1159 resolved)
+
+The CEO subsequently accepted Email Parser as an explicit gap: data did not
+load because the tool blocked the request. No retry or guard change. Five
+refused/unanswered classes may vary on the remaining click-free R5 pages:
+urlMonitor, reminder, notification, logs, EmailParserAction. A new refused path
+makes its page an explicit gap and permits the next named page; this does
+not permit the refused request to reach the reference CRM. New/increased
+responded non-GET, new runtime/script error, tool failure or suspected change
+still stops all R5. The final settings spec records the remaining four pages.
+This supersedes the historical MEP-1159 decision wait above; every write/setup
+restriction remains in force.
+
+
+### R5 BCC automatic POST safety gap (MEP-1160)
+
+Under MEP-1159 the next single click-free page was BCC Dropbox. Its load
+recorded a new responded `POST /crm/v8/settings/bcc_dropbox` (one, HTTP 200),
+plus the existing visitor POST. No field or action was used. The tool retains
+only response structure, so the call's semantics/persistent effect are unknown;
+a successful response alone does not prove a reference setting changed.
+The new responded path triggers the full R5 stop, unlike a refused-path gap.
+A new refused telemetry customMetrics POST was also recorded. No retry,
+rollback or further reference navigation occurred. MEP-1160 owns disposition.
+
+The resting page's generated-address display, copy icon, Regenerate, vCard,
+Exclude Domains and Edit Search Pattern are inventoried in email-settings.md.
+No address is retained. Regeneration, address verification, BCC delivery,
+search-pattern edits, automatic record creation/association, domain exclusions
+and downloads remain untested. Seeing an address does not prove whether this
+load generated it. Do not send a BCC test, replay the endpoint or change the
+guard to investigate. Deliverability, Intelligence and Unsubscribe remain
+unvisited after this full stop; rules, forwarding, disclaimers and limits
+without a direct read-only route remain explicit gaps. The accepted Parser
+gap and Compose/mailbox setup gaps are unchanged.

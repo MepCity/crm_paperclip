@@ -1,6 +1,6 @@
 # Email and mailbox settings — read-only research
 
-Status: blocked on MEP-1159 after the MEP-1158 bounded continuation.
+Status: blocked on MEP-1160 after a new responded BCC settings POST.
 MEP-1051 accepted the original three runtime errors as the R5 baseline.
 Resting-page observations only; write and setup states remain explicit gaps.
 Issue: MEP-1014. Observed 2026-10-22 and 2026-10-23 (local dates).
@@ -548,7 +548,7 @@ was reported. Clicks, steps and skipped-click lists are empty.
 Capture refs added: `m10r5-email-parser-base` (all six files retained locally).
 No BCC Dropbox or later page was captured after this stop.
 
-### Current coverage, open gaps and disposition
+### Historical coverage and disposition at the parser stop
 
 MEP-1159 is the new CEO-owned decision dependency. R5 is stopped until the
 CEO records explicit gap acceptance or another bounded, read-only continuation
@@ -597,3 +597,113 @@ change was observed. No parity-checklist change.
   tests, full test run or local verify. Automatic push/CI not verified.
 - MEP-1014 `blocked` status and MEP-1159 dependency were confirmed by API.
   UI Lead approval remains pending until the scope decision is resolved.
+
+
+## Final R5 boundaries — MEP-1159
+
+The CEO resolved the parser-stop dependency during the same research run.
+Email Parser is accepted as an explicit gap: **data did not load; the tool
+blocked the request**. It is not recaptured, and the guard is not relaxed.
+The earlier blocked disposition and MEP-1159 wait above are historical.
+
+The remaining four pages each receive one click-free base capture. Refused,
+unanswered counts for urlMonitor, reminder, notification, logs and
+EmailParserAction may vary. A different refused unanswered path makes that
+page an explicit gap, then research continues to the next page, without
+replaying its endpoint. Persistent non-paint similarly becomes a page gap.
+Any new/increased responded non-GET, new pageerror/script failure, tool error
+or suspected reference change still stops all R5. No additional decision issue
+is needed for a page-only refused-path gap. Only direct recorded addresses
+are used; click list remains `[]`. Setup and write-only states stay gaps.
+
+
+### BCC Dropbox — resting evidence and full safety stop
+
+Source: `seen (m10r5-bcc-dropbox-base)`. Direct route:
+`/crm/<org>/settings/bcc-dropbox`, from the original base's named link.
+Captured 2026-10-23 01:34:32 UTC, `--wait 25000`, no clicks or retry.
+
+BCC Dropbox is the selected top-level email tab; the configuration subtabs
+are absent. The resting page shows an address-verification warning, Help,
+BCC explanation, a generated-address card, Regenerate and Download as vCard,
+a copy icon, an Exclude Domains input with information icon, and Search Pattern
+with Edit Search Pattern. A note continues below the viewport. The explanation
+states that a BCC copy can associate mail with CRM records, and the search
+pattern describes Contacts before Leads and possible new-Lead creation. These
+are page statements only; no mail or search-pattern action was exercised.
+The generated address is never copied or retained in the repository. Its
+presence does not establish whether this load created or merely returned it.
+
+| # | Delta against Compose base | Position / type | Behaviour | Owner | Contacts ref | Control entries |
+| --- | --- | --- | --- | --- | --- | --- |
+| BC-01 | Reuse ES-01–ES-34 | Setup rail and top shell | not clicked | Same as base | Same as base | Same as base |
+| BC-02 | Reuse ES-35 Profile | Top shell | not clicked | Shared shell | SH-33 | 248–249 |
+| BC-03 | Reuse ES-36 Applications menu | Top shell | not clicked | Shared shell | SH-34 | 252–255 |
+| BC-04 | Additional Applications menu representation | Top shell, adjacent dots icon | not clicked; screenshot shows overlapping shell affordances | Shared shell | SH-34 | 256–258 |
+| BC-05 | Reuse ES-37–ES-42; BCC Dropbox selected | Top email tab row | not clicked | M10 | Same as base | 261–278, three entries per tab |
+| BC-06 | Remove ES-43–ES-53 | Configuration subtabs and Compose form absent | not observed | M10 | new | None |
+| BC-07 | BCC heading Help | Main card, right | not clicked | M10 | new | Screenshot-only; 280 zero-size excluded |
+| BC-08 | Regenerate | Address card, top right; action link | not clicked; write | M10 | new | 281 |
+| BC-09 | Download as vCard | Address card, top right; action link | not clicked; export/download | M10 | new | 282 |
+| BC-10 | Copy address icon | Address card, beside address | not clicked | M10 | new | 284, 333–334 |
+| BC-11 | Exclude Domains information icon | Beside field label | not clicked | M10 | new | 285, 335 |
+| BC-12 | Exclude Domains | Address card; text input | not clicked | M10 | new | 286–288 |
+| BC-13 | Edit Search Pattern | Search-pattern section, after explanation | not clicked; configuration action | M10 | new | 290 |
+| BC-14 | Reuse ES-54–ES-64 | Bottom utility strip | not clicked | Shared shell | SH-35–SH-45 | 322–332 |
+| BC-15 | Reuse ES-66 | Bottom trash-bin icon | not clicked | Shared shell | SH-46 | Screenshot-only |
+
+Reconciliation: 350 entries → 60 indexed controls plus two screenshot-only
+controls = **62 controls**. 105 assigned entries, 45 nested representations
+collapsed, 245 excluded: 60 + 45 + 245 = 350. Original rail/shell exclusions
+through 251 remain. Also exclude tab-row wrappers 259–260, content wrapper
+279, zero-size help 280, static address display 283, static search description
+289, offscreen Add Email 291–292, inactive dialogs/containers 293–321 and
+body/offscreen/scroll wrappers 336–350. Hidden Add Email is not asserted as a
+visible control or operated. The screenshot was inspected; no scrolling.
+
+Heading present, 43 API records; only accepted sortable-parent pageerror,
+zero failed JavaScript loads. Paint passes under MEP-1051. However:
+
+| Non-GET class | Count | Result |
+| --- | --- | --- |
+| **Responded POST `/crm/v8/settings/bcc_dropbox`** | **1, HTTP 200** | **New responded path: full DUR under MEP-1159** |
+| Responded shell visitor POST | 1 | Existing automatic shell class |
+| Blocked reminder POST | 1 | Accepted refused class |
+| Blocked notification POST | 1 | Accepted refused class |
+| Blocked logs POST | 1 | Accepted refused class |
+| Blocked urlMonitor POST | 1 | Accepted refused class |
+| Blocked telemetry `/murphy/:id/telemetry/customMetrics` POST | 1 | New refused class; page gap under MEP-1159 |
+| Blocked EmailParserAction POST | 0 | Absent |
+
+Five blocked attempts, two responded non-GET entries. The request summary
+for the BCC POST is null; retained response evidence is structure only and
+does not establish its semantics or persistent effect. HTTP 200 is not proof
+that settings changed. No control was clicked, no rollback or request replay
+was attempted. The new responded path independently stops all R5 immediately;
+the new refused telemetry path does not override that stop. No tool error,
+tab leak, popup, download, file chooser, print or automatic Escape was reported.
+Click/step lists remain empty.
+
+Capture refs added: `m10r5-bcc-dropbox-base` (all six evidence files retained
+in the research workspace; no screenshot or address committed).
+
+### Current disposition after the BCC stop
+
+MEP-1160 is the CEO-owned safety/scope decision dependency. The source issue
+was confirmed `blocked` with that dependency. No further capture is performed.
+The earlier MEP-1159 wait is resolved: Parser is an accepted open gap. The
+three additional configuration pages and BCC resting evidence are retained;
+none proves write results. MEP-1160 must resolve the new responded POST before
+any further R5 navigation. No change to the capture guard is authorized.
+
+Remaining unvisited pages: Email Deliverability, Email Intelligence and
+Unsubscribe Link. Incoming/outgoing rules, forwarding, disclaimers and limits
+remain gaps wherever no direct read-only route was established. Compose/signature
+and Configure Email setup gaps remain explicit in the write-only document.
+UI Lead approval stays pending; this is partial evidence, not completed R5.
+
+Verification: BCC reused control mappings and reconciliation arithmetic checked;
+all five new screenshots inspected. Current `origin/main` merge already up to
+date. `git diff --check`, relative links and added-content privacy checks pass.
+`research/specs/verify.mjs` absent; documentation only, no application tests.
+No parity-checklist change, no manual push, no automatic-push/CI claim.
