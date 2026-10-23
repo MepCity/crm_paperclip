@@ -1,7 +1,7 @@
 # Automation rules — Workflow and Assignment
 
-Status: research ready for UI Lead review; partial visual evidence, not a module gate.
-Scope: MEP-1199 under MEP-1198. Module 2+ parity: screenshots, controls and
+Status: R1 approved by UI Lead; R2 ready for review. Partial evidence, not a module gate.
+Scope: MEP-1199 (R1) and MEP-1208 (R2) under MEP-1198. Module 2+ parity: screenshots, controls and
 behaviour; no geometry or frontend request matching. Research date: 2026-10-23.
 
 ## Purpose and evidence boundary
@@ -266,3 +266,70 @@ No screenshot is claimed for U1–U7. UI Lead should approve the bounded Assignm
 landing slice and identify which visual gaps require a later research task;
 module parity remains open. No board decision or reference mutation is needed
 to review this evidence-limited report.
+
+
+## R2 — bounded recapture and Assignment navigation (MEP-1208)
+
+R1's approved source was recovered from commit `9419f359` because its spec and
+parity rows were not yet present in this issue's current `origin/main`. This
+revision preserves that baseline and appends only the R2 findings. No UI code,
+shared contract or automation data model changes are included.
+
+### Capture refs and safety audit
+
+Each directory below contains the six standard evidence files in the local
+research workspace. Raw files are intentionally not committed or uploaded:
+they contain account information. The sanitized spec is the review deliverable.
+
+| State | Capture directory | Observation | Read-only audit |
+| --- | --- | --- | --- |
+| W2 | `captures/m12r2-workflow-list-attempt1/` | Workflow direct route, 12000 ms final wait; shell painted, content blank and loading marker visible | No clicks/steps; 3 background POSTs blocked: reminder and two telemetry |
+| W3 | `captures/m12r2-workflow-list-attempt2/` | Same route, 20000 ms final wait; same blank content and loading strip | No clicks/steps; 3 background POSTs blocked: reminder and two telemetry |
+| A7 | `captures/m12r2-assignment-thresholds/` | Assignment Rules introductory page remains visible; requested A2 navigation did not execute | One requested navigation click; step skipped by dangerous-attribute guard; 3 background POSTs blocked: reminder, notification status, telemetry |
+| A8 | `captures/m12r2-assignment-assistant/` | Rules introductory page remains selected; A3 target did not open | One requested navigation click; step skipped by dangerous-attribute guard; 3 background POSTs blocked: reminder, notification status, telemetry |
+
+W2/W3 complete their capture commands successfully, but this is **not** a
+successful Workflow render. At capture, `pendingAtReady` is empty,
+`cdnInFlight` is zero, and script failure count is zero in both. Diagnostics
+still report JSON parsing failure in the Workflow route model and an undefined
+sortable-parent dependency. A completed document load and settled asset fetches
+do not prove that route content rendered. No normal empty state, permission
+screen, transport-error design or existing-rule count can be inferred. Two
+attempts were used; no further Workflow retry or guessed detail URL was made.
+
+### Numbered inventory reconciliation
+
+Screenshots were inspected alongside controls.json. W2/W3 retain H1–H13 and
+W1–W22 from the R1 inventory, with no Workflow content control to add. Loading
+strips are state indicators, not controls. A7/A8 retain H1–H13, S1–S23, A1–A6
+and F1–F12 from A0. The Rules tab remains selected; there are no existing rule
+rows, editable fields or additional main-card controls.
+
+| # | Position / control | Newly established behaviour / boundary | Owner |
+| --- | --- | --- | --- |
+| A2 (R2) | Second tab, Thresholds | Exported nested anchor targets neutral route `/crm/<org>/settings/assignment-thresholds`; unique exported link wrapper requested once. Guard skips it because assignment-related attributes match its dangerous-action policy. Destination is not observed. | Automation |
+| A3 (R2) | Third tab, assistant | Exported anchor is a distinct reasoning-page navigation target; requested once through its unique exported link wrapper. Guard skips the assignment-related attributes; Rules remains selected and the destination body is unobserved. | Automation |
+
+`meta.clicks` records requested selectors, not proof that clicks executed.
+`meta.steps[].result` and `skippedClicks` determine execution. No alternate
+selector, direct destination route, toggle flag or allow-open override was used
+to work around a guard refusal. Navigational intent alone does not certify
+preference persistence. No tabs were closed.
+
+### U-question resolution and next slices
+
+| Key | R2 result | Disposition / next evidence |
+| --- | --- | --- |
+| U1 | Still unresolved: two bounded captures reproduce a route-model failure after shell paint and asset settling | Do not implement the blank region as the intended list or zero-record state. Further research needs a reviewed access/rendering recovery path. |
+| U2 | Still unresolved: no Workflow list row exists in observed content | No detail navigation or identifier guessing; trigger/criteria/actions remain documentation-only. |
+| U3 | Still unresolved: Assignment still exposes an introductory state, without an existing row | Populated list and detail need a pre-existing accessible rule; no rule creation for research. |
+| U5 | Partially characterized: capture/render failure is reproducible, but no intended error UI is visible | Permission, transport-error presentation, genuine loading completion and search/filter persistence remain unobserved. |
+| A2/A3 targets | Link semantics established; destination capture subject to guard results | A skipped step is not destination evidence; opening a local tab shell does not certify its target body. |
+
+No additional destination UI slice is unlocked by R2. The R1-approved Assignment
+introductory slice and synthetic read-only fixture remain the available scope.
+Workflow list, both details, Thresholds and assistant body remain outside visual
+implementation readiness. A narrowly reviewed capture-tool navigation-policy
+follow-up can consider these specific read-only links; this report neither
+changes guard policy nor requests permission to mutate the reference CRM.
+U4/U6/U7 remain unchanged from R1. The Module 12 gate stays open.

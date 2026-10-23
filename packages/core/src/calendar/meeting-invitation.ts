@@ -16,6 +16,8 @@ export interface MeetingInvitationSource {
   location?: string | null;
   description?: string | null;
   participants: MeetingParticipant[];
+  /** RFC 5545 RRULE value (no `RRULE:` prefix). */
+  recurrence?: string | null;
 }
 
 export interface MeetingInvitationOptions {
@@ -51,5 +53,6 @@ export function meetingToInvitation(
   };
   if (meeting.location) input.location = meeting.location;
   if (meeting.description) input.description = meeting.description;
+  if (meeting.recurrence) input.recurrence = meeting.recurrence;
   return input;
 }
