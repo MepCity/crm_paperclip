@@ -76,4 +76,35 @@ describe("incoming iTIP processing", () => {
       "alice@example.com",
     );
   });
+
+  it("applies a REPLY only when the sender is the attendee", async () => {
+    const p = createInvitationProcessor();
+    await seed(p);
+    const part = reply(1, "20261005T090000Z");
+    await processMessageCalendarParts(p, org, "m1", [part], {
+      sender: "eve@example.org",
+      mailboxAddresses: [],
+    });
+    expect((await p.states.get(org, "e1@example.com"))?.attendees[0]?.partstat).toBe(
+      "NEEDS-ACTION",
+    );
+    await processMessageCalendarParts(p, org, "m2", [part], {
+      sender: "Bob@Example.org",
+      mailboxAddresses: [],
+    });
+    expect(p.stats).toMatchObject({ replySenderMismatch: 1, replyApplied: 1 });
+  });
+
+  it("skips a REQUEST whose organizer is the receiving mailbox", async () => {
+    const p = createInvitationProcessor();
+    const req = ics(
+      "REQUEST",
+      "BEGIN:VEVENT\r\nUID:o1@example.com\r\nDTSTAMP:20261005T090000Z\r\nDTSTART:20261008T130000Z\r\nDTEND:20261008T140000Z\r\nSUMMARY:S\r\nORGANIZER:mailto:me@example.com\r\nATTENDEE:mailto:b@example.org\r\nEND:VEVENT\r\n",
+    );
+    await processMessageCalendarParts(p, org, "m1", [req], {
+      sender: "x@example.org",
+      mailboxAddresses: ["ME@example.com"],
+    });
+    expect(p.stats).toMatchObject({ requestOwnOrganizer: 1, requestStored: 0 });
+  });
 });

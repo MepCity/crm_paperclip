@@ -135,6 +135,13 @@ export const shellNav: NavConfig = {
       match: "exact",
       iconAccentToken: "--color-accent-blue",
     },
+    {
+      id: "reports",
+      label: "Reports",
+      icon: Icons.file,
+      href: (slug) => moduleTabPath(slug, "Reports"),
+      match: "prefix",
+    },
   ],
   sections: [
     {
