@@ -1,8 +1,14 @@
 import type { RelatedListControlDefinition } from "@/modules/types";
+import type { EmailConversation } from "../inbox/view-model";
 
 export type EmailParentModule = "Leads" | "Contacts" | "Accounts" | "Deals";
 
 export type EmailTabKey = "mails" | "drafts" | "scheduled";
+
+export type EmailRecordCardLoader = (
+  parentModule?: EmailParentModule,
+  recordId?: string,
+) => Promise<EmailConversation[]>;
 
 export interface EmailTabItem {
   id: EmailTabKey;
@@ -28,4 +34,6 @@ export interface EmailsRecordCardProps {
   initialTab?: EmailTabKey;
   onTabChange?: (tab: EmailTabKey) => void;
   tooltipOpen?: boolean;
+  load?: EmailRecordCardLoader;
+  loader?: EmailRecordCardLoader;
 }
