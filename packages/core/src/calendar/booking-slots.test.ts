@@ -103,9 +103,11 @@ describe("availableBookingSlots", () => {
         to: Date.UTC(2026, 10, 2, 0, 0),
       }),
     );
-    expect(r).toHaveLength(4);
-    expect(new Set(r.map((s) => s.start)).size).toBe(4);
-    expect(r[0]?.start).toBe(Date.UTC(2026, 10, 1, 4, 0));
+    expect(r.map((s) => s.start)).toEqual([
+      Date.UTC(2026, 10, 1, 4, 0),
+      Date.UTC(2026, 10, 1, 5, 0),
+      Date.UTC(2026, 10, 1, 7, 0),
+    ]);
   });
 
   it("Europe/Istanbul around the zone's historic transition dates stays stable", () => {

@@ -117,8 +117,12 @@ export function availableBookingSlots(
     for (const iv of intervals) {
       const ivStart = wallToEpoch(fmt, day + iv.start);
       const ivEnd = wallToEpoch(fmt, day + iv.end);
+      const seenWall = new Set<number>();
       for (let s = ivStart; s + durationMs <= ivEnd; s += stepMs) {
         const e = s + durationMs;
+        const wall = wallOf(fmt, s);
+        if (seenWall.has(wall)) continue;
+        seenWall.add(wall);
         if (s < from || e > to || s < earliest) continue;
         if (busy.some((b) => s < b.end + bufferMs && e > b.start - bufferMs)) continue;
         slots.add(s);
