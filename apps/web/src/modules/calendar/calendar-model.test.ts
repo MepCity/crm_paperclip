@@ -63,12 +63,34 @@ test("loads every record page through the port and includes only overlapping eve
     "Events",
     expect.objectContaining({
       page: 2,
-      filters: { field: "Owner", comparator: "equal", value: { token: "CURRENTUSER" } },
+      filters: {
+        groupOperator: "and",
+        group: [
+          { field: "Start_DateTime", comparator: "less_than", value: "2026-02-01" },
+          { field: "End_DateTime", comparator: "greater_than", value: "2025-12-31" },
+          { field: "Owner", comparator: "equal", value: { token: "CURRENTUSER" } },
+        ],
+      },
+    }),
+  );
+
+  list.mockResolvedValueOnce({ records: [], moreRecords: false });
+  await loadCalendarEvents(service, { start: "2026-01-01", end: "2026-02-01" });
+  expect(list).toHaveBeenLastCalledWith(
+    "Events",
+    expect.objectContaining({
+      filters: {
+        groupOperator: "and",
+        group: [
+          { field: "Start_DateTime", comparator: "less_than", value: "2026-02-01" },
+          { field: "End_DateTime", comparator: "greater_than", value: "2025-12-31" },
+        ],
+      },
     }),
   );
 });
 
-test("calendar queries satisfy the fixture port contract in both calendar scopes", async () => {
+test("calendar queries satisfy the fixture port contract in both calendar scopes and exclude out-of-range records", async () => {
   const service = createFixtureRecordService(
     {
       orgId: randomUUID(),
@@ -83,4 +105,12 @@ test("calendar queries satisfy the fixture port contract in both calendar scopes
   const all = await loadCalendarEvents(service, range);
   expect(all).toHaveLength(250);
   await expect(loadCalendarEvents(service, range, "calendar-user")).resolves.toBeInstanceOf(Array);
+
+  const bounded = await loadCalendarEvents(service, { start: "2026-01-15", end: "2026-01-16" });
+  expect(bounded.length).toBeGreaterThan(0);
+  expect(bounded.length).toBeLessThan(250);
+  for (const event of bounded) {
+    expect(event.start < "2026-01-16T00:00").toBe(true);
+    expect(event.end > "2026-01-15T00:00").toBe(true);
+  }
 });

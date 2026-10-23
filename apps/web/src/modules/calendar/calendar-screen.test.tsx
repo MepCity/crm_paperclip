@@ -74,9 +74,19 @@ test("shows loading, recovers errors, changes calendar scope and opens existing 
   await waitFor(() =>
     expect(list).toHaveBeenLastCalledWith(
       "Events",
-      expect.not.objectContaining({ filters: expect.anything() }),
+      expect.objectContaining({
+        filters: {
+          groupOperator: "and",
+          group: [
+            { field: "Start_DateTime", comparator: "less_than", value: "2026-02-01" },
+            { field: "End_DateTime", comparator: "greater_than", value: "2026-01-30" },
+          ],
+        },
+      }),
     ),
   );
   await user.click(screen.getByRole("button", { name: "Select date 2026-02-01" }));
   await screen.findByRole("grid", { name: "day calendar 2026-02-01" });
+  await user.click(screen.getByRole("button", { name: "Create event 2026-02-01T09:00" }));
+  expect(push).toHaveBeenCalledWith("/crm/acme/tab/Meetings/create");
 });

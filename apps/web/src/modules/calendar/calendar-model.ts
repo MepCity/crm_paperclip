@@ -1,4 +1,4 @@
-import type { RecordData, RecordService } from "@crm/core/records";
+import type { Criteria, RecordData, RecordService } from "@crm/core/records";
 import { addDays, dateOrdinal, monthDays, weekDays } from "@/components/calendar/calendar-date";
 import type { CalendarEvent } from "@/components/calendar/layout-timed-events";
 import { isoToDateTimeParts } from "@/lib/records/datetime-parts";
@@ -51,6 +51,18 @@ export async function loadCalendarEvents(
 ) {
   dateOrdinal(range.start);
   dateOrdinal(range.end);
+  const group: Criteria[] = [
+    { field: "Start_DateTime", comparator: "less_than", value: range.end },
+    { field: "End_DateTime", comparator: "greater_than", value: addDays(range.start, -1) },
+  ];
+  if (userId) {
+    group.push({
+      field: "Owner",
+      comparator: "equal",
+      value: { token: "CURRENTUSER" },
+    });
+  }
+  const filters: Criteria = { groupOperator: "and", group };
   const events: CalendarEvent[] = [];
   for (let page = 1; ; page++) {
     const result = await service.list("Events", {
@@ -58,15 +70,7 @@ export async function loadCalendarEvents(
       page,
       perPage: 100,
       fields: ["Event_Title", "Start_DateTime", "End_DateTime", "All_day", "Owner"],
-      ...(userId
-        ? {
-            filters: {
-              field: "Owner",
-              comparator: "equal",
-              value: { token: "CURRENTUSER" },
-            } as const,
-          }
-        : {}),
+      filters,
     });
     for (const record of result.records) {
       const event = calendarEvent(record);
