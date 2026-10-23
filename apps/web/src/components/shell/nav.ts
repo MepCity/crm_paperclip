@@ -187,6 +187,14 @@ export const settingsNav: readonly NavLink[] = [
     match: "exact",
     group: "Data Administration",
   },
+  {
+    id: "modules-and-fields",
+    label: "Modules and Fields",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/modules`,
+    match: "exact",
+    group: "Customization",
+  },
 ];
 
 /**

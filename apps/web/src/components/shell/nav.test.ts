@@ -178,6 +178,7 @@ describe("settingsNav", () => {
       "calendar-booking",
       "import-history",
       "export-history",
+      "modules-and-fields",
     ]);
     const [general, members, calendarBooking] = settingsNav;
 
