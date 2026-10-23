@@ -98,6 +98,16 @@ export class UnexpectedApiError extends Error {
   }
 }
 
+/** Reserved client handling for future schema-aware mutations. */
+export class SchemaRevisionMismatchError extends UnexpectedApiError {
+  override name = "SchemaRevisionMismatchError";
+  constructor(readonly revision: string) {
+    super(409);
+    this.message =
+      "The module fields have changed. Refresh the form before saving. Your draft has been kept.";
+  }
+}
+
 type ParsedBody = {
   code: string;
   details: Record<string, unknown>;
@@ -236,6 +246,14 @@ export function encodeError(error: unknown): { status: number; body: WireErrorBo
  */
 export function decodeError(status: number, body: unknown): AppError | UnexpectedApiError {
   const parsed = parseBody(body);
+  if (
+    status === 409 &&
+    parsed?.code === "SCHEMA_REVISION_MISMATCH" &&
+    typeof parsed.details.revision === "string" &&
+    /^[A-Za-z0-9._:-]{1,64}$/.test(parsed.details.revision)
+  ) {
+    return new SchemaRevisionMismatchError(parsed.details.revision);
+  }
   const code = parsed ? appCode(parsed.code) : undefined;
   if (!parsed || !code || status !== STATUS_BY_CODE[code]) return new UnexpectedApiError(status);
   return restore(parsed, status);

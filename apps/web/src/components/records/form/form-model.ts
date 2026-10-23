@@ -59,18 +59,27 @@ export function applySectionColumnOverrides(
   return sections.map((section) => {
     const override = overrides[section.label];
     if (!override) return section;
+    const activePlacement = new Set(section.columns.flat().map((field) => field.apiName));
+    const placed = new Set(override.flat());
+    const additions = section.columns.map((column) =>
+      column.filter((field) => !placed.has(field.apiName)),
+    );
     return {
       label: section.label,
-      columns: override.map((column) =>
-        column.flatMap((name) => {
-          const field = fields.get(name);
-          if (!field) return [];
-          const isReadOnlyEdit = mode === "edit" && Boolean(readOnlyFields?.includes(name));
-          if (fieldInView(field, mode, rules) || isReadOnlyEdit) {
-            return [isReadOnlyEdit ? { ...field, readOnly: true } : field];
-          }
-          return [];
-        }),
+      columns: Array.from(
+        { length: Math.max(override.length, section.columns.length) },
+        (_, index) =>
+          (override[index] ?? [])
+            .flatMap((name) => {
+              const field = fields.get(name);
+              if (!field || !activePlacement.has(name)) return [];
+              const isReadOnlyEdit = mode === "edit" && Boolean(readOnlyFields?.includes(name));
+              if (fieldInView(field, mode, rules) || isReadOnlyEdit) {
+                return [isReadOnlyEdit ? { ...field, readOnly: true } : field];
+              }
+              return [];
+            })
+            .concat(additions[index] ?? []),
       ),
     };
   });

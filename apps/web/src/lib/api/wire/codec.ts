@@ -326,13 +326,19 @@ export function decodeModule(
     apiName: module.api_name,
     singularLabel: module.singular_label,
     pluralLabel: module.plural_label,
-    businessCardFields: module.business_card_fields.map((field) => field.api_name),
+    businessCardFields: module.business_card_fields
+      .map((field) => field.api_name)
+      .filter((name) => fields.some((field) => field.api_name === name)),
     fields: fields.map(decodeField),
     layout: layout.sections.map((section) => ({
       label: section.display_label,
       columnCount: section.column_count,
-      columns: section.columns.map((column) => [...column]),
-      fields: section.fields.map((field) => field.api_name),
+      columns: section.columns.map((column) =>
+        column.filter((name) => fields.some((field) => field.api_name === name)),
+      ),
+      fields: section.fields
+        .map((field) => field.api_name)
+        .filter((name) => fields.some((field) => field.api_name === name)),
     })),
   };
 }

@@ -11,7 +11,12 @@ import { UnexpectedApiError } from "@/lib/api/wire/errors";
 import type { WireField } from "@/lib/api/wire/types";
 import { createHttpRecordService } from "./http-record-service";
 
-const field = (api_name: string, data_type: WireField["data_type"]): WireField => ({
+const field = (
+  api_name: string,
+  data_type: WireField["data_type"],
+): WireField & { id: string; custom_field: boolean } => ({
+  id: `field-${api_name}`,
+  custom_field: false,
   api_name,
   field_label: api_name,
   data_type,
@@ -77,6 +82,7 @@ const json = (body: unknown, status = 200) => new Response(JSON.stringify(body),
 function metadataResponse(path: string): Response | undefined {
   if (path.startsWith("/crm/v2.2/settings/modules/"))
     return json({
+      revision: "baseline:1",
       modules: [
         {
           api_name: "Leads",
@@ -86,11 +92,15 @@ function metadataResponse(path: string): Response | undefined {
         },
       ],
     });
-  if (path === "/crm/v2.2/settings/fields?module=Leads") return json({ fields });
+  if (path === "/crm/v2.2/settings/fields?module=Leads")
+    return json({ revision: "baseline:1", fields });
   if (path === "/crm/v2.1/settings/layouts?module=Leads")
     return json({
+      revision: "baseline:1",
       layouts: [
         {
+          id: "layout-1",
+          default: true,
           sections: [
             {
               display_label: "Information",
@@ -168,7 +178,7 @@ describe("HTTP record service", () => {
 
   it("retries a failed metadata load rather than caching the failure", async () => {
     const { service, fetchMock } = setup(() => json({}));
-    fetchMock.mockResolvedValueOnce(json({ modules: [] }));
+    fetchMock.mockResolvedValueOnce(json({ revision: "baseline:1", modules: [] }));
     await expect(service.getModule("Leads")).rejects.toThrow("Module is missing");
     await expect(service.getModule("Leads")).resolves.toMatchObject({ apiName: "Leads" });
     expect(fetchMock).toHaveBeenCalledTimes(6);
