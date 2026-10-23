@@ -307,6 +307,25 @@ describe("emailsCard factory", () => {
     }
   });
 
+  it("keeps the same default loader across renders of the same org", () => {
+    const renderCard = emailsCard("Leads");
+    const args: Parameters<typeof renderCard>[0] = {
+      record: { id: "rec-test", fields: {} },
+      orgSlug: "org-1",
+      recordPath: () => "#",
+      definition: {
+        id: "emails",
+        title: "Emails",
+        moduleKey: "M10",
+        order: 4,
+        targetId: "related-list-emails",
+      },
+    };
+    const loaderOf = (el: unknown) =>
+      isValidElement(el) ? (el.props as Record<string, unknown>).loader : undefined;
+    expect(loaderOf(renderCard(args))).toBe(loaderOf(renderCard(args)));
+  });
+
   it("passes custom loader when provided to emailsCard", () => {
     const customLoader: EmailRecordCardLoader = async () => [];
     const renderCard = emailsCard("Leads", customLoader);
@@ -403,5 +422,10 @@ describe("createHttpRecordCardLoader", () => {
     expect(await loader("Tasks" as never, "t1")).toEqual([]);
     expect(await loader("Leads", undefined)).toEqual([]);
     expect(fetchFn).not.toHaveBeenCalled();
+  });
+
+  it("returns the same loader for the same org when no fetcher is given", () => {
+    expect(createHttpRecordCardLoader("org-1")).toBe(createHttpRecordCardLoader("org-1"));
+    expect(createHttpRecordCardLoader("org-1")).not.toBe(createHttpRecordCardLoader("org-2"));
   });
 });
