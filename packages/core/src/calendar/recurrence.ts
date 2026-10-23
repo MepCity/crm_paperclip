@@ -399,6 +399,11 @@ function getNthWeekdayOfMonth(
 
 const MAX_ITERATIONS = 100_000;
 
+/** Throws `UnsupportedRecurrenceError` when the RRULE is outside the supported subset. */
+export function assertSupportedRrule(rrule: string): void {
+  parseRRule(rrule);
+}
+
 export function expandRecurrence(input: ExpandRecurrenceInput): string[] {
   const start = parseWallDateTime(input.start, "start");
   const windowStart = parseWallDateTime(input.windowStart, "windowStart");
