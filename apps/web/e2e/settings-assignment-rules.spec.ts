@@ -29,7 +29,9 @@ test("Assignment Rules opens from settings with the introductory state", async (
   }
   await expect(page.getByRole("button", { name: "Assignment Rules help" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Contextual help" })).toBeVisible();
-  await page.getByRole("button", { name: "Create Assignment Rule" }).click();
+  const create = page.getByRole("button", { name: "Create Assignment Rule" });
+  await expect(create).toHaveAttribute("aria-disabled", "true");
+  await create.click({ force: true });
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await expect(page.getByRole("table")).toHaveCount(0);
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/settings/assignment-rules$`));
