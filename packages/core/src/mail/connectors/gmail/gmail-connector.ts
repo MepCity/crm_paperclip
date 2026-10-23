@@ -219,7 +219,7 @@ export function createGmailConnector(options: GmailConnectorOptions): MailConnec
           }
       };
       const initial = async () => {
-        for (const label of ["INBOX", "SENT"]) {
+        for (const label of m.folder ? [m.folder.toUpperCase()] : ["INBOX", "SENT"]) {
           const q = encodeURIComponent(`newer_than:${config.syncWindowDays}d`);
           add(
             await listIds(m, `${API}/messages?labelIds=${label}&q=${q}&maxResults=100`, "messages"),
@@ -231,7 +231,7 @@ export function createGmailConnector(options: GmailConnectorOptions): MailConnec
       if (cursor === null) await initial();
       else {
         try {
-          for (const label of ["INBOX", "SENT"]) {
+          for (const label of m.folder ? [m.folder.toUpperCase()] : ["INBOX", "SENT"]) {
             add(
               await listIds(
                 m,

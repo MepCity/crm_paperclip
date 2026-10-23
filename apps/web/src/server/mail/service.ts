@@ -1,10 +1,10 @@
 import type { OrgContext } from "@crm/core";
 import { NotFoundError } from "@crm/core/errors";
 import { createMailService, type MailServiceOptions } from "@crm/core/mail/service";
-import type { MailParticipant } from "@crm/core/mail/types";
+import type { MailParticipant, MailRecordModule } from "@crm/core/mail/types";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import type { EmailConversation, EmailFolder } from "@/modules/emails/inbox/view-model";
-import { createMailSeed } from "./seed";
+import { getMailState } from "./state";
 
 export interface MailReadSource extends MailServiceOptions {
   /** Interim body/read-state adapter, consulted only after core authorizes a message. */
@@ -12,17 +12,18 @@ export interface MailReadSource extends MailServiceOptions {
 }
 
 async function fixtureSource(ctx: OrgContext): Promise<MailReadSource> {
-  const { repository, content } = await createMailSeed(ctx);
+  const { repository, content } = await getMailState(ctx);
   return {
     repository,
     recordAddressLookup: { findByAddress: async () => [] },
     async canReadRecord(actor, module, id) {
       try {
         await createFixtureRecordService(actor).get(
-          { leads: "Leads", contacts: "Contacts", accounts: "Accounts" }[module] as
+          { leads: "Leads", contacts: "Contacts", accounts: "Accounts", deals: "Deals" }[module] as
             | "Leads"
             | "Contacts"
-            | "Accounts",
+            | "Accounts"
+            | "Deals",
           id,
         );
         return true;
@@ -44,8 +45,23 @@ const address = (p: MailParticipant) => ({ name: p.name ?? "", address: p.addres
 const sizeLabel = (bytes: number) =>
   bytes < 1_000_000 ? `${(bytes / 1000).toFixed(1)} KB` : `${(bytes / 1_000_000).toFixed(1)} MB`;
 
-export async function listMailConversations(ctx: OrgContext, folder: EmailFolder) {
+export type MailRecordName = "Leads" | "Contacts" | "Accounts" | "Deals";
+const recordModules: Record<MailRecordName, MailRecordModule> = {
+  Leads: "leads",
+  Contacts: "contacts",
+  Accounts: "accounts",
+  Deals: "deals",
+};
+
+export async function listMailConversations(
+  ctx: OrgContext,
+  scope: EmailFolder | { module: MailRecordName; recordId: string },
+) {
   const source = await mailReadSource.create(ctx);
+  const target = typeof scope === "string" ? null : scope;
+  if (target && !(await source.canReadRecord(ctx, recordModules[target.module], target.recordId))) {
+    throw new NotFoundError();
+  }
   const snapshot = await source.repository.read(ctx.orgId);
   const connected = snapshot.mailboxes.some(
     (m) =>
@@ -53,10 +69,23 @@ export async function listMailConversations(ctx: OrgContext, folder: EmailFolder
   );
   if (!connected) return { connected: false, data: [] };
   // Drafts and scheduled mail have no core read model in this slice.
-  if (folder === "drafts" || folder === "scheduled") return { connected: true, data: [] };
+  if (scope === "drafts" || scope === "scheduled") return { connected: true, data: [] };
   const service = createMailService(ctx, source);
   const groups = new Map<string, EmailConversation>();
-  const rows = (await service.listMessages()).filter((m) => m.folder === folder);
+  const linkedIds = new Set(
+    snapshot.links
+      .filter(
+        (link) =>
+          target &&
+          link.organizationId === ctx.orgId &&
+          link.module === recordModules[target.module] &&
+          link.recordId === target.recordId,
+      )
+      .map((link) => link.messageId),
+  );
+  const rows = (await service.listMessages()).filter((m) =>
+    target ? linkedIds.has(m.id) : m.folder === scope,
+  );
   rows.sort(
     (a, b) =>
       Date.parse(a.sentAt ?? a.receivedAt ?? "1970-01-01T00:00:00Z") -
@@ -88,7 +117,7 @@ export async function listMailConversations(ctx: OrgContext, folder: EmailFolder
     };
     groups.set(key, {
       id: row.threadId ?? row.id,
-      folder,
+      folder: row.folder === "draft" ? "drafts" : row.folder,
       subject: row.subject,
       snippet: row.summary,
       unread: content.unread || (previous?.unread ?? false),

@@ -48,6 +48,12 @@ describe("parseReferences", () => {
 });
 
 describe("normalizeSubject", () => {
+  it("strips Re[2]: and AW: through the shared rule", () => {
+    expect(normalizeSubject("Re[2]: AW: Plan")).toBe("Plan");
+    expect(normalizeSubject("Fwd [3]: WG: Plan")).toBe("Plan");
+    expect(normalizeSubject(null)).toBe("");
+  });
+
   it("strips stacked prefixes and list tags", () => {
     expect(normalizeSubject("RE:  Fwd: AW: [list]  Quarterly   plan")).toBe("Quarterly plan");
     expect(normalizeSubject("[news] Re: WG: Fw: Hello")).toBe("Hello");
