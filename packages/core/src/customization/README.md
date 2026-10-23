@@ -15,13 +15,18 @@ network writes. Consumers must not enable settings editing from this adapter.
   `views` and `picklist` properties replace their complete property value.
   Unknown keys and explicit undefined patch properties are rejected.
 - Names are case-sensitive, as in the existing record contract. Active and
-  retired definitions reserve their API names. Retired fields are omitted from
-  effective reads, and layouts/views/patches cannot refer to them. This slice
+  retired definitions reserve their API names. Baseline API names may have a
+  single leading `$`; custom fields retain the strict letter-first format.
+  Retired fields are omitted from effective reads, and layouts/views/patches
+  cannot refer to them. This slice
   exposes no retire/restore operation; lifecycle dependency checks belong to C.
 - One default layout is supported pending the assignment policy. Supported
-  column counts come from the registered baseline. Required fields need create
-  and edit visibility plus placement, unless the baseline supplies a server
-  value. Visibility is presentation, not field-level authorization.
+  column counts come from the registered baseline. Required fields without a
+  baseline server value must be writable, visible on create and placed. They
+  also need edit visibility unless their baseline declares `views.edit: false`
+  (create-only). Custom fields and baseline-editable fields cannot acquire that
+  exception through a patch. Visibility is presentation, not field-level
+  authorization.
 - Saved views use stable field IDs. The resolver translates criteria to API
   names before calling the existing record engine's typed criteria validator.
   System views cannot be removed, changed or introduced by an overlay.

@@ -119,6 +119,7 @@ export const baselineSchema = z.strictObject({
   pluralLabel: id,
   fields: z.array(
     fieldSchema.extend({
+      apiName: z.string().regex(/^\$?[A-Za-z][A-Za-z0-9_]*$/),
       customizable: z.array(
         z.enum(["label", "required", "readOnly", "maxLength", "picklist", "views"]),
       ),
