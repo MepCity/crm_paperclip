@@ -703,7 +703,8 @@ and Configure Email setup gaps remain explicit in the write-only document.
 UI Lead approval stays pending; this is partial evidence, not completed R5.
 
 Verification: BCC reused control mappings and reconciliation arithmetic checked;
-all five new screenshots inspected. Current `origin/main` merge already up to
-date. `git diff --check`, relative links and added-content privacy checks pass.
+all five new screenshots inspected. Latest `origin/main` merged before
+handoff; the upstream addition is an unrelated research spec. `git diff --check`,
+relative links and added-content privacy checks pass.
 `research/specs/verify.mjs` absent; documentation only, no application tests.
 No parity-checklist change, no manual push, no automatic-push/CI claim.
