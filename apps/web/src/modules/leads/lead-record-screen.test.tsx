@@ -93,6 +93,17 @@ function renderScreen(service: ClientRecordService, recordId: string) {
 }
 
 beforeEach(() => {
+  // The Emails card loads from the record-linked mail endpoint; keep it quiet here.
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(
+      async () =>
+        new Response(JSON.stringify({ connected: false, data: [] }), {
+          status: 200,
+          headers: { "content-type": "application/json" },
+        }),
+    ),
+  );
   vi.stubGlobal(
     "ResizeObserver",
     class {
