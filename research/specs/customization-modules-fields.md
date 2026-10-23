@@ -6,12 +6,19 @@ Inspect the module administration list and the initial read-only tabs for Leads.
 The initial module-list capture is accepted as painted by the CTO decision of
 2026-10-22. The `_sortableParentData` page error is known sorting-library noise
 on these settings pages when the screenshot is fully painted; a genuinely
-blank or partial image still fails. The Leads initial Layouts screen is preserved. Research remains **incomplete**:
-Links fails the paint gate; Layout Rules had a tool-only selector failure, and
-Buttons/Summary were not attempted after the stop. The CTO decision at 20:28 UTC
-permits the remaining initial tabs: refused telemetry deltas are known noise,
-not reference changes. This continuation records successful captures and any
-one-attempt tool failures explicitly. No editor or persisted preference was operated.
+blank or partial image still fails. The existing module-list, Layouts, Validation Rules, Fields,
+Record Locking Configuration and Map Dependency Fields evidence is preserved.
+The CTO decision at 20:39 UTC authorizes one continuation attempt for Layout
+Rules, Buttons and Summary, and one fresh-load retry for Links. Refused requests
+remain blocked; no guard is relaxed. The original broken Links capture and its
+20 shell controls are **invalid acceptance evidence**, retained only for diagnosis.
+This continuation uses only initial tab navigation, never an editor or persisted
+preference.
+
+The CTO's 2026-10-23 01:03 UTC decision permits one final attempt per remaining
+tab in a new run. A source-page load failure is skipped with a reason; no
+further recovery run is requested. Unavailable tab states may be submitted as
+explicit open questions. Earlier diagnostic failures below remain historical.
 
 Module 2+ parity applies: inventory and behaviour only, without pixel metrics,
 typography, colours or frontend request shapes. No reference assets are copied.
@@ -554,7 +561,7 @@ hidden zero-area overlays, body and scroll-region wrappers, as checked
 against the screenshot. Screen-specific overflow controls are listed separately.
 
 
-## Leads — Links failure state (paint gate failed)
+## Leads — Links failure state (invalid acceptance evidence)
 
 Source: **seen, `m11r1-leads-links` screenshot**. One unique Links tab click
 reached `/crm/<org>/settings/modules/Leads/custom-link`. The module sidebar,
@@ -573,7 +580,7 @@ browser. Its refusal may relate to the rendering failure, but causation is
 unproven. No guard was relaxed, request replayed or capture tool changed.
 Successful non-GET calls remain the two accepted passive/read exceptions.
 
-The inventory below covers **only the failed screen's visible shell controls**.
+The inventory below is **invalid acceptance evidence**: it covers only the failed screen's visible shell controls.
 It does not substitute for the intended Links initial-screen inventory.
 
 | # | Position | Control | Raw entries | Observed behaviour / limit | Owning module | Contacts ref |
@@ -604,6 +611,146 @@ Reconciliation: 55 raw entries → 20 logical controls;
 Excluded entries: 1, 2, 5, 9, 10, 12, 13, 15, 16, 19, 20, 25, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 54, 55.
 Exclusions: shell containers, hidden/zero-area overlay placeholders, the static
 error-text node (25), body and content-card wrappers. No content control survives.
+
+
+## Leads — Layout Rules (continuation)
+
+Source: **seen, `m11r1-leads-layout-rules-cont` screenshot**, reconciled against one-based
+`controls.json`. The initial screen is fully painted. An explanatory line precedes the creation
+entry and an empty table with Name, Primary Field, Last Modified and Status
+columns. No configured rule row or status toggle is visible.
+
+| # | Position | Control | Raw entries | Observed behaviour / limit | Owning module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- |
+| LR-01 | Top utility strip | Search records | 3 | Not opened or typed | Shell | Contacts shell |
+| LR-02 | Top utility strip | Quick create | 4 | Not opened or typed | Shell | Contacts shell |
+| LR-03 | Top utility strip | Assistant | 6 | Not opened or typed | Shell | Contacts shell |
+| LR-04 | Top utility strip | Notifications | 7 | Not opened or typed | Shell | Contacts shell |
+| LR-05 | Top utility strip | Calendar | 8 | Not opened or typed | Shell | Contacts shell |
+| LR-06 | Top utility strip | Marketplace | 11 | Not opened or typed | Shell | Contacts shell |
+| LR-07 | Top utility strip | Setup | 14 | Not opened or typed | Shell | Contacts shell |
+| LR-08 | Top utility strip | Profile | 17, 18 | Not opened or typed | Shell | Contacts shell |
+| LR-09 | Top utility strip | Applications menu | 21, 22, 23, 24 | Not opened or typed | Shell | Contacts shell |
+| LR-10 | Sidebar header | Back to Modules | 26, 99, 100 | Back affordance visible; not clicked | M11 | new |
+| LR-11 | Sidebar header right | Module search icon | 27, 101 | Not opened; input behaviour unobserved | M11 | new |
+| LR-12 | Sidebar, top to bottom | Leads | 28 | Selected | M11 | new |
+| LR-13 | Sidebar, top to bottom | Contacts | 29 | Module navigation; not opened | M11 | new |
+| LR-14 | Sidebar, top to bottom | Accounts | 30 | Module navigation; not opened | M11 | new |
+| LR-15 | Sidebar, top to bottom | Deals | 31 | Module navigation; not opened | M11 | new |
+| LR-16 | Sidebar, top to bottom | Tasks | 32 | Module navigation; not opened | M11 | new |
+| LR-17 | Sidebar, top to bottom | Meetings | 33 | Module navigation; not opened | M11 | new |
+| LR-18 | Sidebar, top to bottom | Calls | 34 | Module navigation; not opened | M11 | new |
+| LR-19 | Sidebar, top to bottom | Products | 35 | Module navigation; not opened | M11 | new |
+| LR-20 | Sidebar, top to bottom | Quotes | 36 | Module navigation; not opened | M11 | new |
+| LR-21 | Sidebar, top to bottom | Sales Orders | 37 | Module navigation; not opened | M11 | new |
+| LR-22 | Sidebar, top to bottom | Purchase Orders | 38 | Module navigation; not opened | M11 | new |
+| LR-23 | Sidebar, top to bottom | Invoices | 39 | Module navigation; not opened | M11 | new |
+| LR-24 | Sidebar, top to bottom | Campaigns | 40 | Module navigation; not opened | M11 | new |
+| LR-25 | Sidebar, top to bottom | Vendors | 41 | Module navigation; not opened | M11 | new |
+| LR-26 | Sidebar, top to bottom | Price Books | 42 | Module navigation; not opened | M11 | new |
+| LR-27 | Sidebar, top to bottom | Cases | 43 | Module navigation; not opened | M11 | new |
+| LR-28 | Sidebar, top to bottom | Solutions | 44 | Module navigation; not opened | M11 | new |
+| LR-29 | Module tab strip, left to right | Layouts | 45, 46 | Visible navigation tab; not operated in this capture | M11 | new |
+| LR-30 | Module tab strip, left to right | Layout Rules | 47, 48 | Selected initial state | M11 | new |
+| LR-31 | Module tab strip, left to right | Validation Rules | 49, 50 | Visible navigation tab; not operated in this capture | M11 | new |
+| LR-32 | Module tab strip, left to right | Fields | 51, 52 | Visible navigation tab; not operated in this capture | M11 | new |
+| LR-33 | Module tab strip, left to right | Record Locking Configuration | 53, 54 | Visible navigation tab; not operated in this capture | M11 | new |
+| LR-34 | Module tab strip, left to right | Map Dependency Fields | 55, 56 | Visible navigation tab; not operated in this capture | M11 | new |
+| LR-35 | Module tab strip, left to right | Links | 57, 58 | Visible navigation tab; not operated in this capture | M11 | new |
+| LR-36 | Module tab strip, left to right | Buttons | 59, 60 | Visible navigation tab; not operated in this capture | M11 | new |
+| LR-37 | Module tab strip, left to right | Summary | 61, 62 | Visible navigation tab; not operated in this capture | M11 | new |
+| LR-38 | Content right edge | Contextual help | 64 | Not opened | M11 | new |
+| LR-39 | Bottom utility strip | My Pins | 87 | Not opened | Shell | Contacts shell |
+| LR-40 | Bottom utility strip | Chats | 88 | Not opened | Shell | Contacts shell |
+| LR-41 | Bottom utility strip | Contacts | 89 | Not opened | Shell | Contacts shell |
+| LR-42 | Bottom utility strip | Command palette | 90 | Not opened | Shell | Contacts shell |
+| LR-43 | Bottom utility strip | Announcements | 91 | Not opened | Shell | Contacts shell |
+| LR-44 | Bottom utility strip | Motivator | 92 | Not opened | Shell | Contacts shell |
+| LR-45 | Bottom utility strip | Sticky Notes | 93 | Not opened | Shell | Contacts shell |
+| LR-46 | Bottom utility strip | Activity Reminders | 94 | Not opened | Shell | Contacts shell |
+| LR-47 | Bottom utility strip | Recent Items | 95 | Not opened | Shell | Contacts shell |
+| LR-48 | Bottom utility strip | Accessibility | 96 | Not opened | Shell | Contacts shell |
+| LR-49 | Bottom utility strip | Help | 97 | Not opened | Shell | Contacts shell |
+| LR-50 | Content above table, right | New Layout Rule | 65, 66 | Creation entry; forbidden, not opened | M11 | new |
+
+Reconciliation: 104 raw entries → 50 logical controls;
+67 represented + 37 excluded = 104.
+Excluded entries: 1, 2, 5, 9, 10, 12, 13, 15, 16, 19, 20, 25, 63, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 98, 102, 103, 104.
+Exclusions are hidden or zero-area overlays, structural containers, static text
+and table wrappers, verified against the screenshot. No controls were operated
+except the named tab.
+
+
+## Leads — Summary (final continuation)
+
+Source: **seen, `m11r1-leads-summary-final` screenshot**, reconciled with
+one-based `controls.json`. Summary is selected and fully painted. A Primary
+section presents module/API/display-name attributes and modification metadata.
+A Customization section presents permission, layout and field-count summaries,
+then Buttons and Links count links. Values, identities, dates and configured
+counts are not copied. The Automation heading begins at the lower content edge;
+its controls are below the captured content viewport and are not inventoried.
+No content scrolling, count-link navigation or settings action was performed.
+
+| # | Position | Control | Raw entries | Observed behaviour / limit | Owning module | Contacts ref |
+| --- | --- | --- | --- | --- | --- | --- |
+| SU-01 | Top utility strip | Search records | 3 | Not opened or typed | Shell | Contacts shell |
+| SU-02 | Top utility strip | Quick create | 4 | Not opened or typed | Shell | Contacts shell |
+| SU-03 | Top utility strip | Assistant | 6 | Not opened or typed | Shell | Contacts shell |
+| SU-04 | Top utility strip | Notifications | 7 | Not opened or typed | Shell | Contacts shell |
+| SU-05 | Top utility strip | Calendar | 8 | Not opened or typed | Shell | Contacts shell |
+| SU-06 | Top utility strip | Marketplace | 11 | Not opened or typed | Shell | Contacts shell |
+| SU-07 | Top utility strip | Setup | 14 | Not opened or typed | Shell | Contacts shell |
+| SU-08 | Top utility strip | Profile | 17, 18 | Not opened or typed | Shell | Contacts shell |
+| SU-09 | Top utility strip | Applications menu | 21, 22, 23, 24 | Not opened or typed | Shell | Contacts shell |
+| SU-10 | Sidebar header | Back to Modules | 26, 104, 105 | Back affordance visible; not clicked | M11 | new |
+| SU-11 | Sidebar header right | Module search icon | 27, 106 | Not opened; input behaviour unobserved | M11 | new |
+| SU-12 | Sidebar, top to bottom | Leads | 28 | Selected | M11 | new |
+| SU-13 | Sidebar, top to bottom | Contacts | 29 | Module navigation; not opened | M11 | new |
+| SU-14 | Sidebar, top to bottom | Accounts | 30 | Module navigation; not opened | M11 | new |
+| SU-15 | Sidebar, top to bottom | Deals | 31 | Module navigation; not opened | M11 | new |
+| SU-16 | Sidebar, top to bottom | Tasks | 32 | Module navigation; not opened | M11 | new |
+| SU-17 | Sidebar, top to bottom | Meetings | 33 | Module navigation; not opened | M11 | new |
+| SU-18 | Sidebar, top to bottom | Calls | 34 | Module navigation; not opened | M11 | new |
+| SU-19 | Sidebar, top to bottom | Products | 35 | Module navigation; not opened | M11 | new |
+| SU-20 | Sidebar, top to bottom | Quotes | 36 | Module navigation; not opened | M11 | new |
+| SU-21 | Sidebar, top to bottom | Sales Orders | 37 | Module navigation; not opened | M11 | new |
+| SU-22 | Sidebar, top to bottom | Purchase Orders | 38 | Module navigation; not opened | M11 | new |
+| SU-23 | Sidebar, top to bottom | Invoices | 39 | Module navigation; not opened | M11 | new |
+| SU-24 | Sidebar, top to bottom | Campaigns | 40 | Module navigation; not opened | M11 | new |
+| SU-25 | Sidebar, top to bottom | Vendors | 41 | Module navigation; not opened | M11 | new |
+| SU-26 | Sidebar, top to bottom | Price Books | 42 | Module navigation; not opened | M11 | new |
+| SU-27 | Sidebar, top to bottom | Cases | 43 | Module navigation; not opened | M11 | new |
+| SU-28 | Sidebar, top to bottom | Solutions | 44 | Module navigation; not opened | M11 | new |
+| SU-29 | Module tab strip, left to right | Layouts | 45, 46 | Visible navigation tab; not operated in this capture | M11 | new |
+| SU-30 | Module tab strip, left to right | Layout Rules | 47, 48 | Visible navigation tab; not operated in this capture | M11 | new |
+| SU-31 | Module tab strip, left to right | Validation Rules | 49, 50 | Visible navigation tab; not operated in this capture | M11 | new |
+| SU-32 | Module tab strip, left to right | Fields | 51, 52 | Visible navigation tab; not operated in this capture | M11 | new |
+| SU-33 | Module tab strip, left to right | Record Locking Configuration | 53, 54 | Visible navigation tab; not operated in this capture | M11 | new |
+| SU-34 | Module tab strip, left to right | Map Dependency Fields | 55, 56 | Visible navigation tab; not operated in this capture | M11 | new |
+| SU-35 | Module tab strip, left to right | Links | 57, 58 | Visible navigation tab; not operated in this capture | M11 | new |
+| SU-36 | Module tab strip, left to right | Buttons | 59, 60 | Visible navigation tab; not operated in this capture | M11 | new |
+| SU-37 | Module tab strip, left to right | Summary | 61, 62 | Selected initial state | M11 | new |
+| SU-38 | Bottom utility strip | My Pins | 91 | Not opened | Shell | Contacts shell |
+| SU-39 | Bottom utility strip | Chats | 92 | Not opened | Shell | Contacts shell |
+| SU-40 | Bottom utility strip | Contacts | 93 | Not opened | Shell | Contacts shell |
+| SU-41 | Bottom utility strip | Command palette | 94 | Not opened | Shell | Contacts shell |
+| SU-42 | Bottom utility strip | Announcements | 95 | Not opened | Shell | Contacts shell |
+| SU-43 | Bottom utility strip | Motivator | 96 | Not opened | Shell | Contacts shell |
+| SU-44 | Bottom utility strip | Sticky Notes | 97 | Not opened | Shell | Contacts shell |
+| SU-45 | Bottom utility strip | Activity Reminders | 98 | Not opened | Shell | Contacts shell |
+| SU-46 | Bottom utility strip | Recent Items | 99 | Not opened | Shell | Contacts shell |
+| SU-47 | Bottom utility strip | Accessibility | 100 | Not opened | Shell | Contacts shell |
+| SU-48 | Bottom utility strip | Help | 101 | Not opened | Shell | Contacts shell |
+| SU-49 | Customization summary | Buttons count link | 63, 64 | Visible count link; not opened; destination unverified | M11 | new |
+| SU-50 | Customization summary | Links count link | 65, 66 | Visible count link; not opened; destination unverified | M11 | new |
+
+Reconciliation: 110 raw entries → 50 logical controls;
+68 represented + 42 excluded = 110.
+Excluded entries: 1, 2, 5, 9, 10, 12, 13, 15, 16, 19, 20, 25, 67, 68, 69, 70, 71, 72, 73, 74, 75, 76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87, 88, 89, 90, 102, 103, 107, 108, 109, 110.
+Exclusions are structural wrappers, hidden/zero-area overlays, the static
+modification avatar, and Automation/template links below the visible content
+viewport (67–74). No inaccessible or clipped control is counted as visible.
 
 ## Fields and metadata
 
@@ -696,16 +843,121 @@ No successful settings-write delta is present. The stop is caused by the
 visibly blank Links content, independently of request-count comparisons.
 A pre-click ready probe or tool exit code alone does not establish final paint.
 
+## Continuation capture audit — 2026-10-23
+
+The CTO's 20:39 decision was applied without repeating accepted captures.
+Each attempt starts with a fresh load of the Leads Layouts route. The original
+broken Links capture and its 20 shell controls remain diagnostic only and are
+excluded from accepted inventory totals.
+
+| Capture folder under `captures/` | Target / result | Raw controls | Refused requests | Successful non-GET |
+| --- | --- | --- | --- | --- |
+| `m11r1-leads-layout-rules-cont` | Unique `#formRulesLI` click; fully painted | 104 | 3 | PageLayout/read ×1; visitor/passive ×1; both 200 |
+| `m11r1-leads-buttons-cont` | Source Layouts page remained loading; target absent; no click | 282 | 2 | None recorded |
+
+Layout Rules has 50 logical controls: 67 represented raw entries and 37
+excluded entries. Its screenshot shows the complete module sidebar, nine tabs,
+creation entry and empty table. The known sorting-library error is present;
+failed script count is zero. The three refused requests are reminder polling,
+notification status and telemetry URL monitoring, one each. There is no new
+successful non-GET path or count increase.
+
+The Buttons attempt fails the paint gate **before any click**. The source page
+shows a loading skeleton and spinner; the unique target has zero matches after
+30 seconds. `ready.ok` is false, the step is `not-run`, failed script count is
+zero and the known sorting-library error is recorded. Reminder polling and
+telemetry URL monitoring are refused once each. No successful non-GET request
+is recorded, so no successful settings-write delta is evidenced. Tool exit
+status is 2. The 282 raw controls are not an accepted screen inventory.
+
+Live research stopped at this blank/partial paint, under the CTO's 20:28 stop
+rule retained by the 20:39 decision. Buttons is not retried. Summary and the
+single permitted Links retry are **not attempted in this continuation**; that
+retry allowance is unconsumed. No editor, modal, menu, toggle, creation entry,
+field, preference, drag, download or print was operated. No browser tab was
+closed, no guard changed and no request replayed. The Links-specific exception
+does not waive a loading failure on the source page of another tab.
+
+## Final bounded continuation — 2026-10-23
+
+The 01:03 UTC CTO decision is applied with fresh Layouts loads and a 15-second
+wait before each readiness probe. Each target is attempted at most once in this
+run. Unique selectors come from the accepted Layout Rules controls capture:
+Buttons `#cusButtonLI`, Summary `#infoLI`, Links `#cusLinkLI`.
+
+### Buttons — stale source content, invalid acceptance evidence
+
+Capture: `m11r1-leads-buttons-final`. The source readiness probe succeeds and
+one Buttons tab click is recorded. The final route is the Buttons route, but
+manual screenshot inspection shows Layouts still selected and the layout
+creation entry/table still displayed. The route reports an initialization error
+while setting module state; a profile-assignment request was refused. This is
+a failed tab transition, not the Buttons initial screen. The 108 raw controls
+represent stale content and are excluded from the accepted inventory total.
+There is no blank image, editor, modal or menu. Under the CTO's tool-failure
+skip rule, the next authorized target may proceed; Buttons is not retried.
+
+Eight requests were refused: reminder polling (1), notification status (1),
+URL telemetry (2), profile assignment (1), telemetry logs (1), exception ingest
+(1), custom metrics (1). Successful non-GET requests remain PageLayout/read (1)
+and visitor/passive (1), both 200. No new successful non-GET path or count
+increase is recorded. All guards remain enabled.
+
+### Summary — accepted initial state
+
+Capture: `m11r1-leads-summary-final`; unique `#infoLI` click, readiness true,
+no failed scripts. The screenshot is fully painted and has 50 logical controls
+(68 represented + 42 excluded = 110 raw entries). Five requests are refused:
+URL telemetry (2), reminder polling (1), notification status (1), telemetry
+logs (1). The known sorting-library error is present.
+
+Successful non-GET calls comprise PageLayout module-list read (1), PageLayout
+module-accessibility check (1, query action `isModuleAccessable`, module Leads),
+and visitor/passive (1), all 200. The additional PageLayout call is explicitly
+recorded rather than reported as an unchanged count: it checks access and is
+within the CTO's PageLayout exception. No successful non-GET outside the
+PageLayout/visitor exceptions appears. No settings operation was performed.
+
+### Links — authorized retry consumed, known tool/page issue
+
+Capture: `m11r1-leads-links-final`. The source readiness probe succeeds and the
+single authorized `#cusLinkLI` click is recorded. The final screenshot again
+shows an object-error marker in an otherwise blank content card. The module
+sidebar, tab strip and Links content are absent. Manual image inspection fails
+the paint gate despite the successful pre-click readiness probe/tool exit.
+The 55 raw controls are diagnostic shell evidence only and are not inventoried
+as Links controls. Neither this image nor the original failed Links image is
+valid acceptance evidence or an empty-list design reference.
+
+Eight requests are refused, with the same categories and counts as the final
+Buttons attempt, including the profile-assignment read. Successful non-GET
+requests are PageLayout/read (1) and visitor/passive (1), both 200. There is no
+successful settings-write delta. Diagnostics report a rejected Links route
+model and XMLHttpRequest page errors. Guards are unchanged, no request is
+replayed, and no further live inspection follows this failed paint.
+
+| Final capture folder under `captures/` | Result | Raw controls | Refused requests | Accepted logical controls |
+| --- | --- | --- | --- | --- |
+| `m11r1-leads-buttons-final` | Stale Layouts content at Buttons route; invalid target evidence | 108 | 8 | 0 |
+| `m11r1-leads-summary-final` | Fully painted Summary | 110 | 5 | 50 |
+| `m11r1-leads-links-final` | Blank/object error; invalid; final retry consumed | 55 | 8 | 0 |
+
+All three final screenshots were inspected. No editor, menu, modal, toggle,
+creation entry, field, saved preference, drag, download or print was operated.
+No browser tabs were closed. The seven accepted tab inventories are retained;
+Buttons and Links have justified open questions under the final CTO decision.
+
 ## Open questions and unobserved states
 
-1. Links fails the paint gate: blank content with an object-rendering error.
-   CTO must determine the safe next step before further live research. A new
-   refused profile-assignment request and two request errors are recorded; no
-   successful-write delta is observed. Buttons and Summary remain unobserved.
-2. Layout Rules could not be opened in this continuation: the text selector
-   matched three elements, so the tool ran no click. The screenshot remains
-   Layouts. A later run must use the exported unique `#formRulesLI` selector;
-   no retry was made in this run. This target is not acceptance evidence.
+1. Buttons remains unobserved after its final permitted attempt: tab navigation
+   reached the Buttons route, but the screen retained the Layouts content. The
+   route failed during initialization after a profile-assignment read was
+   refused by the capture guard. No guard bypass or additional retry is allowed.
+   This stale content is not an accepted Buttons screen or product behaviour.
+2. Links remains unobserved: the original and final blank/object-error captures
+   are invalid acceptance evidence. The authorized fresh-load retry is consumed.
+   This is a known tool/page issue; there is no further retry. Its intended
+   initial state remains an open question, not product behaviour to reproduce.
 3. Search/filter, empty-result, permission and error behaviour beyond the
    observed initial states remains unknown. Custom Views is not a visible tab.
 4. Status-switch availability, information tooltips, Teamspace destinations,
@@ -717,21 +969,24 @@ A pre-click ready probe or tool exit code alone does not establish final paint.
 
 ## Verification and handoff
 
-The module-list and Layouts inventories are preserved. Each successful new tab
-has its own screenshot inspection and numbered inventory, including shared shell
-controls, reconciled against raw controls. No capture screenshot or raw data is
-committed or uploaded: these may contain customer/account information.
+Accepted evidence covers the module list and seven of the nine Leads tabs:
+Layouts, Layout Rules, Validation Rules, Fields, Record Locking Configuration
+and Map Dependency Fields, plus Summary. Counts:
+85 + 53 + 50 + 50 + 54 + 50 + 51 + 50 = **443 logical controls**. The invalid Links shell inventory (20) is excluded.
+The earlier ambiguous Layout Rules attempt is superseded by the valid
+continuation capture, without altering its historical failure record.
 
-Layout Rules remains incomplete after a single tool-failed attempt with no click.
-The failed Layout Rules capture folder contains a fully painted Layouts image, not a Layout Rules
-state; it must not be counted as that tab's inventory. A later run can use the
-exported unique selector. Links is separately documented as a failed render, with shell-only inventory.
-Buttons and Summary were not attempted after the paint failure. Successful tab
-states are initial and read-only.
+Each accepted inventory is reconciled with one-based raw controls and its
+screenshot. The new Layout Rules mapping verifies unique raw-index use and
+67 + 37 = 104. The failed Buttons screenshot was inspected independently of
+the readiness result. Raw screenshots and data remain in the local research
+workspace because they may contain customer/account information; they are
+neither committed nor uploaded.
 
-Documentation verification covers raw-index uniqueness and arithmetic,
-privacy/neutral-language scanning and `git diff --check`. No application tests,
-typecheck or e2e are warranted for this documentation-only change.
-`research/specs/verify.mjs` is absent. Acceptance remains incomplete: Layout Rules and Links need valid initial-screen
-evidence; Buttons and Summary are still unobserved. CTO owns disposition of the
-paint failure and routing the remaining work in a later run.
+Documentation verification covers inventory arithmetic and uniqueness,
+privacy/neutral-language scanning and `git diff --check`. Application tests,
+typecheck, e2e and CI are unnecessary for this documentation-only change,
+as explicitly decided by the CTO. `research/specs/verify.mjs` is absent.
+The final bounded attempts are submitted with justified open questions for
+unavailable tabs; CTO approval is required. No further capture recovery run
+is requested under the 01:03 UTC decision.
