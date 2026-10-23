@@ -16,6 +16,7 @@ import {
   emptyEmailRecordCardFixture,
   loadEmailRecordCardFixture,
 } from "./fixtures";
+import { createHttpRecordCardLoader } from "./http-loader";
 import type { EmailRecordCardLoader } from "./types";
 
 function deferred<T>() {
@@ -352,5 +353,55 @@ describe("emailsCard factory", () => {
       expect(emails?.moduleKey).toBe("M10");
       expect(emails?.targetId).toBe("related-list-emails");
     }
+  });
+});
+
+describe("createHttpRecordCardLoader", () => {
+  const conv = {
+    id: "c1",
+    folder: "inbox",
+    subject: "Hi",
+    snippet: "s",
+    unread: false,
+    messages: [
+      {
+        id: "m1",
+        from: { name: "A", address: "a@example.com" },
+        to: [{ name: "B", address: "b@example.com" }],
+        cc: [],
+        date: "2026-01-01T10:00:00Z",
+        body: "x",
+        attachments: [],
+      },
+    ],
+  };
+
+  it("maps a connected response and requests the record endpoint", async () => {
+    const fetchFn = vi.fn(async (_path: string) => ({ connected: true, data: [conv] }));
+    const rows = await createHttpRecordCardLoader("org-1", fetchFn)("Deals", "d1");
+    expect(rows).toHaveLength(1);
+    expect(fetchFn.mock.calls[0]?.[0]).toBe(
+      "/crm/v2.2/mail/conversations?module=Deals&recordId=d1",
+    );
+  });
+
+  it("returns no rows when the mailbox is not connected", async () => {
+    const fetchFn = vi.fn(async () => ({ connected: false, data: [] }));
+    expect(await createHttpRecordCardLoader("org-1", fetchFn)("Leads", "l1")).toEqual([]);
+  });
+
+  it("rejects on request errors so the card shows its error state", async () => {
+    const fetchFn = vi.fn(async () => {
+      throw new Error("boom");
+    });
+    await expect(createHttpRecordCardLoader("org-1", fetchFn)("Leads", "l1")).rejects.toThrow();
+  });
+
+  it("makes no request for unsupported modules or missing ids", async () => {
+    const fetchFn = vi.fn();
+    const loader = createHttpRecordCardLoader("org-1", fetchFn);
+    expect(await loader("Tasks" as never, "t1")).toEqual([]);
+    expect(await loader("Leads", undefined)).toEqual([]);
+    expect(fetchFn).not.toHaveBeenCalled();
   });
 });

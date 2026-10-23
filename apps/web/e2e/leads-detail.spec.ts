@@ -88,6 +88,7 @@ function assertDetailFromListRequests(allRequests: CrmRequest[]) {
   const seen = new Set<string>();
   const requests = allRequests.filter((request) => {
     if (isActivityCardRequest(request)) return false;
+    if (request.pathname.endsWith("/mail/conversations")) return false;
     const key = `${request.method} ${request.pathname} ${[...request.searchParams.keys()].sort()}`;
     if (seen.has(key)) return false;
     seen.add(key);
