@@ -8,8 +8,9 @@ import { Icons } from "@/components/ui/icon";
 import { resolveLaterModule } from "@/components/ui/later-module";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import type { RelatedListControlDefinition } from "@/modules/types";
+import { fetchComposeMailboxes } from "../compose/http-port";
 import { MailCompose } from "../compose/mail-compose";
-import { composeMailboxes, fixtureComposePort } from "../compose/port";
+import type { ComposeMailbox } from "../compose/port";
 import type { EmailConversation } from "../inbox/view-model";
 import { EMAIL_CARD_TABS, EMPTY_STATE_TEXT, loadEmailRecordCardFixture } from "./fixtures";
 import type {
@@ -70,8 +71,24 @@ export function EmailsRecordCard({
   loader,
 }: EmailsRecordCardProps) {
   const [composeOpen, setComposeOpen] = useState(false);
+  const [composeMailboxesList, setComposeMailboxesList] = useState<readonly ComposeMailbox[]>([]);
   const [sent, setSent] = useState(false);
   const [activeTab, setActiveTab] = useState<EmailTabKey>(initialTab);
+
+  useEffect(() => {
+    if (!composeOpen) return;
+    let live = true;
+    void fetchComposeMailboxes()
+      .then((data) => {
+        if (live) setComposeMailboxesList(data);
+      })
+      .catch(() => {
+        if (live) setComposeMailboxesList([]);
+      });
+    return () => {
+      live = false;
+    };
+  }, [composeOpen]);
 
   const isCustomLoader = loader !== undefined || load !== undefined;
   const effectiveLoader = loader ?? load ?? loadEmailRecordCardFixture;
@@ -179,8 +196,7 @@ export function EmailsRecordCard({
       {composeOpen && (
         <MailCompose
           initialTo={recipientEmail}
-          mailboxes={composeMailboxes}
-          port={fixtureComposePort}
+          mailboxes={composeMailboxesList}
           onClose={() => setComposeOpen(false)}
           onSent={() => setSent(true)}
         />

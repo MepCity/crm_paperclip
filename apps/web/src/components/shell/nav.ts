@@ -235,6 +235,14 @@ export const settingsNav: readonly NavLink[] = [
     match: "exact",
     group: "Customization",
   },
+  {
+    id: "assignment-rules",
+    label: "Assignment Rules",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/assignment-rules`,
+    match: "exact",
+    group: "Automation",
+  },
 ];
 
 /**
