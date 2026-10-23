@@ -92,6 +92,22 @@ describe("EmailSettingsScreen", () => {
     expect(screen.queryByRole("button", { name: "Regenerate" })).toBeNull();
   });
 
+  it("reads custom preference state through the port while preventing changes", async () => {
+    render(
+      <EmailSettingsScreen
+        orgSlug="demo"
+        initialTab="custom-email-fields-preference"
+        port={{
+          readSettings: async () => ({ ...fixtureEmailSettings, customEmailFieldsEnabled: true }),
+        }}
+      />,
+    );
+    await screen.findByRole("heading", { name: "Custom Email Fields Preferences" });
+    const toggle = screen.getByRole("switch", { name: "Custom email preferences" });
+    expect(toggle).toHaveProperty("checked", true);
+    expect(toggle).toHaveProperty("disabled", true);
+  });
+
   it("shows an empty sharing table and a load error without showing defaults", async () => {
     const view = render(
       <EmailSettingsScreen

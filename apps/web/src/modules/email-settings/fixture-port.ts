@@ -8,6 +8,7 @@ export const fixtureEmailSettings: EmailSettingsSnapshot = {
     fromAddress: "Demo User <demo@example.com>",
     replyToAddress: "Demo User <demo@example.com>",
   },
+  customEmailFieldsEnabled: false,
   sharingUsers: [
     {
       id: "demo-user-1",

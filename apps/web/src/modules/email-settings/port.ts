@@ -29,6 +29,7 @@ export interface EmailSettingsSnapshot {
     replyToAddress: string;
   };
   sharingUsers: readonly EmailSharingUser[];
+  customEmailFieldsEnabled: boolean;
 }
 
 /** Read-only boundary: preference changes and mailbox setup have no port. */

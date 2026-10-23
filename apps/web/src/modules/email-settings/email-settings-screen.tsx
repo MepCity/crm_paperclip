@@ -143,12 +143,12 @@ export function EmailSettingsScreen({
   );
 }
 
-function Heading({ title, toggle = false }: { title: string; toggle?: boolean }) {
+function Heading({ title, toggle }: { title: string; toggle?: boolean }) {
   return (
     <div className="flex flex-wrap items-center gap-4">
       <h1 className="text-xl font-semibold text-text">{title}</h1>
-      {toggle && (
-        <Switch label="Custom email preferences" hideLabel isSelected={false} isDisabled />
+      {toggle !== undefined && (
+        <Switch label="Custom email preferences" hideLabel isSelected={toggle} isDisabled />
       )}
       <Button variant="icon" size="compact" isDisabled className="ml-auto">
         Help
@@ -195,7 +195,7 @@ function ConfigurationContent({
   if (tab === "custom-email-fields-preference")
     return (
       <>
-        <Heading title="Custom Email Fields Preferences" toggle />
+        <Heading title="Custom Email Fields Preferences" toggle={data.customEmailFieldsEnabled} />
         <p className="mt-5 max-w-4xl text-md">
           Choose whether to sync conversations with addresses stored in custom email fields across
           CRM records.
