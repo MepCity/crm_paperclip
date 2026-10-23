@@ -100,6 +100,14 @@ export function AppShell({
               <CreateRecordsMenu orgSlug={orgSlug} />
               <Link
                 variant="icon"
+                aria-label="Calendar"
+                href={`/crm/${orgSlug}/calendar`}
+                className="size-(--size-topbar-control-pitch)"
+              >
+                <Icons.calendar className="size-(--size-topbar-icon)" aria-hidden />
+              </Link>
+              <Link
+                variant="icon"
                 aria-label="Settings"
                 href={`/crm/${orgSlug}/settings`}
                 className="size-(--size-topbar-control-pitch)"
