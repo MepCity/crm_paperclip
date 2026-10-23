@@ -20,7 +20,17 @@ export interface GmailMailSenderOptions {
   recipientGuard(recipients: readonly MailParticipant[]): void;
 }
 
-/** No worker or real network wiring. BCC delivery awaits the provider-contract decision. */
+/** Provider submission only; composeMime and stored/rendered copies remain BCC-free. */
+function submissionMime(raw: string, bcc: MailParticipant[], fromAddress: string): string {
+  if (bcc.length === 0) return raw;
+  // Reuse MIME address validation, encoding and folding rather than interpolating input.
+  const validation = composeMime({ from: { address: fromAddress }, to: bcc, subject: "" });
+  const header = /^To:([^\r\n]*(?:\r\n[ \t][^\r\n]*)*)/m.exec(validation)?.[1];
+  if (!header) throw new Error("Invalid blind recipients");
+  return `Bcc:${header}\r\n${raw}`;
+}
+
+/** No worker or real network wiring. */
 export function createGmailMailSender(options: GmailMailSenderOptions): MailSender {
   const rejected = (reason: string, retryable = false): MailSendResult => ({
     status: "rejected",
@@ -36,8 +46,6 @@ export function createGmailMailSender(options: GmailMailSenderOptions): MailSend
       } catch {
         return rejected("recipient_not_allowed");
       }
-      // Gmail has no separate envelope field. Never silently drop blind recipients.
-      if (request.message.bcc.length) return rejected("bcc_delivery_unavailable");
       let mailbox: Awaited<ReturnType<GmailMailSenderOptions["resolveMailbox"]>>;
       let content: Awaited<ReturnType<GmailMailSenderOptions["loadContent"]>>;
       try {
@@ -55,11 +63,13 @@ export function createGmailMailSender(options: GmailMailSenderOptions): MailSend
           from: { address: mailbox.address, name: request.message.from[0]?.name },
           to: request.message.to,
           cc: request.message.cc,
+          bcc: request.message.bcc,
           subject: request.message.subject,
           text: content.text ?? (content.html === undefined ? request.message.summary : undefined),
           html: content.html,
           attachments: content.attachments,
         });
+        raw = submissionMime(raw, request.message.bcc, mailbox.address);
       } catch {
         return rejected("invalid_message");
       }

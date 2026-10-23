@@ -1,7 +1,7 @@
 import { randomBytes } from "node:crypto";
 import { describe, expect, it } from "vitest";
 import { createAesGcmSecretBox } from "../../../secrets/secret-box";
-import { envelopeRecipients } from "../../mime";
+import { composeMime, envelopeRecipients } from "../../mime";
 import type { MailSendRequest } from "../../outbox";
 import { createGmailConnector, createInMemoryCredentialStore } from "./gmail-connector";
 import { createGmailMailSender } from "./sender";
@@ -148,20 +148,55 @@ describe("Gmail MailSender", () => {
     ).toEqual({ status: "rejected", reason: "invalid_message", retryable: false });
     expect(calls).toHaveLength(0);
   });
-  it("guards all envelope recipients and fails closed on unsupported BCC", async () => {
+  it("guards all envelope recipients and adds BCC only to provider submission", async () => {
     const { sender, calls, guarded } = await setup(() => response(200, { id: "sent" }));
-    const message = { ...request.message, bcc: [{ address: "blind@example.com" }] };
+    const message = {
+      ...request.message,
+      bcc: [{ address: "blind@example.com" }, { address: "other@example.com" }],
+    };
     expect(envelopeRecipients(message)).toEqual([
       "to@example.com",
       "cc@example.com",
       "blind@example.com",
+      "other@example.com",
     ]);
     expect(await sender.send({ ...request, message })).toEqual({
-      status: "rejected",
-      reason: "bcc_delivery_unavailable",
-      retryable: false,
+      status: "accepted",
+      providerMessageId: "sent",
     });
     expect(guarded[0]).toEqual(envelopeRecipients(message));
-    expect(calls).toHaveLength(0);
+    const body = JSON.parse(calls[1]?.body ?? "{}");
+    expect(Object.keys(body)).toEqual(["raw"]);
+    const submitted = Buffer.from(body.raw, "base64url").toString();
+    expect(submitted.match(/^Bcc:/gm)).toHaveLength(1);
+    expect(submitted).toContain("Bcc: blind@example.com, other@example.com\r\n");
+    expect(composeMime({ ...message, from: { address: mailbox.address } })).not.toMatch(/^Bcc:/im);
+  });
+  it.each(["to", "cc", "bcc"] as const)(
+    "rejects CR/LF injection in %s before dispatch",
+    async (field) => {
+      const { sender, calls } = await setup(() => response(200, { id: "sent" }));
+      for (const entry of [
+        { address: "safe@example.com\r\nBcc: injected@example.com" },
+        { address: "safe@example.com", name: "Safe\r\nBcc: injected@example.com" },
+      ]) {
+        expect(
+          await sender.send({ ...request, message: { ...request.message, [field]: [entry] } }),
+        ).toEqual({ status: "rejected", reason: "invalid_message", retryable: false });
+      }
+      expect(calls).toHaveLength(0);
+    },
+  );
+  it("delivers BCC-only mail without inventing visible recipients", async () => {
+    const { sender, calls } = await setup(() => response(200, { id: "sent" }));
+    expect(
+      await sender.send({
+        ...request,
+        message: { ...request.message, to: [], cc: [], bcc: [{ address: "blind@example.com" }] },
+      }),
+    ).toEqual({ status: "accepted", providerMessageId: "sent" });
+    const raw = Buffer.from(JSON.parse(calls[1]?.body ?? "{}").raw, "base64url").toString();
+    expect(raw).toContain("Bcc: blind@example.com\r\n");
+    expect(raw).not.toMatch(/^To:.*blind/im);
   });
 });
