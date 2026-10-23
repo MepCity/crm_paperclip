@@ -4,8 +4,9 @@ import { existsSync, mkdirSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
 import { closeDb, createDb } from "@crm/db";
 import { ensureDatabase, type LocalPostgres, startLocalPostgres } from "@crm/db/local-postgres";
-import { runMigrations } from "@crm/db/migrate";
+import { runMigrations, runOwnerMigrations } from "@crm/db/migrate";
 import { isPortFree, pickFreePort } from "@crm/db/ports";
+import { provisionRuntimeRoles } from "@crm/db/runtime-roles";
 import {
   registerSignalShutdown,
   startWithSignalShutdown,
@@ -80,6 +81,7 @@ async function main(): Promise<number> {
     if (!databaseUrl) {
       mkdirSync(dataDir, { recursive: true });
       postgres = await startWithSignalShutdown(() => startLocalPostgres({ dataDir }));
+      await provisionRuntimeRoles(postgres.urlFor("postgres"));
       await ensureDatabase(postgres.urlFor("postgres"), DATABASE_NAME);
       databaseUrl = postgres.urlFor(DATABASE_NAME);
       console.log(
@@ -89,7 +91,9 @@ async function main(): Promise<number> {
       console.log("dev: using DATABASE_URL from the environment");
     }
 
-    const { applied, skipped } = await runMigrations(databaseUrl);
+    const { applied, skipped } = process.env.DATABASE_MIGRATION_URL
+      ? await runOwnerMigrations(process.env.DATABASE_MIGRATION_URL)
+      : await runMigrations(databaseUrl);
     console.log(`dev: migrations applied: ${applied.length}, already applied: ${skipped.length}`);
 
     const port = await pickAppPort();
