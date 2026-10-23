@@ -1445,3 +1445,20 @@ implemented and QA-verified as part of MEP-930/MEP-995/MEP-996. All write flows
 (upload, new folder, rename, move, Trash, share, versions, record-attach) are
 deferred pending CTO resolution of ADR 0008 open questions U1–U13. The gate
 will not be marked complete until those flows are implemented and QA-verified.
+## Module 12 — Automation
+
+Research: `research/specs/automation-rules.md` (MEP-1199 approved; MEP-1208 R2 pending UI Lead review).
+Module gate remains open. No automation implementation is certified by this report.
+
+| # | Capability | Research evidence / disposition |
+| --- | --- | --- |
+| M12-R1-01 | Assignment Rules introductory screen and numbered controls | Observed A0; read-only local fixture slice can follow spec approval |
+| M12-R1-02 | Workflow Rules list, filters, columns and row menu | Unresolved U1: base and targeted capture fail to load route content; not a zero-rule state |
+| M12-R1-03 | Workflow detail: trigger, criteria, immediate/scheduled actions | Unresolved U2; public-documentation functional summary only |
+| M12-R1-04 | Assignment populated list/detail: entries, criteria, recipients and round robin | Unresolved U3; no existing row exposed; documentation-only concepts |
+| M12-R1-05 | Builders, scheduling and write validation | Deferred U4/U7; never exercised in reference CRM |
+| M12-R1-06 | Metadata and safe evidence | Workflow export unsupported; Assignment export null; not schema sources. All capture click/step arrays empty; background writes blocked |
+
+| M12-R2-01 | Workflow bounded recapture / paint evidence | W2/W3: exactly two attempts (12s/20s final wait), painted shell and route-model errors; no normal list/empty/detail certified (U1/U2/U5) |
+| M12-R2-02 | Assignment Thresholds and assistant tab targets | Navigation-only requests via exported links; both skipped by dangerous-attribute guard. No destination body certified; no additional UI slice unlocked |
+| M12-R2-03 | Assignment existing detail | No existing row exposed; U3 remains open; no creation or guessed identifier |
