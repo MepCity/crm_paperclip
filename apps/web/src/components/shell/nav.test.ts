@@ -171,7 +171,7 @@ describe("shellNav", () => {
 });
 
 describe("settingsNav", () => {
-  it("defines general, members, calendar booking and data administration links in order", () => {
+  it("defines settings links in group order", () => {
     expect(settingsNav.map((link) => link.id)).toEqual([
       "general",
       "members",
@@ -180,6 +180,7 @@ describe("settingsNav", () => {
       "import-history",
       "export-history",
       "modules-and-fields",
+      "assignment-rules",
     ]);
     const [general, members, calendarBooking] = settingsNav;
 
