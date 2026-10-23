@@ -5,6 +5,7 @@ import { join } from "node:path";
 import pg from "pg";
 import { ensureDatabase, startLocalPostgres } from "./local-postgres";
 import { defaultMigrationsDir, runMigrations } from "./migrate";
+import { provisionRuntimeRoles } from "./runtime-roles";
 import { startWithSignalShutdown } from "./signal-shutdown";
 
 export const TEMPLATE_DATABASE = "crm_template";
@@ -52,6 +53,13 @@ async function startUnmanagedTestPostgres(): Promise<TestPostgres> {
     await rm(dataDir, { recursive: true, force: true });
     throw error;
   }
+  try {
+    await provisionRuntimeRoles(server.urlFor("postgres"));
+  } catch (error) {
+    await server.stop();
+    await rm(dataDir, { recursive: true, force: true });
+    throw error;
+  }
   return {
     adminUrl: server.urlFor("postgres"),
     async stop() {
@@ -85,11 +93,13 @@ async function withAdmin<T>(adminUrl: string, work: (client: pg.Client) => Promi
 
 /** Clones the template into a new database and returns its connection string. */
 export async function cloneTemplateDatabase(adminUrl: string, name: string): Promise<string> {
-  await withAdmin(adminUrl, (client) =>
-    client.query(
+  await withAdmin(adminUrl, async (client) => {
+    await client.query(
       `create database ${client.escapeIdentifier(name)} template ${client.escapeIdentifier(TEMPLATE_DATABASE)}`,
-    ),
-  );
+    );
+    // Database ACLs are not copied from the template; preserve the no-runtime-DDL boundary.
+    await client.query(`revoke temporary on database ${client.escapeIdentifier(name)} from public`);
+  });
   return withDatabase(adminUrl, name);
 }
 
