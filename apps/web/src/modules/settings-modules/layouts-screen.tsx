@@ -165,7 +165,7 @@ export function LayoutsScreen({
                   <tr key={row.id} className="border-b border-border last:border-0">
                     <td className="px-4 py-4">
                       <span className="flex items-center gap-2">
-                        <span className="font-medium text-accent-blue">{row.name}</span>
+                        <span className="font-semibold text-accent-blue">{row.name}</span>
                         {module === "Leads" ? (
                           <button
                             type="button"
