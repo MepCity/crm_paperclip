@@ -1,4 +1,5 @@
 import { ValidationError } from "../errors";
+import { assertSupportedRrule, UnsupportedRecurrenceError } from "./recurrence";
 
 export type IcsPartstat = "NEEDS-ACTION" | "ACCEPTED" | "DECLINED" | "TENTATIVE";
 
@@ -23,6 +24,8 @@ export interface InvitationInput {
   end: Date;
   /** For all-day events `start`/`end` are UTC dates and `end` is exclusive (one-day event: end = next day). */
   allDay: boolean;
+  /** RFC 5545 RRULE value without the `RRULE:` prefix, e.g. `FREQ=WEEKLY;BYDAY=MO;COUNT=4`. Blank = no recurrence. */
+  recurrence?: string;
 }
 
 const pad = (n: number, w = 2) => String(n).padStart(w, "0");
@@ -94,8 +97,22 @@ function validate(input: InvitationInput): void {
   if (bad) fail("end", "End must be after start.");
 }
 
+function normalizeRecurrence(input: InvitationInput): string | undefined {
+  const raw = input.recurrence?.trim();
+  if (!raw) return undefined;
+  const value = raw.replace(/^rrule:/i, "");
+  try {
+    assertSupportedRrule(value);
+  } catch (e) {
+    if (e instanceof UnsupportedRecurrenceError) fail("recurrence", e.message);
+    throw e;
+  }
+  return value;
+}
+
 export function buildInvitation(input: InvitationInput): string {
   validate(input);
+  const recurrence = normalizeRecurrence(input);
 
   const lines: string[] = [
     "BEGIN:VCALENDAR",
@@ -116,6 +133,7 @@ export function buildInvitation(input: InvitationInput): string {
     lines.push(`DTEND:${formatDateTime(input.end)}`);
   }
 
+  if (recurrence) lines.push(`RRULE:${recurrence}`);
   lines.push(`SUMMARY:${escapeText(input.summary)}`);
   if (input.location) lines.push(`LOCATION:${escapeText(input.location)}`);
   if (input.description) lines.push(`DESCRIPTION:${escapeText(input.description)}`);
