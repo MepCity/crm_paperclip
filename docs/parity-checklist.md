@@ -1482,3 +1482,17 @@ Analytics metadata update was blocked on entry. No guard was relaxed and no
 reference mutation is evidenced. U1–U7 remain research questions rather than
 approved product behaviour. First recommended implementation slice is the
 observed read-only Reports list only, pending UI Lead review.
+
+### Module 13 — R2 evidence audit and accepted access gaps (MEP-1224)
+
+Source: R2 section of `research/specs/reports.md`; UI Lead closure decision
+MEP-1230. Reports evidence accepted despite the ambiguous readiness probe; no
+recapture. Analytics behaviour and the implementation gate remain unapproved.
+
+| # | Surface | Evidence / status | Remaining boundary |
+| --- | --- | --- | --- |
+| RP-R2-01 | Reports folder/category boundary | `m13r2-reports-base`: painted list, no folder pane, 298 controls; H01–H47, R01–R08 | Exit 2: ambiguous probe (three matches); content independently verified and accepted. No retry; U1/U2 remain access gaps |
+| RP-R2-02 | Existing overview components | Retained `m13r1-analytics-entry`; AC01–AC09 cross-reference A10–A12 | Four KPI cards, two target charts, three partial lower cards; full tables/drilldown unknown |
+| RP-R2-03 | Dashboard list, scope and periods | Closed selector and displayed scope/period captions only | Access gap accepted; no safe existing-dashboard link exposed; no selection or preference changed |
+| RP-R2-04 | Analytics automatic-write boundary | R1 metadata PUT blocked; no R2 entry or repeat | U5 remains an accepted access gap; no re-entry, guard change or successful-initialization inference |
+| RP-R2-05 | Capture safety ledger | New capture: zero clicks/steps, seven blocked background requests; external visitor-trigger POST same count as R1 | MEP-1230: no new capture; bounded research closed. AC01–AC06 resting presentation only, incomplete initialization caveat |
