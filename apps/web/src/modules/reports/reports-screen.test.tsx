@@ -75,6 +75,7 @@ describe("Reports landing", () => {
       <ReportsScreen
         orgSlug="demo"
         port={{
+          getReport: async () => null,
           listReports: async () => {
             throw new Error("unavailable");
           },
