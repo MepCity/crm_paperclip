@@ -54,7 +54,19 @@ test("email folders and messages persist in URL and browser history", async ({ p
   await expect(page.getByRole("heading", { name: "No messages in Scheduled" })).toBeVisible();
 });
 
-test("compose validates recipients and sends through the fixture port", async ({ page }) => {
+test("compose validates recipients and posts through the HTTP port", async ({ page }) => {
+  const sent: { method: string; org: string | undefined; body: Record<string, unknown> }[] = [];
+  await page.route("**/crm/v2.2/mail/messages", async (route) => {
+    const request = route.request();
+    sent.push({
+      method: request.method(),
+      org: request.headers()["x-crm-org"],
+      body: request.postDataJSON(),
+    });
+    await route.fulfill({
+      json: { data: { id: "synthetic-message", status: "queued", scheduledAt: null } },
+    });
+  });
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(`/crm/${org.slug}/tab/Emails`);
@@ -70,6 +82,18 @@ test("compose validates recipients and sends through the fixture port", async ({
   await compose.getByRole("textbox", { name: "Message", exact: true }).fill("Synthetic mail body");
   await compose.getByRole("button", { name: "Send", exact: true }).click();
   await expect(compose).not.toBeVisible();
+  expect(sent).toHaveLength(1);
+  expect(sent[0]).toMatchObject({
+    method: "POST",
+    org: org.slug,
+    body: {
+      to: [{ address: "recipient@example.com" }],
+      cc: [{ address: "copy@example.com" }],
+      body: "Synthetic mail body",
+      idempotencyKey: expect.any(String),
+    },
+  });
+  expect(sent[0]?.body).not.toHaveProperty("bodyRef");
   await expect(
     page.getByRole("status").filter({ hasText: "Message sent (fixture)" }),
   ).toBeVisible();

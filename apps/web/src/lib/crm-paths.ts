@@ -48,6 +48,14 @@ export function moduleRecordClonePath(
   return moduleTabPath(orgSlug, moduleApiName, recordId, "clone");
 }
 
+export function moduleRecordConvertPath(
+  orgSlug: string,
+  moduleApiName: string,
+  recordId: string,
+): string {
+  return moduleTabPath(orgSlug, moduleApiName, recordId, "convert");
+}
+
 export function moduleRecordMergePath(
   orgSlug: string,
   moduleApiName: string,
