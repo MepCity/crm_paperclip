@@ -1,9 +1,9 @@
 # ADR 0011 — Organization customization metadata
 
-- Status: Proposed
+- Status: Accepted (board answers 2026-10-24)
 - Date: 2026-10-23
 - Issue: MEP-1122
-- Decision owner: CTO; recommendation below awaits approval
+- Decision owner: CTO; board policy answers in §5
 - Scope: Architecture draft only; no runtime changes, migrations or grants
 
 ## Context and evidence boundary
@@ -164,7 +164,7 @@ require refresh; they are not automatically replayed and lose no local edits.
 
 ## 3. Permissions and field lifecycle
 
-Proposed minimum permission policy: only an authenticated current organization
+Permission policy (board decision 1): only an authenticated current organization
 `admin` may customize organization fields, layouts or shared views. Ordinary
 members may read only their effective authorized metadata. Any existing private
 view rights stay separate; this ADR grants no new shared-view write right to
@@ -176,7 +176,7 @@ actual field access restrictions must also apply to APIs, queries and exports.
 | Change | Existing records | Proposed validation / dependency rule |
 | --- | --- | --- |
 | Add optional field | Old records read an absent value as null; no eager rewrite | New writes validate the supported type; defaults apply only to new records when explicitly configured |
-| Add required field / tighten required state | Existing values stay intact | Initially reject publication if affected records lack valid values; an explicit backfill/migration requires its own approved slice |
+| Add required field / tighten required state | Existing values stay intact | Initially reject publication if affected records lack valid values; rejected (board decision 3) |
 | Hide field on a surface | Values retained; no destructive rewrite | Block configurations making a required editable field unreachable without a valid server value; UI visibility alone does not revoke data access |
 | Make field read-only | Values retained | Reject caller writes through every write path; server-owned calculations remain privileged internal operations |
 | Rename label / move section | Values and field identity unchanged | Views, mappings and sort use stable identity/API name, never label |
@@ -188,8 +188,8 @@ Retirement is a proposed reversible metadata lifecycle, not automatic physical
 purge. Retained values are unavailable to ordinary record APIs, filters, search
 and exports. Restrict any future recovery access to an explicit authorized
 service. Restore only the same identity after compatibility/dependency checks;
-never reuse a retired API name for another field. No automatic purge interval
-is selected. Records in the recycle bin are checked on restore against current
+never reuse a retired API name for another field. Values are retained indefinitely
+(board decision 2). Records in the recycle bin are checked on restore against current
 metadata; restore fails atomically with actionable conflicts instead of silently
 coercing data. Do not rewrite historical record events or audit labels.
 
@@ -241,22 +241,24 @@ Costs: schema changes become coordinated operations; specialized screens need
 adapters; dependency and compatibility validation must precede editing UI.
 In-memory edits cannot be marketed as durable configuration.
 
-Questions for the board, after CTO review (no live confirmation requested by
-this draft):
+Board decisions (2026-10-24, MEP-1228):
 
-1. Confirm admin-only organization customization until profiles are designed,
-   and whether private-view creation remains a separate member capability.
-2. Confirm retired-field recovery and retention expectations; physical purge
-   stays disabled until a retention decision exists.
-3. Confirm required-field rollout policy: reject incompatible publication as
-   proposed, or commission an explicit backfill / grandfathering design.
-4. Which field types are needed first? Recommend supported scalar types before
-   formula, subform or new lookup semantics; unsupported types stay unavailable.
-5. Is one default layout sufficient initially? Multiple layouts, assignments and
-   visibility rules need additional evidence and a reviewed permission policy.
-6. R1 editor/save outcomes, Buttons and Links remain unverified. Which write
-   behaviour should be specified from approved documentation or board guidance
-   before implementation? Reference mutations remain forbidden.
+1. Organization customization (fields, layouts, shared views) is admin-only
+   until profiles are designed; private-view creation stays a separate member
+   capability.
+2. Retired fields are recoverable; their values are retained indefinitely.
+   Physical purge stays disabled.
+3. Required-field publication that existing records do not satisfy is rejected;
+   no backfill or grandfathering design.
+4. First field types: supported simple scalar types only; formula, subform and
+   new lookup semantics come later.
+5. One default layout per module initially; multiple layouts and assignment
+   rules come later.
+6. Unverified editor/save outcomes, Buttons and Links write behaviour are
+   specified from the reference's public documentation; anything still unclear
+   is listed as an open question. The reference stays read-only.
+7. Number/date format comes from the organization setting only for now; a
+   personal override comes later.
 
 ## 6. Implementation order and verification gates
 
