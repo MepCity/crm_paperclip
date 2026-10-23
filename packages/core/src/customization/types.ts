@@ -63,6 +63,8 @@ export interface CustomizationSnapshot {
 }
 
 export interface CustomizationPatch {
+  retireFields?: readonly string[];
+  restoreFields?: readonly string[];
   addFields?: readonly CustomizationField[];
   fieldPatches?: Readonly<Record<string, Partial<FieldProperties>>>;
   layouts?: readonly LayoutDefinition[];

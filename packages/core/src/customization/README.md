@@ -59,3 +59,47 @@ multi-process consistency. Restart loses changes.
 3. The requested folder-only scope exposes a local `index.ts`. A package subpath
    export and HTTP codecs belong to a later integration change. Existing types
    and exports outside this folder have not been changed.
+
+## Slice C: coordinated record engine
+
+`InMemorySchemaCoordinator` attaches a synchronous publication guard to one
+`InMemoryCustomizationAdapter`. Register a `SchemaRecordSource` for every
+organization/module before publishing: it supplies active and recoverable rows
+and an explicit dependency inventory. Unknown dependencies block retirement.
+Layouts, views and criteria are also validated by the resolver. Compatibility
+checks run before CAS publication, including baseline upgrades. Rejected changes
+leave metadata and values intact. Custom types are limited to simple scalars.
+
+`FixtureRecordServiceOptions.schema` enables this integration in ephemeral
+contract/development contexts. Configure it on the organization's first service
+open; late attachment and replacement are rejected so previously opened services
+cannot bypass coordination. Every subsequent service for that organization
+inherits the coordinator. Default fixture/HTTP behavior stays unchanged until
+slice E supplies the gated integration; no editing route is enabled here.
+
+Coordinated create, update (including inline editing), mass update, owner change,
+merge, deduplicate and delete accept `RecordWriteOptions.expectedRevision`.
+Use `schemaRevision(effective)` as an opaque string. Conversion uses a map from
+module API name to token for the source and each selected target. Missing tokens
+are validation errors; stale tokens raise `SchemaStaleError` (`schema_stale`,
+wire `SCHEMA_REVISION_MISMATCH`, HTTP 409, `details.revision`). CSV imports forward
+`ImportSettings.expectedRevision` at each create/update boundary; mapping/job UI
+and transport adaptation remain slice I/E work.
+
+Each operation captures its tokens before asynchronous work. The existing
+synchronous record transaction rechecks them before staging any write and
+validates effective constraints after domain hooks. A publish cannot occur
+inside the commit, including history callbacks. This guarantees either a write
+under the checked schema or a stale rejection with no record/history change;
+there is no automatic replay. List/search/filter/sort/projection use active
+metadata and reject retired references. Queries that yield across a publication
+fail rather than return mixed-schema results. Retired values remain in canonical
+rows and can return only through restoration of the same field identity. API
+names remain reserved. Recycle-bin restoration validates current metadata and
+uniqueness inside its existing atomic transaction.
+
+The fixture adapter inventories all built-in fields as code dependencies;
+custom scalar fields have no executable hooks. Future import mappings and other
+metadata consumers must supply their dependency inventory before being enabled.
+The coordinator and fixture state are process-local; neither claims durable or
+multi-process transaction guarantees. Slice J supplies that boundary.

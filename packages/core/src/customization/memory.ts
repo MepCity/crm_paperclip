@@ -26,8 +26,23 @@ export class CustomizationConflictError extends ConflictError {
  * This is not the record-write coordinator or an authorization service.
  */
 export class InMemoryCustomizationAdapter implements CustomizationPort {
+  private publicationGuard?: (
+    orgId: string,
+    module: string,
+    before: EffectiveModuleDefinition,
+    after: EffectiveModuleDefinition,
+  ) => void;
+
+  /** One coordinator owns this adapter for its entire lifetime. */
+  setPublicationGuard(guard: NonNullable<InMemoryCustomizationAdapter["publicationGuard"]>): void {
+    if (this.publicationGuard) invalid("A schema coordinator is already attached.");
+    this.publicationGuard = guard;
+  }
+
   private readonly baselines = new Map<string, ModuleBaseline>();
   private readonly initialRevisions = new Map<string, number>();
+  private readonly resolved = new Map<string, Map<string, EffectiveModuleDefinition>>();
+  private readonly organizations = new Set<string>();
   private readonly snapshots = new Map<string, Map<string, CustomizationSnapshot>>();
 
   constructor(baselines: readonly ModuleBaseline[]) {
@@ -38,6 +53,10 @@ export class InMemoryCustomizationAdapter implements CustomizationPort {
       this.baselines.set(baseline.apiName, immutable(baseline));
       this.initialRevisions.set(baseline.apiName, 0);
     }
+  }
+
+  hasModule(module: string): boolean {
+    return this.baselines.has(module);
   }
 
   private baseline(module: string): ModuleBaseline {
@@ -57,7 +76,21 @@ export class InMemoryCustomizationAdapter implements CustomizationPort {
   }
 
   async readEffective(orgId: string, module: string): Promise<EffectiveModuleDefinition> {
-    return resolveEffectiveModule(this.baseline(module), this.snapshot(orgId, module));
+    return this.readEffectiveSync(orgId, module);
+  }
+
+  readEffectiveSync(orgId: string, module: string): EffectiveModuleDefinition {
+    const baseline = this.baseline(module);
+    const snapshot = this.snapshot(orgId, module);
+    const cached = this.resolved.get(orgId)?.get(module);
+    if (cached?.baselineVersion === baseline.version && cached.revision === snapshot.revision)
+      return cached;
+    const effective = resolveEffectiveModule(baseline, snapshot);
+    this.organizations.add(orgId);
+    const modules = this.resolved.get(orgId) ?? new Map();
+    modules.set(module, effective);
+    this.resolved.set(orgId, modules);
+    return effective;
   }
 
   async applyPatch(
@@ -77,23 +110,44 @@ export class InMemoryCustomizationAdapter implements CustomizationPort {
     if (patch.addFields?.some((field) => field.lifecycle !== "active")) {
       invalid("New custom fields must be active.");
     }
+    const lifecycleIds = [...(patch.retireFields ?? []), ...(patch.restoreFields ?? [])];
+    if (
+      new Set(lifecycleIds).size !== lifecycleIds.length ||
+      lifecycleIds.some((id) => !previous.fields.some((field) => field.id === id))
+    )
+      invalid("Lifecycle changes require distinct existing custom field identities.");
+    if (lifecycleIds.length && !this.publicationGuard)
+      invalid("Lifecycle changes require a schema coordinator.");
+    if (patch.retireFields?.some((id) => Object.hasOwn(patch.fieldPatches ?? {}, id)))
+      invalid("Cannot patch a field while retiring it.");
     const patches = new Map(Object.entries(previous.fieldPatches));
     for (const [id, properties] of Object.entries(patch.fieldPatches ?? {})) {
       patches.set(id, { ...patches.get(id), ...properties });
     }
+    for (const id of patch.retireFields ?? []) patches.delete(id);
     const candidate: CustomizationSnapshot = {
       ...previous,
       revision: previous.revision + 1,
-      fields: [...previous.fields, ...(patch.addFields ?? [])],
+      fields: [...previous.fields, ...(patch.addFields ?? [])].map((field) => ({
+        ...field,
+        ...(patch.retireFields?.includes(field.id) ? previous.fieldPatches[field.id] : {}),
+        lifecycle: patch.retireFields?.includes(field.id)
+          ? ("retired" as const)
+          : patch.restoreFields?.includes(field.id)
+            ? ("active" as const)
+            : field.lifecycle,
+      })),
       fieldPatches: Object.fromEntries(patches),
       ...(patch.layouts !== undefined ? { layouts: patch.layouts } : {}),
       ...(patch.views !== undefined ? { views: patch.views } : {}),
     };
     const effective = resolveEffectiveModule(baseline, candidate);
+    this.publicationGuard?.(orgId, module, this.readEffectiveSync(orgId, module), effective);
     // Only publish a detached, fully validated snapshot. Failure above changes nothing.
     const next = new Map(this.snapshots.get(orgId));
     next.set(module, immutable(structuredClone(candidate)));
     this.snapshots.set(orgId, next);
+    this.organizations.add(orgId);
     return effective;
   }
 
@@ -120,19 +174,26 @@ export class InMemoryCustomizationAdapter implements CustomizationPort {
       invalid("Baseline upgrade cannot release reserved names.");
     }
     const candidates = new Map<string, CustomizationSnapshot>();
-    for (const [orgId, modules] of this.snapshots) {
-      const snapshot = modules.get(baseline.apiName);
-      if (!snapshot) continue;
+    for (const orgId of this.organizations) {
+      const snapshot = this.snapshot(orgId, baseline.apiName);
       const candidate = {
         ...snapshot,
         baselineVersion: baseline.version,
         revision: snapshot.revision + 1,
       };
-      resolveEffectiveModule(baseline, candidate);
+      const effective = resolveEffectiveModule(baseline, candidate);
+      this.publicationGuard?.(
+        orgId,
+        baseline.apiName,
+        this.readEffectiveSync(orgId, baseline.apiName),
+        effective,
+      );
       candidates.set(orgId, immutable(structuredClone(candidate)));
     }
     for (const [orgId, candidate] of candidates) {
-      this.snapshots.get(orgId)?.set(baseline.apiName, candidate);
+      const modules = new Map(this.snapshots.get(orgId));
+      modules.set(baseline.apiName, candidate);
+      this.snapshots.set(orgId, modules);
     }
     this.baselines.set(baseline.apiName, immutable(baseline));
     this.initialRevisions.set(
