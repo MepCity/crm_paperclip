@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+  ConvertLeadInput,
   CurrencyDefinition,
   DeduplicateResult,
   DuplicateGroup,
@@ -269,6 +270,21 @@ export function useMergeRecords(module: ModuleApiName) {
         queryClient.removeQueries({ queryKey: apiKeys.record(orgSlug, module, id) });
       }
       void queryClient.invalidateQueries({ queryKey: apiKeys.record(orgSlug, module, record.id) });
+    },
+  });
+}
+
+export function useConvertLead() {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ leadId, input }: { leadId: RecordId; input: ConvertLeadInput }) =>
+      service.convertLead(leadId, input),
+    onSuccess: (_result, { leadId }) => {
+      invalidateModuleLists(queryClient, orgSlug, "Leads", leadId);
+      for (const module of ["Accounts", "Contacts", "Deals"])
+        invalidateModuleLists(queryClient, orgSlug, module);
     },
   });
 }

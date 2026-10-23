@@ -1,4 +1,11 @@
-import type { ListQuery, RecordService, SearchQuery, SortSpec } from "@crm/core/records";
+import type {
+  ConvertLeadInput,
+  ConvertTarget,
+  ListQuery,
+  RecordService,
+  SearchQuery,
+  SortSpec,
+} from "@crm/core/records";
 import {
   decodeActivityFilter,
   decodeCampaignFilter,
@@ -152,6 +159,24 @@ function idsOf(body: Record<string, unknown>): string[] {
   return [...body.ids] as string[];
 }
 
+async function convertTarget(
+  records: RecordService,
+  module: string,
+  value: unknown,
+  key: string,
+): Promise<ConvertTarget | undefined> {
+  if (value === undefined || value === null) return undefined;
+  const target = object(value, key);
+  const metadata = await records.getModule(module);
+  if (typeof target.reuseId === "string" && target.reuseId)
+    return {
+      reuseId: target.reuseId,
+      ...(target.update === undefined ? {} : { update: decodeInput(target.update, metadata) }),
+    };
+  if (target.create !== undefined) return { create: decodeInput(target.create, metadata) };
+  return invalid(key);
+}
+
 function stringList(value: unknown, key: string): string[] {
   if (!Array.isArray(value) || value.some((item) => typeof item !== "string" || !item))
     invalid(key);
@@ -222,6 +247,26 @@ export const operations = {
           values: decodeInput(body.values, metadata),
         }),
       );
+    },
+  },
+  convertLead: {
+    method: "POST",
+    path: "/crm/v2.2/{module}/{recordId}/actions/convert",
+    async run({ records }, input) {
+      await records.getModule(moduleOf(input));
+      if (moduleOf(input) !== "Leads") invalid("module", "Only leads can be converted.");
+      const body = object(await bodyOf(input), "convert");
+      const [account, contact, deal] = await Promise.all([
+        convertTarget(records, "Accounts", body.account, "account"),
+        convertTarget(records, "Contacts", body.contact, "contact"),
+        convertTarget(records, "Deals", body.deal, "deal"),
+      ]);
+      const request: ConvertLeadInput = {
+        ...(account ? { account } : {}),
+        ...(contact ? { contact } : {}),
+        ...(deal ? { deal } : {}),
+      };
+      return ok(await records.convertLead(recordIdOf(input), request));
     },
   },
   deduplicate: {

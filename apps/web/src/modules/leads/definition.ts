@@ -52,6 +52,19 @@ export const leadsScreenDefinition: ModuleScreenDefinition = {
   form: { rules: leadsFormRules },
   detail: {
     addTags: { label: "Add Tags" },
+    buildHeaderCommands: (record, { editHref }) => [
+      ...(record.fields.Converted__s === true
+        ? []
+        : [
+            {
+              id: "convert",
+              label: "Convert",
+              variant: "primary" as const,
+              href: editHref.replace(/\/edit$/, "/convert"),
+            },
+          ]),
+      { id: "edit", label: "Edit", variant: "secondary" as const, href: editHref },
+    ],
     Screen: LeadRecordScreen,
     header: leadsRecordHeaderIdentity,
     businessCard: buildLeadsBusinessCardFields,
