@@ -376,7 +376,7 @@ never loosen the capture write guards to obtain it.
 
 ### R2 capture ledger and stop condition
 
-**Partial research; not implementation-ready Analytics approval.** Exactly one
+**Research closed with accepted access gaps; not full Analytics approval.** Exactly one
 new capture ran. Before it, one-minute load was 10.28 (informational only).
 A passive readiness probe was supplied; no click, hover, scroll, toggle,
 selector choice, field entry or preference change was requested.
@@ -416,8 +416,27 @@ was found. No export, download, print, popup action or file chooser occurred.
 
 U1 remains only partially evidenced (pane absent again); U2 is unanswered;
 U5's blocked boundary is confirmed from retained evidence, not resolved.
-UI Lead must decide the safe continuation scope before further capture:
-a uniquely named passive Reports probe could remove the ambiguity, while
-Analytics must remain closed unless a reviewed navigation path respects the
-no-retry rule. The current deliverable records a stop and evidence gaps; it
-does not claim completion of the requested dashboard-list exploration.
+### R2 closure decision and permitted implementation boundary
+
+UI Lead's MEP-1230 decision accepts the retained Reports evidence as
+**readiness-gate violation with content independently verified**. The ambiguous
+probe is not evidence of a render failure. No new Reports capture is required
+or authorized by that decision; the failed attempt is not retried.
+
+Analytics remains closed under the no-retry rule. Dashboard list, period/filter
+options, lower-card contents and U1/U2/U5 close as **access gaps**, remaining
+open/unverified in this specification. This closes the bounded research task,
+not those behavioural questions. No additional capture ran after the decision;
+R2 totals remain one new capture, zero requested clicks and zero steps.
+
+Only AC01–AC06 may inform a limited resting presentation, with an incomplete
+initialization caveat. Dashboard selection, filtering, favorites, persistence
+and refresh remain outside the implementation boundary. The recommended first
+slice remains the read-only Reports list with synthetic definitions and
+existing-report navigation. Full dashboard behaviour requires new evidence
+separately approved by the board. This decision grants neither implementation
+authorization nor permission to relax any capture guard.
+
+Verification for this documentation-only closure: reviewed the complete
+MEP-1230 decision against the capture ledger, component inventory and checklist;
+checked the Markdown diff. No application, unit or e2e code changed.
