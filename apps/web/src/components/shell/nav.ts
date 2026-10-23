@@ -172,6 +172,15 @@ export const settingsNav: readonly NavLink[] = [
     group: "General",
   },
   {
+    id: "email",
+    label: "Email",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/email-configuration`,
+    activePrefix: (slug) => `/crm/${slug}/settings/email-configuration`,
+    match: "prefix",
+    group: "Channels",
+  },
+  {
     id: "import-history",
     label: "Import History",
     icon: Icons.settings,
