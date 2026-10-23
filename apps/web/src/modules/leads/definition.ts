@@ -14,7 +14,6 @@ import {
 } from "./leads-record-more-options";
 import { readLeadStatusValue } from "./leads-status-ribbon";
 import {
-  LEADS_TIMELINE_EMPTY_EVENTS,
   LEADS_TIMELINE_MODULE_OPTIONS,
   LEADS_TIMELINE_SOURCE_OPTIONS,
   LEADS_TIMELINE_SUBTABS,
@@ -72,7 +71,6 @@ export const leadsScreenDefinition: ModuleScreenDefinition = {
       subtabs: LEADS_TIMELINE_SUBTABS,
       modules: LEADS_TIMELINE_MODULE_OPTIONS,
       sources: LEADS_TIMELINE_SOURCE_OPTIONS,
-      events: LEADS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: (kind) => (kind === "lead_image_upload" ? "image_upload" : kind),
     },
     relatedLists: [],

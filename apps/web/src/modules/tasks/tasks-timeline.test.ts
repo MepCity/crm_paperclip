@@ -5,16 +5,14 @@ import {
 } from "../deals/deals-timeline";
 import {
   normalizeTasksEventKind,
-  TASKS_TIMELINE_EMPTY_EVENTS,
   TASKS_TIMELINE_MODULE_OPTIONS,
   TASKS_TIMELINE_SOURCE_OPTIONS,
   TASKS_TIMELINE_SUBTABS,
 } from "./tasks-timeline";
 
-test("uses History-only timeline subtabs with empty events and no Interactions tab", () => {
+test("uses History-only timeline subtabs with no Interactions tab", () => {
   expect(TASKS_TIMELINE_SUBTABS).toEqual([{ id: "history", label: "History" }]);
   expect(TASKS_TIMELINE_SUBTABS.some((tab) => tab.id === "interactions")).toBe(false);
-  expect(TASKS_TIMELINE_EMPTY_EVENTS).toEqual([]);
 });
 
 test("uses filter option sets matching Deals with non-empty choices", () => {

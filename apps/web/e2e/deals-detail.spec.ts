@@ -197,6 +197,33 @@ test.describe("Deals record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("Timeline History shows a row after an inline edit (MEP-1027)", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
+    const row = page.locator('[data-detail-field="Next_Step"]');
+    await row.scrollIntoViewIfNeeded();
+    await row.hover();
+    await row.getByRole("button", { name: "Edit Next Step value" }).click();
+    const input = row.getByRole("textbox");
+    await input.fill("History Step");
+    await input.press("Enter");
+    await expect(row).toContainText("History Step");
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    const history = frame.locator("[data-timeline-history]");
+    await expect(history).toBeVisible();
+    await expect(history.getByText("No logs found")).toHaveCount(0);
+    await expect(history.getByText(/Next Step changed from .* to History Step/)).toBeVisible();
+    await page.reload();
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    await expect(history.getByText(/Next Step changed from .* to History Step/)).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("stage history card lists rows and grows after stage change", async ({
     page,
     pageErrors,
@@ -252,6 +279,36 @@ test.describe("Deals record detail", () => {
       .getByRole("link", { name: "Contact Roles", exact: true })
       .locator("xpath=ancestor-or-self::*[contains(@class, 'h-(--size-menu-item-height)')][1]");
     await expect(emptyRailRow).toHaveText("Contact Roles");
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("contact roles dialogs cancel and save role edits", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openDealDetail(page, org.slug, PRIMARY_DEAL_ID);
+    const card = page.locator("#related-list-contact-roles");
+    await card.getByRole("button", { name: "Add Contacts Roles" }).click();
+    const add = page.getByRole("dialog", { name: "Add Contacts Roles" });
+    await expect(add.getByRole("button", { name: /Contact Name/ })).toBeVisible();
+    await add.getByRole("button", { name: "Cancel" }).click();
+    await expect(add).toHaveCount(0);
+    await card.getByRole("button", { name: "Edit All" }).click();
+    const edit = page.getByRole("dialog", { name: "Edit All" });
+    await expect(edit.locator("tbody tr")).toHaveCount(2);
+    await edit
+      .getByRole("button", { name: /Role Name for/ })
+      .first()
+      .click();
+    await page.getByRole("option", { name: "Technical Buyer", exact: true }).click();
+    await edit.getByRole("button", { name: "Save" }).click();
+    await expect(edit).toHaveCount(0);
+    await expect(card.locator("tbody tr").first()).toContainText("Technical Buyer");
+    await page.reload();
+    await expect(card.locator("tbody tr").first()).toContainText("Technical Buyer");
+    await card.getByRole("button", { name: "Edit All" }).click();
+    await expect(page.getByRole("dialog", { name: "Edit All" })).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(page.getByRole("dialog")).toHaveCount(0);
     ignoreFailedResponses(pageErrors, [400]);
   });
 

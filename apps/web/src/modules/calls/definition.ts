@@ -18,7 +18,6 @@ import {
 } from "./calls-record-more-options";
 import { isCallScheduled } from "./calls-reschedule";
 import {
-  CALLS_TIMELINE_EMPTY_EVENTS,
   CALLS_TIMELINE_MODULE_OPTIONS,
   CALLS_TIMELINE_SOURCE_OPTIONS,
   CALLS_TIMELINE_SUBTABS,
@@ -103,7 +102,6 @@ export const callsScreenDefinition: ModuleScreenDefinition = {
       subtabs: CALLS_TIMELINE_SUBTABS,
       modules: CALLS_TIMELINE_MODULE_OPTIONS,
       sources: CALLS_TIMELINE_SOURCE_OPTIONS,
-      events: CALLS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeCallsEventKind,
       upcomingAutomatedActions: { label: "Upcoming Automated Actions", laterModule: "M11" },
     },

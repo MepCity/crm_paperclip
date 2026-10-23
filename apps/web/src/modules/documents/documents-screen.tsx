@@ -1,7 +1,8 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Icons } from "@/components/ui/icon";
+import { createHttpDocumentsPort } from "@/lib/documents/http-port";
 import { fixtureDocumentsPort } from "./fixture-port";
 import type { DocumentFolder, DocumentItem, DocumentSort, DocumentsPort } from "./port";
 
@@ -24,11 +25,20 @@ function CirclePlus({ className = "size-5" }: { className?: string }) {
   );
 }
 
-function InertButton({ label, children }: { label: string; children: React.ReactNode }) {
+function InertButton({
+  label,
+  children,
+  disabled,
+}: {
+  label: string;
+  children: React.ReactNode;
+  disabled?: boolean;
+}) {
   return (
     <button
       type="button"
       aria-label={label}
+      disabled={disabled}
       className="inline-flex min-h-7 min-w-7 items-center justify-center rounded text-text-muted"
       onClick={(event) => event.preventDefault()}
     >
@@ -37,26 +47,77 @@ function InertButton({ label, children }: { label: string; children: React.React
   );
 }
 
+/** Route-level entry: binds the screen to the organization's HTTP port. */
+export function DocumentsHttpScreen({ orgSlug }: { orgSlug: string }) {
+  const port = useMemo(() => createHttpDocumentsPort(orgSlug), [orgSlug]);
+  return <DocumentsScreen port={port} />;
+}
+
+/** Original empty-folder illustration (not the reference asset). */
+function EmptyIllustration() {
+  return (
+    <svg width="112" height="96" viewBox="0 0 112 96" fill="none" aria-hidden="true">
+      <g transform="rotate(-8 56 48)">
+        <path
+          d="M10 24a6 6 0 0 1 6-6h24l8 9h48a6 6 0 0 1 6 6v40a6 6 0 0 1-6 6H16a6 6 0 0 1-6-6V24Z"
+          className="fill-accent-blue opacity-60"
+        />
+        <path
+          d="M10 38a6 6 0 0 1 6-6h80a6 6 0 0 1 6 6v36a6 6 0 0 1-6 6H16a6 6 0 0 1-6-6V38Z"
+          className="fill-accent-blue"
+        />
+      </g>
+    </svg>
+  );
+}
+
 export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: DocumentsPort }) {
   const [folders, setFolders] = useState<readonly DocumentFolder[]>([]);
-  const [rootId, setRootId] = useState("my");
+  const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
   // Sub-folders entered below the selected root; the last entry is the current folder.
   const [trail, setTrail] = useState<readonly DocumentItem[]>([]);
   const [items, setItems] = useState<readonly DocumentItem[]>([]);
+  // Folder id the current `items` belong to; null while a folder is loading.
+  const [loadedId, setLoadedId] = useState<string | null>(null);
+  const [failed, setFailed] = useState(false);
 
+  const rootId = selectedRoot ?? folders.find((folder) => folder.section === "my")?.id ?? "";
   const currentId = trail.length > 0 ? (trail[trail.length - 1] as DocumentItem).id : rootId;
 
   useEffect(() => {
     let live = true;
-    port.listFolders().then((rows) => live && setFolders(rows));
+    port
+      .listFolders()
+      .then((rows) => live && setFolders(rows))
+      .catch(() => {
+        if (!live) return;
+        setFolders([]);
+        setItems([]);
+        setFailed(true);
+      });
     return () => {
       live = false;
     };
   }, [port]);
 
   useEffect(() => {
+    if (!currentId) return;
     let live = true;
-    port.listItems(currentId, DEFAULT_SORT).then((rows) => live && setItems(rows));
+    setLoadedId(null);
+    setItems([]);
+    setFailed(false);
+    port
+      .listItems(currentId, DEFAULT_SORT)
+      .then((rows) => {
+        if (!live) return;
+        setItems(rows);
+        setLoadedId(currentId);
+      })
+      .catch(() => {
+        if (!live) return;
+        setItems([]);
+        setFailed(true);
+      });
     return () => {
       live = false;
     };
@@ -67,9 +128,12 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
   const teamFolders = folders.filter((folder) => folder.section === "team");
 
   function selectRoot(id: string) {
-    setRootId(id);
+    setSelectedRoot(id);
     setTrail([]);
   }
+
+  const shown = loadedId === currentId ? items : [];
+  const isEmpty = !failed && loadedId === currentId && items.length === 0;
 
   const crumbs: { label: string; depth: number }[] = [
     { label: (trail.length === 0 ? root?.title : undefined) ?? root?.name ?? "", depth: 0 },
@@ -137,16 +201,23 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
                   <span key={crumb.depth} className="flex items-center gap-1">
                     <Icons.chevronRight className="size-4 text-text-muted" aria-hidden="true" />
                     {last ? (
-                      <span aria-current="page" className="flex items-center gap-1 font-semibold">
+                      <span
+                        aria-current="page"
+                        className="relative flex items-center gap-1 font-semibold"
+                      >
                         {crumb.label}
-                        {/* Current-folder menu: entries unobserved, inert. */}
-                        <Icons.chevronDown className="size-3" aria-hidden="true" />
+                        {/* D21: dropdown content never observed (open question): inert arrow. */}
+                        <InertButton label="Sub folders">
+                          <Icons.chevronDown className="size-3" aria-hidden="true" />
+                        </InertButton>
                       </span>
                     ) : (
                       <button
                         type="button"
                         className="text-text-muted"
-                        onClick={() => setTrail(trail.slice(0, crumb.depth))}
+                        onClick={() => {
+                          setTrail(trail.slice(0, crumb.depth));
+                        }}
                       >
                         {crumb.label}
                       </button>
@@ -169,20 +240,41 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
             </div>
           </header>
 
-          <div className="flex items-center border-b border-border py-2 pl-16 pr-6 text-sm font-semibold text-text-muted">
-            <span className="flex-1">Name</span>
-            <span className="flex w-64 items-center gap-1">
-              Last Modified
-              <Icons.columnSortDesc className="size-3" aria-label="Sorted descending" />
-            </span>
-            {/* Column configuration: unobserved, inert. */}
-            <InertButton label="Columns">
-              <CirclePlus />
-            </InertButton>
-          </div>
+          {isEmpty || failed ? null : (
+            <div className="flex items-center border-b border-border py-2 pl-4 pr-6 text-sm font-semibold text-text-muted">
+              {/* D18: selection model unobserved, visible but disabled. */}
+              <span className="w-12">
+                <InertButton label="Select all" disabled>
+                  <span className="size-4 rounded-sm border border-border" />
+                </InertButton>
+              </span>
+              <span className="flex-1">Name</span>
+              <span className="flex w-64 items-center gap-1">
+                Last Modified
+                <Icons.columnSortDesc className="size-3" aria-label="Sorted descending" />
+              </span>
+              {/* Column configuration: unobserved, inert. */}
+              <InertButton label="Columns">
+                <CirclePlus />
+              </InertButton>
+            </div>
+          )}
 
-          <ul aria-label="Documents" className="flex-1">
-            {items.map((row) => (
+          {failed ? (
+            <p role="alert" className="px-4 py-6 text-sm text-danger">
+              Documents could not be loaded.
+            </p>
+          ) : null}
+
+          {isEmpty ? (
+            <div className="flex flex-1 flex-col items-center justify-center gap-3 text-text-muted">
+              <EmptyIllustration />
+              <p className="text-base font-semibold">No items available.</p>
+            </div>
+          ) : null}
+
+          <ul aria-label="Documents" className={isEmpty || failed ? "hidden" : "flex-1"}>
+            {shown.map((row) => (
               <li
                 key={row.id}
                 className="flex items-center border-b border-border py-4 pl-16 pr-6 text-base"
@@ -213,7 +305,10 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
                     {dateFormat.format(new Date(row.modifiedAt))} by {row.modifiedBy}
                   </div>
                 </div>
-                <span className="size-7" aria-hidden="true" />
+                {/* D19: row menu unobserved, visible but disabled. */}
+                <InertButton label="More actions" disabled>
+                  <Icons.ellipsis className="size-4" />
+                </InertButton>
               </li>
             ))}
           </ul>

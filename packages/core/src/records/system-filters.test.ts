@@ -89,6 +89,11 @@ describe("history action mapping", () => {
     changes: [],
     payload: null,
   });
+  it("ignores sequence-0 seed rows for touched and untouched", () => {
+    const seed = { ...event("note_added"), sequence: 0 };
+    expect(matchesSystemFilters("Leads", record, { touched: { period } }, [seed])).toBe(false);
+    expect(matchesSystemFilters("Leads", record, { untouched: { period } }, [seed])).toBe(true);
+  });
   it.each([
     ["created", "record_created"],
     ["updated", "fields_updated"],

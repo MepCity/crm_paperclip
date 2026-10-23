@@ -16,7 +16,6 @@ import {
 } from "./accounts-record-more-options";
 import { accountsRelatedListRail } from "./accounts-related-lists";
 import {
-  ACCOUNTS_TIMELINE_EMPTY_EVENTS,
   ACCOUNTS_TIMELINE_MODULE_OPTIONS,
   ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
   ACCOUNTS_TIMELINE_SUBTABS,
@@ -82,7 +81,6 @@ export const accountsScreenDefinition: ModuleScreenDefinition = {
       subtabs: ACCOUNTS_TIMELINE_SUBTABS,
       modules: ACCOUNTS_TIMELINE_MODULE_OPTIONS,
       sources: ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
-      events: ACCOUNTS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeAccountsEventKind,
       upcomingAutomatedActions: {
         label: "Show Upcoming Automated Actions",

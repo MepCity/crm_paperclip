@@ -16,7 +16,6 @@ import {
 } from "./tasks-record-more-options";
 import {
   normalizeTasksEventKind,
-  TASKS_TIMELINE_EMPTY_EVENTS,
   TASKS_TIMELINE_MODULE_OPTIONS,
   TASKS_TIMELINE_SOURCE_OPTIONS,
   TASKS_TIMELINE_SUBTABS,
@@ -73,7 +72,6 @@ export const tasksScreenDefinition: ModuleScreenDefinition = {
       subtabs: TASKS_TIMELINE_SUBTABS,
       modules: TASKS_TIMELINE_MODULE_OPTIONS,
       sources: TASKS_TIMELINE_SOURCE_OPTIONS,
-      events: TASKS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeTasksEventKind,
       upcomingAutomatedActions: { label: "Upcoming Automated Actions", laterModule: "M11" },
     },
