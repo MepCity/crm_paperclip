@@ -69,7 +69,7 @@ export function SettingsCurrenciesScreen({
             data-zcqa="currHelpDoc"
             aria-label="Currencies Help"
             disabled
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-blue opacity-80"
+            className="inline-flex items-center gap-1.5 text-sm font-semibold text-accent-blue opacity-80"
           >
             <HelpCircle className="size-4" aria-hidden="true" />
             <span>Help</span>
