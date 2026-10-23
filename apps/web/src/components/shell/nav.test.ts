@@ -179,6 +179,7 @@ describe("settingsNav", () => {
       "company-details",
       "currencies",
       "calendar-booking",
+      "email",
       "import-history",
       "export-history",
       "modules-and-fields",
@@ -249,6 +250,17 @@ describe("settingsNav", () => {
       expect(isNavLinkActive(link, "example", path)).toBe(true);
       expect(isNavLinkActive(link, "example", "/crm/example/settings")).toBe(false);
     }
+  });
+
+  it("exposes Email under Channels and keeps it active on configuration subtabs", () => {
+    const email = settingsNav.find((link) => link.id === "email");
+    expect(email?.group).toBe("Channels");
+    expect(email?.href("demo")).toBe("/crm/demo/settings/email-configuration");
+    if (!email) return;
+    expect(
+      isNavLinkActive(email, "demo", "/crm/demo/settings/email-configuration/email-sharing"),
+    ).toBe(true);
+    expect(isNavLinkActive(email, "demo", "/crm/demo/settings/members")).toBe(false);
   });
 
   it("groups transfer history links and matches only their own settings page", () => {

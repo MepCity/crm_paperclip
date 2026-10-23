@@ -17,6 +17,17 @@ test("Company Details opens from settings with read-only controls and menu desti
     "href",
     `/crm/${org.slug}/settings/currencies`,
   );
+  for (const [name, path] of [
+    ["Personal Settings", "personal-settings"],
+    ["Company Details", "company-details"],
+    ["Currencies", "currencies"],
+    ["Email", "email-configuration"],
+  ]) {
+    await expect(main.getByRole("link", { name, exact: true })).toHaveAttribute(
+      "href",
+      `/crm/${org.slug}/settings/${path}`,
+    );
+  }
   await settingsNav.getByRole("link", { name: "Company Details", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/settings/company-details$`));
   await expect(main.getByRole("heading", { name: "Example Company" })).toBeVisible();
