@@ -158,3 +158,57 @@ test("blocks disallowed attachment types and enforces the aggregate size limit",
   fireEvent.change(picker, { target: { files: [file] } });
   expect(screen.getByRole("alert").textContent).toContain("20 MB");
 });
+
+test("HTTP compose retains content and window key after failure, then closes on success", async () => {
+  const { createHttpComposePort } = await import("./http-port");
+  const fetcher = vi
+    .fn()
+    .mockRejectedValueOnce(new Error("offline"))
+    .mockResolvedValueOnce({ data: { id: "http-message", status: "queued", scheduledAt: null } });
+  const { onSent, onClose } = setup(createHttpComposePort("demo", fetcher));
+  fill("To", "person@example.com");
+  fill("Message", "Retain this body");
+  fireEvent.click(screen.getByRole("button", { name: "Send" }));
+  await screen.findByText("Unable to send your message. Please try again.");
+  expect(onClose).not.toHaveBeenCalled();
+  expect((screen.getByRole("textbox", { name: "Message" }) as HTMLTextAreaElement).value).toBe(
+    "Retain this body",
+  );
+  fill("Subject", "Edited subject");
+  fireEvent.click(screen.getByRole("button", { name: "Send" }));
+  await waitFor(() =>
+    expect(onSent).toHaveBeenCalledWith({
+      id: "http-message",
+      status: "queued",
+      scheduledAt: null,
+    }),
+  );
+  expect(onClose).toHaveBeenCalledOnce();
+  expect(fetcher.mock.calls[0]?.[1].body.idempotencyKey).toBe(
+    fetcher.mock.calls[1]?.[1].body.idempotencyKey,
+  );
+  expect(fetcher.mock.calls[1]?.[1].body.body).toBe("Retain this body");
+});
+
+test("existing fixture mounts use HTTP in organization routes", async () => {
+  const { fixtureComposePort } = await import("./port");
+  window.history.replaceState(null, "", "/crm/demo/emails");
+  const fetch = vi
+    .fn()
+    .mockResolvedValue(
+      new Response(
+        JSON.stringify({ data: { id: "mounted", status: "queued", scheduledAt: null } }),
+      ),
+    );
+  vi.stubGlobal("fetch", fetch);
+  try {
+    setup(fixtureComposePort);
+    fill("To", "person@example.com");
+    fireEvent.click(screen.getByRole("button", { name: "Send" }));
+    await waitFor(() => expect(fetch).toHaveBeenCalledOnce());
+    expect(fetch.mock.calls[0]?.[1].headers.get("X-CRM-ORG")).toBe("demo");
+  } finally {
+    window.history.replaceState(null, "", "/");
+    vi.unstubAllGlobals();
+  }
+});
