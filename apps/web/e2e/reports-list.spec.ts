@@ -36,7 +36,7 @@ test("Reports landing: columns, inert controls and report placeholder navigation
     );
   }
   const checkbox = page.getByRole("checkbox", { name: "Select Weekly outreach overview" });
-  await checkbox.click();
+  await page.locator("label").filter({ has: checkbox }).click();
   await expect(checkbox).not.toBeChecked();
   await expect(table.getByRole("row")).toHaveCount(14);
   await table.getByRole("link", { name: "Weekly outreach overview", exact: true }).click();
