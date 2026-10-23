@@ -11,6 +11,7 @@ import {
   type ModuleBaseline,
   resolveEffectiveModule,
 } from "./index";
+import { baselineSchema, fieldSchema, patchSchema, snapshotSchema } from "./schema";
 
 function field(id: string, extra: Partial<BaselineField> = {}): BaselineField {
   return {
@@ -96,6 +97,146 @@ describe("effective metadata resolver", () => {
     expect(resolveEffectiveModule(base, overlay)).toEqual(result);
     expect(resolveEffectiveModule(base)).toMatchObject({ baselineVersion: "v1", revision: 0 });
   });
+
+  it.each(["$type", "$link_url"])("accepts baseline-only API name %s", (apiName) => {
+    const base = baseline({ fields: [field("name", { apiName }), field("description")] });
+    expect(baselineSchema.parse(base).fields[0]?.apiName).toBe(apiName);
+    expect(resolveEffectiveModule(base).fields[0]?.apiName).toBe(apiName);
+    expect(fieldSchema.safeParse({ ...custom(), apiName }).success).toBe(false);
+    expect(patchSchema.safeParse({ addFields: [{ ...custom(), apiName }] }).success).toBe(false);
+    expect(snapshotSchema.safeParse(snapshot({ fields: [{ ...custom(), apiName }] })).success).toBe(
+      false,
+    );
+    expect(() =>
+      resolveEffectiveModule(base, snapshot({ fields: [{ ...custom(), apiName }] })),
+    ).toThrow(ValidationError);
+    expect(patchSchema.safeParse({ fieldPatches: { name: { apiName } } }).success).toBe(false);
+  });
+
+  it.each(["$", "$$type", "$1type", "$type-name", "1type", "_type", "type$name"])(
+    "rejects malformed baseline API name %s",
+    (apiName) => {
+      expect(
+        baselineSchema.safeParse(baseline({ fields: [field("name", { apiName })] })).success,
+      ).toBe(false);
+    },
+  );
+
+  it("reserves baseline dollar-prefixed API names across active and retired fields", () => {
+    for (const lifecycle of ["active", "retired"] as const) {
+      const base = baseline({
+        fields: [
+          ...baseline().fields,
+          field("first", { apiName: "$type", lifecycle }),
+          field("second", { apiName: "$type" }),
+        ],
+      });
+      expect(() => resolveEffectiveModule(base)).toThrow(
+        expect.objectContaining({ fieldErrors: { customization: ["Duplicate API name."] } }),
+      );
+    }
+  });
+
+  it("allows required baseline create-only fields and preserves their edit visibility", () => {
+    const base = baseline({
+      fields: [
+        field("name", { required: true, views: { ...field("name").views, edit: false } }),
+        field("description"),
+      ],
+    });
+    for (const overlay of [undefined, snapshot({ fieldPatches: { name: { label: "Title" } } })]) {
+      expect(resolveEffectiveModule(base, overlay).fields[0]).toMatchObject({
+        required: true,
+        readOnly: false,
+        views: { create: true, edit: false },
+      });
+    }
+  });
+
+  it("rejects patches hiding edit on baseline-editable required fields", () => {
+    expect(() =>
+      resolveEffectiveModule(
+        baseline(),
+        snapshot({
+          fieldPatches: {
+            name: { views: { ...field("name").views, edit: false } },
+          },
+        }),
+      ),
+    ).toThrow(
+      expect.objectContaining({
+        fieldErrors: { customization: ["Required field is unreachable without a server value."] },
+      }),
+    );
+  });
+
+  it.each([false, true])("rejects required custom create-only fields (patched: %s)", (patched) => {
+    const added = { ...custom(), required: true };
+    const views = { ...added.views, edit: false };
+    const overlay = snapshot({
+      fields: [{ ...added, views: patched ? added.views : views }],
+      layouts: [layout(["name", "custom"])],
+      fieldPatches: patched ? { custom: { views } } : {},
+    });
+    expect(() => resolveEffectiveModule(baseline(), overlay)).toThrow(
+      expect.objectContaining({
+        fieldErrors: { customization: ["Required field is unreachable without a server value."] },
+      }),
+    );
+  });
+
+  it.each(["readOnly", "unplaced", "createHidden"])(
+    "still rejects unreachable baseline create-only fields: %s",
+    (reason) => {
+      const base = baseline({
+        fields: [
+          field("name", {
+            required: true,
+            readOnly: reason === "readOnly",
+            views: { ...field("name").views, create: reason !== "createHidden", edit: false },
+          }),
+        ],
+        layouts: [layout(reason === "unplaced" ? [] : ["name"])],
+      });
+      expect(() => resolveEffectiveModule(base)).toThrow(
+        expect.objectContaining({
+          fieldErrors: { customization: ["Required field is unreachable without a server value."] },
+        }),
+      );
+      const reachable = baseline({
+        fields: [
+          field("name", {
+            required: true,
+            views: { ...field("name").views, edit: false },
+          }),
+        ],
+        layouts: [layout(["name"])],
+      });
+      const overlay = snapshot({
+        ...(reason === "unplaced"
+          ? { layouts: [layout([])] }
+          : {
+              fieldPatches: {
+                name:
+                  reason === "readOnly"
+                    ? { readOnly: true }
+                    : {
+                        views: {
+                          ...field("name").views,
+                          create: false,
+                          edit: false,
+                        },
+                      },
+              },
+            }),
+      });
+      expect(() => resolveEffectiveModule(reachable, overlay)).toThrow(
+        expect.objectContaining({
+          fieldErrors: { customization: ["Required field is unreachable without a server value."] },
+        }),
+      );
+    },
+  );
 
   it("is independent of patch-object insertion order", () => {
     const left = snapshot({
