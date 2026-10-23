@@ -67,12 +67,23 @@ export function ReportDetailScreen({
             <Icons.refresh className="size-4" aria-hidden />
           </Button>
           <span className="text-text-muted">{relativeUpdate(report.updatedAt, now)}</span>
-          <Button variant="recordPrimary" aria-disabled="true">
-            Edit
-          </Button>
-          <Button variant="icon" aria-label="Report menu" aria-disabled="true">
-            <Icons.chevronDown className="size-4" aria-hidden />
-          </Button>
+          <div className="inline-flex items-center">
+            <button
+              type="button"
+              aria-disabled="true"
+              className="h-8 rounded-l border border-border bg-surface px-3 text-text"
+            >
+              Edit
+            </button>
+            <button
+              type="button"
+              aria-label="Report menu"
+              aria-disabled="true"
+              className="inline-flex h-8 items-center rounded-r border border-l-0 border-border bg-surface px-2 text-text"
+            >
+              <Icons.chevronDown className="size-4" aria-hidden />
+            </button>
+          </div>
         </div>
       </header>
       <div className="flex items-center justify-between gap-3 px-3 py-3">
@@ -91,24 +102,34 @@ export function ReportDetailScreen({
               aria-hidden
             />
           </Button>
-          <Button variant="recordSelector" aria-disabled="true">
+          <button type="button" aria-disabled="true" className="px-1 text-text">
             Filter By Date
-          </Button>
-          <Button variant="recordSelector" aria-disabled="true">
+          </button>
+          <button type="button" aria-disabled="true" className="px-1 text-primary">
             Clear
-          </Button>
+          </button>
         </div>
-        <Button variant="recordSelector" aria-disabled="true">
+        <button
+          type="button"
+          aria-disabled="true"
+          className="px-1 text-text underline decoration-dashed underline-offset-4"
+        >
           Show Details
-        </Button>
+        </button>
       </div>
-      <div className="overflow-x-auto rounded-xl bg-surface">
+      <div className="overflow-x-auto border border-border bg-surface">
         <table aria-label="Report results" className="w-full border-collapse text-left">
           <thead>
-            <tr className="border-b-2 border-border">
+            <tr className="border-b border-border bg-bg">
               {report.headings.map((heading, index) => (
-                <th key={heading} scope="col" className="px-3 py-2 font-semibold">
-                  <span className="inline-flex items-center gap-1">
+                <th
+                  key={heading}
+                  scope="col"
+                  className={`border-r border-border px-3 py-2 font-semibold last:border-r-0 ${index > 0 ? "text-right" : "text-left"}`}
+                >
+                  <span
+                    className={`inline-flex items-center gap-1 ${index > 0 ? "flex-row-reverse" : ""}`}
+                  >
                     {heading}
                     {index > 0 && <Icons.sort className="size-3 text-text-muted" aria-hidden />}
                   </span>
@@ -120,8 +141,11 @@ export function ReportDetailScreen({
             {report.rows.map((row) => (
               <tr key={row[0]} className="border-b border-border">
                 {row.map((value, index) => (
-                  // biome-ignore lint/suspicious/noArrayIndexKey: fixed column order
-                  <td key={index} className="px-3 py-3">
+                  <td
+                    // biome-ignore lint/suspicious/noArrayIndexKey: fixed column order
+                    key={index}
+                    className={`border-r border-border px-3 py-3 last:border-r-0 ${index > 0 ? "text-right" : ""}`}
+                  >
                     {value}
                   </td>
                 ))}

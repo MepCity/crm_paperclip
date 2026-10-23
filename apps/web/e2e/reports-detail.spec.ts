@@ -7,7 +7,11 @@ test("Report detail: header, toolbar, empty and populated tables, back", async (
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(`/crm/${org.slug}/tab/Reports/sample-report-2`);
-  await expect(page.getByRole("heading", { name: "Message engagement summary" })).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "Report detail" })
+      .getByRole("heading", { name: "Message engagement summary" }),
+  ).toBeVisible();
   for (const name of ["Edit", "Filter", "Filter By Date", "Clear", "Show Details"]) {
     await expect(page.getByRole("button", { name, exact: true })).toHaveAttribute(
       "aria-disabled",
