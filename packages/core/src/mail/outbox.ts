@@ -70,7 +70,7 @@ export type MailSendResult =
   /** Provider certainly did not send. `reason` must be a safe public code. */
   | { status: "rejected"; reason: string; retryable: boolean }
   | { status: "unknown" };
-/** Trusted provider port. No real adapter exists yet; tests use a fake. */
+/** Trusted provider port; createGmailMailSender provides the Gmail adapter. */
 export interface MailSender {
   send(request: MailSendRequest, signal?: AbortSignal): Promise<MailSendResult>;
 }

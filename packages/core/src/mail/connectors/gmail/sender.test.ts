@@ -4,7 +4,7 @@ import { createAesGcmSecretBox } from "../../../secrets/secret-box";
 import { composeMime, envelopeRecipients } from "../../mime";
 import type { MailSendRequest } from "../../outbox";
 import { createGmailConnector, createInMemoryCredentialStore } from "./gmail-connector";
-import { createGmailMailSender } from "./sender";
+import { createGmailMailSender, type GmailMailSenderOptions } from "./sender";
 import type { HttpRequest, HttpResponse } from "./transport";
 
 const mailbox = {
@@ -35,6 +35,7 @@ const response = (status: number, body: unknown): HttpResponse => ({
 });
 async function setup(
   send: (req: HttpRequest, attempt: number) => HttpResponse | Promise<HttpResponse>,
+  overrides: Partial<Pick<GmailMailSenderOptions, "resolveMailbox" | "loadContent">> = {},
 ) {
   const calls: HttpRequest[] = [];
   let refreshes = 0;
@@ -56,6 +57,7 @@ async function setup(
     connector,
     resolveMailbox: async () => mailbox,
     loadContent: async () => ({ text: "Private body", attachments: [] }),
+    ...overrides,
     recipientGuard: (recipients) => {
       guarded.push(recipients.map((r) => r.address));
     },
@@ -104,6 +106,53 @@ describe("Gmail MailSender", () => {
     expect(calls.filter((c) => c.url.endsWith("/messages/send"))).toHaveLength(
       status === 401 ? 2 : 1,
     );
+  });
+  it.each(["rateLimitExceeded", "userRateLimitExceeded"])(
+    "retries a rate-limited 403 for %s without replaying submission",
+    async (reason) => {
+      const { sender, calls } = await setup(() => ({
+        ...response(403, { error: { errors: [{ reason }] } }),
+        headers: { "retry-after": "17" },
+      }));
+      expect(await sender.send(request)).toEqual({
+        status: "rejected",
+        reason: "retryable",
+        retryable: true,
+      });
+      expect(calls.filter((call) => call.url.endsWith("/messages/send"))).toHaveLength(1);
+    },
+  );
+  it.each([
+    ["resolveMailbox", "mailbox_unavailable"],
+    ["loadContent", "content_unavailable"],
+  ] as const)("reports %s failures without provider access", async (operation, reason) => {
+    let contentLoads = 0;
+    const { sender, calls } = await setup(() => response(200, { id: "sent" }), {
+      loadContent: async () => {
+        contentLoads++;
+        return { text: "Body", attachments: [] };
+      },
+      [operation]: async () => {
+        throw new Error("private lookup details");
+      },
+    });
+    expect(await sender.send(request)).toEqual({ status: "rejected", reason, retryable: true });
+    expect(calls).toHaveLength(0);
+    expect(contentLoads).toBe(0);
+  });
+  it("rejects a mismatched mailbox before loading content", async () => {
+    const { sender, calls } = await setup(() => response(200, { id: "sent" }), {
+      resolveMailbox: async () => ({ ...mailbox, organizationId: "other-org" }),
+      loadContent: async () => {
+        throw new Error("Content must not load");
+      },
+    });
+    expect(await sender.send(request)).toEqual({
+      status: "rejected",
+      reason: "mailbox_unavailable",
+      retryable: false,
+    });
+    expect(calls).toHaveLength(0);
   });
   it.each([{}, null, { id: 12 }])(
     "holds ambiguous success without a valid id: %s",

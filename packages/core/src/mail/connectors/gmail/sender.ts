@@ -53,6 +53,10 @@ export function createGmailMailSender(options: GmailMailSenderOptions): MailSend
         if (mailbox.organizationId !== request.organizationId || mailbox.id !== request.mailboxId) {
           return rejected("mailbox_unavailable");
         }
+      } catch {
+        return rejected("mailbox_unavailable", true);
+      }
+      try {
         content = await options.loadContent(request);
       } catch {
         return rejected("content_unavailable", true);

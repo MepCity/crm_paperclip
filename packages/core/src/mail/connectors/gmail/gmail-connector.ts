@@ -175,8 +175,7 @@ export function createGmailConnector(options: GmailConnectorOptions): MailConnec
         bearer = await refresh(m);
         continue;
       }
-      const err =
-        isDelivery && res.status === 403 ? new ConnectorError("permanent") : classify(res, now());
+      const err = classify(res, now());
       if (err) throw Object.assign(err, { httpStatus: res.status });
       try {
         return JSON.parse(res.body);
