@@ -11,6 +11,9 @@
   background: var(--color-rail-surface);
   color: var(--color-rail-text);
 }
+.calendar-sidebar button {
+  color: var(--color-rail-text);
+}
 .calendar-sidebar button[data-pressed],
 .calendar-sidebar button[aria-pressed="true"] {
   background: var(--color-rail-item-active);
@@ -19,7 +22,7 @@
 .calendar-mini {
   margin-top: auto;
   padding: 1rem 0.5rem;
-  border-top: 1px solid var(--color-rail-text);
+  border-top: 1px solid var(--color-rail-border);
 }
 .calendar-toolbar,
 .calendar-date-strip {
