@@ -41,6 +41,18 @@ describe("decodeFormatFlowed", () => {
     expect(decodeFormatFlowed("text\n-- \nname \nmore")).toBe("text\n-- \nname more");
   });
 
+  it("breaks a flowed line before the signature separator", () => {
+    expect(decodeFormatFlowed("text \n-- \nname")).toBe("text \n-- \nname");
+  });
+
+  it("breaks before the separator with delSp, same as at a depth change", () => {
+    expect(decodeFormatFlowed("text \n-- \nname", { delSp: true })).toBe("text\n-- \nname");
+  });
+
+  it("breaks before a quoted signature separator", () => {
+    expect(decodeFormatFlowed("> text \n> -- \n> name")).toBe("> text \n> -- \n> name");
+  });
+
   it("accepts CRLF input and outputs LF", () => {
     expect(decodeFormatFlowed("a \r\nb\r\nc\r\n")).toBe("a b\nc\n");
   });

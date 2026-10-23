@@ -35,6 +35,7 @@ export function decodeFormatFlowed(text: string, opts: FormatFlowedOptions = {})
     if (buffer !== null && depth !== bufferDepth) flush();
 
     const isSignature = content === SIGNATURE_SEPARATOR;
+    if (isSignature) flush();
     const flowed = !isSignature && content.endsWith(" ");
 
     if (buffer === null) {
