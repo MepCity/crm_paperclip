@@ -990,3 +990,95 @@ as explicitly decided by the CTO. `research/specs/verify.mjs` is absent.
 The final bounded attempts are submitted with justified open questions for
 unavailable tabs; CTO approval is required. No further capture recovery run
 is requested under the 01:03 UTC decision.
+
+## Delta — Contacts/Accounts/Deals
+
+### R4 scope and current status
+
+MEP-1192 compares only the resting Layouts and Fields screens with the Leads
+inventories above. This is partial research: one accepted Contacts Layouts
+capture, followed by one invalid-route capture. The error stop rule was applied;
+no further live capture or retry was made. Accounts and Deals remain unobserved.
+No editor, preference, field, layout or record was changed.
+
+### Contacts Layouts — observed delta inventory
+
+Source: **seen, `m11r4-contacts-layouts` screenshot**, reconciled with one-based
+`controls.json`. The complete screen is painted: Contacts heading and selection,
+nine module tabs, creation entry, four-column table and one default layout row.
+The last-modified cell is blank. Shell, sidebar order, tab order, contextual help,
+creation entry, layout link and on-looking status switch match the Leads resting
+structure. They inherit ML references rather than duplicate the full inventory.
+No behaviour beyond resting appearance is established.
+
+| # | Position | Control / delta | Raw entries | Observed behaviour / limit | Owning module | Leads ref |
+| --- | --- | --- | --- | --- | --- | --- |
+| R4-CL-01 | Sidebar / Leads | Leads navigation | 28 | No longer selected; not clicked | M11 | ML-12 |
+| R4-CL-02 | Sidebar / Contacts | Contacts navigation | 29 | Selected; Contacts heading is static text | M11 | ML-13 |
+| R4-CL-03 | Layout row beside name | More menu absent at rest | — | No corresponding entry or visible glyph; hover availability unknown, no hover attempted | M11 | ML-41 |
+
+The missing menu is a resting-state observation, not proof of a module-specific
+capability difference. Unchanged controls: ML-01–11, ML-14–40 and ML-42–53.
+Their raw mapping is identical through entry 68; ML-42 maps to 69–70;
+ML-43–53 map to 89–99; ML-10 additionally maps to 102–103;
+ML-11 additionally maps to 104. Thus 53 Leads logical controls minus the absent
+ML-41 = **52 logical controls**. Of 107 raw entries, 71 are represented and
+36 excluded: **71 + 36 = 107**. Duplicate represented entries: 19.
+
+Excluded raw entries: 1, 2, 5, 9, 10, 12, 13, 15, 16, 19, 20, 25, 66,
+71–88, 100–101, 105–107. Reasons match the Leads Layouts reconciliation:
+zero-area/hidden shell and overlay nodes, navigation and utility containers,
+static row wrapper, body and nonoverflowing scroll containers. The screenshot
+shows no additional usable control in these entries. No screenshot-only control
+is added. The static module heading is not counted as interactive.
+
+### Capture refs and non-GET accounting — R4
+
+Both attempts are click-free direct navigations with `--wait 15000`. Evidence
+folders remain under the local research workspace's `captures/`; screenshots,
+ARIA, page text, controls, network, meta and progress files are not committed or
+uploaded. No reference assets or organization/customer values enter this spec.
+
+| Capture ref | Neutral target | Result | Raw controls | API calls | Refused requests | Successful non-GET |
+| --- | --- | --- | --- | --- | --- | --- |
+| `m11r4-contacts-layouts` | `/crm/<org>/settings/modules/Contacts/layouts` | Accepted; full paint, 2026-10-23 17:16:52 UTC | 107 | 47 | 3 | PageLayout/read ×1; visitor/passive ×1; both 200 |
+| `m11r4-contacts-fields` | `/crm/<org>/settings/modules/Contacts/fields` | Invalid URL / HTTP 400; not Fields evidence, 2026-10-23 17:17:26 UTC | 3 diagnostic only | 0 | 0 | None |
+
+The accepted capture refused reminder polling, notification status and URL
+telemetry once each. The two successful POSTs are the previously classified
+page-initiated PageLayout module-list read and visitor-widget passive trace;
+there is no new successful non-GET path or count increase. The known
+`_sortableParentData` page error is present, with zero failed scripts; manual
+screenshot inspection establishes complete paint. No other page error appears.
+The failed route records a console HTTP 400, zero failed scripts, no API calls
+and no non-GET requests. It is not a designed Fields error/empty state.
+
+All click and step lists are empty. Both attempts report no automatic Escape,
+dialog remaining open, popup, window-open request, print, download or file chooser.
+No hover, scroll, toggle, typing, drag, request replay or browser-tab cleanup
+was performed. Capture-tool exit success did not override the manual target
+screen check. Guards were not changed.
+
+### R4 stop, open questions and verification
+
+The analyst used `/fields` without first checking the existing Fields evidence;
+that route is invalid. Local evidence subsequently confirms the actual tab href
+is `/crm/<org>/settings/modules/Contacts/field-listing`; the accepted Leads Fields
+capture also ends in `/field-listing`. This is offline evidence only: the
+corrected route has **not** been captured in this run. Under the issue's error
+stop rule, no corrected navigation or remaining module capture follows the 400.
+
+Pending a continuation decision: Contacts Fields, Accounts Layouts/Fields and
+Deals Layouts/Fields. Their controls, fields and differences must not be inferred
+from Contacts Layouts or metadata. Any continuation must retain click-free
+capture, one capture at a time, paint/request gates and the six-capture total
+budget (two attempts consumed here, leaving four slots for five outstanding
+screens). The continuation owner must resolve that budget shortfall before
+additional captures; no extra attempt is assumed authorized. Full R4 acceptance
+is not claimed.
+
+Verification: screenshot inspection of both attempts, raw-index uniqueness and
+107-entry reconciliation, neutral-language/privacy review and `git diff --check`.
+No application code changed; no typecheck, unit or e2e run is needed for this
+partial documentation output. UI Lead remains the final spec reviewer after
+research completion.
