@@ -1,7 +1,11 @@
 import { ValidationError } from "@crm/core/errors";
-import { afterEach, expect, test, vi } from "vitest";
+import { afterEach, describe, expect, test, vi } from "vitest";
 import { encodeError } from "@/lib/api/wire/errors";
-import { createHttpComposePort } from "./http-port";
+import {
+  createHttpComposePort,
+  fetchComposeMailboxes,
+  readComposeMailboxesResponse,
+} from "./http-port";
 import type { ComposeMailInput } from "./port";
 
 const input: ComposeMailInput = {
@@ -91,4 +95,64 @@ test.each([
   await expect(createHttpComposePort("demo", fetcher).send(input)).rejects.toThrow(
     "Malformed compose response",
   );
+});
+
+describe("fetchComposeMailboxes and readComposeMailboxesResponse", () => {
+  test("parses valid mailbox list with and without optional name", () => {
+    const raw = {
+      data: [
+        { id: "box-1", address: "first@example.com" },
+        { id: "box-2", address: "second@example.com", name: "Second User" },
+      ],
+    };
+    expect(readComposeMailboxesResponse(raw)).toEqual([
+      { id: "box-1", address: "first@example.com" },
+      { id: "box-2", address: "second@example.com", name: "Second User" },
+    ]);
+  });
+
+  test("accepts empty data array", () => {
+    expect(readComposeMailboxesResponse({ data: [] })).toEqual([]);
+  });
+
+  test.each([
+    null,
+    undefined,
+    "string",
+    123,
+    [],
+    {},
+    { data: null },
+    { data: "not-array" },
+    { data: [], extraKey: true },
+    { other: [] },
+  ])("rejects malformed response root %j", (payload) => {
+    expect(() => readComposeMailboxesResponse(payload)).toThrow(
+      "Malformed compose mailboxes response",
+    );
+  });
+
+  test.each([
+    { data: [null] },
+    { data: ["not-an-object"] },
+    { data: [{ id: "box-1" }] },
+    { data: [{ address: "a@b.com" }] },
+    { data: [{ id: "", address: "a@b.com" }] },
+    { data: [{ id: "box-1", address: "" }] },
+    { data: [{ id: "box-1", address: "a@b.com", name: 123 }] },
+    { data: [{ id: "box-1", address: "a@b.com", extra: "forbidden" }] },
+    { data: [{ id: "box-1", address: "a@b.com", ownerUserId: "user-1" }] },
+    { data: [{ id: "box-1", address: "a@b.com", status: "connected" }] },
+  ])("strictly rejects item with invalid or extra fields %j", (payload) => {
+    expect(() => readComposeMailboxesResponse(payload)).toThrow();
+  });
+
+  test("fetchComposeMailboxes invokes fetcher with GET /crm/v2.2/mail/mailboxes", async () => {
+    const fetchFn = vi.fn().mockResolvedValue({
+      data: [{ id: "box-live", address: "live@example.com" }],
+    });
+    const result = await fetchComposeMailboxes(fetchFn);
+    expect(fetchFn).toHaveBeenCalledWith("/crm/v2.2/mail/mailboxes");
+    expect(result).toEqual([{ id: "box-live", address: "live@example.com" }]);
+  });
 });
