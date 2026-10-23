@@ -23,7 +23,10 @@ test("Company Details opens from settings with read-only controls and menu desti
     ["Currencies", "currencies"],
     ["Email", "email-configuration"],
   ]) {
-    await expect(main.getByRole("link", { name, exact: true })).toHaveAttribute(
+    const card = main
+      .getByRole("heading", { name: name === "Email" ? "Channels" : "General", exact: true })
+      .locator("..");
+    await expect(card.getByRole("link", { name, exact: true })).toHaveAttribute(
       "href",
       `/crm/${org.slug}/settings/${path}`,
     );
