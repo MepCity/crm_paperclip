@@ -17,7 +17,7 @@ export default async function ModulesSettingsPage({
     <>
       <PageTitle title={shellPageTitle.settings} />
       <PageHeader description="Modules and Fields." />
-      <SettingsModulesScreen />
+      <SettingsModulesScreen orgSlug={orgSlug} />
     </>
   );
 }
