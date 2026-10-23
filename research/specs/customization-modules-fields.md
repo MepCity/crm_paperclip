@@ -996,10 +996,13 @@ is requested under the 01:03 UTC decision.
 ### R4 scope and current status
 
 MEP-1192 compares only the resting Layouts and Fields screens with the Leads
-inventories above. This is partial research: one accepted Contacts Layouts
-capture, followed by one invalid-route capture. The error stop rule was applied;
-no further live capture or retry was made. Accounts and Deals remain unobserved.
-No editor, preference, field, layout or record was changed.
+inventories above. The CTO continuation decision of 2026-10-23 17:21 UTC raises
+the budget to seven total attempts: the first two are preserved below and the
+five remaining targets receive one attempt each. Five screens are accepted:
+Contacts Layouts/Fields, Accounts Layouts/Fields and Deals Layouts. Deals Fields
+fails the final paint gate and remains an explicit open question under that
+decision; it is not retried. No editor, preference, field, layout or record was
+changed. The accepted Contacts Layouts evidence is not repeated.
 
 ### Contacts Layouts — observed delta inventory
 
@@ -1032,7 +1035,7 @@ static row wrapper, body and nonoverflowing scroll containers. The screenshot
 shows no additional usable control in these entries. No screenshot-only control
 is added. The static module heading is not counted as interactive.
 
-### Capture refs and non-GET accounting — R4
+### Initial capture refs and non-GET accounting — R4
 
 Both attempts are click-free direct navigations with `--wait 15000`. Evidence
 folders remain under the local research workspace's `captures/`; screenshots,
@@ -1059,7 +1062,7 @@ No hover, scroll, toggle, typing, drag, request replay or browser-tab cleanup
 was performed. Capture-tool exit success did not override the manual target
 screen check. Guards were not changed.
 
-### R4 stop, open questions and verification
+### Initial R4 stop and verification (historical)
 
 The analyst used `/fields` without first checking the existing Fields evidence;
 that route is invalid. Local evidence subsequently confirms the actual tab href
@@ -1068,7 +1071,8 @@ capture also ends in `/field-listing`. This is offline evidence only: the
 corrected route has **not** been captured in this run. Under the issue's error
 stop rule, no corrected navigation or remaining module capture follows the 400.
 
-Pending a continuation decision: Contacts Fields, Accounts Layouts/Fields and
+At the initial stop, the targets awaiting a continuation decision were Contacts
+Fields, Accounts Layouts/Fields and
 Deals Layouts/Fields. Their controls, fields and differences must not be inferred
 from Contacts Layouts or metadata. Any continuation must retain click-free
 capture, one capture at a time, paint/request gates and the six-capture total
@@ -1082,3 +1086,159 @@ Verification: screenshot inspection of both attempts, raw-index uniqueness and
 No application code changed; no typecheck, unit or e2e run is needed for this
 partial documentation output. UI Lead remains the final spec reviewer after
 research completion.
+
+
+### Accounts and Deals Layouts — observed delta inventories
+
+Sources: **seen, `m11r4-accounts-layouts` and `m11r4-deals-layouts`
+screenshots**, reconciled with their one-based controls. Both show complete
+module navigation, the matching module heading/selection, nine tabs, the
+creation entry and one default row in the same four-column table as Leads.
+Last Modified is blank; the status switch appears on. There is no visible
+content/table scrollbar. Static sharing values are not retained.
+
+| # | Position | Control / delta | Raw entries | Observed behaviour / limit | Owning module | Leads ref |
+| --- | --- | --- | --- | --- | --- | --- |
+| R4-AL-01 | Sidebar / Leads | Leads navigation | 28 | No longer selected; not clicked | M11 | ML-12 |
+| R4-AL-02 | Sidebar / Accounts | Accounts navigation | 30 | Selected; Accounts heading is static | M11 | ML-14 |
+| R4-AL-03 | Layout row beside name | More menu absent at rest | — | Not visible; hover availability unknown, no hover attempted | M11 | ML-41 |
+| R4-DL-01 | Sidebar / Leads | Leads navigation | 28 | No longer selected; not clicked | M11 | ML-12 |
+| R4-DL-02 | Sidebar / Deals | Deals navigation | 31 | Selected; Deals heading is static | M11 | ML-15 |
+| R4-DL-03 | Layout row beside name | More menu absent at rest | — | Not visible; hover availability unknown, no hover attempted | M11 | ML-41 |
+
+The absent menu has the same limit as Contacts Layouts: a resting-state
+observation, not proof of a module capability difference. Each screen inherits
+all other ML controls. Raw mapping remains identical through 68 except for the
+sidebar selection; ML-42 maps to 69–70, ML-43–53 to 90–100, ML-10 additionally
+to 102–103 and ML-11 additionally to 104. Each has **52 logical controls**,
+71 represented raw entries and 19 duplicate represented entries.
+
+Accounts exclusions: 1, 2, 5, 9, 10, 12, 13, 15, 16, 19, 20, 25, 66,
+71–89, 101, 105–107. Thus **71 + 36 = 107**.
+Deals exclusions: the same set plus 108. Thus **71 + 37 = 108**.
+These are hidden/zero-area shell and overlay placeholders, navigation/utility
+containers, a static row wrapper, the offscreen live-chat widget, body and
+nonoverflowing scroll wrappers. Screenshots confirm no usable control is lost.
+
+### Contacts and Accounts Fields — observed delta inventories
+
+Sources: **seen, `m11r4-contacts-fields-cont` and `m11r4-accounts-fields`
+screenshots**, reconciled with their one-based controls. Both have complete
+module sidebars/headings and the same nine tabs, selected Fields tab, three
+subtabs, empty search, editor entry and three-column table as Leads. Field
+Listing is selected; Field Permissions and AI Governance are not opened.
+No custom-field indicator is visible in the initial rows. Ten complete rows
+and part of the next row are visible; further definitions are outside the
+content viewport. Plain field labels are static, not additional controls.
+
+| # | Position | Control / delta | Raw entries | Observed behaviour / limit | Owning module | Leads ref |
+| --- | --- | --- | --- | --- | --- | --- |
+| R4-CF-01 | Sidebar / Leads | Leads navigation | 28 | No longer selected; not clicked | M11 | FL-12 |
+| R4-CF-02 | Sidebar / Contacts | Contacts navigation | 29 | Selected; Contacts heading is static | M11 | FL-13 |
+| R4-AF-01 | Sidebar / Leads | Leads navigation | 28 | No longer selected; not clicked | M11 | FL-12 |
+| R4-AF-02 | Sidebar / Accounts | Accounts navigation | 30 | Selected; Accounts heading is static | M11 | FL-14 |
+
+All other controls inherit FL-01–54 with identical raw mapping, including
+back/search/help descendants and the field-search glyph. Each screen has
+**54 logical controls**, 75 represented raw entries and 21 duplicate represented
+entries. Exclusions for both: 1, 2, 5, 9, 10, 12, 13, 15, 16, 19, 20, 25,
+72–90, 102, 108–110. Thus **75 + 35 = 110** per screen. Exclusions are static
+table/utility wrappers, hidden overlays, navigation containers, the clipped
+shell glyph and scroll-region wrappers. The Leads body wrapper is absent here;
+this collector difference adds no product control.
+
+Static field-content deltas, separate from the interactive inventory:
+
+| Module | Visible differences from the Leads opening slice | Leads ref |
+| --- | --- | --- |
+| Contacts | Account Name (Lookup), Assistant (Single Line), Asst Phone (Phone), Connected To (`multi_module_lookup`), Contact Image (Contact Image), Contact Owner (Lookup), Date of Birth (Date), Department (Single Line) | Leads — Fields, static field table |
+| Accounts | Account Image (Account Image), Account Name (Single Line), Account Number (Long Integer), Account Owner (Lookup), Account Site (Single Line), Account Type (Pick List), Billing Address (Address), Connected To (`multi_module_lookup`) | Leads — Fields, static field table |
+
+These are field-definition labels/types, never record values. Shared definitions
+such as Created By and Description are not repeated. This is not a full field
+schema or a claim that a definition outside the visible Leads slice is absent
+from Leads. Metadata remains the data-model source of truth. No search, sort,
+filter, editor, permission tab or governance tab was used.
+
+### Continuation capture refs, route checks and request accounting — R4
+
+All five attempts are click-free direct navigation with `--wait 15000`, one at
+a time. The R1 Leads `meta.json` establishes `/layouts` and `/field-listing`;
+Contacts and Accounts tab hrefs independently confirm the Fields suffix.
+The accepted Deals Layouts navigation starts at `/Deals/layouts` and ends at
+`/Potentials/layouts`; its Fields href uses `/Potentials/field-listing`.
+These are neutral module route segments, with no organization identifiers.
+
+The final Fields preflight incorrectly asserted a `/Deals/field-listing` href
+instead of the observed `/Potentials/field-listing` href. Its assertion failed,
+but the shell command did not stop before launching the capture. This is an
+analyst preflight failure, not successful compliance with the required route
+check. The attempt is charged to the budget. No corrective navigation follows.
+The observed canonical Fields href is recorded for future authorized work;
+this issue does not authorize another attempt.
+
+| Capture ref | Requested neutral module suffix | Result / UTC on 2026-10-23 | Raw controls | API calls | Refused requests | Successful non-GET |
+| --- | --- | --- | --- | --- | --- | --- |
+| `m11r4-contacts-fields-cont` | `Contacts/field-listing` | Accepted; full paint, 17:22:41 | 110 | 44 | 3 | PageLayout/read ×1; visitor/passive ×1; both 200 |
+| `m11r4-accounts-layouts` | `Accounts/layouts` | Accepted; full paint, 17:23:34 | 107 | 47 | 3 | PageLayout/read ×1; visitor/passive ×1; both 200 |
+| `m11r4-accounts-fields` | `Accounts/field-listing` | Accepted; full paint, 17:24:21 | 110 | 44 | 3 | PageLayout/read ×1; visitor/passive ×1; both 200 |
+| `m11r4-deals-layouts` | `Deals/layouts` | Accepted; canonical `Potentials/layouts`, full paint, 17:25:03 | 108 | 48 | 2 | PageLayout/read ×1; visitor/passive ×1; both 200 |
+| `m11r4-deals-fields` | `Deals/field-listing` | Partial module shell; invalid target evidence, 17:25:48 | 87 diagnostic only | 44 | 2 | PageLayout/read ×1; visitor/passive ×1; both 200 |
+
+Full neutral path prefix for these suffixes: `/crm/<org>/settings/modules/`.
+Every capture folder contains screenshot, ARIA, page text, controls, network,
+meta and progress evidence, retained only in the local research workspace.
+No raw evidence is committed or uploaded. An initial sandbox refusal at output
+folder creation preceded browser attachment and did not consume a live attempt.
+
+The first three continuation captures each refuse reminder polling,
+notification status and URL telemetry once. Each Deals capture refuses only
+reminder polling and notification status once. Across all seven R4 attempts,
+16 requests are refused: reminders 6, notifications 6, URL telemetry 4. The
+original invalid Contacts route has none. The successful non-GET total is
+PageLayout/read ×6 and visitor/passive ×6, all 200, including the invalid Deals
+Fields capture. Every individual loaded page has exactly one of each. There is
+no new successful non-GET path/count outside the previously classified passive
+exceptions. Refusals remain blocked; no guard, request or preference is changed.
+
+All five continuation captures report zero failed scripts and only the known
+sorting-library page error. Click and step lists are empty. There is no
+automatic Escape, lingering dialog, popup, download, file chooser or print.
+No hover, scroll, typing, toggle, drag, replay or browser-tab cleanup occurred.
+Tool success and successful API calls do not override the final image gate.
+
+### Deals Fields — failed paint gate and open question
+
+The last screenshot contains a field table and subtabs, but the module heading
+and entire module-navigation sidebar are absent. Fields has no selected-tab
+indicator; the page extends behind the fixed bottom bar. The tab strip omits
+Record Locking Configuration and shows Preferences. These are diagnostic
+observations of incomplete module initialization, **not accepted module deltas**.
+The final route remains `/Deals/field-listing`, unlike the canonical module
+segment observed in the preceding accepted Layouts capture. No additional page
+error proves a cause; the route alias is a plausible explanation, not a finding.
+
+The 87 raw entries are excluded from the accepted control totals. They must not
+be used to implement a sidebar-free Fields screen or a different Deals tab set.
+**Open question:** what is the complete resting Deals Fields screen at the
+observed canonical `/crm/<org>/settings/modules/Potentials/field-listing` route?
+It remains unobserved with valid paint. The CTO's seven-attempt budget is fully
+consumed (five accepted screens, two invalid attempts); the explicit failure
+fallback is applied. No further capture or retry is requested by this handoff.
+All editor, write, preference and non-resting behaviours remain unobserved.
+
+### R4 verification and handoff
+
+The five accepted screen inventories contain **264 logical controls**:
+52 + 54 + 52 + 54 + 52. Raw reconciliation totals are **363 represented +
+179 excluded = 542 raw entries**. The original invalid URL's 3 entries and the
+partial Deals Fields capture's 87 entries are diagnostic only and excluded.
+Each inherited mapping is checked for unique raw-index use and full coverage;
+the five new screenshots are manually inspected. No customer data, identifiers,
+reference assets or absolute local paths are introduced.
+
+Checks: inventory arithmetic, inherited-map uniqueness, capture/request audit,
+neutral-language/privacy review and `git diff --check`. This change updates only
+the specification; no application tests, typecheck or e2e are needed. UI Lead
+is the final spec reviewer. The budget and paint failure are disclosed so that
+five-screen acceptance cannot be mistaken for complete six-screen evidence.
