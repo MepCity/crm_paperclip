@@ -30,6 +30,18 @@ describe("meetingToInvitation", () => {
     expect(r.location).toBe("Room 1");
   });
 
+  it("passes recurrence through", () => {
+    const r = meetingToInvitation(
+      { ...meeting, recurrence: "FREQ=WEEKLY;COUNT=3" },
+      { organizer, method: "REQUEST", now },
+    );
+    expect(r.recurrence).toBe("FREQ=WEEKLY;COUNT=3");
+    expect(buildInvitation(r)).toContain("RRULE:FREQ=WEEKLY;COUNT=3");
+    expect(
+      meetingToInvitation(meeting, { organizer, method: "REQUEST", now }).recurrence,
+    ).toBeUndefined();
+  });
+
   it("maps a cancel", () => {
     const r = meetingToInvitation(meeting, { organizer, method: "CANCEL", now });
     expect(buildInvitation(r)).toContain("STATUS:CANCELLED");

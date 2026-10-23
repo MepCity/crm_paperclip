@@ -3,6 +3,7 @@ import { afterEach, expect, test, vi } from "vitest";
 import { render } from "@/test/render";
 import { inboxFixture } from "./fixture";
 import { loadInboxFixture } from "./fixture-loader";
+import { createHttpInboxLoader } from "./http-loader";
 import { InboxClient, type InboxLoader } from "./inbox-client";
 import type { InboxViewModel } from "./view-model";
 
@@ -111,9 +112,9 @@ test.each(["resolve", "reject"] as const)(
   },
 );
 
-test("an invalid folder loads Inbox and the default fixture preserves all folder counts", async () => {
+test("an invalid folder loads Inbox and the explicit fixture preserves all folder counts", async () => {
   query.value = "folder=unknown&message=missing";
-  render(<InboxClient />);
+  render(<InboxClient load={loadInboxFixture} />);
   expect(await screen.findByRole("button", { name: "Inbox 6" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Sent 2" })).toBeTruthy();
   expect(screen.getByRole("heading", { name: "Select a message" })).toBeTruthy();
@@ -133,4 +134,35 @@ test("replacing a loader or unmounting ignores the previous pending result", asy
   view.rerender(<InboxClient load={() => unmounted.promise} />);
   view.unmount();
   await act(async () => unmounted.reject(new Error("Disposed request")));
+});
+
+test("renders HTTP conversations and reloads the selected folder through the port", async () => {
+  const fetcher = vi.fn(async (path: string) => ({
+    connected: true,
+    data: inboxFixture.conversations.filter(
+      (row) => row.folder === new URL(path, "https://crm.test").searchParams.get("folder"),
+    ),
+  }));
+  const load = createHttpInboxLoader(fetcher);
+  const view = render(<InboxClient load={load} />);
+  await screen.findByRole("button", { name: /Project overview/ });
+  expect(screen.getByRole("button", { name: "Inbox 6" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Sent 0" })).toBeTruthy();
+  query.value = "folder=sent&message=conversation-7";
+  view.rerender(<InboxClient load={load} />);
+  await screen.findByRole("heading", { name: "Planning summary" });
+  expect(screen.getByRole("button", { name: "Sent 2" })).toBeTruthy();
+  expect(fetcher.mock.calls.map(([path]) => path)).toEqual([
+    "/crm/v2.2/mail/conversations?folder=inbox",
+    "/crm/v2.2/mail/conversations?folder=sent",
+  ]);
+});
+
+test("HTTP errors use the existing error state", async () => {
+  const load = createHttpInboxLoader(async () => {
+    throw new TypeError("Failed to fetch");
+  });
+  render(<InboxClient load={load} />);
+  expect((await screen.findByRole("alert")).textContent).toBe("Unable to load emails");
+  expect(screen.queryByText("No mailbox connected")).toBeNull();
 });

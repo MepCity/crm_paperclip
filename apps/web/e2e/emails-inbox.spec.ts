@@ -1,6 +1,20 @@
+import { inboxFixture } from "../src/modules/emails/inbox/fixture";
 import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
-import { expect, test } from "./support/test";
+import { expect, ignoreFailedResponses, test } from "./support/test";
+
+// Keep browser scenarios synthetic while exercising the production HTTP loader.
+test.beforeEach(async ({ page }) => {
+  await page.route("**/crm/v2.2/mail/conversations?*", async (route) => {
+    const folder = new URL(route.request().url()).searchParams.get("folder");
+    await route.fulfill({
+      json: {
+        connected: true,
+        data: inboxFixture.conversations.filter((row) => row.folder === folder),
+      },
+    });
+  });
+});
 
 test("email folders and messages persist in URL and browser history", async ({ page }) => {
   await page.setViewportSize({ width: 1470, height: 835 });
@@ -22,7 +36,7 @@ test("email folders and messages persist in URL and browser history", async ({ p
   await expect(firstMessage).toHaveAttribute("aria-expanded", "false");
   await firstMessage.click();
   await expect(reader.getByText("Could you share an overview of the proposed work?")).toBeVisible();
-  await page.getByRole("button", { name: "Sent 2" }).click();
+  await page.getByRole("button", { name: "Sent 0" }).click();
   await expect(page).toHaveURL(/\?folder=sent$/);
   await page.getByRole("button", { name: /Planning summary/ }).click();
   await expect(reader.getByRole("heading", { name: "Planning summary" })).toBeVisible();
@@ -30,14 +44,29 @@ test("email folders and messages persist in URL and browser history", async ({ p
   await expect(page.getByRole("heading", { name: "Select a message" })).toBeVisible();
   await page.goBack();
   await expect(reader.getByRole("heading", { name: "Project overview" })).toBeVisible();
-  expect(requests).toEqual([]);
+  expect(requests.length).toBeGreaterThan(0);
+  expect(requests.every((url) => new URL(url).pathname === "/crm/v2.2/mail/conversations")).toBe(
+    true,
+  );
   await page.reload();
   await expect(reader.getByRole("heading", { name: "Project overview" })).toBeVisible();
   await page.getByRole("button", { name: "Scheduled 0" }).click();
   await expect(page.getByRole("heading", { name: "No messages in Scheduled" })).toBeVisible();
 });
 
-test("compose validates recipients and sends through the fixture port", async ({ page }) => {
+test("compose validates recipients and posts through the HTTP port", async ({ page }) => {
+  const sent: { method: string; org: string | undefined; body: Record<string, unknown> }[] = [];
+  await page.route("**/crm/v2.2/mail/messages", async (route) => {
+    const request = route.request();
+    sent.push({
+      method: request.method(),
+      org: request.headers()["x-crm-org"],
+      body: request.postDataJSON(),
+    });
+    await route.fulfill({
+      json: { data: { id: "synthetic-message", status: "queued", scheduledAt: null } },
+    });
+  });
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(`/crm/${org.slug}/tab/Emails`);
@@ -53,7 +82,40 @@ test("compose validates recipients and sends through the fixture port", async ({
   await compose.getByRole("textbox", { name: "Message", exact: true }).fill("Synthetic mail body");
   await compose.getByRole("button", { name: "Send", exact: true }).click();
   await expect(compose).not.toBeVisible();
+  expect(sent).toHaveLength(1);
+  expect(sent[0]).toMatchObject({
+    method: "POST",
+    org: org.slug,
+    body: {
+      to: [{ address: "recipient@example.com" }],
+      cc: [{ address: "copy@example.com" }],
+      body: "Synthetic mail body",
+      idempotencyKey: expect.any(String),
+    },
+  });
+  expect(sent[0]?.body).not.toHaveProperty("bodyRef");
   await expect(
     page.getByRole("status").filter({ hasText: "Message sent (fixture)" }),
   ).toBeVisible();
+});
+
+test("a disconnected mailbox uses the existing empty state", async ({ page }) => {
+  await page.route("**/crm/v2.2/mail/conversations?*", (route) =>
+    route.fulfill({ json: { connected: false, data: [] } }),
+  );
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(`/crm/${org.slug}/tab/Emails`);
+  await expect(page.getByRole("heading", { name: "No mailbox connected" })).toBeVisible();
+});
+
+test("an HTTP failure uses the existing error state", async ({ page, pageErrors }) => {
+  await page.route("**/crm/v2.2/mail/conversations?*", (route) =>
+    route.fulfill({ status: 403, json: { code: "FORBIDDEN" } }),
+  );
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(`/crm/${org.slug}/tab/Emails`);
+  await expect(page.getByRole("alert").filter({ hasText: "Unable to load emails" })).toBeVisible();
+  ignoreFailedResponses(pageErrors, [403]);
 });

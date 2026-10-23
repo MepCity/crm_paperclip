@@ -1445,3 +1445,40 @@ implemented and QA-verified as part of MEP-930/MEP-995/MEP-996. All write flows
 (upload, new folder, rename, move, Trash, share, versions, record-attach) are
 deferred pending CTO resolution of ADR 0008 open questions U1–U13. The gate
 will not be marked complete until those flows are implemented and QA-verified.
+## Module 12 — Automation
+
+Research: `research/specs/automation-rules.md` (MEP-1199 approved; MEP-1208 R2 pending UI Lead review).
+Module gate remains open. No automation implementation is certified by this report.
+
+| # | Capability | Research evidence / disposition |
+| --- | --- | --- |
+| M12-R1-01 | Assignment Rules introductory screen and numbered controls | Observed A0; read-only local fixture slice can follow spec approval |
+| M12-R1-02 | Workflow Rules list, filters, columns and row menu | Unresolved U1: base and targeted capture fail to load route content; not a zero-rule state |
+| M12-R1-03 | Workflow detail: trigger, criteria, immediate/scheduled actions | Unresolved U2; public-documentation functional summary only |
+| M12-R1-04 | Assignment populated list/detail: entries, criteria, recipients and round robin | Unresolved U3; no existing row exposed; documentation-only concepts |
+| M12-R1-05 | Builders, scheduling and write validation | Deferred U4/U7; never exercised in reference CRM |
+| M12-R1-06 | Metadata and safe evidence | Workflow export unsupported; Assignment export null; not schema sources. All capture click/step arrays empty; background writes blocked |
+
+| M12-R2-01 | Workflow bounded recapture / paint evidence | W2/W3: exactly two attempts (12s/20s final wait), painted shell and route-model errors; no normal list/empty/detail certified (U1/U2/U5) |
+| M12-R2-02 | Assignment Thresholds and assistant tab targets | Navigation-only requests via exported links; both skipped by dangerous-attribute guard. No destination body certified; no additional UI slice unlocked |
+| M12-R2-03 | Assignment existing detail | No existing row exposed; U3 remains open; no creation or guessed identifier |
+
+## Module 13 — Reports and Analytics (R1 research)
+
+Source: `research/specs/reports.md` (MEP-1211). Research only; no implementation
+or module gate is claimed. Module 2+ inventory parity applies.
+
+| # | Surface | Evidence / status | Remaining boundary |
+| --- | --- | --- | --- |
+| RP-01 | Reports populated All Reports list, toolbar, columns and row affordances | `m13r1-reports-main`; H01–H47, R01–R07 inventory | Search, category persistence, selection and favorite actions untested |
+| RP-02 | Report folders / folder contents / empty list | Open U1–U3; no report-folder pane or safe folder link in captured state | No view preference changed; no folder created; empty report result is distinct |
+| RP-03 | Existing report view with empty result | `m13r1-report-detail`; V01–V10 inventory; one navigation-link click | Other report types, populated data, filters, sorting and menu actions unobserved |
+| RP-04 | Analytics initial overview and visible card regions | `m13r1-analytics-entry`; A01–A12 inventory; zero clicks | Automatic metadata PUT blocked; runtime errors; detailed dashboard research is R2 |
+| RP-05 | Metadata and read-only safety | Module index entries present; no dedicated field schemas; all capture meta audited | No writes, export, scheduling, sharing, favorites or preference changes authorized |
+
+All three captures remain local in the research workspace. Guarded background
+requests: reminder/status/telemetry in every capture; an additional automatic
+Analytics metadata update was blocked on entry. No guard was relaxed and no
+reference mutation is evidenced. U1–U7 remain research questions rather than
+approved product behaviour. First recommended implementation slice is the
+observed read-only Reports list only, pending UI Lead review.

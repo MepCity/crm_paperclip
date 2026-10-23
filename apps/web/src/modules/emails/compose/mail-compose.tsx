@@ -10,10 +10,12 @@ import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { resolveAllowedType } from "../../../../../../packages/core/src/attachments/file-policy";
 import { parseRecipientList } from "../../../../../../packages/core/src/mail/recipient-list";
+import { browserComposeOrg, createHttpComposePort } from "./http-port";
 import {
   type ComposeMailbox,
   type ComposeMailInput,
   composeAttachmentByteLimit,
+  fixtureComposePort,
   type MailComposePort,
 } from "./port";
 
@@ -27,13 +29,23 @@ export function MailCompose({
   onSent,
 }: {
   mailboxes: readonly ComposeMailbox[];
-  port: MailComposePort;
+  port?: MailComposePort;
   initialTo?: string;
   onClose: () => void;
   onSent: (result: { id: string }) => void;
 }) {
   const titleId = useId();
+  const orgSlug = browserComposeOrg();
+  // Existing app mounts pass the fixture; organization routes use the HTTP default.
+  // Explicit custom ports and demos outside the app retain their injected behavior.
+  const sendPort =
+    (!port || port === fixtureComposePort) && orgSlug
+      ? createHttpComposePort(orgSlug)
+      : (port ?? fixtureComposePort);
   const [mailboxId, setMailboxId] = useState(mailboxes[0]?.id ?? "");
+  const activeMailboxId = mailboxes.some((m) => m.id === mailboxId)
+    ? mailboxId
+    : (mailboxes[0]?.id ?? "");
   const [values, setValues] = useState({ To: initialTo, Cc: "", Bcc: "" });
   const [visible, setVisible] = useState({ Cc: false, Bcc: false });
   const [subject, setSubject] = useState("");
@@ -43,7 +55,7 @@ export function MailCompose({
   const [pending, setPending] = useState(false);
   const [confirmDiscard, setConfirmDiscard] = useState(false);
   const sending = useRef(false);
-  const intent = useRef<string | null>(null);
+  const [intent] = useState(() => crypto.randomUUID());
   const fileInput = useRef<HTMLInputElement>(null);
   const dirty =
     values.To !== initialTo ||
@@ -52,9 +64,8 @@ export function MailCompose({
     subject ||
     body ||
     files.length ||
-    mailboxId !== (mailboxes[0]?.id ?? "");
+    activeMailboxId !== (mailboxes[0]?.id ?? "");
   function changed() {
-    intent.current = null;
     setError("");
   }
   function requestClose() {
@@ -74,7 +85,7 @@ export function MailCompose({
       setError(count ? "Use at most 100 recipients." : "Add at least one recipient.");
       return;
     }
-    const mailbox = mailboxes.find((item) => item.id === mailboxId);
+    const mailbox = mailboxes.find((item) => item.id === activeMailboxId);
     if (!mailbox) {
       setError("Select a connected mailbox.");
       return;
@@ -82,10 +93,9 @@ export function MailCompose({
     sending.current = true;
     setPending(true);
     setError("");
-    intent.current ??= crypto.randomUUID();
     const input: ComposeMailInput = {
-      idempotencyKey: intent.current,
-      mailboxId,
+      idempotencyKey: intent,
+      mailboxId: activeMailboxId,
       from: { address: mailbox.address, ...(mailbox.name ? { name: mailbox.name } : {}) },
       to: parsed[0]?.recipients ?? [],
       cc: parsed[1]?.recipients ?? [],
@@ -98,11 +108,11 @@ export function MailCompose({
         name: file.name,
         size: file.size,
         contentType: resolveAllowedType({ fileName: file.name, mediaType: file.type }).mediaType,
-        blobRef: `fixture:${intent.current}:${index}`,
+        blobRef: `fixture:${intent}:${index}`,
       })),
     };
     try {
-      const result = await port.send(input);
+      const result = await sendPort.send(input);
       onSent(result);
       onClose();
     } catch {
@@ -137,7 +147,7 @@ export function MailCompose({
             <Select
               label="From"
               items={mailboxes}
-              value={mailboxId}
+              value={activeMailboxId}
               onChange={(key) => {
                 changed();
                 setMailboxId(String(key));

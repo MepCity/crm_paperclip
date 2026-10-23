@@ -2,7 +2,7 @@
 
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { loadInboxFixture } from "./fixture-loader";
+import { loadInboxHttp } from "./http-loader";
 import { InboxScreen } from "./inbox-screen";
 import { type EmailFolder, emailFolders, type InboxViewModel } from "./view-model";
 
@@ -17,7 +17,7 @@ type LoadState = {
 
 const emptyModel: InboxViewModel = { connected: true, conversations: [] };
 
-export function InboxClient({ load = loadInboxFixture }: { load?: InboxLoader }) {
+export function InboxClient({ load = loadInboxHttp }: { load?: InboxLoader }) {
   const params = useSearchParams();
   const folder = emailFolders.find((item) => item.id === params.get("folder"))?.id ?? "inbox";
   const [state, setState] = useState<LoadState | null>(null);

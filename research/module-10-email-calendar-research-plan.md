@@ -77,6 +77,7 @@ variant) and substitutes names. The Module 10 additions are marked (new).
    `blocked`, no attempt to revert or retry, spec still written from what was
    captured. A blocked write the tool refused (listed in `meta.json`
    `blockedRequests`) is reported, not retried.
+   Tool-blocked telemetry and polls. A request listed in `meta.json` `blockedRequests` never reached the reference CRM. For blocked client telemetry paths (`/telemetry/*`, `/ingest/*`) and blocked reminder/notification polls, the stop rule compares path only: a new blocked path still stops, a higher count of an already-listed one is logged in the spec and is not a stop. Every other blocked path, and every request that was sent (present in `network.json` with a response), keeps the path + count rule.
 8. **Named selectors only.** `role=button[name="..."]`, `text=...` or another
    named form that matches exactly one element in the base `controls.json`.
    No positional selectors (`nth`, `:nth-child`, index, coordinates). Unnamed
@@ -94,6 +95,7 @@ variant) and substitutes names. The Module 10 additions are marked (new).
     painted). One retry after 5 minutes with `--wait 25000`; load is only
     logged. Never hand a skeleton to QA, and never answer a non-paint with a
     longer wait alone.
+    Baseline page errors. A `pageerror` message that also appears in an earlier accepted, painted capture of the same screen type is a baseline error and does not by itself fail the gate. The spec names that earlier capture and lists the baseline messages (structure only, no customer data). Any other `pageerror` message, and any `requestfailed GET ... .js`, still fails the gate; all other conditions (module title, `apiCalls`, `controls.json` ≥ 50, record link, screenshot showing the rendered record) must still pass. The first base capture of a screen is never its own baseline.
 11. **Wait.** Every capture uses `--wait 25000`.
 12. **Tool failure rule** (new wording of MEP-107 rule). If the tool leaves an
     empty slug folder, writes no `meta.json`, leaks a tab, or reports

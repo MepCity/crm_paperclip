@@ -248,6 +248,26 @@ describe("gmail connector", () => {
     );
   });
 
+  it.each([
+    ["rateLimitExceeded", "retryable", 17],
+    ["userRateLimitExceeded", "retryable", 17],
+    ["forbidden", "permanent", null],
+    ["invalidArgument", "permanent", null],
+  ])("classifies send 403 %s with Retry-After", async (reason, code, retryAfterSeconds) => {
+    const { connector, calls } = setup((req) =>
+      req.url.includes("/token")
+        ? json(200, { access_token: ACCESS })
+        : json(403, { error: { errors: [{ reason }] } }, { "retry-after": "17" }),
+    );
+    await connector.storeRefreshToken(mb, SECRET);
+    await expect(connector.sendRaw(mb, "Subject: a\r\n\r\nb")).rejects.toMatchObject({
+      code,
+      retryAfterSeconds,
+      httpStatus: 403,
+    });
+    expect(calls.filter((call) => call.url.endsWith("/messages/send"))).toHaveLength(1);
+  });
+
   it("disconnect deletes the secret and stops further calls", async () => {
     const { connector, credentials, calls } = setup(standard);
     await connector.storeRefreshToken(mb, SECRET);
