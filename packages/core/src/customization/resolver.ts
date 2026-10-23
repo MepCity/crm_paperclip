@@ -229,6 +229,7 @@ export function resolveEffectiveModule(
     ]),
   );
   return immutable({
+    inheritsBaselineLayouts: overlay.layouts === undefined,
     apiName: baseline.apiName,
     singularLabel: baseline.singularLabel,
     pluralLabel: baseline.pluralLabel,

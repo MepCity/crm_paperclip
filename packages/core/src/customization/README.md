@@ -16,6 +16,9 @@ network writes. Consumers must not enable settings editing from this adapter.
   member is an active field ID, unique within its section; column entries must
   belong to that section. Cross-section membership may repeat (the Calls
   fixture repeats Description); column placement remains globally unique.
+  Effective reads include `inheritsBaselineLayouts` to distinguish inherited
+  placement from an explicitly supplied replacement, even if their contents
+  happen to match. This internal provenance does not relax validation.
   Field patches merge by stable field ID;
   `views` and `picklist` properties replace their complete property value.
   Unknown keys and explicit undefined patch properties are rejected.

@@ -74,6 +74,8 @@ export interface CustomizationPatch {
 }
 
 export interface EffectiveModuleDefinition {
+  /** Whether placement inherits the baseline, for legacy transport projection. */
+  inheritsBaselineLayouts: boolean;
   apiName: string;
   singularLabel: string;
   pluralLabel: string;

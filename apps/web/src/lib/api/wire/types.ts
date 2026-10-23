@@ -10,6 +10,8 @@ export type WireCriteria =
   | { field: { api_name: string }; comparator: Comparator; value: WireCriteriaValue }
   | { group_operator: "AND" | "OR"; group: readonly WireCriteria[] };
 export type WireField = {
+  id: string;
+  custom_field: boolean;
   accepts_json_array?: boolean;
   api_name: string;
   field_label: string;
@@ -36,6 +38,8 @@ export type WireModule = {
   business_card_fields: readonly { api_name: string }[];
 };
 export type WireLayout = {
+  id: string;
+  default: true;
   sections: readonly {
     display_label: string;
     column_count: number;
@@ -54,6 +58,7 @@ export type WireView = {
   sort_order: "asc" | "desc" | null;
 };
 export type WireInfo = {
+  revision?: string;
   per_page: number;
   count: number;
   page: number;
@@ -74,14 +79,14 @@ export type WireWriteResult = {
 
 export type WireViewSummary = Pick<WireView, "id" | "name" | "system_defined" | "default">;
 export type WirePageInfo = Pick<WireInfo, "per_page" | "count" | "page" | "more_records">;
-export type WireModuleResponse = { modules: readonly WireModule[] };
-export type WireFieldsResponse = { fields: readonly WireField[] };
-export type WireLayoutsResponse = { layouts: readonly WireLayout[] };
+export type WireModuleResponse = { revision: string; modules: readonly WireModule[] };
+export type WireFieldsResponse = { revision: string; fields: readonly WireField[] };
+export type WireLayoutsResponse = { revision: string; layouts: readonly WireLayout[] };
 export type WireViewsResponse = {
   custom_views: readonly WireViewSummary[];
-  info: WirePageInfo & { default?: string };
+  info: WirePageInfo & { default?: string; revision?: string };
 };
-export type WireViewResponse = { custom_views: readonly WireView[] };
+export type WireViewResponse = { revision: string; custom_views: readonly WireView[] };
 export type WireActivitySummaries = Readonly<
   Record<
     string,

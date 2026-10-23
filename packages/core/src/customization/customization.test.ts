@@ -96,6 +96,7 @@ describe("effective metadata resolver", () => {
     const before = structuredClone({ base, overlay });
     const result = resolveEffectiveModule(base, overlay);
     expect(result.revision).toBe(4);
+    expect(result.inheritsBaselineLayouts).toBe(false);
     expect(result.fields.map((entry) => entry.id)).toEqual(["name", "description", "custom"]);
     expect(result.fields[1]).toMatchObject({ label: "Details", views: hidden });
     expect(result.layouts[0]?.sections[0]?.columns[0]).toEqual(["custom", "name", "description"]);
@@ -103,7 +104,11 @@ describe("effective metadata resolver", () => {
     expect(result.fields[0]).not.toHaveProperty("customizable");
     expect({ base, overlay }).toEqual(before);
     expect(resolveEffectiveModule(base, overlay)).toEqual(result);
-    expect(resolveEffectiveModule(base)).toMatchObject({ baselineVersion: "v1", revision: 0 });
+    expect(resolveEffectiveModule(base)).toMatchObject({
+      baselineVersion: "v1",
+      revision: 0,
+      inheritsBaselineLayouts: true,
+    });
   });
 
   it("is independent of patch-object insertion order", () => {

@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { ATTACHMENT_PARENT_MODULES } from "../../attachments/modules";
+import type { CustomizationPort } from "../../customization";
 import {
   ConflictError,
   ForbiddenError,
@@ -27,6 +28,7 @@ import type {
   FieldValue,
   ListQuery,
   MergeInput,
+  ModuleMetadataReader,
   RecordData,
   RecordInput,
   RecordService,
@@ -64,6 +66,7 @@ import { fixtureHistoryStore } from "./history-store";
 import { type FixtureHistoryOperation, historyBatch } from "./history-write";
 import type { FixtureHookContext, FixtureModuleStore } from "./hooks";
 import { createFixtureKanbanViews } from "./kanban-views";
+import { readFixtureModuleProjection } from "./metadata-projection";
 import { notesParentModules } from "./notes/metadata";
 import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
 import { type DeletionManifest, fixtureRecycleBinService, retainDeletion } from "./recycle-bin";
@@ -139,6 +142,7 @@ const normalizeInput = (
 };
 
 export interface FixtureRecordServiceOptions extends FixtureHistoryPermissions {
+  customization?: CustomizationPort;
   actorName?: string;
   source?: HistorySource;
   /** Internal synchronous failure seam; runs before staged history publication. */
@@ -158,12 +162,13 @@ function moduleBundle(module: string): FixtureModuleBundle {
 export function createFixtureRecordService(
   context: OrgContext,
   options?: FixtureRecordServiceOptions,
-): RecordService & {
-  readonly attachmentLifecycle: ReturnType<typeof fixtureAttachmentLifecycle>;
-  readonly history: RecordHistoryService;
-  readonly tags: TagService;
-  readonly recycleBin: RecycleBinService;
-} {
+): RecordService &
+  ModuleMetadataReader & {
+    readonly attachmentLifecycle: ReturnType<typeof fixtureAttachmentLifecycle>;
+    readonly history: RecordHistoryService;
+    readonly tags: TagService;
+    readonly recycleBin: RecycleBinService;
+  } {
   const ctx = { ...context };
   const clock = () => options?.now?.() ?? new Date();
   let store = stores.get(ctx.orgId);
@@ -1207,6 +1212,10 @@ export function createFixtureRecordService(
     },
     async getHomeCurrency() {
       return { isoCode: "TRY", symbol: "TL", name: "Turkish Lira - TRY", prefixSymbol: true };
+    },
+    async getModuleProjection(module) {
+      bundleFor(module);
+      return readFixtureModuleProjection(ctx.orgId, module, options?.customization);
     },
     async getModule(module) {
       return copy(bundleFor(module).metadata);

@@ -108,6 +108,18 @@ export interface ModuleMetadata {
   layout: readonly LayoutSection[];
 }
 
+/** One atomic, organization-bound settings read; record engine integration is separate. */
+export interface ModuleReadProjection extends ModuleMetadata {
+  revision: string;
+  layoutId: string;
+  fields: readonly (FieldDefinition & { id: string; custom: boolean })[];
+  views: readonly ListView[];
+}
+
+export interface ModuleMetadataReader {
+  getModuleProjection(module: ModuleApiName): Promise<ModuleReadProjection>;
+}
+
 export interface RecordData {
   id: RecordId;
   /** Keys are field API names, including owner and creation/modification fields. */
