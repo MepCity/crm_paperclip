@@ -5,11 +5,18 @@
 M10-R4 (MEP-1013) inventories the calendar without changing any reference CRM
 record or preference. Only direct navigation to the observed calendar pathname
 was used, without date, view-type or calendar-selection query overrides.
-The initial screenshot shows Day selected, but a page error fails the mandatory
-paint gate. All initial inventory rows below are provisional diagnostic evidence,
-not an approved implementation baseline. The one permitted retry also fails;
-its blocked telemetry count exceeds the initial baseline. Research is stopped
-pending CEO disposition, with no third capture or browser intervention.
+The initial screenshot shows Day selected. Both captures initially failed the
+strict paint gate because of `$L(...).sortable is not a function`.
+CEO decision MEP-1042 (2026-10-22) accepts this known application-wide baseline
+error and explicitly authorizes offline completion for UI Lead review. The
+rendered Day inventory is therefore submitted for review; it does not establish
+Week/Month layouts or event-tile behaviour. Known blocked telemetry count growth
+is logged under rule 7's path-only exception, not treated as a stop.
+No third capture, click or browser intervention was performed.
+
+This disposition supersedes the provisional R4 wording in section 9 of
+[module-10-write-only-flows.md](../module-10-write-only-flows.md); its write
+restrictions and W5/W6/W10/W17 gaps remain applicable.
 
 ## Layout
 
@@ -26,7 +33,8 @@ days and a marked selected date. No measurements or design tokens are inferred.
 
 ## Control inventory — m10r4-calendar-base
 
-Source for every row: seen (m10r4-calendar-base), provisional due to paint failure.
+Source for every row: seen (m10r4-calendar-base), accepted for offline completion
+under MEP-1042; UI Lead review pending.
 Raw indices are 1-based positions in controls.json. Nested entries representing
 one painted control share one row. Contacts refs refer to contacts.md; they do
 not imply calendar behaviour was exercised. Static labels are marked explicitly.
@@ -187,7 +195,10 @@ schedule includes; the capture does not establish organization defaults.
 - m10r4-calendar-base: click-free, --wait 25000; 48 API groups, 188 controls.
 - Calendar heading present; no ordinary event link because range reads returned
   204. Diagnostics include pageerror: $L(...).sortable is not a function.
-  Paint gate fails regardless of the visible grid or control count.
+  Initially failed the strict paint gate; MEP-1042 accepts this message as an
+  application-wide baseline. The CEO confirmed the other gate conditions pass:
+  rendered heading/grid, 188 controls, 48 API groups, and no activity-link
+  requirement for the empty range.
 - Event-range reads are GET /crm/v9/__calendar_activities (four request groups,
   one call each, 204). No payload shapes are specified.
 
@@ -209,10 +220,12 @@ baseline. No event creation, edit, sync or preference write was requested.
 
 ## Open questions
 
-1. The only permitted retry failed. CEO must decide whether existing resting-state
-   evidence can be accepted offline or a bounded tool correction is needed.
-2. Week/Month layout remains documented only. Retain that limitation under
-   read-only rules; no view switch is authorized by documentation alone.
+1. Resolved by MEP-1042: existing Day evidence is accepted for offline completion
+   with the known baseline error; no new capture is authorized.
+2. Week/Month layout remains documented only. The existing board interaction
+   `8ab91a66-b656-4bdd-9016-437bd1d6f88f` on MEP-1013 is pending, including
+   the event-tile gap. No answer or view-switch permission is inferred. This
+   open question is retained while the CEO-authorized spec goes to UI Lead.
 3. Event tile title/duration/category shape, overlap, recurrence indicators,
    overflow and permissions are unobserved with this empty range.
 4. Meaning of the hatched band and current-time marker placement is unresolved.
@@ -232,8 +245,9 @@ application tests, biome, typecheck or full verify is run.
 
 Click-free retry began at 2026-10-21 21:12:59 UTC, more than five minutes after
 base meta at 21:07:46 UTC; retry meta is 21:13:52 UTC. It again has 48 API
-groups and 188 controls. The same pageerror fails the gate; this first screen
-has no earlier accepted painted calendar capture to establish a baseline error.
+groups and 188 controls. The same pageerror originally failed the gate; MEP-1042 subsequently accepts
+it as an application-wide baseline, without requiring an earlier calendar
+capture. That decision is the acceptance basis, not this capture itself.
 There are no new logical controls and no label/type changes across raw indices.
 The same 132 represented raw entries map to 96 C rows, with 56 excluded.
 Shell inventory is not repeated.
@@ -248,11 +262,11 @@ Shell inventory is not repeated.
 Allowed non-GET paths and counts remain /crm/v9/coql = 1 and the neutral visitor
 trigger path = 1. Four calendar activity GET groups remain 204. The reminder,
 notification, exception telemetry and log telemetry blocked paths each remain
-one. Blocked urlMonitor telemetry increases from one to two. This exceeds the
-base path/count set even though the tool refused it, and independently triggers
-DUR under rule 7. Total blockedRequests: base 5, retry 6. No blocked request was
+one. Blocked urlMonitor telemetry increases from one to two. The earlier DUR interpretation was corrected by the CEO in MEP-1042: rule 7
+compares only the path for known blocked telemetry/polls. No new path appeared;
+this count increase does not trigger DUR. Total blockedRequests: base 5, retry 6. No blocked request was
 manually replayed; no click was executed. No claim of a reference write is made.
 
 No further capture or preference operation is authorized by this document. The
-week/month documentation limit remains an open question; a board question card
-can be recorded on this issue after the safe-continuation decision if required.
+Week/Month documentation limit and existing pending board card remain open.
+No duplicate interaction is created and no board answer is presumed.
