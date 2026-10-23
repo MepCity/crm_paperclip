@@ -76,3 +76,23 @@ export async function runMigrations(
     await client.end();
   }
 }
+
+/** New persistence deployments use the dedicated maintenance URL, never DATABASE_URL. */
+export async function runOwnerMigrations(
+  connection: string = process.env.DATABASE_MIGRATION_URL ?? "",
+  dir: string = defaultMigrationsDir,
+): Promise<MigrationResult> {
+  if (!connection) throw new Error("DATABASE_MIGRATION_URL is required");
+  const client = new pg.Client({ connectionString: connection });
+  await client.connect();
+  try {
+    const role = await client.query(`select current_user = 'crm_owner' as owner,
+      rolsuper or rolbypassrls as elevated from pg_roles where rolname=current_user`);
+    if (!role.rows[0]?.owner || role.rows[0]?.elevated) {
+      throw new Error("Migrations require the restricted crm_owner connection");
+    }
+  } finally {
+    await client.end();
+  }
+  return runMigrations(connection, dir);
+}
