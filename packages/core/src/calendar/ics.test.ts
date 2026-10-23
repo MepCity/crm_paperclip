@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { ValidationError } from "../errors";
 import { buildInvitation, type InvitationInput } from "./ics";
+import { parseImipRequest } from "./imip-request";
 
 const base: InvitationInput = {
   uid: "evt-1@example.com",
@@ -121,5 +122,47 @@ describe("buildInvitation", () => {
 
   it("allows CANCEL without attendees", () => {
     expect(() => buildInvitation({ ...base, method: "CANCEL", attendees: [] })).not.toThrow();
+  });
+
+  describe("recurrence", () => {
+    it("writes RRULE right after DTEND", () => {
+      const lines = buildInvitation({ ...base, recurrence: "FREQ=WEEKLY;BYDAY=MO;COUNT=4" }).split(
+        "\r\n",
+      );
+      const i = lines.findIndex((l) => l.startsWith("DTEND"));
+      expect(lines[i + 1]).toBe("RRULE:FREQ=WEEKLY;BYDAY=MO;COUNT=4");
+    });
+
+    it("writes RRULE for CANCEL too and strips a RRULE: prefix", () => {
+      const ics = buildInvitation({
+        ...base,
+        method: "CANCEL",
+        recurrence: "RRULE:FREQ=DAILY;COUNT=2",
+      });
+      expect(ics).toContain("\r\nRRULE:FREQ=DAILY;COUNT=2\r\n");
+      expect(ics).not.toContain("RRULE:RRULE");
+    });
+
+    it("treats blank recurrence as none (byte-identical output)", () => {
+      expect(buildInvitation({ ...base, recurrence: "  " })).toBe(buildInvitation(base));
+      expect(buildInvitation(base)).not.toContain("RRULE");
+    });
+
+    it("rejects unsupported rules with a recurrence field error", () => {
+      for (const r of ["FREQ=HOURLY", "FREQ=WEEKLY;BYSETPOS=1", "garbage"]) {
+        try {
+          buildInvitation({ ...base, recurrence: r });
+          expect.unreachable();
+        } catch (e) {
+          expect(e).toBeInstanceOf(ValidationError);
+          expect(JSON.stringify((e as ValidationError).fieldErrors ?? e)).toContain("recurrence");
+        }
+      }
+    });
+
+    it("round-trips through parseImipRequest", () => {
+      const ics = buildInvitation({ ...base, recurrence: "FREQ=WEEKLY;BYDAY=MO;COUNT=4" });
+      expect(() => parseImipRequest(ics)).not.toThrow();
+    });
   });
 });
