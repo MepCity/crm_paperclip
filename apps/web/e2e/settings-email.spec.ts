@@ -29,6 +29,7 @@ test("Email settings routes, tabs and accepted gaps stay read only", async ({ pa
   await page.getByRole("tab", { name: "Organization Emails", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Organization Email Addresses" })).toBeVisible();
   await expect(page.getByRole("button", { name: "Add Email Address" })).toBeDisabled();
+  await expect(page).toHaveURL(`${base}/email-configuration/organization-emails`);
   await page.reload();
   await expect(page.getByRole("heading", { name: "Organization Email Addresses" })).toBeVisible();
   await page.goBack();
@@ -41,6 +42,7 @@ test("Email settings routes, tabs and accepted gaps stay read only", async ({ pa
   await page.getByRole("tab", { name: "Email Parser", exact: true }).click();
   await expect(page.getByText(/Email Parser data is unavailable/)).toBeVisible();
   await page.getByRole("tab", { name: "BCC Dropbox", exact: true }).click();
+  await expect(page).toHaveURL(`${base}/bcc-dropbox`);
   await expect(page.getByText(/No address has been generated/)).toBeVisible();
   await page.reload();
   await expect(page.getByRole("heading", { name: "BCC Dropbox" })).toBeVisible();
