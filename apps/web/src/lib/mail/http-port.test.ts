@@ -1,7 +1,7 @@
 import { UnauthenticatedError, ValidationError } from "@crm/core/errors";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { encodeError, UnexpectedApiError } from "@/lib/api/wire/errors";
-import { createHttpMailPort, fetchConversations } from "./http-port";
+import { createHttpMailPort, fetchConversations, fetchRecordConversations } from "./http-port";
 
 const row = {
   id: "thread",
@@ -82,5 +82,53 @@ describe("mail HTTP port", () => {
         createHttpMailPort("example").fetchConversations("inbox"),
       ).rejects.toBeInstanceOf(type);
     }
+  });
+});
+
+describe("record mail HTTP port", () => {
+  it("encodes the record scope and accepts conversations from different folders", async () => {
+    const data = [row, { ...row, id: "sent-thread", folder: "sent" }];
+    const fetcher = vi.fn(async () => ({ connected: true, data }));
+    expect(await fetchRecordConversations("Contacts", "record &1", fetcher)).toEqual({
+      connected: true,
+      data,
+    });
+    expect(fetcher).toHaveBeenCalledWith(
+      "/crm/v2.2/mail/conversations?module=Contacts&recordId=record+%261",
+    );
+  });
+  it.each([
+    null,
+    {},
+    { connected: "yes", data: [] },
+    { connected: false, data: [row] },
+    { connected: true, data: [{ ...row, folder: "unknown" }] },
+    { connected: true, data: [{ ...row, messages: [] }] },
+    { connected: true, data: [{ ...row, messages: [{ ...row.messages[0], date: "bad" }] }] },
+  ])("rejects malformed record response %#", async (body) => {
+    await expect(fetchRecordConversations("Leads", "example", async () => body)).rejects.toThrow(
+      "Malformed mail response",
+    );
+  });
+  it("accepts disconnected state and preserves fetch errors", async () => {
+    expect(
+      await fetchRecordConversations("Deals", "example", async () => ({
+        connected: false,
+        data: [],
+      })),
+    ).toEqual({ connected: false, data: [] });
+    const error = new ValidationError({ recordId: ["Invalid record."] });
+    await expect(
+      fetchRecordConversations("Deals", "example", async () => {
+        throw error;
+      }),
+    ).rejects.toBe(error);
+  });
+  it("uses the organization-bound factory fetcher", async () => {
+    const fetcher = vi.fn(async () => ({ connected: true, data: [] }));
+    await createHttpMailPort("example", fetcher).fetchRecordConversations("Accounts", "record");
+    expect(fetcher).toHaveBeenCalledWith(
+      "/crm/v2.2/mail/conversations?module=Accounts&recordId=record",
+    );
   });
 });

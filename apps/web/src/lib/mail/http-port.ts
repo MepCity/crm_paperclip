@@ -50,6 +50,31 @@ const browserFetch: ApiFetchFn = (path, options) => {
   return apiFetch(decodeURIComponent(slug), path, options);
 };
 
+export type MailRecordModule = "Leads" | "Contacts" | "Accounts" | "Deals";
+
+function readResponse(body: unknown, folder?: EmailFolder): MailConversationsResponse {
+  if (
+    !record(body) ||
+    typeof body.connected !== "boolean" ||
+    !Array.isArray(body.data) ||
+    !body.data.every(conversation) ||
+    (folder !== undefined && body.data.some((row) => row.folder !== folder)) ||
+    (!body.connected && body.data.length > 0)
+  )
+    throw new Error("Malformed mail response");
+  return { connected: body.connected, data: body.data };
+}
+
+export async function fetchRecordConversations(
+  module: MailRecordModule,
+  recordId: string,
+  fetchFn: ApiFetchFn = browserFetch,
+): Promise<MailConversationsResponse> {
+  return readResponse(
+    await fetchFn(`/crm/v2.2/mail/conversations?${new URLSearchParams({ module, recordId })}`),
+  );
+}
+
 export async function fetchConversations(
   folder: EmailFolder,
   fetchFn: ApiFetchFn = browserFetch,
@@ -64,21 +89,16 @@ export async function fetchConversations(
     }
     throw error;
   }
-  if (
-    !record(body) ||
-    typeof body.connected !== "boolean" ||
-    !Array.isArray(body.data) ||
-    !body.data.every(conversation) ||
-    body.data.some((row) => row.folder !== folder) ||
-    (!body.connected && body.data.length > 0)
-  )
-    throw new Error("Malformed mail response");
-  return { connected: body.connected, data: body.data };
+  return readResponse(body, folder);
 }
 
 export function createHttpMailPort(
   orgSlug: string,
   fetcher: ApiFetchFn = (path, options) => apiFetch(orgSlug, path, options),
 ) {
-  return { fetchConversations: (folder: EmailFolder) => fetchConversations(folder, fetcher) };
+  return {
+    fetchConversations: (folder: EmailFolder) => fetchConversations(folder, fetcher),
+    fetchRecordConversations: (module: MailRecordModule, recordId: string) =>
+      fetchRecordConversations(module, recordId, fetcher),
+  };
 }

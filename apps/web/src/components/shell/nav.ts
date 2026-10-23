@@ -153,6 +153,7 @@ export const settingsNav: readonly NavLink[] = [
     icon: Icons.settings,
     href: (slug) => `/crm/${slug}/settings`,
     match: "exact",
+    group: "General",
   },
   {
     id: "members",
@@ -160,6 +161,15 @@ export const settingsNav: readonly NavLink[] = [
     icon: Icons.users,
     href: (slug) => `/crm/${slug}/settings/members`,
     match: "exact",
+    group: "General",
+  },
+  {
+    id: "calendar-booking",
+    label: "Calendar Booking",
+    icon: Icons.calendar,
+    href: (slug) => `/crm/${slug}/settings/calendar-booking`,
+    match: "exact",
+    group: "General",
   },
   {
     id: "import-history",

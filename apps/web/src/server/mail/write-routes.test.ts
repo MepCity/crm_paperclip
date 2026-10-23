@@ -254,9 +254,17 @@ describe("mail write HTTP routes", () => {
       expect(response.status).toBe(400);
     },
   );
+  it("supports manual deal links", async () => {
+    const target = { module: "deals", recordId: "example-record" };
+    expect((await link(target)).status).toBe(200);
+    expect((await state.repository.read(actor.orgId)).links).toEqual([
+      expect.objectContaining(target),
+    ]);
+    expect((await call("DELETE", target)).status).toBe(200);
+  });
   it("rejects invalid sharing and link shapes", async () => {
     expect((await call("PATCH", { shared: "true" })).status).toBe(400);
-    expect((await link({ module: "deals", recordId: "example-record" })).status).toBe(400);
+    expect((await link({ module: "unsupported", recordId: "example-record" })).status).toBe(400);
     expect((await call("DELETE", { module: "leads" })).status).toBe(400);
   });
   it("ignores foreign-tenant rows even if an adapter accidentally returns them", async () => {

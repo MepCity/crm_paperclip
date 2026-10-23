@@ -36,7 +36,11 @@ async function linkMessage(
   message: MailMessage,
   checkpoint: () => Promise<void>,
 ) {
-  const kinds = { leads: "lead", contacts: "contact", accounts: "account" } as const;
+  const kinds: Partial<Record<string, "lead" | "contact" | "account">> = {
+    leads: "lead",
+    contacts: "contact",
+    accounts: "account",
+  };
   const modules = { lead: "leads", contact: "contacts", account: "accounts" } as const;
   const addresses = [
     ...new Set(
@@ -55,7 +59,9 @@ async function linkMessage(
         !Object.hasOwn(kinds, match.module)
       )
         continue;
-      records.push({ kind: kinds[match.module], recordId: match.recordId, email: match.address });
+      const kind = kinds[match.module];
+      if (!kind) continue;
+      records.push({ kind, recordId: match.recordId, email: match.address });
     }
   }
   const result = matchRecordLinks(addresses, records);

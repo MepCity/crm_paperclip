@@ -171,14 +171,15 @@ describe("shellNav", () => {
 });
 
 describe("settingsNav", () => {
-  it("defines general, members and data administration links in order", () => {
+  it("defines general, members, calendar booking and data administration links in order", () => {
     expect(settingsNav.map((link) => link.id)).toEqual([
       "general",
       "members",
+      "calendar-booking",
       "import-history",
       "export-history",
     ]);
-    const [general, members] = settingsNav;
+    const [general, members, calendarBooking] = settingsNav;
 
     expect(general).toEqual({
       id: "general",
@@ -186,6 +187,7 @@ describe("settingsNav", () => {
       icon: Icons.settings,
       href: expect.any(Function),
       match: "exact",
+      group: "General",
     });
     expect(members).toEqual({
       id: "members",
@@ -193,10 +195,40 @@ describe("settingsNav", () => {
       icon: Icons.users,
       href: expect.any(Function),
       match: "exact",
+      group: "General",
+    });
+    expect(calendarBooking).toEqual({
+      id: "calendar-booking",
+      label: "Calendar Booking",
+      icon: Icons.calendar,
+      href: expect.any(Function),
+      match: "exact",
+      group: "General",
     });
 
     expect(general?.href("acme")).toBe("/crm/acme/settings");
     expect(members?.href("acme")).toBe("/crm/acme/settings/members");
+    expect(calendarBooking?.href("acme")).toBe("/crm/acme/settings/calendar-booking");
+  });
+
+  it("groups calendar booking under General and matches only its own settings page", () => {
+    const generalLinks = settingsNav.filter((link) => link.group === "General");
+    expect(generalLinks.map((link) => link.label)).toEqual([
+      "General",
+      "Members",
+      "Calendar Booking",
+    ]);
+
+    const bookingLink = settingsNav.find((link) => link.id === "calendar-booking");
+    expect(bookingLink).toBeDefined();
+    if (!bookingLink) return;
+
+    const path = "/crm/acme/settings/calendar-booking";
+    expect(bookingLink.href("acme")).toBe(path);
+    expect(bookingLink.match).toBe("exact");
+    expect(isNavLinkActive(bookingLink, "acme", path)).toBe(true);
+    expect(isNavLinkActive(bookingLink, "acme", "/crm/acme/settings")).toBe(false);
+    expect(isNavLinkActive(bookingLink, "acme", `${path}/subpage`)).toBe(false);
   });
 
   it("groups transfer history links and matches only their own settings page", () => {
