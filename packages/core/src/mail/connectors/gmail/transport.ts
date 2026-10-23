@@ -3,6 +3,8 @@ export interface HttpRequest {
   url: string;
   headers: Record<string, string>;
   body?: string;
+  /** Transports must honor cancellation; a failed send may already be accepted. */
+  signal?: AbortSignal;
 }
 export interface HttpResponse {
   status: number;
