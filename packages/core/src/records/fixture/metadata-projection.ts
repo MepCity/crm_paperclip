@@ -10,7 +10,7 @@ import { baselineFieldId, baselineLayoutId } from "../metadata";
 import { fixtureModules } from "./registry";
 
 export function fixtureMetadataBaselines(): ModuleBaseline[] {
-  return Object.entries(fixtureModules).map(([module, bundle]) => {
+  return Object.entries(fixtureModules).map(([module, bundle]): ModuleBaseline => {
     const { metadata } = bundle;
     const ids = new Map(
       metadata.fields.map((field) => [field.apiName, baselineFieldId(field.apiName)]),
@@ -56,6 +56,8 @@ export function fixtureMetadataBaselines(): ModuleBaseline[] {
         customizable: ["label", "required", "readOnly", "maxLength", "picklist", "views"] as const,
         systemRequired: field.required,
         serverValue:
+          (module === "Attachments" &&
+            ["File_Name", "Size", "Parent_Id"].includes(field.apiName)) ||
           bundle.managedFields.has(field.apiName) ||
           field.readOnly ||
           field.dataType === "ownerlookup",
@@ -110,7 +112,7 @@ export function fixtureMetadataBaselines(): ModuleBaseline[] {
       supportedColumnCounts: [
         ...new Set([1, 2, ...metadata.layout.map((section) => section.columnCount)]),
       ],
-      capabilities: {},
+      capabilities: module === "Attachments" ? { layouts: false } : {},
       engineCapabilities: {},
     };
   });

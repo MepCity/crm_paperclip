@@ -67,7 +67,11 @@ describe("effective metadata wire projection", () => {
       const fields = json(await operations.fields.run(d, request(module)));
       expect(legacy(fields.body)).toEqual(legacy({ fields: metadata.fields.map(encodeField) }));
       const layouts = json(await operations.layouts.run(d, request(module)));
-      expect(legacy(layouts.body)).toEqual(legacy({ layouts: [encodeLayout(metadata)] }));
+      if (metadata.layout.length) {
+        expect(legacy(layouts.body)).toEqual(legacy({ layouts: [encodeLayout(metadata)] }));
+      } else {
+        expect(layouts).toEqual({ status: 204, body: null });
+      }
       const list = json(await operations.views.run(d, request(module)));
       if (!views.length) {
         expect(list.status).toBe(204);
@@ -95,11 +99,36 @@ describe("effective metadata wire projection", () => {
         expect(legacy(body)).toEqual({ custom_views: [encodeView(view)] });
       }
       expect(fields.body.revision).toBe(moduleBody.revision);
-      expect(layouts.body.revision).toBe(moduleBody.revision);
+      if (layouts.status !== 204) expect(layouts.body.revision).toBe(moduleBody.revision);
       expect(list.body.info.revision).toBe(moduleBody.revision);
       expect(moduleBody.revision).toMatch(/^[A-Za-z0-9._:-]{1,64}$/);
     },
   );
+
+  it("keeps attachment fields unchanged and layouts unavailable", async () => {
+    const baseline = present(baselines.find((entry) => entry.apiName === "Attachments"));
+    expect(baseline.layouts).toEqual([expect.objectContaining({ isDefault: true, sections: [] })]);
+    expect(baseline.capabilities).toEqual({ layouts: false });
+    expect(
+      baseline.fields
+        .filter((field) => field.required && field.serverValue)
+        .map((field) => field.apiName),
+    ).toEqual(["File_Name", "Size", "Parent_Id"]);
+    const calls = present(baselines.find((entry) => entry.apiName === "Calls"));
+    expect(calls.fields.find((field) => field.apiName === "Call_Type")?.serverValue).toBe(false);
+    const records = service(new InMemoryCustomizationAdapter([baseline]));
+    const fields = json(await operations.fields.run(deps(records), request("Attachments")));
+    expect(fields.status).toBe(200);
+    expect(legacy(fields.body)).toEqual(
+      legacy({
+        fields: (await records.getModule("Attachments")).fields.map(encodeField),
+      }),
+    );
+    expect(json(await operations.layouts.run(deps(records), request("Attachments")))).toEqual({
+      status: 204,
+      body: null,
+    });
+  });
 
   it("publishes one new revision to all five reads and projects custom fields and placement", async () => {
     const port = new InMemoryCustomizationAdapter(
