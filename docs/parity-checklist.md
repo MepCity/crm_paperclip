@@ -1447,8 +1447,10 @@ deferred pending CTO resolution of ADR 0008 open questions U1–U13. The gate
 will not be marked complete until those flows are implemented and QA-verified.
 ## Module 12 — Automation
 
-Research: `research/specs/automation-rules.md` (MEP-1199 approved; MEP-1208 R2 pending UI Lead review).
-Module gate remains open. No automation implementation is certified by this report.
+Research: `research/specs/automation-rules.md` (R1 approved; R2 evidence retained;
+MEP-1253 R3 documentation-based inventory pending UI Lead review). MEP-1234 accepted
+the documentation-based continuation; R3 certifies no unseen visual parity or
+implementation completion. Earlier R1/R2 gap rows below remain historical evidence.
 
 | # | Capability | Research evidence / disposition |
 | --- | --- | --- |
@@ -1462,6 +1464,17 @@ Module gate remains open. No automation implementation is certified by this repo
 | M12-R2-01 | Workflow bounded recapture / paint evidence | W2/W3: exactly two attempts (12s/20s final wait), painted shell and route-model errors; no normal list/empty/detail certified (U1/U2/U5) |
 | M12-R2-02 | Assignment Thresholds and assistant tab targets | Navigation-only requests via exported links; both skipped by dangerous-attribute guard. No destination body certified; no additional UI slice unlocked |
 | M12-R2-03 | Assignment existing detail | No existing row exposed; U3 remains open; no creation or guessed identifier |
+
+### Module 12 — R3 documentation-based read-only continuation
+
+| # | Capability | Research evidence / disposition |
+| --- | --- | --- |
+| M12-R3-01 | Workflow list | WL1–WL11: D1 concepts plus explicit interpretation; port mapping includes get-only trigger summary; U8/U10/U11/U12 |
+| M12-R3-02 | Workflow detail | WD1–WD6: trigger, conditions, immediate/scheduled actions and timing; D1 + current port; U9/U13/U16 |
+| M12-R3-03 | Populated Assignment list / introductory transition | AL1–AL5: A0/A7/A8 pattern, D2 concepts and explicit interpretation; U11/U12/U14 |
+| M12-R3-04 | Assignment detail | AD1–AD7: entry sequence, conditions, recipients, distribution, availability, fallback; D2/D3 + port; U7/U13/U14/U16 |
+| M12-R3-05 | Write controls | RC1–RC6: proposed hidden controls / static activation text; U15 decision remains for UI Lead; no writes or execution |
+| M12-R3-06 | Implementation boundaries | MEP-1255 maps to AL/AD; MEP-1256 maps to WL/WD; both share applicable RC inventory. U1–U16 retained; no new capture or model change |
 
 ## Module 13 — Reports and Analytics (R1 research)
 
