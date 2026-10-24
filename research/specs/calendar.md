@@ -270,3 +270,51 @@ manually replayed; no click was executed. No claim of a reference write is made.
 No further capture or preference operation is authorized by this document. The
 Week/Month documentation limit and existing pending board card remain open.
 No duplicate interaction is created and no board answer is presumed.
+
+## R9 — documentation-based answers (MEP-1302)
+
+Checked 2026-10-24 using public first-party CRM help only. No capture, view
+switch, date navigation, hover, event mutation or preference change. All CD
+items are proposals **documented, not observed**, submitted to UI Lead. This
+addendum does not answer, replace or resolve the board interaction on MEP-1013.
+Earlier Day evidence and retry reconciliation remain unchanged.
+
+### Public source register
+
+Neutral titles and knowledge-base breadcrumbs omit product names and hosts.
+Both articles were read; separate standalone calendar-product documentation
+and third-party copies were excluded because they do not establish CRM UI.
+
+| Ref | Neutral page title / topic locator | Sections used |
+| --- | --- | --- |
+| C-D1 | CRM › Organization settings › Calendar management › Using Calendar | Components; UI elements; Controls; Managing meetings; Other Users' Calendar |
+| C-D2 | CRM › Organization settings › Calendar management › Managing Calendar | Set Calendar Preferences |
+
+### Question dispositions and implementation consequences
+
+| Original question | Verdict | Documentation answer / remaining gap | Implementation consequence |
+| --- | --- | --- | --- |
+| 2 — Week/Month layout | Partly answered | C-D1 documents Day/Week/Month, top all-day activities in Day/Week and optional week numbers. C-D2 allows all days or exclusion of closed days, and a chosen week start. Exact geometry remains unknown. | CD01: support documented ranges and all-day separation; retain visual parity and the existing board card as open. Do not assert a universal seven-day work week. |
+| 3 — Event tile shape/overlap/recurrence | Partly answered | C-D1 describes purpose colors, activity icons, shortened names and full title/time on hover; recurrence is supported. No overlap algorithm, overflow rule, recurrence glyph, dimensions or duration-to-height formula is specified. | CD02/CD03: preserve readable titles/time and distinguish activity types. Collision handling, truncation thresholds and recurrence badges remain implementation proposals, requiring review rather than a claim of reference parity. |
+| 4 — Hatched band/current-time marker | Partly answered | C-D1 identifies working-hours display, a current-time indicator and a patterned tile for cursor position. It does not identify the captured band conclusively or specify marker geometry/update cadence. | CD04: keep cursor, working hours and clock concepts distinct; never label the observed hatch as unavailable time solely from its texture. |
+| 5 — Date-navigation persistence | Still open | C-D1 documents mini-calendar and range arrows. C-D2 documents saved preferences, but neither says whether the selected date survives reload, navigation away or a new session. | CD05: support range navigation; do not infer persistent date state or a settings write. Any local persistence policy must be labelled an implementation decision. |
+
+### Proposed capability items — documented, not observed
+
+| # | Proposal / source | Unresolved boundary |
+| --- | --- | --- |
+| CD01 | Day/Week/Month and all-day placement (C-D1); work-week preferences (C-D2) | Month cell structure, adjacent dates, responsive geometry and populated layouts are unobserved. |
+| CD02 | Activity icon, purpose color, shortened title with hover information (C-D1) | No copied icons/assets or inferred color tokens; overlap and overflow remain open. |
+| CD03 | Recurrence capability (C-D1); calendar visibility follows authorization (C-D1, Other Users' Calendar) | Recurrence tile decoration and precise permission-filtered tile rendering are unobserved; do not grant visibility from this functional summary. |
+| CD04 | Current-time, working-hours and cursor indicators (C-D1) | Relationship to C-094's changing hatch remains unproved; no exact position, color or refresh contract. |
+| CD05 | Mini-calendar/range navigation (C-D1) | Date/view persistence and restoration remain undocumented; no reference preference changed. |
+
+### R9 verification and gate handoff
+
+CD01–CD05 are a functional inventory, not evidence of completed implementation.
+Retain Week/Month visual review, tile collision/overflow/recurrence decoration,
+hatch identification, marker geometry and date persistence at the Module 10
+gate. W5/W6/W10/W17 remain untested. No further live investigation is authorized.
+Checks cover questions 2–5, unique CD IDs, source references, relative links,
+`git diff --check` and the forbidden-term hook. No application test is run for
+this Markdown-only update.
