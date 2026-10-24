@@ -6,9 +6,19 @@ import { addTestMember, createTestOrganization } from "@crm/core/testing";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { getRecordService } from "@/lib/records";
 import { encodeInput, MAX_CRITERIA_GROUP_SIZE, MAX_CRITERIA_NODES } from "./codec";
+import { customizationOperations } from "./customization";
 import { type Operation, operationPath, operations } from "./operations";
 
 const handlers = [
+  [operations.createField, () => import("@/app/crm/v2.2/settings/fields/route")],
+  [operations.patchField, () => import("@/app/crm/v2.2/settings/fields/route")],
+  [operations.retireField, () => import("@/app/crm/v2.2/settings/fields/route")],
+  [operations.patchModule, () => import("@/app/crm/v2.2/settings/modules/[module]/route")],
+  [operations.patchLayout, () => import("@/app/crm/v2.1/settings/layouts/route")],
+  [operations.createSharedView, () => import("@/app/crm/v9/settings/custom_views/route")],
+  [operations.patchSharedView, () => import("@/app/crm/v9/settings/custom_views/[viewId]/route")],
+  [operations.deleteSharedView, () => import("@/app/crm/v9/settings/custom_views/[viewId]/route")],
+
   [operations.search, () => import("@/app/crm/v2.2/actions/search/route")],
   [
     operations.duplicateGroups,
@@ -407,6 +417,7 @@ describe("operation routes", () => {
     for (const [op] of handlers.filter(
       ([op]) =>
         ![
+          ...Object.values(customizationOperations),
           operations.search,
           operations.duplicateGroups,
           operations.merge,

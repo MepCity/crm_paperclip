@@ -1488,6 +1488,27 @@ is absent. W-numbers refer to `research/module-10-write-only-flows.md`.
 | Business/personal hours, calendar defaults, meeting-provider setup, booking create/edit/publish and public reservations | MEP-1043 accepts documentation-only R6 closure; MEP-1121 delivers the prerequisite only. Post-configuration screens, defaults and validation remain gaps for MEP-1239. | `calendar-settings.md` › Implementation boundary and gate questions; write-only register R6 |
 | Notify Email (CSV-09), tracking/bounce/unsubscribe results, mass email/mail merge and complete record-link/sharing behaviour | ADR 0009 and W11–W15/W19 retain the missing integrated flows and reference result-state questions. MEP-1093 supplies bounded manual link/sharing routes, not full UI/provider parity. Workflow-triggered mail W16 belongs to M12. | Write-only register W11–W16/W19; `email-record-detail.md` › Open questions and gate handoff |
 
+### Module 10 — R9 documentation follow-up (MEP-1302)
+
+Public first-party documentation checked 2026-10-24; **documented, not observed**.
+Research pending UI Lead approval; no capture or application change.
+
+| # | Question / proposed items | Disposition and remaining gate gap |
+| --- | --- | --- |
+| M10-R9-E1 | Mail entitlement/profile/setup — ED01 | Partly: documented prerequisites; capture-user diagnosis and route mapping unknown. |
+| M10-R9-E2 | Sent/Drafts/Scheduled and tracking views — ED02–ED05 | Partly: folders and statistical semantics documented; exact list UI/columns and Tracked placement unobserved. Record-related scopes are distinguished. |
+| M10-R9-E3 | List-load synchronization — ED06 | Trigger and endpoint still open; asynchronous propagation guidance is not a sync-on-read contract. |
+| M10-R9-E4 | No mailbox — ED07 | Partly: setup prerequisite documented; exact disconnected design unknown; access denied and empty folder remain separate. |
+| M10-R9-C2 | Week/Month — CD01 | Partly: ranges, work-week preferences and all-day separation documented; geometry and existing board card on MEP-1013 remain open. |
+| M10-R9-C3 | Tiles — CD02/CD03 | Partly: icons, colors and hover information documented; overlap, overflow and recurrence decoration remain open. |
+| M10-R9-C4 | Hatch/current time — CD04 | Partly: cursor/working-hours/clock concepts documented; captured hatch identity and marker placement unknown. |
+| M10-R9-C5 | Date persistence — CD05 | Still open; range navigation does not establish persistent selected date. |
+
+Sources, per-question consequences and proposed inventories are in
+`email-inbox.md` and `calendar.md` › R9 — documentation-based answers.
+EC-01/EC-05 above remain delivery records; these research findings do not
+retroactively certify their visual parity or resolve the Module 10 gate.
+
 ### Module 10 gate
 
 Board gate MEP-1239 remains **open**. Rows EC-01–EC-08 record delivered

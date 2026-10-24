@@ -88,3 +88,24 @@ it("resets paging when changing queue", async () => {
 });
 
 afterEach(cleanup);
+
+it("shows synthetic populated and zero fixtures with consistent counts and unavailable boundaries", async () => {
+  sessionStorage.setItem("workqueue-welcome:test:user", "dismissed");
+  const user = userEvent.setup();
+  mount();
+  await user.click(screen.getByRole("button", { name: "Synthetic tasks" }));
+  const table = screen.getByRole("table", { name: "Preview records" });
+  expect(within(table).getAllByRole("link")).toHaveLength(3);
+  expect(screen.getByTestId("preview-count").textContent).toBe("3 records");
+  expect(within(table).getAllByRole("link")[0]?.getAttribute("href")).toMatch(
+    /^\/crm\/test\/tab\/Tasks\/preview-task-/,
+  );
+  await user.click(screen.getByRole("button", { name: "All open" }));
+  expect(within(table).getAllByRole("link")).toHaveLength(4);
+  expect(screen.getByTestId("preview-count").textContent).toBe("4 records");
+  await user.click(screen.getByRole("button", { name: "Synthetic zero result" }));
+  expect(screen.getByTestId("preview-count").textContent).toBe("0 records");
+  expect(screen.getByText(/provisional empty state/)).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Add Leads queue" }));
+  expect(screen.getByRole("status").textContent).toMatch(/unavailable/);
+});

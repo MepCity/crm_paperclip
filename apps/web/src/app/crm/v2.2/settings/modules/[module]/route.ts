@@ -4,3 +4,5 @@ import { operations } from "@/lib/api/wire/operations";
 export const dynamic = "force-dynamic";
 
 export const GET = operationRoute(operations.module);
+
+export const PATCH = operationRoute(operations.patchModule);
