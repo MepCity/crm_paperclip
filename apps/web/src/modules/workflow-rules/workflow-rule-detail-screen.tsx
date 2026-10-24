@@ -1,74 +1,22 @@
 "use client";
 
-import type { AutomationPort, ReadResult, WorkflowRule } from "@crm/core/automation";
-import type { OrgContext } from "@crm/core/records";
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { Button } from "@/components/ui/button";
+import type { ReadResult, WorkflowRule } from "@crm/core/automation";
+import { buttonSizes, buttonStyles } from "@/components/ui/button-styles";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
-import { createSyntheticWorkflowRulesPort } from "./fixtures";
 import { formatActionKind, formatCondition, formatTiming, formatTrigger } from "./formatters";
 
 export interface WorkflowRuleDetailScreenProps {
   orgSlug: string;
   ruleId: string;
-  ctx?: OrgContext;
-  initialResult?: ReadResult<WorkflowRule>;
-  port?: AutomationPort;
+  result: ReadResult<WorkflowRule>;
 }
-
-const fallbackCtx: OrgContext = {
-  orgId: "synthetic-org",
-  orgSlug: "synthetic",
-  orgName: "Synthetic organization",
-  userId: "synthetic-admin",
-  role: "admin",
-};
 
 export function WorkflowRuleDetailScreen({
   orgSlug,
   ruleId,
-  ctx = fallbackCtx,
-  initialResult,
-  port,
+  result,
 }: WorkflowRuleDetailScreenProps) {
-  const activePort = useMemo(() => port ?? createSyntheticWorkflowRulesPort(), [port]);
-  const [result, setResult] = useState<ReadResult<WorkflowRule> | null>(initialResult ?? null);
-  const [loading, setLoading] = useState<boolean>(!initialResult);
-
-  const fetchRule = useCallback(async () => {
-    setLoading(true);
-    try {
-      const res = await activePort.get(ctx, {
-        kind: "workflow",
-        id: ruleId,
-      });
-      if (res.ok) {
-        if (res.value.kind === "workflow") {
-          setResult({ ok: true, value: res.value as WorkflowRule });
-        } else {
-          setResult({ ok: false, error: { code: "unavailable" } });
-        }
-      } else {
-        setResult(res as ReadResult<WorkflowRule>);
-      }
-    } catch {
-      setResult({ ok: false, error: { code: "unavailable" } });
-    } finally {
-      setLoading(false);
-    }
-  }, [activePort, ctx, ruleId]);
-
-  const initialFetchSkipped = useRef(Boolean(initialResult));
-
-  useEffect(() => {
-    if (initialFetchSkipped.current) {
-      initialFetchSkipped.current = false;
-      return;
-    }
-    fetchRule();
-  }, [fetchRule]);
-
   const listHref = `/crm/${encodeURIComponent(orgSlug)}/settings/workflow-rules`;
 
   return (
@@ -87,19 +35,10 @@ export function WorkflowRuleDetailScreen({
         </Link>
       </div>
 
-      {/* Loading state (WD6) */}
-      {loading ? (
-        <div role="status" aria-live="polite" className="py-12 text-center text-text-muted">
-          <Icons.spinner
-            className="inline size-6 animate-spin text-primary mr-2"
-            aria-hidden="true"
-          />
-          <span>Loading rule details...</span>
-        </div>
-      ) : null}
+      {!result.ok ? <h1 className="sr-only">Workflow Rule Details</h1> : null}
 
       {/* Forbidden State (WD6) */}
-      {!loading && result && !result.ok && result.error.code === "forbidden" ? (
+      {!result.ok && result.error.code === "forbidden" ? (
         <div
           role="alert"
           className="rounded-md border border-border bg-surface-muted p-6 text-center"
@@ -113,7 +52,7 @@ export function WorkflowRuleDetailScreen({
       ) : null}
 
       {/* Not Found State (WD6) */}
-      {!loading && result && !result.ok && result.error.code === "not_found" ? (
+      {!result.ok && result.error.code === "not_found" ? (
         <div
           role="alert"
           className="rounded-md border border-border bg-surface-muted p-6 text-center"
@@ -127,11 +66,7 @@ export function WorkflowRuleDetailScreen({
       ) : null}
 
       {/* Error State with Retry (WD6) */}
-      {!loading &&
-      result &&
-      !result.ok &&
-      result.error.code !== "forbidden" &&
-      result.error.code !== "not_found" ? (
+      {!result.ok && result.error.code !== "forbidden" && result.error.code !== "not_found" ? (
         <div
           role="alert"
           className="rounded-md border border-border bg-surface-muted p-6 text-center"
@@ -143,14 +78,17 @@ export function WorkflowRuleDetailScreen({
           <p className="text-sm text-text-muted mt-1">
             A temporary problem occurred while retrieving rule details.
           </p>
-          <Button variant="secondary" size="sm" onClick={fetchRule} className="mt-4">
+          <a
+            href={`${listHref}/${encodeURIComponent(ruleId)}`}
+            className={`mt-4 inline-flex items-center justify-center ${buttonStyles.secondary} ${buttonSizes.sm}`}
+          >
             Retry
-          </Button>
+          </a>
         </div>
       ) : null}
 
       {/* Populated Detail Screen (WD1, WD2, WD3, WD4, WD5) */}
-      {!loading && result && result.ok ? (
+      {result.ok ? (
         <div className="space-y-8">
           {/* WD1: Header summary */}
           <div className="border-b border-border pb-6">

@@ -1,6 +1,7 @@
 "use client";
 
 import { NotFoundError, ValidationError } from "@crm/core/errors";
+import type { FormatOptions } from "@crm/core/format";
 import type {
   ActivityFilterValue,
   CampaignFilterValue,
@@ -64,7 +65,7 @@ import {
   moduleTagsPath,
   withSearchParams,
 } from "@/lib/crm-paths";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import { usePreference } from "@/lib/preferences";
 import {
   appliedSortFromState,
@@ -110,6 +111,7 @@ export interface ModuleListScreenConfig {
     metadata: ModuleMetadata;
     orgSlug: string;
     ownerNames: Readonly<Record<string, string>>;
+    format?: FormatOptions;
   }) => RecordBoardProps;
   boardComponent?: React.ComponentType<ModuleListBoardProps>;
   boardToolbar?: ReactNode;
@@ -227,6 +229,7 @@ function ModuleListScreenLoaded({
   viewId,
   currentUserId,
 }: ModuleListScreenProps & { routeViewId?: string; viewId: string }) {
+  const orgFormat = useFormat();
   const router = useRouter();
   const refreshModuleListData = useRefreshModuleListData(config.module);
   const searchParams = useSearchParams();
@@ -776,7 +779,13 @@ function ModuleListScreenLoaded({
   }
   const boardProps =
     presentation === "board" && config.board && moduleQuery.data
-      ? config.board({ records, metadata: moduleQuery.data, orgSlug, ownerNames })
+      ? config.board({
+          records,
+          metadata: moduleQuery.data,
+          orgSlug,
+          ownerNames,
+          format: orgFormat,
+        })
       : null;
   const previousHref =
     page > 1 && listBasePath ? withSearchParams(listBasePath, previousParams) : null;
@@ -1093,7 +1102,7 @@ function ModuleListScreenLoaded({
                 />
               }
               ownerNames={ownerNames}
-              format={DEFAULT_FORMAT}
+              format={orgFormat}
               footer={{
                 total,
                 page,

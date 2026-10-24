@@ -1,7 +1,7 @@
 "use client";
 
 import { ValidationError } from "@crm/core/errors";
-import { formatCurrency, formatNumber } from "@crm/core/format";
+import { type FormatOptions, formatCurrency, formatNumber } from "@crm/core/format";
 import type { FieldDefinition, ListQuery, ModuleMetadata, RecordData } from "@crm/core/records";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -26,6 +26,7 @@ import { invalidateModuleLists, useHomeCurrency, useRecordSummary } from "@/lib/
 import { useClientRecordService } from "@/lib/api/client/provider";
 import { apiKeys, summarizeQueriesPrefix } from "@/lib/api/client/query-keys";
 import { moduleCreatePath, moduleRecordPath } from "@/lib/crm-paths";
+import { useFormat } from "@/lib/format-context";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { combineCriteriaAnd } from "@/lib/records/filter-criteria";
 import { writeRecordCreatePrefill } from "@/lib/records/record-create-prefill";
@@ -125,8 +126,10 @@ export function buildDealCardRows(
     /** Card field API names in display order; defaults to the seeded stage view. */
     fields?: readonly string[];
     fieldDefinitions?: readonly FieldDefinition[];
+    format?: FormatOptions;
   } = {},
 ): readonly DealCardRow[] {
+  const orgFormat = options.format ?? DEFAULT_FORMAT;
   const rows: DealCardRow[] = [];
   const push = (fieldKey: string, row: Omit<DealCardRow, "fieldKey"> | null) => {
     if (row) rows.push({ ...row, fieldKey });
@@ -156,7 +159,7 @@ export function buildDealCardRows(
       push(
         key,
         typeof value === "number"
-          ? { text: formatCurrency(value, DEALS_LIST_CURRENCY_CODE, DEFAULT_FORMAT) }
+          ? { text: formatCurrency(value, DEALS_LIST_CURRENCY_CODE, orgFormat) }
           : null,
       );
     } else if (key === "Closing_Date") {
@@ -174,7 +177,7 @@ export function buildDealCardRows(
     } else {
       const definition = options.fieldDefinitions?.find((f) => f.apiName === key);
       if (!definition || value === undefined) continue;
-      const formatted = formatFieldValue(definition, value, ownerNames, DEFAULT_FORMAT, {
+      const formatted = formatFieldValue(definition, value, ownerNames, orgFormat, {
         currencyCode: DEALS_LIST_CURRENCY_CODE,
         orgSlug,
       });
@@ -195,13 +198,14 @@ export function formatColumnTotal(
   sum: number,
   aggregateBy: string | null | undefined,
   fieldDefinitions: readonly FieldDefinition[],
+  orgFormat: FormatOptions = DEFAULT_FORMAT,
 ): string | undefined {
   if (!aggregateBy) return undefined;
   const definition = fieldDefinitions.find((f) => f.apiName === aggregateBy);
   if (!definition || definition.dataType === "currency") {
-    return formatCurrency(sum, DEALS_LIST_CURRENCY_CODE, DEFAULT_FORMAT);
+    return formatCurrency(sum, DEALS_LIST_CURRENCY_CODE, orgFormat);
   }
-  return formatNumber(sum, DEFAULT_FORMAT);
+  return formatNumber(sum, orgFormat);
 }
 
 export function buildDealsBoardProps(input: {
@@ -209,7 +213,9 @@ export function buildDealsBoardProps(input: {
   metadata: ModuleMetadata;
   orgSlug: string;
   ownerNames: Readonly<Record<string, string>>;
+  format?: FormatOptions;
 }): RecordBoardProps {
+  const orgFormat = input.format ?? DEFAULT_FORMAT;
   const { records, metadata, orgSlug, ownerNames } = input;
   const stageField = metadata.fields.find((f) => f.apiName === "Stage");
   const stageOptions = stageField?.picklist ?? [];
@@ -227,14 +233,17 @@ export function buildDealsBoardProps(input: {
     );
     const cards: BoardCard[] = stageRecords.map((r) => ({
       id: r.id,
-      rows: buildDealCardRows(r, stageDisplayMap, ownerNames, orgSlug, { closedStages }),
+      rows: buildDealCardRows(r, stageDisplayMap, ownerNames, orgSlug, {
+        closedStages,
+        format: orgFormat,
+      }),
     }));
     return {
       key: opt.storedValue,
       label: opt.displayValue,
       count: stageRecords.length,
       percentage: `${opt.stage?.probability ?? 0}%`,
-      totalText: formatCurrency(sum, DEALS_LIST_CURRENCY_CODE, DEFAULT_FORMAT),
+      totalText: formatCurrency(sum, DEALS_LIST_CURRENCY_CODE, orgFormat),
       cards,
     };
   });
@@ -268,6 +277,7 @@ export function DealsBoard({
   sort,
   perPage,
 }: ModuleListBoardProps) {
+  const orgFormat = useFormat();
   const router = useRouter();
   const service = useClientRecordService();
   const queryClient = useQueryClient();
@@ -373,6 +383,7 @@ export function DealsBoard({
           closedStages,
           fields: cardFields,
           fieldDefinitions: metadata.fields,
+          format: orgFormat,
         }),
       }));
 
@@ -381,7 +392,7 @@ export function DealsBoard({
         label: stage.displayValue,
         count,
         percentage: `${stage.stage?.probability ?? 0}%`,
-        totalText: formatColumnTotal(sum ?? 0, aggregateBy, metadata.fields),
+        totalText: formatColumnTotal(sum ?? 0, aggregateBy, metadata.fields, orgFormat),
         cards,
       };
     });
@@ -396,6 +407,7 @@ export function DealsBoard({
     cardFields,
     aggregateBy,
     metadata.fields,
+    orgFormat,
   ]);
 
   const handleCreate = useCallback(

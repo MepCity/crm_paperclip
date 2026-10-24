@@ -64,63 +64,63 @@ test("Deals board renders all 9 stages in metadata order with counts, percentage
       label: "Qualification",
       probability: "10%",
       count: 28,
-      totalText: "TRY\u00A0533,400.00",
+      totalText: "TL 533.400,00",
     },
     {
       key: "Needs Analysis",
       label: "Needs Analysis",
       probability: "20%",
       count: 28,
-      totalText: "TRY\u00A0536,200.00",
+      totalText: "TL 536.200,00",
     },
     {
       key: "Value Proposition",
       label: "Value Proposition",
       probability: "40%",
       count: 28,
-      totalText: "TRY\u00A0539,000.00",
+      totalText: "TL 539.000,00",
     },
     {
       key: "Id. Decision Makers",
       label: "Identify Decision Makers",
       probability: "60%",
       count: 28,
-      totalText: "TRY\u00A0541,800.00",
+      totalText: "TL 541.800,00",
     },
     {
       key: "Proposal/Price Quote",
       label: "Proposal/Price Quote",
       probability: "75%",
       count: 28,
-      totalText: "TRY\u00A0544,600.00",
+      totalText: "TL 544.600,00",
     },
     {
       key: "Negotiation/Review",
       label: "Negotiation/Review",
       probability: "90%",
       count: 28,
-      totalText: "TRY\u00A0547,400.00",
+      totalText: "TL 547.400,00",
     },
     {
       key: "Closed Won",
       label: "Closed Won",
       probability: "100%",
       count: 28,
-      totalText: "TRY\u00A0550,200.00",
+      totalText: "TL 550.200,00",
     },
     {
       key: "Closed Lost",
       label: "Closed Lost",
       probability: "0%",
       count: 27,
-      totalText: "TRY\u00A0521,100.00",
+      totalText: "TL 521.100,00",
     },
     {
       key: "Closed Lost to Competition",
       label: "Closed Lost to Competition",
       probability: "0%",
       count: 27,
-      totalText: "TRY\u00A0523,800.00",
+      totalText: "TL 523.800,00",
     },
   ];
 
@@ -178,7 +178,7 @@ test("Deals board renders all 9 stages in metadata order with counts, percentage
   await expect(contactLink).toHaveAttribute("href", /\/tab\/Contacts\/[^/?]+$/);
 
   // 6. Amount (currency formatted)
-  await expect(rows.nth(5)).toContainText("TRY");
+  await expect(rows.nth(5)).toContainText("TL");
 
   // 7. Closing Date (dd.MM.yyyy)
   await expect(rows.nth(6)).toHaveText(/^\d{2}\.\d{2}\.\d{4}$/);
@@ -225,9 +225,9 @@ test("Drag-and-drop card to open stage updates stage and persists on reload", as
 
   // Initial column summaries
   await expect(qualCol.locator(".record-board-count")).toHaveText("28");
-  await expect(qualCol.locator(".record-board-total")).toHaveText("TRY\u00A0533,400.00");
+  await expect(qualCol.locator(".record-board-total")).toHaveText("TL 533.400,00");
   await expect(needsCol.locator(".record-board-count")).toHaveText("28");
-  await expect(needsCol.locator(".record-board-total")).toHaveText("TRY\u00A0536,200.00");
+  await expect(needsCol.locator(".record-board-total")).toHaveText("TL 536.200,00");
 
   const card = qualCol.locator("[data-board-card]").first();
   const cardId = await card.getAttribute("data-board-card");
@@ -243,9 +243,9 @@ test("Drag-and-drop card to open stage updates stage and persists on reload", as
 
   // Summary counts and sums updated without reload
   await expect(qualCol.locator(".record-board-count")).toHaveText("27");
-  await expect(qualCol.locator(".record-board-total")).toHaveText("TRY\u00A0502,200.00");
+  await expect(qualCol.locator(".record-board-total")).toHaveText("TL 502.200,00");
   await expect(needsCol.locator(".record-board-count")).toHaveText("29");
-  await expect(needsCol.locator(".record-board-total")).toHaveText("TRY\u00A0567,400.00");
+  await expect(needsCol.locator(".record-board-total")).toHaveText("TL 567.400,00");
 
   // Reload page to verify persistence
   await page.reload();
@@ -253,9 +253,9 @@ test("Drag-and-drop card to open stage updates stage and persists on reload", as
   const reloadedCard = needsCol.locator(`[data-board-card="${cardId}"]`);
   await expect(reloadedCard).toBeVisible();
   await expect(qualCol.locator(".record-board-count")).toHaveText("27");
-  await expect(qualCol.locator(".record-board-total")).toHaveText("TRY\u00A0502,200.00");
+  await expect(qualCol.locator(".record-board-total")).toHaveText("TL 502.200,00");
   await expect(needsCol.locator(".record-board-count")).toHaveText("29");
-  await expect(needsCol.locator(".record-board-total")).toHaveText("TRY\u00A0567,400.00");
+  await expect(needsCol.locator(".record-board-total")).toHaveText("TL 567.400,00");
 });
 
 test("Drag-and-drop card to Closed Won opens Verify Details dialog and updates on save", async ({
@@ -273,9 +273,9 @@ test("Drag-and-drop card to Closed Won opens Verify Details dialog and updates o
   await wonCol.scrollIntoViewIfNeeded();
 
   await expect(negCol.locator(".record-board-count")).toHaveText("28");
-  await expect(negCol.locator(".record-board-total")).toHaveText("TRY\u00A0547,400.00");
+  await expect(negCol.locator(".record-board-total")).toHaveText("TL 547.400,00");
   await expect(wonCol.locator(".record-board-count")).toHaveText("28");
-  await expect(wonCol.locator(".record-board-total")).toHaveText("TRY\u00A0550,200.00");
+  await expect(wonCol.locator(".record-board-total")).toHaveText("TL 550.200,00");
 
   const card = negCol.locator("[data-board-card]").first();
   const cardId = await card.getAttribute("data-board-card");
@@ -300,9 +300,9 @@ test("Drag-and-drop card to Closed Won opens Verify Details dialog and updates o
 
   // Negotiation/Review decreased by 1, Closed Won increased by 1 without reload
   await expect(negCol.locator(".record-board-count")).toHaveText("27");
-  await expect(negCol.locator(".record-board-total")).toHaveText("TRY\u00A0515,700.00");
+  await expect(negCol.locator(".record-board-total")).toHaveText("TL 515.700,00");
   await expect(wonCol.locator(".record-board-count")).toHaveText("29");
-  await expect(wonCol.locator(".record-board-total")).toHaveText("TRY\u00A0581,900.00");
+  await expect(wonCol.locator(".record-board-total")).toHaveText("TL 581.900,00");
 });
 
 test("Drag-and-drop card to Closed Won and redirecting Stage in Verify Details moves card to selected stage without reload", async ({

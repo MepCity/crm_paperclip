@@ -4,7 +4,7 @@ import type { FieldDefinition, ListQuery } from "@crm/core/records";
 import { useEffect, useMemo, useState } from "react";
 import { CellValue } from "@/components/records/list/cell-value";
 import { useModule, useRecordList, useUsers, useView, useViews } from "@/lib/api/client/hooks";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import type { ModuleScreenDefinition } from "@/modules/types";
 import { readPrintListQuery } from "./print-list-handoff";
 import { PrintToolbar } from "./print-toolbar";
@@ -22,6 +22,7 @@ export function ListPrintScreen({
   viewId?: string;
   definition: ModuleScreenDefinition;
 }) {
+  const orgFormat = useFormat();
   const moduleApiName = definition.apiName;
   const viewsQuery = useViews(moduleApiName);
   const viewId = routeViewId ?? viewsQuery.data?.find((view) => view.isDefault)?.id ?? "";
@@ -88,7 +89,7 @@ export function ListPrintScreen({
                     field={field}
                     value={record.fields[field.apiName] ?? null}
                     ownerNames={ownerNames}
-                    format={DEFAULT_FORMAT}
+                    format={orgFormat}
                     orgSlug={orgSlug}
                     currencyCode={definition.list.cellCurrencyCode}
                   />

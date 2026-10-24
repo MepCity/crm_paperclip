@@ -10,7 +10,7 @@ import {
 import { formatFieldValue } from "@/components/records/field-format";
 import { useModule, useRecord, useRecordList, useViews } from "@/lib/api/client/hooks";
 import { moduleRecordPath } from "@/lib/crm-paths";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import { useParentActivities } from "@/lib/records/use-parent-activities";
 import { resolveModuleScreenByApiName } from "./registry";
 
@@ -37,6 +37,7 @@ function tabOf(module: string): string {
  * Meetings and Calls), read through the existing list endpoints.
  */
 export function ActivitySidePanel({ record, orgSlug }: { record: RecordData; orgSlug: string }) {
+  const orgFormat = useFormat();
   const personRef = asRef(record.fields.Who_Id) ?? asRef(record.fields.What_Id);
   const personQuery = useRecord(
     (personRef?.module ?? "Contacts") as ModuleApiName,
@@ -94,7 +95,7 @@ export function ActivitySidePanel({ record, orgSlug }: { record: RecordData; org
       const field = fieldsByName.get(apiName);
       const value = row.fields[apiName];
       if (!field || value === undefined) return null;
-      const formatted = formatFieldValue(field, value, {}, DEFAULT_FORMAT, {
+      const formatted = formatFieldValue(field, value, {}, orgFormat, {
         numericDates: true,
       });
       return formatted.kind === "text" || formatted.kind === "multiline" ? formatted.text : null;
@@ -107,7 +108,7 @@ export function ActivitySidePanel({ record, orgSlug }: { record: RecordData; org
         .filter((v): v is string => v !== null)
         .join(" · "),
     }));
-  }, [dealList.data, dealsModule.data]);
+  }, [dealList.data, dealsModule.data, orgFormat]);
 
   const activities = useParentActivities(
     personRef?.module ?? "",

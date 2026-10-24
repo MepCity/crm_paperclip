@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { ForbiddenError, SchemaStaleError } from "../errors";
+import { ForbiddenError, SchemaStaleError, ValidationError } from "../errors";
 import type { OrgContext } from "../tenancy/types";
 import { type CustomizationCommand, customizationRequestSchema } from "./commands";
 import { schemaRevision } from "./coordinator";
@@ -107,8 +107,12 @@ export class CustomizationService {
       case "view.patch":
       case "view.delete": {
         const original = current.views.find((view) => view.id === viewId);
-        if (!original || original.systemDefined || original.isDefault)
-          invalid("Unknown or protected view.");
+        if (!original) invalid("Unknown view.");
+        if (original.systemDefined || original.isDefault)
+          throw new ValidationError({
+            customization: ["protected_view: system and default views are immutable."],
+            view: ["protected_view"],
+          });
         if (command.type === "view.patch" && command.view.id !== viewId)
           invalid("View identity does not match the resource.");
         patch.views =

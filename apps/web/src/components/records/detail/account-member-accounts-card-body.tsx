@@ -6,7 +6,7 @@ import { FieldValueView } from "@/components/records/detail/field-value";
 import { RelatedRecordsListError } from "@/components/records/detail/related-records-list-error";
 import { Link } from "@/components/ui/link";
 import { useModule, useRecordList, useUsers, useViews } from "@/lib/api/client/hooks";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 
 const LIST_PAGE_SIZE = 100;
 const MEMBER_ACCOUNT_COLUMNS = ["Account_Name", "Phone", "Website", "Owner"] as const;
@@ -25,6 +25,7 @@ export function AccountMemberAccountsCardBody({
   parentRecord,
   accountRecordPath,
 }: AccountMemberAccountsCardBodyProps) {
+  const orgFormat = useFormat();
   const moduleQuery = useModule("Accounts");
   const viewsQuery = useViews("Accounts");
   const usersQuery = useUsers();
@@ -109,7 +110,7 @@ export function AccountMemberAccountsCardBody({
                       field={field}
                       value={value}
                       ownerNames={ownerNames}
-                      format={DEFAULT_FORMAT}
+                      format={orgFormat}
                     />
                   </td>
                 );

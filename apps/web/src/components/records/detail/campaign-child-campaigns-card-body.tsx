@@ -6,7 +6,7 @@ import { FieldValueView } from "@/components/records/detail/field-value";
 import { RelatedRecordsListError } from "@/components/records/detail/related-records-list-error";
 import { Link } from "@/components/ui/link";
 import { useModule, useRecordList, useUsers, useViews } from "@/lib/api/client/hooks";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 
 const LIST_PAGE_SIZE = 100;
 const CHILD_CAMPAIGN_COLUMNS = [
@@ -31,6 +31,7 @@ export function CampaignChildCampaignsCardBody({
   parentRecord,
   campaignRecordPath,
 }: CampaignChildCampaignsCardBodyProps) {
+  const orgFormat = useFormat();
   const moduleQuery = useModule("Campaigns");
   const viewsQuery = useViews("Campaigns");
   const usersQuery = useUsers();
@@ -115,7 +116,7 @@ export function CampaignChildCampaignsCardBody({
                       field={field}
                       value={value}
                       ownerNames={ownerNames}
-                      format={DEFAULT_FORMAT}
+                      format={orgFormat}
                     />
                   </td>
                 );
