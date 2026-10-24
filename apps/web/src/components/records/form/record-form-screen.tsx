@@ -10,6 +10,7 @@ import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
 import { RecordChoice } from "@/components/ui/record-choice";
 import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import {
   useCreateRecord,
   useModule,
@@ -100,9 +101,10 @@ function addressParentForField(
 }
 
 function RecordNotFound() {
+  const t = useUiTranslations();
   return (
     <div className="p-6 text-md text-text">
-      <p>The requested page could not be found.</p>
+      <p>{t("common.notFound")}</p>
     </div>
   );
 }
@@ -190,7 +192,7 @@ function LoadedRecordForm({
   config,
   currentUserId,
   intent,
-  metadata,
+  metadata: rawMetadata,
   sourceRecord,
   users,
   refreshMetadata,
@@ -202,6 +204,8 @@ function LoadedRecordForm({
   users: OwnerOption[];
 }) {
   const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
+  const metadata = useMemo(() => adapter.adaptModule(rawMetadata), [adapter, rawMetadata]);
   const mode: FormMode = intent === "edit" ? "edit" : "create";
   const rules = useMemo(
     () => resolveFormRules(config.rules, { mode, metadata, record: sourceRecord }),
@@ -300,10 +304,10 @@ function LoadedRecordForm({
   const editing = intent === "edit" ? sourceRecord : undefined;
   const title =
     intent === "clone"
-      ? `Clone ${metadata.singularLabel}`
+      ? t("records.form.cloneTitle", { module: metadata.singularLabel })
       : intent === "edit"
-        ? `Edit ${metadata.singularLabel}`
-        : `Create ${metadata.singularLabel}`;
+        ? t("records.form.editTitle", { module: metadata.singularLabel })
+        : t("records.form.createTitle", { module: metadata.singularLabel });
   const ownerNames = useMemo(
     () => Object.fromEntries(users.map((user) => [user.id, user.name])),
     [users],
@@ -447,6 +451,7 @@ function LoadedRecordForm({
         .map((field) => ({ ...field, required: isRequired(field) })),
       values,
       (field) => labelsByField.get(field.apiName) ?? field.label,
+      (label) => t("records.form.fieldRequired", { field: label }),
     );
     const checked = validateRanges(
       rules.ranges,
@@ -480,7 +485,7 @@ function LoadedRecordForm({
       setSchemaChanged(false);
       setBannerMessage(null);
     } catch {
-      setBannerMessage("Unable to refresh the fields. Your draft has been kept. Try again.");
+      setBannerMessage(t("records.form.refreshError"));
     } finally {
       setRefreshingSchema(false);
     }
@@ -829,7 +834,7 @@ function LoadedRecordForm({
                     void refreshFields();
                   }}
                 >
-                  Refresh fields
+                  {t("records.form.refreshFields")}
                 </Button>
               ) : null}
             </FormErrorBanner>

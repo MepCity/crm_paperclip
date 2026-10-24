@@ -6,6 +6,7 @@ import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-c
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { TextField } from "@/components/ui/text-field";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { MAX_SELECTED_COLUMNS } from "./constants";
 
 export interface ManageColumnsDialogProps {
@@ -25,6 +26,7 @@ export function ManageColumnsDialog({
   selectedColumns,
   onSave,
 }: ManageColumnsDialogProps) {
+  const t = useUiTranslations();
   const titleId = useId();
   const [search, setSearch] = useState("");
   const [draft, setDraft] = useState<string[]>(() => [...selectedColumns]);
@@ -75,14 +77,14 @@ export function ManageColumnsDialog({
       <Modal className="w-full max-w-md rounded-lg border border-border bg-surface p-6 shadow-xl outline-none">
         <AriaDialog aria-labelledby={titleId} className="flex flex-col gap-4 outline-none">
           <Heading id={titleId} className="text-lg font-semibold text-text">
-            Manage Columns {moduleLabel}
+            {t("records.list.manageColumnsTitle", { module: moduleLabel })}
           </Heading>
 
           <div>
             <TextField
-              label="Search fields"
+              label={t("records.list.searchFields")}
               hideLabel
-              placeholder="Search"
+              placeholder={t("common.actions.search")}
               value={search}
               onChange={setSearch}
               className="w-full"
@@ -91,7 +93,7 @@ export function ManageColumnsDialog({
 
           <fieldset
             className="flex max-h-80 flex-col gap-2 overflow-y-auto pr-1 py-1"
-            aria-label="Available columns"
+            aria-label={t("records.list.availableColumns")}
           >
             {filteredFields.map((field) => {
               const isChecked = draft.includes(field.apiName);
@@ -108,16 +110,18 @@ export function ManageColumnsDialog({
               );
             })}
             {filteredFields.length === 0 && (
-              <p className="py-4 text-center text-sm text-text-muted">No fields found.</p>
+              <p className="py-4 text-center text-sm text-text-muted">
+                {t("records.list.noFieldsFound")}
+              </p>
             )}
           </fieldset>
 
           <div className="flex justify-end gap-3 pt-2 border-t border-border">
             <Button variant="secondary" onPress={onClose}>
-              Cancel
+              {t("common.actions.cancel")}
             </Button>
             <Button variant="primary" onPress={handleSave}>
-              Save
+              {t("common.actions.save")}
             </Button>
           </div>
         </AriaDialog>

@@ -12,6 +12,7 @@ import {
   SubmenuTrigger,
 } from "@/components/ui/menu";
 import { SplitButton, type SplitButtonProps } from "@/components/ui/split-button";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { SortPopover, type SortPopoverProps } from "./sort-popover";
 import { ViewTypeSwitcher } from "./view-type-switcher";
 
@@ -46,6 +47,7 @@ export function ListToolbar({
   viewTypeTileIds,
   actionsMenuWidth,
 }: ListToolbarProps) {
+  const t = useUiTranslations();
   return (
     <div
       className="flex h-(--size-list-toolbar-height) items-center justify-between gap-3"
@@ -63,7 +65,7 @@ export function ListToolbar({
             aria-hidden="true"
             className="h-(--size-list-filter-toggle-icon-height) w-(--size-list-filter-toggle-icon-width) shrink-0 text-(--color-list-filter-toggle-icon)"
           />
-          Filter
+          {t("records.list.filter")}
         </Button>
         <SortPopover fields={fields} sort={sort} onApply={onSortApply} />
         <span className="ml-(--size-list-view-switcher-offset)">
@@ -77,7 +79,7 @@ export function ListToolbar({
           <Button
             variant="ghost"
             size="listIcon"
-            aria-label="Refresh Custom View"
+            aria-label={t("records.list.refresh")}
             onPress={onRefresh}
           >
             <Icons.refresh
@@ -91,7 +93,7 @@ export function ListToolbar({
         <SplitButton {...create} />
         {actions.length > 0 && (
           <MenuTrigger>
-            <Button variant="secondary" size="actions" aria-label="Actions">
+            <Button variant="secondary" size="actions" aria-label={t("records.list.actions")}>
               <Icons.ellipsis aria-hidden="true" className="h-4 w-4 shrink-0" />
             </Button>
             <Menu

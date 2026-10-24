@@ -10,6 +10,7 @@ import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { ActivityRibbon } from "./activity-ribbon";
 import { CellValue } from "./cell-value";
 import { RecordTableFooter, type RecordTableFooterProps } from "./record-table-footer";
@@ -131,6 +132,7 @@ export function RecordTable({
   rowTools = ["ellipsis", "note"],
   footer,
 }: RecordTableProps) {
+  const t = useUiTranslations();
   const empty = records.length === 0;
 
   const selected = new Set(selectedIds);
@@ -221,7 +223,7 @@ export function RecordTable({
                       </span>
                       {isLinkField && alphabet ? (
                         <AlphabetFilter
-                          label="Filter by first letter"
+                          label={t("records.list.filterByFirstLetter")}
                           value={alphabet.value}
                           onChange={alphabet.onChange}
                           className="shrink-0"
