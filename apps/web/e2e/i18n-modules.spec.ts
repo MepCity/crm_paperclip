@@ -17,7 +17,7 @@ test.describe("CRM modules Turkish localization", () => {
     await expect(page.locator("html")).toHaveAttribute("lang", "tr");
 
     // 1. Leads list view
-    await page.goto(`/crm/${org.slug}/tab/Leads`);
+    await page.goto(`/crm/${org.slug}/tab/Leads/list`);
     await expect(page.locator("html")).toHaveAttribute("lang", "tr");
     await expect(
       page.getByRole("link", { name: "Müşteri Adayı Oluştur", exact: true }),
@@ -39,7 +39,7 @@ test.describe("CRM modules Turkish localization", () => {
     await expect(page.getByText(/boş bırakılamaz|zorunludur/i).first()).toBeVisible();
 
     // 3. Leads detail view
-    await page.goto(`/crm/${org.slug}/tab/Leads`);
+    await page.goto(`/crm/${org.slug}/tab/Leads/list`);
     await expect(page.getByRole("table", { name: /Records|Kayıtlar/i })).toBeVisible();
     const firstRowLink = page.locator("table tbody tr").first().getByRole("link").first();
     await firstRowLink.click();
@@ -52,14 +52,31 @@ test.describe("CRM modules Turkish localization", () => {
     await expect(page.getByRole("link", { name: "Açık Aktiviteler", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Kapalı Aktiviteler", exact: true })).toBeVisible();
 
-    // 4. Empty states for later modules
-    await page.goto(`/crm/${org.slug}/tab/Campaigns`);
+    // 4. Empty states and localized module controls for later modules
+    await page.goto(`/crm/${org.slug}/tab/Campaigns/list`);
+    await expect(page.getByRole("link", { name: "Kampanya Oluştur", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Kampanya Adı", exact: true }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "İlk harfe göre filtrele" }).click();
+    await page.getByRole("option", { name: "Z", exact: true }).click();
     await expect(page.getByText("Hiçbir Kampanyalar bulunamadı.")).toBeVisible();
 
-    await page.goto(`/crm/${org.slug}/tab/Cases`);
+    await page.goto(`/crm/${org.slug}/tab/Cases/list`);
+    await expect(
+      page.getByRole("link", { name: "Servis Dosyası Oluştur", exact: true }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "İlk harfe göre filtrele" }).click();
+    await page.getByRole("option", { name: "Z", exact: true }).click();
     await expect(page.getByText("Hiçbir Servis Dosyaları bulunamadı.")).toBeVisible();
 
-    await page.goto(`/crm/${org.slug}/tab/Solutions`);
+    await page.goto(`/crm/${org.slug}/tab/Solutions/list`);
+    await expect(page.getByRole("link", { name: "Çözüm Oluştur", exact: true })).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Çözüm Başlığı", exact: true }),
+    ).toBeVisible();
+    await page.getByRole("button", { name: "İlk harfe göre filtrele" }).click();
+    await page.getByRole("option", { name: "Z", exact: true }).click();
     await expect(page.getByText("Hiçbir Çözümler bulunamadı.")).toBeVisible();
   });
 });

@@ -26,7 +26,7 @@ test("saved Language switches shell EN/TR, survives reload and another session, 
   await draft.bringToFront();
   await draft.evaluate(() => window.dispatchEvent(new Event("focus")));
   await expect(draft.locator("html")).toHaveAttribute("lang", "tr");
-  await expect(draft.getByRole("textbox", { name: "Last Name", exact: true })).toHaveValue(
+  await expect(draft.getByRole("textbox", { name: "Soyadı", exact: true })).toHaveValue(
     "Unsaved language draft",
   );
   await expect(draft.getByRole("button", { name: "Kaydet", exact: true })).toBeVisible();
