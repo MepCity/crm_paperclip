@@ -12,7 +12,7 @@ interface ViewTypeTile {
    */
   label: string;
   icon: ComponentType<SVGProps<SVGSVGElement>>;
-  /** The row's ink box for this glyph; the svg box is the ink box because the glyphs are filled. */
+  /** The row's ink box for this glyph; the svg box is the ink box for the outline glyphs. */
   sizeClass: string;
 }
 
@@ -69,23 +69,35 @@ const TILE_BASE =
  * the arrow are visible with `aria-disabled="true"` and do nothing when activated. Their names are
  * ours; the reference exposes no accessible names for these controls.
  */
-export function ViewTypeSwitcher() {
+export function ViewTypeSwitcher({
+  presentation,
+  onPresentationChange,
+  tileIds,
+}: {
+  presentation?: "table" | "board";
+  onPresentationChange?: (presentation: "table" | "board") => void;
+  /** Tile ids to draw, in order; omitted draws all six tiles (Tasks has no Sheet tile). */
+  tileIds?: readonly string[];
+} = {}) {
   return (
     <div
       className="flex items-center gap-(--size-list-view-switcher-gap)"
       data-view-type-switcher
       data-part="view-type-switcher"
     >
-      {TILES.map((tile) => {
-        const active = tile.id === "list";
+      {TILES.filter((tile) => !tileIds || tileIds.includes(tile.id)).map((tile) => {
+        const target = tile.id === "list" ? "table" : tile.id === "split" ? "board" : null;
+        const enabled = Boolean(presentation && target);
+        const active = presentation ? target === presentation : tile.id === "list";
         const Icon = tile.icon;
         return (
           <button
             key={tile.id}
             type="button"
-            aria-label={tile.label}
+            aria-label={presentation && tile.id === "split" ? "Board presentation" : tile.label}
             aria-pressed={active}
-            aria-disabled={active ? undefined : true}
+            aria-disabled={enabled || active ? undefined : true}
+            onClick={enabled && target ? () => onPresentationChange?.(target) : undefined}
             data-active={active}
             className={TILE_BASE}
           >

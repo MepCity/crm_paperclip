@@ -10,6 +10,7 @@ import {
   type SelectUserRecord,
 } from "@/components/records/form/select-user-dialog";
 import { Button } from "@/components/ui/button";
+import { claimOpeningFocus } from "@/components/ui/opening-focus";
 import { useChangeOwner } from "@/lib/api/client/hooks";
 import "./change-owner-dialog.css";
 
@@ -54,7 +55,7 @@ export function ChangeOwnerDialog({
     setPickerOpen(false);
     setFieldError(null);
     setGeneralError(null);
-    const frame = requestAnimationFrame(() => cancelRef.current?.focus());
+    const frame = requestAnimationFrame(() => claimOpeningFocus(cancelRef.current));
     return () => cancelAnimationFrame(frame);
   }, [isOpen]);
 

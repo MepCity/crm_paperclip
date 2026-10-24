@@ -1,9 +1,27 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
-import { laterModuleProps, useLaterModule } from "./later-module";
+import {
+  LIVE_MODULE_KEYS,
+  laterModuleProps,
+  resolveLaterModule,
+  useLaterModule,
+} from "./later-module";
 
 afterEach(cleanup);
+
+test("resolveLaterModule returns undefined for active modules and key for later modules", () => {
+  expect(LIVE_MODULE_KEYS).toEqual(["M2", "M3", "M4"]);
+  expect(resolveLaterModule("M2")).toBeUndefined();
+  expect(resolveLaterModule("M3")).toBeUndefined();
+  expect(resolveLaterModule("M4")).toBeUndefined();
+  expect(resolveLaterModule(undefined)).toBeUndefined();
+  expect(resolveLaterModule(null)).toBeUndefined();
+  expect(resolveLaterModule("")).toBeUndefined();
+  expect(resolveLaterModule("M5")).toBe("M5");
+  expect(resolveLaterModule("P2")).toBe("P2");
+  expect(resolveLaterModule("P3")).toBe("P3");
+});
 
 test("laterModuleProps returns aria-disabled and data-later-module when key provided", () => {
   expect(laterModuleProps()).toEqual({});

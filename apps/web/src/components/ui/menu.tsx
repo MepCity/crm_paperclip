@@ -126,8 +126,17 @@ export function MenuItem<T extends object>({
 }
 
 export interface MenuAction {
-  /** Visual indicator only; does not create a submenu. */
+  /** Visual indicator for entries without submenu content. */
   submenuIndicator?: boolean;
+  submenu?: readonly {
+    id: string;
+    label: string;
+    laterModule?: ModuleKey;
+    onAction?: () => void;
+    accent?: boolean;
+  }[];
+  /** Draws a divider above the row (Activities Actions menu, MEP-590 row 40). */
+  separatorBefore?: boolean;
   id: string;
   label: string;
   onAction: () => void;
@@ -137,26 +146,37 @@ export interface MenuAction {
 
 const measuredMenuClass = "p-(--size-menu-inset) outline-none";
 
-function menuPopoverClass(widthClass: string, appearance: "default" | "measured" | "record") {
+function menuPopoverClass(
+  widthClass: string,
+  appearance: "default" | "measured" | "record",
+  tall = false,
+) {
   return (
     `${widthClass} ${appearance === "measured" ? "bg-menu-surface" : "bg-surface"} max-w-full ` +
-    `${appearance === "record" ? "max-h-screen rounded-(--radius-record-menu)" : "max-h-80 rounded-md"} ` +
+    `${appearance === "record" ? "max-h-screen rounded-(--radius-record-menu)" : `${tall ? "max-h-[80vh]" : "max-h-80"} rounded-md`} ` +
     "overflow-auto border border-border shadow-lg outline-none"
   );
 }
 
 /**
  * Content of a `SubmenuTrigger`: the submenu popover and its menu, in the measured row
- * style. The placement comes from the submenu trigger, so it must not be set here.
+ * style. Placement defaults to the submenu trigger and can be overridden for flyouts.
  * `list-views.md` › View Settings popover measures the parent popover only, so the
  * submenu sizes to its rows.
  */
 export function Submenu<T extends object>({
   ariaLabel,
+  placement,
   ...props
-}: AriaMenuProps<T> & { ariaLabel: string }) {
+}: AriaMenuProps<T> & {
+  ariaLabel: string;
+  placement?: ComponentProps<typeof Popover>["placement"];
+}) {
   return (
-    <Popover className={menuPopoverClass("w-max", "measured")}>
+    <Popover
+      {...(placement ? { placement } : {})}
+      className={menuPopoverClass("w-max", "measured")}
+    >
       <AriaMenu {...props} aria-label={ariaLabel} className={measuredMenuClass} />
     </Popover>
   );
@@ -168,8 +188,14 @@ export function Menu<T extends object>({
   placement,
   header,
   shouldCloseOnInteractOutside,
+  widthPx,
+  tall,
   ...props
 }: AriaMenuProps<T> & {
+  /** Lifts the 320px height cap so a long list does not show a scrollbar that narrows the rows. */
+  tall?: boolean;
+  /** Measured outer width in px; overrides the named `width` (Activities Actions menu). */
+  widthPx?: number;
   width?: "create" | "actions" | "settings" | "columnOptions";
   appearance?: "default" | "measured" | "record";
   placement?: ComponentProps<typeof Popover>["placement"];
@@ -195,7 +221,8 @@ export function Menu<T extends object>({
     <Popover
       placement={placement ?? "bottom end"}
       offset={appearance === "record" ? 0 : undefined}
-      className={menuPopoverClass(widthClass, appearance)}
+      className={menuPopoverClass(widthClass, appearance, tall)}
+      {...(widthPx ? { style: { width: widthPx } } : {})}
       {...(shouldCloseOnInteractOutside ? { shouldCloseOnInteractOutside } : {})}
     >
       {header && <div className="border-b border-border p-3 text-md text-text">{header}</div>}

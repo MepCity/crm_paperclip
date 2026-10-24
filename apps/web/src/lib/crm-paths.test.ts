@@ -2,11 +2,14 @@ import { describe, expect, it } from "vitest";
 import {
   CRM_ORG_PATH_PREFIX,
   moduleCreatePath,
+  moduleDraftsPath,
+  moduleImportPath,
   moduleListCustomPath,
   moduleListDefaultPath,
   moduleRecordEditPath,
   moduleRecordPath,
   moduleTabPath,
+  moduleTagsPath,
   orgBasePath,
   withSearchParams,
 } from "./crm-paths";
@@ -23,6 +26,8 @@ describe("crm-paths", () => {
     expect(moduleRecordPath("acme", "Leads", "lead-1")).toBe("/crm/acme/tab/Leads/lead-1");
     expect(moduleRecordEditPath("acme", "Leads", "lead-1")).toBe("/crm/acme/tab/Leads/lead-1/edit");
     expect(moduleCreatePath("acme", "Leads")).toBe("/crm/acme/tab/Leads/create");
+    expect(moduleTagsPath("acme", "Leads")).toBe("/crm/acme/tab/Leads/tags");
+    expect(moduleDraftsPath("acme", "Leads")).toBe("/crm/acme/tab/Leads/drafts");
   });
 
   it("appends search parameters when present", () => {
@@ -34,4 +39,10 @@ describe("crm-paths", () => {
       "/crm/acme/tab/Leads/list",
     );
   });
+});
+
+it.each(["Tasks", "Events", "Calls"])("uses the screen tab for %s imports", (module) => {
+  expect(moduleImportPath("sample-org", module)).toBe(
+    `/crm/sample-org/tab/${module === "Events" ? "Meetings" : module}/import`,
+  );
 });

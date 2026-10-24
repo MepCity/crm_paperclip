@@ -106,7 +106,7 @@ export function Select<T extends object>({
             className={
               variant === "filter"
                 ? "filter-operator-popover shadow-lg"
-                : "max-h-60 overflow-auto rounded-md border border-border bg-surface shadow-lg outline-none"
+                : "selection-panel max-h-60 overflow-auto rounded-md border border-border bg-surface shadow-lg outline-none"
             }
           >
             <ListBox

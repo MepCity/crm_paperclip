@@ -108,6 +108,47 @@ test.each([false, true])("choice keeps one selected marker with inline=%s", (inl
   expect(empty.querySelector(".record-inline-choice-check") !== null).toBe(inline);
 });
 
+test("inline list closes on outside pointer while focus stays on an option", async () => {
+  const user = userEvent.setup();
+  render(
+    <div>
+      <button type="button">Outside</button>
+      <RecordChoice
+        label="Choice"
+        value="a"
+        onChange={() => {}}
+        options={options}
+        defaultOpen
+        inline
+      />
+    </div>,
+  );
+  const selected = screen.getByRole("option", { name: "Alpha" });
+  selected.focus();
+  expect(screen.getByRole("listbox", { name: "Choice choices" })).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Outside" }));
+  await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+});
+
+test("inline list closes on Escape while focus stays on an option", async () => {
+  const user = userEvent.setup();
+  render(
+    <RecordChoice
+      label="Choice"
+      value="a"
+      onChange={() => {}}
+      options={options}
+      defaultOpen
+      inline
+    />,
+  );
+  const selected = screen.getByRole("option", { name: "Alpha" });
+  selected.focus();
+  expect(screen.getByRole("listbox", { name: "Choice choices" })).toBeTruthy();
+  await user.keyboard("{Escape}");
+  await waitFor(() => expect(screen.queryByRole("listbox")).toBeNull());
+});
+
 test("inline list stays open when focused selection scrolls its ancestor", async () => {
   render(
     <RecordChoice
@@ -126,4 +167,28 @@ test("inline list stays open when focused selection scrolls its ancestor", async
   const user = userEvent.setup();
   await user.click(screen.getByRole("option", { name: "-None-" }));
   expect(screen.queryByRole("listbox")).toBeNull();
+});
+
+test("owner defaults to Search Users and keeps name, email, avatar and selected check", async () => {
+  render(
+    <RecordChoice
+      label="Owner"
+      value="tester"
+      onChange={() => {}}
+      options={[
+        { value: "tester", label: "Example Tester", secondaryLabel: "tester@example.test" },
+      ]}
+      searchable
+      owner
+      defaultOpen
+    />,
+  );
+  expect(screen.getByRole("textbox", { name: "Search Users" }).getAttribute("placeholder")).toBe(
+    "Search Users",
+  );
+  const row = screen.getByRole("option", { name: /Example Tester/ });
+  expect(row.querySelector(".record-owner-avatar")).toBeTruthy();
+  expect(row.querySelector(".record-owner-name")?.textContent).toBe("Example Tester");
+  expect(row.querySelector(".record-owner-email")?.textContent).toBe("tester@example.test");
+  expect(row.querySelectorAll(".record-choice-check")).toHaveLength(1);
 });

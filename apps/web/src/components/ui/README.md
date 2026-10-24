@@ -121,6 +121,7 @@ what the "no colour constants" rule forbids.
 | `--color-text-placeholder` | `#8c91ab` | app-shell.md › Colour summary › "`#8C91AB` › Global search placeholder, approx."; list-views.md › Text roles › "Placeholder and subdued text `#8C91AB`" | from spec |
 | `--color-border` | `#ced0e1` | app-shell.md › Colour summary › "`#CED0E1` › More Actions menu edge and dividers" | from spec |
 | `--color-primary` | `#5464f2` | app-shell.md › Colour summary › "`#5464F2` › Sales folder icon, quick-create border, and open search outline"; list-views.md › Selected / disabled › "glyph `#5464F2`" | from spec |
+| `--color-list-row-hover-activities` | `#f5f7fc` | activities.md › Difference table — Activities lists › row 31 "`#F5F7FC`, with highlighted link `#5464F2`" | from spec |
 | `--color-primary-text` | `#ffffff` | list-views.md › Create and action buttons › "white `#FFFFFF` label" | from spec |
 | `--color-primary-hover` | `#1d4ed8` | No hover state was captured. The list spec does not measure a primary hover either | not yet measured |
 | `--color-primary-pressed` | `#1e40af` | No pressed state was captured. The list spec does not measure a primary pressed state either | not yet measured |
@@ -179,7 +180,7 @@ what the "no colour constants" rule forbids.
 | `--color-popover-sort-border` | `#ced0e1` | list-views.md › Sort popover › "1 px `#CED0E1` border" | from spec |
 | `--color-surface-selected` | `#f0f4fc` | list-views.md › Header and tab strip › "with 6 px corners and `#F0F4FC` fill" | from spec |
 | `--color-surface-active` | `#edf0f9` | list-views.md › Selected / disabled › "Active Filter button 69.5 × 27 px with fill `#EDF0F9`" | from spec |
-| `--color-list-filter-toggle-icon` | `#000000` | list-views.md › Filter toggle, panel open › the funnel "solid glyph ink" | from spec |
+| `--color-list-filter-toggle-icon` | `#616e88` | list-views.md › View type switcher › glyph color "#616E88" | from spec |
 | `--color-text-strong` | `#202123` | list-views.md › Text roles › "column headers about 14 px medium `#202123`" | from spec |
 | `--color-text-disabled` | `#b5b8be` | list-views.md › Text roles › "disabled pagination text/icon about `#B5B8BE`"; Selected / disabled › "Disabled pagination arrows about `#B5B8BE`" | from spec |
 | `--color-text-empty` | `#8b9ab9` | list-views.md › Empty view › "message in #8B9AB9"; record-detail.md › Layout › Visual layout › Timeline › Expanded History filter › All Modules and All Sources placeholders `#8B9AB9` | from spec |
@@ -375,6 +376,7 @@ what the "no colour constants" rule forbids.
 | `--size-list-view-type-arrow-width` | `11px` | list-views.md › View type switcher › trailing dropdown arrow "11 × 6.5 px" ink box | from spec |
 | `--size-list-view-type-arrow-height` | `6.5px` | list-views.md › View type switcher › trailing dropdown arrow "11 × 6.5 px" ink box | from spec |
 | `--color-detail-divider` | `#d6d6e3` | record-detail.md › Details card › "`Hide Details` divider is 1 px `#D6D6E3`" | from spec |
+| `--size-detail-attach-width` | `78.5px` | record-detail.md › Related-list card › Card shell: Attach x 1359.5–1438 | measured |
 | `--size-detail-card-width` | `906px` | record-detail.md › Canvas and tab row › "first card left x 552, right x 1458" (906 px wide) | from spec |
 | `--size-detail-card-padding` | `20px` | record-detail.md › Related-list card › "Heading starts x 572" with card x 552 (20 px inset) | from spec |
 | `--size-detail-business-label-width` | `153.5px` | record-detail.md › Business card › labels end x 725.5 with card x 552 and 20 px inset | from spec |
@@ -421,6 +423,10 @@ what the "no colour constants" rule forbids.
 | `--size-form-list-padding` | `6px` | record-detail.md › Standard picklist › padding above and below | from spec |
 | `--size-form-country-height` | `270px` | record-detail.md › Country panel › panel height | from spec |
 | `--size-form-owner-height` | `179px` | record-detail.md › Owner dropdown › panel height | from spec |
+| `--size-choice-viewport-inset` | `12px` | Overlay collision boundary | interim viewport safety inset; not reference-measured |
+| `--size-form-panel-min-width` | `110px` | record-detail.md › Standard picklist › Salutation panel | smallest observed panel; content may expand |
+| `--size-form-panel-search-min-width` | `303px` | record-detail.md › Country panel | measured width; interim mapping for narrow module selectors |
+| `--size-form-panel-owner-min-width` | `299.5px` | record-detail.md › Owner dropdown | measured width; interim mapping for activity owner triggers |
 | `--size-form-prefix-width` | `110px` | record-detail.md › Composite inputs › Salutation panel width | from spec |
 | `--size-form-prefix-divider-offset` | `94px` | record-detail.md › Composite inputs › Salutation divider from outer left | from spec |
 | `--size-form-prefix-caret-gap` | `11px` | record-detail.md › Composite inputs › Salutation caret before divider | from spec |
@@ -718,6 +724,7 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-record-header-end` | `24px` | record-detail.md › Record header › Next chevron centred 35.5 px from header right edge | from spec |
 | `--radius-record-menu-row` | `5px` | record-detail.md › More Options menu › Rows and groups › highlighted row corners | from spec |
 | `--size-record-rail-width` | `220px` | record-detail.md › Related-list rail › 540 − 320 | from spec |
+| `--size-record-side-panel-width` | `300px` | activities-record-detail.md › Visual layout V11 › white panel x=1170–1470 | from spec |
 | `--size-record-rail-heading-height` | `38px` | record-detail.md › Related-list rail › 161 − 123 first-row offset | from spec |
 | `--size-record-rail-text-inset` | `8.5px` | record-detail.md › Related-list rail › 340.5 − 332 label inset | from spec |
 | `--size-record-tab-row-height` | `62px` | record-detail.md › Canvas and tab row; Status strip › 185 − 123 card offset | from spec |
@@ -733,8 +740,16 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-record-menu-inset` | `5px` | record-detail.md › More Options menu › Rows and groups › 6 px inner highlight inset minus 1px edge; group padding | from spec |
 | `--size-record-menu-inset-inline` | `5.75px` | record-detail.md › More Options menu › Rows and groups › Highlight width 1373 − 1169.5 = 203.5; (217 − 203.5) / 2 minus 1px border | from spec |
 | `--size-record-menu-text-inset` | `10.25px` | record-detail.md › More Options menu › Rows and groups › 1180 − 1163 − 1 − 5.75 | from spec |
-| `--size-record-scroll-top` | `36px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
-| `--size-record-scroll-offset` | `16px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
+| `--size-record-column-selector-width` | `117px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-selector-width` | `150px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-selector-height` | `34px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-action-width` | `218px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-action-gap` | `19.5px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-page-strip-height` | `61px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-top` | `37px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-right` | `44px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-bottom` | `78px` | record-detail.md › Existing-capture button measurements; strip height and bottom offset derived from y748–809 and y731 | from spec |
+| `--size-record-scroll-footer-gap` | `17px` | record-detail.md › Existing-capture button measurements › Scroll To Top disc bottom to strip separator | from spec |
 | `--size-record-demo-height` | `560px` | Task-authorized Interim; unmeasured Scroll To Top / synthetic demo height | not yet measured |
 | `--color-status-current` | `#eeeffc` | record-detail.md › Visual layout › Status strip / current stage |
 | `--color-status-terminal-border` | `#ffadac` | record-detail.md › Visual layout › Hidden-rail layout / Terminal control |
@@ -795,6 +810,53 @@ rendered widths and weight axis. Components inherit `--font-sans` and need no fa
 | `--size-detail-inline-save-check-width` | `10px` | record-detail.md › Inline editor › Save button / checkmark width |
 | `--size-detail-inline-save-check-height` | `7.5px` | record-detail.md › Inline editor › Save button / checkmark height |
 | `--size-detail-inline-check-gap` | `6px` | record-detail.md › Inline editor › Checkmark / gap to label |
+| `--size-meeting-window-width` | `500px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-title-inset` | `30px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-title-top` | `24px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-content-inset` | `30px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-content-end` | `52px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-footer-height` | `77px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-meeting-window-footer-inset` | `25px` | activities-form.md → Visual layout — Meeting form (measured) | derived from spec |
+| `--size-activity-form-width` | `548px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-inset` | `12px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-label-width` | `219px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-strip-height` | `63px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-strip-content-offset` | `4.5px` | activities-form.md → Visual layout — Task form (measured); action center y=86 versus band center y=81.5 | derived from spec |
+| `--size-activity-form-strip-inset` | `30px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-first-content-top` | `66px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-first-title-center` | `31px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-row-height` | `27px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-row-gap` | `23px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-rule` | `1px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-required-width` | `25px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-required-height` | `2px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-section-gap` | `52.5px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-section-title-gap` | `26px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-textarea-height` | `37px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-textarea-rule-gap` | `7.5px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-icon` | `16px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-icon-inset` | `5px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-choice-gap` | `21px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-switch-width` | `28px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--size-activity-form-switch-height` | `15px` | activities-form.md → Visual layout — Task form (measured); geometry allocation where CSS boxes are not observed | derived from spec |
+| `--color-activity-form-rule` | `#dcdbee` | activities-form.md → Visual layout — Task form (measured); exact-colour measurement | from spec |
+| `--color-activity-form-required` | `#f27b77` | activities-form.md → Visual layout — Task form (measured); exact-colour measurement | from spec |
+| `--color-activity-form-value` | `#434d5f` | activities-form.md → Visual layout — Task form (measured); exact-colour measurement | from spec |
+| `--color-activity-form-placeholder` | `#8b9ab9` | activities-form.md → Visual layout — Task form (measured); exact-colour measurement | from spec |
+| `--color-activity-form-lookup` | `#aaaaaa` | activities-form.md → Visual layout — Task form (measured); exact-colour measurement | from spec |
+| `--color-activity-form-switch` | `#c8cdd6` | activities-form.md → Visual layout — Task form (measured); exact-colour measurement | from spec |
+| `--color-activity-form-switch-subdued` | `#dee1e6` | activities-form.md → Visual layout — Task form (measured); Repeat off track | from spec |
+| `--size-call-form-width` | `1150px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--size-call-form-box-left` | `202.5px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--size-call-form-box-width` | `531px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--size-call-form-box-height` | `34px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--size-call-form-row-gap` | `21px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--size-call-form-label-width` | `165px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--size-call-form-label-gap` | `19px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--size-call-form-required-width` | `3px` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--color-call-form-border` | `#c5c4d3` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--color-call-form-focus` | `#5464f2` | activities-form.md → Visual layout — Call form (measured) | from spec |
+| `--color-call-form-required` | `#ff5d5a` | activities-form.md → Visual layout — Call form (measured) | from spec |
 
 ### Measured values that carry no token
 
@@ -872,6 +934,14 @@ token:
   token and the control is not drawn that way.
 
 ### Contrast notes
+
+The related-card Attach and Add Campaigns actions keep the measured `--color-primary` text on
+`--color-primary-subtle` (4.18:1, below the 4.5:1 AA text minimum), from
+`record-detail.md` › Related-list card › Card shell. Per ADR 0003 §8 this
+measured pair is retained and reported for the board decision. Add Campaigns
+is independently confirmed in Existing-capture button measurements.
+The gallery axe scan excludes only `span[data-related-action-label]` for this
+measured pair (ADR 0003 §8); the surrounding buttons stay in the scan.
 
 ADR 0003 §8 requires WCAG 2.1 AA: 4.5:1 for text and 3:1 for the non-text parts of a control. The
 ratios below are computed from the token values with the WCAG relative-luminance formula.
@@ -1095,3 +1165,27 @@ range filter inputs) and Value list structures.
 | `--size-filter-user-header-height` | 28px | Owner header controls height |
 | `--size-filter-user-body-height` | 174px | Owner list height |
 | `--size-filter-user-row-height` | 41px | Owner entry height |
+
+## Global search primitives
+
+`SearchLayer` composes the React Aria modal overlay and dialog for a top-centered
+search layer. Outside interaction and Escape dismiss it; React Aria contains focus
+and restores the trigger. `TextField.variant="search"` supplies an unbordered query
+inside its caller's shared selector/query frame, including prefix content for the
+Record Name badge. Both use existing tokens; geometry is interim under Module 2's
+visual parity rule. Existing text-field variants are unchanged.
+
+
+### Choice panel sizing
+
+`RecordChoice` uses the trigger as a minimum rather than a fixed width. Ordinary
+lists grow to their content; searchable/owner lists have separate measured minimum
+widths. Prefix controls keep their trigger geometry without locking the panel.
+React Aria flips/shifts overlays at viewport edges; panel widths are also capped
+by a viewport inset. Ordinary choice labels wrap at the cap. Owner name/email lines retain the reference
+ellipsis for unusually long values. Owner rows retain the avatar, name, secondary email and selected check.
+
+`Select`, `ComboBox`, and `SearchableSelect` use the selection panel boundary;
+filter multi-select and sort panels retain their measured widths. Generic popovers
+receive only a viewport cap, with no new minimum width. Lookup search windows
+remain dialogs. See `docs/choice-panel-audit.md` for coverage and evidence gaps.

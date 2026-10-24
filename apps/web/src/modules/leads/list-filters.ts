@@ -3,6 +3,7 @@ import type { FilterEditorDefinition } from "@/components/records/list/filter-ed
 import type { FilterGroup } from "@/components/records/list/filter-panel";
 import type { FilterFieldType } from "@/lib/records/filter-operators";
 import { filterOperators } from "@/lib/records/filter-operators";
+import { systemFilterProps } from "../system-filter-props";
 
 const systemDefinedItems = [
   "Activities",
@@ -80,10 +81,44 @@ function editorForField(
       ...(user.email ? { detail: user.email } : {}),
     }));
   }
+  if (fieldType === "tag") editor.tagModule = "Leads";
   if (fieldType === "currency") {
     editor.currencyCode = currencyCode;
   }
   return editor;
+}
+
+function buildSystemDefinedItems() {
+  return systemDefinedItems.map((label, index) => {
+    if (label === "Activities") {
+      return {
+        id: "Activities",
+        label,
+        systemEditor: "activities" as const,
+      };
+    }
+    if (label === "Campaigns") {
+      return {
+        id: "Campaigns",
+        label,
+        systemEditor: "campaigns" as const,
+      };
+    }
+    const system = systemFilterProps(label, "Leads");
+    return {
+      id: `system-${index}`,
+      label,
+      ...(system ?? { disabled: true }),
+    };
+  });
+}
+
+function disabledFieldItems(labels: readonly string[]) {
+  return labels.map((label, index) => ({
+    id: `field-${index}`,
+    label,
+    disabled: true,
+  }));
 }
 
 export interface BuildLeadsFilterGroupsInput {
@@ -119,7 +154,7 @@ export function buildLeadsFilterGroups(input: BuildLeadsFilterGroupsInput): read
     {
       id: "system",
       label: "System Defined Filters",
-      items: disabledItems(systemDefinedItems, "system"),
+      items: buildSystemDefinedItems(),
     },
     {
       id: "fields",
@@ -134,20 +169,12 @@ export function buildLeadsFilterGroups(input: BuildLeadsFilterGroupsInput): read
   ];
 }
 
-function disabledFieldItems(labels: readonly string[]) {
-  return labels.map((label, index) => ({
-    id: `field-${index}`,
-    label,
-    disabled: true,
-  }));
-}
-
 /** Fallback groups before metadata resolves; the list page supplies built groups. */
 export const leadsFilterGroups: readonly FilterGroup[] = [
   {
     id: "system",
     label: "System Defined Filters",
-    items: disabledItems(systemDefinedItems, "system"),
+    items: buildSystemDefinedItems(),
   },
   {
     id: "fields",

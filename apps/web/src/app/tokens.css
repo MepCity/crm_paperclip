@@ -20,6 +20,8 @@
   --color-border: #ced0e1;
 
   --color-primary: #5464f2;
+  /* Activities lists, row hover fill (MEP-590 row 31, measured). */
+  --color-list-row-hover-activities: #f5f7fc;
   --color-primary-text: #ffffff;
   --color-primary-hover: #1d4ed8;
   --color-primary-pressed: #1e40af;
@@ -101,7 +103,7 @@
   --color-popover-sort-border: #ced0e1;
   --color-surface-selected: #f0f4fc;
   --color-surface-active: #edf0f9;
-  --color-list-filter-toggle-icon: #000000;
+  --color-list-filter-toggle-icon: #616e88;
   --color-text-strong: #202123;
   --color-text-disabled: #b5b8be;
   --color-text-empty: #8b9ab9;
@@ -350,6 +352,8 @@
 
   /* Record detail cards. record-detail.md › Layout › Visual layout › Business card, Details card */
   --color-detail-divider: #d6d6e3;
+  /* record-detail.md > Related-list card > Card shell: Attach x 1359.5–1438. */
+  --size-detail-attach-width: 78.5px;
   --size-detail-card-width: 906px;
   --size-detail-card-padding: 20px;
   --size-detail-business-label-width: 153.5px;
@@ -405,6 +409,12 @@
   --size-form-list-padding: 6px;
   --size-form-country-height: 270px;
   --size-form-owner-height: 179px;
+  /* record-detail.md: Salutation 110, Country 303, Owner 299.5 px.
+     Narrow activity triggers reuse these measured panel families; pending capture audit. */
+  --size-choice-viewport-inset: 12px;
+  --size-form-panel-min-width: 110px;
+  --size-form-panel-search-min-width: 303px;
+  --size-form-panel-owner-min-width: 299.5px;
   --size-form-prefix-width: 110px;
   --size-form-prefix-divider-offset: 94px;
   --size-form-prefix-caret-gap: 11px;
@@ -729,6 +739,7 @@
   --size-record-header-end: 24px;
   --radius-record-menu-row: 5px;
   --size-record-rail-width: 220px;
+  --size-record-side-panel-width: 300px;
   --size-record-rail-heading-height: 38px;
   --size-record-rail-text-inset: 8.5px;
   --size-record-tab-row-height: 62px;
@@ -745,8 +756,17 @@
   --size-record-menu-inset-inline: 5.75px;
   --size-record-menu-text-inset: 10.25px;
   /* Interim: unmeasured Scroll To Top footprint/offset and demo viewport. */
-  --size-record-scroll-top: 36px;
-  --size-record-scroll-offset: 16px;
+  /* record-detail.md > Existing-capture button measurements */
+  --size-record-column-selector-width: 117px;
+  --size-record-page-selector-width: 150px;
+  --size-record-page-selector-height: 34px;
+  --size-record-page-action-width: 218px;
+  --size-record-page-action-gap: 19.5px;
+  --size-record-page-strip-height: 61px;
+  --size-record-scroll-top: 37px;
+  --size-record-scroll-right: 44px;
+  --size-record-scroll-bottom: 78px;
+  --size-record-scroll-footer-gap: 17px;
   --size-record-demo-height: 560px;
   /* record-detail.md: status ribbon and picklist panels. */
   --color-status-current: #eeeffc;
@@ -812,4 +832,56 @@
   --size-detail-inline-save-check-width: 10px;
   --size-detail-inline-save-check-height: 7.5px;
   --size-detail-inline-check-gap: 6px;
+}
+
+/* activities-form.md → Visual layout — Task form (measured). Row height/gap
+   allocate the observed 50px separator pitch; CSS row boxes were not observed. */
+:root {
+  --size-meeting-window-width: 500px;
+  --size-meeting-window-title-inset: 30px;
+  --size-meeting-window-title-top: 24px;
+  --size-meeting-window-content-inset: 30px;
+  --size-meeting-window-content-end: 52px;
+  --size-meeting-window-footer-height: 77px;
+  --size-meeting-window-footer-inset: 25px;
+  --size-activity-form-width: 548px;
+  --size-activity-form-inset: 12px;
+  --size-activity-form-label-width: 219px;
+  --size-activity-form-strip-height: 63px;
+  --size-activity-form-strip-content-offset: 4.5px;
+  --size-activity-form-strip-inset: 30px;
+  --size-activity-form-first-content-top: 66px;
+  --size-activity-form-first-title-center: 31px;
+  --size-activity-form-row-height: 27px;
+  --size-activity-form-row-gap: 23px;
+  --size-activity-form-rule: 1px;
+  --size-activity-form-required-width: 25px;
+  --size-activity-form-required-height: 2px;
+  --size-activity-form-section-gap: 52.5px;
+  --size-activity-form-section-title-gap: 26px;
+  --size-activity-form-textarea-height: 37px;
+  --size-activity-form-textarea-rule-gap: 7.5px;
+  --size-activity-form-icon: 16px;
+  --size-activity-form-icon-inset: 5px;
+  --size-activity-form-choice-gap: 21px;
+  --size-activity-form-switch-width: 28px;
+  --size-activity-form-switch-height: 15px;
+  --color-activity-form-rule: #dcdbee;
+  --color-activity-form-required: #f27b77;
+  --color-activity-form-value: #434d5f;
+  --color-activity-form-placeholder: #8b9ab9;
+  --color-activity-form-lookup: #aaaaaa;
+  --color-activity-form-switch: #c8cdd6;
+  --color-activity-form-switch-subdued: #dee1e6;
+  --size-call-form-width: 1150px;
+  --size-call-form-box-left: 202.5px;
+  --size-call-form-box-width: 531px;
+  --size-call-form-box-height: 34px;
+  --size-call-form-row-gap: 21px;
+  --size-call-form-label-width: 165px;
+  --size-call-form-label-gap: 19px;
+  --size-call-form-required-width: 3px;
+  --color-call-form-border: #c5c4d3;
+  --color-call-form-focus: #5464f2;
+  --color-call-form-required: #ff5d5a;
 }

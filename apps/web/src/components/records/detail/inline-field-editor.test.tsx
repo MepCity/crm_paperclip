@@ -3,6 +3,7 @@ import type { FieldDataType, FieldDefinition, FieldValue } from "@crm/core/recor
 import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
+import { ApiProvider, type ClientRecordService } from "@/lib/api/client/provider";
 import { DEFAULT_FORMAT } from "@/lib/locale";
 import { isLeadInlineEditable } from "@/modules/leads/leads-inline-edit";
 import { render } from "@/test/render";
@@ -126,6 +127,19 @@ test("an impossible day stays open with the format message in inline edit", asyn
   await user.click(screen.getByRole("button", { name: "Save" }));
   expect(screen.getByText("Please enter a valid Company.")).toBeTruthy();
   expect(save).not.toHaveBeenCalled();
+});
+
+test("deleting one character from a stored day keeps it and blocks the inline write", async () => {
+  const { user, save, complete } = setup("date", "2026-02-15");
+  const input = screen.getByRole("textbox", { name: "Company" }) as HTMLInputElement;
+  expect(input.value).toBe("15.02.2026");
+  input.setSelectionRange(input.value.length, input.value.length);
+  await user.type(input, "{Backspace}");
+  expect(input.value).toBe("15.02.202");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(screen.getByText("Please enter a valid Company.")).toBeTruthy();
+  expect(save).not.toHaveBeenCalled();
+  expect(complete).not.toHaveBeenCalled();
 });
 
 test.each([new ValidationError({ Company: ["Rejected field."] }), new Error("Update failed.")])(
@@ -278,4 +292,59 @@ test("static demo error preserves focus while an opened editor takes focus", () 
     />,
   );
   expect(document.activeElement).toBe(screen.getByRole("textbox", { name: "Company" }));
+});
+
+test("forwards lookupRecordHref and ownerNames to lookup picker", async () => {
+  const lookupField: FieldDefinition = {
+    apiName: "Account_Name",
+    label: "Account Name",
+    dataType: "lookup",
+    lookup: { module: "Accounts" },
+    required: false,
+    readOnly: false,
+    unique: false,
+    massUpdate: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
+  };
+  const mockService = {
+    getModule: vi.fn().mockResolvedValue({
+      apiName: "Accounts",
+      singularLabel: "Account",
+      pluralLabel: "Accounts",
+      fields: [
+        { apiName: "Account_Name", label: "Account Name", dataType: "text" },
+        { apiName: "Owner", label: "Account Owner", dataType: "ownerlookup" },
+      ],
+      layout: [],
+    }),
+    listViews: vi
+      .fn()
+      .mockResolvedValue([
+        { id: "all", name: "All Accounts", isDefault: true, columns: ["Account_Name", "Owner"] },
+      ]),
+    list: vi.fn().mockResolvedValue({
+      records: [{ id: "acc-1", fields: { Account_Name: "Acme Corp", Owner: "u-1" } }],
+      moreRecords: false,
+    }),
+    count: vi.fn().mockResolvedValue(1),
+  };
+  render(
+    <ApiProvider orgSlug="acme" service={mockService as unknown as ClientRecordService}>
+      <InlineFieldEditor
+        field={lookupField}
+        value={null}
+        lookupRecordHref={(id) => `/tab/Accounts/${id}`}
+        lookupOwnerNames={{ "u-1": "Test Owner" }}
+        onSave={async () => {}}
+        onCancel={() => {}}
+        onComplete={() => {}}
+      />
+    </ApiProvider>,
+  );
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Open Account Name lookup" }));
+  expect(await screen.findByRole("dialog", { name: "Choose Account" })).toBeTruthy();
+  const link = await screen.findByRole("link", { name: "Acme Corp" });
+  expect(link.getAttribute("href")).toBe("/tab/Accounts/acc-1");
+  expect(screen.getByText("Test Owner")).toBeTruthy();
 });

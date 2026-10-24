@@ -15,6 +15,7 @@ vi.mock("next/navigation", () => ({
   notFound: () => {
     throw new Error("NEXT_NOT_FOUND");
   },
+  useRouter: () => ({ push: vi.fn(), replace: vi.fn(), back: vi.fn() }),
 }));
 vi.mock("@/lib/session", () => ({
   requireOrgContext: vi.fn(async () => ({ userId: "route-author" })),
@@ -25,7 +26,7 @@ vi.mock("@/components/shell/page-title", () => ({
 vi.mock("../registry", async (importOriginal) => {
   const original = await importOriginal<typeof import("../registry")>();
   const { contactsScreenDefinition } = await import("./definition");
-  const definitions = [...original.moduleScreens, contactsScreenDefinition];
+  const definitions = [...original.getModuleScreens(), contactsScreenDefinition];
   return {
     ...original,
     resolveModuleScreen: (tab: string) => original.resolveModuleScreen(tab, definitions),
@@ -46,6 +47,20 @@ vi.mock("../module-list-client", () => ({
 }));
 vi.mock("@/components/records/detail/record-detail-screen", () => ({
   RecordDetailScreen: ({
+    definition,
+    recordId,
+  }: {
+    definition: ModuleScreenDefinition;
+    recordId: string;
+  }) => (
+    <p>
+      {definition.apiName}:detail:{recordId}:
+      {definition.detail.statusRibbon ? "ribbon" : "no ribbon"}
+    </p>
+  ),
+}));
+vi.mock("./contact-record-screen", () => ({
+  ContactRecordScreen: ({
     definition,
     recordId,
   }: {

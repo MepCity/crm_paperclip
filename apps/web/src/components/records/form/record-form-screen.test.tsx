@@ -6,8 +6,11 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
-import { UnexpectedApiError } from "@/lib/api/wire/errors";
+import { decodeError, UnexpectedApiError } from "@/lib/api/wire/errors";
+import { contactsFormRules } from "@/modules/contacts/contacts-form-rules";
+import { dealsFormRules } from "@/modules/deals/deals-form-rules";
 import { leadsFormRules, leadsFormFields as names } from "@/modules/leads/leads-form-rules";
+import { tasksFormRules } from "@/modules/tasks/tasks-form-rules";
 import { render } from "@/test/render";
 import { FORM_SAVE_GENERIC_ERROR_MESSAGE } from "./form-save-error";
 import { type RecordFormConfig, RecordFormScreen } from "./record-form-screen";
@@ -156,6 +159,16 @@ test.each([
   ["forbidden", new ForbiddenError("You cannot create leads."), "You cannot create leads."],
   ["not found", new NotFoundError("This lead was deleted."), "This lead was deleted."],
   ["unexpected api", new UnexpectedApiError(502), FORM_SAVE_GENERIC_ERROR_MESSAGE],
+  [
+    "schema revision",
+    decodeError(409, {
+      code: "SCHEMA_REVISION_MISMATCH",
+      status: "error",
+      details: { revision: "next:2" },
+      message: "stale",
+    }),
+    "The module fields have changed. Refresh the form before saving. Your draft has been kept.",
+  ],
   ["network", new TypeError("Failed to fetch"), FORM_SAVE_GENERIC_ERROR_MESSAGE],
 ])(
   "non-field save error %s keeps values, re-enables actions and shows the banner",
@@ -167,7 +180,9 @@ test.each([
     await user.click(screen.getByRole("button", { name: "Save" }));
     const banner = await screen.findByRole("alert");
     expect(banner.hasAttribute("data-record-form-error-banner")).toBe(true);
-    expect(banner.textContent).toBe(message);
+    expect(banner.textContent).toBe(
+      message + (_label === "schema revision" ? "Refresh fields" : ""),
+    );
     expect((screen.getByRole("textbox", { name: "Company" }) as HTMLInputElement).value).toBe(
       "Synthetic Company",
     );
@@ -175,6 +190,13 @@ test.each([
       false,
     );
     expect(navigate).not.toHaveBeenCalled();
+    if (_label === "schema revision") {
+      await user.click(screen.getByRole("button", { name: "Refresh fields" }));
+      await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+      expect((screen.getByRole("textbox", { name: "Company" }) as HTMLInputElement).value).toBe(
+        "Synthetic Company",
+      );
+    }
   },
 );
 
@@ -585,3 +607,203 @@ test.each([undefined, { id: "saved-currency", fields: { [names.revenue]: 125 } }
     expect((input as HTMLInputElement).value).toBe(record ? "125" : "");
   },
 );
+
+/**
+ * `Date_of_Birth` is the optional date field of an already saved record: the entry mask is typed
+ * as `DD.MM.YYYY`, so deleting one character leaves half a day on the screen.
+ */
+function savedContactWithDateOfBirth() {
+  const record = {
+    id: "saved-contact",
+    fields: { Last_Name: "Saved Contact", Date_of_Birth: "1990-03-15" },
+  };
+  const { service, navigate } = harness(record, { module: "Contacts", rules: contactsFormRules });
+  const update = vi.spyOn(service, "update").mockResolvedValue(record);
+  return { update, navigate };
+}
+
+function dateOfBirthInput(): HTMLInputElement {
+  return screen.getByRole("textbox", { name: "Date of Birth" }) as HTMLInputElement;
+}
+
+test("a half-typed date blocks Save with the format message and keeps the stored day", async () => {
+  const { update, navigate } = savedContactWithDateOfBirth();
+  await ready(/^Edit Contact$/);
+  const user = userEvent.setup();
+  const date = dateOfBirthInput();
+  expect(date.value).toBe("15.03.1990");
+  date.setSelectionRange(date.value.length, date.value.length);
+  await user.type(date, "{Backspace}");
+  expect(date.value).toBe("15.03.199");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(await screen.findByText("Please enter a valid Date of Birth.")).toBeTruthy();
+  expect(update).not.toHaveBeenCalled();
+  expect(navigate).not.toHaveBeenCalled();
+  expect(dateOfBirthInput().value).toBe("15.03.199");
+});
+
+test("completing a half-typed date clears the message and saves the calendar day", async () => {
+  const { update } = savedContactWithDateOfBirth();
+  await ready(/^Edit Contact$/);
+  const user = userEvent.setup();
+  const date = dateOfBirthInput();
+  date.setSelectionRange(date.value.length, date.value.length);
+  await user.type(date, "{Backspace}");
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await screen.findByText("Please enter a valid Date of Birth.");
+  await user.type(date, "6");
+  expect(screen.queryByText("Please enter a valid Date of Birth.")).toBeNull();
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() =>
+    expect(update).toHaveBeenCalledWith("Contacts", "saved-contact", {
+      Date_of_Birth: "1996-03-15",
+    }),
+  );
+});
+
+test("clearing an optional date completely saves null", async () => {
+  const { update } = savedContactWithDateOfBirth();
+  await ready(/^Edit Contact$/);
+  const user = userEvent.setup();
+  await user.clear(dateOfBirthInput());
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  await waitFor(() =>
+    expect(update).toHaveBeenCalledWith("Contacts", "saved-contact", { Date_of_Birth: null }),
+  );
+});
+
+test("omits sections listed in omittedSections or having no fields", async () => {
+  const { service, fixture } = harness(undefined, {
+    rules: {
+      ...leadsFormRules,
+      omittedSections: ["Lead Image", "Empty Section"],
+    },
+  });
+  vi.spyOn(service, "getModule").mockImplementation(async (moduleName) => {
+    const meta = await fixture.getModule(moduleName);
+    return {
+      ...meta,
+      layout: [
+        ...meta.layout,
+        { label: "Lead Image", columnCount: 1, columns: [[]], fields: [] },
+        { label: "Empty Section", columnCount: 1, columns: [[]], fields: [] },
+      ],
+    };
+  });
+  await ready(/^Create Lead$/);
+  expect(screen.queryByText("Lead Image")).toBeNull();
+  expect(screen.queryByText("Empty Section")).toBeNull();
+});
+
+test("populates initial values using function defaultValues reading metadata", async () => {
+  harness(undefined, {
+    rules: {
+      ...leadsFormRules,
+      defaultValues: (meta) => ({
+        Designation: `Dynamic Title for ${meta?.singularLabel ?? "Lead"}`,
+      }),
+    },
+  });
+  await ready(/^Create Lead$/);
+  const input = screen.getByRole("textbox", { name: "Title" }) as HTMLInputElement;
+  expect(input.value).toBe("Dynamic Title for Lead");
+});
+
+test("activity variant removes inventory chrome and the enclosing card", async () => {
+  harness(undefined, { variant: "activity", inventoryChrome: true });
+  await ready();
+  expect(screen.queryByRole("button", { name: "Client Script" })).toBeNull();
+  expect(screen.queryByText("Create Form Views :")).toBeNull();
+  expect(screen.getByRole("button", { name: "Edit Page Layout" })).toBeTruthy();
+  const form = screen.getByRole("form", { name: "Create Lead" });
+  expect(form.parentElement?.className).toBe("record-form-activity-body");
+  const subject = screen.getByRole("textbox", { name: "Last Name" });
+  expect(subject.closest("[data-record-form-row]")?.hasAttribute("data-required")).toBe(true);
+});
+
+test("default variant retains inventory chrome and the enclosing card", async () => {
+  harness(undefined, { inventoryChrome: true });
+  await ready();
+  expect(screen.getByRole("button", { name: "Client Script" })).toBeTruthy();
+  expect(screen.getByText("Create Form Views :")).toBeTruthy();
+  expect(screen.getByRole("form", { name: "Create Lead" }).parentElement?.className).toBe(
+    "record-form-card",
+  );
+});
+
+test("changing the label-side Who type clears the value and retargets the lookup", async () => {
+  harness(
+    {
+      id: "task-1",
+      fields: { Who_Id: { module: "Contacts", id: "c-1", name: "Ada Synthetic" } },
+    } as unknown as RecordData,
+    {
+      module: "Tasks",
+      variant: "activity",
+      rules: tasksFormRules,
+      paths: { detail: (id) => `detail:${id}`, create: "create", cancel: "origin" },
+    },
+  );
+  await ready(/^Edit Task$/);
+  const user = userEvent.setup();
+  const select = await screen.findByRole("button", { name: /Contact Name module/ });
+  expect(select.textContent).toContain("Contact");
+  expect(screen.getByDisplayValue("Ada Synthetic")).toBeTruthy();
+  await user.click(select);
+  await user.click(screen.getByRole("option", { name: "Lead" }));
+  expect(screen.queryByDisplayValue("Ada Synthetic")).toBeNull();
+  expect(screen.getByRole("button", { name: /Contact Name module/ }).textContent).toContain("Lead");
+}, 30_000);
+
+test("updates initial values when createPrefill arrives after initial mount", async () => {
+  const ctx = {
+    orgId: `form-screen-${++counter}`,
+    orgSlug: "form-screen",
+    orgName: "Form Screen",
+    userId: "form-author",
+    role: "admin" as const,
+  };
+  const fixture = createFixtureRecordService(ctx, {
+    listMemberIds: async () => [ctx.userId, "other-user"],
+  });
+  const service = createClientRecordService(fixture, {
+    listUsers: async () => [
+      { userId: ctx.userId, name: "Form Author", email: "author@example.test" },
+      { userId: "other-user", name: "Other User", email: "other@example.test" },
+    ],
+  });
+  const config: RecordFormConfig = {
+    module: "Deals",
+    rules: dealsFormRules,
+    paths: { detail: (id) => `detail:${id}`, create: "create", cancel: "origin" },
+    navigate: vi.fn(),
+  };
+
+  const { rerender } = render(
+    <ApiProvider orgSlug={ctx.orgSlug} service={service}>
+      <RecordFormScreen config={config} currentUserId={ctx.userId} />
+    </ApiProvider>,
+  );
+  await waitFor(() => expect(screen.getByRole("textbox", { name: "Deal Name" })).toBeTruthy());
+  const input = screen.getByRole("textbox", { name: "Account Name" }) as HTMLInputElement;
+  expect(input.value).toBe("");
+
+  // createPrefill arrives asynchronously (e.g. from delayed session prefill or query param resolution)
+  rerender(
+    <ApiProvider orgSlug={ctx.orgSlug} service={service}>
+      <RecordFormScreen
+        config={{
+          ...config,
+          createPrefill: {
+            Account_Name: { module: "Accounts", id: "500000000000000000", name: "Account 001" },
+          },
+        }}
+        currentUserId={ctx.userId}
+      />
+    </ApiProvider>,
+  );
+  await waitFor(() => {
+    const updatedInput = screen.getByRole("textbox", { name: "Account Name" }) as HTMLInputElement;
+    expect(updatedInput.value).toBe("Account 001");
+  });
+});

@@ -19,6 +19,7 @@ const navigation = vi.hoisted(() => ({
 
 vi.mock("next/navigation", () => ({
   useRouter: () => navigation,
+  useSearchParams: () => new URLSearchParams(),
 }));
 
 let counter = 0;

@@ -33,24 +33,26 @@ interface FieldOption {
 export interface SortPopoverProps {
   fields: readonly { apiName: string; label: string }[];
   sort: SortSpec | null;
-  onApply: (sort: SortSpec) => void;
+  onApply: (sort: SortSpec | null) => void;
 }
 
 export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
   const [open, setOpen] = useState(false);
   const [field, setField] = useState(sort?.field ?? "");
   const [order, setOrder] = useState<SortSpec["order"]>(sort?.order ?? "asc");
+  const [noneSelected, setNoneSelected] = useState(false);
   const validField = fields.some((option) => option.apiName === field);
   const changeOpen = (next: boolean) => {
     if (next) {
       setField(sort?.field ?? "");
+      setNoneSelected(false);
       setOrder(sort?.order ?? "asc");
     }
     setOpen(next);
   };
   return (
     <PopoverTrigger isOpen={open} onOpenChange={changeOpen}>
-      <Button variant="ghost" size="listToolbar" className="gap-1">
+      <Button variant="ghost" size="listToolbar" className="gap-1" data-part="sort">
         <Icons.sort aria-hidden="true" className="h-4 w-4" />
         Sort
       </Button>
@@ -70,7 +72,10 @@ export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
           <SortByFieldSelect
             fields={fields}
             value={validField ? field : null}
-            onChange={(apiName) => setField(apiName ?? "")}
+            onChange={(apiName) => {
+              setField(apiName ?? "");
+              setNoneSelected(apiName === null);
+            }}
           />
           <Select
             variant="sort"
@@ -96,9 +101,9 @@ export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
           </Button>
           <Button
             size="toolbar"
-            isDisabled={!validField}
+            isDisabled={!validField && !noneSelected}
             onPress={() => {
-              onApply({ field, order });
+              onApply(noneSelected ? null : { field, order });
               setOpen(false);
             }}
           >

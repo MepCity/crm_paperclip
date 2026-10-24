@@ -1,25 +1,42 @@
 "use client";
 
 import type {
+  ConvertLeadInput,
   CurrencyDefinition,
+  DeduplicateResult,
+  DuplicateGroup,
+  KanbanView,
+  KanbanViewInput,
   ListQuery,
+  MergeInput,
   ModuleApiName,
   ModuleMetadata,
   RecordData,
   RecordId,
   RecordInput,
+  SearchQuery,
+  SummaryQuery,
 } from "@crm/core/records";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useMemo } from "react";
 import type { OrgMember } from "./http-record-service";
+import { createHttpTransferClient, type TransferClient } from "./http-transfer-service";
 import { useClientRecordService, useOrgSlug } from "./provider";
-import { apiKeys, countQueriesPrefix, listQueriesPrefix } from "./query-keys";
+import {
+  apiKeys,
+  countQueriesPrefix,
+  duplicateGroupsPrefix,
+  listQueriesPrefix,
+  summarizeQueriesPrefix,
+} from "./query-keys";
 
-export function useHomeCurrency() {
+export function useHomeCurrency(options?: { enabled?: boolean }) {
   const orgSlug = useOrgSlug();
   const service = useClientRecordService();
   return useQuery<CurrencyDefinition>({
     queryKey: apiKeys.homeCurrency(orgSlug),
     queryFn: () => service.getHomeCurrency(),
+    enabled: options?.enabled ?? true,
   });
 }
 
@@ -70,15 +87,60 @@ export function useRecordList(
   });
 }
 
+/** Loads every page of a list (until `moreRecords` is false) as one query under the list key prefix. */
+export function useAllRecordPages(
+  module: ModuleApiName,
+  query: Omit<ListQuery, "page">,
+  options?: { enabled?: boolean },
+) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  return useQuery({
+    queryKey: [...apiKeys.list(orgSlug, module, { ...query, page: 1 }), "all-pages"],
+    queryFn: async () => {
+      const records: RecordData[] = [];
+      for (let page = 1; ; page += 1) {
+        const result = await service.list(module, { ...query, page });
+        records.push(...result.records);
+        if (result.moreRecords !== true || result.records.length === 0) return records;
+      }
+    },
+    enabled: options?.enabled ?? Boolean(query.viewId),
+  });
+}
+
 export function useRecordCount(
   module: ModuleApiName,
-  query: Pick<ListQuery, "viewId" | "filters" | "search">,
+  query: Pick<
+    ListQuery,
+    | "viewId"
+    | "filters"
+    | "search"
+    | "activityFilter"
+    | "campaignFilter"
+    | "systemFilters"
+    | "relatedModules"
+  >,
 ) {
   const orgSlug = useOrgSlug();
   const service = useClientRecordService();
   return useQuery({
     queryKey: apiKeys.count(orgSlug, module, query),
     queryFn: () => service.count(module, query),
+  });
+}
+
+export function useRecordSummary(
+  module: ModuleApiName,
+  query: SummaryQuery,
+  options?: { enabled?: boolean },
+) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  return useQuery({
+    queryKey: apiKeys.summarize(orgSlug, module, query),
+    queryFn: () => service.summarize(module, query),
+    enabled: options?.enabled ?? (Boolean(query.viewId) && Boolean(query.groupBy)),
   });
 }
 
@@ -101,14 +163,16 @@ export function useUsers() {
   });
 }
 
-function invalidateModuleLists(
+export function invalidateModuleLists(
   queryClient: ReturnType<typeof useQueryClient>,
   orgSlug: string,
   module: ModuleApiName,
   recordId?: RecordId,
 ) {
+  void queryClient.invalidateQueries({ queryKey: apiKeys.timelines(orgSlug) });
   void queryClient.invalidateQueries({ queryKey: listQueriesPrefix(orgSlug, module) });
   void queryClient.invalidateQueries({ queryKey: countQueriesPrefix(orgSlug, module) });
+  void queryClient.invalidateQueries({ queryKey: summarizeQueriesPrefix(orgSlug, module) });
   if (recordId)
     void queryClient.invalidateQueries({ queryKey: apiKeys.record(orgSlug, module, recordId) });
 }
@@ -140,6 +204,7 @@ export function useUpdateRecord(module: ModuleApiName) {
     onSuccess: async (record) => {
       await queryClient.cancelQueries({ queryKey: apiKeys.record(orgSlug, module, record.id) });
       queryClient.setQueryData(apiKeys.record(orgSlug, module, record.id), record);
+      void queryClient.invalidateQueries({ queryKey: apiKeys.timelines(orgSlug) });
       void queryClient.invalidateQueries({ queryKey: listQueriesPrefix(orgSlug, module) });
       void queryClient.invalidateQueries({ queryKey: countQueriesPrefix(orgSlug, module) });
     },
@@ -188,5 +253,142 @@ export function useChangeOwner(module: ModuleApiName) {
       for (const id of ids)
         void queryClient.invalidateQueries({ queryKey: apiKeys.record(orgSlug, module, id) });
     },
+  });
+}
+
+export function useMergeRecords(module: ModuleApiName) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: MergeInput) => service.merge(module, input),
+    onSuccess: (record, input) => {
+      invalidateModuleLists(queryClient, orgSlug, module, record.id);
+      void queryClient.invalidateQueries({ queryKey: duplicateGroupsPrefix(orgSlug, module) });
+      for (const id of input.duplicateIds) {
+        void queryClient.invalidateQueries({ queryKey: apiKeys.record(orgSlug, module, id) });
+        queryClient.removeQueries({ queryKey: apiKeys.record(orgSlug, module, id) });
+      }
+      void queryClient.invalidateQueries({ queryKey: apiKeys.record(orgSlug, module, record.id) });
+    },
+  });
+}
+
+export function useConvertLead() {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ leadId, input }: { leadId: RecordId; input: ConvertLeadInput }) =>
+      service.convertLead(leadId, input),
+    onSuccess: (_result, { leadId }) => {
+      invalidateModuleLists(queryClient, orgSlug, "Leads", leadId);
+      for (const module of ["Accounts", "Contacts", "Deals"])
+        invalidateModuleLists(queryClient, orgSlug, module);
+    },
+  });
+}
+
+/** Duplicate groups of a module for one to three match fields. */
+export function useDuplicateGroups(
+  module: ModuleApiName,
+  fields: readonly string[],
+  options?: { enabled?: boolean },
+) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  return useQuery<readonly DuplicateGroup[]>({
+    queryKey: apiKeys.duplicateGroups(orgSlug, module, fields),
+    queryFn: () => service.findDuplicateGroups(module, fields),
+    enabled: (options?.enabled ?? true) && fields.length > 0,
+  });
+}
+
+/**
+ * Runs the module-wide cleanup; the service keeps one running job per module and answers
+ * with a conflict error while another one holds the lock.
+ */
+export function useDeduplicate(module: ModuleApiName) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation<DeduplicateResult, Error, readonly string[]>({
+    mutationFn: (fields) => service.deduplicate(module, fields),
+    onSuccess: () => {
+      invalidateModuleLists(queryClient, orgSlug, module);
+      void queryClient.invalidateQueries({ queryKey: duplicateGroupsPrefix(orgSlug, module) });
+    },
+  });
+}
+
+export function useGlobalSearch(query: SearchQuery, enabled: boolean) {
+  const service = useClientRecordService();
+  const orgSlug = useOrgSlug();
+  return useQuery({
+    queryKey: [...apiKeys.root(orgSlug), "search", query],
+    queryFn: () => service.search(query),
+    enabled,
+  });
+}
+
+export function useKanbanViews(module: ModuleApiName, options?: { enabled?: boolean }) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  return useQuery<readonly KanbanView[]>({
+    queryKey: apiKeys.kanbanViews(orgSlug, module),
+    queryFn: () => service.listKanbanViews(module),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useKanbanView(module: ModuleApiName, id: string) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  return useQuery<KanbanView>({
+    queryKey: apiKeys.kanbanView(orgSlug, module, id),
+    queryFn: () => service.getKanbanView(module, id),
+    enabled: Boolean(id),
+  });
+}
+
+/** Creates a view when `id` is omitted, otherwise updates it; refreshes the view queries. */
+export function useSaveKanbanView(module: ModuleApiName) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation<KanbanView, Error, { id?: string; input: KanbanViewInput }>({
+    mutationFn: ({ id, input }) =>
+      id ? service.updateKanbanView(module, id, input) : service.createKanbanView(module, input),
+    onSuccess: (view) => {
+      void queryClient.invalidateQueries({ queryKey: apiKeys.kanbanViews(orgSlug, module) });
+      void queryClient.invalidateQueries({
+        queryKey: apiKeys.kanbanView(orgSlug, module, view.id),
+      });
+    },
+  });
+}
+
+export function useTransferClient(): TransferClient {
+  const orgSlug = useOrgSlug();
+  return useMemo(() => createHttpTransferClient(orgSlug), [orgSlug]);
+}
+
+export function useImportHistory(options?: { enabled?: boolean }) {
+  const orgSlug = useOrgSlug();
+  const client = useTransferClient();
+  return useQuery({
+    queryKey: apiKeys.imports(orgSlug),
+    queryFn: () => client.listImports(),
+    enabled: options?.enabled ?? true,
+  });
+}
+
+export function useExportHistory(options?: { enabled?: boolean }) {
+  const orgSlug = useOrgSlug();
+  const client = useTransferClient();
+  return useQuery({
+    queryKey: apiKeys.exports(orgSlug),
+    queryFn: () => client.listExports(),
+    enabled: options?.enabled ?? true,
   });
 }

@@ -73,7 +73,26 @@ function matchesDetailSpec(request: CrmRequest, spec: (typeof DETAIL_FROM_LIST_R
   return actual.length === expectedSorted.length && actual.every((k, i) => k === expectedSorted[i]);
 }
 
-function assertDetailFromListRequests(requests: CrmRequest[]) {
+/** Related cards load their own metadata, views and rows independently of the detail request. */
+function isActivityCardRequest(request: CrmRequest): boolean {
+  return (
+    /^\/crm\/v[\d.]+\/settings\//.test(request.pathname) ||
+    /^\/crm\/v[\d.]+\/(Tasks|Events|Calls|Campaign_Members|Campaigns)\b/.test(request.pathname) ||
+    (request.method === "POST" &&
+      /^\/crm\/v[\d.]+\/Notes\/(bulk|actions\/count)$/.test(request.pathname)) ||
+    /^\/crm\/v2\.2\/Leads\/[^/]+\/Attachments$/.test(request.pathname)
+  );
+}
+
+function assertDetailFromListRequests(allRequests: CrmRequest[]) {
+  const seen = new Set<string>();
+  const requests = allRequests.filter((request) => {
+    if (isActivityCardRequest(request)) return false;
+    const key = `${request.method} ${request.pathname} ${[...request.searchParams.keys()].sort()}`;
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
   for (const request of requests) {
     expect(
       DETAIL_FROM_LIST_REQUESTS.some((spec) => matchesDetailSpec(request, spec)),
@@ -111,6 +130,21 @@ async function openFirstLeadFromList(
 test.describe("Lead record detail page", () => {
   test.beforeEach(async ({ page }) => {
     await page.setViewportSize({ width: 1470, height: 835 });
+  });
+
+  test("Leads activities cards render live task, meeting and call columns", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openFirstLeadFromList(page, org.slug);
+    const open = page.locator("#related-list-open-activities");
+    await expect(open.getByRole("region", { name: /^Open Tasks \(\d+\)$/ })).toBeVisible();
+    await expect(open.getByRole("region", { name: /^Open Meetings \(\d+\)$/ })).toBeVisible();
+    const closed = page.locator("#related-list-closed-activities");
+    await expect(closed.getByRole("region", { name: /^Closed Tasks \(\d+\)$/ })).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
   });
 
   test("opens from the list name link", async ({ page }) => {
@@ -207,7 +241,13 @@ test.describe("Lead record detail page", () => {
     await expect(page.locator("[data-record-frame]")).toBeVisible();
     page.off("request", onRequest);
     assertDetailFromListRequests(seen);
-    expect(seen.some((item) => item.pathname.includes("/settings/custom_views"))).toBe(false);
+    expect(
+      seen.some(
+        (item) =>
+          item.pathname.includes("/settings/custom_views") &&
+          item.searchParams.get("module") === LEADS_MODULE,
+      ),
+    ).toBe(false);
   });
 
   test("meets accessibility rules on a populated record", async ({ page }) => {
@@ -437,8 +477,8 @@ test.describe("Lead record detail page", () => {
     expectEdge(itemBox.height, 30);
     expect(Math.abs(itemBox.width - 203.5)).toBeLessThanOrEqual(1);
     expect(Math.abs(itemBox.x - popBox.x - 6.5)).toBeLessThanOrEqual(1);
-    // Clone is the first actionable row (y 6); Delete is the second (30 px pitch).
-    expect(itemBox.y - popBox.y).toBe(36);
+    // Clone (y 6), Share (36), Delete (66) — 30 px row pitch.
+    expect(itemBox.y - popBox.y).toBe(66);
     await item.focus();
     await expect(item).toHaveCSS("background-color", "rgb(240, 244, 252)");
     await expect(item).toHaveCSS("padding-left", "10.25px");
@@ -481,6 +521,33 @@ test.describe("Lead record detail page", () => {
     expectEdge(statusBox.x + statusBox.width, CANVAS_RIGHT);
     expect(Math.abs(statusBox.width - HIDDEN_CARD_WIDTH)).toBeLessThanOrEqual(1);
     expectEdge(statusBox.height, STATUS_HEIGHT);
+  });
+
+  test("Timeline History shows a row after an inline edit (MEP-1027)", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openFirstLeadFromList(page, org.slug);
+    const row = page.locator('[data-detail-field="Company"]');
+    await row.scrollIntoViewIfNeeded();
+    await row.hover();
+    await row.getByRole("button", { name: "Edit Company value" }).click();
+    const input = row.getByRole("textbox");
+    await input.fill("History Co");
+    await input.press("Enter");
+    await expect(row).toContainText("History Co");
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    const history = frame.locator("[data-timeline-history]");
+    await expect(history).toBeVisible();
+    await expect(history.getByText("No logs found")).toHaveCount(0);
+    await expect(history.getByText(/Company changed from .* to History Co/)).toBeVisible();
+    await page.reload();
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    await expect(history.getByText(/Company changed from .* to History Co/)).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
   });
 
   test("Timeline tab switches to History, opens filter panel, and returns to Overview without errors", async ({

@@ -1,6 +1,12 @@
 import type { PicklistOption } from "../../contract";
 
+import { countryOptions, stateOptions } from "./address-picklists";
+
 export const contactsPicklists: Readonly<Record<string, readonly PicklistOption[]>> = {
+  Mailing_Country: countryOptions,
+  Other_Country: countryOptions,
+  Mailing_State: stateOptions,
+  Other_State: stateOptions,
   Lead_Source: [
     {
       displayValue: "-None-",

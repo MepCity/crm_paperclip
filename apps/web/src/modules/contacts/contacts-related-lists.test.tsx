@@ -3,6 +3,7 @@ import { userEvent } from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RelatedCardsContainer } from "@/components/records/detail/related-cards-container";
+import { resolveLaterModule } from "@/components/ui/later-module";
 import { render } from "@/test/render";
 import { contactsRelatedLists, createContactsRelatedLists } from "./contacts-related-lists";
 
@@ -13,7 +14,7 @@ describe("contactsRelatedLists definition", () => {
     expect(contactsRelatedLists).toHaveLength(19);
 
     const expectedOrder = [
-      { order: 1, id: "notes", title: "Notes", moduleKey: "M6" },
+      { order: 1, id: "notes", title: "Notes", moduleKey: "M2" },
       { order: 2, id: "connected-records", title: "Connected Records", moduleKey: "P3" },
       { order: 3, id: "attachments", title: "Attachments", moduleKey: "M6" },
       { order: 4, id: "cadences", title: "Cadences", moduleKey: "P3" },
@@ -22,14 +23,14 @@ describe("contactsRelatedLists definition", () => {
       { order: 7, id: "closed-activities", title: "Closed Activities", moduleKey: "M5" },
       { order: 8, id: "invited-meetings", title: "Invited Meetings", moduleKey: "M5" },
       { order: 9, id: "products", title: "Products", moduleKey: "P2" },
-      { order: 10, id: "cases", title: "Cases", moduleKey: "M8" },
+      { order: 10, id: "cases", title: "Cases", moduleKey: "M2" },
       { order: 11, id: "quotes", title: "Quotes", moduleKey: "P2" },
       { order: 12, id: "sales-orders", title: "Sales Orders", moduleKey: "P2" },
       { order: 13, id: "purchase-orders", title: "Purchase Orders", moduleKey: "P2" },
       { order: 14, id: "emails", title: "Emails", moduleKey: "M10" },
       { order: 15, id: "invoices", title: "Invoices", moduleKey: "P2" },
-      { order: 16, id: "campaigns", title: "Campaigns", moduleKey: "M7" },
-      { order: 17, id: "social", title: "Social", moduleKey: "M15" },
+      { order: 16, id: "campaigns", title: "Campaigns", moduleKey: "M2" },
+      { order: 17, id: "social", title: "Social", moduleKey: "M2" },
       { order: 18, id: "reporting-contacts", title: "Reporting Contacts", moduleKey: "M2" },
       { order: 19, id: "voice-of-the-customer", title: "Voice of the Customer", moduleKey: "P3" },
     ];
@@ -43,6 +44,13 @@ describe("contactsRelatedLists definition", () => {
       expect(actual.title).toBe(expected.title);
       expect(actual.moduleKey).toBe(expected.moduleKey);
     });
+
+    expect(
+      contactsRelatedLists.find((c) => c.id === "open-activities")?.countBadge,
+    ).toBeUndefined();
+    expect(
+      contactsRelatedLists.find((c) => c.id === "closed-activities")?.countBadge,
+    ).toBeUndefined();
   });
 
   it("assigns laterModule to all non-M2 cards and leaves M2 for Reporting Contacts", () => {
@@ -50,12 +58,41 @@ describe("contactsRelatedLists definition", () => {
     expect(reportingContacts?.moduleKey).toBe("M2");
 
     for (const card of contactsRelatedLists) {
-      if (card.id === "reporting-contacts") {
+      // Campaigns, Cases and Notes cards are live and borrow the live key so their controls stay unlocked.
+      if (
+        card.id === "reporting-contacts" ||
+        card.id === "campaigns" ||
+        card.id === "cases" ||
+        card.id === "social" ||
+        card.id === "notes"
+      ) {
         expect(card.moduleKey).toBe("M2");
       } else {
         expect(card.moduleKey).not.toBe("M2");
       }
     }
+  });
+
+  it("draws an activity badge from the records the card holds, never a constant", () => {
+    // D-30/D-31: the captured contact has no tasks, meetings or calls, so no badge is painted.
+    const lists = createContactsRelatedLists();
+    expect(lists.find((c) => c.id === "open-activities")?.countBadge).toBeUndefined();
+    expect(lists.find((c) => c.id === "closed-activities")?.countBadge).toBeUndefined();
+    expect(lists.find((c) => c.id === "open-activities")?.activityColumns).toHaveLength(2);
+  });
+
+  it("keeps the Deals card live and filtered on Contact Name (D-14, MEP-415)", () => {
+    const deals = createContactsRelatedLists().find((c) => c.id === "deals");
+    expect(deals?.moduleKey).toBe("M4");
+    expect(resolveLaterModule(deals?.moduleKey)).toBeUndefined();
+    expect(deals?.recordFilterField).toBe("Contact_Name");
+    expect(deals?.countBadge).toBeUndefined();
+
+    const withDeals = createContactsRelatedLists({}, { deals: 2 });
+    expect(withDeals.find((c) => c.id === "deals")?.countBadge).toBe(2);
+    expect(
+      createContactsRelatedLists({}, { deals: 0 }).find((c) => c.id === "deals")?.countBadge,
+    ).toBeUndefined();
   });
 });
 
@@ -67,6 +104,18 @@ describe("RelatedCardsContainer with Contacts card set", () => {
       const section = screen.getByRole("region", { name: card.title });
       expect(section).toBeTruthy();
     }
+  });
+
+  it("opens the Deals create form from the Deals card New Deal (D-56)", async () => {
+    const user = userEvent.setup();
+    const onDealsNew = vi.fn();
+    render(<RelatedCardsContainer relatedLists={createContactsRelatedLists({ onDealsNew })} />);
+
+    const dealsSection = screen.getByRole("region", { name: "Deals" });
+    const newDealBtn = within(dealsSection).getByRole("button", { name: "New Deal" });
+    await user.click(newDealBtn);
+    expect(onDealsNew).toHaveBeenCalledTimes(1);
+    expect(within(dealsSection).getByText("No records found")).toBeTruthy();
   });
 
   it("renders upper controls and verifies laterModule attributes", async () => {
@@ -94,9 +143,10 @@ describe("RelatedCardsContainer with Contacts card set", () => {
     const enrollBtn = screen.getByRole("button", { name: "Enroll" });
     expect(enrollBtn.getAttribute("data-later-module")).toBe("P3");
 
-    // D-56 New Deal (M4)
+    // D-56 New Deal (M4): live since MEP-415, so it draws without the later-module lock
     const newDealBtn = screen.getByRole("button", { name: "New Deal" });
-    expect(newDealBtn.getAttribute("data-later-module")).toBe("M4");
+    expect(newDealBtn.getAttribute("data-later-module")).toBeNull();
+    expect(newDealBtn.getAttribute("aria-disabled")).toBeNull();
 
     // D-57 to D-60 Open Activities controls (M5, M11)
     const openActivitiesSection = screen.getByRole("region", { name: "Open Activities" });
@@ -133,42 +183,28 @@ describe("RelatedCardsContainer with Contacts card set", () => {
     const addProductsBtn = screen.getByRole("button", { name: "Add Products" });
     expect(addProductsBtn.getAttribute("data-later-module")).toBe("P2");
 
-    // D-70, D-71 Cases Assign & New (M8)
+    // MEP-900: the Cases card is live (no later-module marker on Assign / New)
     const casesSection = screen.getByRole("region", { name: "Cases" });
-    const casesAssign = casesSection.querySelector('button[data-later-module="M8"]');
-    expect(casesAssign?.textContent).toContain("Assign");
+    expect(casesSection.querySelector("[data-later-module]")).toBeNull();
 
-    // D-79 Emails Compose Email (M10)
+    // D-79 to D-82 (MEP-1049): Emails card opens compose and has interactive tabs
     const composeEmailBtn = screen.getByRole("button", { name: "Compose Email" });
-    expect(composeEmailBtn.getAttribute("data-later-module")).toBe("M10");
-
-    // D-80 to D-82 Emails subtabs (M10)
-    expect(screen.getByRole("tab", { name: "Mails" }).getAttribute("data-later-module")).toBe(
-      "M10",
-    );
-    expect(screen.getByRole("tab", { name: "Drafts" }).getAttribute("data-later-module")).toBe(
-      "M10",
-    );
-    expect(screen.getByRole("tab", { name: "Scheduled" }).getAttribute("data-later-module")).toBe(
-      "M10",
+    expect(composeEmailBtn.hasAttribute("disabled")).toBe(false);
+    expect(composeEmailBtn.getAttribute("aria-disabled")).not.toBe("true");
+    expect(screen.getByRole("tab", { name: "Mails" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByRole("tab", { name: "Drafts" }).getAttribute("aria-selected")).toBe("false");
+    expect(screen.getByRole("tab", { name: "Scheduled" }).getAttribute("aria-selected")).toBe(
+      "false",
     );
 
-    // D-87, D-88 Social links (M15) in two-panel layout
-    const twitterLink = screen.getByRole("link", { name: "Associate Twitter" });
-    expect(twitterLink.getAttribute("data-later-module")).toBe("M15");
-    const facebookLink = screen.getByRole("link", { name: "Associate Facebook" });
-    expect(facebookLink.getAttribute("data-later-module")).toBe("M15");
+    // D-87, D-88 Social card: two inert associate controls, no later-module marker
     const socialSection = screen.getByRole("region", { name: "Social" });
-    expect(within(socialSection).getByText(/You cannot search a profile in Facebook/)).toBeTruthy();
+    expect(within(socialSection).getByRole("button", { name: "Associate Twitter" })).toBeTruthy();
+    expect(within(socialSection).getByRole("button", { name: "Associate Facebook" })).toBeTruthy();
+    expect(socialSection.querySelector("[data-later-module]")).toBeNull();
 
-    // Notes card (M6): Recent Last selector button and active-styled Add a note textarea
-    const notesSection = screen.getByRole("region", { name: "Notes" });
-    const recentLastBtn = within(notesSection).getByRole("button", { name: "Recent Last" });
-    expect(recentLastBtn.getAttribute("data-later-module")).toBe("M6");
-    const notesTextarea = within(notesSection).getByRole("textbox", { name: "Add a note" });
-    expect(notesTextarea.hasAttribute("disabled")).toBe(false);
-    expect(notesTextarea.getAttribute("data-later-module")).toBe("M6");
-    expect(notesTextarea.getAttribute("aria-disabled")).toBe("true");
+    // Notes card (M6): the body needs a record; the card itself is rendered
+    expect(screen.getByRole("region", { name: "Notes" })).toBeTruthy();
 
     // D-92 Voice of the Customer Enable feature (P3)
     const enableFeatureBtn = screen.getByRole("button", { name: "Enable feature" });
@@ -238,13 +274,13 @@ describe("RecordPageFrame with Contacts rail", () => {
       targetId: item.targetId,
       countBadge: item.countBadge,
       moduleKey: item.moduleKey,
-      laterModule: item.moduleKey === "M2" ? undefined : item.moduleKey,
+      laterModule: resolveLaterModule(item.moduleKey),
       railAction: item.railAction
         ? {
             id: item.railAction.id,
             label: item.railAction.label,
             moduleKey: item.railAction.moduleKey,
-            laterModule: item.railAction.moduleKey === "M2" ? undefined : item.railAction.moduleKey,
+            laterModule: resolveLaterModule(item.railAction.moduleKey),
             onAction: item.id === "reporting-contacts" ? onAddReporting : undefined,
           }
         : undefined,
@@ -286,11 +322,12 @@ describe("RecordPageFrame with Contacts rail", () => {
       const link = within(rail).getByRole("link", { name: item.title });
       expect(link).toBeTruthy();
 
-      if (item.moduleKey === "M2") {
+      const laterModule = resolveLaterModule(item.moduleKey);
+      if (laterModule === undefined) {
         expect(link.hasAttribute("data-later-module")).toBe(false);
         expect(link.getAttribute("href")).toBe(`#${item.targetId}`);
       } else {
-        expect(link.getAttribute("data-later-module")).toBe(item.moduleKey);
+        expect(link.getAttribute("data-later-module")).toBe(laterModule);
       }
     }
 
@@ -299,7 +336,7 @@ describe("RecordPageFrame with Contacts rail", () => {
     const notesRow = notesLink.closest("div[class*='flex items-center']");
     const notesAddBtn = notesRow?.querySelector("button");
     expect(notesAddBtn).not.toBeNull();
-    expect(notesAddBtn?.getAttribute("data-later-module")).toBe("M6");
+    expect(notesAddBtn?.getAttribute("data-later-module")).toBeNull();
 
     // Reporting Contacts is NOT initially selected, so its plus button is not rendered
     const reportingLink = within(rail).getByRole("link", { name: "Reporting Contacts" });
@@ -322,11 +359,12 @@ describe("RecordPageFrame with Contacts rail", () => {
     // Notes is now no longer selected, so its plus button is gone
     expect(notesRow?.querySelector("button")).toBeNull();
 
-    // Verify laterModule rail link does NOT trigger onRelatedSelectionChange
+    // D-14 (MEP-415): the Deals rail link is live, so selecting it triggers the callback
     onSelect.mockClear();
     const dealsLink = within(rail).getByRole("link", { name: "Deals" });
+    expect(dealsLink.hasAttribute("data-later-module")).toBe(false);
     await user.click(dealsLink);
-    expect(onSelect).not.toHaveBeenCalled();
+    expect(onSelect).toHaveBeenCalledWith("deals");
   });
 
   it("tracks the visible card when scrolling and displays the corresponding plus action", () => {
@@ -339,13 +377,13 @@ describe("RecordPageFrame with Contacts rail", () => {
       targetId: item.targetId,
       countBadge: item.countBadge,
       moduleKey: item.moduleKey,
-      laterModule: item.moduleKey === "M2" ? undefined : item.moduleKey,
+      laterModule: resolveLaterModule(item.moduleKey),
       railAction: item.railAction
         ? {
             id: item.railAction.id,
             label: item.railAction.label,
             moduleKey: item.railAction.moduleKey,
-            laterModule: item.railAction.moduleKey === "M2" ? undefined : item.railAction.moduleKey,
+            laterModule: resolveLaterModule(item.railAction.moduleKey),
             onAction: item.id === "reporting-contacts" ? onAddReporting : undefined,
           }
         : undefined,
@@ -420,7 +458,7 @@ describe("RecordPageFrame with Contacts rail", () => {
       fireEvent.scroll(activeScroller);
     }
 
-    // 1. Scroll to Cases -> D-72 appears with laterModule M8
+    // 1. Scroll to Cases -> D-72 appears (live since MEP-900)
     scrollToCard("related-list-cases");
     expect(onSelect).toHaveBeenCalledWith("cases");
     const casesRow = within(rail)
@@ -428,7 +466,7 @@ describe("RecordPageFrame with Contacts rail", () => {
       .closest("div[class*='flex items-center']");
     const casesAddBtn = casesRow?.querySelector("button");
     expect(casesAddBtn).not.toBeNull();
-    expect(casesAddBtn?.getAttribute("data-later-module")).toBe("M8");
+    expect(casesAddBtn?.getAttribute("data-later-module")).toBeNull();
 
     // Notes row now has no button
     const notesRow = within(rail)
@@ -450,10 +488,11 @@ describe("RecordPageFrame with Contacts rail", () => {
     // 3. Scroll to Closed Activities -> Closed Activities is selected, no plus button
     scrollToCard("related-list-closed-activities");
     expect(onSelect).toHaveBeenCalledWith("closed-activities");
-    const closedRow = within(rail)
-      .getByRole("link", { name: "Closed Activities" })
-      .closest("div[class*='flex items-center']");
-    expect(closedRow?.querySelector("button")).toBeNull();
+    // D-31: the card holds no records, so the rail draws a bare link row without a badge.
+    const closedLink = within(rail).getByRole("link", { name: "Closed Activities" });
+    const closedRow = closedLink.closest("div[class*='flex items-center']") ?? closedLink;
+    expect(closedRow.querySelector("button")).toBeNull();
+    expect(closedRow.querySelector("span[class*='rounded-full']")).toBeNull();
     expect(invoicesRow?.querySelector("button")).toBeNull();
 
     // 4. Scroll to Notes -> D-53 appears with laterModule M6
@@ -461,6 +500,6 @@ describe("RecordPageFrame with Contacts rail", () => {
     expect(onSelect).toHaveBeenCalledWith("notes");
     const notesAddBtn = notesRow?.querySelector("button");
     expect(notesAddBtn).not.toBeNull();
-    expect(notesAddBtn?.getAttribute("data-later-module")).toBe("M6");
+    expect(notesAddBtn?.getAttribute("data-later-module")).toBeNull();
   });
 });

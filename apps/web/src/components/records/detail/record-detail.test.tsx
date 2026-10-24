@@ -1,10 +1,11 @@
-import { cleanup, fireEvent, screen, waitFor } from "@testing-library/react";
+import { cleanup, fireEvent, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 import { render } from "@/test/render";
+import { LastUpdateLabel } from "./last-update-label";
 import { RecordHeader, type RecordHeaderProps } from "./record-header";
-import { RecordPageFrame } from "./record-page-frame";
+import { getActiveRelatedEntryId, RecordPageFrame } from "./record-page-frame";
 import { RecordRailToggle } from "./record-rail-toggle";
 
 const base: RecordHeaderProps = {
@@ -108,9 +109,11 @@ test("grouped menu opens by keyboard, skips disabled entries, dispatches and res
 function Frame({
   entries = true,
   railVisible = true,
+  tabRowEnd,
 }: {
   entries?: boolean;
   railVisible?: boolean;
+  tabRowEnd?: import("react").ReactNode;
 }) {
   const [selected, setSelected] = useState("one");
   const [tab, setTab] = useState("overview");
@@ -134,6 +137,7 @@ function Frame({
       onTabChange={setTab}
       relatedRailVisible={rail}
       railControl={<RecordRailToggle railVisible={rail} onRailVisibleChange={setRail} />}
+      tabRowEnd={tabRowEnd}
       scrollTopLabel="Scroll To Top"
       tabs={[
         {
@@ -228,12 +232,12 @@ test("later-module header menu actions keep the menu open without dispatching", 
   expect(screen.queryByRole("menu")).toBeNull();
 });
 
-test("later-module account subtitle is a focusable inert link", async () => {
+test("later-module subtitle is a focusable inert link", async () => {
   const user = userEvent.setup();
   const location = window.location.href;
-  render(<RecordHeader {...base} subtitleLaterModule="M3" />);
+  render(<RecordHeader {...base} subtitleLaterModule="M4" />);
   const link = screen.getByRole("link", { name: "Example Company" });
-  expect(link.getAttribute("data-later-module")).toBe("M3");
+  expect(link.getAttribute("data-later-module")).toBe("M4");
   expect(link.getAttribute("aria-disabled")).toBe("true");
   expect(link.hasAttribute("href")).toBe(false);
   expect(link.hasAttribute("title")).toBe(false);
@@ -242,4 +246,305 @@ test("later-module account subtitle is a focusable inert link", async () => {
   await user.keyboard("{Enter} ");
   expect(document.activeElement).toBe(link);
   expect(window.location.href).toBe(location);
+});
+
+test("website subtitle renders shared link without opening new tab by default", () => {
+  render(
+    <RecordHeader {...base} subtitle="https://example.com" subtitleHref="https://example.com" />,
+  );
+  const link = screen.getByRole("link", { name: "https://example.com" });
+  expect(link.getAttribute("href")).toBe("https://example.com");
+  expect(link.hasAttribute("target")).toBe(false);
+});
+
+test("custom portrait icon renders in portrait container", () => {
+  function CustomIcon(props: import("react").SVGProps<SVGSVGElement>) {
+    return <svg data-testid="custom-portrait" {...props} />;
+  }
+  render(<RecordHeader {...base} portraitIcon={CustomIcon} />);
+  expect(screen.getByTestId("custom-portrait")).toBeTruthy();
+});
+
+test("primary header command draws the filled command, secondary stays plain", () => {
+  render(
+    <RecordHeader
+      {...base}
+      commands={[
+        { id: "send-email", label: "Send Email", variant: "primary", laterModule: "M10" },
+        { id: "edit", label: "Edit", variant: "secondary", href: "/dev/ui?edit" },
+      ]}
+    />,
+  );
+  const send = screen.getByRole("button", { name: "Send Email" });
+  const edit = screen.getByRole("link", { name: "Edit" });
+  expect(send.className).toContain("bg-primary");
+  expect(send.className).not.toContain("bg-surface");
+  expect(edit.className).toContain("bg-surface");
+  expect(edit.className).not.toContain("bg-primary");
+});
+
+test("the tab row keeps its right end empty until a module supplies one", () => {
+  const { rerender } = render(<Frame />);
+  const row = document.querySelector("[data-record-tab-row]");
+  expect(row?.textContent).toContain("Overview");
+  expect(row?.querySelector(".detail-last-update")).toBeNull();
+  rerender(<Frame tabRowEnd={<LastUpdateLabel text="Last Update : 2 day(s) ago" inTabRow />} />);
+  const label = document.querySelector("[data-record-tab-row] .detail-last-update");
+  expect(label?.textContent).toBe("Last Update : 2 day(s) ago");
+  expect(label?.querySelector("svg")).toBeTruthy();
+  // The panels keep the label out of the overview flow.
+  expect(document.querySelector("[data-record-scroller] .detail-last-update")).toBeNull();
+});
+
+test("rail badges follow the record count; an empty card draws none", () => {
+  render(
+    <RecordPageFrame
+      header={<RecordHeader {...base} />}
+      relatedListLabel="Related List"
+      relatedEntries={[
+        { id: "notes", label: "Notes", targetId: "target-notes", countBadge: 2 },
+        { id: "open", label: "Open Activities", targetId: "target-open", countBadge: undefined },
+      ]}
+      tabsLabel="Record views"
+      selectedTabId="overview"
+      onTabChange={() => {}}
+      scrollTopLabel="Scroll To Top"
+      tabs={[{ id: "overview", label: "Overview", content: <article id="target-notes" /> }]}
+    />,
+  );
+  const rail = screen.getByRole("navigation", { name: "Related List" });
+  expect(within(rail).getByText("2")).toBeTruthy();
+  expect(within(rail).queryByText("1")).toBeNull();
+  expect(rail.querySelectorAll("[class*='rounded-full']")).toHaveLength(1);
+});
+
+test("clicking rail link on alternate tab calls onTabChange, scrolls target, and selects entry", async () => {
+  const user = userEvent.setup();
+  const onTabChangeSpy = vi.fn();
+
+  function TwoTabFrame() {
+    const [selected, setSelected] = useState<string | undefined>("timeline-item");
+    const [tab, setTab] = useState("timeline");
+
+    return (
+      <RecordPageFrame
+        header={<RecordHeader {...base} />}
+        relatedListLabel="Related List"
+        relatedEntries={[
+          { id: "one", label: "Section One", targetId: "target-one" },
+          {
+            id: "timeline-item",
+            label: "Timeline Item",
+            targetId: "target-timeline",
+            tabId: "timeline",
+          },
+        ]}
+        selectedRelatedId={selected}
+        onRelatedSelectionChange={setSelected}
+        tabsLabel="Record views"
+        selectedTabId={tab}
+        onTabChange={(nextTab) => {
+          onTabChangeSpy(nextTab);
+          setTab(nextTab);
+        }}
+        scrollTopLabel="Scroll To Top"
+        tabs={[
+          {
+            id: "overview",
+            label: "Overview",
+            content: (
+              <article
+                id="target-one"
+                ref={(el) => {
+                  if (el)
+                    Object.defineProperty(el, "offsetTop", {
+                      value: 160,
+                      configurable: true,
+                    });
+                }}
+              >
+                First section
+              </article>
+            ),
+          },
+          {
+            id: "timeline",
+            label: "Timeline",
+            content: <article id="target-timeline">Timeline content</article>,
+          },
+        ]}
+      />
+    );
+  }
+
+  const { container } = render(<TwoTabFrame />);
+  const scroller = container.querySelector("[data-record-scroller]") as HTMLDivElement;
+  expect(scroller.scrollTop).toBe(0);
+
+  const one = screen.getByRole("link", { name: "Section One" });
+  expect(one.hasAttribute("aria-current")).toBe(false);
+
+  await user.click(one);
+
+  expect(onTabChangeSpy).toHaveBeenCalledWith("overview");
+  expect(one.getAttribute("aria-current")).toBe("page");
+  expect(scroller.scrollTop).toBe(160);
+});
+
+test("clicking rail link when target is in selected tab scrolls without calling onTabChange", async () => {
+  const user = userEvent.setup();
+  const onTabChangeSpy = vi.fn();
+
+  function OverviewFrame() {
+    const [selected, setSelected] = useState<string | undefined>("one");
+    const [tab, setTab] = useState("overview");
+
+    return (
+      <RecordPageFrame
+        header={<RecordHeader {...base} />}
+        relatedListLabel="Related List"
+        relatedEntries={[
+          { id: "one", label: "Section One", targetId: "target-one" },
+          { id: "two", label: "Section Two", targetId: "target-two" },
+        ]}
+        selectedRelatedId={selected}
+        onRelatedSelectionChange={setSelected}
+        tabsLabel="Record views"
+        selectedTabId={tab}
+        onTabChange={(nextTab) => {
+          onTabChangeSpy(nextTab);
+          setTab(nextTab);
+        }}
+        scrollTopLabel="Scroll To Top"
+        tabs={[
+          {
+            id: "overview",
+            label: "Overview",
+            content: (
+              <>
+                <article
+                  id="target-one"
+                  ref={(el) => {
+                    if (el)
+                      Object.defineProperty(el, "offsetTop", {
+                        value: 50,
+                        configurable: true,
+                      });
+                  }}
+                >
+                  First section
+                </article>
+                <article
+                  id="target-two"
+                  ref={(el) => {
+                    if (el)
+                      Object.defineProperty(el, "offsetTop", {
+                        value: 250,
+                        configurable: true,
+                      });
+                  }}
+                >
+                  Second section
+                </article>
+              </>
+            ),
+          },
+          {
+            id: "timeline",
+            label: "Timeline",
+            content: "Alternate content",
+          },
+        ]}
+      />
+    );
+  }
+
+  const { container } = render(<OverviewFrame />);
+  const scroller = container.querySelector("[data-record-scroller]") as HTMLDivElement;
+
+  const two = screen.getByRole("link", { name: "Section Two" });
+  await user.click(two);
+
+  expect(onTabChangeSpy).not.toHaveBeenCalled();
+  expect(two.getAttribute("aria-current")).toBe("page");
+  expect(scroller.scrollTop).toBe(250);
+});
+
+test("rail link does not become selected if target cannot be found in any tab", async () => {
+  const user = userEvent.setup();
+  const onTabChangeSpy = vi.fn();
+
+  function MissingTargetFrame() {
+    const [selected, setSelected] = useState<string | undefined>(undefined);
+    const [tab] = useState("overview");
+
+    return (
+      <RecordPageFrame
+        header={<RecordHeader {...base} />}
+        relatedListLabel="Related List"
+        relatedEntries={[
+          { id: "first", label: "First Section", targetId: "target-one" },
+          { id: "missing", label: "Missing Section", targetId: "nonexistent" },
+          { id: "invalid-tab", label: "Invalid Tab", targetId: "target-two", tabId: "unknown-tab" },
+        ]}
+        selectedRelatedId={selected}
+        onRelatedSelectionChange={setSelected}
+        tabsLabel="Record views"
+        selectedTabId={tab}
+        onTabChange={onTabChangeSpy}
+        scrollTopLabel="Scroll To Top"
+        tabs={[
+          {
+            id: "overview",
+            label: "Overview",
+            content: <article id="target-one">First section</article>,
+          },
+        ]}
+      />
+    );
+  }
+
+  render(<MissingTargetFrame />);
+  const missing = screen.getByRole("link", { name: "Missing Section" });
+  await user.click(missing);
+  expect(missing.hasAttribute("aria-current")).toBe(false);
+
+  const invalidTab = screen.getByRole("link", { name: "Invalid Tab" });
+  await user.click(invalidTab);
+  expect(invalidTab.hasAttribute("aria-current")).toBe(false);
+  expect(onTabChangeSpy).not.toHaveBeenCalled();
+});
+
+test("getActiveRelatedEntryId preserves selected entry visible in viewport when at bottom of scroller", () => {
+  const container = document.createElement("div");
+  Object.defineProperty(container, "clientHeight", { value: 600, configurable: true });
+  Object.defineProperty(container, "scrollHeight", { value: 900, configurable: true });
+  Object.defineProperty(container, "scrollTop", { value: 300, configurable: true }); // at bottom: 900 - 300 - 600 = 0
+
+  const invoices = document.createElement("section");
+  invoices.id = "target-invoices";
+  Object.defineProperty(invoices, "offsetTop", { value: 200, configurable: true });
+  Object.defineProperty(invoices, "offsetHeight", { value: 120, configurable: true }); // top = -100, bottom = 20
+
+  const memberAccounts = document.createElement("section");
+  memberAccounts.id = "target-member-accounts";
+  Object.defineProperty(memberAccounts, "offsetTop", { value: 350, configurable: true });
+  Object.defineProperty(memberAccounts, "offsetHeight", { value: 250, configurable: true }); // top = 50, bottom = 300
+
+  const cases = document.createElement("section");
+  cases.id = "target-cases";
+  Object.defineProperty(cases, "offsetTop", { value: 620, configurable: true });
+  Object.defineProperty(cases, "offsetHeight", { value: 280, configurable: true }); // top = 320, bottom = 600
+
+  container.append(invoices, memberAccounts, cases);
+
+  const entries = [
+    { id: "invoices", label: "Invoices", targetId: "target-invoices" },
+    { id: "member-accounts", label: "Member Accounts", targetId: "target-member-accounts" },
+    { id: "cases", label: "Cases", targetId: "target-cases" },
+  ];
+
+  // User clicked member-accounts; it is in view at the bottom, so it must stay selected
+  const activeId = getActiveRelatedEntryId(container, entries, "member-accounts");
+  expect(activeId).toBe("member-accounts");
 });

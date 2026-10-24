@@ -1,6 +1,7 @@
 import type { FieldDefinition, ModuleMetadata, RecordData } from "@crm/core/records";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailFieldEntry, DetailSection } from "@/components/records/detail/details-card";
+import { addressSubfieldApiNames } from "@/lib/records/composite-address";
 
 function visible(field: FieldDefinition, record: RecordData) {
   return field.views.view && Object.hasOwn(record.fields, field.apiName);
@@ -14,9 +15,17 @@ export function buildContactsBusinessCardFields(
 ): BusinessCardField[] {
   return module.businessCardFields.flatMap((name) => {
     const field = module.fields.find((candidate) => candidate.apiName === name);
-    return field && visible(field, record)
-      ? [{ field: label(field), value: record.fields[name] ?? null }]
-      : [];
+    if (!field || !visible(field, record)) return [];
+    const value = record.fields[name] ?? null;
+    const isPhone = name === "Phone";
+    const hasValue = value !== null && value !== undefined && value !== "";
+    return [
+      {
+        field: label(field),
+        value,
+        ...(isPhone && hasValue ? { callAction: true } : {}),
+      },
+    ];
   });
 }
 
@@ -34,6 +43,18 @@ export function buildContactsDetailSections(
   record: RecordData,
 ): DetailSection[] {
   const byName = new Map(module.fields.map((field) => [field.apiName, field]));
+  const activeRecord = {
+    ...record,
+    fields: Object.fromEntries(
+      Object.entries(record.fields).filter(([name]) => byName.get(name)?.views.view),
+    ),
+  };
+  const addressParts = new Set(
+    ["Mailing", "Other"].flatMap((prefix) => [
+      ...addressSubfieldApiNames(`${prefix}_Address`),
+      `${prefix}_Code`,
+    ]),
+  );
   return module.layout
     .filter((section) => section.label !== "Contact Image")
     .map((section) => {
@@ -44,7 +65,8 @@ export function buildContactsDetailSections(
           if (!field?.views.view) continue;
           const prefix =
             name === "Mailing_Address" ? "Mailing" : name === "Other_Address" ? "Other" : null;
-          if (section.label === "Address Information" && !prefix) continue;
+          if (section.label === "Address Information" && !prefix && addressParts.has(name))
+            continue;
           if (!prefix && !visible(field, record)) continue;
           const timestamp =
             name === "Created_By"
@@ -52,14 +74,19 @@ export function buildContactsDetailSections(
               : name === "Modified_By"
                 ? record.fields.Modified_Time
                 : undefined;
+          const value = prefix
+            ? formatContactsAddress(activeRecord, prefix) || null
+            : (record.fields[name] ?? null);
+          const isPhone =
+            section.label === "Contact Information" && name === "Phone" && index === 0;
+          const hasValue = value !== null && value !== undefined && value !== "";
           fields.push({
             column:
               section.label === "Description Information" ? "full" : index === 0 ? "left" : "right",
             field: label(field),
-            value: prefix
-              ? formatContactsAddress(record, prefix) || null
-              : (record.fields[name] ?? null),
+            value,
             auditTimestamp: typeof timestamp === "string" ? timestamp : undefined,
+            ...(isPhone && hasValue ? { callAction: true } : {}),
           });
         }
       });

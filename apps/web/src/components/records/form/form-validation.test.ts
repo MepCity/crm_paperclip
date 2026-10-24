@@ -70,6 +70,26 @@ test("whole numbers and empty optional integers pass", () => {
   }
 });
 
+test("bigint accepts digit text and reports an entry that is not digits", () => {
+  const optional = [field("Account_Number", "Account Number", "bigint", false)];
+  for (const value of ["9007199254740993", "0", " 123456789012345678 ", null]) {
+    expect(validateRecordForm(optional, { Account_Number: value }, (f) => f.label)).toEqual({});
+  }
+  for (const value of ["12a", "1.5", "12 34", "1e5", "-5", 123456789012, 12.5]) {
+    expect(validateRecordForm(optional, { Account_Number: value }, (f) => f.label)).toEqual({
+      Account_Number: "Please enter a valid Account Number.",
+    });
+  }
+  const required = [field("Account_Number", "Account Number", "bigint", true)];
+  expect(validateRecordForm(required, {}, (f) => f.label)).toEqual({
+    Account_Number: "Account Number cannot be empty.",
+  });
+  // Spaces alone are a cleared field, not a format failure.
+  expect(validateRecordForm(required, { Account_Number: "   " }, (f) => f.label)).toEqual({
+    Account_Number: "Account Number cannot be empty.",
+  });
+});
+
 test("isEmailFormatValid accepts common addresses", () => {
   expect(isEmailFormatValid("user@example.test")).toBe(true);
   expect(isEmailFormatValid("bad")).toBe(false);
@@ -89,6 +109,28 @@ test("date rejects a day that never happened", () => {
   });
 });
 
+test("date rejects a half-typed entry instead of reading it as empty", () => {
+  const fields = [field("Date_of_Birth", "Date of Birth", "date", false)];
+  for (const value of ["1", "15.", "15.02", "15.02.202", "1.2.2024"]) {
+    expect(validateRecordForm(fields, { Date_of_Birth: value }, (f) => f.label)).toEqual({
+      Date_of_Birth: "Please enter a valid Date of Birth.",
+    });
+  }
+});
+
+test("an optional date stays valid when the entry is really cleared", () => {
+  const fields = [field("Date_of_Birth", "Date of Birth", "date", false)];
+  expect(validateRecordForm(fields, { Date_of_Birth: null }, (f) => f.label)).toEqual({});
+  const requiredFields = [field("Date_of_Birth", "Date of Birth", "date", true)];
+  expect(validateRecordForm(requiredFields, { Date_of_Birth: null }, (f) => f.label)).toEqual({
+    Date_of_Birth: "Date of Birth cannot be empty.",
+  });
+  // Half an entry is not empty, so a required field reports the format, not the empty message.
+  expect(
+    validateRecordForm(requiredFields, { Date_of_Birth: "15.02.202" }, (f) => f.label),
+  ).toEqual({ Date_of_Birth: "Please enter a valid Date of Birth." });
+});
+
 test("date rejects anything outside the contract shape", () => {
   const fields = [field("Date_of_Birth", "Date of Birth", "date", false)];
   for (const value of ["15.02.2026", "2026-2-15", "2026-13-01", 20260215, true]) {
@@ -105,9 +147,17 @@ test("required date reports the empty message before the format", () => {
   });
 });
 
-test("datetime keeps being skipped until its own form task", () => {
-  const fields = [field("Created_Time", "Created Time", "datetime", true)];
-  expect(validateRecordForm(fields, {}, (f) => f.label)).toEqual({});
+test("a required datetime must be filled and a filled one must be a real timestamp", () => {
+  const fields = [field("Start_DateTime", "From", "datetime", true)];
+  expect(validateRecordForm(fields, {}, (f) => f.label)).toEqual({
+    Start_DateTime: "From cannot be empty.",
+  });
+  expect(validateRecordForm(fields, { Start_DateTime: "nope" }, (f) => f.label)).toEqual({
+    Start_DateTime: "Please enter a valid From.",
+  });
+  expect(
+    validateRecordForm(fields, { Start_DateTime: "2026-10-14T09:00:00.000Z" }, (f) => f.label),
+  ).toEqual({});
 });
 
 test("required lookup fields require a populated reference", () => {
@@ -147,4 +197,27 @@ test("optional lookup fields accept null or populated references", () => {
       (f) => f.label,
     ),
   ).toEqual({});
+});
+
+test("required duration treats zero duration (00:00) as empty", () => {
+  const required = [field("Call_Duration", "Call Duration", "text", true)];
+  for (const zero of ["00:00", "0:00", "00:0", "000:00"]) {
+    expect(validateRecordForm(required, { Call_Duration: zero }, (f) => f.label)).toEqual({
+      Call_Duration: "Call Duration cannot be empty.",
+    });
+  }
+  expect(validateRecordForm(required, { Call_Duration: null }, (f) => f.label)).toEqual({
+    Call_Duration: "Call Duration cannot be empty.",
+  });
+  expect(validateRecordForm(required, {}, (f) => f.label)).toEqual({
+    Call_Duration: "Call Duration cannot be empty.",
+  });
+  for (const valid of ["00:05", "01:00", "05:30", "120:00"]) {
+    expect(validateRecordForm(required, { Call_Duration: valid }, (f) => f.label)).toEqual({});
+  }
+
+  const optional = [field("Call_Duration", "Call Duration", "text", false)];
+  for (const val of ["00:00", null, "05:30"]) {
+    expect(validateRecordForm(optional, { Call_Duration: val }, (f) => f.label)).toEqual({});
+  }
 });

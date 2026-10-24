@@ -3,6 +3,7 @@ import {
   calendarShapeToDisplayDate,
   DATE_MASK_PLACEHOLDER,
   displayDateToCalendarShape,
+  displayDateToModelShape,
   isCalendarDate,
 } from "./calendar-date";
 
@@ -29,6 +30,30 @@ describe("displayDateToCalendarShape", () => {
       "31.12.99999",
     ]) {
       expect(displayDateToCalendarShape(value)).toBeNull();
+    }
+  });
+});
+
+describe("displayDateToModelShape", () => {
+  it("keeps a full day on the contract value", () => {
+    expect(displayDateToModelShape("15.02.2026")).toBe("2026-02-15");
+    expect(displayDateToModelShape("30.02.2026")).toBe("2026-02-30");
+  });
+
+  it("holds an unfinished entry as its typed text, not as the empty value", () => {
+    for (const value of ["1", "15.", "15.02", "15.02.202", "1.2.2024"]) {
+      expect(displayDateToModelShape(value)).toBe(value);
+    }
+  });
+
+  it("is empty only when nothing is left in the entry", () => {
+    expect(displayDateToModelShape("")).toBeNull();
+    expect(displayDateToModelShape("   ")).toBeNull();
+  });
+
+  it("stays out of the contract shape so validation can reject it", () => {
+    for (const value of ["1", "15.02.202", "1.2.2024"]) {
+      expect(isCalendarDate(displayDateToModelShape(value) ?? "")).toBe(false);
     }
   });
 });

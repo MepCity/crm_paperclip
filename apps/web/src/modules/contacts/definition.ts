@@ -1,5 +1,6 @@
 import { Icons } from "@/components/ui/icon";
 import type { ModuleScreenDefinition } from "../types";
+import { ContactRecordScreen } from "./contact-record-screen";
 import {
   buildContactsBusinessCardFields,
   buildContactsDetailSections,
@@ -14,7 +15,6 @@ import {
   CONTACTS_DELETE_CONFIRM_TITLE,
 } from "./contacts-record-more-options";
 import {
-  CONTACTS_TIMELINE_EMPTY_EVENTS,
   CONTACTS_TIMELINE_MODULE_OPTIONS,
   CONTACTS_TIMELINE_SOURCE_OPTIONS,
   CONTACTS_TIMELINE_SUBTABS,
@@ -23,15 +23,32 @@ import {
 import { CONTACTS_LIST_CURRENCY_CODE, contactsListPageConfig } from "./list-config";
 import { buildContactsFilterGroups } from "./list-filters";
 
+export const contactsMergeDefinition = {
+  criterionFields: ["First_Name", "Last_Name", "Email", "Phone", "Mobile", "Account_Name"],
+  matchingColumns: [
+    "Full_Name",
+    "Account_Name",
+    "Email",
+    "Phone",
+    "Mobile",
+    "Created_Time",
+    "Modified_Time",
+    "Owner",
+  ],
+} as const;
+
 export const contactsScreenDefinition: ModuleScreenDefinition = {
   apiName: "Contacts",
   tab: "Contacts",
   singularLabel: "Contact",
   pluralLabel: "Contacts",
   pageTitle: "Contacts",
-  navigation: { id: "contacts", icon: Icons.users },
+  navigation: { id: "contacts", icon: Icons.circleUser },
+  search: { secondaryFields: ["Email", "Phone"] },
   list: contactsListPageConfig,
   listCurrencyCode: CONTACTS_LIST_CURRENCY_CODE,
+  searchColumns: ["Full_Name", "Account_Name", "Email", "Phone", "Owner"],
+  merge: contactsMergeDefinition,
   buildFilterGroups: buildContactsFilterGroups,
   form: {
     rules: contactsFormRules,
@@ -40,20 +57,30 @@ export const contactsScreenDefinition: ModuleScreenDefinition = {
     profileImageLaterModule: "M6",
   },
   detail: {
+    Screen: ContactRecordScreen,
     header: contactsRecordHeaderIdentity,
+    addTags: { label: "Add Tags" },
+    headerCommands: [
+      { id: "send-email", label: "Send Email", laterModule: "M10", variant: "primary" },
+    ],
     businessCard: buildContactsBusinessCardFields,
     sections: buildContactsDetailSections,
     inlineEditable: isContactInlineEditable,
     lastUpdate: formatContactsLastUpdateLabel,
+    lastUpdatePlacement: "tab-row",
     moreOptions: buildContactsRecordMoreMenuGroups,
     deleteTitle: CONTACTS_DELETE_CONFIRM_TITLE,
     deleteMessage: CONTACTS_DELETE_CONFIRM_MESSAGE,
+    loadingAttributes: { "data-contact-record-loading": true },
     timeline: {
       subtabs: CONTACTS_TIMELINE_SUBTABS,
       modules: CONTACTS_TIMELINE_MODULE_OPTIONS,
       sources: CONTACTS_TIMELINE_SOURCE_OPTIONS,
-      events: CONTACTS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeContactsEventKind,
+      upcomingAutomatedActions: {
+        label: "Show Upcoming Automated Actions",
+        laterModule: "M12",
+      },
     },
   },
 };

@@ -29,7 +29,7 @@ The route `app/crm/[orgSlug]/tab/[moduleTab]/[recordId]/page.tsx` calls
 | `FieldValueView` | Read-only field value for detail rows; empty values use an em dash. |
 | `BusinessCard` | Five (or fewer) label/value rows with right-aligned labels. |
 | `DetailsCard` | `Hide Details` control, divider, and titled sections with one or two columns. |
-| `LastUpdateLabel` | `Last Update` relative-age text supplied by the parent. |
+| `LastUpdateLabel` | `Last Update` relative-age text supplied by the parent. `inTabRow` draws the Accounts/Contacts indicator (AD-35 / D-35) at the right end of the tab row with its clock glyph; Leads keeps it above the overview content. |
 | `DetailFieldRow` | Internal row layout for business and details cards. |
 
 Shared formatting with list `CellValue` lives in `../field-format.ts`.
@@ -125,7 +125,6 @@ menu present/absent, and all four arrow availability combinations.
 
 | Omitted control or content | Owning module / task |
 | --- | --- |
-| Add Tags line | M6, notes/attachments/CSV and tags |
 | Send Email | M10, email inbox/calendar |
 | Convert | M4, Deals with Contacts and Accounts |
 | Add Related List, Links, Add Link | M11, customization |
@@ -146,8 +145,11 @@ menu present/absent, and all four arrow availability combinations.
   14px or 15px token. These expectations are read from tokens in the E2E test.
 - The pill's full width/height and selected slice height are measured in the hidden-rail
   table; the same pill is used with the rail shown. This does not implement rail hiding.
-- The omitted Add Tags line leaves the title vertically centred beside the portrait.
-  Final full-page coordinates are verified by the route/data integration task.
+- Leads, Contacts, Accounts and Deals render the Module 6 Add Tags popover and
+  record chips below the identity. `tagsContent` supplies the shared tag component;
+  activity modules retain their later-module entry. The observed initial popover
+  follows `research/specs/tags.md`; populated chips and write flows use the
+  accepted interim rules in ADR 0007.
 - Menu horizontal padding is 5.75px inside the 1px edge, preserving the measured
   203.5px highlighted width. Its start differs by 0.25px from the captured half-pixel
   boundary, within the 1px tolerance; text begins 17px from the popover edge.
@@ -164,11 +166,16 @@ menu present/absent, and all four arrow availability combinations.
   Whether the key is shared across all modules or scoped per module was not observed in reference
   captures; we use one global key for every record detail page.
 
-The spec places Scroll To Top at lower right but does not measure it: we use a 36px
-circle, 16px from the content frame's right/bottom edges, white surface, panel border,
-and the existing medium shadow. These values are separately documented as unmeasured
-tokens; they do not claim reference parity. The demo's 560px height is a synthetic
-inspection viewport, not a reference page height.
+Scroll To Top uses the existing-capture measurements in record-detail.md: a 37px
+disc, 44px from the viewport right edge. Its bottom offset reserves the 61px
+page-view strip plus the measured 17px gap, and tracks the actual footer
+position when it wraps. A blank lane of disc diameter plus gap before the
+strip prevents overlap with the final card at the 1470 × 835 baseline. This
+clearance is an implementation choice for the no-overlap requirement; the
+existing captures do not establish the final-card-to-strip spacing. The demo's 560px height remains a synthetic viewport.
+The page-view selector is 150 × 34px; the custom page action is at least 218 ×
+32px and can grow with its label. Related-card selectors use the small text role
+and 27px height. Unmeasured padding and line-height retain project defaults.
 
 ## Verification
 

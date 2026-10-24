@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import { readTagCatalogueAction } from "@/app/crm/[orgSlug]/tags/actions";
 import { ModuleListScreen } from "@/components/records/list/module-list-screen";
 import { useModule, useUsers } from "@/lib/api/client/hooks";
 import {
@@ -9,17 +10,30 @@ import {
   moduleListDefaultPath,
   moduleRecordPath,
 } from "@/lib/crm-paths";
+import { type TagCatalogClient, TagCatalogProvider } from "@/lib/records/tags";
 import type { ModuleScreenDefinition } from "./types";
 
 export function ModuleListClient({
   orgSlug,
   viewId,
   definition,
+  currentUserId,
 }: {
   orgSlug: string;
   viewId?: string;
   definition: ModuleScreenDefinition;
+  currentUserId?: string;
 }) {
+  const tagClient = useMemo<TagCatalogClient>(
+    () => ({
+      async listTags(module) {
+        const result = await readTagCatalogueAction(orgSlug, module);
+        if (result.status === "error") throw new Error(result.message);
+        return [...result.tags];
+      },
+    }),
+    [orgSlug],
+  );
   const listConfig = definition.list;
   const module = useModule(definition.apiName);
   const users = useUsers();
@@ -57,5 +71,14 @@ export function ModuleListClient({
     return <div className="module-list-page" aria-hidden="true" />;
   }
 
-  return <ModuleListScreen orgSlug={orgSlug} config={config} viewId={viewId} />;
+  return (
+    <TagCatalogProvider client={tagClient}>
+      <ModuleListScreen
+        orgSlug={orgSlug}
+        config={config}
+        viewId={viewId}
+        currentUserId={currentUserId}
+      />
+    </TagCatalogProvider>
+  );
 }

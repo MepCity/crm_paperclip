@@ -4,3 +4,5 @@ import { operations } from "@/lib/api/wire/operations";
 export const dynamic = "force-dynamic";
 
 export const GET = operationRoute(operations.views);
+
+export const POST = operationRoute(operations.createSharedView);

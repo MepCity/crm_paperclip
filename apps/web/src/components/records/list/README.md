@@ -407,11 +407,16 @@ Visual layout (View Settings popover; Data and trailing column widths), Actions
 - `ViewTabStrip({ viewName })`: renders the selected view label in the measured pill.
   It is a static label: no selector, tab options or additional tabs are rendered.
 - `ListToolbar({ filterOpen, onFilterChange, onRefresh, fields, sort, onSortApply,
-  create, actions?, presentationLabel? })`: controlled Filter state with `aria-pressed`,
-  Sort, a static accessible list presentation indicator, refresh and create/actions.
+  create, actions? })`: controlled Filter state with `aria-pressed`, outline funnel icon
+  in `--color-list-filter-toggle-icon`, Sort, the presentation switcher (`ViewTypeSwitcher`),
+  refresh in `--color-text-muted`, and create/actions.
   `create` takes the `SplitButton` props. `actions` takes `MenuAction[]` from the menu
   primitive (`id`, `label`, `onAction`, optional `isDisabled`). No Actions button is
-  rendered for an empty collection. `presentationLabel` defaults to `List presentation`.
+  rendered for an empty collection.
+- `ViewTypeSwitcher()`: presentation switcher row consisting of six view-type tiles and
+  a trailing overflow chevron. All glyphs are original outline drawings (`fill="none"`,
+  `stroke="currentColor"`). The active list presentation is highlighted in primary colors
+  while the unselected tiles appear in `--color-text-muted`.
 - `SelectionBar({ selectedCount, onClear, onDelete, onMassUpdate?, actions? })`: replaces
   the toolbar while `selectedCount > 0`. Shows the measured toolbar height, a count
   (`1 Record Selected` / `3 Records Selected`), a `Clear` text control, `Delete`, an

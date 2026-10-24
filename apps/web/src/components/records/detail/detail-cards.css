@@ -256,3 +256,22 @@
   color: var(--color-text-muted);
   margin-block-end: 0.5rem;
 }
+
+/* AD-35 / D-35: in the tab row the indicator sits at the far right, vertically centred on the
+   tabs, with a clock glyph in front of the text. */
+.detail-last-update--tab-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-block-end: 0;
+  white-space: nowrap;
+}
+
+.detail-details-card--activity .detail-details-row,
+.detail-details-card--activity .detail-details-row-full {
+  grid-template-columns: 153.5px 31.5px minmax(0, 1fr);
+}
+
+.detail-details-card--activity .detail-field-label {
+  white-space: nowrap;
+}

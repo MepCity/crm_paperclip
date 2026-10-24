@@ -1,4 +1,6 @@
 import type { RecordMenuGroup } from "@/components/records/detail/record-header";
+import { withPrintPreviewAction } from "@/components/records/print/print-preview-menu";
+import type { ModuleKey } from "@/components/ui/later-module";
 
 /** Interim copy for single-record delete (leads-write-behaviour.md › A1, not documented in UI). */
 export const LEADS_DELETE_CONFIRM_TITLE = "Delete Lead";
@@ -7,12 +9,15 @@ export const LEADS_DELETE_CONFIRM_MESSAGE = "Are you sure you want to delete thi
 export type LeadsRecordMoreOptionsHandlers = {
   onClone: () => void;
   onDelete: () => void;
+  onFindMergeDuplicates?: () => void;
+  onPrintPreview?: () => void;
 };
 
 type SpecMenuItem = {
   id: string;
   label: string;
   handlerKey?: keyof LeadsRecordMoreOptionsHandlers;
+  laterModule?: ModuleKey;
 };
 
 export type LeadsMoreOptionsDeviation = {
@@ -32,15 +37,19 @@ export const LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS: readonly {
     id: "leads-more-primary",
     items: [
       { id: "clone", label: "Clone", handlerKey: "onClone" },
-      { id: "share", label: "Share" },
+      { id: "share", label: "Share", laterModule: "M11" },
       { id: "delete", label: "Delete", handlerKey: "onDelete" },
     ],
   },
   {
     id: "leads-more-print",
     items: [
-      { id: "print-preview", label: "Print Preview" },
-      { id: "find-merge-duplicates", label: "Find and Merge Duplicates" },
+      { id: "print-preview", label: "Print Preview", laterModule: "M6" },
+      {
+        id: "find-merge-duplicates",
+        label: "Find and Merge Duplicates",
+        handlerKey: "onFindMergeDuplicates",
+      },
       { id: "mail-merge", label: "Mail Merge" },
     ],
   },
@@ -64,7 +73,6 @@ export const LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS: readonly {
 export const LEADS_RECORD_MORE_OPTIONS_DEVIATIONS: readonly LeadsMoreOptionsDeviation[] = [
   { label: "Share", parityModule: "M11 (Record Share)" },
   { label: "Print Preview", parityModule: "M6" },
-  { label: "Find and Merge Duplicates", parityModule: "M2 with Contacts" },
   { label: "Mail Merge", parityModule: "M10" },
   { label: "Run Macro", parityModule: "M12" },
   { label: "Customize Business Card", parityModule: "M11" },
@@ -86,19 +94,24 @@ export function buildLeadsRecordMoreMenuGroups(
   const groups: RecordMenuGroup[] = [];
   for (const group of LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS) {
     const items = group.items
-      .filter((item) => item.handlerKey !== undefined)
+      .filter((item) => item.handlerKey !== undefined || item.laterModule !== undefined)
+      .filter(
+        (item) =>
+          item.handlerKey !== "onFindMergeDuplicates" ||
+          handlers.onFindMergeDuplicates !== undefined,
+      )
       .map((item) => {
         const key = item.handlerKey;
-        if (!key) throw new Error("Filtered item missing handlerKey.");
         return {
           id: item.id,
           label: item.label,
-          onAction: handlers[key],
+          ...(key ? { onAction: handlers[key] } : {}),
+          ...(item.laterModule ? { laterModule: item.laterModule } : {}),
         };
       });
     if (items.length > 0) {
       groups.push({ id: group.id, items });
     }
   }
-  return groups;
+  return withPrintPreviewAction(groups, handlers.onPrintPreview);
 }

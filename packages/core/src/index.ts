@@ -1,4 +1,5 @@
 export { getSession, handleAuthRequest, requireUser, type Session, type SessionUser } from "./auth";
+export { isDevLoginEnabled } from "./auth/dev-login";
 export { getDb } from "./database";
 export { type Env, parseEnv } from "./env";
 export {
@@ -35,3 +36,22 @@ export {
   type Transaction,
   withOrg,
 } from "./tenancy";
+export type {
+  Actor,
+  Charset,
+  ExportJob,
+  ExportRequest,
+  FieldMapping,
+  ImportJob,
+  ImportMode,
+  ImportPreview,
+  ImportRowResult,
+  ImportSettings,
+  RowOutcome,
+  TransferAction,
+  TransferDependencies,
+  TransferLimits,
+  TransferModule,
+  TransferService,
+} from "./transfer";
+export { createTransferService, DEFAULT_TRANSFER_LIMITS, TRANSFER_MODULES } from "./transfer";

@@ -2,6 +2,8 @@ import {
   Activity,
   AlertCircle,
   AlertTriangle,
+  BarChart3,
+  BookUser,
   Building2,
   Calendar,
   Check,
@@ -10,25 +12,55 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronUp,
+  CircleUserRound,
+  ClipboardCheck,
+  Clock,
+  Columns3,
   Contact,
+  File,
   Folder,
+  Handshake,
   Home,
   Info,
   Loader2,
+  Lock,
   LogOut,
   type LucideIcon,
+  Mail,
+  Megaphone,
   MessageSquare,
+  Minus,
   PanelLeftClose,
   PanelLeftOpen,
   Phone,
   Plus,
   Settings,
+  Sparkles,
+  SquareCheck,
   Store,
+  Tag,
+  Target,
+  Ticket,
   Triangle,
+  UserPlus,
+  UserRound,
   Users,
+  Wallet,
   X,
 } from "lucide-react";
-import type { SVGProps } from "react";
+import { forwardRef, type SVGProps } from "react";
+
+/** Shared line weight for every Lucide glyph; the reference icons are thin-lined. */
+export const ICON_STROKE_WIDTH = 1.5;
+
+/** Lucide glyph with the shared stroke width as default; callers may still override. */
+function thin(Glyph: LucideIcon): LucideIcon {
+  const Thin = forwardRef<SVGSVGElement, SVGProps<SVGSVGElement>>((props, ref) => (
+    <Glyph ref={ref} strokeWidth={ICON_STROKE_WIDTH} {...props} />
+  ));
+  Thin.displayName = `Thin(${Glyph.displayName ?? "Icon"})`;
+  return Thin as unknown as LucideIcon;
+}
 
 /** Named filter glyphs only expose `role="img"` when given an accessible name. */
 function filterIconRoleProps(props: SVGProps<SVGSVGElement>) {
@@ -75,20 +107,32 @@ function FilterChevronRight(props: SVGProps<SVGSVGElement>) {
 }
 
 function FieldEdit(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
   return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
     <svg
-      role="img"
-      aria-label={props["aria-label"]}
       viewBox="0 0 11.5 11.5"
       fill="none"
       xmlns="http://www.w3.org/2000/svg"
-      {...props}
+      {...filterIconRoleProps(props)}
+      {...rest}
     >
       <path
         transform="translate(-0.5 0.5) scale(1.38 1.23) translate(-1.38 0.11)"
         d="M1.38 9.66h1.1l6.07-6.07-1.1-1.1-6.07 6.07v1.1zM9.11 3.04l1.1-1.1c.28-.28.28-.74 0-1.01l-.83-.83c-.28-.28-.74-.28-1.01 0l-1.1 1.1 1.1 1.1z"
         fill="currentColor"
       />
+    </svg>
+  );
+}
+
+/** Solid 45-degree pencil (tip bottom-left) used beside the board grouping select. */
+function BoardEdit(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg viewBox="0 0 24 24" fill="currentColor" {...filterIconRoleProps(props)} {...rest}>
+      <path d="M3 17.25V21h3.75L17.81 9.94l-3.75-3.75L3 17.25ZM20.71 7.04a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83Z" />
     </svg>
   );
 }
@@ -126,6 +170,45 @@ function ThumbDown(props: SVGProps<SVGSVGElement>) {
         d="M22 1h5v8h-5zM22 2h-8L5 1C3 1 2 2 2 4l1 4c0 1 1 2 3 2h7l-1 3h3l5-5h2"
         strokeLinejoin="round"
       />
+    </svg>
+  );
+}
+
+/** Original outlined thumb up, with no copied icon asset. */
+function ThumbUp(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 28.5 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.2"
+      {...props}
+    >
+      <path
+        d="M22 13h5V5h-5zM22 12h-8L5 13C3 13 2 12 2 10l1-4c0-1 1-2 3-2h7l-1-3h3l5 5h2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Original stopwatch outline for deal closing date badge. */
+function Stopwatch(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      role="img"
+      aria-label={props["aria-label"]}
+      viewBox="0 0 14 14"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.1"
+      {...props}
+    >
+      <circle cx="7" cy="8" r="5.25" />
+      <path d="M7 5.25V8l2 1.25" strokeLinecap="round" strokeLinejoin="round" />
+      <path d="M5.5 1.5h3M7 1.5V3" strokeLinecap="round" />
     </svg>
   );
 }
@@ -399,23 +482,28 @@ function CreateRecordPlus(props: SVGProps<SVGSVGElement>) {
 
 export type Icon = LucideIcon;
 
+const ThinBuilding = thin(Building2);
+const ThinStore = thin(Store);
+const ThinContact = thin(Contact);
+
 function RecordLookupIcon({ module, ...props }: SVGProps<SVGSVGElement> & { module?: string }) {
   switch (module) {
     case "Accounts":
-      return <Building2 {...props} />;
+      return <ThinBuilding {...props} />;
     case "Vendors":
-      return <Store {...props} />;
+      return <ThinStore {...props} />;
     case "Contacts":
-      return <Contact {...props} />;
+      return <ThinContact {...props} />;
     default:
-      return <Building2 {...props} />;
+      return <ThinBuilding {...props} />;
   }
 }
 
 export const Icons = {
-  activity: Activity,
-  messageSquare: MessageSquare,
-  phone: Phone,
+  activity: thin(Activity),
+  messageSquare: thin(MessageSquare),
+  envelope: thin(Mail),
+  phone: thin(Phone),
   recordLookup: RecordLookupIcon,
   recordUser: RecordUser,
   avatarPerson: AvatarPerson,
@@ -429,6 +517,8 @@ export const Icons = {
   recordInfo: RecordInfo,
   recordPortrait: RecordPortrait,
   thumbDown: ThumbDown,
+  thumbUp: ThumbUp,
+  stopwatch: Stopwatch,
   statusCheck: StatusCheck,
   filterChevronDown: FilterChevronDown,
   productCaretDown: ProductCaretDown,
@@ -438,30 +528,46 @@ export const Icons = {
   columnSortAsc: ColumnSortArrowUp,
   columnSortDesc: ColumnSortArrowDown,
   fieldEdit: FieldEdit,
-  building: Building2,
-  check: Check,
-  chevronUp: ChevronUp,
-  folder: Folder,
-  home: Home,
-  signOut: LogOut,
-  hideMenu: PanelLeftClose,
-  showMenu: PanelLeftOpen,
-  plus: Plus,
-  settings: Settings,
-  users: Users,
-  spinner: Loader2,
-  error: AlertCircle,
-  success: CheckCircle2,
-  info: Info,
-  warning: AlertTriangle,
-  calendar: Calendar,
-  chevronDown: ChevronDown,
+  boardEdit: BoardEdit,
+  task: thin(ClipboardCheck),
+  userRound: thin(UserRound),
+  building: thin(Building2),
+  userPlus: thin(UserPlus),
+  handshake: thin(Handshake),
+  megaphone: thin(Megaphone),
+  target: thin(Target),
+  circleUser: thin(CircleUserRound),
+  wallet: thin(Wallet),
+  ticket: thin(Ticket),
+  bookUser: thin(BookUser),
+  check: thin(Check),
+  checkSquare: thin(SquareCheck),
+  chevronUp: thin(ChevronUp),
+  file: thin(File),
+  folder: thin(Folder),
+  home: thin(Home),
+  signOut: thin(LogOut),
+  hideMenu: thin(PanelLeftClose),
+  showMenu: thin(PanelLeftOpen),
+  plus: thin(Plus),
+  minus: thin(Minus),
+  settings: thin(Settings),
+  users: thin(Users),
+  spinner: thin(Loader2),
+  error: thin(AlertCircle),
+  success: thin(CheckCircle2),
+  info: thin(Info),
+  warning: thin(AlertTriangle),
+  sparkles: thin(Sparkles),
+  calendar: thin(Calendar),
+  clock: thin(Clock),
+  chevronDown: thin(ChevronDown),
   arrowLeft: ArrowLeft,
-  chevronLeft: ChevronLeft,
-  chevronRight: ChevronRight,
+  chevronLeft: thin(ChevronLeft),
+  chevronRight: thin(ChevronRight),
   recordHeaderChevronLeft: RecordHeaderChevronLeft,
   recordHeaderChevronRight: RecordHeaderChevronRight,
-  close: X,
+  close: thin(X),
   filter: FilterIcon,
   filterToggle: FilterToggleIcon,
   sort: SortIcon,
@@ -474,13 +580,18 @@ export const Icons = {
   viewTypeCards: ViewTypeCardsIcon,
   viewTypeArrow: ViewTypeArrowIcon,
   settingsSliders: SettingsSlidersIcon,
+  columns: thin(Columns3),
   eye: EyeIcon,
   refresh: RefreshIcon,
   ellipsis: EllipsisIcon,
   timelinePencil: TimelinePencilIcon,
   timelineGeneric: TimelineGenericIcon,
   tablePlus: TablePlusIcon,
+  tableChevronDown: TableChevronDownIcon,
   diagonalExpand: DiagonalExpandIcon,
+  recordTag: thin(Tag),
+  lock: thin(Lock),
+  barChart: thin(BarChart3),
 };
 
 /** Original silhouette, kept inline rather than adding an image asset. */
@@ -611,91 +722,101 @@ function InlineCheck(props: SVGProps<SVGSVGElement>) {
 }
 
 /**
- * Filled glyphs whose viewBox is the ink box itself, so the painted area is the element box.
- * The measured size is applied by the call site. Original drawings; no reference assets.
+ * Outline glyphs whose viewBox is the ink box itself, so the painted area is the element box.
+ * The measured size is applied by the call site. Original line drawings; no reference assets.
  */
 function InkGlyph({ viewBox, children, ...props }: SVGProps<SVGSVGElement>) {
   return (
     // biome-ignore lint/a11y/noSvgWithoutTitle: decorative; the element box is the measured ink box
-    <svg viewBox={viewBox} fill="currentColor" {...props}>
+    <svg
+      viewBox={viewBox}
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...props}
+    >
       {children}
     </svg>
   );
 }
 
-/** Advanced-filter toggle funnel: ink box 15 × 16 px. */
+/** Advanced-filter toggle funnel: ink box 15 × 16 px, outline drawing. */
 function FilterToggleIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <InkGlyph viewBox="0 0 15 16" {...props}>
-      <path d="M0 0h15v2.4L8.9 10v4L6.1 16v-6L0 2.4Z" />
+      <path d="M1.25 2C1.25 1.45 1.7 1 2.25 1h10.5c.55 0 1 .45 1 1 0 .35-.15.7-.45 1L9.25 7.75c-.3.35-.5.8-.5 1.25v5c0 .55-.45 1-1 1h-.5c-.55 0-1-.45-1-1V9c0-.45-.2-.9-.5-1.25L1.7 3c-.3-.3-.45-.65-.45-1Z" />
     </InkGlyph>
   );
 }
 
-/** View type, bulleted list: ink box 15.5 × 15.5 px. */
+/** View type, bulleted list: ink box 15.5 × 15.5 px, outline drawing. */
 function ViewTypeListIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <InkGlyph viewBox="0 0 15.5 15.5" {...props}>
-      <path d="M0 0h2v2H0Zm0 6.75h2v2H0Zm0 6.75h2v2H0Z" />
-      <path d="M4.5 0h11v2h-11Zm0 6.75h11v2h-11Zm0 6.75h11v2h-11Z" />
+      <path d="M2 2.5h.01M2 7.75h.01M2 13h.01" strokeWidth="2.5" />
+      <path d="M5.75 2.5h8M5.75 7.75h8M5.75 13h8" />
     </InkGlyph>
   );
 }
 
-/** View type, two columns split vertically: ink box 16 × 16 px. */
+/** View type, two columns split vertically: ink box 16 × 16 px, outline drawing. */
 function ViewTypeSplitIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <InkGlyph viewBox="0 0 16 16" {...props}>
-      <path d="M0 0h7v16H0Zm9 0h7v16H9Z" />
+      <rect x="1" y="1" width="6" height="14" rx="1.5" />
+      <rect x="9" y="1" width="6" height="9" rx="1.5" />
     </InkGlyph>
   );
 }
 
-/** View type, grid of four cells: ink box 16 × 16 px. */
+/** View type, grid of four cells: ink box 16 × 16 px, outline drawing. */
 function ViewTypeGridIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <InkGlyph viewBox="0 0 16 16" {...props}>
-      <path d="M0 0h7v7H0Zm9 0h7v7H9ZM0 9h7v7H0Zm9 0h7v7H9Z" />
+      <rect x="1" y="1" width="14" height="14" rx="1.5" />
+      <path d="M5.5 1v14M1 5.5h14" />
     </InkGlyph>
   );
 }
 
-/** View type, pie chart with one slice cut: ink box 15 × 15 px. */
+/** View type, pie chart with one slice cut: ink box 15 × 15 px, outline drawing. */
 function ViewTypeChartIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <InkGlyph viewBox="0 0 15 15" {...props}>
-      <path
-        fillRule="evenodd"
-        d="M7.5 0a7.5 7.5 0 1 1 0 15 7.5 7.5 0 1 1 0-15ZM8.5 1.6a6.5 6.5 0 0 1 4.9 4.9H8.5Z"
-      />
+      <circle cx="7.5" cy="7.5" r="6.5" />
+      <path d="M7.5 1v6.5h6.5M7.5 7.5l4.6 4.6" />
     </InkGlyph>
   );
 }
 
-/** View type, connected blocks: ink box 17 × 13 px. */
+/** View type, connected blocks: ink box 17 × 13 px, outline drawing. */
 function ViewTypeConnectedIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <InkGlyph viewBox="0 0 17 13" {...props}>
-      <path d="M6 0h5v4H6ZM0 9h5v4H0Zm12 0h5v4h-5Z" />
-      <path d="M8 4h1v2.5H8Zm-5.5 2.5h12v1h-12ZM2.5 7.5h1V9h-1Zm11 0h1V9h-1Z" />
+      <path d="M1.25 1.5v7.5a1.75 1.75 0 0 0 1.75 1.75H8" />
+      <rect x="4.75" y="1" width="6.5" height="4.5" rx="1.5" />
+      <rect x="8" y="7.25" width="7.75" height="4.5" rx="1.5" />
     </InkGlyph>
   );
 }
 
-/** View type, stacked cards: ink box 16 × 15.5 px. */
+/** View type, stacked cards: ink box 16 × 15.5 px, outline drawing. */
 function ViewTypeCardsIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <InkGlyph viewBox="0 0 16 15.5" {...props}>
-      <path d="M0 0h16v4.5H0Zm0 5.5h16v4.5H0Zm0 5.5h16v4.5H0Z" />
+      <rect x="1" y="1.25" width="14" height="5.5" rx="1.5" />
+      <rect x="1" y="8.75" width="14" height="5.5" rx="1.5" />
     </InkGlyph>
   );
 }
 
-/** View type switcher overflow arrow: ink box 11 × 6.5 px. */
+/** View type switcher overflow arrow: ink box 11 × 6.5 px, outline drawing. */
 function ViewTypeArrowIcon(props: SVGProps<SVGSVGElement>) {
   return (
     <InkGlyph viewBox="0 0 11 6.5" {...props}>
-      <path d="M5.5 6.5 0 0h11Z" />
+      <path d="M1.25 1.25L5.5 5.25L9.75 1.25" />
     </InkGlyph>
   );
 }
@@ -720,6 +841,29 @@ function TablePlusIcon(props: SVGProps<SVGSVGElement>) {
       <line x1="6.5" y1="5.5" x2="6.5" y2="14.5" />
       <line x1="10.5" y1="8" x2="10.5" y2="12" />
       <line x1="8.5" y1="10" x2="12.5" y2="10" />
+    </svg>
+  );
+}
+
+/** Record-picker table mark (AF-11.4): the same table frame with a down arrow instead of a plus. */
+function TableChevronDownIcon(props: SVGProps<SVGSVGElement>) {
+  const { "aria-label": _label, ...rest } = props;
+  return (
+    // biome-ignore lint/a11y/noSvgWithoutTitle: decorative unless aria-label is provided
+    <svg
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.5"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      {...filterIconRoleProps(props)}
+      {...rest}
+    >
+      <rect x="1.5" y="1.5" width="13" height="13" rx="1.5" />
+      <line x1="1.5" y1="5.5" x2="14.5" y2="5.5" />
+      <line x1="6.5" y1="5.5" x2="6.5" y2="14.5" />
+      <polyline points="9,8.5 11,10.5 13,8.5" />
     </svg>
   );
 }

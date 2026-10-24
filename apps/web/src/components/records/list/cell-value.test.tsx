@@ -6,7 +6,9 @@ import { DEFAULT_FORMAT } from "@/lib/locale";
 import { render } from "@/test/render";
 import { CellValue } from "./cell-value";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+});
 
 function field(
   dataType: FieldDefinition["dataType"],
@@ -128,6 +130,18 @@ test("date uses the shared formatter and shows no clock", () => {
   expect(screen.queryByText("2026-02-15")).toBeNull();
 });
 
+test("currency cell carries the supplied currency code", () => {
+  const { container } = render(
+    <CellValue
+      field={field("currency")}
+      value={31800}
+      format={DEFAULT_FORMAT}
+      currencyCode="TRY"
+    />,
+  );
+  expect(container.textContent).toBe("TRY\u00A031,800.00");
+});
+
 test("integer, boolean, currency and Created_By match shared field formatting", () => {
   const { rerender } = show("integer", 12_345);
   expect(screen.getByText("12345")).toBeTruthy();
@@ -208,15 +222,48 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
       format={DEFAULT_FORMAT}
     />,
   );
-  const laterLink = screen.getByRole("link", { name: "Acme Corp" });
+  const accountsLink = screen.getByRole("link", { name: "Acme Corp" });
+  expect(accountsLink.getAttribute("href")).toBe("/tab/Accounts/acc-1");
+  expect(accountsLink.getAttribute("data-later-module")).toBeNull();
+
+  rerender(
+    <CellValue
+      field={field("lookup", { lookup: { module: "Deals" } })}
+      value={{ module: "Deals", id: "deal-1", name: "Big Deal" }}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  const dealsLink = screen.getByRole("link", { name: "Big Deal" });
+  expect(dealsLink.getAttribute("href")).toBe("/tab/Deals/deal-1");
+  expect(dealsLink.getAttribute("data-later-module")).toBeNull();
+
+  rerender(
+    <CellValue
+      field={field("lookup", { lookup: { module: "Cases" } })}
+      value={{ module: "Cases", id: "case-1", name: "Big Case" }}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  const casesLink = screen.getByRole("link", { name: "Big Case" });
+  expect(casesLink.getAttribute("href")).toBe("/tab/Cases/case-1");
+  expect(casesLink.getAttribute("data-later-module")).toBeNull();
+
+  rerender(
+    <CellValue
+      field={field("lookup", { lookup: { module: "Documents" } })}
+      value={{ module: "Documents", id: "doc-1", name: "Big Doc" }}
+      format={DEFAULT_FORMAT}
+    />,
+  );
+  const laterLink = screen.getByRole("link", { name: "Big Doc" });
   expect(laterLink.tagName).toBe("SPAN");
   expect(laterLink.hasAttribute("href")).toBe(false);
-  expect(laterLink.getAttribute("data-later-module")).toBe("M3");
+  expect(laterLink.getAttribute("data-later-module")).toBe("M9");
   expect(laterLink.getAttribute("aria-disabled")).toBe("true");
 
   rerender(
     <CellValue
-      field={field("lookup", { lookup: { module: "Accounts" } })}
+      field={field("lookup", { lookup: { module: "Documents" } })}
       value={null}
       format={DEFAULT_FORMAT}
     />,
@@ -224,7 +271,7 @@ test("lookup field renders link in list cell (with laterModule for unregistered 
   expect(screen.queryByRole("link")).toBeNull();
 });
 
-test("Contacts Account Name shows the lookup name without an active Accounts link", () => {
+test("Contacts Account Name links to registered Accounts detail page", () => {
   render(
     <CellValue
       field={field("lookup", {
@@ -236,8 +283,66 @@ test("Contacts Account Name shows the lookup name without an active Accounts lin
       format={DEFAULT_FORMAT}
     />,
   );
-  const account = screen.getByText("Synthetic Account");
-  expect(account.closest("a")).toBeNull();
-  expect(account.getAttribute("data-later-module")).toBe("M3");
+  const link = screen.getByRole("link", { name: "Synthetic Account" });
+  expect(link.getAttribute("href")).toBe("/tab/Accounts/synthetic-account");
+  expect(link.getAttribute("data-later-module")).toBeNull();
   expect(screen.queryByText("synthetic-account")).toBeNull();
 });
+
+test("Related To pictogram only draws when asked, by the related module", () => {
+  const related = field("lookup", { apiName: "What_Id", label: "Related To" });
+  const account = { module: "Accounts", id: "a1", name: "Acme" };
+  const { container, rerender } = render(
+    <CellValue field={related} value={account} format={DEFAULT_FORMAT} numericDates />,
+  );
+  expect(container.querySelector("[data-part=related-pictogram]")).toBeNull();
+
+  rerender(
+    <CellValue field={related} value={account} format={DEFAULT_FORMAT} relatedToPictogram />,
+  );
+  const building = container.querySelector("[data-part=related-pictogram]");
+  expect(building).toBeTruthy();
+
+  rerender(
+    <CellValue
+      field={related}
+      value={{ module: "Deals", id: "d1", name: "Big" }}
+      format={DEFAULT_FORMAT}
+      relatedToPictogram
+    />,
+  );
+  const generic = container.querySelector("[data-part=related-pictogram]");
+  expect(generic).toBeTruthy();
+  expect(generic?.innerHTML).not.toBe(building?.innerHTML);
+
+  rerender(<CellValue field={related} value={null} format={DEFAULT_FORMAT} relatedToPictogram />);
+  expect(container.querySelector("[data-part=related-pictogram]")).toBeNull();
+});
+
+test("numeric dates show date and time, or only the date on all-day rows", () => {
+  const start = field("datetime");
+  const { rerender } = render(
+    <CellValue field={start} value="2026-03-01T14:05:00Z" format={DEFAULT_FORMAT} numericDates />,
+  );
+  expect(screen.getByText(/^01\.03\.2026 \d{1,2}:05 (AM|PM)$/)).toBeTruthy();
+  rerender(
+    <CellValue
+      field={start}
+      value="2026-03-01T14:05:00Z"
+      format={DEFAULT_FORMAT}
+      numericDates
+      dateOnly
+    />,
+  );
+  expect(screen.getByText("01.03.2026")).toBeTruthy();
+});
+
+for (const module of ["Cases", "Solutions"]) {
+  test(`${module} lookup links to its registered detail page`, () => {
+    show("lookup", { module, id: "record-1", name: "Support record" }, { lookup: { module } });
+    const link = screen.getByRole("link", { name: "Support record" });
+    expect(link.tagName).toBe("A");
+    expect(link.getAttribute("href")).toBe(`/tab/${module}/record-1`);
+    expect(link.hasAttribute("data-later-module")).toBe(false);
+  });
+}
