@@ -551,3 +551,139 @@ Verification: visually inspected base, open and closed screenshots; reconciled
 step ARIA and final controls; compared both non-GET ledgers by method/path/count;
 reviewed the documentation diff. No application code changed; no unit/e2e run
 is applicable to these documentation-only findings.
+
+## R4 — documentation-based functional spec (MEP-1303)
+
+### Evidence boundary and source register
+
+R4 uses public help documentation read on 2026-10-24 only. **Every RD/AD
+entry below is documented, not observed.** These are proposed functional
+inventories, not additions to the screenshot-certified H/R/V/A/AC controls.
+No capture, authenticated reference navigation, export or preference action
+ran. R2/R3 stop conditions and U5's no-retry boundary remain in force.
+No application code or Phase 2 research is included.
+
+Sources are identified by neutral public page titles only, without vendor
+names or URLs. Section locators distinguish overlapping guidance:
+
+| Source | Neutral page title | Relevant section |
+| --- | --- | --- |
+| S1 | FAQs on Reports | Report types; field visibility; personal folders |
+| S2 | Understanding and building reports | Grouping; aggregation; sorting; quick-view filters; actions; folders; roles |
+| S3 | Scheduling Reports | Scheduler setup; standard fields; recurring delivery |
+| S4 | FAQs: Exporting Data | Exporting data from reports |
+| S5 | Creating dashboards | View/manage dashboards; sharing; dashboard/component filters |
+| S6 | Analytical Components — Overview | Component families; detailed drilldown |
+| S7 | Key Performance Indicators | KPI styles; duration; rollout warning |
+| S8 | Charts | Report-based/quick charts; temporal grouping; rollout warning |
+| S9 | Managing Profile Permissions | Module permissions: Reports and Analytics |
+| S10 | Editing Criteria Patterns in Reports | Criteria-pattern limit |
+
+Use S2 for the current builder rather than the older developer-platform
+builder instructions. S7/S8 warn of phased availability: documentation is not
+proof that a control exists in this account. S6's general access wording refers
+to Reports permission, whereas S5/S9 distinguish Analytics access; use S9's
+permission vocabulary, with effective account permissions still unverified.
+No public page establishes this account's saved definitions or runtime state.
+
+### U1–U7 disposition
+
+Status describes the whole question, including the retained R1–R3 evidence.
+No question is fully answered by generic help documentation alone.
+
+| Question | Disposition | What R4 resolves / leaves open | Implementation consequence |
+| --- | --- | --- | --- |
+| U1 — missing folder pane | Partly | S2 describes folders; why the captured pane is absent remains unknown | Preserve observed selector; do not add a second pane based on documentation |
+| U2 — categories | Partly | R3 remains the evidence for visible options; documentation does not certify persistence or the scrolled account catalogue | Keep category selection semantics pending; RD IDs do not replace R10–R19 |
+| U3 — empty lists/search | Open | No account-specific search matching, debounce, pagination or empty copy established | Synthetic empty/error cases are engineering fixtures, not observed parity |
+| U4 — report results/types | Partly | RD01–RD08 and RD12 describe functional capabilities; initial criteria, click cycles and report-specific results remain unknown | Propose bounded fixtures; no universal email-result schema or inferred default sort |
+| U5 — Analytics initialization | Open | Public help cannot explain the blocked automatic PUT or certify initialization | No retry, guard exception or successful-service claim; retain AC01–AC06 presentation caveat |
+| U6 — actions/preferences | Partly | RD08–RD11 and AD01–AD08 narrow documented capabilities; exact menus, favorite persistence, permissions and validation remain unobserved | Separate read access from all mutations; no write implementation is authorized here |
+| U7 — utility identity | Open | Help does not identify the captured information/help/bin controls | Retain existing unknown labels; no invented destinations |
+
+### Proposed Reports inventory — documented, not observed
+
+Placement is functional context, not a claim about exact menu order, icons,
+selected states or availability in the captured report type.
+
+| ID | Surface / function | Documented behaviour | Source / implementation boundary |
+| --- | --- | --- | --- |
+| RD01 | Tabular result | Records appear in table columns | S1; use per-definition headings, not email headings for all reports |
+| RD02 | Summary result | Grouped records include subtotals and summary information | S1; grouped presentation requires a separately approved model |
+| RD03 | Matrix result | Summaries intersect row and column categories | S1; a flat string table cannot express this structure semantically |
+| RD04 | Grouping | Rows and columns can be grouped; combined groups form a matrix | S2; grouping editor and persistence excluded |
+| RD05 | Aggregates / Show Details | Sum, average, minimum, maximum and count; detail rows, subtotals and grand totals have visibility controls | S2; no default checkbox state established |
+| RD06 | Sorting | Summary/matrix columns support ascending and descending order | S2; initial order, third click, null ordering and ties remain unknown |
+| RD07 | Quick-view filter | Up to five date, datetime, checkbox, user-lookup, picklist or multipicklist filters; Apply Filter restricts results, Clear removes criteria | S2; no universal initial date range inferred |
+| RD08 | Report actions | Run, Edit, Clone, Export; Send Email offers immediate or later delivery | S2; exact menu composition/order remains open; never execute in the reference |
+| RD09 | Folders / access | Sharing supports Only me, Everyone or Selected Users; administrators can view others' reports | S2; folder sharing is distinct from exporting a file |
+| RD10 | Scheduler | Scheduled Reports leads to a scheduler with report, format, start date/time, repeat/end and recipients. Recurrence: daily, weekly, monthly, yearly; email and supported chat integrations; at most 2,000 records | S3; integration availability, timezone/DST, failure copy and defaults remain open; no scheduler creation |
+| RD11 | Export | Formatted exports preserve grouping: Excel/CSV/PDF, up to 2,000 rows. Detailed exports omit grouping: Excel/CSV, up to 50,000 rows | S4; no download, file generation or daily quota assumption |
+| RD12 | Joined results | Up to three reports with the same primary module may be combined | S2; not a fourth basic report type; proposed later scope only |
+| RD13 | Favorites | S2 identifies a predefined Favorites folder; R1/R3 show star/category affordances | S2 plus retained evidence; toggle, removal, ranking, limits and persistence remain open |
+| RD14 | Permission vocabulary | Reports permissions distinguish View, Manage, Schedule and Export | S9; actual grants and denied-state presentation remain unverified |
+
+S1 documents field visibility restrictions and private folders with administrator
+access. Do not equate generic metadata CRUD flags with these capabilities.
+Do not infer record-level security from whether a report definition is visible;
+any real query implementation needs its own permission review.
+
+S2's builder criteria limit (four), quick-view limit (five), and S10's criteria
+pattern guidance (twenty-five) describe different or versioned surfaces.
+Do not collapse them into one validation constant. S3's broad export wording
+mentions HTML, while S4's report-specific section lists the formats in RD11.
+HTML availability, detailed-PDF availability suggested by S2's broad wording,
+and edition-specific daily quotas stay open rather than becoming contracts.
+The inventory intentionally uses S4's narrower export matrix.
+
+Report-result drilldown to an individual record, grouped-cell navigation,
+target routes, breadcrumbs and back behaviour remain unverified. S2's
+“drill down into related modules” concerns builder relationships, not evidence
+of a result-cell interaction. Analytics drilldown is separately documented
+below and must not be generalized to every report table.
+
+### Proposed Analytics inventory — documented, not observed
+
+| ID | Surface / function | Documented behaviour | Source / implementation boundary |
+| --- | --- | --- | --- |
+| AD01 | Dashboard catalogue | Favorites, Created by me, Shared with me, Public and other users' dashboards; the last category is administrator-only | S5; no exact option sequence or account list inferred |
+| AD02 | Dashboard management | A consolidated management surface offers list/grid views | S5; not evidence that this is the captured overview; no view preference change |
+| AD03 | Component families | Charts, KPI, Comparator, Anomaly Detector, Target Meter, Funnel, Cohort, Quadrant, Zone and Stage; up to twenty components | S6; do not retrofit every family into AC01–AC09 |
+| AD04 | Period / metrics | KPI configuration has week, month, quarter, year, last-date, custom-date and fiscal-week duration choices; five KPI styles include scorecard/rankings | S7; configuration choices are not a universal overview period picker |
+| AD05 | Dashboard filters | User/date/datetime/picklist fields; Apply/Clear affect relevant components, unfiltered components show a warning; Save Filter persists values | S5; no account defaults or saved criteria established |
+| AD06 | Component filters | Up to two configured fields; temporary Apply differs from persistent Apply and Save; Anomaly Detector is excluded and cross-module Comparator has restrictions | S5; separate component state from dashboard-wide criteria |
+| AD07 | Dashboard sharing | Only me, All users or Custom; locked dashboards are editable only by creator/admin | S5; sharing is not equivalent to data permission |
+| AD08 | Component actions | Clone, Delete, Add to Home/Favorite, Embed URL, Move and Download are documented | S5; no exact menu layout or write action is approved |
+| AD09 | Component drilldown | Charts, KPIs, Target Meters and Comparators can open detailed reports | S6; destination shape, columns and close/back behaviour remain unobserved |
+| AD10 | Chart sources / periods | Report-based charts or Quick Charts; temporal grouping includes day, calendar/fiscal week, month, fiscal quarter and year; joined reports cannot source charts | S8; grouping granularity differs from a period filter |
+| AD11 | Access vocabulary | Analytics permissions distinguish View Dashboards, Manage Dashboards and Export Dashboards | S9; no effective grants inferred from painted cards |
+
+AD01/AD04–AD06 narrow R2's access gaps at the documentation level only.
+They do not unlock reference re-entry or certify selector contents, visible
+period controls, loading completion, chart interactions or lower-card layout.
+No viewport measurements, assets or customer examples were copied.
+
+### Suggested read-only fixture slices — proposals, not authorization
+
+Existing code was inspected only to identify reusable seams. Names below are
+repository-relative; no source changes accompany R4.
+
+| Slice | Existing building blocks | Proposed synthetic cases and checks | Explicit limit |
+| --- | --- | --- | --- |
+| F1 — definition/detail baseline | `modules/reports/port.ts`: `ReportsPort.listReports/getReport`, `ReportDefinition`, `ReportDetail`; existing list/detail screens and fixture port | Missing optional cells, unknown report ID, empty and populated detail; assert headings belong to that definition and navigation remains read-only | Current fixture assigns email headings to every report; do not claim it covers RD01–RD03 |
+| F2 — tabular illustration | Same `ReportDetail.headings/rows` shape and detail-screen tests | A synthetic lead-status table with three rows and fixed update time, plus an empty variant; assert columns/values align | No execution, date default, sort or generic report engine contract implied |
+| F3 — grouped/matrix design fixture | Reuse definition identity, list navigation and screen shell | Two fictional categories with amounts 10 and 20, expected sum 30; later summary/matrix model must distinguish detail/group/subtotal/grand-total cells | Existing flat string rows lack group metadata; model/rendering approval precedes code, and aggregate labels must not masquerade as records |
+| F4 — Analytics resting values | `AnalyticsPort.getDashboard`, `AnalyticsDashboardData`, `createFixtureAnalyticsPort`, existing card components | Independently authored mixed/value/empty dashboard data; fixed clock; check empty is distinct from zero and comparisons/target captions remain consistent | Port returns one dashboard without ID/filter parameters; it cannot establish AD01/AD05/AD06 selection or persistence |
+| F5 — later catalogue/drilldown | Reuse screen shell and future read-only adapters, after contract approval | Synthetic catalogue categories and selected component records; permission-denied/loading/error cases should be explicitly designed and tested | Neither port currently models catalogue, permissions or drilldown; no guessed endpoint, route or mutation |
+
+Use fictional names, amounts, labels and dates authored independently of
+captures. Existing fixture values and comments are not research evidence.
+F3/F5 require new approved contracts; F1/F2/F4 can reuse current data shapes
+for bounded presentation tests. No developer data-source toggles belong in
+product UI. Prefer test injection through existing ports. Proposed checks
+are handoff guidance, not tests run in this documentation-only task.
+
+R4 closes this bounded documentation research with U4/U6 partly answered and
+R2 Analytics gaps narrowed only functionally. All remaining access/visual
+questions above persist. UI Lead approval of this spec is not a module gate
+or permission to implement undocumented defaults or reference writes.

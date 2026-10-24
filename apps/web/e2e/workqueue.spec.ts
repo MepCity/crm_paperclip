@@ -25,8 +25,8 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
   );
   await expect(nav.locator('[aria-current="page"]')).toHaveCount(1);
 
-  // W01: Welcome dialog: Get Started
-  const dialog = page.getByRole("dialog");
+  // W01: Welcome dialog has accessible name, auto-focuses Get Started, traps Tab, and returns focus.
+  const dialog = page.getByRole("dialog", { name: "Workqueue - Stay on top of your day" });
   await expect(dialog).toBeVisible();
   await expect(
     dialog.getByRole("heading", { name: "Workqueue - Stay on top of your day", exact: true }),
@@ -34,10 +34,17 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
   await expect(
     dialog.getByText("Welcome to Workqueue, your single place to manage all your work across CRM"),
   ).toBeVisible();
-  const getStartedBtn = dialog.getByRole("button", { name: "Get Started", exact: true });
-  await expect(getStartedBtn).toBeVisible();
-  await getStartedBtn.click();
+  const getStarted = page.getByRole("button", { name: "Get Started", exact: true });
+  await expect(getStarted).toBeFocused();
+  await page.keyboard.press("Tab");
+  await expect(getStarted).toBeFocused();
+  await page.keyboard.press("Enter");
   await expect(page.getByRole("dialog")).toHaveCount(0);
+
+  // Focus returns to sensible target (selected Tasks queue button)
+  const tasksBtn = page.getByRole("button", { name: /^Tasks \d+$/, exact: true });
+  await expect(tasksBtn).toBeFocused();
+  await expect(tasksBtn).toHaveAttribute("aria-pressed", "true");
 
   // W02: Top: User panel & WD04 (current user scope)
   await expect(page.getByText(credentials.name, { exact: true })).toBeVisible();
@@ -47,6 +54,9 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
   const selectUsersBtn = page.getByRole("button", { name: "Select users", exact: true });
   await expect(selectUsersBtn).toBeVisible();
   await selectUsersBtn.click();
+  await expect(page.getByRole("status")).toHaveText(
+    "User selection is unavailable in this preview: no changes are made or saved.",
+  );
 
   // Left rail
   const rail = page.getByRole("complementary", { name: "Workqueue queues" });
@@ -58,7 +68,6 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
 
   // W05, W06, W07: Activity queues in documented order (WD01)
   // Documented order: Tasks -> Meetings -> Calls
-  const tasksBtn = rail.getByRole("button", { name: /^Tasks \d+$/, exact: true });
   const meetingsBtn = rail.getByRole("button", { name: /^Meetings \d+$/, exact: true });
   const callsBtn = rail.getByRole("button", { name: /^Calls \d+$/, exact: true });
   await expect(tasksBtn).toBeVisible();
@@ -170,6 +179,9 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
   // W23: Tasks heading: Filter (WD02)
   const filterBtn = queueRegion.getByRole("button", { name: "Filter", exact: true });
   await expect(filterBtn).toBeVisible();
+  const filterDescId = await filterBtn.getAttribute("aria-describedby");
+  expect(filterDescId).toBeTruthy();
+  await expect(page.locator(`#${filterDescId}`)).toContainText("unavailable");
   await filterBtn.click();
 
   // W24: Tasks heading right: contextual Help
@@ -178,7 +190,7 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
   await helpBtn.click();
 
   // Table header & columns (W25, W26, W28, WD02)
-  const table = page.getByRole("table", { name: "Queue records" });
+  const table = page.getByRole("table");
   await expect(table).toBeVisible();
 
   // W25: Table header right: View Settings (WD02)
@@ -192,14 +204,14 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
   await expect(alphaFilterBtn).toHaveText("All");
   await alphaFilterBtn.click();
 
-  // W28: Per task: Related To / Contact Name links and documented column order
+  // W28: Per task: documented column order (compact 4 columns in reference Workqueue)
   const ths = table.locator("thead th");
   await expect(ths.nth(0)).toContainText("Subject");
   await expect(ths.nth(1)).toContainText("Due Date");
   await expect(ths.nth(2)).toContainText("Status");
   await expect(ths.nth(3)).toContainText("Priority");
-  await expect(ths.nth(4)).toContainText("Related To");
-  await expect(ths.nth(5)).toContainText("Contact Name");
+  await expect(page.getByRole("columnheader", { name: "Related To" })).toHaveCount(0);
+  await expect(page.getByRole("columnheader", { name: "Contact Name" })).toHaveCount(0);
 
   // WD03 & WD08: Activity edit/delete/complete and record field updates/email/convert stay unavailable
   await expect(table.locator("input[type='checkbox']")).toHaveCount(0);
@@ -239,51 +251,63 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
 
   // Session reload keeps welcome modal dismissed
   await page.reload();
-  await expect(page.getByRole("table", { name: "Queue records" })).toBeVisible();
+  const queueTable = page.getByRole("table");
+  await expect(queueTable).toBeVisible();
+  await expect(page.getByRole("columnheader", { name: "Subject" })).toBeVisible();
   await expect(page.getByRole("dialog")).toHaveCount(0);
 
   // W27: Per task: Subject record link navigates safely to destination Tasks record detail
-  const taskLink = page.getByRole("table", { name: "Queue records" }).getByRole("link").first();
+  const taskLink = queueTable.getByRole("link").first();
   await expect(taskLink).toBeVisible();
   const taskHref = await taskLink.getAttribute("href");
   expect(taskHref).toMatch(new RegExp(`^/crm/${slug}/tab/Tasks/`));
   expect(writes).toEqual([]);
+  // Destination record pages have their own read POST contract; the queue itself is GET-only.
   await taskLink.click();
   await expect(page).toHaveURL(taskHref ?? "");
 
   assertNoPageErrors(pageErrors);
 });
 
-test("Workqueue synthetic Tasks preview: populated, filtered and zero-result stay local (WD01, WD04, WD05)", async ({
+test("Workqueue keeps developer controls hidden and aligns queue labels, icons and count pills", async ({
   page,
   pageErrors,
 }) => {
+  await page.setViewportSize({ width: 1470, height: 835 });
   await signUpNewUser(page);
   const { slug } = await createOrganization(page);
   await page.goto(`/crm/${slug}/workqueue`);
   await page.getByRole("button", { name: "Get Started" }).click();
-
-  const writes: string[] = [];
-  page.on("request", (request) => {
-    if (request.method() !== "GET") writes.push(request.method());
+  await expect(page.getByText("Preview data", { exact: true })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: /Synthetic/ })).toHaveCount(0);
+  const rail = page.getByRole("complementary", { name: "Workqueue queues" });
+  const tasks = rail.getByRole("button", { name: /^Tasks \d+$/ });
+  await expect(tasks.locator("svg")).toBeVisible();
+  const geometry = await tasks.evaluate((row) => {
+    const label = row.querySelector(".workqueue-label")?.getBoundingClientRect();
+    const badge = row.querySelector(".workqueue-count")?.getBoundingClientRect();
+    return {
+      labelRight: label?.right,
+      badgeLeft: badge?.left,
+      border: getComputedStyle(row).borderLeftWidth,
+    };
   });
-
-  await page.getByRole("button", { name: "Synthetic tasks" }).click();
-  const table = page.getByRole("table", { name: "Preview records" });
-  await expect(table.getByRole("link")).toHaveCount(3);
-  await expect(page.getByTestId("preview-count")).toHaveText("3 records");
-
-  await page.getByRole("button", { name: "All open" }).click();
-  await expect(table.getByRole("link")).toHaveCount(4);
-  await expect(page.getByTestId("preview-count")).toHaveText("4 records");
-
-  await page.getByRole("button", { name: "Synthetic zero result" }).click();
-  await expect(page.getByTestId("preview-count")).toHaveText("0 records");
-  await expect(page.getByText(/provisional empty state/)).toBeVisible();
-
-  await page.getByRole("button", { name: "Add Leads queue" }).click();
-  await expect(page.getByRole("status")).toContainText("unavailable");
-
-  expect(writes).toEqual([]);
+  expect(geometry.badgeLeft).toBeGreaterThan(geometry.labelRight ?? 0);
+  expect(geometry.border).toBe("3px");
+  const longLabel = rail
+    .getByRole("button", { name: /^Contacts assigned/ })
+    .locator(".workqueue-label");
+  await expect(longLabel).toHaveCSS("white-space", "nowrap");
+  await expect(longLabel).toHaveCSS("text-overflow", "ellipsis");
+  await expect(page.getByRole("columnheader", { name: "Related To" })).toHaveCount(0);
+  await expect(page.getByRole("columnheader", { name: "Contact Name" })).toHaveCount(0);
+  await expect(page.getByRole("columnheader", { name: "Priority", exact: true })).toBeVisible();
+  await expect(page.getByText(/^Late by \d+ days?$/).first()).toBeVisible();
+  if (process.env.WORKQUEUE_SCREENSHOT_DIR) {
+    await page.screenshot({
+      path: `${process.env.WORKQUEUE_SCREENSHOT_DIR}/workqueue-local.png`,
+      scale: "css",
+    });
+  }
   assertNoPageErrors(pageErrors);
 });

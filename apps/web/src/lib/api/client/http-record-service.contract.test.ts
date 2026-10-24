@@ -68,7 +68,7 @@ function createOperationFetch(deps: OperationDeps): typeof fetch {
         body,
       });
       if (result.status === 204) return new Response(null, { status: 204 });
-      return new Response(JSON.stringify(result.body), {
+      return new Response(JSON.stringify(withMetadataRevision(result.body)), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       });
@@ -288,4 +288,16 @@ for (const definition of Object.values(systemDefinitions)) {
     },
     definition,
   );
+}
+
+// Slice B is delivered separately; operation fixtures supply its additive envelope key.
+function withMetadataRevision(body: unknown): unknown {
+  if (
+    body &&
+    typeof body === "object" &&
+    ("modules" in body || "fields" in body || "layouts" in body)
+  ) {
+    return { revision: "fixture:1", ...body };
+  }
+  return body;
 }
