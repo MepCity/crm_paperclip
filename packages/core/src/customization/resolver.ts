@@ -13,6 +13,10 @@ import type {
 export function invalid(message: string): never {
   throw new ValidationError({ customization: [message] });
 }
+/** Reject a view and name the offending field so it is never silently dropped. */
+export function invalidView(message: string, field: string): never {
+  throw new ValidationError({ customization: [message], view_field: [field] });
+}
 export function unique(values: readonly string[], label: string): void {
   if (new Set(values).size !== values.length) invalid(`Duplicate ${label}.`);
 }
@@ -40,7 +44,7 @@ export function viewWithApiNames(
   const queryFields = new Map([...active.values()].map((field) => [field.apiName, field]));
   const apiName = (id: string): string => {
     const field = active.get(id);
-    if (!field) invalid("View references an inactive or unknown field.");
+    if (!field) invalidView(`View references an inactive or unknown field: ${id}.`, id);
     return field.apiName;
   };
   const translateCriteria = (criteria: Criteria): Criteria => {
@@ -51,7 +55,10 @@ export function viewWithApiNames(
       return translated;
     }
     if (!effective.externalCriteriaFields.includes(criteria.field))
-      invalid("View criterion references an inactive or unknown field.");
+      invalidView(
+        `View criterion references an inactive or unknown field: ${criteria.field}.`,
+        criteria.field,
+      );
     parse(comparatorSchema, criteria.comparator);
     return criteria;
   };
