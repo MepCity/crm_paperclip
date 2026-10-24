@@ -136,6 +136,13 @@ export const shellNav: NavConfig = {
       iconAccentToken: "--color-accent-blue",
     },
     {
+      id: "workqueue",
+      label: "Workqueue",
+      icon: Icons.task,
+      href: (slug) => `/crm/${slug}/workqueue`,
+      match: "exact",
+    },
+    {
       id: "reports",
       label: "Reports",
       icon: Icons.file,
