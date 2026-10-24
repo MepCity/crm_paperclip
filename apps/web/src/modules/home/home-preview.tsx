@@ -1,6 +1,18 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
+import {
+  type ActivityRow,
+  type ActivityType,
+  activityFields,
+  activityRows,
+  filterActivities,
+  fixtureNow,
+  fixtureTimeZone,
+  type HomePeriod,
+  homePeriods,
+} from "./activities";
 import {
   dealStages,
   dealsCardFields,
@@ -35,7 +47,103 @@ function Card({
   );
 }
 
-export function HomePreviewCards({ empty }: { empty: boolean }) {
+const activityTypes: ActivityType[] = ["Tasks", "Meetings", "Calls"];
+
+/** HD13 Open Activities card. Empty copy is a local proposal; loading/error are not modelled (fixtures). */
+function OpenActivities({ orgSlug, empty }: { orgSlug: string; empty: boolean }) {
+  const [period, setPeriod] = useState<HomePeriod>("today");
+  const { overdue, inPeriod } = filterActivities(
+    empty ? [] : activityRows,
+    period,
+    new Date(fixtureNow),
+    fixtureTimeZone,
+  );
+  const renderGroup = (label: string, rows: ActivityRow[]) =>
+    rows.length === 0 ? null : (
+      <div key={label} data-testid={`activities-${label.toLowerCase()}`}>
+        <h4 className="mt-3 text-sm font-semibold">{label}</h4>
+        {activityTypes.map((type) => {
+          const typed = rows.filter((r) => r.type === type);
+          if (typed.length === 0) return null;
+          return (
+            <table
+              key={type}
+              className="mt-2 w-full text-left text-sm"
+              aria-label={`${label} ${type}`}
+            >
+              <thead>
+                <tr>
+                  {activityFields[type].map((f) => (
+                    <th key={f} className="pb-1 font-semibold text-text-muted">
+                      {f}
+                    </th>
+                  ))}
+                </tr>
+              </thead>
+              <tbody>
+                {typed.map((r) => (
+                  <tr key={r.id}>
+                    {r.cells.map((c, i) => (
+                      // biome-ignore lint/suspicious/noArrayIndexKey: fixed cell order per type
+                      <td key={i} className="py-1">
+                        {i === (type === "Tasks" ? 1 : 0) ? (
+                          <Link
+                            href={`/crm/${orgSlug}/tab/${type}/${r.id}`}
+                            className="text-accent hover:underline"
+                          >
+                            {c}
+                          </Link>
+                        ) : (
+                          c
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          );
+        })}
+      </div>
+    );
+  return (
+    <section
+      aria-label="Open Activities"
+      className="rounded-md border border-border bg-surface p-5 md:col-span-2"
+    >
+      <div className="flex items-center justify-between">
+        <h3 className="text-base font-semibold">Open Activities</h3>
+        <select
+          aria-label="Activity period"
+          value={period}
+          onChange={(e) => setPeriod(e.target.value as HomePeriod)}
+          className="h-8 rounded-md border border-border bg-surface px-2 text-sm"
+        >
+          {homePeriods.map((p) => (
+            <option key={p.id} value={p.id}>
+              {p.label}
+            </option>
+          ))}
+        </select>
+      </div>
+      <p className="mt-1 text-xs text-text-muted">
+        Source: Open Activities · Tasks, Meetings, Calls
+      </p>
+      {overdue.length + inPeriod.length === 0 ? (
+        <p className="mt-4 text-sm text-text-muted" data-testid="activities-empty">
+          {emptyCopy}
+        </p>
+      ) : (
+        <>
+          {renderGroup("Overdue", overdue)}
+          {renderGroup("Upcoming", inPeriod)}
+        </>
+      )}
+    </section>
+  );
+}
+
+export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: string }) {
   const total = dealStages.reduce((sum, s) => sum + s.count, 0);
   return (
     <div
@@ -69,6 +177,7 @@ export function HomePreviewCards({ empty }: { empty: boolean }) {
           </table>
         )}
       </Card>
+      <OpenActivities orgSlug={orgSlug} empty={empty} />
       <Card title="Pipeline Deals by Stage" source={dealsCardSource} fields={dealsCardFields}>
         {empty ? (
           <p className="text-sm text-text-muted">{emptyCopy}</p>
@@ -135,7 +244,7 @@ export function HomeContent({
       {view === "onboarding" ? (
         <HomeOnboarding orgSlug={orgSlug} userName={userName} />
       ) : (
-        <HomePreviewCards empty={view === "preview-empty"} />
+        <HomePreviewCards empty={view === "preview-empty"} orgSlug={orgSlug} />
       )}
     </>
   );
