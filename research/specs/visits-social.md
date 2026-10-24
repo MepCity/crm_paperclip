@@ -244,3 +244,185 @@ historical card in the first slice. Local tests should distinguish disconnected
 introductions from enabled-empty tables, verify all body controls and ensure
 setup/association controls issue no external writes. Populated lists, tracking,
 streams and publishing remain separate evidence-dependent work.
+
+## R2 — documentation-based functional spec (MEP-1272)
+
+### Evidence boundary and source register
+
+Public help pages reviewed on 2026-10-24. Everything in R2 is **documented,
+not observed**; R1 remains the authority for painted controls. No capture tool,
+integration, setup, association or reference account was operated. Documentation
+can describe several UI generations; it does not prove current account
+availability, positions, exact labels, default selections or error presentation.
+No images, example records or provider assets are reused.
+
+Source titles below are neutralized where necessary. Full provider URLs are
+intentionally omitted under the repository naming rule. Section headings are
+locators within the public reference CRM help center, not application routes.
+
+| Source | Public page title (neutral wording) | Section locators |
+| --- | --- | --- |
+| D1 | Setting up visitor-tracking integration | Use Visits Tab; Standard Fields; CRM View for Visits Tab; Related Lists |
+| D2 | Integrating CRM with visitor tracking | CRM – Visits; List View; Modifying the List View; Tracking your visitors inside CRM |
+| D3 | Visitor Tracking — Overview | New Fields in Leads/Contacts Module; Related List; Attachments of Chat Transcripts |
+| D4 | Visitor-tracking integration FAQs | Empty Visits; tab visibility; editions; notifications; setup conflicts |
+| D5 | Working with the Social Tab | Dashboard; Monitor; Post; Activity Log; View Social Interactions |
+| D6 | Social Profiles | Associating social media profiles; Components of the Social Related List |
+| D7 | Setting up Social Tab / Manage Social Accounts | Create Brand in CRM; Add Facebook Page; Add X (Twitter) Handle; Enable Social Admin Permission |
+| D8 | Using Visitor Tracking (developer guide) | Standard Fields; Records in the Visits Tab — corroboration only, vertical-application context |
+
+D8 is supporting evidence, not a substitute for current CRM metadata. D1/D3 list
+eight Visit Summary fields; D4 refers to seven without enumerating them in the
+retrieved text. Preserve that discrepancy; do not change fields to force agreement.
+
+### Visits: documented functional surfaces
+
+Each row carries its evidence status and source page title. Unknown details
+are explicit gaps rather than inferred generic CRM behaviour.
+
+| Surface | Documented structure / boundary | Status and page title |
+| --- | --- | --- |
+| List columns | Configurable through Edit → Manage Columns; initial subset/order unspecified | documented — D2, Integrating CRM with visitor tracking |
+| Views | All Visits; Today's Visits; Top Visits; Today's Top Visits; Visits by Leads; Visits by Contacts | documented — D2, Integrating CRM with visitor tracking |
+| Filters | Tracking-account selector; precise criteria for “Top”, timezone and ordinary filter operators unresolved | documented — D2, Integrating CRM with visitor tracking; D1, Setting up visitor-tracking integration |
+| CRM view | Customers, Potential Customers, Leads/Contacts groups | documented — D1, Setting up visitor-tracking integration |
+| Row entry | Open a Visit to inspect details; inline edit/delete/clone/mass-action menus unspecified | documented — D1, Setting up visitor-tracking integration |
+| Detail related lists | Actions Performed, notes, attachments; transcript may be attached | documented — D8, Using Visitor Tracking |
+| Actions Performed fields | Action Type (Accessed/Navigation/Chat), Actions, Time Spent, Action Performed Time | documented — D1, Setting up visitor-tracking integration |
+| Enabled-empty | Before incoming visits, Send to Webmaster link; removed after visits arrive | documented — D1, Setting up visitor-tracking integration |
+
+Field catalog below is not a claim that every field is a visible list column.
+Source D8 defines integration-populated, noneditable standard values; the rest
+are corroborated by D1. Types are semantic fixture needs, not API metadata.
+
+| Visit detail fields | Semantic fixture values | Status and page title |
+| --- | --- | --- |
+| IP Address; VisitedBy; Visited Page; Time Spent (Minutes) | Address; Lead/Contact reference; page; duration | documented — D8, Using Visitor Tracking |
+| Referrer; User Agents; Attended By | Referral URL; client information; attending user | documented — D8, Using Visitor Tracking |
+| Visited Page URL; Browser; Operating System; Portal Name | URL; client/platform; tracking portal | documented — D1, Setting up visitor-tracking integration |
+| Visitor Type; Revenue; Visited Time; Search Keyword; Search Engine | Category; amount; timestamp; acquisition text | documented — D1, Setting up visitor-tracking integration |
+
+**Record-level Visits:** D3, *Visitor Tracking — Overview*, documents a Visit
+Summary on Leads/Contacts: Days Visited, Number Of Chats, Average Time Spent
+(Minutes), Last Visited Time, First Visited Time, First Visited URL, Referrer,
+Visitor Score. Its Visits related list contains IP Address, Visited Page, Time
+Spent (Minutes), Referrer and Search Engine, with a portal selector. Chat
+transcripts can accompany Lead/Contact records. This establishes module/field
+scope; it does not establish a new business-card layout or an Accounts Visits
+card. No shared hook should query Visits on every record module.
+
+**Prerequisites:** D4, *Visitor-tracking integration FAQs*, documents paid CRM
+and tracking-service editions, Visits tab visibility, Create Visits permission
+and Add Visits Details configuration. Notification delivery additionally depends
+on tracking rules, enabled embed/tracking, user membership and notification
+settings. Missing permission/configuration can explain no data; it is not always
+a genuine zero-visit result. D3, *Visitor Tracking — Overview*, requires tracking
+code on the website and a Visits profile permission. Website publication and
+integration association are write boundaries. Exact ownership verification,
+consent presentation and account entitlement remain unverified; nothing here
+authorizes installing code or enabling tracking.
+
+### Social: documented functional surfaces
+
+| Surface | Structure | Status and page title |
+| --- | --- | --- |
+| Dashboard | Conversation and Message tabs; network, brand and module filters | documented — D5, Working with the Social Tab |
+| Monitor | Network columns, keyword/user search, refresh; column save/reorder controls change preferences | documented — D5, Working with the Social Tab |
+| Post | Network posts, brand filter, composer and engagement actions | documented — D5, Working with the Social Tab |
+| Activity Log | Current user's social actions, newest first | documented — D5, Working with the Social Tab |
+| Record Social | Interactions/Messages, network/brand filters, Search & Associate | documented — D5, Working with the Social Tab |
+
+**RC02/RC03 outcome:** D6, *Social Profiles*, documents profile association on
+Leads, Contacts and Accounts. Associated X profiles expose basic information,
+tweets and follower/following/likes counts; Facebook exposes basic information.
+Profile Info has Unlink. Social Interactions differs from Streams (timeline/feed);
+Tweet and Send DM are documented write actions. X lookup accepts name/handle;
+an existing record handle may associate automatically. Facebook matching depends
+on profile search privacy. These are documented outcomes, not confirmation that
+the historical RC03 link currently opens a particular dialog. D6's “three
+profiles” wording conflicts with its two enumerated networks; do not invent a
+third network. D5 and D6 use different record section vocabulary; retain both
+as documentation variants, without promising both layouts at once.
+
+**Permissions/prerequisites:** D7, *Setting up Social Tab / Manage Social
+Accounts*, requires Social Administrator for organization configuration, a brand
+and an authorized Facebook Page or X handle. Facebook requires a Page. Profile
+access and per-network action permissions are distinct; tab access alone can
+show no data with an administrator-contact instruction. Removing Social Admin
+does not itself remove read access. Brand allowance depends on edition; exact
+current entitlement is unknown. D6, *Social Profiles*, names Social Profile or
+Social Tab access and profile privacy constraints. A usable brand account or
+personal authentication is required for interaction. Authorization expiry,
+matching failures and service errors are not specified sufficiently for parity.
+
+### Proposed documented control inventory
+
+**Documented, not observed.** IDs below are functional candidates, not a complete
+painted inventory or evidence of position. They do not replace V/SO/RC IDs.
+Owners: Visits/Social respectively; existing list and record shells retain
+navigation ownership. “Boundary” means represent only under an approved local
+policy; do not execute on the reference or connect a real service.
+
+| ID | Candidate / context | Source page title | Proposed local treatment |
+| --- | --- | --- | --- |
+| VD01 | Tracking-account selector, Visits | D2 — Integrating CRM with visitor tracking | In-memory fixture scope |
+| VD02 | Six predefined views, Visits | D2 — Integrating CRM with visitor tracking | Local selection; Top criteria need approval |
+| VD03 | Edit / Manage Columns, list | D2 — Integrating CRM with visitor tracking | Preference boundary; no persistence |
+| VD04 | List / CRM view choice | D1 — Setting up visitor-tracking integration | Approved fixture mode only |
+| VD05 | Visit row → detail | D1 — Setting up visitor-tracking integration | Existing read-only detail component |
+| VD06 | Notes / attachment actions, detail | D1 — Setting up visitor-tracking integration | Write boundary |
+| VD07 | Send to Webmaster, enabled-empty | D1 — Setting up visitor-tracking integration | Send boundary |
+| VD08 | Portal selector, Lead/Contact Visits related list | D3 — Visitor Tracking — Overview | Local fixture scope |
+| SD01 | Dashboard / Monitor / Post / Activity Log | D5 — Working with the Social Tab | Fixture navigation |
+| SD02 | Conversation / Message; network / brand / module filters | D5 — Working with the Social Tab | In-memory fixture filters |
+| SD03 | Monitor search / refresh | D5 — Working with the Social Tab | Local fixture results |
+| SD04 | Monitor add/save/remove/reorder columns | D5 — Working with the Social Tab | Preference boundary |
+| SD05 | Compose / engage / Add to CRM | D5 — Working with the Social Tab | Publish and record-write boundaries |
+| SD06 | Search / Associate profile, record | D6 — Social Profiles | Association boundary |
+| SD07 | Profile Unlink, record | D6 — Social Profiles | Association boundary |
+| SD08 | Interaction channel choice / account choice | D6 — Social Profiles | Fixture scope only |
+| SD09 | Tweet / Send DM / reply / like / comment | D6 — Social Profiles | External-write boundary |
+| SD10 | Brand / account settings | D7 — Setting up Social Tab / Manage Social Accounts | Setup boundary |
+
+### U1–U6 disposition
+
+“Answered” would require the whole question, including current account behaviour,
+to be resolved. Public documentation narrows structure but cannot certify an
+enabled installation. Existing R1 wording stays intact as the historical baseline.
+
+| Question | R2 disposition | Implementation consequence |
+| --- | --- | --- |
+| U1 | partly — D3/D4 prerequisites documented; consent/ownership checks unknown | Model readiness explicitly; no setup or tracking implementation |
+| U2 | partly — D1/D2/D3/D8 fields, views and related lists documented; default columns, Top criteria, row menus unknown | Fixture list can use an explicitly proposed subset; no claimed live schema or arbitrary row actions |
+| U3 | partly — D7 organization/brand/authorization and permissions documented; current licensing unknown | Separate disconnected, denied and available fixture states; no live connect |
+| U4 | partly — D5/D6 association, streams and write affordances documented; precise errors and RC03 flow unknown | Associated fixture read surfaces only; writes require separate approved scope |
+| U5 | partly — D3 documents conditional Lead/Contact Visits; D6 supports Social in Leads/Contacts/Accounts; current installation unobserved | Guard by supported module and availability; retain historical-card caveat |
+| U6 | still open — no reviewed page identifies R1 tray/bin control or carousel persistence | Leave with shared-shell/research owner; no inferred action or saved preference |
+
+### Suggested S3/S4 implementation slices (proposals only)
+
+These are delivery suggestions, not approved implementation tasks or permission
+to expand S1/S2. Reuse existing list/record components and original neutral
+artwork. Fixture shapes are internal view data; no API contract, migration or
+reference metadata change is proposed. Keep unsupported modules free of new
+requests. Retain disconnected introductions separately from enabled-empty,
+permission-denied and populated fixture states. Loading/error visuals remain
+local conventions pending evidence; do not claim them as observed parity.
+
+- **S3 — Visits read-only fixtures:** approved subset of the field catalog,
+  VD01/VD02/VD05, detail fields and Actions Performed, Lead/Contact summary and
+  related list with VD08. Reuse existing record sections and navigation. Obtain
+  UI Lead's choice of provisional columns and Top-view fixture membership;
+  do not invent ranking logic. Keep setup, sends, column persistence, notes and
+  uploads unavailable with an explicit local explanation. Test state separation,
+  field rendering, supported-module guards and absence of external writes.
+- **S4 — Social read-only fixtures:** SD01/SD02, fixed Monitor columns and
+  associated record profiles/interactions, with Lead/Contact scope first.
+  Treat Accounts as a separately enumerated extension if approved. Choose one
+  documented record-layout variant explicitly. Render association and outbound
+  actions under a visible local unavailable policy; do not mutate local records
+  as if synchronization succeeded. Test channel/brand fixture scoping, allowed
+  modules, disconnected/denied/populated states and zero outbound requests.
+
+S3/S4 acceptance must explicitly label documentation-derived behaviour. No
+populated-state capture completeness or Module 15 gate is asserted by R2.
