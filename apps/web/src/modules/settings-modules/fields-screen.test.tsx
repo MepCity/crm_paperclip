@@ -32,6 +32,12 @@ describe("FieldsScreen", () => {
     expect(screen.getByRole("link", { name: "Back to Modules" }).getAttribute("href")).toBe(
       "/crm/o/settings/modules",
     );
+    const tableRows = screen.getAllByRole("row").slice(1);
+    expect(tableRows[0]?.textContent).toContain("Email");
+    expect(tableRows[1]?.textContent).toContain("Last Name");
+    expect(screen.getByRole("tab", { name: "Field Listing" }).getAttribute("aria-selected")).toBe(
+      "true",
+    );
     await userEvent.type(
       screen.getByRole("searchbox", { name: "Search Fields or Data Types" }),
       "email",

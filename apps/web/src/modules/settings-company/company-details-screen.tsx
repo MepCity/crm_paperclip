@@ -181,14 +181,18 @@ export function CompanyDetailsScreen({
               Team Licenses
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-2">
-              <p>Team users can access team modules with limited access to organization modules.</p>
+              <p className="text-text-muted">
+                Team users can access team modules with limited access to organization modules.
+              </p>
               <Button variant="ghost" isDisabled>
                 Learn More
               </Button>
             </div>
-            <Button variant="relatedAction" isDisabled className="mt-5">
-              Get Team User License
-            </Button>
+            <div title="Team licensing management is not available in this edition.">
+              <Button variant="relatedAction" isDisabled className="mt-5">
+                Get Team User License
+              </Button>
+            </div>
           </section>
         </div>
       )}
