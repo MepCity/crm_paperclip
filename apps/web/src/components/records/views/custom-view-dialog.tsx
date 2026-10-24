@@ -14,12 +14,7 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
-import {
-  deletePrivateView,
-  getPrivateViews,
-  savePrivateView,
-  sendViewCommand,
-} from "./custom-view-api";
+import { sendViewCommand } from "./custom-view-api";
 import "./custom-view-dialog.css";
 
 const COMPARATOR_OPTIONS: { value: Comparator; label: string }[] = [
@@ -41,6 +36,7 @@ const COMPARATOR_OPTIONS: { value: Comparator; label: string }[] = [
 
 export interface CriterionDraft {
   id: string;
+  leafKey?: string;
   field: string; // API name
   comparator: Comparator;
   value: string;
@@ -56,9 +52,9 @@ export interface CustomViewDialogProps {
   userId?: string;
   isAdmin: boolean;
   expectedRevision: string;
-  initial?: Partial<ListView> & { sharedTo?: "only_me" | "everyone" };
+  initial?: Partial<ListView>;
   fields: readonly (FieldDefinition & { id?: string })[];
-  onSave?: (savedView: ListView & { sharedTo?: "only_me" | "everyone" }) => void;
+  onSave?: (savedView: ListView) => void;
   onDelete?: (viewId: string) => void;
   onClose: () => void;
 }
@@ -66,6 +62,7 @@ export interface CustomViewDialogProps {
 function parseSingleCriterion(
   leaf: { field: string; comparator: Comparator; value: unknown },
   apiNameById: Map<string, string>,
+  path: string,
   leafIndex?: number,
 ): CriterionDraft {
   const fieldName = apiNameById.get(leaf.field) ?? leaf.field;
@@ -80,7 +77,8 @@ function parseSingleCriterion(
     }
   }
   return {
-    id: `crit-${leafIndex ?? 0}-${fieldName}-${leaf.comparator}-${Math.random()}`,
+    id: `crit-${path}-${fieldName}-${leaf.comparator}-${leafIndex ?? 0}`,
+    leafKey: path,
     field: fieldName,
     comparator: leaf.comparator,
     value: valueStr,
@@ -89,7 +87,7 @@ function parseSingleCriterion(
   };
 }
 
-function parseCriteriaDrafts(
+export function parseCriteriaDrafts(
   criteria: Criteria | null | undefined,
   apiNameById: Map<string, string>,
 ): {
@@ -99,24 +97,19 @@ function parseCriteriaDrafts(
   if (!criteria) return { rows: [], groupOperator: "and" };
 
   let nextIndex = 0;
-  function parseNode(node: Criteria): CriterionDraft[] {
+  function parseNode(node: Criteria, path: string): CriterionDraft[] {
     if ("group" in node) {
-      return node.group.flatMap((child) => {
-        if ("group" in child) {
-          return parseNode(child);
-        }
-        return [parseSingleCriterion(child, apiNameById, nextIndex++)];
-      });
+      return node.group.flatMap((child, index) => parseNode(child, `${path}_${index}`));
     }
-    return [parseSingleCriterion(node, apiNameById, nextIndex++)];
+    return [parseSingleCriterion(node, apiNameById, path, nextIndex++)];
   }
 
-  const rows = parseNode(criteria);
+  const rows = parseNode(criteria, "0");
   const operator = "group" in criteria && criteria.groupOperator ? criteria.groupOperator : "and";
   return { rows, groupOperator: operator };
 }
 
-function buildTypedValue(
+export function buildTypedValue(
   row: CriterionDraft,
   def?: FieldDefinition & { id?: string },
 ): CriteriaValue {
@@ -134,7 +127,7 @@ function buildTypedValue(
     if (typeof row.rawTypedValue === "boolean") {
       return row.rawTypedValue;
     }
-    return row.value === "true" || row.value === "1";
+    return false;
   }
   if (def && ["integer", "double", "currency", "percent", "bigint"].includes(def.dataType)) {
     if (row.comparator === "between" || row.comparator === "not_between") {
@@ -174,14 +167,7 @@ function buildTypedValue(
   return row.value;
 }
 
-function countLeaves(node: Criteria): number {
-  if ("group" in node) {
-    return node.group.reduce((acc, c) => acc + countLeaves(c), 0);
-  }
-  return 1;
-}
-
-function rebuildCriteriaAst(
+export function rebuildCriteriaAst(
   originalAst: Criteria | null | undefined,
   rows: CriterionDraft[],
   groupOperator: "and" | "or",
@@ -190,8 +176,6 @@ function rebuildCriteriaAst(
 ): Criteria | null {
   if (rows.length === 0) return null;
 
-  const originalLeafCount = originalAst ? countLeaves(originalAst) : 0;
-
   function resolveField(name: string): string {
     if (!idByApiName) {
       return name.startsWith("field:") ? name.slice(6) : name;
@@ -199,34 +183,7 @@ function rebuildCriteriaAst(
     return idByApiName.get(name) ?? name;
   }
 
-  // Preserve nested AST if rows count matches original leaves
-  if (originalAst && rows.length === originalLeafCount) {
-    let currentLeafIndex = 0;
-    function updateAst(node: Criteria): Criteria {
-      if ("group" in node) {
-        return {
-          groupOperator: node.groupOperator ?? "and",
-          group: node.group.map(updateAst),
-        };
-      }
-      const row = rows[currentLeafIndex++];
-      if (!row) return node;
-      return {
-        field: resolveField(row.field),
-        comparator: row.comparator,
-        value: buildTypedValue(row, fieldByApiName.get(row.field)),
-      };
-    }
-    const updated = updateAst(originalAst);
-    if ("group" in updated && updated.groupOperator !== groupOperator) {
-      return { ...updated, groupOperator };
-    }
-    return updated;
-  }
-
-  // Flat construction
-  if (rows.length === 1 && rows[0]) {
-    const row = rows[0];
+  function rowToLeaf(row: CriterionDraft): Criteria {
     return {
       field: resolveField(row.field),
       comparator: row.comparator,
@@ -234,13 +191,81 @@ function rebuildCriteriaAst(
     };
   }
 
+  // If no original AST:
+  if (!originalAst) {
+    if (rows.length === 1 && rows[0]) return rowToLeaf(rows[0]);
+    return {
+      groupOperator,
+      group: rows.map(rowToLeaf),
+    };
+  }
+
+  const rowByLeafKey = new Map<string, CriterionDraft>();
+  const newRows: CriterionDraft[] = [];
+  for (const r of rows) {
+    if (r.leafKey) {
+      rowByLeafKey.set(r.leafKey, r);
+    } else {
+      newRows.push(r);
+    }
+  }
+
+  function updateNode(node: Criteria, path: string): Criteria | null {
+    if ("group" in node) {
+      const remaining: Criteria[] = [];
+      for (let i = 0; i < node.group.length; i++) {
+        const child = node.group[i];
+        if (!child) continue;
+        const updated = updateNode(child, `${path}_${i}`);
+        if (updated) {
+          remaining.push(updated);
+        }
+      }
+      if (remaining.length === 0) return null;
+      if (remaining.length === 1 && remaining[0]) {
+        return remaining[0];
+      }
+      return {
+        groupOperator: node.groupOperator ?? "and",
+        group: remaining,
+      };
+    }
+
+    const row = rowByLeafKey.get(path);
+    if (!row) return null;
+    return rowToLeaf(row);
+  }
+
+  const updatedTree = updateNode(originalAst, "0");
+  const newLeaves = newRows.map(rowToLeaf);
+
+  if (!updatedTree) {
+    if (newLeaves.length === 0) return null;
+    if (newLeaves.length === 1 && newLeaves[0]) return newLeaves[0];
+    return { groupOperator, group: newLeaves };
+  }
+
+  const originalRootOp =
+    originalAst && "group" in originalAst ? (originalAst.groupOperator ?? "and") : null;
+  const operatorChangedByUser = originalRootOp !== null && groupOperator !== originalRootOp;
+
+  if (newLeaves.length === 0) {
+    if ("group" in updatedTree && operatorChangedByUser) {
+      return { ...updatedTree, groupOperator };
+    }
+    return updatedTree;
+  }
+
+  if ("group" in updatedTree && updatedTree.groupOperator === groupOperator) {
+    return {
+      groupOperator,
+      group: [...updatedTree.group, ...newLeaves],
+    };
+  }
+
   return {
     groupOperator,
-    group: rows.map((row) => ({
-      field: resolveField(row.field),
-      comparator: row.comparator,
-      value: buildTypedValue(row, fieldByApiName.get(row.field)),
-    })),
+    group: [updatedTree, ...newLeaves],
   };
 }
 
@@ -253,7 +278,6 @@ function CustomViewDialogContent({
   mode,
   module,
   orgSlug,
-  userId,
   isAdmin,
   expectedRevision,
   initial,
@@ -264,7 +288,6 @@ function CustomViewDialogContent({
 }: CustomViewDialogProps) {
   const titleId = useId();
   const isProtected = Boolean(initial?.systemDefined || initial?.isDefault);
-  const effectiveUserId = userId || "default-user";
 
   // Field lookups: apiName <-> id
   const idByApiName = useMemo(() => {
@@ -293,9 +316,7 @@ function CustomViewDialogContent({
   }, [fields]);
 
   const [name, setName] = useState(initial?.name ?? "");
-  const [sharedTo, setSharedTo] = useState<"only_me" | "everyone">(
-    initial?.sharedTo ?? (isAdmin ? "everyone" : "only_me"),
-  );
+  const [sharedTo, setSharedTo] = useState<"everyone" | "only_me">("everyone");
 
   const initialColumns = useMemo(() => {
     if (initial?.columns && initial.columns.length > 0) {
@@ -403,18 +424,22 @@ function CustomViewDialogContent({
       return;
     }
 
+    if (sharedTo === "only_me") {
+      setError(
+        "Private custom views ('Only me') are not supported for organization views. Only shared views ('Everyone') can be saved.",
+      );
+      return;
+    }
+
     setPending(true);
     setError(null);
 
-    const isShared = isAdmin && sharedTo === "everyone";
-
-    // Build criteria with typed values and preserved AST structure
-    // Server commands for shared views use stable field IDs; private views use field API names
+    // Build criteria with typed values and preserved AST structure using stable field IDs
     const criteria = rebuildCriteriaAst(
       initial?.criteria,
       criteriaRows,
       groupOperator,
-      isShared ? idByApiName : null,
+      idByApiName,
       fieldByApiName,
     );
 
@@ -431,89 +456,68 @@ function CustomViewDialogContent({
       };
     }
 
-    if (isShared) {
-      const commandPayload =
-        mode === "create"
-          ? {
-              type: "view.create" as const,
-              view: {
-                id: viewId,
-                name: trimmedName,
-                systemDefined: false as const,
-                isDefault: false as const,
-                columns: columnIds,
-                criteria,
-                sort: sortPayload,
-              },
-            }
-          : {
-              type: "view.patch" as const,
-              view: {
-                id: viewId,
-                name: trimmedName,
-                systemDefined: false as const,
-                isDefault: false as const,
-                columns: columnIds,
-                criteria,
-                sort: sortPayload,
-              },
-            };
+    const commandPayload =
+      mode === "create"
+        ? {
+            type: "view.create" as const,
+            view: {
+              id: viewId,
+              name: trimmedName,
+              systemDefined: false as const,
+              isDefault: false as const,
+              columns: columnIds,
+              criteria,
+              sort: sortPayload,
+            },
+          }
+        : {
+            type: "view.patch" as const,
+            view: {
+              id: viewId,
+              name: trimmedName,
+              systemDefined: false as const,
+              isDefault: false as const,
+              columns: columnIds,
+              criteria,
+              sort: sortPayload,
+            },
+          };
 
-      const res = await sendViewCommand(
-        orgSlug,
-        module,
-        mode === "create" ? "POST" : "PATCH",
-        expectedRevision,
-        commandPayload,
-        mode === "edit" ? viewId : undefined,
-      );
+    const res = await sendViewCommand(
+      orgSlug,
+      module,
+      mode === "create" ? "POST" : "PATCH",
+      expectedRevision,
+      commandPayload,
+      mode === "edit" ? viewId : undefined,
+    );
 
-      setPending(false);
+    setPending(false);
 
-      if (res.ok) {
-        deletePrivateView(orgSlug, effectiveUserId, module, viewId);
-        const savedView: ListView = res.view ?? {
-          id: viewId,
-          name: trimmedName,
-          systemDefined: false,
-          isDefault: false,
-          columns: selectedColumns,
-          criteria,
-          sort,
-        };
-        onSave?.({ ...savedView, sharedTo: "everyone" });
-        onClose();
-        return;
-      }
-
-      if (res.fieldErrors?.view_field && res.fieldErrors.view_field.length > 0) {
-        setError(
-          `View references an inactive or unknown field: ${res.fieldErrors.view_field.join(", ")}`,
-        );
-      } else if (res.fieldErrors?.view?.includes("protected_view")) {
-        setError("protected_view: system and default views are immutable.");
-      } else {
-        setError(res.message);
-      }
+    if (res.ok) {
+      const savedView: ListView = res.view ?? {
+        id: viewId,
+        name: trimmedName,
+        systemDefined: false,
+        isDefault: false,
+        columns: selectedColumns,
+        criteria,
+        sort,
+      };
+      onSave?.(savedView);
+      onClose();
       return;
     }
 
-    // Private view save (admin "Only me" OR standard member)
-    const privateSavedView: ListView & { sharedTo: "only_me" } = {
-      id: viewId,
-      name: trimmedName,
-      systemDefined: false,
-      isDefault: false,
-      columns: selectedColumns,
-      criteria,
-      sort,
-      sharedTo: "only_me",
-    };
-
-    savePrivateView(orgSlug, effectiveUserId, module, privateSavedView);
-    setPending(false);
-    onSave?.(privateSavedView);
-    onClose();
+    if (res.fieldErrors?.view_field && res.fieldErrors.view_field.length > 0) {
+      setError(
+        `View references an inactive or unknown field: ${res.fieldErrors.view_field.join(", ")}`,
+      );
+    } else if (res.fieldErrors?.view?.includes("protected_view")) {
+      setError("protected_view: system and default views are immutable.");
+    } else {
+      setError(res.message);
+    }
   }
 
   async function handleDelete() {
@@ -527,18 +531,6 @@ function CustomViewDialogContent({
     setPending(true);
     setError(null);
 
-    const isPrivate =
-      initial?.sharedTo === "only_me" ||
-      getPrivateViews(orgSlug, effectiveUserId, module).some((v) => v.id === viewId);
-
-    if (isPrivate) {
-      deletePrivateView(orgSlug, effectiveUserId, module, viewId);
-      setPending(false);
-      onDelete?.(viewId);
-      onClose();
-      return;
-    }
-
     const res = await sendViewCommand(
       orgSlug,
       module,
@@ -547,12 +539,15 @@ function CustomViewDialogContent({
       { type: "view.delete" },
       viewId,
     );
+
     setPending(false);
+
     if (res.ok) {
       onDelete?.(viewId);
       onClose();
       return;
     }
+
     if (res.fieldErrors?.view?.includes("protected_view")) {
       setError("protected_view: system and default views are immutable.");
     } else {
@@ -802,7 +797,7 @@ function CustomViewDialogContent({
             </div>
           </div>
 
-          {/* Share this with: ONLY shown for admin! */}
+          {/* Share this with: ONLY shown for admin */}
           {isAdmin ? (
             <div className="custom-view-section" data-testid="sharing-section">
               <span className="custom-view-section-title">Share this with:</span>
@@ -810,11 +805,20 @@ function CustomViewDialogContent({
                 label="Share this with"
                 orientation="horizontal"
                 value={sharedTo}
-                onChange={(val) => setSharedTo(val as "only_me" | "everyone")}
+                onChange={(val) => {
+                  if (val === "only_me") {
+                    setError(
+                      "Private custom views ('Only me') are not supported for organization views. Only shared views ('Everyone') can be saved.",
+                    );
+                    return;
+                  }
+                  setError(null);
+                  setSharedTo(val as "everyone");
+                }}
                 isDisabled={isProtected || pending}
                 options={[
-                  { value: "only_me", label: "Only me" },
                   { value: "everyone", label: "Everyone" },
+                  { value: "only_me", label: "Only me", isDisabled: true },
                   { value: "selected_users", label: "Selected users", isDisabled: true },
                 ]}
               />

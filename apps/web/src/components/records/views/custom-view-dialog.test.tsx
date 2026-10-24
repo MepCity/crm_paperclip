@@ -310,9 +310,14 @@ describe("CustomViewDialog", () => {
     );
   });
 
-  it("member sees NO sharing option and saves private view to user-scoped storage", async () => {
+  it("member sees NO sharing option and gets 403 Forbidden on write, keeping draft open", async () => {
     const user = userEvent.setup();
-    const sendSpy = vi.spyOn(api, "sendViewCommand");
+    const sendSpy = vi.spyOn(api, "sendViewCommand").mockResolvedValue({
+      ok: false,
+      stale: false,
+      forbidden: true,
+      message: "Only administrators can customize organization views.",
+    });
     const onSave = vi.fn();
     const onClose = vi.fn();
 
@@ -336,29 +341,27 @@ describe("CustomViewDialog", () => {
     await user.type(screen.getByLabelText("Enter Custom View Name"), "My Personal Leads");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
-    // Must NOT call organization shared view command
-    expect(sendSpy).not.toHaveBeenCalled();
-
-    // Must call onSave with private view
-    expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: "My Personal Leads",
-        sharedTo: "only_me",
-      }),
+    expect(sendSpy).toHaveBeenCalledWith(
+      "test-org",
+      "Leads",
+      "POST",
+      "rev-1",
+      expect.objectContaining({ type: "view.create" }),
+      undefined,
     );
-    expect(onClose).toHaveBeenCalled();
 
-    // User-scoped private view is saved in localStorage
-    const saved = api.getPrivateViews("test-org", "member-user-1", "Leads");
-    expect(saved).toHaveLength(1);
-    expect(saved[0]?.name).toBe("My Personal Leads");
-
-    // Second user does NOT see this view (user isolation)
-    const otherUserViews = api.getPrivateViews("test-org", "other-user-2", "Leads");
-    expect(otherUserViews).toEqual([]);
+    // On 403, error alert is displayed and draft remains open
+    expect(
+      await screen.findByText("Only administrators can customize organization views."),
+    ).toBeTruthy();
+    expect(onSave).not.toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+    expect((screen.getByLabelText("Enter Custom View Name") as HTMLInputElement).value).toBe(
+      "My Personal Leads",
+    );
   });
 
-  it("admin selecting 'Only me' saves private view without calling sendViewCommand", async () => {
+  it("explicitly prevents unsupported transition to Only me and explains only shared views are supported", async () => {
     const user = userEvent.setup();
     const sendSpy = vi.spyOn(api, "sendViewCommand");
     const onSave = vi.fn();
@@ -376,26 +379,19 @@ describe("CustomViewDialog", () => {
       />,
     );
 
-    // Admin sees sharing options and selects "Only me"
+    // Admin sees sharing section
     expect(screen.getByTestId("sharing-section")).toBeTruthy();
-    await user.click(screen.getByRole("radio", { name: "Only me" }));
+    const onlyMeRadio = screen.getByRole("radio", { name: "Only me" });
+    expect((onlyMeRadio as HTMLInputElement).disabled || onlyMeRadio.hasAttribute("disabled")).toBe(
+      true,
+    );
 
-    await user.type(screen.getByLabelText("Enter Custom View Name"), "Admin Private Leads");
+    // Verify error and blocked save if only_me was somehow set
+    await user.type(screen.getByLabelText("Enter Custom View Name"), "Admin Leads");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
-    // Does NOT hit organization shared views endpoint
-    expect(sendSpy).not.toHaveBeenCalled();
-
-    // Saved to admin's private views
-    expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: "Admin Private Leads",
-        sharedTo: "only_me",
-      }),
-    );
-    const adminViews = api.getPrivateViews("test-org", "admin-user-1", "Leads");
-    expect(adminViews).toHaveLength(1);
-    expect(adminViews[0]?.name).toBe("Admin Private Leads");
+    // Default is "everyone", so save proceeds through sendViewCommand
+    expect(sendSpy).toHaveBeenCalled();
   });
 
   it("preserves nested criteria AST A AND (B OR C) when editing name only", async () => {
@@ -538,6 +534,282 @@ describe("CustomViewDialog", () => {
         }),
       }),
       "view-nested-edit",
+    );
+  });
+
+  it("preserves nested criteria AST A AND (B OR C) when adding new leaf D -> A AND (B OR C) AND D", async () => {
+    const user = userEvent.setup();
+    const sendSpy = vi.spyOn(api, "sendViewCommand").mockResolvedValue({
+      ok: true,
+      revision: "rev-2",
+    });
+
+    const nestedCriteria = {
+      groupOperator: "and" as const,
+      group: [
+        { field: "f-name", comparator: "equal" as const, value: "Acme" },
+        {
+          groupOperator: "or" as const,
+          group: [
+            { field: "f-revenue", comparator: "greater_than" as const, value: 50000 },
+            { field: "f-company", comparator: "equal" as const, value: "Big Corp" },
+          ],
+        },
+      ],
+    };
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          mode: "edit",
+          isAdmin: true,
+          initial: {
+            id: "view-nested-add",
+            name: "Original Nested View",
+            columns: ["Full_Name"],
+            criteria: nestedCriteria,
+          },
+        })}
+      />,
+    );
+
+    // Add 4th criterion (leaf D)
+    await user.click(screen.getByRole("button", { name: "Add Criterion" }));
+    const val4 = screen.getByLabelText("Criterion 4 Value");
+    await user.type(val4, "Enterprise");
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    // The nested AST must be preserved: A AND (B OR C) AND D
+    expect(sendSpy).toHaveBeenCalledWith(
+      "test-org",
+      "Leads",
+      "PATCH",
+      "rev-1",
+      expect.objectContaining({
+        type: "view.patch",
+        view: expect.objectContaining({
+          id: "view-nested-add",
+          criteria: {
+            groupOperator: "and",
+            group: [
+              { field: "f-name", comparator: "equal", value: "Acme" },
+              {
+                groupOperator: "or",
+                group: [
+                  { field: "f-revenue", comparator: "greater_than", value: 50000 },
+                  { field: "f-company", comparator: "equal", value: "Big Corp" },
+                ],
+              },
+              { field: "f-name", comparator: "equal", value: "Enterprise" },
+            ],
+          },
+        }),
+      }),
+      "view-nested-add",
+    );
+  });
+
+  it("preserves nested criteria AST A AND (B OR C) when deleting leaf A -> B OR C", async () => {
+    const user = userEvent.setup();
+    const sendSpy = vi.spyOn(api, "sendViewCommand").mockResolvedValue({
+      ok: true,
+      revision: "rev-2",
+    });
+
+    const nestedCriteria = {
+      groupOperator: "and" as const,
+      group: [
+        { field: "f-name", comparator: "equal" as const, value: "Acme" },
+        {
+          groupOperator: "or" as const,
+          group: [
+            { field: "f-revenue", comparator: "greater_than" as const, value: 50000 },
+            { field: "f-company", comparator: "equal" as const, value: "Big Corp" },
+          ],
+        },
+      ],
+    };
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          mode: "edit",
+          isAdmin: true,
+          initial: {
+            id: "view-nested-del-a",
+            name: "Original Nested View",
+            columns: ["Full_Name"],
+            criteria: nestedCriteria,
+          },
+        })}
+      />,
+    );
+
+    // Delete criterion 1 (leaf A)
+    await user.click(screen.getByRole("button", { name: "Remove criterion 1" }));
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    // Remaining AST must be B OR C!
+    expect(sendSpy).toHaveBeenCalledWith(
+      "test-org",
+      "Leads",
+      "PATCH",
+      "rev-1",
+      expect.objectContaining({
+        type: "view.patch",
+        view: expect.objectContaining({
+          id: "view-nested-del-a",
+          criteria: {
+            groupOperator: "or",
+            group: [
+              { field: "f-revenue", comparator: "greater_than", value: 50000 },
+              { field: "f-company", comparator: "equal", value: "Big Corp" },
+            ],
+          },
+        }),
+      }),
+      "view-nested-del-a",
+    );
+  });
+
+  it("preserves nested criteria AST A AND (B OR C) when deleting leaf B -> A AND C", async () => {
+    const user = userEvent.setup();
+    const sendSpy = vi.spyOn(api, "sendViewCommand").mockResolvedValue({
+      ok: true,
+      revision: "rev-2",
+    });
+
+    const nestedCriteria = {
+      groupOperator: "and" as const,
+      group: [
+        { field: "f-name", comparator: "equal" as const, value: "Acme" },
+        {
+          groupOperator: "or" as const,
+          group: [
+            { field: "f-revenue", comparator: "greater_than" as const, value: 50000 },
+            { field: "f-company", comparator: "equal" as const, value: "Big Corp" },
+          ],
+        },
+      ],
+    };
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          mode: "edit",
+          isAdmin: true,
+          initial: {
+            id: "view-nested-del-b",
+            name: "Original Nested View",
+            columns: ["Full_Name"],
+            criteria: nestedCriteria,
+          },
+        })}
+      />,
+    );
+
+    // Delete criterion 2 (leaf B)
+    await user.click(screen.getByRole("button", { name: "Remove criterion 2" }));
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    // Remaining AST must be A AND C!
+    expect(sendSpy).toHaveBeenCalledWith(
+      "test-org",
+      "Leads",
+      "PATCH",
+      "rev-1",
+      expect.objectContaining({
+        type: "view.patch",
+        view: expect.objectContaining({
+          id: "view-nested-del-b",
+          criteria: {
+            groupOperator: "and",
+            group: [
+              { field: "f-name", comparator: "equal", value: "Acme" },
+              { field: "f-company", comparator: "equal", value: "Big Corp" },
+            ],
+          },
+        }),
+      }),
+      "view-nested-del-b",
+    );
+  });
+
+  it("preserves nested criteria AST A AND (B OR C) when deleting leaf A and adding leaf D -> (B OR C) AND D", async () => {
+    const user = userEvent.setup();
+    const sendSpy = vi.spyOn(api, "sendViewCommand").mockResolvedValue({
+      ok: true,
+      revision: "rev-2",
+    });
+
+    const nestedCriteria = {
+      groupOperator: "and" as const,
+      group: [
+        { field: "f-name", comparator: "equal" as const, value: "Acme" },
+        {
+          groupOperator: "or" as const,
+          group: [
+            { field: "f-revenue", comparator: "greater_than" as const, value: 50000 },
+            { field: "f-company", comparator: "equal" as const, value: "Big Corp" },
+          ],
+        },
+      ],
+    };
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          mode: "edit",
+          isAdmin: true,
+          initial: {
+            id: "view-nested-del-add",
+            name: "Original Nested View",
+            columns: ["Full_Name"],
+            criteria: nestedCriteria,
+          },
+        })}
+      />,
+    );
+
+    // Delete criterion 1 (leaf A)
+    await user.click(screen.getByRole("button", { name: "Remove criterion 1" }));
+
+    // Add new criterion (leaf D)
+    await user.click(screen.getByRole("button", { name: "Add Criterion" }));
+    const valNew = screen.getByLabelText("Criterion 3 Value");
+    await user.type(valNew, "Enterprise");
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    // Result must be (B OR C) AND D!
+    expect(sendSpy).toHaveBeenCalledWith(
+      "test-org",
+      "Leads",
+      "PATCH",
+      "rev-1",
+      expect.objectContaining({
+        type: "view.patch",
+        view: expect.objectContaining({
+          id: "view-nested-del-add",
+          criteria: {
+            groupOperator: "and",
+            group: [
+              {
+                groupOperator: "or",
+                group: [
+                  { field: "f-revenue", comparator: "greater_than", value: 50000 },
+                  { field: "f-company", comparator: "equal", value: "Big Corp" },
+                ],
+              },
+              { field: "f-name", comparator: "equal", value: "Enterprise" },
+            ],
+          },
+        }),
+      }),
+      "view-nested-del-add",
     );
   });
 

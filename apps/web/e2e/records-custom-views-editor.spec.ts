@@ -24,8 +24,9 @@ test.describe("Custom Views Editor", () => {
     await page.getByRole("menuitem", { name: "New Custom View" }).click();
 
     await expect(page.getByRole("heading", { name: "New Custom View" })).toBeVisible();
-    // Admin sees the sharing options
+    // Admin sees the sharing options with 'Only me' disabled (shared views only)
     await expect(page.getByTestId("sharing-section")).toBeVisible();
+    await expect(page.getByRole("radio", { name: "Only me" })).toBeDisabled();
 
     // Set view name
     await page.getByPlaceholder("Enter Custom View Name").fill("High Value Contacts");
@@ -79,13 +80,29 @@ test.describe("Custom Views Editor", () => {
     );
   });
 
-  test("member view does not display sharing options in editor and views remain accessible", async ({
+  test("member can view and select shared custom views but cannot create or edit", async ({
     page,
     browser,
   }) => {
     test.setTimeout(180_000);
     await signUpNewUser(page, { name: "Owner Admin" });
     const org = await createOrganization(page);
+
+    // Admin creates a shared custom view
+    await page.goto(moduleListDefaultPath(org.slug, MODULE));
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 60_000 });
+
+    await page.getByRole("button", { name: "Custom views" }).click();
+    await expect(page.getByRole("menu", { name: "Custom views" })).toBeVisible();
+    await page.getByRole("menuitem", { name: "New Custom View" }).click();
+
+    await expect(page.getByRole("heading", { name: "New Custom View" })).toBeVisible();
+    await page.getByPlaceholder("Enter Custom View Name").fill("Shared Team View");
+    await page.getByRole("button", { name: "Save" }).click();
+    await expect(page.getByRole("heading", { name: "New Custom View" })).toHaveCount(0);
+    await expect(
+      page.locator("[data-view-pill]").filter({ hasText: "Shared Team View" }),
+    ).toBeVisible();
 
     // Invite member
     await page.getByRole("link", { name: "Settings", exact: true }).click();
@@ -117,38 +134,28 @@ test.describe("Custom Views Editor", () => {
         timeout: 60_000,
       });
 
-      // Member opens New Custom View dialog
+      // Member checks custom views menu
       await memberPage.getByRole("button", { name: "Custom views" }).click();
-      await memberPage.getByRole("menuitem", { name: "New Custom View" }).click();
-      await expect(memberPage.getByRole("heading", { name: "New Custom View" })).toBeVisible();
+      await expect(memberPage.getByRole("menu", { name: "Custom views" })).toBeVisible();
 
-      // Sharing section must NOT be visible for member (Kurul 1 / Board decision 1)
-      await expect(memberPage.getByTestId("sharing-section")).toHaveCount(0);
+      // Member should see the shared view
+      const sharedMenuItem = memberPage.getByRole("menuitem", { name: "Shared Team View" });
+      await expect(sharedMenuItem).toBeVisible();
 
-      // Fill in view name and criterion
-      await memberPage.getByPlaceholder("Enter Custom View Name").fill("Member Private Contacts");
-      await memberPage.getByRole("button", { name: "Add Criterion" }).click();
-      await expect(memberPage.getByTestId("criterion-row-0")).toBeVisible();
-      await memberPage.getByTestId("criterion-row-0").getByPlaceholder("Type here").fill("Acme");
+      // Member should NOT have Edit Current View
+      await expect(memberPage.getByRole("menuitem", { name: "Edit Current View" })).toHaveCount(0);
 
-      // Save view
-      await memberPage.getByRole("button", { name: "Save" }).click();
+      // New Custom View should be disabled for member
+      const newViewItem = memberPage.getByRole("menuitem", { name: "New Custom View" });
+      await expect(newViewItem).toHaveAttribute("aria-disabled", "true");
 
-      // Verify dialog closes and navigates to custom view route
-      await expect(memberPage.getByRole("heading", { name: "New Custom View" })).toHaveCount(0);
+      // Member selects the shared view
+      await sharedMenuItem.click();
       await expect(memberPage).toHaveURL(new RegExp(`/tab/${MODULE}/custom-view/`));
       await expect(
-        memberPage.locator("[data-view-pill]").filter({ hasText: "Member Private Contacts" }),
+        memberPage.locator("[data-view-pill]").filter({ hasText: "Shared Team View" }),
       ).toBeVisible();
       await expect(memberPage.getByRole("table", { name: "Records" })).toBeVisible();
-
-      // Verify user isolation: The admin user (on `page`) must NOT see "Member Private Contacts"
-      await page.bringToFront();
-      await page.goto(moduleListDefaultPath(org.slug, MODULE));
-      await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 60_000 });
-      await page.getByRole("button", { name: "Custom views" }).click();
-      await expect(page.getByRole("menu", { name: "Custom views" })).toBeVisible();
-      await expect(page.getByText("Member Private Contacts")).toHaveCount(0);
     } finally {
       await memberContext.close();
     }

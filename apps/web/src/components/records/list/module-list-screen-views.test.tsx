@@ -8,7 +8,6 @@ import { createClientRecordService } from "@/lib/api/client/client-record-servic
 import { ApiProvider } from "@/lib/api/client/provider";
 import { resetPreferenceStoreForTests } from "@/lib/preferences";
 import { contactsListPageConfig } from "@/modules/contacts/list-config";
-import { savePrivateView } from "../views/custom-view-api";
 import { ModuleListScreen } from "./module-list-screen";
 
 const ctx = {
@@ -148,9 +147,8 @@ describe("ModuleListScreen Custom View Dialog Integration", () => {
     expect(within(dialog).getByRole("button", { name: "Delete View" })).toBeTruthy();
   });
 
-  it("member saves private custom view without 403 and navigates to the new view", async () => {
+  it("member cannot create or edit custom views, preserving existing member flow without regression", async () => {
     const user = userEvent.setup();
-    const fetchSpy = vi.spyOn(globalThis, "fetch");
     const records = createFixtureRecordService(ctx);
     const service = createClientRecordService(records, {
       listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
@@ -173,124 +171,47 @@ describe("ModuleListScreen Custom View Dialog Integration", () => {
     const viewsBtn = screen.getByRole("button", { name: "Custom views" });
     await user.click(viewsBtn);
 
-    // Click "New Custom View"
-    const newViewItem = await screen.findByRole("menuitem", { name: "New Custom View" });
+    // Edit Current View is NOT available for members
+    expect(screen.queryByRole("menuitem", { name: "Edit Current View" })).toBeNull();
+
+    // New Custom View has laterModule and does NOT open modal
+    const newViewItem = screen.getByRole("menuitem", { name: /New Custom View/ });
+    expect(newViewItem.getAttribute("aria-disabled")).toBe("true");
     await user.click(newViewItem);
 
-    const dialog = await screen.findByRole("dialog", { name: "New Custom View" });
-    // Sharing section is omitted for members
-    expect(within(dialog).queryByTestId("sharing-section")).toBeNull();
-
-    // Fill name
-    const nameInput = within(dialog).getByLabelText("Enter Custom View Name");
-    await user.type(nameInput, "My Member View");
-
-    // Add criterion
-    const addCriterionBtn = within(dialog).getByRole("button", { name: "Add Criterion" });
-    await user.click(addCriterionBtn);
-    const criterionRow = within(dialog).getByTestId("criterion-row-0");
-    const valueInput = within(criterionRow).getByPlaceholderText("Type here");
-    await user.type(valueInput, "Alice");
-
-    const saveBtn = within(dialog).getByRole("button", { name: "Save" });
-    await user.click(saveBtn);
-
-    // Dialog closes without 403 Forbidden
-    await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "New Custom View" })).toBeNull();
-    });
-
-    // fetch was NOT called because private views are stored locally, avoiding 403
-    expect(fetchSpy).not.toHaveBeenCalled();
-
-    // Navigates to custom view route
-    expect(navigation.push).toHaveBeenCalledWith(expect.stringContaining("custom-view/"));
+    expect(screen.queryByRole("dialog", { name: "New Custom View" })).toBeNull();
   });
 
-  it("private view injects criteria into list and count queries and is isolated between users", async () => {
+  it("member can view and select shared custom views created on the server", async () => {
+    const user = userEvent.setup();
+    const sharedView = {
+      id: "shared-1",
+      name: "Shared High Value Contacts",
+      systemDefined: false,
+      isDefault: false,
+      columns: ["Full_Name", "Email"],
+      criteria: null,
+      sort: null,
+    };
     const records = createFixtureRecordService(ctx);
     const baseService = createClientRecordService(records, {
       listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
     });
-
-    const listSpy = vi.fn(async (m: ModuleApiName, q: Parameters<RecordService["list"]>[1]) => {
-      return records.list(m, { ...q, viewId: "all-contacts" });
-    });
-    const countSpy = vi.fn(async (m: ModuleApiName, q: Parameters<RecordService["count"]>[1]) => {
-      return records.count(m, { ...q, viewId: "all-contacts" });
-    });
-
     const service = {
       ...baseService,
-      list: listSpy,
-      count: countSpy,
+      listViewSummaries: async (m: ModuleApiName) => [
+        ...(await records.listViews(m)),
+        { id: sharedView.id, name: sharedView.name, systemDefined: false, isDefault: false },
+      ],
+      getView: async (m: ModuleApiName, id: string) =>
+        id === sharedView.id ? sharedView : records.getView(m, id),
     };
 
-    // Pre-populate private view for user-1
-    const privateViewId = "custom-user1-view";
-    savePrivateView(ctx.orgSlug, "user-1", "Contacts", {
-      id: privateViewId,
-      name: "User 1 Private View",
-      columns: ["Full_Name", "Email"],
-      systemDefined: false,
-      isDefault: false,
-      sort: null,
-      criteria: {
-        field: "First_Name",
-        comparator: "equal",
-        value: "Alice",
-      },
-    });
-
-    // 1. Render as user-1 with their private view
-    const { unmount } = render(
-      <ModuleListScreen
-        orgSlug={ctx.orgSlug}
-        config={contactsListPageConfig}
-        currentUserId="user-1"
-        viewId={privateViewId}
-        isAdmin={false}
-        userRole="member"
-      />,
-      { wrapper: wrapper(service as unknown as ReturnType<typeof createClientRecordService>) },
-    );
-
-    await screen.findByRole("table", { name: "Records" });
-
-    // Verify list and count were called with serverViewId ("all-contacts") and injected criteria
-    await waitFor(() => {
-      expect(listSpy).toHaveBeenCalledWith(
-        "Contacts",
-        expect.objectContaining({
-          viewId: "all-contacts",
-          filters: {
-            field: "First_Name",
-            comparator: "equal",
-            value: "Alice",
-          },
-        }),
-      );
-      expect(countSpy).toHaveBeenCalledWith(
-        "Contacts",
-        expect.objectContaining({
-          viewId: "all-contacts",
-          filters: {
-            field: "First_Name",
-            comparator: "equal",
-            value: "Alice",
-          },
-        }),
-      );
-    });
-
-    unmount();
-
-    // 2. Render as user-2 with their view menu - user-1's private view must NOT be visible
     render(
       <ModuleListScreen
         orgSlug={ctx.orgSlug}
         config={contactsListPageConfig}
-        currentUserId="user-2"
+        currentUserId="user-member-1"
         isAdmin={false}
         userRole="member"
       />,
@@ -299,10 +220,17 @@ describe("ModuleListScreen Custom View Dialog Integration", () => {
 
     await screen.findByRole("table", { name: "Records" });
 
+    // Open Custom views menu
     const viewsBtn = screen.getByRole("button", { name: "Custom views" });
-    await userEvent.setup().click(viewsBtn);
+    await user.click(viewsBtn);
 
-    expect(screen.queryByText("User 1 Private View")).toBeNull();
+    // Shared custom view appears in public views
+    const sharedItem = await screen.findByRole("menuitem", { name: "Shared High Value Contacts" });
+    expect(sharedItem).toBeTruthy();
+    await user.click(sharedItem);
+
+    // Navigates to custom view route
+    expect(navigation.push).toHaveBeenCalledWith(expect.stringContaining("custom-view/shared-1"));
   });
 
   it("admin saves shared custom view and navigates to the new view", async () => {
