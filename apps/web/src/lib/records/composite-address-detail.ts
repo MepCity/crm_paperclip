@@ -14,15 +14,29 @@ export function buildCompositeAddressDetailFields(
   record: RecordData,
   withDetailLabel: (field: FieldDefinition) => FieldDefinition = (field) => field,
 ): DetailFieldEntry[] {
-  const activeValues = Object.fromEntries(
-    Object.entries(record.fields).filter(([name]) =>
-      moduleFields.some((field) => field.apiName === name && field.views.view),
-    ),
-  );
   const byName = new Map(moduleFields.map((field) => [field.apiName, field]));
+  const activeValues = Object.fromEntries(
+    Object.entries(record.fields).filter(([name]) => {
+      const field = byName.get(name);
+      return !field || field.views.view;
+    }),
+  );
   return rules.flatMap((rule) => {
-    const field = byName.get(rule.parentApiName);
-    if (!field?.views.view) return [];
+    const addressField = byName.get(rule.parentApiName);
+    if (addressField && !addressField.views.view) return [];
+    if (!addressField && moduleFields.length > 0) return [];
+    const field =
+      addressField ??
+      ({
+        apiName: rule.parentApiName,
+        label: rule.parentLabel ?? rule.parentApiName,
+        dataType: "textarea",
+        required: false,
+        readOnly: false,
+        unique: false,
+        massUpdate: false,
+        views: { view: true, create: true, edit: true, quickCreate: false },
+      } satisfies FieldDefinition);
     const composite = formatCompositeAddress(
       rule.parentApiName,
       activeValues,
