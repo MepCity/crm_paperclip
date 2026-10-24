@@ -1,7 +1,6 @@
 import { schemaRevision } from "@crm/core/customization";
 import { fixtureCustomizationPort } from "@crm/core/records/fixture/metadata-projection";
 import { notFound } from "next/navigation";
-import { PageHeader } from "@/components/shell/page-header";
 import { PageTitle } from "@/components/shell/page-title";
 import { getCustomizationService } from "@/lib/customization";
 import { requireOrgContext } from "@/lib/session";
@@ -38,7 +37,6 @@ export default async function ModuleLayoutsPage({
   return (
     <>
       <PageTitle title={shellPageTitle.settings} />
-      <PageHeader description="Modules and Fields." />
       <LayoutsScreen orgSlug={orgSlug} module={name} rows={[defaultLayoutRow()]} editor={editor} />
     </>
   );
