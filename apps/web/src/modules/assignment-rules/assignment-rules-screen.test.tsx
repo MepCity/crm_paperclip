@@ -54,3 +54,15 @@ it.each(["forbidden", "unavailable"] as const)(
     expect(screen.queryByTestId("assignment-introduction")).toBeNull();
   },
 );
+
+it("offers a read-only retry link on unavailable but not on forbidden", () => {
+  const { unmount } = render(
+    <AssignmentRulesScreen result={{ ok: false, error: { code: "unavailable" } }} orgSlug="o" />,
+  );
+  expect(screen.getByRole("link", { name: "Try again" }).getAttribute("href")).toBe(
+    "/crm/o/settings/assignment-rules",
+  );
+  unmount();
+  render(<AssignmentRulesScreen result={{ ok: false, error: { code: "forbidden" } }} />);
+  expect(screen.queryByRole("link", { name: "Try again" })).toBeNull();
+});

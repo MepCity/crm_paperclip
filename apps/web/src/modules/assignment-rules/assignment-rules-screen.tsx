@@ -8,8 +8,9 @@ import { Tab, TabList, TabPanel, Tabs } from "@/components/ui/tabs";
 
 const MODULE_OPTIONS = ["Leads", "Contacts", "Accounts", "Deals"] as const;
 
-// AL5/AD7 (U12): loading and read-only retry come from the shell boundaries
-// app/crm/[orgSlug]/loading.tsx ("Loading page…") and error.tsx ("Try again"); no page-level inference.
+// AL5/AD7 (U12): loading comes from the shell boundary app/crm/[orgSlug]/loading.tsx;
+// a failed list read is a ReadResult (not a throw), so this screen renders its own
+// read-only "Try again" link that re-requests the same list URL (a fresh server read).
 export function AssignmentRulesScreen({
   result,
   orgSlug = "",
@@ -56,15 +57,25 @@ export function AssignmentRulesScreen({
             ?
           </Button>
           {!result.ok ? (
-            <p
-              role="alert"
-              data-testid={`assignment-list-${result.error.code}`}
-              className="text-md text-text-muted"
-            >
-              {result.error.code === "forbidden"
-                ? "Assignment rules could not be loaded: you do not have permission to view them."
-                : "Assignment rules could not be loaded."}
-            </p>
+            <>
+              <p
+                role="alert"
+                data-testid={`assignment-list-${result.error.code}`}
+                className="text-md text-text-muted"
+              >
+                {result.error.code === "forbidden"
+                  ? "Assignment rules could not be loaded: you do not have permission to view them."
+                  : "Assignment rules could not be loaded."}
+              </p>
+              {result.error.code !== "forbidden" ? (
+                <a
+                  href={`${base}${module ? `?module=${encodeURIComponent(module)}` : ""}`}
+                  className="mt-2 inline-block text-md text-link hover:underline"
+                >
+                  Try again
+                </a>
+              ) : null}
+            </>
           ) : result.value.items.length === 0 && !module ? (
             <div data-testid="assignment-introduction">
               <p className="mb-6 text-md text-text-muted">
