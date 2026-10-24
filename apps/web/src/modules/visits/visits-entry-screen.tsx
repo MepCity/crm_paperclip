@@ -167,9 +167,6 @@ function VisitorArtwork({ slide: _slide }: { slide: number }) {
         <text x="46" y="157" fill="#0f172a" fontSize="10" fontWeight="bold" fontFamily="sans-serif">
           Visit History
         </text>
-        <text x="205" y="157" fill="#10b981" fontSize="8" fontWeight="bold" fontFamily="sans-serif">
-          Live
-        </text>
         <line x1="42" y1="163" x2="232" y2="163" stroke="#f1f5f9" strokeWidth="1" />
 
         <text x="46" y="176" fill="#64748b" fontSize="8" fontFamily="sans-serif">
