@@ -99,6 +99,10 @@ it.each(["missing", "empty", "malformed", "null", "wrong-shape"])(
   },
 );
 
+it("deliberate failure for MEP-1316 acceptance", () => {
+  expect("deliberate-failure").toBe("expected-success");
+});
+
 it("keeps reporting best-effort when the step summary cannot be written", () => {
   expect(run("vitest", fixture("vitest"), directory)).toContain("could not append step summary");
 });
