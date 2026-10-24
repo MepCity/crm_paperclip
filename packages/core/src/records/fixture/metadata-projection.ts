@@ -1,9 +1,6 @@
-import {
-  type CustomizationPort,
-  InMemoryCustomizationAdapter,
-  type ModuleBaseline,
-  viewWithApiNames,
-} from "../../customization";
+import { InMemoryCustomizationAdapter } from "../../customization/memory";
+import { viewWithApiNames } from "../../customization/resolver";
+import type { CustomizationPort, ModuleBaseline } from "../../customization/types";
 import { NotFoundError } from "../../errors";
 import type { Criteria, ModuleReadProjection } from "../contract";
 import { baselineFieldId, baselineLayoutId } from "../metadata";
