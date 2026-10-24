@@ -22,10 +22,12 @@ export const users = pgTable(
     email: text("email").notNull(),
     emailVerified: boolean("email_verified").notNull().default(false),
     image: text("image"),
+    uiLanguage: text("ui_language").notNull().default("en"),
     createdAt: createdAt(),
     updatedAt: updatedAt(),
   },
   (table) => [
+    check("users_ui_language_check", sql`${table.uiLanguage} in ('en', 'tr')`),
     uniqueIndex("users_email_unique").on(table.email),
     check("users_email_lower_check", sql`${table.email} = lower(${table.email})`),
   ],

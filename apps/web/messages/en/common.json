@@ -1,0 +1,25 @@
+{
+  "actions": {
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "close": "Close",
+    "search": "Search",
+    "retry": "Try again",
+    "confirm": "Confirm",
+    "saveAndNew": "Save and New"
+  },
+  "loading": "Loading",
+  "error": "Something went wrong. Please try again.",
+  "empty": "No records found",
+  "selected": "{count, plural, one {# record selected} other {# records selected}}",
+  "notFound": "The requested page could not be found.",
+  "pageError": "The page could not be loaded. Please try again.",
+  "errorTitle": "Something went wrong!",
+  "errorShort": "Something went wrong.",
+  "errorHeading": "An error occurred",
+  "unexpectedError": "An unexpected error occurred.",
+  "formLoadError": "Unable to load the form.",
+  "formLoading": "Loading..."
+}

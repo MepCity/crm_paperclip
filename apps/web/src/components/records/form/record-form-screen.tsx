@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
 import { RecordChoice } from "@/components/ui/record-choice";
+import { useUiTranslations } from "@/i18n/client-provider";
 import {
   useCreateRecord,
   useModule,
@@ -149,6 +150,7 @@ export interface RecordFormScreenProps {
 
 /** Page addresses and navigation come from the route layer; this screen has no URL rules. */
 export function RecordFormScreen(props: RecordFormScreenProps) {
+  const t = useUiTranslations();
   const metadata = useModule(props.config.module);
   const loadId = props.cloneSourceId ?? props.recordId ?? "";
   const needsRecord = Boolean(props.cloneSourceId || props.recordId);
@@ -157,9 +159,9 @@ export function RecordFormScreen(props: RecordFormScreenProps) {
   const recordError = needsRecord ? record.error : null;
   const error = (metadata.data ? null : metadata.error) ?? users.error ?? recordError;
   if (recordError instanceof NotFoundError) return <RecordNotFound />;
-  if (error) return <Alert variant="danger">Unable to load the form.</Alert>;
+  if (error) return <Alert variant="danger">{t("common.formLoadError")}</Alert>;
   if (!metadata.data || !users.data || (needsRecord && !record.data))
-    return <p role="status">Loading...</p>;
+    return <p role="status">{t("common.formLoading")}</p>;
   const intent: FormIntent = props.cloneSourceId ? "clone" : props.recordId ? "edit" : "create";
   const formKey =
     intent !== "create"
@@ -199,6 +201,7 @@ function LoadedRecordForm({
   sourceRecord?: RecordData;
   users: OwnerOption[];
 }) {
+  const t = useUiTranslations();
   const mode: FormMode = intent === "edit" ? "edit" : "create";
   const rules = useMemo(
     () => resolveFormRules(config.rules, { mode, metadata, record: sourceRecord }),
@@ -810,9 +813,9 @@ function LoadedRecordForm({
         formAriaLabel={title}
         titleAccessory={config.inventoryChrome ? <RecordFormEditPageLayoutLink /> : undefined}
         actionLabels={{
-          cancel: "Cancel",
-          saveAndNew: rules.followUp?.label ?? "Save and New",
-          save: "Save",
+          cancel: t("common.actions.cancel"),
+          saveAndNew: rules.followUp?.label ?? t("common.actions.saveAndNew"),
+          save: t("common.actions.save"),
         }}
         errorBanner={
           bannerMessage ? (

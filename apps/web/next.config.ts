@@ -1,5 +1,6 @@
 import { fileURLToPath } from "node:url";
 import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
 
 const monorepoRoot = fileURLToPath(new URL("../..", import.meta.url));
 
@@ -11,4 +12,4 @@ const config: NextConfig = {
   turbopack: { root: monorepoRoot },
 };
 
-export default config;
+export default createNextIntlPlugin()(config);

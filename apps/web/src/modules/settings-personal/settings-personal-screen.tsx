@@ -2,7 +2,9 @@
 
 import { Pencil } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
+import { useUiLanguage, useUiTranslations } from "@/i18n/client-provider";
 import { fixturePersonalSettingsPort } from "./fixture-port";
+import { LanguageEditor } from "./language-editor";
 import type { PersonalSettings, PersonalSettingsPort } from "./port";
 
 const localeRows: [string, keyof PersonalSettings["locale"]][] = [
@@ -64,6 +66,9 @@ export function SettingsPersonalScreen({
   user: { name: string; email: string };
   port?: PersonalSettingsPort;
 }) {
+  const t = useUiTranslations();
+  const language = useUiLanguage();
+  const [editing, setEditing] = useState(false);
   const [data, setData] = useState<PersonalSettings | null>(null);
   const [error, setError] = useState(false);
   const [hidden, setHidden] = useState(false);
@@ -79,8 +84,8 @@ export function SettingsPersonalScreen({
     };
   }, [port, user]);
 
-  if (error) return <p>Personal settings could not be loaded.</p>;
-  if (!data) return <p>Loading personal settings…</p>;
+  if (error) return <p>{t("settings.loadError")}</p>;
+  if (!data) return <p>{t("settings.loading")}</p>;
 
   return (
     <div className="rounded-lg border border-border bg-surface shadow-xs" data-settings-personal>
@@ -91,7 +96,7 @@ export function SettingsPersonalScreen({
           aria-selected="true"
           className="border-b-2 border-primary py-3 text-sm font-semibold"
         >
-          Personal Settings
+          {t("shell.personal-settings")}
         </button>
         <button
           type="button"
@@ -153,21 +158,37 @@ export function SettingsPersonalScreen({
             </ul>
           </Section>
           <Section
-            title="Locale Information"
+            title={t("settings.locale")}
             action={
-              <button type="button" disabled aria-label="Edit locale information">
+              <button
+                type="button"
+                onClick={() => setEditing(true)}
+                aria-label={t("settings.editLocale")}
+              >
                 <Pencil className="h-4 w-4" />
               </button>
             }
           >
-            <dl className="grid grid-cols-[200px_1fr] gap-x-6 gap-y-2 text-sm">
-              {localeRows.map(([label, key]) => (
-                <div key={key} className="contents">
-                  <dt className="text-muted-foreground">{label}</dt>
-                  <dd data-locale-row={key}>{data.locale[key]}</dd>
-                </div>
-              ))}
-            </dl>
+            {editing ? (
+              <LanguageEditor onClose={() => setEditing(false)} />
+            ) : (
+              <dl className="grid grid-cols-[200px_1fr] gap-x-6 gap-y-2 text-sm">
+                {localeRows.map(([, key]) => (
+                  <div key={key} className="contents">
+                    <dt className="text-muted-foreground">
+                      {t(key === "language" ? "settings.language" : `settings.${key}`)}
+                    </dt>
+                    <dd data-locale-row={key}>
+                      {key === "language" && port === fixturePersonalSettingsPort
+                        ? language === "tr"
+                          ? "Türkçe"
+                          : "English (United States)"
+                        : data.locale[key]}
+                    </dd>
+                  </div>
+                ))}
+              </dl>
+            )}
           </Section>
           <Section
             title="Groups"

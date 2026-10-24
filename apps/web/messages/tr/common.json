@@ -1,0 +1,25 @@
+{
+  "actions": {
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "edit": "Düzenle",
+    "delete": "Sil",
+    "close": "Kapat",
+    "search": "Ara",
+    "retry": "Yeniden dene",
+    "confirm": "Onayla",
+    "saveAndNew": "Kaydet ve Yeni"
+  },
+  "loading": "Yükleniyor",
+  "error": "Bir hata oluştu. Lütfen yeniden deneyin.",
+  "empty": "Kayıt bulunamadı",
+  "selected": "{count} kayıt seçildi",
+  "notFound": "İstenen sayfa bulunamadı.",
+  "pageError": "Sayfa yüklenemedi. Lütfen yeniden deneyin.",
+  "errorTitle": "Bir hata oluştu!",
+  "errorShort": "Bir hata oluştu.",
+  "errorHeading": "Bir hata oluştu",
+  "unexpectedError": "Beklenmeyen bir hata oluştu.",
+  "formLoadError": "Form yüklenemedi.",
+  "formLoading": "Yükleniyor..."
+}

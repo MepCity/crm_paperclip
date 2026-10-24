@@ -1,3 +1,6 @@
+"use client";
+
+import { useUiTranslations } from "@/i18n/client-provider";
 import { Icons } from "./icon";
 
 export interface SpinnerProps {
@@ -6,11 +9,8 @@ export interface SpinnerProps {
   "aria-hidden"?: boolean;
 }
 
-export function Spinner({
-  className = "",
-  label = "Loading",
-  "aria-hidden": hidden,
-}: SpinnerProps) {
+export function Spinner({ className = "", label, "aria-hidden": hidden }: SpinnerProps) {
+  const t = useUiTranslations();
   const icon = <Icons.spinner className="h-full w-full animate-spin" aria-hidden="true" />;
 
   if (hidden) {
@@ -22,7 +22,11 @@ export function Spinner({
   }
 
   return (
-    <span role="status" aria-label={label} className={`inline-flex ${className}`}>
+    <span
+      role="status"
+      aria-label={label ?? t("common.loading")}
+      className={`inline-flex ${className}`}
+    >
       {icon}
     </span>
   );
