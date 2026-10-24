@@ -94,7 +94,7 @@ export function VisitsEntryScreen() {
             size="compact"
             aria-label="Previous slide"
             onPress={() => step(-1)}
-            className="size-8 rounded-full bg-border"
+            className="size-8 rounded-full! bg-border!"
           >
             <Icons.chevronLeft className="size-5" aria-hidden />
           </Button>
@@ -104,7 +104,7 @@ export function VisitsEntryScreen() {
             size="compact"
             aria-label="Next slide"
             onPress={() => step(1)}
-            className="size-8 rounded-full bg-border"
+            className="size-8 rounded-full! bg-border!"
           >
             <Icons.chevronRight className="size-5" aria-hidden />
           </Button>
