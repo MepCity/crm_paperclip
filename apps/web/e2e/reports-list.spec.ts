@@ -24,17 +24,49 @@ test("Reports landing: columns, inert controls and report placeholder navigation
   await page.screenshot({ path: testInfo.outputPath("reports-landing.png"), fullPage: true });
   const search = page.getByRole("textbox", { name: "Search All Reports" });
   await expect(search).toHaveAttribute("readonly", "");
+
+  const nonGetRequests: string[] = [];
+  page.on("request", (request) => {
+    if (!["GET", "HEAD", "OPTIONS"].includes(request.method())) {
+      nonGetRequests.push(`${request.method()} ${request.url()}`);
+    }
+  });
+
   for (const name of [
     "All Reports",
     "Create Report",
     "Reports help",
     "Favorite Weekly outreach overview",
+    "Report actions: Weekly outreach overview",
   ]) {
     await expect(page.getByRole("button", { name, exact: true })).toHaveAttribute(
       "aria-disabled",
       "true",
     );
   }
+
+  // R08: row actions ellipsis icon button visible on hover, inert, no non-GET request
+  const firstRow = table.getByRole("row").nth(1);
+  const rowActionsButton = firstRow.getByRole("button", {
+    name: "Report actions: Weekly outreach overview",
+    exact: true,
+  });
+  await expect(rowActionsButton).toHaveClass(/opacity-0/);
+  await firstRow.hover();
+  await expect(rowActionsButton).toBeVisible();
+  await rowActionsButton.click({ force: true });
+
+  const seventhRow = table.getByRole("row").nth(7);
+  const seventhRowActions = seventhRow.getByRole("button", {
+    name: /^Report actions:/,
+  });
+  await expect(seventhRowActions).toHaveClass(/opacity-0/);
+  await seventhRow.hover();
+  await expect(seventhRowActions).toBeVisible();
+  await seventhRowActions.click({ force: true });
+
+  expect(nonGetRequests).toEqual([]);
+
   const checkbox = page.getByRole("checkbox", { name: "Select Weekly outreach overview" });
   await page.locator("label").filter({ has: checkbox }).click();
   await expect(checkbox).not.toBeChecked();

@@ -105,7 +105,7 @@ export function ReportsScreen({
             </thead>
             <tbody>
               {reports.map((report) => (
-                <tr key={report.id} className="border-b border-border">
+                <tr key={report.id} className="group border-b border-border">
                   <td className="py-4 pl-4">
                     <div className="flex items-center gap-1">
                       <Checkbox
@@ -126,9 +126,20 @@ export function ReportsScreen({
                     </div>
                   </td>
                   <td className="px-3 py-4">
-                    <Link href={reportPath(orgSlug, report.id)} className="block truncate">
-                      {report.name}
-                    </Link>
+                    <div className="flex min-w-0 items-center gap-1.5">
+                      <Link href={reportPath(orgSlug, report.id)} className="min-w-0 truncate">
+                        {report.name}
+                      </Link>
+                      <Button
+                        variant="icon"
+                        size="compact"
+                        aria-label={`Report actions: ${report.name}`}
+                        aria-disabled="true"
+                        className="shrink-0 text-text-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100"
+                      >
+                        <Icons.ellipsis className="size-4" aria-hidden />
+                      </Button>
+                    </div>
                   </td>
                   <td className="truncate px-3 py-4" title={report.description ?? undefined}>
                     {report.description || "-"}
