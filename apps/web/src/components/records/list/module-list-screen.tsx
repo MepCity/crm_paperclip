@@ -1072,6 +1072,18 @@ function ModuleListScreenLoaded({
           userId={currentUserId}
           isAdmin={isAdmin}
           expectedRevision={projectionQuery.data?.revision ?? ""}
+          isLoadingRevision={
+            isAdmin &&
+            (projectionQuery.isLoading ||
+              (Boolean(!projectionQuery.data?.revision) && !projectionQuery.isError))
+          }
+          revisionError={
+            projectionQuery.isError
+              ? projectionQuery.error instanceof Error
+                ? projectionQuery.error.message
+                : String(projectionQuery.error)
+              : null
+          }
           initial={
             customViewModal.mode === "edit"
               ? customViewModal.viewId && customViewModal.viewId !== view?.id

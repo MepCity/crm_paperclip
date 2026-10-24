@@ -7,7 +7,7 @@ import type {
   FieldDefinition,
   ListView,
 } from "@crm/core/records";
-import { useId, useMemo, useState } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { RadioGroup } from "@/components/ui/radio-group";
@@ -52,6 +52,8 @@ export interface CustomViewDialogProps {
   userId?: string;
   isAdmin: boolean;
   expectedRevision: string;
+  isLoadingRevision?: boolean;
+  revisionError?: string | null;
   initial?: Partial<ListView>;
   fields: readonly (FieldDefinition & { id?: string })[];
   onSave?: (savedView: ListView) => void;
@@ -280,6 +282,8 @@ function CustomViewDialogContent({
   orgSlug,
   isAdmin,
   expectedRevision,
+  isLoadingRevision,
+  revisionError,
   initial,
   fields,
   onSave,
@@ -342,6 +346,37 @@ function CustomViewDialogContent({
 
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  const isActionDisabled =
+    isProtected ||
+    pending ||
+    Boolean(isLoadingRevision) ||
+    !expectedRevision ||
+    Boolean(revisionError);
+
+  const hasFieldIds = useMemo(() => fields.some((f) => Boolean(f.id)), [fields]);
+  const hasSyncedInitial = useRef(false);
+
+  useEffect(() => {
+    if (hasFieldIds && !hasSyncedInitial.current) {
+      hasSyncedInitial.current = true;
+      if (initial?.columns && initial.columns.length > 0) {
+        setSelectedColumns(initial.columns.map((c) => apiNameById.get(c) ?? c));
+      }
+      if (initial?.criteria) {
+        const parsed = parseCriteriaDrafts(initial.criteria, apiNameById);
+        setCriteriaRows(parsed.rows);
+        setGroupOperator(parsed.groupOperator);
+      }
+    }
+  }, [hasFieldIds, initial, apiNameById]);
+
+  useEffect(() => {
+    if (mode === "create" && selectedColumns.length === 0 && fields.length > 0) {
+      const visible = fields.filter((f) => f.views?.view !== false);
+      setSelectedColumns((visible.length > 0 ? visible : fields).slice(0, 5).map((f) => f.apiName));
+    }
+  }, [mode, selectedColumns.length, fields]);
 
   const availableColumns = useMemo(() => {
     const q = columnSearch.trim().toLowerCase();
@@ -409,6 +444,13 @@ function CustomViewDialogContent({
   }
 
   async function handleSave() {
+    if (isLoadingRevision || !expectedRevision) {
+      return;
+    }
+    if (revisionError) {
+      setError(`Failed to load module customization metadata: ${revisionError}`);
+      return;
+    }
     if (isProtected) {
       setError("protected_view: system and default views are immutable.");
       return;
@@ -521,6 +563,13 @@ function CustomViewDialogContent({
   }
 
   async function handleDelete() {
+    if (isLoadingRevision || !expectedRevision) {
+      return;
+    }
+    if (revisionError) {
+      setError(`Failed to load module customization metadata: ${revisionError}`);
+      return;
+    }
     if (isProtected) {
       setError("protected_view: system and default views are immutable.");
       return;
@@ -584,12 +633,30 @@ function CustomViewDialogContent({
             </div>
           ) : null}
 
-          {error ? (
+          {revisionError ? (
+            <div
+              role="alert"
+              className="rounded-md border border-danger/40 bg-danger/10 p-3 text-sm text-danger"
+            >
+              Failed to load module customization metadata: {revisionError}
+            </div>
+          ) : null}
+
+          {error && !revisionError ? (
             <div
               role="alert"
               className="rounded-md border border-danger/40 bg-danger/10 p-3 text-sm text-danger"
             >
               {error}
+            </div>
+          ) : null}
+
+          {isLoadingRevision && !revisionError ? (
+            <div
+              role="status"
+              className="rounded-md border border-neutral-200 bg-neutral-50 p-2 text-xs text-text-muted"
+            >
+              Loading module customization metadata...
             </div>
           ) : null}
 
@@ -829,7 +896,7 @@ function CustomViewDialogContent({
         <footer className="custom-view-footer">
           <div>
             {mode === "edit" ? (
-              <Button variant="danger" isDisabled={isProtected || pending} onPress={handleDelete}>
+              <Button variant="danger" isDisabled={isActionDisabled} onPress={handleDelete}>
                 Delete View
               </Button>
             ) : null}
@@ -838,7 +905,7 @@ function CustomViewDialogContent({
             <Button variant="secondary" onPress={onClose} isDisabled={pending}>
               Cancel
             </Button>
-            <Button isDisabled={isProtected || pending} isPending={pending} onPress={handleSave}>
+            <Button isDisabled={isActionDisabled} isPending={pending} onPress={handleSave}>
               Save
             </Button>
           </div>

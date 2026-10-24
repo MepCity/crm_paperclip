@@ -1089,4 +1089,118 @@ describe("CustomViewDialog", () => {
     expect(onDelete).toHaveBeenCalledWith("custom-view-1");
     expect(onClose).toHaveBeenCalled();
   });
+
+  it("disables Save and Delete buttons while revision is loading and prevents command submission", async () => {
+    const user = userEvent.setup();
+    const sendSpy = vi.spyOn(api, "sendViewCommand");
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          mode: "edit",
+          expectedRevision: "",
+          isLoadingRevision: true,
+          initial: {
+            id: "custom-view-1",
+            name: "Loading Test View",
+            systemDefined: false,
+            isDefault: false,
+            columns: ["Full_Name"],
+          },
+        })}
+      />,
+    );
+
+    const saveBtn = screen.getByRole("button", { name: "Save" });
+    const deleteBtn = screen.getByRole("button", { name: "Delete View" });
+
+    expect(
+      saveBtn.hasAttribute("disabled") || saveBtn.getAttribute("aria-disabled") === "true",
+    ).toBe(true);
+    expect(
+      deleteBtn.hasAttribute("disabled") || deleteBtn.getAttribute("aria-disabled") === "true",
+    ).toBe(true);
+    expect(screen.getByRole("status").textContent).toContain(
+      "Loading module customization metadata...",
+    );
+
+    await user.click(saveBtn);
+    await user.click(deleteBtn);
+    expect(sendSpy).not.toHaveBeenCalled();
+  });
+
+  it("disables Save and Delete buttons and shows alert when revision loading fails", async () => {
+    const user = userEvent.setup();
+    const sendSpy = vi.spyOn(api, "sendViewCommand");
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          mode: "edit",
+          expectedRevision: "",
+          isLoadingRevision: false,
+          revisionError: "Network connection refused",
+          initial: {
+            id: "custom-view-1",
+            name: "Error Test View",
+            systemDefined: false,
+            isDefault: false,
+            columns: ["Full_Name"],
+          },
+        })}
+      />,
+    );
+
+    const saveBtn = screen.getByRole("button", { name: "Save" });
+    const deleteBtn = screen.getByRole("button", { name: "Delete View" });
+
+    expect(
+      saveBtn.hasAttribute("disabled") || saveBtn.getAttribute("aria-disabled") === "true",
+    ).toBe(true);
+    expect(
+      deleteBtn.hasAttribute("disabled") || deleteBtn.getAttribute("aria-disabled") === "true",
+    ).toBe(true);
+    expect(screen.getByRole("alert").textContent).toContain(
+      "Failed to load module customization metadata: Network connection refused",
+    );
+
+    await user.click(saveBtn);
+    await user.click(deleteBtn);
+    expect(sendSpy).not.toHaveBeenCalled();
+  });
+
+  it("disables Save and Delete buttons when expectedRevision is empty", async () => {
+    const user = userEvent.setup();
+    const sendSpy = vi.spyOn(api, "sendViewCommand");
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          mode: "edit",
+          expectedRevision: "",
+          initial: {
+            id: "custom-view-1",
+            name: "Empty Revision View",
+            systemDefined: false,
+            isDefault: false,
+            columns: ["Full_Name"],
+          },
+        })}
+      />,
+    );
+
+    const saveBtn = screen.getByRole("button", { name: "Save" });
+    const deleteBtn = screen.getByRole("button", { name: "Delete View" });
+
+    expect(
+      saveBtn.hasAttribute("disabled") || saveBtn.getAttribute("aria-disabled") === "true",
+    ).toBe(true);
+    expect(
+      deleteBtn.hasAttribute("disabled") || deleteBtn.getAttribute("aria-disabled") === "true",
+    ).toBe(true);
+
+    await user.click(saveBtn);
+    await user.click(deleteBtn);
+    expect(sendSpy).not.toHaveBeenCalled();
+  });
 });
