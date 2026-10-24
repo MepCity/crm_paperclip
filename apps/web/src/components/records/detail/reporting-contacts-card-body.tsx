@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { FieldValueView } from "@/components/records/detail/field-value";
 import { Link } from "@/components/ui/link";
 import { useModule, useRecordList, useViews } from "@/lib/api/client/hooks";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 
 const LIST_PAGE_SIZE = 100;
 
@@ -24,6 +24,7 @@ export function ReportingContactsCardBody({
   managerRecord,
   recordPath,
 }: ReportingContactsCardBodyProps) {
+  const orgFormat = useFormat();
   const moduleQuery = useModule("Contacts");
   const viewsQuery = useViews("Contacts");
   const defaultViewId = useMemo(
@@ -111,7 +112,7 @@ export function ReportingContactsCardBody({
                   <FieldValueView
                     field={field}
                     value={row.fields[field.apiName] ?? null}
-                    format={DEFAULT_FORMAT}
+                    format={orgFormat}
                   />
                 </td>
               ))}

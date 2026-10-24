@@ -20,7 +20,7 @@ import {
   useViews,
 } from "@/lib/api/client/hooks";
 import { useClientRecordService } from "@/lib/api/client/provider";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import type { ModuleScreenDefinition } from "@/modules/types";
 import {
   MergeComparison,
@@ -68,6 +68,7 @@ export function MergeDuplicatesScreen({
   definition,
   paths,
 }: MergeDuplicatesScreenProps) {
+  const orgFormat = useFormat();
   const module = definition.apiName;
   const mergeDefinition = definition.merge;
   const router = useRouter();
@@ -355,7 +356,7 @@ export function MergeDuplicatesScreen({
             fieldChoices={fieldChoices}
             conflictsOnly={conflictsOnly}
             ownerNames={ownerNames}
-            format={DEFAULT_FORMAT}
+            format={orgFormat}
             displayNameField={displayNameField}
             onMasterChange={setMasterId}
             onFieldChoiceChange={(fieldApiName, id) =>
@@ -568,7 +569,7 @@ export function MergeDuplicatesScreen({
             anchorId={recordId}
             maxSelected={MAX_SELECTED}
             ownerNames={ownerNames}
-            format={DEFAULT_FORMAT}
+            format={orgFormat}
             emptyMessage="No records found."
             onToggle={toggleRow}
           />

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Icons } from "@/components/ui/icon";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import { fetchComposeMailboxes } from "../compose/http-port";
 import { MailCompose } from "../compose/mail-compose";
 import type { ComposeMailbox } from "../compose/port";
@@ -24,6 +24,7 @@ function addressLabel(person: EmailAddress) {
 }
 
 function MessageContent({ message }: { message: EmailMessage }) {
+  const orgFormat = useFormat();
   return (
     <div className="space-y-4 px-4 pb-4 text-sm">
       <dl className="space-y-1 break-words text-text-muted">
@@ -44,7 +45,7 @@ function MessageContent({ message }: { message: EmailMessage }) {
         <div>
           <dt className="inline font-semibold">Date: </dt>
           <dd className="inline">
-            <time dateTime={message.date}>{formatDateTime(message.date, DEFAULT_FORMAT)}</time>
+            <time dateTime={message.date}>{formatDateTime(message.date, orgFormat)}</time>
           </dd>
         </div>
       </dl>
@@ -83,6 +84,7 @@ export function InboxScreen({
   messageParam: string | null;
   onNavigate: (folder: EmailFolder, messageId?: string) => void;
 }) {
+  const orgFormat = useFormat();
   const [composeOpen, setComposeOpen] = useState(false);
   const [mailboxes, setMailboxes] = useState<readonly ComposeMailbox[]>([]);
   const [sent, setSent] = useState(false);
@@ -205,9 +207,7 @@ export function InboxScreen({
                         {conversation.snippet}
                       </span>
                       <span className="mt-2 flex items-center justify-between gap-2 font-normal text-xs text-text-muted">
-                        <time dateTime={latest.date}>
-                          {formatDateTime(latest.date, DEFAULT_FORMAT)}
-                        </time>
+                        <time dateTime={latest.date}>{formatDateTime(latest.date, orgFormat)}</time>
                         {conversation.messages.some(
                           (message) => message.attachments.length > 0,
                         ) && (
@@ -231,7 +231,7 @@ export function InboxScreen({
                 {selected.messages.map((message, index) => (
                   <div key={message.id} className="rounded-md border border-border">
                     <Disclosure
-                      label={`${message.from.name} · ${formatDateTime(message.date, DEFAULT_FORMAT)}`}
+                      label={`${message.from.name} · ${formatDateTime(message.date, orgFormat)}`}
                       defaultExpanded={index === selected.messages.length - 1}
                     >
                       <MessageContent message={message} />

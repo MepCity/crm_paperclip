@@ -1,3 +1,5 @@
+import type { OrganizationFormat } from "@crm/core/format";
+
 export interface CompanyDetails {
   name: string;
   displayId: string;
@@ -14,4 +16,6 @@ export interface CompanyDetails {
 /** Read-only screen boundary; editing and licensing contracts remain unresearched. */
 export interface CompanyDetailsPort {
   readCompanyDetails(): Promise<CompanyDetails>;
+  /** Organization number/date format; `null` when unset (callers fall back to the default). */
+  readOrganizationFormat(): Promise<OrganizationFormat | null>;
 }

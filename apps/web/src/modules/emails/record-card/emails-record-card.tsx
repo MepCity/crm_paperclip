@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Icons } from "@/components/ui/icon";
 import { resolveLaterModule } from "@/components/ui/later-module";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import type { RelatedListControlDefinition } from "@/modules/types";
 import { fetchComposeMailboxes } from "../compose/http-port";
 import { MailCompose } from "../compose/mail-compose";
@@ -70,6 +70,7 @@ export function EmailsRecordCard({
   load,
   loader,
 }: EmailsRecordCardProps) {
+  const orgFormat = useFormat();
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeMailboxesList, setComposeMailboxesList] = useState<readonly ComposeMailbox[]>([]);
   const [sent, setSent] = useState(false);
@@ -249,7 +250,7 @@ export function EmailsRecordCard({
               {conversations.map((conversation) => {
                 const latest = conversation.messages.at(-1);
                 const sender = latest ? latest.from.name || latest.from.address : "";
-                const dateLabel = latest?.date ? formatDateTime(latest.date, DEFAULT_FORMAT) : "";
+                const dateLabel = latest?.date ? formatDateTime(latest.date, orgFormat) : "";
 
                 return (
                   <li key={conversation.id} data-email-conversation={conversation.id}>

@@ -1,9 +1,11 @@
+import { DOTTED_DAY_FIRST_FORMAT, formatOptionsFromOrganization } from "@crm/core/format";
 import type { FieldDataType, FieldDefinition, FieldValue, RecordService } from "@crm/core/records";
 import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 import { RecordChoice } from "@/components/ui/record-choice";
+import { FormatProvider } from "@/lib/format-context";
 import { dealsFormRules } from "@/modules/deals/deals-form-rules";
 import { render } from "@/test/render";
 import { FieldInput, type FieldInputProps } from "./field-input";
@@ -843,4 +845,28 @@ test("calendar dismisses on an outside click without changing the date", async (
   await user.click(screen.getByRole("button", { name: "Outside" }));
   expect(screen.queryByRole("dialog")).toBeNull();
   expect(change).not.toHaveBeenCalled();
+});
+
+test("form accepts organization format: 1.234,56 amount maps to 1234.56 and 30.06.2026 date maps to 2026-06-30", async () => {
+  const user = userEvent.setup();
+  const changeAmount = vi.fn();
+  const changeDate = vi.fn();
+  const orgFormat = formatOptionsFromOrganization(DOTTED_DAY_FIRST_FORMAT);
+  render(
+    <FormatProvider format={orgFormat}>
+      <Controlled type="currency" initial={null} onChange={changeAmount} />
+      <Controlled type="date" initial={null} onChange={changeDate} />
+    </FormatProvider>,
+  );
+  const [amountInput, dateInput] = screen.getAllByRole("textbox", { name: "Example" });
+  expect(amountInput).toBeDefined();
+  expect(dateInput).toBeDefined();
+  if (!amountInput || !dateInput) return;
+
+  await user.type(amountInput, "1.234,56");
+  await user.tab();
+  expect(changeAmount).toHaveBeenLastCalledWith(1234.56);
+
+  await user.type(dateInput, "30.06.2026");
+  expect(changeDate).toHaveBeenLastCalledWith("2026-06-30");
 });

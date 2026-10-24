@@ -48,7 +48,12 @@ describe("CompanyDetailsScreen", () => {
       accessUrl: "https://example.test/local/",
     };
     const readCompanyDetails = vi.fn().mockResolvedValue(data);
-    render(<CompanyDetailsScreen orgSlug="demo" port={{ readCompanyDetails }} />);
+    render(
+      <CompanyDetailsScreen
+        orgSlug="demo"
+        port={{ readCompanyDetails, readOrganizationFormat: async () => null }}
+      />,
+    );
     await screen.findByRole("heading", { name: data.name });
     const writeText = vi.spyOn(navigator.clipboard, "writeText").mockResolvedValue();
     await user.click(screen.getByRole("button", { name: "Copy access URL" }));
@@ -70,12 +75,14 @@ describe("CompanyDetailsScreen", () => {
   it("shows read failures and discards stale results when the port changes", async () => {
     let resolveOld: ((value: typeof fixtureCompanyDetails) => void) | undefined;
     const oldPort: CompanyDetailsPort = {
+      readOrganizationFormat: async () => null,
       readCompanyDetails: () =>
         new Promise((resolve) => {
           resolveOld = resolve;
         }),
     };
     const failedPort: CompanyDetailsPort = {
+      readOrganizationFormat: async () => null,
       readCompanyDetails: async () => {
         throw new Error("Read failed");
       },

@@ -18,7 +18,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Link } from "@/components/ui/link";
 import { RecordChoice } from "@/components/ui/record-choice";
 import { useDeleteRecords, useRecordList, useUpdateRecord, useViews } from "@/lib/api/client/hooks";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 
 const LIST_PAGE_SIZE = 100;
 const DATE_FIELDS = {
@@ -131,6 +131,7 @@ export function CampaignMembershipsCardBody({
   recordId,
   campaignPath,
 }: CampaignMembershipsCardBodyProps) {
+  const orgFormat = useFormat();
   const filter = useMemo(() => membershipsOfRecord(module, recordId), [module, recordId]);
   const members = useRecordList(
     "Campaign_Members",
@@ -240,14 +241,14 @@ export function CampaignMembershipsCardBody({
                   <FieldValueView
                     field={DATE_FIELDS.Start_Date}
                     value={campaign?.fields.Start_Date ?? null}
-                    format={DEFAULT_FORMAT}
+                    format={orgFormat}
                   />
                 </td>
                 <td className="whitespace-nowrap px-2 py-2 text-text">
                   <FieldValueView
                     field={DATE_FIELDS.End_Date}
                     value={campaign?.fields.End_Date ?? null}
-                    format={DEFAULT_FORMAT}
+                    format={orgFormat}
                   />
                 </td>
                 <td className="whitespace-nowrap px-2 py-2 text-text">

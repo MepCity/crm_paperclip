@@ -5,7 +5,7 @@ import { InviteMemberDialog } from "@/components/members/invite-member-dialog";
 import { MembersTable } from "@/components/members/members-table";
 import { PageHeader } from "@/components/shell/page-header";
 import { PageTitle } from "@/components/shell/page-title";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { loadOrganizationFormat } from "@/lib/format-settings";
 import { requireOrgContext } from "@/lib/session";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import {
@@ -30,6 +30,7 @@ export default async function MembersSettingsPage({
     canManage ? listInvitations(org) : Promise.resolve([]),
   ]);
 
+  const orgFormat = await loadOrganizationFormat();
   return (
     <>
       <PageTitle title={shellPageTitle.settings} />
@@ -47,7 +48,7 @@ export default async function MembersSettingsPage({
           name: member.name,
           email: member.email,
           role: member.role,
-          joinedAt: formatDate(member.joinedAt, DEFAULT_FORMAT),
+          joinedAt: formatDate(member.joinedAt, orgFormat),
         }))}
         currentUserId={org.userId}
         canManage={canManage}
@@ -60,7 +61,7 @@ export default async function MembersSettingsPage({
             id: invitation.id,
             email: invitation.email,
             role: invitation.role,
-            expiresAt: formatDate(invitation.expiresAt, DEFAULT_FORMAT),
+            expiresAt: formatDate(invitation.expiresAt, orgFormat),
           }))}
           onRevoke={revokeInvitationAction.bind(null, orgSlug)}
         />
