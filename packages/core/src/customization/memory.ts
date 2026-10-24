@@ -98,6 +98,22 @@ export class InMemoryCustomizationAdapter implements CustomizationPort {
     return this.readEffectiveSync(orgId, module);
   }
 
+  /** Retired organization-added fields (omitted from effective reads) so admins can restore them. */
+  retiredFields(
+    orgId: string,
+    module: string,
+  ): readonly { id: string; apiName: string; label: string; dataType: string }[] {
+    const snapshot = this.snapshot(orgId, module);
+    return snapshot.fields
+      .filter((field) => field.lifecycle === "retired")
+      .map((field) => ({
+        id: field.id,
+        apiName: field.apiName,
+        label: snapshot.fieldPatches[field.id]?.label ?? field.label,
+        dataType: field.dataType,
+      }));
+  }
+
   readEffectiveSync(orgId: string, module: string): EffectiveModuleDefinition {
     const baseline = this.baseline(module);
     const snapshot = this.snapshot(orgId, module);

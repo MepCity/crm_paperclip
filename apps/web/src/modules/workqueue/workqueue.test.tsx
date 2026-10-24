@@ -2,9 +2,10 @@ import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { taskField } from "@/modules/tasks/test-metadata";
+import { describedBy } from "@/test/dom";
 import { render } from "@/test/render";
 import { type QueueData, queueDefinitions } from "./queues";
-import { Workqueue } from "./workqueue";
+import { overdueLabel, Workqueue } from "./workqueue";
 
 const refresh = vi.fn();
 const replace = vi.fn();
@@ -39,9 +40,16 @@ beforeEach(() => {
 it("dismisses the welcome for the session and switches queues without a write", async () => {
   const user = userEvent.setup();
   const view = mount();
-  expect(await screen.findByRole("dialog")).toBeTruthy();
-  await user.click(screen.getByRole("button", { name: "Get Started" }));
+  const dialog = await screen.findByRole("dialog", {
+    name: "Workqueue - Stay on top of your day",
+  });
+  expect(dialog).toBeTruthy();
+  const getStarted = screen.getByRole("button", { name: "Get Started" });
+  expect(document.activeElement).toBe(getStarted);
+  await user.click(getStarted);
   expect(screen.queryByRole("dialog")).toBeNull();
+  const tasksButton = screen.getByRole("button", { name: "Tasks 1" });
+  expect(document.activeElement).toBe(tasksButton);
   const rail = screen.getByRole("complementary", { name: "Workqueue queues" });
   for (const section of [
     "My Open Activity",
@@ -56,6 +64,9 @@ it("dismisses the welcome for the session and switches queues without a write", 
   expect(within(rail).getByRole("button", { name: "Tasks 1" }).getAttribute("aria-pressed")).toBe(
     "true",
   );
+  expect(
+    within(rail).getByRole("button", { name: "Meetings 0" }).getAttribute("aria-pressed"),
+  ).toBe("false");
   expect(screen.getByRole("link", { name: "Synthetic task" }).getAttribute("href")).toBe(
     "/crm/test/tab/Tasks/task-test",
   );
@@ -73,8 +84,13 @@ it("dismisses the welcome for the session and switches queues without a write", 
     "Customize queue",
     "Suggested queue",
     "Add Leads queue",
-  ])
-    await user.click(screen.getByRole("button", { name }));
+  ]) {
+    const btn = screen.getByRole("button", { name });
+    expect(describedBy(btn)).toBe(
+      "Action is unavailable in this preview: no changes are made or saved.",
+    );
+    await user.click(btn);
+  }
   expect(refresh).toHaveBeenCalledOnce();
   view.unmount();
   mount();
@@ -89,23 +105,89 @@ it("resets paging when changing queue", async () => {
 
 afterEach(cleanup);
 
-it("shows synthetic populated and zero fixtures with consistent counts and unavailable boundaries", async () => {
+it("keeps test controls out of the product and shows the observed task columns", () => {
+  sessionStorage.setItem("workqueue-welcome:test:user", "dismissed");
+  mount();
+  expect(screen.queryByText("Preview data")).toBeNull();
+  expect(screen.queryByRole("button", { name: /Synthetic/ })).toBeNull();
+  expect(screen.getByRole("button", { name: "Activity period: Today & Overdue" })).toBeTruthy();
+  const rail = screen.getByRole("complementary", { name: "Workqueue queues" });
+  for (const button of rail.querySelectorAll(".workqueue-row")) {
+    expect(button.querySelector("svg")).toBeTruthy();
+    expect(button.querySelector(".workqueue-count")).toBeTruthy();
+  }
+});
+
+it("renders overdue task dates in red and hides default lookup columns", () => {
+  sessionStorage.setItem("workqueue-welcome:test:user", "dismissed");
+  const populated = queues.map((queue) =>
+    queue.id === "tasks"
+      ? {
+          ...queue,
+          columns: [
+            taskField("Subject"),
+            taskField("Due_Date", { label: "Due Date", dataType: "date" }),
+            taskField("Status"),
+            taskField("Priority"),
+            taskField("What_Id", { label: "Related To" }),
+            taskField("Who_Id", { label: "Contact Name" }),
+          ],
+          result: {
+            ...queue.result,
+            records: [
+              {
+                id: "overdue",
+                fields: {
+                  Subject: "Past due task",
+                  Due_Date: "2000-01-01",
+                  Status: "Not Started",
+                  Priority: "High",
+                },
+              },
+            ],
+          },
+        }
+      : queue,
+  );
+  render(
+    <Workqueue
+      orgSlug="test"
+      user={{ id: "user", name: "Test User", role: "Member" }}
+      queues={populated}
+      page={1}
+    />,
+  );
+  expect(screen.getByText(/^Late by \d+ days$/).className).toBe("text-danger");
+  expect(screen.getByRole("columnheader", { name: "Priority" })).toBeTruthy();
+  expect(screen.queryByRole("columnheader", { name: "Related To" })).toBeNull();
+  expect(screen.queryByRole("columnheader", { name: "Contact Name" })).toBeNull();
+});
+
+it("formats overdue dates as calendar-day lateness", () => {
+  const today = new Date(2026, 9, 24, 12);
+  expect(overdueLabel("2026-10-23", today)).toBe("Late by 1 day");
+  expect(overdueLabel("2026-10-21", today)).toBe("Late by 3 days");
+  expect(overdueLabel("2026-10-24", today)).toBeNull();
+  expect(overdueLabel("2026-10-25", today)).toBeNull();
+  expect(overdueLabel(null, today)).toBeNull();
+  expect(overdueLabel("invalid", today)).toBeNull();
+});
+
+it("activates queue buttons via keyboard Enter and Space", async () => {
   sessionStorage.setItem("workqueue-welcome:test:user", "dismissed");
   const user = userEvent.setup();
   mount();
-  await user.click(screen.getByRole("button", { name: "Synthetic tasks" }));
-  const table = screen.getByRole("table", { name: "Preview records" });
-  expect(within(table).getAllByRole("link")).toHaveLength(3);
-  expect(screen.getByTestId("preview-count").textContent).toBe("3 records");
-  expect(within(table).getAllByRole("link")[0]?.getAttribute("href")).toMatch(
-    /^\/crm\/test\/tab\/Tasks\/preview-task-/,
-  );
-  await user.click(screen.getByRole("button", { name: "All open" }));
-  expect(within(table).getAllByRole("link")).toHaveLength(4);
-  expect(screen.getByTestId("preview-count").textContent).toBe("4 records");
-  await user.click(screen.getByRole("button", { name: "Synthetic zero result" }));
-  expect(screen.getByTestId("preview-count").textContent).toBe("0 records");
-  expect(screen.getByText(/provisional empty state/)).toBeTruthy();
-  await user.click(screen.getByRole("button", { name: "Add Leads queue" }));
-  expect(screen.getByRole("status").textContent).toMatch(/unavailable/);
+  const meetingsBtn = screen.getByRole("button", { name: "Meetings 0" });
+  meetingsBtn.focus();
+  expect(document.activeElement).toBe(meetingsBtn);
+  await user.keyboard("{Enter}");
+  expect(screen.getByRole("region", { name: "Meetings queue" })).toBeTruthy();
+  expect(meetingsBtn.getAttribute("aria-pressed")).toBe("true");
+
+  const callsBtn = screen.getByRole("button", { name: "Calls 0" });
+  callsBtn.focus();
+  await user.keyboard(" ");
+  expect(screen.getByRole("region", { name: "Calls queue" })).toBeTruthy();
+  expect(callsBtn.getAttribute("aria-pressed")).toBe("true");
+  expect(meetingsBtn.getAttribute("aria-pressed")).toBe("false");
 });

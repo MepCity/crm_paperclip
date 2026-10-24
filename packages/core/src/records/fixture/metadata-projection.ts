@@ -115,11 +115,17 @@ export function fixtureMetadataBaselines(): ModuleBaseline[] {
   });
 }
 
-let adapter: InMemoryCustomizationAdapter | undefined;
+// Pinned to globalThis like the record stores: development bundles each page and route
+// separately, and they must still share one adapter per process.
+const runtime = globalThis as typeof globalThis & {
+  __crmFixtureCustomizationPort?: InMemoryCustomizationAdapter;
+};
 /** Shared ephemeral publication port; no HTTP mutation is exposed by slice B. */
 export function fixtureCustomizationPort(): InMemoryCustomizationAdapter {
-  adapter ??= new InMemoryCustomizationAdapter(fixtureMetadataBaselines());
-  return adapter;
+  runtime.__crmFixtureCustomizationPort ??= new InMemoryCustomizationAdapter(
+    fixtureMetadataBaselines(),
+  );
+  return runtime.__crmFixtureCustomizationPort;
 }
 
 export async function readFixtureModuleProjection(

@@ -1,6 +1,7 @@
 import type { FieldDefinition, ModuleMetadata, RecordData } from "@crm/core/records";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailFieldEntry, DetailSection } from "@/components/records/detail/details-card";
+import { addressSubfieldApiNames } from "@/lib/records/composite-address";
 
 function visible(field: FieldDefinition, record: RecordData) {
   return field.views.view && Object.hasOwn(record.fields, field.apiName);
@@ -45,6 +46,18 @@ export function buildAccountsDetailSections(
   record: RecordData,
 ): DetailSection[] {
   const byName = new Map(module.fields.map((field) => [field.apiName, field]));
+  const activeRecord = {
+    ...record,
+    fields: Object.fromEntries(
+      Object.entries(record.fields).filter(([name]) => byName.get(name)?.views.view),
+    ),
+  };
+  const addressParts = new Set(
+    ["Billing", "Shipping"].flatMap((prefix) => [
+      ...addressSubfieldApiNames(`${prefix}_Address`),
+      `${prefix}_Code`,
+    ]),
+  );
   return module.layout
     .filter((section) => section.label !== "Account Image")
     .map((section) => {
@@ -59,7 +72,8 @@ export function buildAccountsDetailSections(
               : name === "Shipping_Address"
                 ? "Shipping"
                 : null;
-          if (section.label === "Address Information" && !prefix) continue;
+          if (section.label === "Address Information" && !prefix && addressParts.has(name))
+            continue;
           if (!prefix && !visible(field, record)) continue;
           const timestamp =
             name === "Created_By"
@@ -72,7 +86,7 @@ export function buildAccountsDetailSections(
               section.label === "Description Information" ? "full" : index === 0 ? "left" : "right",
             field,
             value: prefix
-              ? formatAccountsAddress(record, prefix) || null
+              ? formatAccountsAddress(activeRecord, prefix) || null
               : (record.fields[name] ?? null),
             auditTimestamp: typeof timestamp === "string" ? timestamp : undefined,
           });
