@@ -98,7 +98,6 @@ test("Visits and Social entry controls stay local inside the shell", async ({
     await expect(nav.locator('[aria-current="page"]')).toHaveCount(1);
     const setup = page.getByRole("button", { name: label, exact: true });
     await expect(setup).toBeVisible();
-    await page.screenshot({ path: testInfo.outputPath(`${module.toLowerCase()}-entry.png`) });
     await setup.click({ force: true });
     await expect(
       page.getByText(
@@ -121,8 +120,10 @@ test("Visits and Social entry controls stay local inside the shell", async ({
     "aria-pressed",
     "true",
   );
+  await page.screenshot({ path: testInfo.outputPath("visits-entry.png") });
   await page.goto(`/crm/${slug}/tab/Social`);
   await expect(page.getByRole("heading", { name: /Engage customers/ })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("social-entry.png") });
 
   // Contact Social card verification & screenshot
   await page.goto(`/crm/${slug}/tab/Contacts/300000000000000000`);
