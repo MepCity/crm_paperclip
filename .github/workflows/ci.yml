@@ -16,10 +16,50 @@ permissions:
   contents: read
 
 jobs:
+  unit:
+    name: unit (${{ matrix.shard }}/2)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      # Integration tests run in their own job. The native SysV IPC test stays local.
+      - name: Unit and component tests
+        run: |
+          files=$(git ls-files '*.test.ts' '*.test.tsx' | grep -v '\.int\.test\.ts$' | grep -v 'packages/db/src/sysv-ipc.test.ts')
+          pnpm exec vitest run --project unit --project component --shard=${{ matrix.shard }}/2 --reporter=default --reporter=json --outputFile=test-results/vitest.json $files
+        env:
+          CI: "1"
+
+      - name: Summarize test durations
+        if: always()
+        continue-on-error: true
+        run: node scripts/ci/duration-summary.mjs vitest test-results/vitest.json
+      - name: Upload unit and component report
+        if: always() && !cancelled()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fast-results-${{ matrix.shard }}
+          path: test-results/vitest.json
+          retention-days: 7
+          if-no-files-found: ignore
+
   fast:
     name: fast
     runs-on: ubuntu-latest
     timeout-minutes: 40
+    needs: [unit]
+    if: !cancelled()
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -33,26 +73,15 @@ jobs:
         run: pnpm exec biome check .
       - name: Typecheck
         run: node scripts/typecheck.mjs
-      # Integration tests run in their own job. The native SysV IPC test stays local.
-      - name: Unit and component tests
-        run: |
-          files=$(git ls-files '*.test.ts' '*.test.tsx' | grep -v '\.int\.test\.ts$' | grep -v 'packages/db/src/sysv-ipc.test.ts')
-          pnpm exec vitest run --project unit --project component --reporter=default --reporter=json --outputFile=test-results/vitest.json $files
-        env:
-          CI: "1"
-
-      - name: Summarize test durations
-        if: always()
-        continue-on-error: true
-        run: node scripts/ci/duration-summary.mjs vitest test-results/vitest.json
-      - name: Upload unit and component report
+      - name: Verify unit test shards
         if: always() && !cancelled()
-        uses: actions/upload-artifact@v7
-        with:
-          name: fast-results
-          path: test-results/vitest.json
-          retention-days: 7
-          if-no-files-found: ignore
+        run: |
+          echo "Unit test shards status: ${{ needs.unit.result }}"
+          if [ "${{ needs.unit.result }}" != "success" ]; then
+            echo "::error::Unit test shard(s) failed with status: ${{ needs.unit.result }}"
+            exit 1
+          fi
+          echo "All unit test shards and fast checks passed."
 
   integration:
     name: integration
