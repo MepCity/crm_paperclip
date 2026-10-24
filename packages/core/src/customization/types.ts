@@ -57,6 +57,7 @@ export interface ModuleBaseline {
 }
 
 export interface CustomizationSnapshot {
+  moduleProperties?: { singularLabel?: string; pluralLabel?: string };
   baselineVersion: string;
   revision: CustomizationRevision;
   fields: readonly CustomizationField[];
@@ -67,6 +68,7 @@ export interface CustomizationSnapshot {
 }
 
 export interface CustomizationPatch {
+  moduleProperties?: { singularLabel?: string; pluralLabel?: string };
   retireFields?: readonly string[];
   restoreFields?: readonly string[];
   addFields?: readonly CustomizationField[];
@@ -101,4 +103,13 @@ export interface CustomizationPort {
     expectedRevision: CustomizationRevision,
     patch: CustomizationPatch,
   ): Promise<EffectiveModuleDefinition>;
+}
+
+/** Metadata-only audit. Stored atomically with the corresponding snapshot. */
+export interface CustomizationAuditEntry {
+  actorId: string;
+  operation: string;
+  targetIds: readonly string[];
+  timestamp: string;
+  revision: number;
 }
