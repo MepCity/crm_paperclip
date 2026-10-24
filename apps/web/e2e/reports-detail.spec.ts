@@ -21,8 +21,12 @@ test("Report detail: header, toolbar, empty and populated tables, back", async (
   const table = page.getByRole("table", { name: "Report results" });
   await expect(table.getByRole("columnheader")).toHaveCount(9);
   await expect(page.getByText("No Data Found")).toBeVisible();
+  if (process.env.REPORT_SHOT_DIR)
+    await page.screenshot({ path: `${process.env.REPORT_SHOT_DIR}/report-detail-empty.png` });
   await page.goto(`/crm/${org.slug}/tab/Reports/sample-report-1`);
   await expect(table.getByRole("row")).toHaveCount(3);
+  if (process.env.REPORT_SHOT_DIR)
+    await page.screenshot({ path: `${process.env.REPORT_SHOT_DIR}/report-detail-populated.png` });
   await page.getByRole("button", { name: "Refresh report" }).click();
   await expect(table.getByRole("row")).toHaveCount(3);
   await page.getByRole("link", { name: "Back to Reports" }).click();
