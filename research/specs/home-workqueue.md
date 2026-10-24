@@ -286,3 +286,173 @@ Suggested later implementation checks: initial-entry component test, synthetic
 task/count consistency, existing-record navigation test, and an e2e assertion
 that opening the read-only route makes no mutation request. This docs-only issue
 requires evidence and diff checks, not application test execution.
+
+## R2 — documentation-based functional spec (MEP-1290)
+
+### Evidence boundary and source register
+
+Public documentation reviewed on 2026-10-24. **Documented, not observed** applies
+to every HD/WD entry below. R1 remains the painted-state baseline; this supplement
+does not certify the current installation, complete onboarding, authorize writes,
+or open implementation work. No capture tool, authenticated application session,
+page switch, dismissal, preference change or reference asset was used in R2.
+Phase 2 research remains outside scope pending MEP-1284.
+
+Titles below are neutral locators in the public reference CRM help center; URLs
+and product-bearing titles are intentionally omitted under the naming rule.
+Official help articles take precedence over historical announcements. No customer
+values, account identifiers or screenshots are included.
+
+| Ref | Neutral public page title | Section locator / evidence role |
+| --- | --- | --- |
+| D1 | Customizing Home Tab | Classic View; Switch between the Home Pages; Add Components in User's Home Page |
+| D2 | Open Activities Homepage Component | What can you view; Decide how you want to view activities; Customize Activity information |
+| D3 | Workqueue | Sections in Workqueue; Manager View; Accessing Workqueue |
+| D4 | Introducing an updated User Home Page and other enhancements in Dashboards | Additional components for new sign-ups; historical defaults only |
+| D5 | Introducing a new home page view and UI enhancements for Dashboards | Manager's Home; visual enhancements; historical empty-state guidance |
+
+### Home page model and component catalogue
+
+D1 documents Classic, personal User's Home, shared Customized Home and Manager's
+Home. A top-right dropdown switches pages; last accessed becomes default.
+Classic is fixed; personal and shared layouts are configurable. Actual configured
+page names and account availability remain unknown.
+
+Each row is documented with its source title via D1–D5. “Unknown” marks absent
+field/empty-state evidence, not an empty value. IDs also form the proposed Home
+inventory; they are functional candidates without certified position or geometry.
+
+| ID | Type / data source | Fields or content | Empty evidence | Status / neutral page title |
+| --- | --- | --- | --- | --- |
+| HD01 | Page dropdown | Above page model | Unknown | documented — D1, Customizing Home Tab |
+| HD02 | Classic Tasks list / Tasks | Fixed component; fields unknown | Unknown | documented — D1, Customizing Home Tab |
+| HD03 | Classic Today's Events / Meetings | Fixed component; fields unknown | Unknown | documented — D1, Customizing Home Tab |
+| HD04 | Classic Pipeline by Stage / Deals | Stage aggregation | Unknown | documented — D1, Customizing Home Tab |
+| HD05 | Dashboard / configured analytics | Selected component | D5 caveat below | documented — D1, Customizing Home Tab |
+| HD06 | Custom View / selected module | Selected view columns | Unknown | documented — D1, Customizing Home Tab |
+| HD07 | Widgets / custom application | Application-defined | Unknown | documented — D1, Customizing Home Tab |
+| HD08 | Kiosk / configured kiosk | Flow-defined | Unknown | documented — D1, Customizing Home Tab |
+| HD09 | Reports / selected report | Report-defined | Unknown | documented — D1, Customizing Home Tab |
+| HD10 | Voice of the Customer / selected component | Component-defined | Unknown | documented — D1, Customizing Home Tab |
+| HD11 | Agents / configured agent | On-demand insights | Unknown | documented — D1, Customizing Home Tab |
+| HD12 | Advanced Components | My Open Activities; Rich Text; Quick Links | Unknown | documented — D1, Customizing Home Tab |
+| HD13 | Open Activities / Tasks, Meetings, Calls, Appointments | D2 field matrix below | Unknown | documented — D2, Open Activities Homepage Component |
+| HD14 | New-user KPI presets / Deals, Leads, Calls | Open Deals; Leads; Untouched Deals; Today's Calls | Unknown | documented — D4, Introducing an updated User Home Page and other enhancements in Dashboards |
+| HD15 | New-user custom-view presets / Tasks, Leads, Meetings, Deals | Open Tasks; Today's Leads; Meetings; Deals Closing this Month | Unknown | documented — D4, Introducing an updated User Home Page and other enhancements in Dashboards |
+| HD16 | New-user funnel / Deals | Pipeline Deals by Stage | D5 caveat below | documented — D4, Introducing an updated User Home Page and other enhancements in Dashboards |
+| HD17 | Manager dashboard / sales analytics | Monthly leads, deals, revenue, trend anomalies | D5 caveat below | documented — D5, Introducing a new home page view and UI enhancements for Dashboards |
+
+“Widgets” (HD07) is an extension type, not a synonym for every dashboard card.
+HD14–HD16 use current-user scope in D4. D4 says existing users retain their
+customizations; these presets cannot establish this account's default dashboard.
+Criteria such as “untouched”, exact KPI formulas and funnel values remain open.
+
+D5 describes an illustration with “No data available” for empty dashboards and
+ten rows for personal custom-view components. It is historical, not a universal
+per-card empty contract. Do not apply it to HD02/HD03, custom applications or
+Workqueue without evidence. Recreate any illustration independently.
+
+D5 says custom pages always take default precedence, whereas D1 says last
+accessed is default. Prefer the current help wording provisionally, retain this
+conflict for approval, and do not test it in the reference. Manager access is
+role-hierarchy-dependent in D5; it does not certify this user's entitlement.
+
+### Open Activities: per-widget fields and selectors
+
+Source for every row: documented — D2, *Open Activities Homepage Component*.
+This is Home HD13, **not** a Workqueue period or column specification. The article
+marks rollout as phased; no claim of current installation availability is made.
+
+| Activity source | Documented default fields |
+| --- | --- |
+| Tasks | Due Date, Subject, Related To, Contact Name |
+| Meetings | Title, From, To, Related To, Contact Name |
+| Calls | Subject, Related To, Call Start time |
+| Appointments | Appointment Name, Appointment For, Appointment Start Time |
+
+HD13's timeline options are today, this week, next week and next seven days.
+Preferences control overdue visibility and placement, plus all-day task/meeting
+placement. Overdue starts at the top. Manage Fields selects an activity type and
+supports field selection/reordering. These are preference-write boundaries;
+none was operated. Date/time, activity information and related-record context
+are documented; exact grouping, timezone edges, links and empty copy are open.
+Appointments are a catalogue entry only, not authorization to expand module scope.
+
+### Workqueue: functional inventory
+
+**Documented, not observed.** D3, *Workqueue*, supports the following candidates;
+IDs do not replace R1 W01–W29. No screenshot position, column order or account
+entitlement is implied. This compact table is the documented Workqueue contract.
+
+| ID | Functional candidate | Status / neutral page title |
+| --- | --- | --- |
+| WD01 | Open Activity: Tasks, Meetings, Calls, Appointments; today/overdue filtering | documented — D3, Workqueue |
+| WD02 | Smart filters; manage columns | documented — D3, Workqueue |
+| WD03 | Activity edit/delete/complete; overdue red, upcoming green | documented — D3, Workqueue |
+| WD04 | My Records / Other User Records scope | documented — D3, Workqueue |
+| WD05 | Queue source: custom view, date field or criteria; In the Last / Due In using hours/days/weeks | documented — D3, Workqueue |
+| WD06 | Suggested queues; create queue; access selection | documented — D3, Workqueue |
+| WD07 | Queue management: select/reorder; Category/List View | documented — D3, Workqueue |
+| WD08 | Record field updates, email, follow-up, lead conversion | documented — D3, Workqueue |
+| WD09 | Jobs: approval, review, Blueprint, image validation; approve/reject/delegate | documented — D3, Workqueue |
+| WD10 | Manager subordinate context; existing queues only | documented — D3, Workqueue |
+
+D3 specifies fifteen queues maximum, common across teamspaces; team/integrated
+modules are unsupported. Manager View requires Enterprise or above.
+
+**Unresolved in reviewed documentation:** exhaustive WD01 period menu (including
+Tomorrow or custom ranges), WD02 operators/defaults, ordinary sort controls and
+order, user-picker labels, row hover/menu geometry, exact completion eligibility,
+pagination, and empty-result copy/actions. R1's Today & Overdue is an observed
+caption, not proof of the entire menu. HD13 periods must not fill this gap.
+No zero badge establishes an empty table; no generic dashboard empty illustration
+establishes Workqueue emptiness. Record ownership and sharing semantics should
+reuse existing authorization rather than infer new visibility from queue labels.
+All WD03/WD06–WD09 writes and WD07 preferences remain prohibited in the reference.
+
+### U1–U6 disposition
+
+“Answered” requires the entire original question to be resolved. Documentation
+narrows product capabilities; it cannot certify account state or remove R1's
+blocked-request and runtime boundaries. No original question is fully answered.
+
+| Question | Disposition | Implementation consequence |
+| --- | --- | --- |
+| U1 | partly — HD01–HD17 document page/component families; account page list, precise schemas/formulas and most empties unknown | Use explicitly proposed fixture variants, not a claimed configured dashboard; retain D1/D5 default conflict |
+| U2 | still open — welcome dismissal and initialization effects not established | Retain first-run fixture separately; never require a reference dismissal to proceed |
+| U3 | still open — documentation does not explain the blocked preference PUT or certify initialization without it | No retry, guard exception or inferred safe persistence; local fixtures make no preference requests |
+| U4 | partly — WD01–WD10 establish capabilities; exhaustive periods, sort and empty-result contract unresolved | Limit local selectors to approved fixture options; no invented reference menu or action behaviour |
+| U5 | still open — reviewed pages do not identify the bottom chart utility or duplicate offscreen Help target | Leave shared-shell ownership unchanged; do not invent an action |
+| U6 | still open — public pages cannot certify this account's runtime/readiness | Keep R1 diagnostics separate from intended local loading/error behaviour |
+
+### Suggested read-only fixture slices (proposals after research approval)
+
+These are bounded implementation suggestions, not approved subtasks, API shapes,
+metadata changes or new data models. Use synthetic records only. Reuse the
+existing shell, list and record-detail components plus module field renderers.
+Preserve the distinction between observed R1 entry and documented R2 candidates.
+
+1. **H-F1 — personal page preview:** render a fixed, explicitly named fixture
+   page with a Tasks custom-view card and a Deals aggregation card, drawn from
+   existing module fixtures. Show source/field labels from HD06/HD16, with KPI
+   formulas withheld unless approved. A local-only page selector may demonstrate
+   HD01; it must not persist preferences or imply the account's actual page list.
+2. **H-F2 — activity preview:** reuse Tasks/Meetings/Calls record links and HD13
+   fields. Fix a synthetic clock/timezone for today/overdue tests. Keep Home's
+   four documented periods separate from Workqueue options. Exclude Appointments
+   until its own scope is approved. Empty, loading and error variants are local
+   proposals needing acceptance, not documented reference copy.
+3. **W-F1 — queue preview:** extend the R1 proposal with synthetic Tasks data,
+   counts and existing detail links. Demonstrate populated and zero-result
+   fixtures with clearly provisional empty presentation. Filter changes stay
+   in memory; don't invent a full period/sort menu. Reuse underlying module
+   authorization, and ensure unsupported pages make no queue requests.
+4. **W-F2 — visibility preview:** separate current-user and subordinate fixtures
+   only after an approved visibility contract. Represent Jobs and write actions
+   as unavailable boundaries rather than implementing approval, conversion,
+   email, queue creation or preference persistence. No real external integration.
+
+Later implementation checks should cover count/result consistency, supported
+module guards, safe existing-record navigation and absence of mutation requests.
+Research verification is documentation/diff review plus the forbidden-term hook;
+no application code changed, so no application tests are required for R2.
