@@ -1,6 +1,7 @@
 import type { FieldDefinition, FieldValue, ModuleMetadata, RecordData } from "@crm/core/records";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailFieldEntry, DetailSection } from "@/components/records/detail/details-card";
+import { addressSubfieldApiNames } from "@/lib/records/composite-address";
 import { buildCompositeAddressDetailFields } from "@/lib/records/composite-address-detail";
 import {
   LEADS_DETAIL_FIELD_API_NAMES,
@@ -81,12 +82,21 @@ function buildAddressSection(
 ): DetailSection {
   return {
     title: section.label,
-    fields: buildCompositeAddressDetailFields(
-      [{ parentApiName: LEADS_DETAIL_FIELD_API_NAMES.Address }],
-      module.fields,
-      record,
-      withDetailLabel,
-    ),
+    fields: [
+      ...buildCompositeAddressDetailFields(
+        [{ parentApiName: LEADS_DETAIL_FIELD_API_NAMES.Address }],
+        module.fields,
+        record,
+        withDetailLabel,
+      ),
+      ...buildLeadInformationSection(section, module, record).fields.filter(
+        (entry) =>
+          entry.field.apiName !== LEADS_DETAIL_FIELD_API_NAMES.Address &&
+          !addressSubfieldApiNames(LEADS_DETAIL_FIELD_API_NAMES.Address).includes(
+            entry.field.apiName,
+          ),
+      ),
+    ],
   };
 }
 
@@ -126,7 +136,9 @@ export function buildLeadsDetailSections(
     }
     if (section.label === LEADS_DETAIL_SECTION_LABELS.descriptionInformation) {
       sections.push(buildDescriptionSection(section, module, record));
+      continue;
     }
+    sections.push(buildLeadInformationSection(section, module, record));
   }
   return sections;
 }

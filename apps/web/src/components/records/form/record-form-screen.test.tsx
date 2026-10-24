@@ -6,7 +6,7 @@ import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
-import { UnexpectedApiError } from "@/lib/api/wire/errors";
+import { decodeError, UnexpectedApiError } from "@/lib/api/wire/errors";
 import { contactsFormRules } from "@/modules/contacts/contacts-form-rules";
 import { dealsFormRules } from "@/modules/deals/deals-form-rules";
 import { leadsFormRules, leadsFormFields as names } from "@/modules/leads/leads-form-rules";
@@ -159,6 +159,16 @@ test.each([
   ["forbidden", new ForbiddenError("You cannot create leads."), "You cannot create leads."],
   ["not found", new NotFoundError("This lead was deleted."), "This lead was deleted."],
   ["unexpected api", new UnexpectedApiError(502), FORM_SAVE_GENERIC_ERROR_MESSAGE],
+  [
+    "schema revision",
+    decodeError(409, {
+      code: "SCHEMA_REVISION_MISMATCH",
+      status: "error",
+      details: { revision: "next:2" },
+      message: "stale",
+    }),
+    "The module fields have changed. Refresh the form before saving. Your draft has been kept.",
+  ],
   ["network", new TypeError("Failed to fetch"), FORM_SAVE_GENERIC_ERROR_MESSAGE],
 ])(
   "non-field save error %s keeps values, re-enables actions and shows the banner",
@@ -170,7 +180,9 @@ test.each([
     await user.click(screen.getByRole("button", { name: "Save" }));
     const banner = await screen.findByRole("alert");
     expect(banner.hasAttribute("data-record-form-error-banner")).toBe(true);
-    expect(banner.textContent).toBe(message);
+    expect(banner.textContent).toBe(
+      message + (_label === "schema revision" ? "Refresh fields" : ""),
+    );
     expect((screen.getByRole("textbox", { name: "Company" }) as HTMLInputElement).value).toBe(
       "Synthetic Company",
     );
@@ -178,6 +190,13 @@ test.each([
       false,
     );
     expect(navigate).not.toHaveBeenCalled();
+    if (_label === "schema revision") {
+      await user.click(screen.getByRole("button", { name: "Refresh fields" }));
+      await waitFor(() => expect(screen.queryByRole("alert")).toBeNull());
+      expect((screen.getByRole("textbox", { name: "Company" }) as HTMLInputElement).value).toBe(
+        "Synthetic Company",
+      );
+    }
   },
 );
 
