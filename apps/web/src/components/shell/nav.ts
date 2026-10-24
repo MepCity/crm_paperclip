@@ -96,7 +96,17 @@ function flatNavLinks(): NavLink[] {
     const index = flatNavOrder.indexOf(id);
     return index === -1 ? flatNavOrder.length : index;
   };
-  return moduleNavLinks("flat").sort((a, b) => rank(a.id) - rank(b.id));
+  const entries: NavLink[] = [
+    ...moduleNavLinks("flat"),
+    {
+      id: "social",
+      label: "Social",
+      icon: Icons.messageSquare,
+      href: (slug) => moduleTabPath(slug, "Social"),
+      match: "exact",
+    },
+  ];
+  return entries.sort((a, b) => rank(a.id) - rank(b.id));
 }
 
 /** Documents is not a record module (no list/detail engine); it sits after Deals in the Sales group. */
@@ -161,7 +171,24 @@ export const shellNav: NavConfig = {
     {
       id: "teamspace",
       label: "Teamspace",
-      groups: [navGroup("sales", "Sales"), navGroup("activities", "Activities")],
+      groups: [
+        navGroup("sales", "Sales"),
+        navGroup("activities", "Activities"),
+        {
+          id: "integrations",
+          label: "Integrations",
+          icon: Icons.folder,
+          links: [
+            {
+              id: "visits",
+              label: "Visits",
+              icon: Icons.activity,
+              href: (slug) => moduleTabPath(slug, "Visits"),
+              match: "exact",
+            },
+          ],
+        },
+      ],
       links: flatNavLinks(),
     },
   ],

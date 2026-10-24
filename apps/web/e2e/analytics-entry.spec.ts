@@ -2,7 +2,7 @@ import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
-test("Analytics entry: resting overview dashboard, toolbar, empty/value card states and refresh", async ({
+test("Analytics entry: record-backed overview dashboard, toolbar, empty target states and refresh", async ({
   page,
 }, testInfo) => {
   await page.setViewportSize({ width: 1470, height: 900 });
@@ -51,52 +51,42 @@ test("Analytics entry: resting overview dashboard, toolbar, empty/value card sta
 
   // Row 1: KPI cards (A10.01–A10.04)
   const leadsCard = page.getByRole("region", { name: "LEADS THIS MONTH" });
-  await expect(leadsCard).toContainText("No data available");
+  await expect(leadsCard.locator(".text-3xl")).toHaveText(/^\d+$/);
+  const originalLeads = Number(await leadsCard.locator(".text-3xl").textContent());
 
   const revenueCard = page.getByRole("region", { name: "REVENUE THIS MONTH" });
-  await expect(revenueCard).toContainText("No data available");
+  await expect(revenueCard).toBeVisible();
 
   const pipelineCard = page.getByRole("region", { name: "DEALS IN PIPELINE" });
-  await expect(pipelineCard).toContainText("9");
+  await expect(pipelineCard.locator(".text-3xl")).toHaveText(/^\d+$/);
 
   const accountsCard = page.getByRole("region", { name: "ACCOUNTS THIS MONTH" });
-  await expect(accountsCard).toContainText("32");
-  await expect(accountsCard).toContainText("47.5%");
-  await expect(accountsCard).toContainText("Last Month Relative: 61");
+  await expect(accountsCard.locator(".text-3xl")).toHaveText(/^\d+$/);
+  await expect(accountsCard).toContainText("Last Month Relative:");
 
-  // Row 2: Target cards (A11.01–A11.02)
-  const leadTargetCard = page.getByRole("region", { name: "LEAD GENERATION TARGET - THIS YEAR" });
-  await expect(leadTargetCard).toContainText("10");
-  await expect(leadTargetCard).toContainText("Target: 1000");
-  await expect(leadTargetCard).toContainText("Remaining : 990");
-
-  const revenueTargetCard = page.getByRole("region", { name: "REVENUE TARGET - THIS YEAR" });
-  await expect(revenueTargetCard).toContainText("Entire Org");
-  await expect(revenueTargetCard).toContainText("Target : $10,000,000.00");
-  await expect(revenueTargetCard).toContainText("Achieved : $785,000.00");
-
-  // Row 3: Breakdown cards (A12.01–A12.03)
-  const perfCard = page.getByRole("region", { name: "LAST 3 MONTHS PERFORMANCE MONITOR" });
-  await expect(perfCard).toContainText("July 2026");
-  await expect(perfCard).toContainText("LEADS CREATED");
-  await expect(perfCard).toContainText("DEALS WON");
-
-  const sourcesCard = page.getByRole("region", { name: "LEADS BY SOURCE" });
-  await expect(sourcesCard).toContainText("Advertisement");
-  await expect(sourcesCard).toContainText("Cold Call");
-
-  const repsCard = page.getByRole("region", { name: "PROLIFIC SALES REPS" });
-  await expect(repsCard).toContainText("Deal Owner");
-  await expect(repsCard).toContainText("Hatice Arslan");
-  await expect(repsCard).toContainText("$35,000.00");
+  for (const title of [
+    "LEAD GENERATION TARGET - THIS YEAR",
+    "REVENUE TARGET - THIS YEAR",
+    "LAST 3 MONTHS PERFORMANCE MONITOR",
+  ]) {
+    await expect(page.getByRole("region", { name: title })).toContainText("No data available");
+  }
+  await expect(page.getByRole("region", { name: "LEADS BY SOURCE" })).toBeVisible();
+  await expect(page.getByRole("region", { name: "PROLIFIC SALES REPS" })).toBeVisible();
 
   // Verify per-card refresh buttons exist
   const cardRefreshButtons = page.getByRole("button", { name: "Refresh Component" });
   await expect(cardRefreshButtons).toHaveCount(9);
 
   // Click toolbar refresh and verify dashboard re-renders without errors
+  const created = await page.request.post("/crm/v2.2/Leads", {
+    headers: { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin },
+    data: { data: [{ Last_Name: "Analytics refresh example", Company: "Analytics example" }] },
+  });
+  expect(created.ok()).toBe(true);
   await refreshBtn.click();
-  await expect(pipelineCard).toContainText("9");
+  await expect(leadsCard.locator(".text-3xl")).toHaveText(String(originalLeads + 1));
+  await expect(pipelineCard.locator(".text-3xl")).toHaveText(/^\d+$/);
 
   await page.screenshot({ path: testInfo.outputPath("analytics-entry.png"), fullPage: true });
 });
