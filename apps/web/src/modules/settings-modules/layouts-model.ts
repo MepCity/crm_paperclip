@@ -1,3 +1,5 @@
+import type { CustomizationField, LayoutDefinition } from "@crm/core/customization";
+
 export type LayoutRow = {
   id: string;
   name: string;
@@ -15,3 +17,9 @@ export function defaultLayoutRow(): LayoutRow {
     status: true,
   };
 }
+
+export type LayoutEditorData = {
+  revision: string;
+  layout: LayoutDefinition;
+  fields: CustomizationField[];
+};
