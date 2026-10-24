@@ -236,6 +236,15 @@ export const settingsNav: readonly NavLink[] = [
     group: "Customization",
   },
   {
+    id: "workflow-rules",
+    label: "Workflow Rules",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/workflow-rules`,
+    activePrefix: (slug) => `/crm/${slug}/settings/workflow-rules`,
+    match: "prefix",
+    group: "Automation",
+  },
+  {
     id: "assignment-rules",
     label: "Assignment Rules",
     icon: Icons.settings,

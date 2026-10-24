@@ -190,6 +190,7 @@ describe("settingsNav", () => {
       "import-history",
       "export-history",
       "modules-and-fields",
+      "workflow-rules",
       "assignment-rules",
     ]);
     const [general, members] = settingsNav;
