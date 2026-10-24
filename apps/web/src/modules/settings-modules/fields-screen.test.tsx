@@ -13,8 +13,12 @@ const rows = [
 describe("FieldsScreen", () => {
   it("lists fields, filters by label or type, and keeps writes disabled", async () => {
     render(<FieldsScreen orgSlug="o" module="Leads" rows={rows} />);
+    expect(screen.getByRole("heading", { name: "Leads" })).toBeDefined();
     expect(screen.getByRole("columnheader", { name: "Custom Field" })).toBeDefined();
     expect(screen.getByRole("tab", { name: "Fields" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByRole("tab", { name: "Layouts" }).getAttribute("href")).toBe(
+      "/crm/o/settings/modules/Leads/layouts",
+    );
     expect(screen.getByRole("button", { name: "Create and Edit Fields" })).toHaveProperty(
       "disabled",
       true,
@@ -33,5 +37,16 @@ describe("FieldsScreen", () => {
       "zzz",
     );
     expect(screen.getByText("No fields found")).toBeDefined();
+  });
+
+  it("renders with Contacts module heading and sidebar active state", () => {
+    render(<FieldsScreen orgSlug="test-org" module="Contacts" rows={rows} />);
+    expect(screen.getByRole("heading", { name: "Contacts" })).toBeDefined();
+    const nav = screen.getByRole("navigation", { name: "Modules" });
+    const current = nav.querySelector('[aria-current="page"]');
+    expect(current?.textContent).toBe("Contacts");
+    expect(screen.getByRole("tab", { name: "Layouts" }).getAttribute("href")).toBe(
+      "/crm/test-org/settings/modules/Contacts/layouts",
+    );
   });
 });

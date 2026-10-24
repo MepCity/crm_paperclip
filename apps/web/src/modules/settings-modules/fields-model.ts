@@ -2,6 +2,45 @@ import type { FieldDataType, ModuleMetadata } from "@crm/core/records";
 
 export type FieldRow = { apiName: string; label: string; dataType: string; custom: boolean };
 
+export const ALLOWED_SETTINGS_MODULES = ["Leads", "Contacts", "Accounts", "Deals"] as const;
+export type AllowedSettingsModule = (typeof ALLOWED_SETTINGS_MODULES)[number];
+
+export function isAllowedSettingsModule(name: string): name is AllowedSettingsModule {
+  return (ALLOWED_SETTINGS_MODULES as readonly string[]).includes(name);
+}
+
+export const SIDEBAR_MODULES = [
+  "Leads",
+  "Contacts",
+  "Accounts",
+  "Deals",
+  "Tasks",
+  "Meetings",
+  "Calls",
+  "Products",
+  "Quotes",
+  "Sales Orders",
+  "Purchase Orders",
+  "Invoices",
+  "Campaigns",
+  "Vendors",
+  "Price Books",
+  "Cases",
+  "Solutions",
+];
+
+export const MODULE_TABS = [
+  "Layouts",
+  "Layout Rules",
+  "Validation Rules",
+  "Fields",
+  "Record Locking Configuration",
+  "Map Dependency Fields",
+  "Links",
+  "Buttons",
+  "Summary",
+];
+
 const TYPE_LABELS: Record<FieldDataType, string> = {
   multireminder: "Reminder",
   ALARM: "Alarm",
