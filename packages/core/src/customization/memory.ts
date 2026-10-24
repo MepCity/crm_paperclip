@@ -1,7 +1,9 @@
+import { z } from "zod";
 import { ConflictError, NotFoundError } from "../errors";
 import { emptySnapshot, immutable, invalid, resolveEffectiveModule } from "./resolver";
 import { baselineSchema, parse, patchSchema } from "./schema";
 import type {
+  CustomizationAuditEntry,
   CustomizationPatch,
   CustomizationPort,
   CustomizationRevision,
@@ -39,11 +41,28 @@ export class InMemoryCustomizationAdapter implements CustomizationPort {
     this.publicationGuard = guard;
   }
 
+  get coordinated(): boolean {
+    return this.publicationGuard !== undefined;
+  }
+
   private readonly baselines = new Map<string, ModuleBaseline>();
   private readonly initialRevisions = new Map<string, number>();
   private readonly resolved = new Map<string, Map<string, EffectiveModuleDefinition>>();
   private readonly organizations = new Set<string>();
-  private readonly snapshots = new Map<string, Map<string, CustomizationSnapshot>>();
+  private readonly snapshots = new Map<
+    string,
+    Map<
+      string,
+      {
+        snapshot: CustomizationSnapshot;
+        audit: readonly CustomizationAuditEntry[];
+      }
+    >
+  >();
+
+  auditEntries(orgId: string, module: string): readonly CustomizationAuditEntry[] {
+    return immutable(structuredClone(this.snapshots.get(orgId)?.get(module)?.audit ?? []));
+  }
 
   constructor(baselines: readonly ModuleBaseline[]) {
     for (const input of baselines) {
@@ -68,7 +87,7 @@ export class InMemoryCustomizationAdapter implements CustomizationPort {
   private snapshot(orgId: string, module: string): CustomizationSnapshot {
     if (!orgId) invalid("Organization is required.");
     return (
-      this.snapshots.get(orgId)?.get(module) ?? {
+      this.snapshots.get(orgId)?.get(module)?.snapshot ?? {
         ...emptySnapshot(this.baseline(module)),
         revision: this.initialRevisions.get(module) ?? 0,
       }
@@ -98,6 +117,7 @@ export class InMemoryCustomizationAdapter implements CustomizationPort {
     module: string,
     expectedRevision: CustomizationRevision,
     input: CustomizationPatch,
+    audit?: Omit<CustomizationAuditEntry, "revision">,
   ): Promise<EffectiveModuleDefinition> {
     const baseline = this.baseline(module);
     const previous = this.snapshot(orgId, module);
@@ -116,6 +136,15 @@ export class InMemoryCustomizationAdapter implements CustomizationPort {
       lifecycleIds.some((id) => !previous.fields.some((field) => field.id === id))
     )
       invalid("Lifecycle changes require distinct existing custom field identities.");
+    if (
+      patch.retireFields?.some(
+        (id) => previous.fields.find((field) => field.id === id)?.lifecycle !== "active",
+      ) ||
+      patch.restoreFields?.some(
+        (id) => previous.fields.find((field) => field.id === id)?.lifecycle !== "retired",
+      )
+    )
+      invalid("Lifecycle transition does not match the current field state.");
     if (lifecycleIds.length && !this.publicationGuard)
       invalid("Lifecycle changes require a schema coordinator.");
     if (patch.retireFields?.some((id) => Object.hasOwn(patch.fieldPatches ?? {}, id)))
@@ -128,6 +157,9 @@ export class InMemoryCustomizationAdapter implements CustomizationPort {
     const candidate: CustomizationSnapshot = {
       ...previous,
       revision: previous.revision + 1,
+      ...(patch.moduleProperties
+        ? { moduleProperties: { ...previous.moduleProperties, ...patch.moduleProperties } }
+        : {}),
       fields: [...previous.fields, ...(patch.addFields ?? [])].map((field) => ({
         ...field,
         ...(patch.retireFields?.includes(field.id) ? previous.fieldPatches[field.id] : {}),
@@ -145,7 +177,29 @@ export class InMemoryCustomizationAdapter implements CustomizationPort {
     this.publicationGuard?.(orgId, module, this.readEffectiveSync(orgId, module), effective);
     // Only publish a detached, fully validated snapshot. Failure above changes nothing.
     const next = new Map(this.snapshots.get(orgId));
-    next.set(module, immutable(structuredClone(candidate)));
+    const entries = this.auditEntries(orgId, module);
+    const entry =
+      audit === undefined
+        ? undefined
+        : parse(
+            z.strictObject({
+              actorId: z.string().min(1),
+              operation: z.string().min(1),
+              targetIds: z.array(z.string().min(1)),
+              timestamp: z.iso.datetime(),
+              revision: z.int().positive(),
+            }),
+            { ...audit, revision: candidate.revision },
+          );
+    next.set(
+      module,
+      immutable(
+        structuredClone({
+          snapshot: candidate,
+          audit: entry ? [...entries, entry] : entries,
+        }),
+      ),
+    );
     this.snapshots.set(orgId, next);
     this.organizations.add(orgId);
     return effective;
@@ -192,7 +246,10 @@ export class InMemoryCustomizationAdapter implements CustomizationPort {
     }
     for (const [orgId, candidate] of candidates) {
       const modules = new Map(this.snapshots.get(orgId));
-      modules.set(baseline.apiName, candidate);
+      modules.set(baseline.apiName, {
+        snapshot: candidate,
+        audit: this.auditEntries(orgId, baseline.apiName),
+      });
       this.snapshots.set(orgId, modules);
     }
     this.baselines.set(baseline.apiName, immutable(baseline));
