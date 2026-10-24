@@ -1,7 +1,6 @@
 import { schemaRevision } from "@crm/core/customization";
 import { fixtureCustomizationPort } from "@crm/core/records/fixture/metadata-projection";
 import { notFound } from "next/navigation";
-import { PageHeader } from "@/components/shell/page-header";
 import { PageTitle } from "@/components/shell/page-title";
 import { getCustomizationService } from "@/lib/customization";
 import { getRecordService } from "@/lib/records";
@@ -64,7 +63,6 @@ export default async function ModuleFieldsPage({
   return (
     <>
       <PageTitle title={shellPageTitle.settings} />
-      <PageHeader description="Modules and Fields." />
       <FieldsScreen
         orgSlug={orgSlug}
         module={name}

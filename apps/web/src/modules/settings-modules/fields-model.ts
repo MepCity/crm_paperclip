@@ -105,12 +105,14 @@ export const TYPE_LABELS: Record<FieldDataType, string> = {
 };
 
 export function fieldRowsFromMetadata(meta: ModuleMetadata): FieldRow[] {
-  return meta.fields.map((f) => ({
-    apiName: f.apiName,
-    label: f.label,
-    dataType: TYPE_LABELS[f.dataType] ?? f.dataType,
-    custom: false,
-  }));
+  return meta.fields
+    .map((f) => ({
+      apiName: f.apiName,
+      label: f.label,
+      dataType: TYPE_LABELS[f.dataType] ?? f.dataType,
+      custom: false,
+    }))
+    .sort((a, b) => a.label.localeCompare(b.label, "en", { sensitivity: "base" }));
 }
 
 export function filterFieldRows(rows: readonly FieldRow[], query: string): FieldRow[] {

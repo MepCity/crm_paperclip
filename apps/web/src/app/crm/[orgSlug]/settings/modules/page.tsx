@@ -1,4 +1,3 @@
-import { PageHeader } from "@/components/shell/page-header";
 import { PageTitle } from "@/components/shell/page-title";
 import { requireOrgContext } from "@/lib/session";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
@@ -16,7 +15,6 @@ export default async function ModulesSettingsPage({
   return (
     <>
       <PageTitle title={shellPageTitle.settings} />
-      <PageHeader description="Modules and Fields." />
       <SettingsModulesScreen orgSlug={orgSlug} />
     </>
   );

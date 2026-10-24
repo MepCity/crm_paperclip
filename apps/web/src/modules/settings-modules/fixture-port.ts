@@ -2,6 +2,7 @@ import type { ModuleListPort, ModuleSummary } from "./port";
 
 const names: [string, string | null, boolean][] = [
   ["Home", null, true],
+  ["Workqueue", null, true],
   ["Leads", "Oct 14, 2026", true],
   ["Contacts", "Oct 14, 2026", true],
   ["Accounts", "Oct 14, 2026", true],

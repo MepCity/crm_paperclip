@@ -14,7 +14,9 @@ describe("SettingsModulesScreen", () => {
     await screen.findAllByText("Leads");
     const rows = screen.getAllByRole("row").slice(1);
     expect(rows[0]?.textContent).toContain("Home");
-    expect(rows[1]?.textContent).toContain("Leads");
+    expect(rows[1]?.textContent).toContain("Workqueue");
+    expect(rows[2]?.textContent).toContain("Leads");
+    expect(screen.getAllByTestId("status-info-icon")).toHaveLength(2);
     expect(screen.getByRole("tab", { name: "Modules" }).getAttribute("aria-selected")).toBe("true");
     expect(screen.getByRole("tab", { name: "Web Tabs" })).toHaveProperty("disabled", true);
     expect(screen.getByRole("button", { name: "Create New Module" })).toHaveProperty(
