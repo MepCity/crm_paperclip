@@ -51,6 +51,29 @@ describe("populated Assignment list (AL1–AL5)", () => {
   });
 });
 
+describe("Assignment list retry recovery (AL5)", () => {
+  it("re-reads the list from the retry link and recovers with rows", async () => {
+    let calls = 0;
+    const read = async () => {
+      calls += 1;
+      return calls === 1
+        ? ({ ok: false, error: { code: "unavailable" } } as const)
+        : port.list(ctx, { kind: "assignment", limit: 50 });
+    };
+    const first = await read();
+    const view = render(<AssignmentRulesScreen result={first} orgSlug="synthetic" />);
+    const retry = screen.getByRole("link", { name: "Try again" });
+    expect(retry.getAttribute("href")).toBe("/crm/synthetic/settings/assignment-rules");
+    // A full-page GET to the retry href re-runs the page's server read.
+    const second = await read();
+    view.unmount();
+    render(<AssignmentRulesScreen result={second} orgSlug="synthetic" />);
+    expect(calls).toBe(2);
+    expect(screen.queryByRole("link", { name: "Try again" })).toBeNull();
+    expect(screen.getByRole("link", { name: "Synthetic regional routing" })).toBeTruthy();
+  });
+});
+
 describe("Assignment detail (AD1–AD7)", () => {
   it("renders ordered entries, recipients, distribution, availability and fallback", async () => {
     const result = await port.get(ctx, { kind: "assignment", id: "synthetic-rule-1" });
