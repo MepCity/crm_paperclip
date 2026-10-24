@@ -30,10 +30,12 @@ export interface LayoutDefinition {
     columnCount: number;
     /** Array position is the ordering contract. Entries are stable field IDs. */
     columns: readonly (readonly string[])[];
+    /** Ordered membership, including fields without column placement. */
+    fields: readonly string[];
   }[];
 }
 
-/** View field references (including criteria and sort) use stable field IDs. */
+/** View references use stable field IDs, except declared external criteria names. */
 export interface SavedViewDefinition extends ListView {}
 
 export interface ModuleBaseline {
@@ -44,6 +46,8 @@ export interface ModuleBaseline {
   fields: readonly BaselineField[];
   layouts: readonly LayoutDefinition[];
   views: readonly SavedViewDefinition[];
+  /** API names allowed only in saved-view criteria, outside the field catalog. */
+  externalCriteriaFields: readonly string[];
   reservedApiNames: readonly string[];
   /** Explicit engine support, not permission to expose an editing UI. */
   customFieldTypes: readonly FieldDataType[];
@@ -72,6 +76,8 @@ export interface CustomizationPatch {
 }
 
 export interface EffectiveModuleDefinition {
+  /** Whether placement inherits the baseline, for legacy transport projection. */
+  inheritsBaselineLayouts: boolean;
   apiName: string;
   singularLabel: string;
   pluralLabel: string;
@@ -80,6 +86,8 @@ export interface EffectiveModuleDefinition {
   fields: readonly CustomizationField[];
   layouts: readonly LayoutDefinition[];
   views: readonly SavedViewDefinition[];
+  /** API names allowed only in saved-view criteria, outside the field catalog. */
+  externalCriteriaFields: readonly string[];
   /** Engine intersection only. The authorization service must narrow this further. */
   capabilities: Readonly<Record<string, boolean>>;
 }
