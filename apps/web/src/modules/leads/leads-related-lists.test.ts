@@ -12,8 +12,9 @@ describe("createLeadsRelatedLists", () => {
       "attachments",
       "emails",
       "campaigns",
+      "social",
     ]);
-    expect(lists.map((card) => card.order)).toEqual([0, 1, 2, 3, 4, 5]);
+    expect(lists.map((card) => card.order)).toEqual([0, 1, 2, 3, 4, 5, 6]);
 
     const [notes, openActivities, closedActivities] = lists;
     expect(notes).toBeDefined();
@@ -182,7 +183,9 @@ describe("createLeadsRelatedLists", () => {
         recordPath: () => "/crm/acme/leads/lead-test-1",
         definition: card,
       });
-      expect(renderedWithoutRecord).toBeUndefined();
+      // The Social card is static and renders without a record.
+      if (card.id === "social") expect(renderedWithoutRecord).toBeDefined();
+      else expect(renderedWithoutRecord).toBeUndefined();
     }
   });
 });
