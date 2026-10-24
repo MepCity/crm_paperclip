@@ -48,6 +48,8 @@ function metadata(): ModuleMetadata {
     { api_name: "Leads", singular_label: "Lead", plural_label: "Leads", business_card_fields: [] },
     [custom],
     {
+      id: "layout-default",
+      default: true,
       sections: [
         {
           display_label: "Custom Information",
