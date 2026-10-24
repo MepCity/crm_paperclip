@@ -102,7 +102,7 @@ Measured via GitHub Actions Jobs API timestamps for run `40083180630`:
 | # | Proposal | Est. saving | Risk |
 |---|---|---|---|
 | 1 | Publish per-file durations (vitest JSON + Playwright JSON) in the step summary, so the other items can be targeted | none directly; enables the rest | Very low |
-| 2 | Split `fast` unit/component tests into two parallel jobs (or vitest shards), as lint/typecheck and 7 min of tests run serially today | about 3 min on the p90 critical path (9.7 to about 6.5) | Low; one more runner per push |
+| 2 | Split `fast` unit/component tests into two parallel jobs (or vitest shards), as lint/typecheck and 7 min of tests run serially today | **Measured:** 2.9 min saved vs p90 (9.7 min baseline down to 6.8 min wall time, run 40128174309; fast aggregating job 34 s) | Implemented (MEP-1316) |
 | 3 | Rebalance e2e shards: shard 2 is 1.7 min slower than shard 4 | about 0.5 to 1 min on the critical path | Low; needs per-spec timings (item 1) |
 | 4 | Reuse the test database template between specs instead of re-creating it | unmeasured, likely 5 to 10% of the browser step | Medium; test isolation |
 | 5 | Skip the macOS geometry job for changes that touch no layout or CSS code | saves a macOS runner, about 3 min of cost, not critical path | Medium; a path filter can miss a layout-affecting change |
