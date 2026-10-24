@@ -53,7 +53,11 @@ function formatDate(iso: string, format: FormatOptions): string {
   } catch {
     const date = new Date(iso);
     if (Number.isNaN(date.getTime())) return "";
-    return date.toLocaleDateString(format.locale, { month: "short", day: "numeric", year: "numeric" });
+    return date.toLocaleDateString(format.locale, {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+    });
   }
 }
 

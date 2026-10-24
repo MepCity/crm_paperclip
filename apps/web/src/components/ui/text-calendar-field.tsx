@@ -5,11 +5,7 @@ import { parseDate } from "@internationalized/date";
 import { useEffect, useId, useRef, useState } from "react";
 import { Calendar, FieldError, Input, Label, Popover, TextField } from "react-aria-components";
 import { useFormat } from "@/lib/format-context";
-import {
-  calendarShapeToDisplayDate,
-  datePatternToPlaceholder,
-  displayDateToModelShape,
-} from "@/lib/records/calendar-date";
+import { calendarShapeToDisplayDate, displayDateToModelShape } from "@/lib/records/calendar-date";
 import { CalendarContent } from "./date-picker";
 import type { TextFieldProps } from "./text-field";
 

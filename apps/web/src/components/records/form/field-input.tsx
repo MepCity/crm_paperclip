@@ -27,7 +27,6 @@ import { useFormat } from "@/lib/format-context";
 import { numberInputLocale } from "@/lib/locale";
 import {
   calendarShapeToDisplayDate,
-  DATE_MASK_PLACEHOLDER,
   datePatternToPlaceholder,
   displayDateToModelShape,
 } from "@/lib/records/calendar-date";

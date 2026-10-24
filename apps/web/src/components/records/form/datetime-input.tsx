@@ -70,7 +70,9 @@ export function DateTimeInput({
         isInvalid={Boolean(errorMessage)}
         errorMessage={errorMessage}
         validationBehavior="aria"
-        onChange={(date) => update({ ...parts, date: displayDateToModelShape(date, pattern) ?? "" })}
+        onChange={(date) =>
+          update({ ...parts, date: displayDateToModelShape(date, pattern) ?? "" })
+        }
       />
       {dateOnly ? null : (
         <TextField

@@ -85,10 +85,7 @@ export function displayDateToModelShape(
 }
 
 /** `YYYY-MM-DD` formatted according to `pattern` (defaults to `dd.MM.yyyy`); anything else is shown as it came in. */
-export function calendarShapeToDisplayDate(
-  value: string,
-  pattern: string = "dd.MM.yyyy",
-): string {
+export function calendarShapeToDisplayDate(value: string, pattern: string = "dd.MM.yyyy"): string {
   const match = CALENDAR_SHAPE.exec(value);
   if (!match) return value;
   const [, year, month, day] = match;
