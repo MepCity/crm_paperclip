@@ -1496,3 +1496,16 @@ recapture. Analytics behaviour and the implementation gate remain unapproved.
 | RP-R2-03 | Dashboard list, scope and periods | Closed selector and displayed scope/period captions only | Access gap accepted; no safe existing-dashboard link exposed; no selection or preference changed |
 | RP-R2-04 | Analytics automatic-write boundary | R1 metadata PUT blocked; no R2 entry or repeat | U5 remains an accepted access gap; no re-entry, guard change or successful-initialization inference |
 | RP-R2-05 | Capture safety ledger | New capture: zero clicks/steps, seven blocked background requests; external visitor-trigger POST same count as R1 | MEP-1230: no new capture; bounded research closed. AC01–AC06 resting presentation only, incomplete initialization caveat |
+
+## Module 14 — Home and Workqueue (R1 research)
+
+Source: `research/specs/home-workqueue.md` (MEP-1241). Bounded read-only
+inventory, pending UI Lead approval; no implementation or module gate claimed.
+
+| # | Surface | Evidence / status | Remaining boundary |
+| --- | --- | --- | --- |
+| HW-01 | Current Home onboarding and shell | `m14r1-home-default`; S01–S47, H01–H09; compared with both earlier Home captures | U1: completed-onboarding dashboard, page switcher and widget empty states unobserved |
+| HW-02 | Workqueue welcome entry | `m14r1-workqueue-entry`; one existing navigation-link click; W01–W29 | U2/U6: modal left open; underlying controls partly occluded, destination completeness uncertified |
+| HW-03 | Queue sections, counts and Tasks fields | Screenshot fragments plus explicit export-only inventory; Tasks metadata cross-check | U4: zero badges are not empty tables; no queue, period, filter, sort or row action operated |
+| HW-04 | Capture safety | Both pre-capture Home gates passed; 4/6 blocked requests; no guard changes | U3: automatic user-preference PUT on Workqueue entry blocked; no retry or further capture |
+| HW-05 | First slice proposal | Local fixture-backed read-only Workqueue entry; reuse shell/list/detail components | Broader interactive queue and Home dashboard await evidence and approval; no implementation opened |
