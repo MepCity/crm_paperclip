@@ -164,7 +164,7 @@ export function WorkflowRulesListScreen({
 
         {/* Module Filter (WL6) */}
         <div className="flex items-center gap-2">
-          <label htmlFor="workflow-module-filter" className="text-sm font-medium text-text">
+          <label htmlFor="workflow-module-filter" className="text-sm font-semibold text-text">
             Filter by module:
           </label>
           <select
@@ -202,7 +202,7 @@ export function WorkflowRulesListScreen({
           className="rounded-md border border-border bg-surface-muted p-6 text-center"
         >
           <Icons.warning className="inline size-6 text-accent-orange mb-2" aria-hidden="true" />
-          <p className="text-md font-medium text-text">Access denied.</p>
+          <p className="text-md font-semibold text-text">Access denied.</p>
           <p className="text-sm text-text-muted mt-1">
             You do not have permission to view workflow rules.
           </p>
@@ -216,7 +216,7 @@ export function WorkflowRulesListScreen({
           className="rounded-md border border-border bg-surface-muted p-6 text-center"
         >
           <Icons.error className="inline size-6 text-accent-red mb-2" aria-hidden="true" />
-          <p className="text-md font-medium text-text">Workflow rules could not be loaded.</p>
+          <p className="text-md font-semibold text-text">Workflow rules could not be loaded.</p>
           <p className="text-sm text-text-muted mt-1">
             A temporary problem occurred while retrieving workflow rules.
           </p>
@@ -232,7 +232,7 @@ export function WorkflowRulesListScreen({
           data-testid="workflow-empty-state"
           className="rounded-md border border-dashed border-border p-12 text-center"
         >
-          <p className="text-md font-medium text-text">
+          <p className="text-md font-semibold text-text">
             {selectedModule === "all"
               ? "No workflow rules have been configured yet."
               : `No workflow rules found for module "${selectedModule}".`}
@@ -304,8 +304,8 @@ export function WorkflowRulesListScreen({
                       <span
                         className={
                           rule.enabled
-                            ? "inline-block text-xs font-medium text-accent-green"
-                            : "inline-block text-xs font-medium text-text-muted"
+                            ? "inline-block text-xs font-semibold text-accent-green"
+                            : "inline-block text-xs font-semibold text-text-muted"
                         }
                       >
                         {rule.enabled ? "Enabled" : "Disabled"}

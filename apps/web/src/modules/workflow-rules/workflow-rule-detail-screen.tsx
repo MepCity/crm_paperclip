@@ -80,7 +80,7 @@ export function WorkflowRuleDetailScreen({
       <div className="mb-6">
         <Link
           href={listHref}
-          className="inline-flex items-center gap-1.5 text-sm font-medium text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary"
+          className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <Icons.chevronLeft className="size-4" aria-hidden="true" />
           <span>Back to Workflow Rules</span>
@@ -105,7 +105,7 @@ export function WorkflowRuleDetailScreen({
           className="rounded-md border border-border bg-surface-muted p-6 text-center"
         >
           <Icons.warning className="inline size-6 text-accent-orange mb-2" aria-hidden="true" />
-          <p className="text-md font-medium text-text">Access denied.</p>
+          <p className="text-md font-semibold text-text">Access denied.</p>
           <p className="text-sm text-text-muted mt-1">
             You do not have permission to view this workflow rule.
           </p>
@@ -119,7 +119,7 @@ export function WorkflowRuleDetailScreen({
           className="rounded-md border border-border bg-surface-muted p-6 text-center"
         >
           <Icons.error className="inline size-6 text-text-muted mb-2" aria-hidden="true" />
-          <p className="text-md font-medium text-text">Workflow rule not found.</p>
+          <p className="text-md font-semibold text-text">Workflow rule not found.</p>
           <p className="text-sm text-text-muted mt-1">
             The requested workflow rule does not exist or may have been removed.
           </p>
@@ -137,7 +137,7 @@ export function WorkflowRuleDetailScreen({
           className="rounded-md border border-border bg-surface-muted p-6 text-center"
         >
           <Icons.error className="inline size-6 text-accent-red mb-2" aria-hidden="true" />
-          <p className="text-md font-medium text-text">
+          <p className="text-md font-semibold text-text">
             Workflow rule details could not be loaded.
           </p>
           <p className="text-sm text-text-muted mt-1">
@@ -157,7 +157,7 @@ export function WorkflowRuleDetailScreen({
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <h1 className="text-2xl font-bold text-text">{result.value.name}</h1>
               <div className="flex items-center gap-3">
-                <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-medium text-text">
+                <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-semibold text-text">
                   Module: {result.value.module}
                 </span>
                 <span
@@ -180,8 +180,8 @@ export function WorkflowRuleDetailScreen({
           <div className="rounded-lg border border-border bg-surface-muted/30 p-5">
             <h2 className="text-base font-semibold text-text mb-2">Trigger</h2>
             <div className="text-sm text-text">
-              <span className="font-medium text-text-muted mr-2">Execution basis:</span>
-              <span className="font-medium">{formatTrigger(result.value.trigger)}</span>
+              <span className="font-semibold text-text-muted mr-2">Execution basis:</span>
+              <span>{formatTrigger(result.value.trigger)}</span>
             </div>
           </div>
 
@@ -207,7 +207,7 @@ export function WorkflowRuleDetailScreen({
 
                       {/* Condition criteria */}
                       <div className="text-sm">
-                        <span className="font-medium text-text-muted mr-2">Criteria:</span>
+                        <span className="font-semibold text-text-muted mr-2">Criteria:</span>
                         <code className="rounded bg-surface-muted px-2 py-1 text-xs text-text font-mono">
                           {formatCondition(branch.condition)}
                         </code>
@@ -227,7 +227,7 @@ export function WorkflowRuleDetailScreen({
                                 key={action.id}
                                 className="flex items-center justify-between px-3 py-2 text-xs"
                               >
-                                <span className="font-medium text-text">
+                                <span className="font-semibold text-text">
                                   {formatActionKind(action.kind)}
                                 </span>
                                 <span className="text-text-muted font-mono">
@@ -253,7 +253,7 @@ export function WorkflowRuleDetailScreen({
                                 key={sched.id}
                                 className="rounded-md border border-border bg-surface-muted/20 p-3 space-y-2"
                               >
-                                <div className="text-xs font-medium text-text">
+                                <div className="text-xs font-semibold text-text">
                                   <span className="text-text-muted mr-1.5">Timing:</span>
                                   <span>{formatTiming(sched.timing)}</span>
                                 </div>
@@ -263,7 +263,7 @@ export function WorkflowRuleDetailScreen({
                                       key={act.id}
                                       className="flex items-center justify-between px-3 py-1.5 text-xs"
                                     >
-                                      <span className="font-medium text-text">
+                                      <span className="font-semibold text-text">
                                         {formatActionKind(act.kind)}
                                       </span>
                                       <span className="text-text-muted font-mono">
