@@ -1445,6 +1445,59 @@ implemented and QA-verified as part of MEP-930/MEP-995/MEP-996. All write flows
 (upload, new folder, rename, move, Trash, share, versions, record-attach) are
 deferred pending CTO resolution of ADR 0008 open questions U1–U13. The gate
 will not be marked complete until those flows are implemented and QA-verified.
+
+## Module 10 — Email and calendar
+
+Specs: `research/specs/email-inbox.md`, `email-message.md`,
+`email-record-detail.md`, `email-settings.md`, `email-templates.md`,
+`calendar.md`, `calendar-settings.md`, `email-calendar-metadata.md` and
+`email-calendar-rule-check.md` (all under `research/specs/`). ADR 0009 records
+the real-mail direction; `research/module-10-write-only-flows.md` records
+unobserved write behaviour. Implementation umbrella: MEP-1036. This index
+separates delivered UI and process-local services from live-provider and
+persistence readiness; it does not certify full operational parity.
+
+### Delivered scope — done
+
+| # | Capability | Spec section | Delivery / evidence |
+| --- | --- | --- | --- |
+| EC-01 | Emails tab: folder navigation, conversation list, search and loading, empty, disconnected and error states | `email-inbox.md` › Layout, Flows and empty/error states | MEP-1050 (screen), MEP-1155 (HTTP loader); `apps/web/e2e/emails-inbox.spec.ts`. Reference inbox access was denied; this is the documented/fixture implementation, not a captured populated-inbox match. |
+| EC-02 | Message/conversation reader with participant details, message body and action entry points | `email-message.md` › Layout, Control inventory, Flows and empty/error states | MEP-1050; `apps/web/e2e/emails-inbox.spec.ts`. Documentation baseline; exact reply quoting and provider results remain open. |
+| EC-03 | Shared compose window with recipient, subject and body inputs; HTTP adapter and authenticated mailbox selection | `email-message.md` › Fields, Actions; write-only register W1–W4 | MEP-1094 (window), MEP-1093 (authorized process-local write routes), MEP-1219 (mailbox selector); `modules/emails/compose/mail-compose.test.tsx` and `http-port.test.ts` under `apps/web/src/`. Queue acceptance does not mean delivery. |
+| EC-04 | Emails related card on Leads, Contacts, Accounts and Deals: Mails/Drafts/Scheduled scope, empty states and record-scoped mail reads | `email-record-detail.md` › Control inventory, Fields and metadata, Flows and empty/error states | MEP-1049 (card), MEP-1106 (loader), MEP-1108 (record reads), MEP-1143 / MEP-1218 (port wiring continuation), MEP-1232 (scope and guard coverage); `apps/web/e2e/record-emails-card.spec.ts`. Automatic address matching does not include Deals. |
+| EC-05 | Native Events calendar in Day, Week and Month views, date navigation and event presentation | `calendar.md` › Layout, Control inventory, Documented views | MEP-1062 (views), MEP-1170 (range filtering and slot prefill), under MEP-1036; `apps/web/e2e/calendar.spec.ts`. Day resting evidence and documented alternative views are distinguished in the spec; external sync is not claimed. |
+| EC-06 | Read-only email settings pages with resting controls and explicit setup/access gaps | `email-settings.md` › Final disposition — MEP-1160 accepted scope closure | MEP-1187; `apps/web/e2e/settings-email.spec.ts`. Scope includes Compose, sharing, organization addresses, custom fields, Parser access-gap and BCC resting surfaces; mailbox setup stays disabled; unobserved pages and settings writes remain gaps. |
+| EC-07 | Email templates list, folders, module selector, list controls and later-module entries | `email-templates.md` › Layout, Control inventory, Flows and states | MEP-1080; `apps/web/e2e/settings-email-templates.spec.ts`. Template authoring and saved preferences are not delivered by this list. |
+| EC-08 | Calendar Booking settings entry and business-hours prerequisite dialog | `calendar-settings.md` › Layout and observed prerequisite, Implementation boundary and gate questions | MEP-1121 (MEP-1036 child); `apps/web/e2e/settings-calendar-booking.spec.ts`. The prerequisite is delivered; booking administration and public reservations are not certified. |
+
+### Write flows and operational readiness — open / deferred
+
+Core helpers and process-local routes delivered under MEP-1036/MEP-1093 are
+partial building blocks. The rows below retain the missing end-to-end flows
+and unresolved observations; they do not imply that every underlying helper
+is absent. W-numbers refer to `research/module-10-write-only-flows.md`.
+
+| Flow / gap | Open decision or delivery boundary | Spec / evidence |
+| --- | --- | --- |
+| Durable mailbox, message, draft, outbox and calendar storage; migrations and RLS | ADR 0002 record-storage decision remains separate; accepted ADR 0012 foundation does not implement any mail migration or adapter. Domain persistence and runtime-role verification still require reviewed implementation under MEP-1036. | ADR 0009 trust boundary; ADR 0012 §§2–7; `apps/web/src/server/mail/README.md` (process-local state) |
+| Live Gmail smoke and any reference write observation | ADR 0009 Q12: final action list and test window require board approval through MEP-1239; no live check or reference write is authorized by this checklist. Q13/Q14 safety conditions and the strict read-only rule remain in force. | ADR 0009 › Topic 8, Board questions; `email-calendar-rule-check.md`; W7/W8 and N1–N4 |
+| Actual send, receive, draft lifecycle, scheduled delivery, reply/reply-all/forward and attachment transfer | MEP-1093/MEP-1219 provide staging routes and selection only; durable outbox, connected-account provisioning, sender/worker wiring and provider delivery remain open under MEP-1036. Literal validation, quote format and result states remain research gaps. | W1–W4, W7/W8, W18; `email-message.md`; mail HTTP adapter README |
+| Invitation delivery, RSVP, recurring-event write UI, drag/resize and external calendar synchronization | ADR 0009 calendar direction and W5/W6/W10/W17 do not certify these end-to-end flows; MEP-1062 delivers native views. Provider conflicts, deletion propagation and reference-specific RSVP vocabulary remain open at MEP-1239. | `calendar.md` › Open questions; `calendar-settings.md` › Documented scope and access gaps |
+| Settings changes: signatures, mailbox connection, sharing preferences, organization addresses, custom fields, parser, BCC configuration, deliverability, tracking and unsubscribe | MEP-1187 is read-only UI. MEP-1160 closes further R5 capture scope with accepted gaps; it does not supply missing settings forms, saves or effects. BCC page-load side effects remain an explicit uncertainty. | `email-settings.md` › Final disposition; write-only register R5 and W7/W8/W12/W14/W15/W19 |
+| Template create/edit/clone/delete, merge-field editor/preview, attachments, folder sharing, favorites and reorder persistence | MEP-1080 delivers the list only; W9/N4 and R7 observation limits remain open for MEP-1239. | `email-templates.md` › Open questions; write-only register §9 |
+| Business/personal hours, calendar defaults, meeting-provider setup, booking create/edit/publish and public reservations | MEP-1043 accepts documentation-only R6 closure; MEP-1121 delivers the prerequisite only. Post-configuration screens, defaults and validation remain gaps for MEP-1239. | `calendar-settings.md` › Implementation boundary and gate questions; write-only register R6 |
+| Notify Email (CSV-09), tracking/bounce/unsubscribe results, mass email/mail merge and complete record-link/sharing behaviour | ADR 0009 and W11–W15/W19 retain the missing integrated flows and reference result-state questions. MEP-1093 supplies bounded manual link/sharing routes, not full UI/provider parity. Workflow-triggered mail W16 belongs to M12. | Write-only register W11–W16/W19; `email-record-detail.md` › Open questions and gate handoff |
+
+### Module 10 gate
+
+Board gate MEP-1239 remains **open**. Rows EC-01–EC-08 record delivered
+surfaces and their implementation issues, with the access and documentation
+limits preserved. The gate must report the operational and write-flow gaps
+above, distinguish synthetic/process-local checks from live Gmail evidence,
+and obtain the pending board decisions before claiming full readiness.
+No reference CRM access or capture was performed for this checklist update
+(MEP-1265).
+
 ## Module 12 — Automation
 
 Research: `research/specs/automation-rules.md` (R1 approved; R2 evidence retained;
@@ -1522,3 +1575,16 @@ inventory, pending UI Lead approval; no implementation or module gate claimed.
 | HW-03 | Queue sections, counts and Tasks fields | Screenshot fragments plus explicit export-only inventory; Tasks metadata cross-check | U4: zero badges are not empty tables; no queue, period, filter, sort or row action operated |
 | HW-04 | Capture safety | Both pre-capture Home gates passed; 4/6 blocked requests; no guard changes | U3: automatic user-preference PUT on Workqueue entry blocked; no retry or further capture |
 | HW-05 | First slice proposal | Local fixture-backed read-only Workqueue entry; reuse shell/list/detail components | Broader interactive queue and Home dashboard await evidence and approval; no implementation opened |
+
+## Module 15 — Visits and Social (R1 research)
+
+Source: `research/specs/visits-social.md` (MEP-1257). Bounded read-only
+inventory pending UI Lead approval; no implementation or module gate claimed.
+
+| # | Surface | Evidence / status | Remaining boundary |
+| --- | --- | --- | --- |
+| VS-01 | Visits introduction and shared shell | `m15r1-visits-entry`; S01–S54, V01–V09; painted tracking introduction | U1/U2: enabled list, columns, filters and record Visits cards unobserved |
+| VS-02 | Social disconnected introduction | `m15r1-social-entry`; SO01 and shared shell; no streams or tabs | U3/U4: external account/brand setup and connected states unobserved |
+| VS-03 | Historical Contact Social card and Lead rail entry | `m2d2-card-invoices`, `leads-detail`; RC01–RC04, RL01 | U5: dated evidence; Lead card export-only; association never attempted |
+| VS-04 | Safety and evidence completeness | Both new paint gates passed; zero clicks/steps; 3/2 background POSTs blocked | Shell diagnostics retained; no setup, preference, tracking or account writes allowed |
+| VS-05 | First slice proposal | Fixture-backed disconnected entry and optional existing Contact Social card | Approval required; no fabricated populated schema or external integration |

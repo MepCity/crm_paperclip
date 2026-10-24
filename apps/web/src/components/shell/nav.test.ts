@@ -57,13 +57,18 @@ describe("navLinkIconClassName", () => {
 
 describe("shellNav", () => {
   it("defines top-level pinned links and teamspace section structure", () => {
-    expect(shellNav.links.map((link) => link.id)).toEqual(["home", "reports"]);
+    expect(shellNav.links.map((link) => link.id)).toEqual(["home", "reports", "analytics"]);
     const reportsLink = shellNav.links.find((link) => link.id === "reports");
     expect(reportsLink?.href("acme")).toBe("/crm/acme/tab/Reports");
     if (reportsLink) {
       expect(isNavLinkActive(reportsLink, "acme", "/crm/acme/tab/Reports/sample-report-1")).toBe(
         true,
       );
+    }
+    const analyticsLink = shellNav.links.find((link) => link.id === "analytics");
+    expect(analyticsLink?.href("acme")).toBe("/crm/acme/tab/Dashboards");
+    if (analyticsLink) {
+      expect(isNavLinkActive(analyticsLink, "acme", "/crm/acme/tab/Dashboards")).toBe(true);
     }
     const homeLink = shellNav.links[0];
     expect(homeLink).toBeDefined();
