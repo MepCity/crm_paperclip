@@ -8,6 +8,7 @@ import {
   sendFieldCommand,
   withFieldHidden,
   withFieldPlaced,
+  withFieldRemoved,
   withFieldShown,
 } from "./fields-api";
 import {
@@ -156,7 +157,13 @@ export function useFieldEditor(orgSlug: string, module: string, data: FieldEdito
             disabled={busy}
             aria-label={`Retire ${row.label}`}
             onClick={() =>
-              run(() => send("DELETE", "fields", { type: "field.retire", fieldId: id }))
+              run(() =>
+                send("DELETE", "fields", {
+                  type: "field.retire",
+                  fieldId: id,
+                  layout: withFieldRemoved(data.layout, id),
+                }),
+              )
             }
           >
             Retire
@@ -187,11 +194,17 @@ export function useFieldEditor(orgSlug: string, module: string, data: FieldEdito
               className={button}
               disabled={busy}
               aria-label={`Restore ${r.label}`}
-              onClick={() =>
-                r.id
-                  ? run(() => send("PATCH", "fields", { type: "field.restore", fieldId: r.id }))
-                  : undefined
-              }
+              onClick={() => {
+                const rid = r.id;
+                if (!rid) return;
+                run(() =>
+                  send("PATCH", "fields", {
+                    type: "field.restore",
+                    fieldId: rid,
+                    layout: withFieldPlaced(data.layout, rid),
+                  }),
+                );
+              }}
             >
               Restore
             </button>

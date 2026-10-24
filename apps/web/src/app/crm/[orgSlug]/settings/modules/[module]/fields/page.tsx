@@ -1,10 +1,10 @@
 import { schemaRevision } from "@crm/core/customization";
-import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { fixtureCustomizationPort } from "@crm/core/records/fixture/metadata-projection";
 import { notFound } from "next/navigation";
 import { PageHeader } from "@/components/shell/page-header";
 import { PageTitle } from "@/components/shell/page-title";
 import { getCustomizationService } from "@/lib/customization";
+import { getRecordService } from "@/lib/records";
 import { requireOrgContext } from "@/lib/session";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import type { FieldEditorData } from "@/modules/settings-modules/fields-editor";
@@ -27,7 +27,7 @@ export default async function ModuleFieldsPage({
   const ctx = await requireOrgContext(orgSlug);
   const name = decodeURIComponent(module);
   if (!isAllowedSettingsModule(name)) notFound();
-  const meta = await createFixtureRecordService(ctx).getModule(name);
+  const meta = await getRecordService(ctx).getModule(name);
   let editor: FieldEditorData | undefined;
   let editorRows: FieldRow[] | undefined;
   if (getCustomizationService(ctx).capabilities(name).fields) {
@@ -49,7 +49,15 @@ export default async function ModuleFieldsPage({
       editor = {
         revision: schemaRevision(effective),
         layout,
-        retired: effective.fields.filter((f) => f.lifecycle === "retired").map(row),
+        retired: fixtureCustomizationPort()
+          .retiredFields(ctx.orgId, name)
+          .map((f) => ({
+            id: f.id,
+            apiName: f.apiName,
+            label: f.label,
+            dataType: typeLabel(f.dataType),
+            custom: true,
+          })),
       };
     }
   }

@@ -100,3 +100,15 @@ export function withFieldShown(layout: LayoutDefinition, id: string): LayoutDefi
   const index = layout.sections.findIndex((s) => s.fields.includes(id));
   return withFieldPlaced(layout, id, index === -1 ? layout.sections.length - 1 : index);
 }
+
+/** Drops a field from both membership and columns (required before retiring it). */
+export function withFieldRemoved(layout: LayoutDefinition, id: string): LayoutDefinition {
+  return {
+    ...layout,
+    sections: layout.sections.map((section) => ({
+      ...section,
+      fields: section.fields.filter((v) => v !== id),
+      columns: section.columns.map((column) => column.filter((v) => v !== id)),
+    })),
+  };
+}

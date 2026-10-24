@@ -6,11 +6,16 @@ import { fixtureCustomizationPort } from "@crm/core/records/fixture/metadata-pro
 export function customizationEditingEnabled(): boolean {
   return process.env.NODE_ENV !== "production" && process.env.MEP_EPHEMERAL_CUSTOMIZATION === "1";
 }
-let coordinator: InMemorySchemaCoordinator | undefined;
+// Shared across development bundles (page and route modules load separately).
+const runtime = globalThis as typeof globalThis & {
+  __crmCustomizationCoordinator?: InMemorySchemaCoordinator;
+};
 export function getCustomizationCoordinator(): InMemorySchemaCoordinator | undefined {
   if (!customizationEditingEnabled()) return undefined;
-  coordinator ??= new InMemorySchemaCoordinator(fixtureCustomizationPort());
-  return coordinator;
+  runtime.__crmCustomizationCoordinator ??= new InMemorySchemaCoordinator(
+    fixtureCustomizationPort(),
+  );
+  return runtime.__crmCustomizationCoordinator;
 }
 export function getCustomizationService(ctx: OrgContext): CustomizationService {
   return new CustomizationService(ctx, fixtureCustomizationPort(), customizationEditingEnabled());
