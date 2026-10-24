@@ -311,7 +311,9 @@ function ModuleListScreenLoaded({
 
   const viewsQuery = useViews(config.module);
   const moduleQuery = useModule(config.module);
-  const projectionQuery = useModuleProjection(config.module);
+  const projectionQuery = useModuleProjection(config.module, {
+    enabled: Boolean(customViewModal?.open && isAdmin),
+  });
   const viewQuery = useView(config.module, viewId);
   const users = useUsers();
   const service = useClientRecordService();
