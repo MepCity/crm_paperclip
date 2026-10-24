@@ -28,14 +28,14 @@ describe("Report detail", () => {
     }
     expect(screen.getByTestId("filter-active-indicator")).toBeTruthy();
     expect(screen.getByText(/^Updated/)).toBeTruthy();
-    const table = screen.getByRole("table", { name: "Report results" });
+    const table = screen.getByRole("table");
     expect(within(table).getAllByRole("columnheader")).toHaveLength(9);
     expect(screen.getByText("No Data Found")).toBeTruthy();
   });
 
   it("renders populated rows from fixture data", async () => {
     render(<ReportDetailScreen orgSlug="demo" reportId="sample-report-1" />);
-    const table = await screen.findByRole("table", { name: "Report results" });
+    const table = await screen.findByRole("table");
     expect(within(table).getAllByRole("row")).toHaveLength(3);
     expect(screen.queryByText("No Data Found")).toBeNull();
   });
@@ -49,7 +49,7 @@ describe("Report detail", () => {
         port={{ ...fixtureReportsPort, getReport }}
       />,
     );
-    await screen.findByRole("table", { name: "Report results" });
+    await screen.findByRole("table");
     await userEvent.setup().click(screen.getByRole("button", { name: "Refresh report" }));
     expect(getReport).toHaveBeenCalledTimes(2);
   });

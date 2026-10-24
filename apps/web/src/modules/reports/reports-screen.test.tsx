@@ -10,7 +10,7 @@ afterEach(cleanup);
 describe("Reports landing", () => {
   it("renders thirteen synthetic definitions with captured columns and missing-value dashes", async () => {
     render(<ReportsScreen orgSlug="demo" />);
-    const table = await screen.findByRole("table", { name: "Report definitions" });
+    const table = await screen.findByRole("table");
     expect(within(table).getAllByRole("row")).toHaveLength(14);
     for (const name of [
       "Report Name",
@@ -74,7 +74,7 @@ describe("Reports landing", () => {
   it("renders an inert R08 row actions button for every report with hover and focus visibility styles", async () => {
     const user = userEvent.setup();
     render(<ReportsScreen orgSlug="demo" />);
-    const table = await screen.findByRole("table", { name: "Report definitions" });
+    const table = await screen.findByRole("table");
     const reports = await fixtureReportsPort.listReports();
 
     const dataRows = within(table).getAllByRole("row").slice(1);
@@ -114,5 +114,17 @@ describe("Reports landing", () => {
     );
     expect((await screen.findByRole("alert")).textContent).toBe("Reports could not be loaded.");
     expect(screen.queryByRole("table")).toBeNull();
+  });
+});
+
+describe("Reports a11y semantics", () => {
+  it("explains unavailable controls and leaves tables unlabeled", async () => {
+    render(<ReportsScreen orgSlug="demo" />);
+    const table = await screen.findByRole("table");
+    expect(table.getAttribute("aria-label")).toBeNull();
+    const create = screen.getByRole("button", { name: "Create Report" });
+    expect(create.getAttribute("aria-disabled")).toBe("true");
+    const note = document.getElementById(create.getAttribute("aria-describedby") ?? "");
+    expect(note?.textContent).toContain("Not available");
   });
 });

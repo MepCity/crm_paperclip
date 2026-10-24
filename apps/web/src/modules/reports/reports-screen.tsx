@@ -44,11 +44,15 @@ export function ReportsScreen({
 
   return (
     <section aria-label="Reports" className="min-h-full bg-bg p-3 text-md text-text">
+      <span id="reports-unavailable" className="sr-only">
+        Not available in this read-only view.
+      </span>
       <div className="flex flex-wrap items-center justify-between gap-4 pb-3">
         <Button
           variant="recordSelector"
           aria-label="All Reports"
           aria-disabled="true"
+          aria-describedby="reports-unavailable"
           className="gap-4"
         >
           All Reports <Icons.chevronDown className="size-4" aria-hidden />
@@ -65,10 +69,19 @@ export function ReportsScreen({
               prefix={<Icons.filterSearch className="size-4" aria-hidden />}
             />
           </div>
-          <Button variant="recordPrimary" aria-disabled="true">
+          <Button
+            variant="recordPrimary"
+            aria-disabled="true"
+            aria-describedby="reports-unavailable"
+          >
             Create Report
           </Button>
-          <Button variant="icon" aria-label="Reports help" aria-disabled="true">
+          <Button
+            variant="icon"
+            aria-label="Reports help"
+            aria-disabled="true"
+            aria-describedby="reports-unavailable"
+          >
             <Icons.info className="size-4" aria-hidden />
           </Button>
         </div>
@@ -77,10 +90,7 @@ export function ReportsScreen({
       {status === "error" && <p role="alert">Reports could not be loaded.</p>}
       {status === "ready" && (
         <div className="overflow-x-auto rounded-xl bg-surface">
-          <table
-            aria-label="Report definitions"
-            className="w-full table-fixed border-collapse text-left"
-          >
+          <table className="w-full table-fixed border-collapse text-left">
             <colgroup>
               <col className="w-14" />
               <col className="w-[29%]" />
@@ -119,6 +129,7 @@ export function ReportsScreen({
                         size="compact"
                         aria-label={`Favorite ${report.name}`}
                         aria-disabled="true"
+                        aria-describedby="reports-unavailable"
                         className="text-text-muted"
                       >
                         <span aria-hidden>☆</span>
@@ -135,6 +146,7 @@ export function ReportsScreen({
                         size="compact"
                         aria-label={`Report actions: ${report.name}`}
                         aria-disabled="true"
+                        aria-describedby="reports-unavailable"
                         className="shrink-0 text-text-muted opacity-0 group-hover:opacity-100 group-focus-within:opacity-100 focus:opacity-100"
                       >
                         <Icons.ellipsis className="size-4" aria-hidden />

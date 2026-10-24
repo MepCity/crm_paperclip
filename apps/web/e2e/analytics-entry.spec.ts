@@ -29,6 +29,9 @@ test("Analytics entry: record-backed overview dashboard, toolbar, empty target s
   );
   await expect(page.getByLabel("Scope: All Users")).toContainText("All Users");
 
+  await expect(page.getByRole("button", { name: "Add Component" })).toHaveAccessibleDescription(
+    /Not available/,
+  );
   const refreshBtn = page.getByRole("button", { name: "Refresh all components" });
   await expect(refreshBtn).toBeVisible();
 
