@@ -112,7 +112,7 @@ export function LayoutEditor({
             type="button"
             onClick={onCancel}
             disabled={saving}
-            className="rounded-md border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-surface-muted disabled:opacity-50"
+            className="rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-text hover:bg-surface-muted disabled:opacity-50"
           >
             Cancel
           </button>
@@ -135,7 +135,7 @@ export function LayoutEditor({
         >
           <AlertCircle className="size-5 shrink-0" aria-hidden="true" />
           <div className="flex-1">
-            <p className="font-medium">{error.message}</p>
+            <p className="font-semibold">{error.message}</p>
             {error.stale ? (
               <p className="mt-1 text-xs opacity-90">
                 Your unsaved changes in this editor are preserved. When ready, click &quot;Save
@@ -152,7 +152,7 @@ export function LayoutEditor({
           className="flex items-center gap-2.5 rounded-lg border border-success/30 bg-success/10 p-4 text-sm text-success"
         >
           <CheckCircle2 className="size-5 shrink-0" aria-hidden="true" />
-          <p className="font-medium">{success}</p>
+          <p className="font-semibold">{success}</p>
         </div>
       ) : null}
 
@@ -166,7 +166,7 @@ export function LayoutEditor({
               <button
                 type="button"
                 onClick={() => setAddingSection(true)}
-                className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-medium text-text hover:bg-surface-muted"
+                className="flex items-center gap-1.5 rounded-md border border-border px-3 py-1.5 text-sm font-semibold text-text hover:bg-surface-muted"
                 aria-label="Add Section"
               >
                 <Plus className="size-4" aria-hidden="true" />
@@ -220,7 +220,7 @@ export function LayoutEditor({
                       setAddingSection(false);
                       setNewSectionLabel("");
                     }}
-                    className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-medium text-text hover:bg-surface-muted"
+                    className="rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-text hover:bg-surface-muted"
                   >
                     Cancel
                   </button>
@@ -262,7 +262,7 @@ export function LayoutEditor({
                         }
                         aria-label={`Set ${section.label} to 1 column`}
                         aria-pressed={section.columnCount === 1}
-                        className={`rounded px-2 py-1 text-xs font-medium ${section.columnCount === 1 ? "bg-primary text-primary-text" : "text-text-muted hover:text-text"}`}
+                        className={`rounded px-2 py-1 text-xs font-semibold ${section.columnCount === 1 ? "bg-primary text-primary-text" : "text-text-muted hover:text-text"}`}
                       >
                         1 Col
                       </button>
@@ -273,7 +273,7 @@ export function LayoutEditor({
                         }
                         aria-label={`Set ${section.label} to 2 columns`}
                         aria-pressed={section.columnCount === 2}
-                        className={`rounded px-2 py-1 text-xs font-medium ${section.columnCount === 2 ? "bg-primary text-primary-text" : "text-text-muted hover:text-text"}`}
+                        className={`rounded px-2 py-1 text-xs font-semibold ${section.columnCount === 2 ? "bg-primary text-primary-text" : "text-text-muted hover:text-text"}`}
                       >
                         <Columns2 className="inline size-3.5 mr-1" aria-hidden="true" />2 Col
                       </button>
@@ -346,7 +346,7 @@ export function LayoutEditor({
                             >
                               <div className="min-w-0 flex-1 pr-2">
                                 <div className="flex items-center gap-1.5 flex-wrap">
-                                  <span className="truncate text-xs font-medium text-text">
+                                  <span className="truncate text-xs font-semibold text-text">
                                     {fieldLabel}
                                   </span>
                                   {isRequired ? (
@@ -470,7 +470,7 @@ export function LayoutEditor({
                 >
                   <div className="min-w-0 flex-1 pr-2">
                     <div className="flex items-center gap-1.5 flex-wrap">
-                      <span className="font-medium text-text truncate">{field.label}</span>
+                      <span className="font-semibold text-text truncate">{field.label}</span>
                       {field.required ? (
                         <span className="rounded bg-error/10 px-1 py-0.2 text-[10px] font-semibold text-error">
                           Required
@@ -491,7 +491,7 @@ export function LayoutEditor({
                       }
                     }}
                     aria-label={`Add ${field.label} to layout`}
-                    className="flex items-center gap-1 rounded bg-surface border border-border px-2 py-1 text-xs font-medium text-text hover:bg-surface-muted hover:border-primary"
+                    className="flex items-center gap-1 rounded bg-surface border border-border px-2 py-1 text-xs font-semibold text-text hover:bg-surface-muted hover:border-primary"
                   >
                     <Plus className="size-3" aria-hidden="true" />
                     Add
