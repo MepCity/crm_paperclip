@@ -19,7 +19,7 @@ export default defineConfig({
   // Several agents share one machine; cap browsers per run. Override with MEP_TEST_WORKERS.
   workers: Number(process.env.MEP_TEST_WORKERS ?? 2),
   forbidOnly: Boolean(process.env.CI),
-  reporter: [["list"]],
+  reporter: process.env.CI ? [["list"], ["github"], ["html"], ["json"]] : [["list"]],
   outputDir: "./test-results",
   use: {
     baseURL: `http://127.0.0.1:${port}`,

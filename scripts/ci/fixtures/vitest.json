@@ -1,0 +1,16 @@
+{
+  "testResults": [
+    {
+      "name": "scripts/slow.test.ts",
+      "startTime": 100,
+      "endTime": 3100,
+      "assertionResults": [{ "status": "passed" }, { "status": "pending" }]
+    },
+    {
+      "name": "scripts/fast.test.ts",
+      "startTime": 100,
+      "endTime": 600,
+      "assertionResults": [{ "status": "failed" }]
+    }
+  ]
+}
