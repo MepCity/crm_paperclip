@@ -6,6 +6,7 @@ API error codec (`400` validation/conflict, `401` session, `403` ownership,
 
 | Method | Path | Request | Response `data` |
 | --- | --- | --- | --- |
+| GET | `/crm/v2.2/mail/mailboxes` | None (query ignored) | `[{ id, address, name? }]` |
 | POST | `/crm/v2.2/mail/messages` | Core `composeMailSchema` fields, replacing `bodyRef` with required plain-text `body` | `{ id, status, scheduledAt }` |
 | PATCH | `/crm/v2.2/mail/messages/{id}/sharing` | `{ shared: boolean }` | `{ id, shared }` |
 | POST | `/crm/v2.2/mail/messages/{id}/links` | `{ module, recordId }` | `{ id, module, recordId, linked: true }` |
@@ -71,3 +72,24 @@ and the organization-bound factory exposes the same operation. Both use the
 same response guards as folder reads. Deal links are supported manually;
 automatic participant address matching stays limited to leads, contacts and
 accounts under ADR 0009.
+
+## Mailbox selector
+
+`GET /crm/v2.2/mail/mailboxes` returns the authenticated actor's own connected
+mailboxes for compose selection:
+
+- Authentication and same-origin required; `X-CRM-ORG` required; responses are
+  not cached (`Cache-Control: no-store`). Query parameters are ignored and not echoed.
+- Returns `200 { data: [{ id, address, name? }] }`, sorted by `id` ascending.
+- Selection matches the compose ownership rule: `organizationId === ctx.orgId && ownerUserId === ctx.userId && status === "connected"`.
+- Disconnected, error, other users' (strictly no admin bypass), and other tenants'
+  mailboxes are never listed.
+- `address` and `name` are derived server-side from the authenticated actor's own
+  user record (email, display name) via session/membership lookup; mailbox rows store
+  no address column and require no schema changes. If the actor has no usable email,
+  an empty list `{ data: [] }` is returned.
+- Exact key set: never returns `ownerUserId`, `organizationId`, `provider`,
+  `credentialRef`, `lastSyncAt`, `lastError`, sync settings or any provider identifier.
+- The route is read-only: it never creates, provisions or changes a mailbox, reusing
+  the per-organization state and `mailbox-demo` seed.
+

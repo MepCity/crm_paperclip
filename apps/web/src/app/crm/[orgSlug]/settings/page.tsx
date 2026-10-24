@@ -35,6 +35,31 @@ export default async function GeneralSettingsPage({
       <Card className="mt-6">
         <CardContent>
           <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text-muted">
+            General
+          </h2>
+          <div className="flex flex-wrap gap-6">
+            <Link href={`/crm/${orgSlug}/settings/personal-settings`}>Personal Settings</Link>
+            <Link href={`/crm/${orgSlug}/settings/company-details`}>Company Details</Link>
+            <Link href={`/crm/${orgSlug}/settings/currencies`}>Currencies</Link>
+          </div>
+        </CardContent>
+      </Card>
+      <Card className="mt-6">
+        <CardContent>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text-muted">
+            Channels
+          </h2>
+          <Link
+            href={`/crm/${orgSlug}/settings/email-configuration`}
+            className="text-md text-accent-blue hover:underline"
+          >
+            Email
+          </Link>
+        </CardContent>
+      </Card>
+      <Card className="mt-6">
+        <CardContent>
+          <h2 className="mb-3 text-sm font-semibold uppercase tracking-wider text-text-muted">
             Customization
           </h2>
           <div>

@@ -88,6 +88,7 @@ const expectedIcons = [
   "diagonalExpand",
   "recordTag",
   "lock",
+  "barChart",
   "userPlus",
   "handshake",
   "megaphone",

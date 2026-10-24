@@ -96,7 +96,17 @@ function flatNavLinks(): NavLink[] {
     const index = flatNavOrder.indexOf(id);
     return index === -1 ? flatNavOrder.length : index;
   };
-  return moduleNavLinks("flat").sort((a, b) => rank(a.id) - rank(b.id));
+  const entries: NavLink[] = [
+    ...moduleNavLinks("flat"),
+    {
+      id: "social",
+      label: "Social",
+      icon: Icons.messageSquare,
+      href: (slug) => moduleTabPath(slug, "Social"),
+      match: "exact",
+    },
+  ];
+  return entries.sort((a, b) => rank(a.id) - rank(b.id));
 }
 
 /** Documents is not a record module (no list/detail engine); it sits after Deals in the Sales group. */
@@ -135,12 +145,50 @@ export const shellNav: NavConfig = {
       match: "exact",
       iconAccentToken: "--color-accent-blue",
     },
+    {
+      id: "workqueue",
+      label: "Workqueue",
+      icon: Icons.task,
+      href: (slug) => `/crm/${slug}/workqueue`,
+      match: "exact",
+    },
+    {
+      id: "reports",
+      label: "Reports",
+      icon: Icons.file,
+      href: (slug) => moduleTabPath(slug, "Reports"),
+      match: "prefix",
+    },
+    {
+      id: "analytics",
+      label: "Analytics",
+      icon: Icons.barChart,
+      href: (slug) => moduleTabPath(slug, "Dashboards"),
+      match: "prefix",
+    },
   ],
   sections: [
     {
       id: "teamspace",
       label: "Teamspace",
-      groups: [navGroup("sales", "Sales"), navGroup("activities", "Activities")],
+      groups: [
+        navGroup("sales", "Sales"),
+        navGroup("activities", "Activities"),
+        {
+          id: "integrations",
+          label: "Integrations",
+          icon: Icons.folder,
+          links: [
+            {
+              id: "visits",
+              label: "Visits",
+              icon: Icons.activity,
+              href: (slug) => moduleTabPath(slug, "Visits"),
+              match: "exact",
+            },
+          ],
+        },
+      ],
       links: flatNavLinks(),
     },
   ],
@@ -164,12 +212,45 @@ export const settingsNav: readonly NavLink[] = [
     group: "General",
   },
   {
+    id: "personal-settings",
+    label: "Personal Settings",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/personal-settings`,
+    match: "exact",
+    group: "General",
+  },
+  {
+    id: "company-details",
+    label: "Company Details",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/company-details`,
+    match: "exact",
+    group: "General",
+  },
+  {
+    id: "currencies",
+    label: "Currencies",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/currencies`,
+    match: "exact",
+    group: "General",
+  },
+  {
     id: "calendar-booking",
     label: "Calendar Booking",
     icon: Icons.calendar,
     href: (slug) => `/crm/${slug}/settings/calendar-booking`,
     match: "exact",
     group: "General",
+  },
+  {
+    id: "email",
+    label: "Email",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/email-configuration`,
+    activePrefix: (slug) => `/crm/${slug}/settings/email-configuration`,
+    match: "prefix",
+    group: "Channels",
   },
   {
     id: "import-history",
@@ -194,6 +275,23 @@ export const settingsNav: readonly NavLink[] = [
     href: (slug) => `/crm/${slug}/settings/modules`,
     match: "exact",
     group: "Customization",
+  },
+  {
+    id: "workflow-rules",
+    label: "Workflow Rules",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/workflow-rules`,
+    activePrefix: (slug) => `/crm/${slug}/settings/workflow-rules`,
+    match: "prefix",
+    group: "Automation",
+  },
+  {
+    id: "assignment-rules",
+    label: "Assignment Rules",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/assignment-rules`,
+    match: "exact",
+    group: "Automation",
   },
 ];
 
