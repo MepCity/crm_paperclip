@@ -205,3 +205,31 @@ test("Reports category selector: open, inventory R09-R19 in order, close on Esca
   // No non-GET requests were issued
   expect(nonGetRequests).toEqual([]);
 });
+
+test("Reports read-only contract: opening list and navigating to report issues zero non-GET requests", async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 1470, height: 900 });
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+
+  const nonGetRequests: string[] = [];
+  page.on("request", (request) => {
+    if (!["GET", "HEAD", "OPTIONS"].includes(request.method())) {
+      nonGetRequests.push(`${request.method()} ${request.url()}`);
+    }
+  });
+
+  await page.goto(`/crm/${org.slug}/tab/Reports`);
+  await expect(page.getByRole("heading", { name: "Reports", exact: true })).toBeVisible();
+  await expect(page.getByRole("table")).toBeVisible();
+
+  await page.getByRole("link", { name: "Weekly outreach overview", exact: true }).click();
+  await expect(page).toHaveURL(`/crm/${org.slug}/tab/Reports/sample-report-1`);
+  await expect(
+    page.getByRole("heading", { name: "Weekly outreach overview", exact: true }).first(),
+  ).toBeVisible();
+  await expect(page.getByRole("table")).toBeVisible();
+
+  expect(nonGetRequests).toEqual([]);
+});
