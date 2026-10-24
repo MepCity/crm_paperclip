@@ -5,7 +5,7 @@ import { taskField } from "@/modules/tasks/test-metadata";
 import { describedBy } from "@/test/dom";
 import { render } from "@/test/render";
 import { type QueueData, queueDefinitions } from "./queues";
-import { Workqueue } from "./workqueue";
+import { overdueLabel, Workqueue } from "./workqueue";
 
 const refresh = vi.fn();
 const replace = vi.fn();
@@ -105,28 +105,72 @@ it("resets paging when changing queue", async () => {
 
 afterEach(cleanup);
 
-it("shows synthetic populated and zero fixtures with consistent counts and unavailable boundaries", async () => {
+it("keeps test controls out of the product and shows the observed task columns", () => {
   sessionStorage.setItem("workqueue-welcome:test:user", "dismissed");
-  const user = userEvent.setup();
   mount();
-  await user.click(screen.getByRole("button", { name: "Synthetic tasks" }));
-  const table = screen.getByRole("table");
-  expect(within(table).getByRole("columnheader", { name: "Subject" })).toBeTruthy();
-  expect(within(table).getByRole("columnheader", { name: "Due Date" })).toBeTruthy();
-  expect(within(table).getByRole("columnheader", { name: "Status" })).toBeTruthy();
-  expect(within(table).getAllByRole("link")).toHaveLength(3);
-  expect(screen.getByTestId("preview-count").textContent).toBe("3 records");
-  expect(within(table).getAllByRole("link")[0]?.getAttribute("href")).toMatch(
-    /^\/crm\/test\/tab\/Tasks\/preview-task-/,
+  expect(screen.queryByText("Preview data")).toBeNull();
+  expect(screen.queryByRole("button", { name: /Synthetic/ })).toBeNull();
+  expect(screen.getByRole("button", { name: "Activity period: Today & Overdue" })).toBeTruthy();
+  const rail = screen.getByRole("complementary", { name: "Workqueue queues" });
+  for (const button of rail.querySelectorAll(".workqueue-row")) {
+    expect(button.querySelector("svg")).toBeTruthy();
+    expect(button.querySelector(".workqueue-count")).toBeTruthy();
+  }
+});
+
+it("renders overdue task dates in red and hides default lookup columns", () => {
+  sessionStorage.setItem("workqueue-welcome:test:user", "dismissed");
+  const populated = queues.map((queue) =>
+    queue.id === "tasks"
+      ? {
+          ...queue,
+          columns: [
+            taskField("Subject"),
+            taskField("Due_Date", { label: "Due Date", dataType: "date" }),
+            taskField("Status"),
+            taskField("Priority"),
+            taskField("What_Id", { label: "Related To" }),
+            taskField("Who_Id", { label: "Contact Name" }),
+          ],
+          result: {
+            ...queue.result,
+            records: [
+              {
+                id: "overdue",
+                fields: {
+                  Subject: "Past due task",
+                  Due_Date: "2000-01-01",
+                  Status: "Not Started",
+                  Priority: "High",
+                },
+              },
+            ],
+          },
+        }
+      : queue,
   );
-  await user.click(screen.getByRole("button", { name: "All open" }));
-  expect(within(table).getAllByRole("link")).toHaveLength(4);
-  expect(screen.getByTestId("preview-count").textContent).toBe("4 records");
-  await user.click(screen.getByRole("button", { name: "Synthetic zero result" }));
-  expect(screen.getByTestId("preview-count").textContent).toBe("0 records");
-  expect(screen.getByText(/provisional empty state/)).toBeTruthy();
-  await user.click(screen.getByRole("button", { name: "Add Leads queue" }));
-  expect(screen.getByRole("status").textContent).toMatch(/unavailable/);
+  render(
+    <Workqueue
+      orgSlug="test"
+      user={{ id: "user", name: "Test User", role: "Member" }}
+      queues={populated}
+      page={1}
+    />,
+  );
+  expect(screen.getByText(/^Late by \d+ days$/).className).toBe("text-danger");
+  expect(screen.getByRole("columnheader", { name: "Priority" })).toBeTruthy();
+  expect(screen.queryByRole("columnheader", { name: "Related To" })).toBeNull();
+  expect(screen.queryByRole("columnheader", { name: "Contact Name" })).toBeNull();
+});
+
+it("formats overdue dates as calendar-day lateness", () => {
+  const today = new Date(2026, 9, 24, 12);
+  expect(overdueLabel("2026-10-23", today)).toBe("Late by 1 day");
+  expect(overdueLabel("2026-10-21", today)).toBe("Late by 3 days");
+  expect(overdueLabel("2026-10-24", today)).toBeNull();
+  expect(overdueLabel("2026-10-25", today)).toBeNull();
+  expect(overdueLabel(null, today)).toBeNull();
+  expect(overdueLabel("invalid", today)).toBeNull();
 });
 
 it("activates queue buttons via keyboard Enter and Space", async () => {
