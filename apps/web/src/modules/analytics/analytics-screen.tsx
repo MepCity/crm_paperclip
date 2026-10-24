@@ -45,6 +45,9 @@ export function AnalyticsScreen({
 
   return (
     <section aria-label="Analytics" className="min-h-full bg-bg p-4 text-md text-text">
+      <span id="analytics-unavailable" className="sr-only">
+        Not available in this read-only view.
+      </span>
       {/* A01–A09: Toolbar */}
       <div className="flex flex-wrap items-center justify-between gap-4 pb-4">
         {/* Left cluster: A01, A02, A03, A04 */}
@@ -54,6 +57,7 @@ export function AnalyticsScreen({
             variant="recordSelector"
             aria-label="All"
             aria-disabled="true"
+            aria-describedby="analytics-unavailable"
             className="h-8 gap-2 px-3 text-sm"
           >
             <span>All</span>
@@ -68,6 +72,7 @@ export function AnalyticsScreen({
               size="compact"
               aria-label="Favorite Org Overview"
               aria-disabled="true"
+              aria-describedby="analytics-unavailable"
               className="px-2 text-text-muted"
             >
               <span aria-hidden className="text-sm">
@@ -80,6 +85,7 @@ export function AnalyticsScreen({
               aria-label="Overview selector"
               aria-expanded="false"
               aria-disabled="true"
+              aria-describedby="analytics-unavailable"
               tabIndex={0}
               className="flex items-center gap-2 pr-3 pl-1 text-sm font-semibold text-text"
             >
@@ -127,6 +133,7 @@ export function AnalyticsScreen({
             variant="recordSecondary"
             size="toolbar"
             aria-disabled="true"
+            aria-describedby="analytics-unavailable"
             className="h-8 text-xs font-semibold"
           >
             Add Component
@@ -137,6 +144,7 @@ export function AnalyticsScreen({
             variant="recordPrimary"
             size="toolbar"
             aria-disabled="true"
+            aria-describedby="analytics-unavailable"
             className="h-8 text-xs font-semibold"
           >
             Create Dashboard
@@ -148,6 +156,7 @@ export function AnalyticsScreen({
             size="compact"
             aria-label="More actions"
             aria-disabled="true"
+            aria-describedby="analytics-unavailable"
             className="p-1.5 text-text-muted"
           >
             <Icons.ellipsis className="size-4" aria-hidden />
@@ -159,6 +168,7 @@ export function AnalyticsScreen({
             size="compact"
             aria-label="Analytics help"
             aria-disabled="true"
+            aria-describedby="analytics-unavailable"
             className="p-1.5 text-text-muted"
           >
             <Icons.info className="size-4" aria-hidden />

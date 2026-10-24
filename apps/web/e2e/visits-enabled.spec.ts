@@ -33,6 +33,8 @@ test("Visits enabled fixture: list to detail with unavailable controls", async (
     "aria-disabled",
     "true",
   );
+  await expect(page.getByRole("button", { name: "Add Note" })).toHaveAccessibleDescription(/.+/);
+  await expect(page.getByRole("table")).not.toHaveAttribute("aria-label", /.+/);
   expect(writes).toEqual([]);
   assertNoPageErrors(pageErrors);
 });
