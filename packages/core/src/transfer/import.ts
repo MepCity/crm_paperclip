@@ -312,8 +312,21 @@ export async function importRows(
         );
       }
       const result = target
-        ? await records.update(upload.module, target.id, values)
-        : await records.create(upload.module, values);
+        ? await records.update(
+            upload.module,
+            target.id,
+            values,
+            settings.expectedRevision === undefined
+              ? undefined
+              : { expectedRevision: settings.expectedRevision },
+          )
+        : await records.create(
+            upload.module,
+            values,
+            settings.expectedRevision === undefined
+              ? undefined
+              : { expectedRevision: settings.expectedRevision },
+          );
       if (target) job.counts.updated++;
       else {
         job.counts.created++;
@@ -341,7 +354,9 @@ export async function importRows(
                 ? "not_found"
                 : error.code === "conflict"
                   ? "already_exists"
-                  : "invalid_value";
+                  : error.code === "schema_stale"
+                    ? "schema_stale"
+                    : "invalid_value";
       job.counts.errors++;
       job.rows.push({ row: index + 2, outcome: "error", code, ...(field ? { field } : {}) });
     }

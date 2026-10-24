@@ -169,7 +169,7 @@ describe("transfer record-service integration", () => {
       ignoreEmptyOnUpdate: true,
     });
     expect(job.counts.updated).toBe(1);
-    expect(update).toHaveBeenCalledWith("Contacts", record.id, {});
+    expect(update).toHaveBeenCalledWith("Contacts", record.id, {}, undefined);
     expect((await s.records.get("Contacts", record.id)).fields).toMatchObject({
       Last_Name: "Original",
       Description: "Keep",

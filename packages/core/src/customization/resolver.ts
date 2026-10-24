@@ -45,7 +45,24 @@ export function resolveEffectiveModule(
   );
   unique([...allFields.map((field) => field.apiName), ...baseline.reservedApiNames], "API name");
   for (const field of overlay.fields) {
-    if (!baseline.customFieldTypes.includes(field.dataType))
+    if (
+      ![
+        "text",
+        "textarea",
+        "email",
+        "phone",
+        "website",
+        "picklist",
+        "integer",
+        "currency",
+        "double",
+        "bigint",
+        "boolean",
+        "date",
+        "datetime",
+      ].includes(field.dataType) ||
+      !baseline.customFieldTypes.includes(field.dataType)
+    )
       invalid("Unsupported custom field type.");
     if (field.lookup || field.acceptsJsonArray)
       invalid("Custom lookup and opaque array semantics are not enabled.");
