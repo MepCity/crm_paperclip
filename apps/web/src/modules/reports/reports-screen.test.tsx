@@ -1,5 +1,5 @@
 // @vitest-environment jsdom
-import { cleanup, render, screen, within } from "@testing-library/react";
+import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it } from "vitest";
 import { fixtureReportsPort } from "./fixture-port";
@@ -45,7 +45,7 @@ describe("Reports landing", () => {
     expect(reportPath("demo", "report/one")).toBe("/crm/demo/tab/Reports/report%2Fone");
   });
 
-  it("leaves search, category, selection, favorite, create and help unwired", async () => {
+  it("leaves search, selection, favorite, create and help unwired", async () => {
     const user = userEvent.setup();
     render(<ReportsScreen orgSlug="demo" />);
     await screen.findByRole("table");
@@ -53,7 +53,6 @@ describe("Reports landing", () => {
     await user.type(search, "anything");
     expect((search as HTMLInputElement).value).toBe("");
     for (const name of [
-      "All Reports",
       "Create Report",
       "Reports help",
       "Favorite Weekly outreach overview",
@@ -69,6 +68,149 @@ describe("Reports landing", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
     expect(screen.queryByRole("listbox")).toBeNull();
     expect(screen.getAllByRole("row")).toHaveLength(14);
+  });
+
+  it("opens R01 category selector panel and displays all R09–R19 controls in order", async () => {
+    const user = userEvent.setup();
+    render(<ReportsScreen orgSlug="demo" />);
+    await screen.findByRole("table");
+
+    const trigger = screen.getByRole("button", { name: "All Reports" });
+    expect(trigger.getAttribute("aria-expanded")).toBe("false");
+    await user.click(trigger);
+    expect(trigger.getAttribute("aria-expanded")).toBe("true");
+
+    const dialog = screen.getByRole("dialog");
+    expect(dialog).toBeTruthy();
+
+    // R09: "Search Folder" textbox
+    const searchFolder = within(dialog).getByRole("textbox", { name: "Search Folder" });
+    expect(searchFolder).toBeTruthy();
+    expect((searchFolder as HTMLInputElement).value).toBe("");
+
+    // R09 accepts text but does not filter (R3 U3 open)
+    await user.type(searchFolder, "custom search");
+    expect((searchFolder as HTMLInputElement).value).toBe("custom search");
+
+    // Listbox with R10-R17
+    const listbox = within(dialog).getByRole("listbox", { name: "Report folders" });
+    const options = within(listbox).getAllByRole("option");
+    expect(options).toHaveLength(8);
+
+    const expectedOptions = [
+      "All Reports",
+      "My Reports",
+      "Favorites",
+      "Recently Viewed",
+      "Shared Reports",
+      "Scheduled Reports",
+      "Recently Deleted",
+      "Account and Contact Reports",
+    ];
+
+    expect(options.map((opt) => opt.textContent?.trim())).toEqual(expectedOptions);
+
+    // R10 is selected (aria-selected="true" + data-selected="true")
+    const firstOption = options[0];
+    expect(firstOption).toBeDefined();
+    expect(firstOption?.getAttribute("aria-selected")).toBe("true");
+    expect(firstOption?.getAttribute("data-selected")).toBe("true");
+    expect(firstOption?.className).toContain("bg-surface-selected");
+    // Other options are not selected
+    for (const opt of options.slice(1)) {
+      expect(opt.getAttribute("aria-selected")).toBe("false");
+      expect(opt.hasAttribute("data-selected")).toBe(false);
+    }
+
+    // Divider between R16 and R17
+    const separator = within(listbox).getByRole("separator");
+    expect(separator).toBeTruthy();
+
+    // R18: Manage Folders button with gear icon, disabled with tooltip
+    const manageFolders = within(dialog).getByRole("button", { name: "Manage Folders" });
+    expect(manageFolders).toBeTruthy();
+    expect(manageFolders.getAttribute("aria-disabled")).toBe("true");
+
+    // R19: Advanced analytics entry, disabled with tooltip
+    const advancedAnalytics = within(dialog).getByRole("button", { name: /Advanced analytics/i });
+    expect(advancedAnalytics).toBeTruthy();
+    expect(advancedAnalytics.getAttribute("aria-disabled")).toBe("true");
+    expect(within(advancedAnalytics).getByText("Advanced Analytics")).toBeTruthy();
+  });
+
+  it("closes category panel with Escape and returns focus to R01 while selection stays All Reports", async () => {
+    const user = userEvent.setup();
+    render(<ReportsScreen orgSlug="demo" />);
+    await screen.findByRole("table");
+
+    const trigger = screen.getByRole("button", { name: "All Reports" });
+    await user.click(trigger);
+    expect(screen.getByRole("dialog")).toBeTruthy();
+
+    await user.keyboard("{Escape}");
+    expect(screen.queryByRole("dialog")).toBeNull();
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
+    expect(trigger.textContent).toContain("All Reports");
+  });
+
+  it("closes category panel with outside click and returns focus to R01", async () => {
+    const user = userEvent.setup();
+    render(<ReportsScreen orgSlug="demo" />);
+    const table = await screen.findByRole("table");
+
+    const trigger = screen.getByRole("button", { name: "All Reports" });
+    await user.click(trigger);
+    expect(screen.getByRole("dialog")).toBeTruthy();
+
+    await user.click(within(table).getByText("Report Name"));
+    expect(screen.queryByRole("dialog")).toBeNull();
+    await waitFor(() => expect(document.activeElement).toBe(trigger));
+    expect(trigger.textContent).toContain("All Reports");
+  });
+
+  it("clicking any option R11–R17 closes panel and keeps All Reports (selection semantics unobserved)", async () => {
+    const user = userEvent.setup();
+    render(<ReportsScreen orgSlug="demo" />);
+    await screen.findByRole("table");
+
+    const trigger = screen.getByRole("button", { name: "All Reports" });
+
+    for (const name of [
+      "My Reports",
+      "Favorites",
+      "Scheduled Reports",
+      "Account and Contact Reports",
+    ]) {
+      await user.click(trigger);
+      const dialog = screen.getByRole("dialog");
+      const option = within(dialog).getByRole("option", { name });
+      await user.click(option);
+      expect(screen.queryByRole("dialog")).toBeNull();
+      await waitFor(() => expect(document.activeElement).toBe(trigger));
+      expect(trigger.textContent).toContain("All Reports");
+    }
+  });
+
+  it("renders disabled R18 and R19 with 'Not available yet' tooltip triggers", async () => {
+    const user = userEvent.setup();
+    render(<ReportsScreen orgSlug="demo" />);
+    await screen.findByRole("table");
+
+    const trigger = screen.getByRole("button", { name: "All Reports" });
+    await user.click(trigger);
+    const dialog = screen.getByRole("dialog");
+
+    const manageBtn = within(dialog).getByRole("button", { name: "Manage Folders" });
+    expect(manageBtn.getAttribute("aria-disabled")).toBe("true");
+
+    const analyticsBtn = within(dialog).getByRole("button", { name: /Advanced analytics/i });
+    expect(analyticsBtn.getAttribute("aria-disabled")).toBe("true");
+
+    // Clicking either disabled button does not trigger any action, navigation, or close the dialog
+    await user.click(manageBtn);
+    expect(screen.getByRole("dialog")).toBeTruthy();
+    await user.click(analyticsBtn);
+    expect(screen.getByRole("dialog")).toBeTruthy();
   });
 
   it("renders an inert R08 row actions button for every report with hover and focus visibility styles", async () => {

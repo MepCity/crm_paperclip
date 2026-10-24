@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { NotFoundError, ValidationError } from "@crm/core/errors";
+import { ForbiddenError, NotFoundError, ValidationError } from "@crm/core/errors";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { decodeView, encodeCriteria, encodeModule } from "./codec";
+import { customizationOperations } from "./customization";
 import { encodeError } from "./errors";
 import { type OperationDeps, type OperationRequest, operationPath, operations } from "./operations";
 
@@ -343,9 +344,17 @@ describe("wire operations", () => {
       operations.delete.run(deps, { ...input(), params: { module: "Leads" } }),
     ).rejects.toBeInstanceOf(ValidationError);
   });
+  it("denies customization mutations before decoding when no command service is bound", async () => {
+    for (const op of Object.values(customizationOperations))
+      await expect(op.run(deps, input({}, {}))).rejects.toBeInstanceOf(ForbiddenError);
+  });
   it("returns 404 for unknown modules, views and records", async () => {
     for (const op of Object.values(operations).filter(
-      (op) => op !== operations.users && op !== operations.currencies && op !== operations.search,
+      (op) =>
+        op !== operations.users &&
+        op !== operations.currencies &&
+        op !== operations.search &&
+        !Object.values(customizationOperations).includes(op),
     )) {
       await expect(
         op.run(deps, {

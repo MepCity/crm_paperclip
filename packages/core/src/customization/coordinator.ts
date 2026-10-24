@@ -1,5 +1,4 @@
 import { AsyncLocalStorage } from "node:async_hooks";
-import { createHash } from "node:crypto";
 import { ForbiddenError, SchemaStaleError, ValidationError } from "../errors";
 import type { RecordData, RecordWriteOptions } from "../records/contract";
 import { validateSchemaRecord } from "../records/fixture/schema-validation";
@@ -11,7 +10,7 @@ import type { EffectiveModuleDefinition } from "./types";
 
 /** Opaque wire token, including the baseline version; clients compare only for equality. */
 export function schemaRevision(schema: EffectiveModuleDefinition): string {
-  return `${createHash("sha256").update(schema.baselineVersion).digest("hex").slice(0, 32)}:${schema.revision}`;
+  return `${schema.baselineVersion}:${schema.revision}`;
 }
 
 export interface SchemaRecordSource {

@@ -321,11 +321,18 @@ export function createFixtureRecordService(
     const criteria = (value: import("../contract").Criteria): import("../contract").Criteria =>
       "group" in value
         ? { ...value, group: value.group.map(criteria) }
-        : { ...value, field: name(value.field) };
+        : {
+            ...value,
+            field: effective.externalCriteriaFields.includes(value.field)
+              ? value.field
+              : name(value.field),
+          };
     return {
       ...bundle,
       metadata: {
         ...bundle.metadata,
+        singularLabel: effective.singularLabel,
+        pluralLabel: effective.pluralLabel,
         businessCardFields: bundle.metadata.businessCardFields.filter((name) =>
           effective.fields.some((field) => field.apiName === name),
         ),
@@ -335,7 +342,7 @@ export function createFixtureRecordService(
             label: section.label,
             columnCount: section.columnCount,
             columns: section.columns.map((column) => column.map(name)),
-            fields: section.columns.flat().map(name),
+            fields: section.fields.map(name),
           })) ?? [],
       },
       views: effective.views.map((view) => ({
@@ -1337,7 +1344,11 @@ export function createFixtureRecordService(
     },
     async getModuleProjection(module) {
       bundleFor(module);
-      return readFixtureModuleProjection(ctx.orgId, module, options?.customization);
+      return readFixtureModuleProjection(
+        ctx.orgId,
+        module,
+        schema?.metadata ?? options?.customization,
+      );
     },
     async getModule(module) {
       return copy(bundleFor(module).metadata);
