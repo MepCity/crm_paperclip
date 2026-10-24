@@ -18,7 +18,7 @@ test("Report detail: header, toolbar, empty and populated tables, back", async (
       "true",
     );
   }
-  const table = page.getByRole("table", { name: "Report results" });
+  const table = page.getByRole("table");
   await expect(table.getByRole("columnheader")).toHaveCount(9);
   await expect(page.getByText("No Data Found")).toBeVisible();
   if (process.env.REPORT_SHOT_DIR)

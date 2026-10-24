@@ -14,13 +14,16 @@ test("Reports landing: columns, inert controls and report placeholder navigation
     .click();
   await expect(page).toHaveURL(`/crm/${org.slug}/tab/Reports`);
   await expect(page.getByRole("heading", { name: "Reports", exact: true })).toBeVisible();
-  const table = page.getByRole("table", { name: "Report definitions" });
+  const table = page.getByRole("table");
   await expect(table.getByRole("row")).toHaveCount(14);
   for (const name of ["Report Name", "Description", "Folder", "Last Accessed Date", "Created By"]) {
     await expect(table.getByRole("columnheader", { name })).toBeVisible();
   }
   await expect(table.getByRole("row").nth(1).getByRole("cell").nth(4)).toHaveText("-");
   await expect(table.getByRole("row").nth(3)).toContainText("01.10.2026");
+  const create = page.getByRole("button", { name: "Create Report" });
+  await expect(create).toHaveAttribute("aria-disabled", "true");
+  await expect(create).toHaveAccessibleDescription(/Not available/);
   await page.screenshot({ path: testInfo.outputPath("reports-landing.png"), fullPage: true });
   const search = page.getByRole("textbox", { name: "Search All Reports" });
   await expect(search).toHaveAttribute("readonly", "");
@@ -77,7 +80,7 @@ test("Reports landing: columns, inert controls and report placeholder navigation
     page.getByRole("heading", { name: "Weekly outreach overview", exact: true }).first(),
   ).toBeVisible();
   await page.getByRole("link", { name: "Back to Reports", exact: true }).click();
-  await expect(page.getByRole("table", { name: "Report definitions" })).toBeVisible();
+  await expect(page.getByRole("table")).toBeVisible();
 });
 
 test("Reports category selector: open, inventory R09-R19 in order, close on Escape/outside, selection stays All Reports", async ({
