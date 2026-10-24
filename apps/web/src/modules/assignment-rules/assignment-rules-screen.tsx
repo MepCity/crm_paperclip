@@ -8,6 +8,8 @@ import { Tab, TabList, TabPanel, Tabs } from "@/components/ui/tabs";
 
 const MODULE_OPTIONS = ["Leads", "Contacts", "Accounts", "Deals"] as const;
 
+// AL5/AD7 (U12): loading and read-only retry come from the shell boundaries
+// app/crm/[orgSlug]/loading.tsx ("Loading page…") and error.tsx ("Try again"); no page-level inference.
 export function AssignmentRulesScreen({
   result,
   orgSlug = "",
