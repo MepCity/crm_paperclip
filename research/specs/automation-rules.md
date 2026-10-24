@@ -1,7 +1,7 @@
 # Automation rules — Workflow and Assignment
 
-Status: R1 approved by UI Lead; R2 ready for review. Partial evidence, not a module gate.
-Scope: MEP-1199 (R1) and MEP-1208 (R2) under MEP-1198. Module 2+ parity: screenshots, controls and
+Status: R1 approved by UI Lead; R2 evidence retained; R3 ready for UI Lead review.
+Scope: MEP-1199 (R1), MEP-1208 (R2), MEP-1253 (R3) under MEP-1198/MEP-1250. Module 2+ parity: screenshots, controls and
 behaviour; no geometry or frontend request matching. Research date: 2026-10-23.
 
 ## Purpose and evidence boundary
@@ -333,3 +333,174 @@ implementation readiness. A narrowly reviewed capture-tool navigation-policy
 follow-up can consider these specific read-only links; this report neither
 changes guard policy nor requests permission to mutate the reference CRM.
 U4/U6/U7 remain unchanged from R1. The Module 12 gate stays open.
+
+## R3 — documentation-based read-only screens
+
+MEP-1253, 2026-10-24. The board accepted documentation-based continuation in
+MEP-1234; MEP-1250 separates implementation into Assignment and Workflow slices.
+This section supersedes the earlier implementation-readiness restrictions for
+these two read-only surfaces only. It does not certify unseen visual parity.
+No new capture, click, toggle, reference data creation or metadata export was
+performed. W0–W3/A0/A7/A8 remain the observation boundary and safety ledger.
+D1–D3 were reread; no new documentation source was needed. The source catalog's
+neutral article paths remain the citation keys for each numbered item below.
+
+### Reading the inventory and port boundary
+
+D1–D3 establish concepts, not the account's populated screen arrangement.
+**I** means a proposed local functional interpretation; **A0 pattern** means
+reuse of the observed introductory card only. Every inferred presentation has
+an explicit U8+ question. All rows are owned by Automation; shared shell controls
+retain their earlier owners. Display regions and states are numbered alongside
+interactive controls so implementation and QA can trace the complete surface.
+No geometry or pixel table applies.
+
+Port mappings below refer to `packages/core/src/automation/types.ts`.
+`list` is `AutomationPort.list(ctx, { kind, module?, cursor?, limit })`;
+`get` is `AutomationPort.get(ctx, { kind, id })`. `RulePage.items` contains
+`RuleSummary`, **without** trigger, branches, entries or fallback. Detail reads
+must narrow `kind` before rendering. Loading is local promise state, not a
+`ReadResult` variant. An empty result is `ok: true` with zero items; a failure
+must never be rendered as that result. Neither method changes rules or executes
+an engine. IDs/revisions identify and reconcile reads; they are not new columns.
+
+### Workflow list inventory
+
+| # | Region / read-only behaviour | Source / uncertainty | Port mapping |
+| --- | --- | --- | --- |
+| WL1 | Content heading Workflow Rules; table columns Name, Module, Trigger, Status in that proposed order | D1 concepts; I arrangement, U8 | `list` with `kind: workflow`; no heading/layout field |
+| WL2 | Name is a keyboard-accessible detail link; one row per returned rule | D1 basic details; I link placement, U8/U9 | `RulePage.items[].name`, `.id`, `.kind`; `get` by same id |
+| WL3 | Module label in each row | D1 module concept; I column, U8 | `RuleSummary.module`; label resolved locally |
+| WL4 | Trigger summary, including selected fields or date field as applicable; never derive it from rule name | D1 trigger concept; I summary, U8/U10 | `get` → `WorkflowRule.trigger`; absent from `RuleSummary` |
+| WL5 | Enabled/Disabled text, without an interactive switch | I presentation, U8/U15 | `RuleSummary.enabled` |
+| WL6 | Module filter with All modules option; selection affects this local screen only | I, U8/U11; A0 contains no filter | `list.query.module`; omit for All modules; reset cursor |
+| WL7 | Pending read: loading status; no fabricated rows | I, U12; W0–W3 are failures, not normal loading proof | Local pending `list`; separate pending `get` for WL4 |
+| WL8 | Successful zero rows: empty explanation; distinguish no rules from no matches for selected module | I, U12; do not reuse W0–W3 blank region | `ok: true`, `value.items.length === 0`; current module filter |
+| WL9 | Access denied: explicit unavailable-access state; no empty table claim | I, U12 | `ok: false`, `error.code: forbidden` |
+| WL10 | Read failure: error plus safe local retry; preserve filter, prevent stale response replacement | I, U12 | `unavailable` / `invalid_query`; unexpected rejected promise handled locally; retry `list` |
+| WL11 | Read next page only when a cursor exists; no invented total count or user-controlled sorting | I, U8/U11 | `RulePage.nextCursor`, `list.query.cursor/limit`; no total/sort field |
+
+WL4 requires a separate read for each visible rule because the current list
+contract lacks trigger. Deduplicate by id/revision within the loaded page and
+bound detail-read concurrency; do not change the port in this slice. A pending
+summary has its own loading text. A failed summary shows unavailable text and
+local retry, while Name/Module/Status remain usable. U10 tracks this proposed
+fallback and cost; never invent a trigger or silently label it disabled.
+
+### Workflow detail inventory
+
+| # | Region / read-only behaviour | Source / uncertainty | Port mapping |
+| --- | --- | --- | --- |
+| WD1 | Name heading, module, description and static status; return link to list | D1 basic details; I grouping/navigation, U9/U15 | `get` → `RuleBase.name/module/description/enabled`; no back-link field |
+| WD2 | Trigger region: record event; changed field references; or date field and timezone | D1 trigger concepts; I display, U9/U16 | `Trigger.kind`; `record.on`, `field_change.fields`, `date.field/timezone` |
+| WD3 | Ordered condition branches, with all-records or readable criteria expression | D1 conditions; I branch layout, U9/U16 | `WorkflowRule.branches`, `Branch.position/id/condition`; `Condition.kind`, `criteria` |
+| WD4 | Immediate actions: show category and definition reference; show explicit empty section when none | D1 instant actions; I reference/empty display, U9/U13 | `Branch.immediate[]`; `Action.id/kind/definitionRef` |
+| WD5 | Scheduled groups: time basis, offset and actions; explicit empty section when none | D1 scheduled actions; I group display, U9/U13 | `Branch.scheduled[].id/timing/actions`; `Timing.kind/offsetSeconds`, field-relative `field/timezone`; `Action` |
+| WD6 | Pending, denied, not found and unavailable detail states; retry only reads; list remains reachable | I, U12 | Local pending `get`; `ReadFailure.code` including `not_found`; wrong returned kind treated as local failure |
+
+Display `Branch.position` order, without drag handles. A condition is a
+structured expression, not executable code. Keep parentheses, field/operator
+and typed value distinctions from `Criteria`; do not flatten nested logic into
+an inaccurate sentence. Date/field labels may use existing local metadata;
+unresolved fields retain a neutral reference label (U13). Event-relative timing
+uses its signed offset: negative before, zero at, positive after the event;
+field-relative timing also names field and timezone. This is a display convention
+(I, U16), not schedule calculation. Do not compute next-run dates.
+The port does not express every D1 option, such as recurrence, section-change
+triggers or later unmatched-branch semantics. Do not infer them from position
+or `all_records`, add fields, or pretend opaque definitions contain full action
+configuration. These remain U16, outside this read-only slice.
+
+### Populated Assignment list inventory
+
+| # | Region / read-only behaviour | Source / uncertainty | Port mapping |
+| --- | --- | --- | --- |
+| AL1 | Keep Assignment Rules heading and selected Rules tab; populated rows replace introductory body after a successful nonempty read | A0/A7/A8 pattern; I transition, U14 | `list` with `kind: assignment`; `RulePage.items` |
+| AL2 | Proposed columns Order, Name, Module, Status; Name opens detail | D2 basic details; I columns, order/navigation/status, U14/U15 | `RuleSummary.position/name/id/module/enabled`; `get` with `kind: assignment` |
+| AL3 | Module filter; read next page only when present | I, U11/U14; absent in A0 | `list.query.module/cursor/limit`; `RulePage.nextCursor` |
+| AL4 | No rules: retain observed introductory paragraph/card; filtered zero matches: local no-matches explanation | A0 pattern; I distinction and hidden creation control, U12/U15 | Successful empty `RulePage.items`; current filter; no database-count assertion |
+| AL5 | Loading, forbidden and error/retry states distinct from introductory body | I, U12 | Local pending `list`; `ReadFailure.code`; safe retry reads only |
+
+AL2 order is rule-level `RuleBase.position`; it is not the entry evaluation
+sequence. Preserve adapter page order; no browser sort may claim a global order
+across cursors (U11). D2's entry sequence belongs to AD2. AL1 does not claim A0
+itself proved zero records. Existing Thresholds/assistant navigation boundaries
+remain as in R2; R3 does not specify destination bodies or enable blocked links.
+
+### Assignment detail inventory
+
+| # | Region / read-only behaviour | Source / uncertainty | Port mapping |
+| --- | --- | --- | --- |
+| AD1 | Name heading, module, description, static status; return to Assignment list | D2 basic details; I arrangement/status/navigation, U14/U15 | `get` → `AssignmentRule.name/module/description/enabled`; no navigation field |
+| AD2 | Ordered entry rows, each with a displayed sequence and condition | D2 entry ordering/criteria; I table, U14/U16 | `AssignmentRule.entries[]`; `AssignmentEntry.position/id/condition` |
+| AD3 | Recipient category and references; user-condition recipients show definition reference | D2/D3 recipient concepts; I display, U13/U14 | `AssignmentEntry.recipients`; `RecipientSet.kind`, `.refs` or `.definitionRef` |
+| AD4 | Static distribution label Single or Round robin; no simulation or next-recipient prediction | D2/D3 multiple-recipient allocation; I label mapping, U14 | `AssignmentEntry.distribution: single / round_robin` |
+| AD5 | Static availability policy: Ignore availability, Require available, or Unresolved | D2/D3 availability concept; I three-state display, U7/U14 | `AssignmentEntry.availability: ignore / require_available / unresolved` |
+| AD6 | Separate default recipient section; null explicitly means no fallback configured in this fixture | D2/D3 default recipient; I null/type display, U7/U14 | `AssignmentRule.fallback: RecipientSet / null` |
+| AD7 | Empty entries and pending/forbidden/not-found/error states remain distinct; keep return navigation | I, U12/U14 | Successful `entries.length === 0`; local pending `get`; `ReadFailure.code`; wrong kind fails locally |
+
+AD2 orders entries by position and reads criteria as WD3; the screen never
+checks a real record against them. AD3 preserves users/roles/groups distinctions;
+`user_conditions` is an opaque definition, not a list of matched users. Use
+synthetic references only. A directory resolver is absent from `AutomationPort`:
+do not add a hidden request or claim references are human-readable names (U13).
+AD5 is configured policy, not current online/shift status. `unresolved` must not
+be coerced to ignore. AD6 does not invent a default owner when null, and the port
+allows recipient sets broader than the documented default-user concept (U7).
+D3 describes a contextual acting-user fallback when no default is selected;
+this port does not encode that context. Null therefore reports configuration
+only, never a prediction that unmatched records stay unassigned (U7/U16).
+Associated follow-up tasks, thresholds and assistant suggestions have no fields
+here; leave them outside the slice and tracked in U16.
+
+### Write-control disposition
+
+| # | Control | Proposed local decision and reason | Source / port boundary |
+| --- | --- | --- | --- |
+| RC1 | New rule / Create Assignment Rule | Hide, including A0's A6; no approved builder or write method | A6 observed; D1/D2 creation concept; I omission, U15; no port method |
+| RC2 | Edit | Hide; detail is a read-only inspection | D1/D2 write flow; I omission, U15; no port method |
+| RC3 | Delete | Hide; no deletion flow in scope | D1; I omission, U15; no port method |
+| RC4 | Clone | Hide; no cloning flow in scope | D1; I omission, U15; no port method |
+| RC5 | Reorder / drag handles | Hide; show positions as text only | D2 sequence concept; I omission, U15; `position` is read-only |
+| RC6 | Enable/disable switch | Replace with static status text; no focusable switch | I, U15; read `enabled`, no update method |
+
+These are review proposals under U15, not observed reference behaviour or a
+claim that the board already chose omission. If UI Lead retains an affordance,
+render it disabled with a readable read-only explanation and no handler. Never
+substitute an enabled button that silently does nothing. No save, mutation,
+execution, assignment, recipient lookup side effect or persisted preference is
+unlocked. The reference's controls are never clicked to resolve this decision.
+
+### Current open-question register (supersedes earlier dispositions)
+
+| Key | Current disposition / decision still needed |
+| --- | --- |
+| U1 | W0–W3 do not establish normal Workflow visuals. Board permits functional documentation-based WL1–WL11; visual parity remains uncertified. No recapture requested. |
+| U2 | Existing Workflow detail remains unseen. WD1–WD6 are documentation/port interpretations, not captured detail evidence. |
+| U3 | Existing Assignment populated list/detail remains unseen. AL1–AL5/AD1–AD7 proceed under documentation-based scope, not a newly observed row. |
+| U4 | Builders and literal validation/success/write errors remain deferred; no writes authorized. |
+| U5 | Actual permission/loading/error designs and persistence remain unknown; U11/U12 specify proposed local handling only. |
+| U6 | A4 help hit area and F4/F12 utility functions remain unresolved; no new actions inferred. |
+| U7 | Account edition/limits, availability configuration and fallback semantics remain unknown. In particular, null fallback and non-user fallback sets require explicit display conventions, not claimed reference defaults. |
+| U8 | Workflow column order, summary placement, list grouping and pagination affordance are unobserved. UI Lead reviews the proposed functional table. |
+| U9 | Workflow detail arrangement, back-navigation state and empty action-section presentation are unobserved. Proposed sections require review. |
+| U10 | Trigger summary is missing from RuleSummary. Review bounded per-row get reads, loading and partial-failure display; a contract extension needs separate approval. |
+| U11 | Module filter presence, default list ordering, cursor presentation and filter/back-navigation persistence are unobserved. Proposed local filter resets cursor, is not saved, and does not globally sort pages. |
+| U12 | Exact empty/loading/forbidden/not-found/error wording and retry presentation lack evidence. Proposed distinct accessible status regions must not masquerade as captured states. |
+| U13 | Human-readable field, recipient and action labels/configuration cannot be resolved by this port alone. Use neutral synthetic reference labels; no fabricated resolved names or external lookups. |
+| U14 | Assignment populated columns/detail arrangement, rule versus entry order display, distribution/availability captions and A0 transition are unobserved. Proposed read-only sections need UI Lead review. |
+| U15 | Hiding creation/edit/delete/clone/reorder and replacing activation switches with text is a local scope proposal, including deviation from A0's visible A6. UI Lead must decide hidden versus disabled; no write action is offered either way. |
+| U16 | D1/D2 options exceed the current read model: recurrence, section-change and unmatched branches, full action definitions and Assignment follow-up tasks. Show only representable fields, mark opaque references, defer unsupported semantics; never alter the model in these UI slices. |
+
+### Implementation and verification handoff
+
+| Slice under MEP-1250 | Inventory coverage | Verification expectations |
+| --- | --- | --- |
+| MEP-1255 populated Assignment | AL1–AL5, AD1–AD7, RC1–RC6 as applicable; reuse existing A0 shell | Synthetic empty/populated fixtures; module/cursor read arguments; correct entry order, all recipient variants, both distributions, three availability policies, null/non-null fallback; separate load/denied/missing/failure states; no mutation affordance handlers |
+| MEP-1256 Workflow | WL1–WL11, WD1–WD6, RC1–RC6 as applicable | Synthetic trigger/condition/action/timing variants; per-row summary failure; empty and populated pages; module/cursor reset; kind narrowing; immediate/scheduled empties; separate denied/missing/failure states; no execution or write requests |
+
+Each slice uses the existing read-only adapter and synthetic data. Preserve all
+previous evidence and unresolved questions. This is a screen specification, not
+an ADR approval, engine implementation, persistence decision or completion claim
+for either coding slice. UI Lead review of these numbered proposals is the next
+step; new reference capture is neither required nor authorized by R3.
