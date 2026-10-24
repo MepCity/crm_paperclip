@@ -60,7 +60,7 @@ export function AssignmentRulesScreen({
               className="text-md text-text-muted"
             >
               {result.error.code === "forbidden"
-                ? "You do not have permission to view assignment rules."
+                ? "Assignment rules could not be loaded: you do not have permission to view them."
                 : "Assignment rules could not be loaded."}
             </p>
           ) : result.value.items.length === 0 && !module ? (

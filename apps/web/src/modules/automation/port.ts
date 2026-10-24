@@ -8,11 +8,10 @@ export const POPULATED_FIXTURE_ORG_PREFIX = "Synthetic Populated";
 /**
  * Server-side factory for the read-only automation port (workflow and assignment).
  * Default fixture is empty and fully synthetic; no reference data, no write capability.
- * The populated synthetic fixture is opt-in: `MEP_AUTOMATION_FIXTURE=populated` and an
- * organization name with the prefix above (used by component and e2e tests).
+ * The populated synthetic fixture is opt-in by organization name prefix (above), so e2e runs
+ * it in CI without an environment switch; all other organizations get the empty fixture.
  */
 export function createAutomationPort(): AutomationPort {
-  if (process.env.MEP_AUTOMATION_FIXTURE !== "populated") return createMemoryAutomationPort();
   const forOrg = (ctx: OrgContext) =>
     createMemoryAutomationPort({
       fixtures: ctx.orgName.startsWith(POPULATED_FIXTURE_ORG_PREFIX)
