@@ -35,6 +35,8 @@ export function WorkflowRuleDetailScreen({
         </Link>
       </div>
 
+      {!result.ok ? <h1 className="sr-only">Workflow Rule Details</h1> : null}
+
       {/* Forbidden State (WD6) */}
       {!result.ok && result.error.code === "forbidden" ? (
         <div

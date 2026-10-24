@@ -1,3 +1,4 @@
+import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
 import { assertNoPageErrors, expect, test } from "./support/test";
@@ -31,13 +32,13 @@ test("Assignment Rules opens from settings with the introductory state (A0, AL4)
     "aria-selected",
     "true",
   );
-
   // AL4: Introductory explanation in unpopulated state
   const intro = page.getByTestId("assignment-introduction");
   await expect(intro).toBeVisible();
   await expect(intro).toContainText(
     "Assignment Rules helps you automatically assign records to users based on specified criteria.",
   );
+  await expectNoA11yViolations(page, { include: ['section[aria-label="Assignment Rules"]'] });
 
   // Inert tabs (Thresholds, Assistant) remain focusable and do not navigate away
   for (const name of ["Thresholds", "Assistant"]) {
@@ -155,7 +156,6 @@ test("populated Assignment rules list AL1–AL5 and detail AD1–AD7 read-only i
   await expect(noMatches).toHaveText("No assignment rules match the selected module.");
   await expect(page.getByRole("table")).toHaveCount(0);
   await expect(page.getByTestId("assignment-introduction")).toHaveCount(0);
-
   // Filter to Leads -> only Leads rule rendered
   await moduleFilter.selectOption("Leads");
   await applyFilter.click();
@@ -173,6 +173,8 @@ test("populated Assignment rules list AL1–AL5 and detail AD1–AD7 read-only i
   await applyFilter.click();
   await expect(table.getByRole("link", { name: "Synthetic regional routing" })).toBeVisible();
   await expect(table.getByRole("link", { name: "Synthetic contact intake" })).toBeVisible();
+  await expect(page.getByRole("table", { name: "Assignment rules", exact: true })).toBeVisible();
+  await expectNoA11yViolations(page, { include: ['section[aria-label="Assignment Rules"]'] });
 
   // AL3: Next page link is absent when nextCursor is null
   await expect(page.getByRole("link", { name: "Next page" })).toHaveCount(0);
@@ -201,8 +203,10 @@ test("populated Assignment rules list AL1–AL5 and detail AD1–AD7 read-only i
   const backToList = page.getByRole("link", { name: "Back to Assignment Rules" });
   await expect(backToList).toBeVisible();
   await expect(
-    page.getByRole("heading", { name: "Synthetic regional routing", level: 2 }),
+    page.getByRole("heading", { name: "Synthetic regional routing", level: 1 }),
   ).toBeVisible();
+  await expect(detailRegion.getByRole("heading", { level: 1 })).toHaveCount(1);
+  await expectNoA11yViolations(page, { include: ['section[aria-label="Assignment Rule"]'] });
   await expect(detailRegion.getByText("Leads")).toBeVisible();
   await expect(page.getByTestId("assignment-detail-status")).toHaveText("Active");
   await expect(detailRegion.getByText("Synthetic rule that routes by region.")).toBeVisible();
@@ -212,7 +216,7 @@ test("populated Assignment rules list AL1–AL5 and detail AD1–AD7 read-only i
   await expect(detailRegion.getByRole("switch")).toHaveCount(0);
 
   // AD2: Ordered entry rows with displayed sequence and condition
-  await expect(page.getByRole("heading", { name: "Rule entries", level: 3 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Rule entries", level: 2 })).toBeVisible();
   const entriesTable = detailRegion.getByRole("table");
   await expect(entriesTable).toBeVisible();
 
@@ -265,7 +269,7 @@ test("populated Assignment rules list AL1–AL5 and detail AD1–AD7 read-only i
   // AD6: Separate default recipient section with configured fallback
   const fallback = page.getByTestId("assignment-detail-fallback");
   await expect(
-    fallback.getByRole("heading", { name: "Default recipient", level: 3 }),
+    fallback.getByRole("heading", { name: "Default recipient", level: 2 }),
   ).toBeVisible();
   await expect(fallback).toContainText("Groups");
   await expect(fallback).toContainText("synthetic-group-a");
@@ -281,8 +285,9 @@ test("populated Assignment rules list AL1–AL5 and detail AD1–AD7 read-only i
 
   const detailRegion2 = page.getByRole("region", { name: "Assignment Rule" });
   await expect(
-    page.getByRole("heading", { name: "Synthetic contact intake", level: 2 }),
+    page.getByRole("heading", { name: "Synthetic contact intake", level: 1 }),
   ).toBeVisible();
+  await expect(detailRegion2.getByRole("heading", { level: 1 })).toHaveCount(1);
   await expect(detailRegion2.getByText("Contacts")).toBeVisible();
   await expect(page.getByTestId("assignment-detail-status")).toHaveText("Inactive");
   await expect(detailRegion2.getByText("No description")).toBeVisible();

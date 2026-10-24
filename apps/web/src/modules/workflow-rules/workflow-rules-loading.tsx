@@ -9,6 +9,7 @@ export function WorkflowRulesLoading({ orgSlug }: { orgSlug?: string }) {
       aria-label={detail ? "Workflow Rule Details" : "Workflow Rules"}
       className="relative min-h-screen rounded-lg border border-border bg-surface shadow-xs p-6"
     >
+      {detail ? <h1 className="sr-only">Workflow Rule Details</h1> : null}
       {detail ? (
         <div className="mb-6">
           <Link
