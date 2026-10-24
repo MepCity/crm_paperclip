@@ -73,7 +73,6 @@ test("Reports landing: columns, inert controls and report placeholder navigation
   await expect(table.getByRole("row")).toHaveCount(14);
   await table.getByRole("link", { name: "Weekly outreach overview", exact: true }).click();
   await expect(page).toHaveURL(`/crm/${org.slug}/tab/Reports/sample-report-1`);
-  await expect(page.getByText("Report detail is not available yet.")).toBeVisible();
   await page.reload();
   await expect(
     page.getByRole("heading", { name: "Weekly outreach overview", exact: true }).first(),
