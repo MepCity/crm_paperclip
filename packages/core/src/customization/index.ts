@@ -1,3 +1,4 @@
+export { InMemorySchemaCoordinator, schemaRevision } from "./coordinator";
 export { CustomizationConflictError, InMemoryCustomizationAdapter } from "./memory";
 export { resolveEffectiveModule } from "./resolver";
 export type {

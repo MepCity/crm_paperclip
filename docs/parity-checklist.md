@@ -1588,3 +1588,17 @@ inventory pending UI Lead approval; no implementation or module gate claimed.
 | VS-03 | Historical Contact Social card and Lead rail entry | `m2d2-card-invoices`, `leads-detail`; RC01–RC04, RL01 | U5: dated evidence; Lead card export-only; association never attempted |
 | VS-04 | Safety and evidence completeness | Both new paint gates passed; zero clicks/steps; 3/2 background POSTs blocked | Shell diagnostics retained; no setup, preference, tracking or account writes allowed |
 | VS-05 | First slice proposal | Fixture-backed disconnected entry and optional existing Contact Social card | Approval required; no fabricated populated schema or external integration |
+
+### Module 15 — R2 documented enabled surfaces (MEP-1272)
+
+Source: R2 in `research/specs/visits-social.md`; public documentation reviewed
+2026-10-24. **Documented, not observed**; pending UI Lead approval. R1 painted
+inventories remain unchanged; no integration or capture tool used in R2.
+
+| # | Surface | Evidence / status | Remaining boundary |
+| --- | --- | --- | --- |
+| VS-R2-01 | Visits list and detail | D1/D2/D8; VD01–VD07; field catalog, six standard views, CRM groups, Actions Performed | Default columns/order, Top criteria and row menus unknown; no fabricated table parity |
+| VS-R2-02 | Lead/Contact Visit Summary and Visits related list | D3; eight summary fields, five related-list fields, portal selector VD08 | Conditional integration state; not an Accounts Visits card; eight/seven-field documentation discrepancy retained |
+| VS-R2-03 | Social enabled module | D5/D7; SD01–SD05/SD10; documented tabs, filters and prerequisites | Actual account entitlement, enabled layouts, errors and preference persistence unobserved |
+| VS-R2-04 | Associated Social record state | D5/D6; SD06–SD09; RC02/RC03 documented outcomes; Leads/Contacts/Accounts scope | Historical link behaviour not recaptured; record-layout variants and Facebook association flow unresolved |
+| VS-R2-05 | Questions and next slices | U1–U5 partly narrowed; U6 still open; S3 Visits / S4 Social read-only fixture proposals | Implementation approval required; no setup, association, outbound actions or gate claim |

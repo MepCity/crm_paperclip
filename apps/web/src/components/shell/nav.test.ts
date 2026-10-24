@@ -57,7 +57,17 @@ describe("navLinkIconClassName", () => {
 
 describe("shellNav", () => {
   it("defines top-level pinned links and teamspace section structure", () => {
-    expect(shellNav.links.map((link) => link.id)).toEqual(["home", "reports", "analytics"]);
+    expect(shellNav.links.map((link) => link.id)).toEqual([
+      "home",
+      "workqueue",
+      "reports",
+      "analytics",
+    ]);
+    const workqueueLink = shellNav.links[1];
+    if (!workqueueLink) throw new Error("Missing Workqueue link");
+    expect(workqueueLink.href("acme")).toBe("/crm/acme/workqueue");
+    expect(isNavLinkActive(workqueueLink, "acme", "/crm/acme/workqueue")).toBe(true);
+
     const reportsLink = shellNav.links.find((link) => link.id === "reports");
     expect(reportsLink?.href("acme")).toBe("/crm/acme/tab/Reports");
     if (reportsLink) {
@@ -74,6 +84,7 @@ describe("shellNav", () => {
     expect(homeLink).toBeDefined();
     if (!homeLink) return;
 
+    expect(isNavLinkActive(homeLink, "acme", "/crm/acme/workqueue")).toBe(false);
     expect(homeLink.id).toBe("home");
     expect(homeLink.label).toBe("Home");
     expect(homeLink.icon).toBe(Icons.home);
@@ -216,6 +227,7 @@ describe("settingsNav", () => {
       "import-history",
       "export-history",
       "modules-and-fields",
+      "workflow-rules",
       "assignment-rules",
     ]);
     const [general, members] = settingsNav;

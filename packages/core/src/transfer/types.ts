@@ -32,6 +32,8 @@ export interface ImportPreview {
   matchFields: { field: string; label: string }[];
 }
 export interface ImportSettings {
+  /** Mapping revision forwarded unchanged at every record commit boundary. */
+  expectedRevision?: string;
   mode: ImportMode;
   matchField?: string;
   ignoreEmptyOnUpdate: boolean;
