@@ -14,7 +14,12 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
-import { sendViewCommand } from "./custom-view-api";
+import {
+  deletePrivateView,
+  getPrivateViews,
+  savePrivateView,
+  sendViewCommand,
+} from "./custom-view-api";
 import "./custom-view-dialog.css";
 
 const COMPARATOR_OPTIONS: { value: Comparator; label: string }[] = [
@@ -40,6 +45,7 @@ export interface CriterionDraft {
   comparator: Comparator;
   value: string;
   rawTypedValue?: unknown;
+  leafIndex?: number;
 }
 
 export interface CustomViewDialogProps {
@@ -47,11 +53,12 @@ export interface CustomViewDialogProps {
   mode: "create" | "edit";
   module: string;
   orgSlug: string;
+  userId?: string;
   isAdmin: boolean;
   expectedRevision: string;
   initial?: Partial<ListView> & { sharedTo?: "only_me" | "everyone" };
   fields: readonly (FieldDefinition & { id?: string })[];
-  onSave?: (savedView: ListView) => void;
+  onSave?: (savedView: ListView & { sharedTo?: "only_me" | "everyone" }) => void;
   onDelete?: (viewId: string) => void;
   onClose: () => void;
 }
@@ -59,22 +66,26 @@ export interface CustomViewDialogProps {
 function parseSingleCriterion(
   leaf: { field: string; comparator: Comparator; value: unknown },
   apiNameById: Map<string, string>,
+  leafIndex?: number,
 ): CriterionDraft {
   const fieldName = apiNameById.get(leaf.field) ?? leaf.field;
   let valueStr = "";
   if (leaf.value !== null && leaf.value !== undefined) {
-    if (typeof leaf.value === "object") {
+    if (Array.isArray(leaf.value)) {
+      valueStr = leaf.value.join(", ");
+    } else if (typeof leaf.value === "object") {
       valueStr = JSON.stringify(leaf.value);
     } else {
       valueStr = String(leaf.value);
     }
   }
   return {
-    id: `crit-${fieldName}-${leaf.comparator}-${Math.random()}`,
+    id: `crit-${leafIndex ?? 0}-${fieldName}-${leaf.comparator}-${Math.random()}`,
     field: fieldName,
     comparator: leaf.comparator,
     value: valueStr,
     rawTypedValue: leaf.value,
+    leafIndex,
   };
 }
 
@@ -86,17 +97,23 @@ function parseCriteriaDrafts(
   groupOperator: "and" | "or";
 } {
   if (!criteria) return { rows: [], groupOperator: "and" };
-  if ("group" in criteria) {
-    const operator = criteria.groupOperator ?? "and";
-    const rows = criteria.group.flatMap((child) => {
-      if ("group" in child) {
-        return child.group.flatMap((g) => parseCriteriaDrafts(g, apiNameById).rows);
-      }
-      return [parseSingleCriterion(child, apiNameById)];
-    });
-    return { rows, groupOperator: operator };
+
+  let nextIndex = 0;
+  function parseNode(node: Criteria): CriterionDraft[] {
+    if ("group" in node) {
+      return node.group.flatMap((child) => {
+        if ("group" in child) {
+          return parseNode(child);
+        }
+        return [parseSingleCriterion(child, apiNameById, nextIndex++)];
+      });
+    }
+    return [parseSingleCriterion(node, apiNameById, nextIndex++)];
   }
-  return { rows: [parseSingleCriterion(criteria, apiNameById)], groupOperator: "and" };
+
+  const rows = parseNode(criteria);
+  const operator = "group" in criteria && criteria.groupOperator ? criteria.groupOperator : "and";
+  return { rows, groupOperator: operator };
 }
 
 function buildTypedValue(
@@ -107,14 +124,32 @@ function buildTypedValue(
     return null;
   }
   if (def?.dataType === "boolean") {
-    return row.value === "true" || row.value === "1" || row.rawTypedValue === true;
+    const normalized = row.value.trim().toLowerCase();
+    if (normalized === "false" || normalized === "0") {
+      return false;
+    }
+    if (normalized === "true" || normalized === "1") {
+      return true;
+    }
+    if (typeof row.rawTypedValue === "boolean") {
+      return row.rawTypedValue;
+    }
+    return row.value === "true" || row.value === "1";
   }
   if (def && ["integer", "double", "currency", "percent", "bigint"].includes(def.dataType)) {
     if (row.comparator === "between" || row.comparator === "not_between") {
-      if (Array.isArray(row.rawTypedValue) && row.value === row.rawTypedValue.join(", ")) {
+      const clean = row.value.replace(/^\[\s*|\s*\]$/g, "").trim();
+      const parts = clean.split(/,\s*/).map((item) => {
+        const num = Number(item);
+        return Number.isNaN(num) ? item : num;
+      });
+      if (parts.length === 2 && parts.every((p) => typeof p === "number")) {
+        return parts as [number, number];
+      }
+      if (Array.isArray(row.rawTypedValue) && row.rawTypedValue.length === 2) {
         return row.rawTypedValue as CriteriaValue;
       }
-      return row.value.split(/,\s*/).map(Number);
+      return parts as CriteriaValue;
     }
     const num = Number(row.value);
     if (!Number.isNaN(num) && row.value.trim() !== "") {
@@ -123,10 +158,11 @@ function buildTypedValue(
     return row.value;
   }
   if (row.comparator === "between" || row.comparator === "not_between") {
-    if (Array.isArray(row.rawTypedValue) && row.value === row.rawTypedValue.join(", ")) {
+    const clean = row.value.replace(/^\[\s*|\s*\]$/g, "").trim();
+    if (Array.isArray(row.rawTypedValue) && clean === row.rawTypedValue.join(", ")) {
       return row.rawTypedValue as CriteriaValue;
     }
-    return row.value.split(/,\s*/);
+    return clean.split(/,\s*/);
   }
   if (
     typeof row.rawTypedValue === "object" &&
@@ -138,6 +174,76 @@ function buildTypedValue(
   return row.value;
 }
 
+function countLeaves(node: Criteria): number {
+  if ("group" in node) {
+    return node.group.reduce((acc, c) => acc + countLeaves(c), 0);
+  }
+  return 1;
+}
+
+function rebuildCriteriaAst(
+  originalAst: Criteria | null | undefined,
+  rows: CriterionDraft[],
+  groupOperator: "and" | "or",
+  idByApiName: Map<string, string> | null,
+  fieldByApiName: Map<string, FieldDefinition & { id?: string }>,
+): Criteria | null {
+  if (rows.length === 0) return null;
+
+  const originalLeafCount = originalAst ? countLeaves(originalAst) : 0;
+
+  function resolveField(name: string): string {
+    if (!idByApiName) {
+      return name.startsWith("field:") ? name.slice(6) : name;
+    }
+    return idByApiName.get(name) ?? name;
+  }
+
+  // Preserve nested AST if rows count matches original leaves
+  if (originalAst && rows.length === originalLeafCount) {
+    let currentLeafIndex = 0;
+    function updateAst(node: Criteria): Criteria {
+      if ("group" in node) {
+        return {
+          groupOperator: node.groupOperator ?? "and",
+          group: node.group.map(updateAst),
+        };
+      }
+      const row = rows[currentLeafIndex++];
+      if (!row) return node;
+      return {
+        field: resolveField(row.field),
+        comparator: row.comparator,
+        value: buildTypedValue(row, fieldByApiName.get(row.field)),
+      };
+    }
+    const updated = updateAst(originalAst);
+    if ("group" in updated && updated.groupOperator !== groupOperator) {
+      return { ...updated, groupOperator };
+    }
+    return updated;
+  }
+
+  // Flat construction
+  if (rows.length === 1 && rows[0]) {
+    const row = rows[0];
+    return {
+      field: resolveField(row.field),
+      comparator: row.comparator,
+      value: buildTypedValue(row, fieldByApiName.get(row.field)),
+    };
+  }
+
+  return {
+    groupOperator,
+    group: rows.map((row) => ({
+      field: resolveField(row.field),
+      comparator: row.comparator,
+      value: buildTypedValue(row, fieldByApiName.get(row.field)),
+    })),
+  };
+}
+
 export function CustomViewDialog(props: CustomViewDialogProps) {
   if (!props.open) return null;
   return <CustomViewDialogContent {...props} />;
@@ -147,6 +253,7 @@ function CustomViewDialogContent({
   mode,
   module,
   orgSlug,
+  userId,
   isAdmin,
   expectedRevision,
   initial,
@@ -157,6 +264,7 @@ function CustomViewDialogContent({
 }: CustomViewDialogProps) {
   const titleId = useId();
   const isProtected = Boolean(initial?.systemDefined || initial?.isDefault);
+  const effectiveUserId = userId || "default-user";
 
   // Field lookups: apiName <-> id
   const idByApiName = useMemo(() => {
@@ -266,6 +374,7 @@ function CustomViewDialogContent({
         field: defaultField,
         comparator: "equal",
         value: "",
+        leafIndex: criteriaRows.length,
       },
     ]);
   }
@@ -297,26 +406,17 @@ function CustomViewDialogContent({
     setPending(true);
     setError(null);
 
-    // Build criteria with typed values and preserved group structure
-    let criteria: Criteria | null = null;
-    if (criteriaRows.length === 1 && criteriaRows[0]) {
-      const row = criteriaRows[0];
-      const fieldRef = idByApiName.get(row.field) ?? row.field;
-      criteria = {
-        field: fieldRef,
-        comparator: row.comparator as Comparator,
-        value: buildTypedValue(row, fieldByApiName.get(row.field)),
-      };
-    } else if (criteriaRows.length > 1) {
-      criteria = {
-        groupOperator,
-        group: criteriaRows.map((row) => ({
-          field: idByApiName.get(row.field) ?? row.field,
-          comparator: row.comparator as Comparator,
-          value: buildTypedValue(row, fieldByApiName.get(row.field)),
-        })),
-      };
-    }
+    const isShared = isAdmin && sharedTo === "everyone";
+
+    // Build criteria with typed values and preserved AST structure
+    // Server commands for shared views use stable field IDs; private views use field API names
+    const criteria = rebuildCriteriaAst(
+      initial?.criteria,
+      criteriaRows,
+      groupOperator,
+      isShared ? idByApiName : null,
+      fieldByApiName,
+    );
 
     // Stable column field IDs
     const columnIds = selectedColumns.map((c) => idByApiName.get(c) ?? c);
@@ -331,68 +431,89 @@ function CustomViewDialogContent({
       };
     }
 
-    const commandPayload =
-      mode === "create"
-        ? {
-            type: "view.create" as const,
-            view: {
-              id: viewId,
-              name: trimmedName,
-              systemDefined: false as const,
-              isDefault: false as const,
-              columns: columnIds,
-              criteria,
-              sort: sortPayload,
-            },
-          }
-        : {
-            type: "view.patch" as const,
-            view: {
-              id: viewId,
-              name: trimmedName,
-              systemDefined: false as const,
-              isDefault: false as const,
-              columns: columnIds,
-              criteria,
-              sort: sortPayload,
-            },
-          };
+    if (isShared) {
+      const commandPayload =
+        mode === "create"
+          ? {
+              type: "view.create" as const,
+              view: {
+                id: viewId,
+                name: trimmedName,
+                systemDefined: false as const,
+                isDefault: false as const,
+                columns: columnIds,
+                criteria,
+                sort: sortPayload,
+              },
+            }
+          : {
+              type: "view.patch" as const,
+              view: {
+                id: viewId,
+                name: trimmedName,
+                systemDefined: false as const,
+                isDefault: false as const,
+                columns: columnIds,
+                criteria,
+                sort: sortPayload,
+              },
+            };
 
-    const res = await sendViewCommand(
-      orgSlug,
-      module,
-      mode === "create" ? "POST" : "PATCH",
-      expectedRevision,
-      commandPayload,
-      mode === "edit" ? viewId : undefined,
-    );
+      const res = await sendViewCommand(
+        orgSlug,
+        module,
+        mode === "create" ? "POST" : "PATCH",
+        expectedRevision,
+        commandPayload,
+        mode === "edit" ? viewId : undefined,
+      );
 
-    setPending(false);
+      setPending(false);
 
-    if (res.ok) {
-      const savedView: ListView = res.view ?? {
-        id: viewId,
-        name: trimmedName,
-        systemDefined: false,
-        isDefault: false,
-        columns: selectedColumns,
-        criteria,
-        sort,
-      };
-      onSave?.(savedView);
-      onClose();
+      if (res.ok) {
+        deletePrivateView(orgSlug, effectiveUserId, module, viewId);
+        const savedView: ListView = res.view ?? {
+          id: viewId,
+          name: trimmedName,
+          systemDefined: false,
+          isDefault: false,
+          columns: selectedColumns,
+          criteria,
+          sort,
+        };
+        onSave?.({ ...savedView, sharedTo: "everyone" });
+        onClose();
+        return;
+      }
+
+      if (res.fieldErrors?.view_field && res.fieldErrors.view_field.length > 0) {
+        setError(
+          `View references an inactive or unknown field: ${res.fieldErrors.view_field.join(", ")}`,
+        );
+      } else if (res.fieldErrors?.view?.includes("protected_view")) {
+        setError("protected_view: system and default views are immutable.");
+      } else {
+        setError(res.message);
+      }
       return;
     }
 
-    if (res.fieldErrors?.view_field && res.fieldErrors.view_field.length > 0) {
-      setError(
-        `View references an inactive or unknown field: ${res.fieldErrors.view_field.join(", ")}`,
-      );
-    } else if (res.fieldErrors?.view?.includes("protected_view")) {
-      setError("protected_view: system and default views are immutable.");
-    } else {
-      setError(res.message);
-    }
+    // Private view save (admin "Only me" OR standard member)
+    const privateSavedView: ListView & { sharedTo: "only_me" } = {
+      id: viewId,
+      name: trimmedName,
+      systemDefined: false,
+      isDefault: false,
+      columns: selectedColumns,
+      criteria,
+      sort,
+      sharedTo: "only_me",
+    };
+
+    savePrivateView(orgSlug, effectiveUserId, module, privateSavedView);
+    setPending(false);
+    onSave?.(privateSavedView);
+    onClose();
   }
 
   async function handleDelete() {
@@ -405,6 +526,18 @@ function CustomViewDialogContent({
 
     setPending(true);
     setError(null);
+
+    const isPrivate =
+      initial?.sharedTo === "only_me" ||
+      getPrivateViews(orgSlug, effectiveUserId, module).some((v) => v.id === viewId);
+
+    if (isPrivate) {
+      deletePrivateView(orgSlug, effectiveUserId, module, viewId);
+      setPending(false);
+      onDelete?.(viewId);
+      onClose();
+      return;
+    }
 
     const res = await sendViewCommand(
       orgSlug,

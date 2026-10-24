@@ -125,9 +125,30 @@ test.describe("Custom Views Editor", () => {
       // Sharing section must NOT be visible for member (Kurul 1 / Board decision 1)
       await expect(memberPage.getByTestId("sharing-section")).toHaveCount(0);
 
-      // Close modal
-      await memberPage.getByRole("button", { name: "Cancel" }).click();
+      // Fill in view name and criterion
+      await memberPage.getByPlaceholder("Enter Custom View Name").fill("Member Private Contacts");
+      await memberPage.getByRole("button", { name: "Add Criterion" }).click();
+      await expect(memberPage.getByTestId("criterion-row-0")).toBeVisible();
+      await memberPage.getByTestId("criterion-row-0").getByPlaceholder("Type here").fill("Acme");
+
+      // Save view
+      await memberPage.getByRole("button", { name: "Save" }).click();
+
+      // Verify dialog closes and navigates to custom view route
       await expect(memberPage.getByRole("heading", { name: "New Custom View" })).toHaveCount(0);
+      await expect(memberPage).toHaveURL(new RegExp(`/tab/${MODULE}/custom-view/`));
+      await expect(
+        memberPage.locator("[data-view-pill]").filter({ hasText: "Member Private Contacts" }),
+      ).toBeVisible();
+      await expect(memberPage.getByRole("table", { name: "Records" })).toBeVisible();
+
+      // Verify user isolation: The admin user (on `page`) must NOT see "Member Private Contacts"
+      await page.bringToFront();
+      await page.goto(moduleListDefaultPath(org.slug, MODULE));
+      await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 60_000 });
+      await page.getByRole("button", { name: "Custom views" }).click();
+      await expect(page.getByRole("menu", { name: "Custom views" })).toBeVisible();
+      await expect(page.getByText("Member Private Contacts")).toHaveCount(0);
     } finally {
       await memberContext.close();
     }

@@ -310,25 +310,25 @@ describe("CustomViewDialog", () => {
     );
   });
 
-  it("member sees NO sharing option and receives server rejection on unauthorized save", async () => {
+  it("member sees NO sharing option and saves private view to user-scoped storage", async () => {
     const user = userEvent.setup();
-    vi.spyOn(api, "sendViewCommand").mockResolvedValue({
-      ok: false,
-      stale: false,
-      forbidden: true,
-      message: "Only administrators can customize organization views.",
-    });
+    const sendSpy = vi.spyOn(api, "sendViewCommand");
+    const onSave = vi.fn();
+    const onClose = vi.fn();
 
     render(
       <CustomViewDialog
         {...defaultProps({
           isAdmin: false,
+          userId: "member-user-1",
+          onSave,
+          onClose,
           initial: { columns: ["Full_Name"] },
         })}
       />,
     );
 
-    // Sharing section MUST NOT be rendered for members (Üye: paylaşım seçeneği yok)
+    // Sharing section MUST NOT be rendered for members (Kurul 1 / Board decision 1)
     expect(screen.queryByTestId("sharing-section")).toBeNull();
     expect(screen.queryByRole("radio", { name: "Everyone" })).toBeNull();
     expect(screen.queryByRole("radio", { name: "Only me" })).toBeNull();
@@ -336,11 +336,314 @@ describe("CustomViewDialog", () => {
     await user.type(screen.getByLabelText("Enter Custom View Name"), "My Personal Leads");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
-    await waitFor(() => {
-      expect(screen.getByRole("alert").textContent).toContain(
-        "Only administrators can customize organization views.",
-      );
+    // Must NOT call organization shared view command
+    expect(sendSpy).not.toHaveBeenCalled();
+
+    // Must call onSave with private view
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "My Personal Leads",
+        sharedTo: "only_me",
+      }),
+    );
+    expect(onClose).toHaveBeenCalled();
+
+    // User-scoped private view is saved in localStorage
+    const saved = api.getPrivateViews("test-org", "member-user-1", "Leads");
+    expect(saved).toHaveLength(1);
+    expect(saved[0]?.name).toBe("My Personal Leads");
+
+    // Second user does NOT see this view (user isolation)
+    const otherUserViews = api.getPrivateViews("test-org", "other-user-2", "Leads");
+    expect(otherUserViews).toEqual([]);
+  });
+
+  it("admin selecting 'Only me' saves private view without calling sendViewCommand", async () => {
+    const user = userEvent.setup();
+    const sendSpy = vi.spyOn(api, "sendViewCommand");
+    const onSave = vi.fn();
+    const onClose = vi.fn();
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          isAdmin: true,
+          userId: "admin-user-1",
+          onSave,
+          onClose,
+          initial: { columns: ["Full_Name"] },
+        })}
+      />,
+    );
+
+    // Admin sees sharing options and selects "Only me"
+    expect(screen.getByTestId("sharing-section")).toBeTruthy();
+    await user.click(screen.getByRole("radio", { name: "Only me" }));
+
+    await user.type(screen.getByLabelText("Enter Custom View Name"), "Admin Private Leads");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    // Does NOT hit organization shared views endpoint
+    expect(sendSpy).not.toHaveBeenCalled();
+
+    // Saved to admin's private views
+    expect(onSave).toHaveBeenCalledWith(
+      expect.objectContaining({
+        name: "Admin Private Leads",
+        sharedTo: "only_me",
+      }),
+    );
+    const adminViews = api.getPrivateViews("test-org", "admin-user-1", "Leads");
+    expect(adminViews).toHaveLength(1);
+    expect(adminViews[0]?.name).toBe("Admin Private Leads");
+  });
+
+  it("preserves nested criteria AST A AND (B OR C) when editing name only", async () => {
+    const user = userEvent.setup();
+    const sendSpy = vi.spyOn(api, "sendViewCommand").mockResolvedValue({
+      ok: true,
+      revision: "rev-2",
     });
+
+    const nestedCriteria = {
+      groupOperator: "and" as const,
+      group: [
+        { field: "f-name", comparator: "equal" as const, value: "Acme" },
+        {
+          groupOperator: "or" as const,
+          group: [
+            { field: "f-revenue", comparator: "greater_than" as const, value: 50000 },
+            { field: "f-company", comparator: "equal" as const, value: "Big Corp" },
+          ],
+        },
+      ],
+    };
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          mode: "edit",
+          isAdmin: true,
+          initial: {
+            id: "view-nested",
+            name: "Original Nested View",
+            columns: ["Full_Name"],
+            criteria: nestedCriteria,
+          },
+        })}
+      />,
+    );
+
+    const nameInput = screen.getByLabelText("Enter Custom View Name");
+    await user.clear(nameInput);
+    await user.type(nameInput, "Renamed Nested View");
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    // The nested AST must NOT be flattened to A AND B AND C!
+    expect(sendSpy).toHaveBeenCalledWith(
+      "test-org",
+      "Leads",
+      "PATCH",
+      "rev-1",
+      expect.objectContaining({
+        type: "view.patch",
+        view: expect.objectContaining({
+          id: "view-nested",
+          name: "Renamed Nested View",
+          criteria: {
+            groupOperator: "and",
+            group: [
+              { field: "f-name", comparator: "equal", value: "Acme" },
+              {
+                groupOperator: "or",
+                group: [
+                  { field: "f-revenue", comparator: "greater_than", value: 50000 },
+                  { field: "f-company", comparator: "equal", value: "Big Corp" },
+                ],
+              },
+            ],
+          },
+        }),
+      }),
+      "view-nested",
+    );
+  });
+
+  it("preserves nested criteria AST and updates modified leaf value", async () => {
+    const user = userEvent.setup();
+    const sendSpy = vi.spyOn(api, "sendViewCommand").mockResolvedValue({
+      ok: true,
+      revision: "rev-2",
+    });
+
+    const nestedCriteria = {
+      groupOperator: "and" as const,
+      group: [
+        { field: "f-name", comparator: "equal" as const, value: "Acme" },
+        {
+          groupOperator: "or" as const,
+          group: [
+            { field: "f-revenue", comparator: "greater_than" as const, value: 50000 },
+            { field: "f-company", comparator: "equal" as const, value: "Old Corp" },
+          ],
+        },
+      ],
+    };
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          mode: "edit",
+          isAdmin: true,
+          initial: {
+            id: "view-nested-edit",
+            name: "Nested Edit",
+            columns: ["Full_Name"],
+            criteria: nestedCriteria,
+          },
+        })}
+      />,
+    );
+
+    // Edit criterion 3 value (the second leaf in the OR group: row index 2)
+    const val3 = screen.getByLabelText("Criterion 3 Value");
+    await user.clear(val3);
+    await user.type(val3, "New Corp");
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(sendSpy).toHaveBeenCalledWith(
+      "test-org",
+      "Leads",
+      "PATCH",
+      "rev-1",
+      expect.objectContaining({
+        type: "view.patch",
+        view: expect.objectContaining({
+          id: "view-nested-edit",
+          criteria: {
+            groupOperator: "and",
+            group: [
+              { field: "f-name", comparator: "equal", value: "Acme" },
+              {
+                groupOperator: "or",
+                group: [
+                  { field: "f-revenue", comparator: "greater_than", value: 50000 },
+                  { field: "f-company", comparator: "equal", value: "New Corp" },
+                ],
+              },
+            ],
+          },
+        }),
+      }),
+      "view-nested-edit",
+    );
+  });
+
+  it("correctly changes boolean criterion from true to false", async () => {
+    const user = userEvent.setup();
+    const sendSpy = vi.spyOn(api, "sendViewCommand").mockResolvedValue({
+      ok: true,
+      revision: "rev-2",
+    });
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          mode: "edit",
+          isAdmin: true,
+          initial: {
+            id: "view-bool",
+            name: "Boolean View",
+            columns: ["Full_Name"],
+            criteria: {
+              field: "f-email-opt-out",
+              comparator: "equal",
+              value: true,
+            },
+          },
+        })}
+      />,
+    );
+
+    const valInput = screen.getByLabelText("Criterion 1 Value");
+    expect((valInput as HTMLInputElement).value).toBe("true");
+
+    await user.clear(valInput);
+    await user.type(valInput, "false");
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(sendSpy).toHaveBeenCalledWith(
+      "test-org",
+      "Leads",
+      "PATCH",
+      "rev-1",
+      expect.objectContaining({
+        view: expect.objectContaining({
+          criteria: {
+            field: "f-email-opt-out",
+            comparator: "equal",
+            value: false, // NOT true!
+          },
+        }),
+      }),
+      "view-bool",
+    );
+  });
+
+  it("correctly parses and sends numeric between criterion as [number, number]", async () => {
+    const user = userEvent.setup();
+    const sendSpy = vi.spyOn(api, "sendViewCommand").mockResolvedValue({
+      ok: true,
+      revision: "rev-2",
+    });
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          mode: "edit",
+          isAdmin: true,
+          initial: {
+            id: "view-between",
+            name: "Between View",
+            columns: ["Full_Name"],
+            criteria: {
+              field: "f-revenue",
+              comparator: "between",
+              value: [10000, 50000],
+            },
+          },
+        })}
+      />,
+    );
+
+    // Initial input display should be "10000, 50000", not "[10000,50000]"
+    const valInput = screen.getByLabelText("Criterion 1 Value");
+    expect((valInput as HTMLInputElement).value).toBe("10000, 50000");
+
+    await user.clear(valInput);
+    await user.type(valInput, "20000, 80000");
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(sendSpy).toHaveBeenCalledWith(
+      "test-org",
+      "Leads",
+      "PATCH",
+      "rev-1",
+      expect.objectContaining({
+        view: expect.objectContaining({
+          criteria: {
+            field: "f-revenue",
+            comparator: "between",
+            value: [20000, 80000], // Real numbers, NOT [NaN, NaN] or [null, null]
+          },
+        }),
+      }),
+      "view-between",
+    );
   });
 
   it("protects system-defined and default views: disables Save and Delete", () => {

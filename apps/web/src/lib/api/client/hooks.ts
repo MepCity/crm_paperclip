@@ -73,13 +73,13 @@ export function useViews(module: ModuleApiName, options?: { enabled?: boolean })
   });
 }
 
-export function useView(module: ModuleApiName, viewId: string) {
+export function useView(module: ModuleApiName, viewId: string, options?: { enabled?: boolean }) {
   const orgSlug = useOrgSlug();
   const service = useClientRecordService();
   return useQuery({
     queryKey: apiKeys.view(orgSlug, module, viewId),
     queryFn: () => service.getView(module, viewId),
-    enabled: Boolean(viewId),
+    enabled: Boolean(viewId) && (options?.enabled ?? true),
   });
 }
 

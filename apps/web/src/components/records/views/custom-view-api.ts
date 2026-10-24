@@ -179,3 +179,60 @@ export async function sendViewCommand(
     };
   }
 }
+
+export function privateViewsStorageKey(orgSlug: string, userId: string, module: string): string {
+  return `crm:custom-views:${orgSlug}:${userId}:${module}`;
+}
+
+/** Reads user-scoped private views for the given organization and module. */
+export function getPrivateViews(orgSlug: string, userId: string, module: string): ListView[] {
+  if (typeof window === "undefined" || !userId) return [];
+  try {
+    const raw = localStorage.getItem(privateViewsStorageKey(orgSlug, userId, module));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed as ListView[];
+  } catch {
+    return [];
+  }
+}
+
+/** Saves or updates one user-scoped private view. */
+export function savePrivateView(
+  orgSlug: string,
+  userId: string,
+  module: string,
+  view: ListView,
+): void {
+  if (typeof window === "undefined" || !userId) return;
+  try {
+    const existing = getPrivateViews(orgSlug, userId, module);
+    const index = existing.findIndex((v) => v.id === view.id);
+    const viewWithShare = { ...view, sharedTo: "only_me" as const };
+    const next =
+      index >= 0
+        ? existing.map((v, i) => (i === index ? viewWithShare : v))
+        : [...existing, viewWithShare];
+    localStorage.setItem(privateViewsStorageKey(orgSlug, userId, module), JSON.stringify(next));
+  } catch {
+    // Quota or disabled storage fallback
+  }
+}
+
+/** Deletes one user-scoped private view. */
+export function deletePrivateView(
+  orgSlug: string,
+  userId: string,
+  module: string,
+  viewId: string,
+): void {
+  if (typeof window === "undefined" || !userId) return;
+  try {
+    const existing = getPrivateViews(orgSlug, userId, module);
+    const next = existing.filter((v) => v.id !== viewId);
+    localStorage.setItem(privateViewsStorageKey(orgSlug, userId, module), JSON.stringify(next));
+  } catch {
+    // Quota or disabled storage fallback
+  }
+}

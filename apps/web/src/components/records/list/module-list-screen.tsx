@@ -8,6 +8,7 @@ import type {
   Criteria,
   FieldDefinition,
   ListResult,
+  ListView,
   ModuleApiName,
   ModuleMetadata,
   RecordData,
@@ -23,6 +24,7 @@ import { RecordBoard, type RecordBoardProps } from "@/components/records/board/r
 import { DeduplicateJob } from "@/components/records/deduplicate/dedup-job";
 import { writePrintListQuery } from "@/components/records/print/print-list-handoff";
 import { supportsListPrint } from "@/components/records/print/print-modules";
+import { getPrivateViews } from "@/components/records/views/custom-view-api";
 import { CustomViewDialog } from "@/components/records/views/custom-view-dialog";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -309,13 +311,49 @@ function ModuleListScreenLoaded({
     config.module === "Leads" || config.module === "Contacts" ? config.module : null;
   const deleteRecords = useDeleteRecords(config.module);
 
+  const effectiveUserId = currentUserId || "default-user";
+  const [privateViews, setPrivateViews] = useState<ListView[]>(() =>
+    typeof window !== "undefined"
+      ? getPrivateViews(orgSlug, currentUserId || "default-user", config.module)
+      : [],
+  );
+
+  useEffect(() => {
+    setPrivateViews(getPrivateViews(orgSlug, currentUserId || "default-user", config.module));
+  }, [orgSlug, currentUserId, config.module]);
+
   const viewsQuery = useViews(config.module);
   const moduleQuery = useModule(config.module);
   const projectionQuery = useModuleProjection(config.module);
-  const viewQuery = useView(config.module, viewId);
+  const privateView = useMemo(
+    () => privateViews.find((v) => v.id === viewId),
+    [privateViews, viewId],
+  );
+  const viewQuery = useView(config.module, viewId, { enabled: !privateView });
   const users = useUsers();
   const service = useClientRecordService();
-  const view = viewQuery.data;
+
+  const view = viewQuery.data ?? privateView;
+
+  const combinedViews = useMemo(() => {
+    const list = [...(viewsQuery.data ?? [])];
+    const serverIds = new Set(list.map((v) => v.id));
+    for (const pv of privateViews) {
+      if (!serverIds.has(pv.id)) {
+        list.push({ id: pv.id, name: pv.name, systemDefined: false, isDefault: false });
+      }
+    }
+    return list;
+  }, [viewsQuery.data, privateViews]);
+
+  const defaultViewId = useMemo(() => {
+    return viewsQuery.data?.find((v) => v.isDefault)?.id ?? viewsQuery.data?.[0]?.id ?? "all";
+  }, [viewsQuery.data]);
+
+  const serverViewId = useMemo(() => {
+    if (!privateView) return viewId;
+    return defaultViewId;
+  }, [privateView, viewId, defaultViewId]);
 
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [selectedColumns, setSelectedColumns] = useState<{
@@ -357,16 +395,37 @@ function ModuleListScreenLoaded({
     [appliedCriteria, config.linkField, letter],
   );
 
+  const effectiveListCriteria = useMemo(() => {
+    if (privateView?.criteria) {
+      const normalize = (c: Criteria): Criteria => {
+        if ("group" in c) {
+          return { ...c, group: c.group.map(normalize) };
+        }
+        return {
+          ...c,
+          field: c.field.startsWith("field:") ? c.field.slice(6) : c.field,
+        };
+      };
+      return combineCriteriaAnd([normalize(privateView.criteria), listCriteria]);
+    }
+    return listCriteria;
+  }, [privateView?.criteria, listCriteria]);
+
   const listQuery = useMemo(() => {
     if (columnApiNames.length === 0) return null;
     // Row presentation may need a field that is not a visible column.
     const queryFields = config.allDayField
       ? [...new Set([...columnApiNames, config.allDayField])]
       : columnApiNames;
-    const base = listQueryFromSearchState(viewId, queryFields, searchState, eligibleSortFields);
+    const base = listQueryFromSearchState(
+      serverViewId,
+      queryFields,
+      searchState,
+      eligibleSortFields,
+    );
     return {
       ...base,
-      ...(listCriteria ? { filters: listCriteria } : {}),
+      ...(effectiveListCriteria ? { filters: effectiveListCriteria } : {}),
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
       ...(appliedCampaignFilter ? { campaignFilter: appliedCampaignFilter } : {}),
       ...(appliedSystemFilters ? { systemFilters: appliedSystemFilters } : {}),
@@ -381,16 +440,16 @@ function ModuleListScreenLoaded({
     columnApiNames,
     config.allDayField,
     config.activityRibbon,
+    effectiveListCriteria,
     eligibleSortFields,
-    listCriteria,
     searchState,
-    viewId,
+    serverViewId,
   ]);
 
   const countQuery = useMemo(
     () => ({
-      viewId,
-      ...(listCriteria ? { filters: listCriteria } : {}),
+      viewId: serverViewId,
+      ...(effectiveListCriteria ? { filters: effectiveListCriteria } : {}),
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
       ...(appliedCampaignFilter ? { campaignFilter: appliedCampaignFilter } : {}),
       ...(appliedSystemFilters ? { systemFilters: appliedSystemFilters } : {}),
@@ -401,8 +460,8 @@ function ModuleListScreenLoaded({
       appliedCampaignFilter,
       appliedSystemFilters,
       appliedRelatedModules,
-      listCriteria,
-      viewId,
+      effectiveListCriteria,
+      serverViewId,
     ],
   );
 
@@ -672,10 +731,10 @@ function ModuleListScreenLoaded({
     (viewQuery.isLoading && !view) ||
     (listQuery !== null && list.isLoading && !list.data);
 
-  if (viewQuery.isError && viewQuery.error instanceof NotFoundError) {
+  if (!privateView && viewQuery.isError && viewQuery.error instanceof NotFoundError) {
     return <ListNotFound />;
   }
-  if (viewQuery.isError && !(viewQuery.error instanceof NotFoundError)) {
+  if (!privateView && viewQuery.isError && !(viewQuery.error instanceof NotFoundError)) {
     throw viewQuery.error;
   }
   if (list.isError && list.error instanceof NotFoundError) {
@@ -871,7 +930,7 @@ function ModuleListScreenLoaded({
     >
       <ViewTabStrip
         viewName={view.name}
-        views={config.inventory ? viewsQuery.data : undefined}
+        views={config.inventory ? combinedViews : undefined}
         pinnedViews={config.pinnedViews}
         searchable={config.viewMenuSearch}
         onViewChange={(id) => {
@@ -882,11 +941,7 @@ function ModuleListScreenLoaded({
           );
         }}
         onNewView={() => setCustomViewModal({ open: true, mode: "create" })}
-        onEditView={
-          view && !view.systemDefined && !view.isDefault
-            ? (id) => setCustomViewModal({ open: true, mode: "edit", viewId: id })
-            : undefined
-        }
+        onEditView={(id) => setCustomViewModal({ open: true, mode: "edit", viewId: id })}
       />
       {selectionActive && presentation === "table" ? (
         <SelectionBar
@@ -1059,24 +1114,39 @@ function ModuleListScreenLoaded({
           mode={customViewModal.mode}
           module={config.module}
           orgSlug={orgSlug}
+          userId={effectiveUserId}
           isAdmin={isAdmin}
           expectedRevision={projectionQuery.data?.revision ?? ""}
-          initial={customViewModal.mode === "edit" ? view : undefined}
+          initial={
+            customViewModal.mode === "edit"
+              ? customViewModal.viewId && customViewModal.viewId !== view?.id
+                ? (privateViews.find((v) => v.id === customViewModal.viewId) ?? view)
+                : view
+              : undefined
+          }
           fields={projectionQuery.data?.fields ?? moduleQuery.data?.fields ?? []}
           onClose={() => setCustomViewModal(null)}
           onSave={(savedView) => {
-            service.invalidate?.(config.module);
-            void queryClient.invalidateQueries({
-              queryKey: apiKeys.module(orgSlug, config.module),
-              exact: true,
-            });
-            void queryClient.invalidateQueries({ queryKey: apiKeys.views(orgSlug, config.module) });
-            void queryClient.invalidateQueries({
-              queryKey: apiKeys.view(orgSlug, config.module, savedView.id),
-            });
-            void queryClient.invalidateQueries({
-              queryKey: apiKeys.moduleProjection(orgSlug, config.module),
-            });
+            const isPrivate =
+              savedView.sharedTo === "only_me" || (!isAdmin && !savedView.systemDefined);
+            if (isPrivate) {
+              setPrivateViews(getPrivateViews(orgSlug, effectiveUserId, config.module));
+            } else {
+              service.invalidate?.(config.module);
+              void queryClient.invalidateQueries({
+                queryKey: apiKeys.module(orgSlug, config.module),
+                exact: true,
+              });
+              void queryClient.invalidateQueries({
+                queryKey: apiKeys.views(orgSlug, config.module),
+              });
+              void queryClient.invalidateQueries({
+                queryKey: apiKeys.view(orgSlug, config.module, savedView.id),
+              });
+              void queryClient.invalidateQueries({
+                queryKey: apiKeys.moduleProjection(orgSlug, config.module),
+              });
+            }
             invalidateModuleLists(queryClient, orgSlug, config.module);
             setCustomViewModal(null);
             if (customViewModal.mode === "create") {
@@ -1084,15 +1154,22 @@ function ModuleListScreenLoaded({
             }
           }}
           onDelete={(deletedId) => {
-            service.invalidate?.(config.module);
-            void queryClient.invalidateQueries({
-              queryKey: apiKeys.module(orgSlug, config.module),
-              exact: true,
-            });
-            void queryClient.invalidateQueries({ queryKey: apiKeys.views(orgSlug, config.module) });
-            void queryClient.invalidateQueries({
-              queryKey: apiKeys.moduleProjection(orgSlug, config.module),
-            });
+            const isPrivate = privateViews.some((v) => v.id === deletedId);
+            if (isPrivate) {
+              setPrivateViews(getPrivateViews(orgSlug, effectiveUserId, config.module));
+            } else {
+              service.invalidate?.(config.module);
+              void queryClient.invalidateQueries({
+                queryKey: apiKeys.module(orgSlug, config.module),
+                exact: true,
+              });
+              void queryClient.invalidateQueries({
+                queryKey: apiKeys.views(orgSlug, config.module),
+              });
+              void queryClient.invalidateQueries({
+                queryKey: apiKeys.moduleProjection(orgSlug, config.module),
+              });
+            }
             setCustomViewModal(null);
             if (deletedId === viewId) {
               router.push(config.paths.defaultList(orgSlug, config.module));
