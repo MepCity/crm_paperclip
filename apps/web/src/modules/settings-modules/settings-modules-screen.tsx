@@ -7,12 +7,14 @@ import {
   Calendar,
   CheckSquare,
   Home,
+  Info,
   LayoutGrid,
   type LucideIcon,
   Network,
   Phone,
   Search,
   Settings,
+  Sparkles,
   User,
   UserPlus,
   Users,
@@ -34,6 +36,7 @@ const heads = [
 
 const MODULE_ICONS: Record<string, LucideIcon> = {
   Home,
+  Workqueue: CheckSquare,
   Leads: UserPlus,
   Contacts: Users,
   Accounts: Building2,
@@ -130,8 +133,9 @@ export function SettingsModulesScreen({
             <button
               type="button"
               disabled
-              className="text-sm font-semibold text-accent-blue opacity-60"
+              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-3 py-2 text-sm font-semibold text-text opacity-60"
             >
+              <Sparkles className="size-4 text-accent-blue" aria-hidden="true" />
               Create module using assistant
             </button>
             <button
@@ -201,19 +205,28 @@ export function SettingsModulesScreen({
                       ) : null}
                     </td>
                     <td className="px-4 py-4">
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={r.enabled}
-                        aria-label={`${r.displayLabel} status`}
-                        disabled
-                        className={`relative inline-flex h-5 w-9 rounded-full opacity-60 ${r.enabled ? "bg-success" : "bg-border"}`}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`absolute top-0.5 size-4 rounded-full bg-surface ${r.enabled ? "right-0.5" : "left-0.5"}`}
-                        />
-                      </button>
+                      <div className="flex items-center gap-2">
+                        <button
+                          type="button"
+                          role="switch"
+                          aria-checked={r.enabled}
+                          aria-label={`${r.displayLabel} status`}
+                          disabled
+                          className={`relative inline-flex h-5 w-9 rounded-full opacity-60 ${r.enabled ? "bg-success" : "bg-border"}`}
+                        >
+                          <span
+                            aria-hidden="true"
+                            className={`absolute top-0.5 size-4 rounded-full bg-surface ${r.enabled ? "right-0.5" : "left-0.5"}`}
+                          />
+                        </button>
+                        {(r.apiName === "Leads" || r.apiName === "Contacts") && (
+                          <Info
+                            data-testid="status-info-icon"
+                            className="size-3.5 text-text-muted"
+                            aria-label={`${r.displayLabel} is a system module`}
+                          />
+                        )}
+                      </div>
                     </td>
                   </tr>
                 ))

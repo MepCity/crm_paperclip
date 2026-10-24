@@ -14,9 +14,14 @@ export function SettingsLayoutClient({
   const pathname = usePathname();
   const isSetupHome =
     pathname === `/crm/${orgSlug}/settings` || pathname === `/crm/${orgSlug}/settings/`;
+  const isModuleDetail = /^\/crm\/[^/]+\/settings\/modules\/[^/]+/.test(pathname);
 
   if (isSetupHome) {
     return <div className="min-h-full bg-bg px-6 py-6 md:px-10 lg:px-14">{children}</div>;
+  }
+
+  if (isModuleDetail) {
+    return <div className="min-h-full p-6">{children}</div>;
   }
 
   return (
