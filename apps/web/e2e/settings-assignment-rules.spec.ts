@@ -37,3 +37,24 @@ test("Assignment Rules opens from settings with the introductory state", async (
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/settings/assignment-rules$`));
   assertNoPageErrors(pageErrors);
 });
+
+// Needs MEP_AUTOMATION_FIXTURE=populated in the environment of the app server and the test run.
+test("populated synthetic Assignment rules list and open read-only detail", async ({
+  page,
+  pageErrors,
+}) => {
+  test.skip(process.env.MEP_AUTOMATION_FIXTURE !== "populated", "populated fixture not enabled");
+  await signUpNewUser(page);
+  const org = await createOrganization(page, "Synthetic Populated Org");
+  await page.goto(`/crm/${org.slug}/settings/assignment-rules`);
+  await expect(page.getByTestId("assignment-introduction")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Create Assignment Rule" })).toHaveCount(0);
+  await page.getByRole("link", { name: "Synthetic regional routing" }).click();
+  await expect(page.getByRole("heading", { name: "Synthetic regional routing" })).toBeVisible();
+  await expect(page.getByTestId("assignment-detail-fallback")).toContainText("synthetic-group-a");
+  await expect(page.getByRole("button")).toHaveCount(0);
+  await page.getByRole("link", { name: "Back to Assignment Rules" }).click();
+  await page.goto(`/crm/${org.slug}/settings/assignment-rules/missing-rule`);
+  await expect(page.getByTestId("assignment-detail-not_found")).toBeVisible();
+  assertNoPageErrors(pageErrors);
+});
