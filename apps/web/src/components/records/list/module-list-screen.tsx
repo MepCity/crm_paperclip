@@ -33,8 +33,10 @@ import {
 } from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
 import { AddToCampaignsDialog } from "../campaigns/add-to-campaigns-dialog";
+import { ManageColumnsDialog } from "../search/manage-columns-dialog";
 import { ExportLauncher } from "../transfer/export-launcher";
 import { ChangeOwnerDialog } from "./change-owner-dialog";
+import { effectiveColumns, effectiveFilterGroups } from "./effective-fields";
 import type { FilterGroup } from "./filter-panel";
 import { FilterPanel } from "./filter-panel";
 import { ListToolbar } from "./list-toolbar";
@@ -289,7 +291,13 @@ function ModuleListScreenLoaded({
   const users = useUsers();
   const view = viewQuery.data;
 
-  const columnApiNames = view?.columns ?? [];
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [selectedColumns, setSelectedColumns] = useState<{
+    viewId: string;
+    names: string[];
+  } | null>(null);
+  const columnApiNames =
+    selectedColumns?.viewId === viewId ? selectedColumns.names : (view?.columns ?? []);
   const sortFields = useMemo(
     () => resolveSortFieldLabels(config, moduleQuery.data?.fields ?? []),
     [config, moduleQuery.data?.fields],
@@ -432,26 +440,19 @@ function ModuleListScreenLoaded({
   }, [users.data]);
 
   const columns = useMemo((): FieldDefinition[] => {
-    const byName = new Map((moduleQuery.data?.fields ?? []).map((field) => [field.apiName, field]));
-    return columnApiNames
-      .map(
-        (apiName) =>
-          byName.get(apiName) ??
-          (config.inventory
-            ? {
-                apiName,
-                label: apiName,
-                dataType: "text" as const,
-                required: false,
-                readOnly: true,
-                unique: false,
-                massUpdate: false,
-                views: { view: true, create: false, edit: false, quickCreate: false },
-              }
-            : undefined),
-      )
-      .filter((field): field is FieldDefinition => field !== undefined);
-  }, [columnApiNames, config.inventory, moduleQuery.data?.fields]);
+    return effectiveColumns(columnApiNames, moduleQuery.data?.fields ?? []);
+  }, [columnApiNames, moduleQuery.data?.fields]);
+
+  const filterGroups = useMemo(
+    () =>
+      effectiveFilterGroups(
+        config.filterGroups,
+        moduleQuery.data?.fields ?? [],
+        config.linkField,
+        config.linkFieldLabel,
+      ),
+    [config.filterGroups, config.linkField, config.linkFieldLabel, moduleQuery.data?.fields],
+  );
 
   const massUpdateFields = useMemo(
     () => (moduleQuery.data ? massUpdateFieldsInLayoutOrder(moduleQuery.data) : []),
@@ -1004,6 +1005,16 @@ function ModuleListScreenLoaded({
           onConfirm={confirmDelete}
         />
       ) : null}
+      {columnsOpen && moduleQuery.data ? (
+        <ManageColumnsDialog
+          isOpen
+          onClose={() => setColumnsOpen(false)}
+          moduleLabel={config.pluralLabel}
+          allFields={moduleQuery.data.fields.filter((field) => field.views.view)}
+          selectedColumns={columns.map((field) => field.apiName)}
+          onSave={(names) => setSelectedColumns({ viewId, names })}
+        />
+      ) : null}
       <div className="module-list-body">
         {filterOpen ? (
           <FilterPanel
@@ -1011,7 +1022,7 @@ function ModuleListScreenLoaded({
             title={config.filterTitle}
             searchLabel="Search filter choices"
             searchPlaceholder="Search"
-            groups={config.filterGroups}
+            groups={filterGroups}
             initialFilters={appliedFilters}
             initialActivityFilter={appliedActivityFilter}
             initialCampaignFilter={appliedCampaignFilter}
@@ -1074,6 +1085,7 @@ function ModuleListScreenLoaded({
               settings={
                 <ViewSettingsMenu
                   laterModule={config.inventory ? "M11" : undefined}
+                  onManageColumns={() => setColumnsOpen(true)}
                   perPage={searchState.perPage}
                   onPerPageChange={changePerPage}
                   wrapText={wrapText}

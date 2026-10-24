@@ -1,5 +1,9 @@
 import { type FieldErrors, isAppError, type ValidationError } from "@crm/core/errors";
-import { INTERNAL_ERROR_MESSAGE, UnexpectedApiError } from "@/lib/api/wire/errors";
+import {
+  INTERNAL_ERROR_MESSAGE,
+  SchemaRevisionMismatchError,
+  UnexpectedApiError,
+} from "@/lib/api/wire/errors";
 
 export const FORM_SAVE_GENERIC_ERROR_MESSAGE = INTERNAL_ERROR_MESSAGE;
 
@@ -29,6 +33,7 @@ export function formSaveFieldErrors(error: unknown): Record<string, string> | nu
 
 /** User-visible banner text for non-field save failures; null when the caller handles the error. */
 export function formSaveBannerMessage(error: unknown): string | null {
+  if (error instanceof SchemaRevisionMismatchError) return error.message;
   if (formSaveFieldErrors(error)) return null;
   if (isAppError(error)) {
     if (error.code === "unauthenticated" || error.code === "validation") return null;

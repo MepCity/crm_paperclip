@@ -74,20 +74,28 @@ export function MeetingInformationDialog({
   const [expanded, setExpanded] = useState(false);
   const windowFields = useMemo(() => {
     const byName = new Map((metadata.data?.fields ?? []).map((f) => [f.apiName, f]));
-    return MEETING_INFORMATION_FIELDS.flatMap((name) => {
+    const quickFields =
+      metadata.data?.layout
+        .flatMap((section) => section.columns.flat())
+        .filter(
+          (name) =>
+            byName.get(name)?.views.quickCreate &&
+            !MEETING_INFORMATION_FIELDS.some((base) => base === name),
+        ) ?? [];
+    return [...MEETING_INFORMATION_FIELDS, ...quickFields].flatMap((name) => {
       const field = byName.get(name);
-      return field ? [field] : [];
+      return field?.views.create ? [field] : [];
     });
   }, [metadata.data]);
   // Add more details: the rest of the full create form, in layout order, inside this same window.
   const extraFields = useMemo(() => {
     if (!metadata.data) return [];
-    const shown = new Set<string>(MEETING_INFORMATION_FIELDS);
+    const shown = new Set(windowFields.map((field) => field.apiName));
     const omitted = new Set<string>(meetingsFormRules.omitted ?? []);
     return buildFormModel(metadata.data, "create", meetingsFormRules)
       .flatMap((section) => section.columns.flat())
       .filter((f) => !shown.has(f.apiName) && !omitted.has(f.apiName));
-  }, [metadata.data]);
+  }, [metadata.data, windowFields]);
   const fields = useMemo(
     () => (expanded ? [...windowFields, ...extraFields] : windowFields),
     [expanded, windowFields, extraFields],

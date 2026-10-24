@@ -60,8 +60,15 @@ export function LeadsListScreen() {
   instance. `getModule`, `list`, `get`, `create`, and `update` share that load;
   concurrent calls on the same instance share a single in-flight load. A load
   that ends in error is not cached.
-- There is no refresh path yet: a full page load creates a new adapter instance.
-  Refresh behaviour will be decided when the customization module lands.
+- Module, fields and layout revisions must match. A mismatch refetches all three
+  once; a second mismatch produces a terminal load error (query retries do not
+  repeat that pair). Settled bundles use module + opaque revision keys.
+- `invalidate(module)` clears settled and inflight state for that module. A load
+  invalidated while pending cannot repopulate the cache. Future publish callers
+  must also refresh their module/view queries through the query client.
+- Reserved HTTP 409 `SCHEMA_REVISION_MISMATCH` handling invalidates the affected
+  module, never replays the mutation, and lets the form keep draft values while
+  prompting a metadata refresh.
 - `AppError` and `UnexpectedApiError` with `status < 500` are not retried. Other
   query failures retry at most three times. Write requests are not retried.
 
