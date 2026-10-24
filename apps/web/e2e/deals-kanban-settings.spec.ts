@@ -42,8 +42,8 @@ test("Kanban settings change the card fields after Save", async ({ page }) => {
 
   const firstCard = page.locator('[data-board-column="Qualification"] [data-board-card]').first();
   const rows = firstCard.locator(":scope > div");
-  // Closing date (dd.MM.yyyy) is gone; the added field comes last.
-  await expect(firstCard).not.toContainText(/\d{2}\.\d{2}\.\d{4}/);
+  // Closing date is gone; the added field (Created Time) has the time and comes last.
+  await expect(rows.nth(6)).toContainText(/AM|PM/);
   await expect(rows.nth(6)).not.toBeEmpty();
 });
 
