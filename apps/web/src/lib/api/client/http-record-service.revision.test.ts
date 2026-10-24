@@ -1,3 +1,4 @@
+import { SchemaStaleError } from "@crm/core/errors";
 import { describe, expect, it, vi } from "vitest";
 import { decodeError, SchemaRevisionMismatchError } from "@/lib/api/wire/errors";
 import { shouldRetryQuery } from "./fetch";
@@ -86,6 +87,8 @@ describe("effective schema bundle", () => {
       details: { revision: "b:2" },
     });
     expect(stale).toBeInstanceOf(SchemaRevisionMismatchError);
+    expect(stale).toBeInstanceOf(SchemaStaleError);
+    expect(stale).toMatchObject({ code: "schema_stale", revision: "b:2" });
     const fetch = vi.fn(async (path: string, options?: { method?: string }) => {
       if (options?.method === "POST") throw stale;
       return response(path, "a:1");

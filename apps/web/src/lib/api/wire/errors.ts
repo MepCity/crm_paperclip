@@ -101,11 +101,11 @@ export class UnexpectedApiError extends Error {
   }
 }
 
-/** Reserved client handling for future schema-aware mutations. */
-export class SchemaRevisionMismatchError extends UnexpectedApiError {
+/** Client refresh handling preserves the core stale-schema error contract. */
+export class SchemaRevisionMismatchError extends SchemaStaleError {
   override name = "SchemaRevisionMismatchError";
-  constructor(readonly revision: string) {
-    super(409);
+  constructor(revision: string) {
+    super(revision);
     this.message =
       "The module fields have changed. Refresh the form before saving. Your draft has been kept.";
   }
