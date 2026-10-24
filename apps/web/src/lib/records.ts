@@ -1,5 +1,6 @@
 import { listMembers } from "@crm/core";
 import type {
+  ModuleMetadataReader,
   OrgContext,
   RecordHistoryService,
   RecordService,
@@ -12,7 +13,7 @@ import {
 } from "@crm/core/records/fixture";
 
 /** The single application adapter selection point for record data. */
-export function getRecordService(ctx: OrgContext): RecordService {
+export function getRecordService(ctx: OrgContext): RecordService & ModuleMetadataReader {
   return createFixtureRecordService(ctx, {
     listMemberIds: async () => (await listMembers(ctx)).map((member) => member.userId),
   });

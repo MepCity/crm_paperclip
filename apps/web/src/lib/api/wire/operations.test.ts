@@ -46,7 +46,7 @@ describe("wire operations", () => {
     const module = await operations.module.run(deps, input());
     expect(json(module)).toEqual({
       status: 200,
-      body: { modules: [encodeModule(await deps.records.getModule("Leads"))] },
+      body: { modules: [encodeModule(await deps.records.getModule("Leads"))], revision: "v1:0" },
     });
     expect(json(await operations.views.run(deps, input())).body.custom_views[0]).toEqual({
       id: "all-leads",

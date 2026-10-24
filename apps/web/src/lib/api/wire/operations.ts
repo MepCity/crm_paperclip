@@ -1,7 +1,9 @@
+import { NotFoundError } from "@crm/core/errors";
 import type {
   ConvertLeadInput,
   ConvertTarget,
   ListQuery,
+  ModuleMetadataReader,
   RecordService,
   SearchQuery,
   SortSpec,
@@ -31,7 +33,7 @@ import { kanbanViewOperations } from "./kanban-views";
 import type { WireMember } from "./types";
 
 export type OperationDeps = {
-  records: RecordService;
+  records: RecordService & ModuleMetadataReader;
   members: () => Promise<readonly WireMember[]>;
 };
 export type OperationRequest = {
@@ -288,30 +290,36 @@ export const operations = {
     method: "GET",
     path: "/crm/v2.2/settings/modules/{module}",
     async run({ records }, input) {
-      return ok({ modules: [encodeModule(await records.getModule(moduleOf(input)))] });
+      const metadata = await records.getModuleProjection(moduleOf(input));
+      return ok({ modules: [encodeModule(metadata)], revision: metadata.revision });
     },
   },
   fields: {
     method: "GET",
     path: "/crm/v2.2/settings/fields",
     async run({ records }, input) {
-      const metadata = await records.getModule(moduleOf(input));
-      return metadata.fields.length ? ok({ fields: metadata.fields.map(encodeField) }) : empty();
+      const metadata = await records.getModuleProjection(moduleOf(input));
+      return metadata.fields.length
+        ? ok({ fields: metadata.fields.map(encodeField), revision: metadata.revision })
+        : empty();
     },
   },
   layouts: {
     method: "GET",
     path: "/crm/v2.1/settings/layouts",
     async run({ records }, input) {
-      const metadata = await records.getModule(moduleOf(input));
-      return metadata.layout.length ? ok({ layouts: [encodeLayout(metadata)] }) : empty();
+      const metadata = await records.getModuleProjection(moduleOf(input));
+      return metadata.layout.length
+        ? ok({ layouts: [encodeLayout(metadata)], revision: metadata.revision })
+        : empty();
     },
   },
   views: {
     method: "GET",
     path: "/crm/v9/settings/custom_views",
     async run({ records }, input) {
-      const views = await records.listViews(moduleOf(input));
+      const metadata = await records.getModuleProjection(moduleOf(input));
+      const views = metadata.views;
       const defaultView = views.find((view) => view.isDefault);
       return collection(
         views.map(({ id, name, systemDefined, isDefault }) => ({
@@ -323,7 +331,7 @@ export const operations = {
         "custom_views",
         input,
         200,
-        defaultView ? { default: defaultView.id } : {},
+        { ...(defaultView ? { default: defaultView.id } : {}), revision: metadata.revision },
       );
     },
   },
@@ -331,13 +339,11 @@ export const operations = {
     method: "GET",
     path: "/crm/v9/settings/custom_views/{viewId}",
     async run({ records }, input) {
-      return ok({
-        custom_views: [
-          encodeView(
-            await records.getView(moduleOf(input), input.params?.viewId || invalid("viewId")),
-          ),
-        ],
-      });
+      const metadata = await records.getModuleProjection(moduleOf(input));
+      const id = input.params?.viewId || invalid("viewId");
+      const view = metadata.views.find((candidate) => candidate.id === id);
+      if (!view) throw new NotFoundError("View not found.");
+      return ok({ custom_views: [encodeView(view)], revision: metadata.revision });
     },
   },
   bulk: {

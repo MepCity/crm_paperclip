@@ -642,6 +642,8 @@ describe("wire codec", () => {
       columns: [Object.keys(values), []],
     });
     expect(encodeField(module.fields.at(-1) as FieldDefinition)).toEqual({
+      id: "field:Choice",
+      custom_field: false,
       api_name: "Choice",
       field_label: "Choice",
       data_type: "picklist",
@@ -654,6 +656,12 @@ describe("wire codec", () => {
       pick_list_values: [{ display_value: "Shown", actual_value: "Stored" }],
       lookup: { module: { api_name: "Contacts" } },
     });
+  });
+  it("preserves core custom identities and ignores them when decoding domain fields", () => {
+    const definition = field("Custom_Text", "text");
+    const encoded = encodeField({ ...definition, id: "local-custom-id", custom: true });
+    expect(encoded).toMatchObject({ id: "local-custom-id", custom_field: true });
+    expect(decodeField(encoded)).toEqual(definition);
   });
   it("round-trips a selected view, nested groups, arrays, nulls and sort", () => {
     const view: ListView = {

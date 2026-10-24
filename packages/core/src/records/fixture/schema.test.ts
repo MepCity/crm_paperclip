@@ -31,6 +31,7 @@ function baseline(module: string): ModuleBaseline {
     version: "test-v1",
     singularLabel: module,
     pluralLabel: module,
+    externalCriteriaFields: [],
     fields: bundle.metadata.fields.map((field) => ({
       ...field,
       id: field.apiName,
@@ -50,6 +51,7 @@ function baseline(module: string): ModuleBaseline {
             label: "Main",
             columnCount: 1,
             columns: [bundle.metadata.fields.map((field) => field.apiName)],
+            fields: bundle.metadata.fields.map((field) => field.apiName),
           },
         ],
       },

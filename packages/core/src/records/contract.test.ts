@@ -25,6 +25,8 @@ describe("record port type boundary", () => {
   it("exports types without loading a runtime service", () => {
     expect(Object.keys(records).sort()).toEqual([
       "KANBAN_HEADER_STYLES",
+      "baselineFieldId",
+      "baselineLayoutId",
       "campaignMemberStatuses",
       "isJsonArray",
       "isJsonObject",
