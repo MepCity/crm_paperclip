@@ -117,10 +117,10 @@ test("Report detail over a module with seeded records displays formatted values"
   const meetingRow = page.getByRole("row").filter({ hasText: "Quarterly Strategy Review" });
   await expect(meetingRow).toBeVisible();
   await expect(meetingRow.getByRole("cell").nth(0)).toHaveText("Quarterly Strategy Review");
-  await expect(meetingRow.getByRole("cell").nth(2)).toContainText("Jun 15, 2030");
-  await expect(meetingRow.getByRole("cell").nth(2)).toContainText("12:00 PM");
-  await expect(meetingRow.getByRole("cell").nth(3)).toContainText("Jun 15, 2030");
-  await expect(meetingRow.getByRole("cell").nth(3)).toContainText("1:30 PM");
+  await expect(meetingRow.getByRole("cell").nth(2)).toContainText("15.06.2030");
+  await expect(meetingRow.getByRole("cell").nth(2)).toContainText("9:00 AM");
+  await expect(meetingRow.getByRole("cell").nth(3)).toContainText("15.06.2030");
+  await expect(meetingRow.getByRole("cell").nth(3)).toContainText("10:30 AM");
   await expect(meetingRow.getByRole("cell").nth(4)).toHaveText("Conference Room Alpha");
 
   // Verify outreach report formatted numbers
@@ -128,10 +128,10 @@ test("Report detail over a module with seeded records displays formatted values"
   const outreachRow = page.getByRole("row").filter({ hasText: "Synthetic Outreach Campaign" });
   await expect(outreachRow).toBeVisible();
   await expect(outreachRow.getByRole("cell").nth(0)).toHaveText("Synthetic Outreach Campaign");
-  await expect(outreachRow.getByRole("cell").nth(1)).toHaveText("2,500");
+  await expect(outreachRow.getByRole("cell").nth(1)).toHaveText("2.500");
   await expect(outreachRow.getByRole("cell").nth(2)).toHaveText("350");
-  await expect(outreachRow.getByRole("cell").nth(3)).toHaveText("12,500");
-  await expect(outreachRow.getByRole("cell").nth(4)).toHaveText("9,800");
+  await expect(outreachRow.getByRole("cell").nth(3)).toHaveText("12.500");
+  await expect(outreachRow.getByRole("cell").nth(4)).toHaveText("9.800");
 });
 
 test("Report detail respects tenant scope: records from another organization do not appear", async ({
