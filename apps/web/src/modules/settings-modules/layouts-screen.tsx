@@ -4,17 +4,21 @@ import { ArrowLeft, HelpCircle, MoreHorizontal, Search } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { MODULE_TABS, SIDEBAR_MODULES } from "./fields-model";
-import { defaultLayoutRow, type LayoutRow } from "./layouts-model";
+import { LayoutEditor } from "./layout-editor";
+import { defaultLayoutRow, type LayoutEditorData, type LayoutRow } from "./layouts-model";
 
 export function LayoutsScreen({
   orgSlug,
   module,
   rows = [defaultLayoutRow()],
+  editor,
 }: {
   orgSlug: string;
   module: string;
   rows?: LayoutRow[];
+  editor?: LayoutEditorData;
 }) {
+  const [editing, setEditing] = useState(false);
   const [moduleQuery, setModuleQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const modules = SIDEBAR_MODULES.filter(
@@ -136,70 +140,108 @@ export function LayoutsScreen({
           </button>
         </div>
         <div className="p-6">
-          <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
-            <p className="text-sm text-text-muted">
-              Design your own layouts to fit your business processes, then assign them to your user
-              accounts based on permission profiles.
-            </p>
-            <button
-              type="button"
-              disabled
-              className="shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-text opacity-60 cursor-not-allowed"
-            >
-              Create New Layout
-            </button>
-          </div>
-          <div className="max-h-[640px] overflow-auto rounded-lg border border-border">
-            <table className="w-full text-left text-sm">
-              <thead className="sticky top-0 border-b border-border bg-surface">
-                <tr>
-                  {["Name", "Shared To", "Last Modified", "Status"].map((h) => (
-                    <th key={h} scope="col" className="px-4 py-3 font-semibold text-text">
-                      {h}
-                    </th>
-                  ))}
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((row) => (
-                  <tr key={row.id} className="border-b border-border last:border-0">
-                    <td className="px-4 py-4">
-                      <span className="flex items-center gap-2">
-                        <span className="font-semibold text-accent-blue">{row.name}</span>
-                        {module === "Leads" ? (
+          {editing && editor ? (
+            <LayoutEditor
+              orgSlug={orgSlug}
+              module={module}
+              initialLayout={editor.layout}
+              fields={editor.fields}
+              initialRevision={editor.revision}
+              onCancel={() => setEditing(false)}
+              onSaved={(savedLayout, nextRevision) => {
+                editor.layout = savedLayout;
+                editor.revision = nextRevision;
+              }}
+            />
+          ) : (
+            <>
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
+                <p className="text-sm text-text-muted">
+                  Design your own layouts to fit your business processes, then assign them to your
+                  user accounts based on permission profiles.
+                </p>
+                {editor ? (
+                  <button
+                    type="button"
+                    onClick={() => setEditing(true)}
+                    className="shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-text hover:bg-primary/90"
+                  >
+                    Customize Layout
+                  </button>
+                ) : (
+                  <button
+                    type="button"
+                    disabled
+                    className="shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-text opacity-60 cursor-not-allowed"
+                  >
+                    Create New Layout
+                  </button>
+                )}
+              </div>
+              <div className="max-h-[640px] overflow-auto rounded-lg border border-border">
+                <table className="w-full text-left text-sm">
+                  <thead className="sticky top-0 border-b border-border bg-surface">
+                    <tr>
+                      {["Name", "Shared To", "Last Modified", "Status"].map((h) => (
+                        <th key={h} scope="col" className="px-4 py-3 font-semibold text-text">
+                          {h}
+                        </th>
+                      ))}
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {rows.map((row) => (
+                      <tr key={row.id} className="border-b border-border last:border-0">
+                        <td className="px-4 py-4">
+                          <span className="flex items-center gap-2">
+                            {editor ? (
+                              <button
+                                type="button"
+                                onClick={() => setEditing(true)}
+                                aria-label={`Edit ${row.name} layout`}
+                                className="font-semibold text-accent-blue hover:underline text-left cursor-pointer"
+                              >
+                                {row.name}
+                              </button>
+                            ) : (
+                              <span className="font-semibold text-accent-blue">{row.name}</span>
+                            )}
+                            {module === "Leads" ? (
+                              <button
+                                type="button"
+                                aria-label="More"
+                                disabled
+                                className="text-text-muted opacity-60 cursor-not-allowed"
+                              >
+                                <MoreHorizontal className="size-4" aria-hidden="true" />
+                              </button>
+                            ) : null}
+                          </span>
+                        </td>
+                        <td className="px-4 py-4 text-text-muted">{row.sharedTo}</td>
+                        <td className="px-4 py-4 text-text-muted">{row.lastModifiedAt ?? ""}</td>
+                        <td className="px-4 py-4">
                           <button
                             type="button"
-                            aria-label="More"
+                            role="switch"
+                            aria-checked={row.status}
+                            aria-label={`${row.name} layout status`}
                             disabled
-                            className="text-text-muted opacity-60 cursor-not-allowed"
+                            className={`relative inline-flex h-5 w-9 rounded-full opacity-60 cursor-not-allowed ${row.status ? "bg-success" : "bg-border"}`}
                           >
-                            <MoreHorizontal className="size-4" aria-hidden="true" />
+                            <span
+                              aria-hidden="true"
+                              className={`absolute top-0.5 size-4 rounded-full bg-surface ${row.status ? "right-0.5" : "left-0.5"}`}
+                            />
                           </button>
-                        ) : null}
-                      </span>
-                    </td>
-                    <td className="px-4 py-4 text-text-muted">{row.sharedTo}</td>
-                    <td className="px-4 py-4 text-text-muted">{row.lastModifiedAt ?? ""}</td>
-                    <td className="px-4 py-4">
-                      <button
-                        type="button"
-                        role="switch"
-                        aria-checked={row.status}
-                        aria-label={`${row.name} layout status`}
-                        disabled
-                        className={`relative inline-flex h-5 w-9 rounded-full opacity-60 cursor-not-allowed ${row.status ? "bg-success" : "bg-border"}`}
-                      >
-                        <span
-                          aria-hidden="true"
-                          className={`absolute top-0.5 size-4 rounded-full bg-surface ${row.status ? "right-0.5" : "left-0.5"}`}
-                        />
-                      </button>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </div>

@@ -5,6 +5,7 @@ import {
 } from "@crm/core/automation";
 import type { OrgContext } from "@crm/core/records";
 import { syntheticAssignmentRules } from "./synthetic-fixture";
+import { SYNTHETIC_WORKFLOW_RULES } from "./synthetic-workflow-fixture";
 
 /** Organizations whose name starts with this prefix get the populated fixture (test only). */
 export const POPULATED_FIXTURE_ORG_PREFIX = "Synthetic Populated";
@@ -21,7 +22,7 @@ export function createAutomationPort(options?: MemoryAutomationOptions): Automat
   const forOrg = (ctx: OrgContext) =>
     createMemoryAutomationPort({
       fixtures: ctx.orgName.startsWith(POPULATED_FIXTURE_ORG_PREFIX)
-        ? { [ctx.orgId]: syntheticAssignmentRules }
+        ? { [ctx.orgId]: [...syntheticAssignmentRules, ...SYNTHETIC_WORKFLOW_RULES] }
         : {},
     });
   return {
