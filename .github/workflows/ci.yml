@@ -123,15 +123,15 @@ jobs:
         env:
           PLAYWRIGHT_HTML_OPEN: never
           PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
-      - name: Summarize test durations
-        if: always()
-        continue-on-error: true
-        run: node scripts/ci/duration-summary.mjs playwright apps/web/test-results/results.json
       - name: Record cache result
         if: always()
         run: |
           echo 'Chromium cache hit = ${{ steps.browsers.outputs.cache-hit }}' >> "$GITHUB_STEP_SUMMARY"
           sed 's/^/::notice title=E2E measurements::/' "$GITHUB_STEP_SUMMARY"
+      - name: Summarize test durations
+        if: always()
+        continue-on-error: true
+        run: node scripts/ci/duration-summary.mjs playwright apps/web/test-results/results.json
       - name: Upload browser report and traces
         if: always() && !cancelled()
         uses: actions/upload-artifact@v7
@@ -179,15 +179,15 @@ jobs:
         env:
           PLAYWRIGHT_HTML_OPEN: never
           PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
-      - name: Summarize test durations
-        if: always()
-        continue-on-error: true
-        run: node scripts/ci/duration-summary.mjs playwright apps/web/test-results/results.json
       - name: Record cache result
         if: always()
         run: |
           echo 'Chromium cache hit = ${{ steps.browsers.outputs.cache-hit }}' >> "$GITHUB_STEP_SUMMARY"
           sed 's/^/::notice title=E2E measurements::/' "$GITHUB_STEP_SUMMARY"
+      - name: Summarize test durations
+        if: always()
+        continue-on-error: true
+        run: node scripts/ci/duration-summary.mjs playwright apps/web/test-results/results.json
       - name: Upload browser report and traces
         if: always() && !cancelled()
         uses: actions/upload-artifact@v7
