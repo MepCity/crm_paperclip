@@ -177,7 +177,7 @@ function FieldsScreenBody({
                 role="tab"
                 aria-selected={i === 0}
                 disabled={i !== 0}
-                className={`rounded-full px-4 py-1 text-sm font-medium transition-colors ${
+                className={`rounded-full px-4 py-1 text-sm transition-colors ${
                   i === 0
                     ? "bg-surface font-semibold text-text shadow-xs"
                     : "text-text-muted opacity-60 cursor-not-allowed"
