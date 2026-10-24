@@ -5,7 +5,7 @@ import type { FieldValue, ModuleApiName, RecordData } from "@crm/core/records";
 import { activityState } from "@crm/core/records/activities";
 import { useEffect, useMemo, useState } from "react";
 import { useAllRecordPages, useUsers, useViews } from "@/lib/api/client/hooks";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import {
   type ActivityKind,
   type ActivityVariant,
@@ -84,6 +84,7 @@ export function useParentActivities(
     return () => clearTimeout(timer);
   }, [nextBoundary]);
 
+  const orgFormat = useFormat();
   return useMemo(() => {
     const ownerById = new Map((users.data ?? []).map((member) => [member.userId, member.name]));
     const records = { task: tasks.records, meeting: meetings.records, call: calls.records };
@@ -94,8 +95,8 @@ export function useParentActivities(
         now,
         classify: (kind, record, now) => activityState(MODULE_BY_KIND[kind], record, now),
         recordPath: (kind, id) => recordPath(MODULE_BY_KIND[kind], id),
-        formatDate: (iso) => formatDate(iso, DEFAULT_FORMAT),
-        formatDateTime: (iso) => formatDateTime(iso, DEFAULT_FORMAT),
+        formatDate: (iso) => formatDate(iso, orgFormat),
+        formatDateTime: (iso) => formatDateTime(iso, orgFormat),
         ownerName: (owner: FieldValue | undefined) => {
           if (owner && typeof owner === "object" && "name" in owner) {
             return typeof owner.name === "string" && owner.name !== "" ? owner.name : null;
@@ -126,6 +127,7 @@ export function useParentActivities(
     isError,
     recordPath,
     now,
+    orgFormat,
   ]);
 }
 

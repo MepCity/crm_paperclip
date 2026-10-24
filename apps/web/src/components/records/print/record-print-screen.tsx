@@ -6,7 +6,7 @@ import { useMemo } from "react";
 import { FieldValueView } from "@/components/records/detail/field-value";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { useModule, useRecord, useUsers } from "@/lib/api/client/hooks";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import type { ModuleScreenDefinition } from "@/modules/types";
 import { PrintToolbar } from "./print-toolbar";
 import "./print-page.css";
@@ -21,6 +21,7 @@ export function RecordPrintScreen({
   recordId: RecordId;
   definition: ModuleScreenDefinition;
 }) {
+  const orgFormat = useFormat();
   const moduleQuery = useModule(definition.apiName);
   const recordQuery = useRecord(definition.apiName, recordId);
   const usersQuery = useUsers();
@@ -70,7 +71,7 @@ export function RecordPrintScreen({
                     field={entry.field}
                     value={entry.value}
                     ownerNames={ownerNames}
-                    format={DEFAULT_FORMAT}
+                    format={orgFormat}
                     auditTimestamp={entry.auditTimestamp}
                     orgSlug={orgSlug}
                   />

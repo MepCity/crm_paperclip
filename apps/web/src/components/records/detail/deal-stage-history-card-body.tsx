@@ -5,7 +5,7 @@ import { useMemo } from "react";
 import { FieldValueView } from "@/components/records/detail/field-value";
 import { RelatedRecordsListError } from "@/components/records/detail/related-records-list-error";
 import { useModule, useRecordList, useUsers, useViews } from "@/lib/api/client/hooks";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 
 const LIST_PAGE_SIZE = 100;
 
@@ -29,6 +29,7 @@ function dealHistoryFilter(dealId: RecordId): Criteria {
 }
 
 export function DealStageHistoryCardBody({ dealId }: DealStageHistoryCardBodyProps) {
+  const orgFormat = useFormat();
   const moduleQuery = useModule("DealHistory");
   const viewsQuery = useViews("DealHistory");
   const usersQuery = useUsers();
@@ -109,7 +110,7 @@ export function DealStageHistoryCardBody({ dealId }: DealStageHistoryCardBodyPro
                     <FieldValueView
                       field={field}
                       value={value}
-                      format={DEFAULT_FORMAT}
+                      format={orgFormat}
                       ownerNames={ownerNames}
                     />
                   </td>

@@ -39,7 +39,7 @@ import {
   useViews,
 } from "@/lib/api/client/hooks";
 import { moduleRecordPrintPath } from "@/lib/crm-paths";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import { usePreference } from "@/lib/preferences";
 import {
   type RecordListContext,
@@ -139,6 +139,7 @@ export function RecordDetailScreen({
   buildDetailSlots,
   saveRecord: saveRecordOverride,
 }: RecordDetailScreenProps) {
+  const orgFormat = useFormat();
   const moduleApiName = definition.apiName;
   const rules = definition.detail;
   const StatusSection = rules.statusRibbon?.component;
@@ -278,7 +279,7 @@ export function RecordDetailScreen({
     currency: homeCurrencyQuery.data,
     currencySymbol: homeCurrencyQuery.data?.symbol,
   });
-  const lastUpdate = rules.lastUpdate(record, now, DEFAULT_FORMAT);
+  const lastUpdate = rules.lastUpdate(record, now, orgFormat);
   const businessFields = rules.businessCard(module, displayRecord);
   const detailSections = rules.sections(module, displayRecord);
 
@@ -380,7 +381,7 @@ export function RecordDetailScreen({
           save={persistRecord}
         >
           {detailSlots?.overviewPrefix}
-          <BusinessCard fields={businessFields} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
+          <BusinessCard fields={businessFields} ownerNames={ownerNames} format={orgFormat} />
           {rules.BetweenCards ? <rules.BetweenCards record={displayRecord} /> : null}
           {detailSlots?.contactSummary ??
             (rules.linkedContactSummary && linkedContactSummaryPath ? (
@@ -392,7 +393,7 @@ export function RecordDetailScreen({
           <DetailsCard
             sections={detailSections}
             ownerNames={ownerNames}
-            format={DEFAULT_FORMAT}
+            format={orgFormat}
             railLayout={railVisible ? "shown" : "hidden"}
             activity={activityLayout}
           />
@@ -420,7 +421,7 @@ export function RecordDetailScreen({
         recordId={recordId}
         heading="Timeline History"
         filterButtonLabel="History filter"
-        format={DEFAULT_FORMAT}
+        format={orgFormat}
         initialFilterExpanded={false}
         modulesLabel="Modules"
         modulesAllLabel="All Modules"

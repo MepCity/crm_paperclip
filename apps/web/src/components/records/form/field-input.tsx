@@ -1,4 +1,7 @@
-"use client";
+import { useFormat } from "@/lib/format-context";
+import { numberInputLocale } from "@/lib/locale";
+
+("use client");
 
 import type {
   FieldDefinition,
@@ -212,6 +215,7 @@ export function FieldInput({
   participantModules,
   laterModule,
 }: FieldInputProps) {
+  const orgFormat = useFormat();
   const controlId = id ?? field.apiName;
   const common = {
     label: field.label,
@@ -350,6 +354,7 @@ export function FieldInput({
           // An integer field still accepts what is typed: `Save` rejects a decimal with
           // `Please enter a valid <label>.`, which needs the value to survive in the input.
           formatOptions={{ useGrouping: false, maximumFractionDigits: 20 }}
+          locale={numberInputLocale(orgFormat)}
           prefix={
             field.dataType === "currency" && currencyPrefix ? (
               <span className="record-currency-prefix">

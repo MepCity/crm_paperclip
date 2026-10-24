@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Link } from "@/components/ui/link";
 import { UserAvatarPlaceholder } from "@/components/ui/user-avatar-placeholder";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import type { NoteListItem } from "./note-list";
 import "./notes.css";
 
@@ -18,6 +18,7 @@ export interface NoteRowProps {
 }
 
 export function NoteRow({ item, onEdit, onDelete }: NoteRowProps) {
+  const orgFormat = useFormat();
   const bodyRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
@@ -50,7 +51,7 @@ export function NoteRow({ item, onEdit, onDelete }: NoteRowProps) {
         <div className="note-row-meta">
           <Link href={item.parentHref}>{item.parentLabel}</Link>
           <span>Add Note</span>
-          <span>{formatDateTime(item.createdAt, DEFAULT_FORMAT)}</span>
+          <span>{formatDateTime(item.createdAt, orgFormat)}</span>
           <span>{item.authorName}</span>
         </div>
       </div>

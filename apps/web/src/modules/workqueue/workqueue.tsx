@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { moduleRecordPath } from "@/lib/crm-paths";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import { type PreviewFilter, type PreviewSource, previewQueue } from "./fixtures";
 import { PAGE_SIZE, type QueueData, type QueueId, queueDefinitions } from "./queues";
 
@@ -23,6 +23,7 @@ export function Workqueue({
   queues: readonly QueueData[];
   page: number;
 }) {
+  const orgFormat = useFormat();
   const router = useRouter();
   const [selected, setSelected] = useState<QueueId>("tasks");
   const [welcome, setWelcome] = useState(false);
@@ -285,7 +286,7 @@ export function Workqueue({
                             }
                             orgSlug={orgSlug}
                             ownerNames={{ [user.id]: user.name }}
-                            format={DEFAULT_FORMAT}
+                            format={orgFormat}
                           />
                         </td>
                       ))}
