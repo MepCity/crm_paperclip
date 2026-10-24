@@ -14,7 +14,13 @@ import type {
   RecordData,
   RecordInput,
 } from "@crm/core/records";
-import { isJsonArray, isJsonObject, lookupTargetModules } from "@crm/core/records";
+import {
+  baselineFieldId,
+  baselineLayoutId,
+  isJsonArray,
+  isJsonObject,
+  lookupTargetModules,
+} from "@crm/core/records";
 import { validateActivityFilter } from "@crm/core/records/activities";
 import { validateCampaignFilter } from "@crm/core/records/campaigns";
 import {
@@ -182,8 +188,12 @@ export function decodeRecord(row: WireRecord, metadata: ModuleMetadata): RecordD
   return { id: row.id, fields: decodeInput(row, metadata) };
 }
 
-export function encodeField(field: FieldDefinition): WireField {
+export function encodeField(
+  field: FieldDefinition & Partial<{ id: string; custom: boolean }>,
+): WireField {
   return {
+    id: field.id ?? baselineFieldId(field.apiName),
+    custom_field: field.custom ?? false,
     api_name: field.apiName,
     field_label: field.label,
     data_type: field.dataType,
@@ -303,8 +313,10 @@ export function encodeModule(metadata: ModuleMetadata): WireModule {
     business_card_fields: metadata.businessCardFields.map((api_name) => ({ api_name })),
   };
 }
-export function encodeLayout(metadata: ModuleMetadata): WireLayout {
+export function encodeLayout(metadata: ModuleMetadata & { layoutId?: string }): WireLayout {
   return {
+    id: metadata.layoutId ?? baselineLayoutId(metadata.apiName),
+    default: true,
     sections: metadata.layout.map((section) => ({
       display_label: section.label,
       column_count: section.columnCount,

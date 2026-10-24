@@ -11,11 +11,8 @@ import { UnexpectedApiError } from "@/lib/api/wire/errors";
 import type { WireField } from "@/lib/api/wire/types";
 import { createHttpRecordService } from "./http-record-service";
 
-const field = (
-  api_name: string,
-  data_type: WireField["data_type"],
-): WireField & { id: string; custom_field: boolean } => ({
-  id: `field-${api_name}`,
+const field = (api_name: string, data_type: WireField["data_type"]): WireField => ({
+  id: `field:${api_name}`,
   custom_field: false,
   api_name,
   field_label: api_name,

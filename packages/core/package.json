@@ -5,6 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/index.ts",
+    "./customization": "./src/customization/index.ts",
+    "./records/fixture/metadata-projection": "./src/records/fixture/metadata-projection.ts",
     "./errors": "./src/errors.ts",
     "./format": "./src/format/index.ts",
     "./transfer/types": "./src/transfer/types.ts",

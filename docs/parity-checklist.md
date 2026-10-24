@@ -1589,6 +1589,20 @@ inventory, pending UI Lead approval; no implementation or module gate claimed.
 | HW-04 | Capture safety | Both pre-capture Home gates passed; 4/6 blocked requests; no guard changes | U3: automatic user-preference PUT on Workqueue entry blocked; no retry or further capture |
 | HW-05 | First slice proposal | Local fixture-backed read-only Workqueue entry; reuse shell/list/detail components | Broader interactive queue and Home dashboard await evidence and approval; no implementation opened |
 
+### Module 14 — R2 documented functional surfaces (MEP-1290)
+
+Source: R2 in `research/specs/home-workqueue.md`; public documentation reviewed
+2026-10-24. **Documented, not observed**; pending UI Lead approval. No capture or
+reference interaction; R1 entry evidence and safety boundaries remain unchanged.
+
+| # | Surface | Evidence / status | Remaining boundary |
+| --- | --- | --- | --- |
+| HW-R2-01 | Home page model and catalogue | D1/D4/D5; HD01–HD17 | U1 partly; actual page list, formulas and most empties unknown; default-page documentation conflict retained |
+| HW-R2-02 | Home Open Activities | D2; HD13 field matrix and four timeline choices | Phased availability; not Workqueue options; preference controls never operated |
+| HW-R2-03 | Workqueue functional candidates | D3; WD01–WD10 | U4 partly; exhaustive periods, sort, row geometry and empty results unresolved |
+| HW-R2-04 | Research limits | U1/U4 partly; U2/U3/U5/U6 still open | Welcome, blocked preference PUT and runtime completeness unresolved; no re-entry or guard changes |
+| HW-R2-05 | Fixture proposals | H-F1/H-F2/W-F1/W-F2; reuse shell/list/record components | Research approval and bounded implementation scope required; no code, Phase 2 or module-gate claim |
+
 ## Module 15 — Visits and Social (R1 research)
 
 Source: `research/specs/visits-social.md` (MEP-1257). Bounded read-only
