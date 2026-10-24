@@ -34,7 +34,7 @@ const failureText: Record<ReadFailure["code"], string> = {
 export function RecipientView({ recipients }: { recipients: RecipientSet }) {
   return (
     <div>
-      <span className="font-medium">{recipientKindLabel[recipients.kind]}</span>{" "}
+      <span className="font-semibold">{recipientKindLabel[recipients.kind]}</span>{" "}
       {recipients.kind === "user_conditions" ? (
         <span className="text-text-muted">Definition: {recipients.definitionRef}</span>
       ) : (
