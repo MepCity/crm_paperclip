@@ -3,6 +3,7 @@
 import { ArrowLeft, HelpCircle, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { type FieldEditorData, useFieldEditor } from "./fields-editor";
 import { type FieldRow, filterFieldRows, MODULE_TABS, SIDEBAR_MODULES } from "./fields-model";
 
 const SUBTABS = ["Field Listing", "Field Permissions", "AI Governance"];
@@ -11,11 +12,35 @@ export function FieldsScreen({
   orgSlug,
   module,
   rows,
+  editor,
 }: {
   orgSlug: string;
   module: string;
   rows: FieldRow[];
+  /** Present only for an admin on an editing-enabled deployment. */
+  editor?: FieldEditorData;
 }) {
+  return <FieldsScreenBody orgSlug={orgSlug} module={module} rows={rows} editor={editor} />;
+}
+
+const NO_EDITOR: FieldEditorData = {
+  revision: "",
+  layout: { id: "", label: "", isDefault: true, sections: [] },
+  retired: [],
+};
+
+function FieldsScreenBody({
+  orgSlug,
+  module,
+  rows,
+  editor,
+}: {
+  orgSlug: string;
+  module: string;
+  rows: FieldRow[];
+  editor?: FieldEditorData;
+}) {
+  const edit = useFieldEditor(orgSlug, module, editor ?? NO_EDITOR);
   const [query, setQuery] = useState("");
   const [moduleQuery, setModuleQuery] = useState("");
   const [searching, setSearching] = useState(false);
@@ -165,19 +190,27 @@ export function FieldsScreen({
                 className="w-72 rounded-md border border-border bg-surface py-2 pl-8 pr-3 text-sm focus:border-primary focus:outline-hidden"
               />
             </div>
-            <button
-              type="button"
-              disabled
-              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-text opacity-60 cursor-not-allowed"
-            >
-              Create and Edit Fields
-            </button>
+            {editor ? (
+              edit.toolbar
+            ) : (
+              <button
+                type="button"
+                disabled
+                className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-text opacity-60 cursor-not-allowed"
+              >
+                Create and Edit Fields
+              </button>
+            )}
           </div>
+          {editor ? edit.banner : null}
           <div className="max-h-[640px] overflow-auto rounded-lg border border-border">
             <table className="w-full text-left text-sm">
               <thead className="sticky top-0 border-b border-border bg-surface">
                 <tr>
-                  {["Fields", "Data Type", "Custom Field"].map((h) => (
+                  {(editor
+                    ? ["Fields", "Data Type", "Custom Field", "Actions"]
+                    : ["Fields", "Data Type", "Custom Field"]
+                  ).map((h) => (
                     <th key={h} scope="col" className="px-4 py-3 font-semibold text-text">
                       {h}
                     </th>
@@ -187,7 +220,7 @@ export function FieldsScreen({
               <tbody>
                 {shown.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="px-4 py-8 text-center text-text-muted">
+                    <td colSpan={editor ? 4 : 3} className="px-4 py-8 text-center text-text-muted">
                       No fields found
                     </td>
                   </tr>
@@ -197,14 +230,17 @@ export function FieldsScreen({
                       <td className="px-4 py-3">{r.label}</td>
                       <td className="px-4 py-3">{r.dataType}</td>
                       <td className="px-4 py-3">{r.custom ? "Custom" : ""}</td>
+                      {editor ? <td className="px-4 py-3">{edit.actions(r)}</td> : null}
                     </tr>
                   ))
                 )}
               </tbody>
             </table>
           </div>
+          {editor ? edit.retired : null}
         </div>
       </div>
+      {editor ? edit.dialog : null}
     </div>
   );
 }
