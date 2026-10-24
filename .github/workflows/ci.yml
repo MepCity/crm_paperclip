@@ -37,9 +37,22 @@ jobs:
       - name: Unit and component tests
         run: |
           files=$(git ls-files '*.test.ts' '*.test.tsx' | grep -v '\.int\.test\.ts$' | grep -v 'packages/db/src/sysv-ipc.test.ts')
-          pnpm exec vitest run --project unit --project component $files
+          pnpm exec vitest run --project unit --project component --reporter=default --reporter=json --outputFile=test-results/vitest.json $files
         env:
           CI: "1"
+
+      - name: Summarize test durations
+        if: always()
+        continue-on-error: true
+        run: node scripts/ci/duration-summary.mjs vitest test-results/vitest.json
+      - name: Upload unit and component report
+        if: always() && !cancelled()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fast-results
+          path: test-results/vitest.json
+          retention-days: 7
+          if-no-files-found: ignore
 
   integration:
     name: integration
@@ -110,6 +123,10 @@ jobs:
         env:
           PLAYWRIGHT_HTML_OPEN: never
           PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
+      - name: Summarize test durations
+        if: always()
+        continue-on-error: true
+        run: node scripts/ci/duration-summary.mjs playwright apps/web/test-results/results.json
       - name: Record cache result
         if: always()
         run: |
@@ -162,6 +179,10 @@ jobs:
         env:
           PLAYWRIGHT_HTML_OPEN: never
           PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
+      - name: Summarize test durations
+        if: always()
+        continue-on-error: true
+        run: node scripts/ci/duration-summary.mjs playwright apps/web/test-results/results.json
       - name: Record cache result
         if: always()
         run: |
