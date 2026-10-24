@@ -3,38 +3,8 @@
 import { ArrowLeft, HelpCircle, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
-import { type FieldRow, filterFieldRows } from "./fields-model";
+import { type FieldRow, filterFieldRows, MODULE_TABS, SIDEBAR_MODULES } from "./fields-model";
 
-const SIDEBAR_MODULES = [
-  "Leads",
-  "Contacts",
-  "Accounts",
-  "Deals",
-  "Tasks",
-  "Meetings",
-  "Calls",
-  "Products",
-  "Quotes",
-  "Sales Orders",
-  "Purchase Orders",
-  "Invoices",
-  "Campaigns",
-  "Vendors",
-  "Price Books",
-  "Cases",
-  "Solutions",
-];
-const MODULE_TABS = [
-  "Layouts",
-  "Layout Rules",
-  "Validation Rules",
-  "Fields",
-  "Record Locking Configuration",
-  "Map Dependency Fields",
-  "Links",
-  "Buttons",
-  "Summary",
-];
 const SUBTABS = ["Field Listing", "Field Permissions", "AI Governance"];
 
 export function FieldsScreen({
@@ -97,7 +67,7 @@ export function FieldsScreen({
                 ) : (
                   <Link
                     href={`/crm/${orgSlug}/settings/modules/${encodeURIComponent(m)}/fields`}
-                    className="block px-2 py-2 text-sm text-text-muted"
+                    className="block px-2 py-2 text-sm text-text-muted hover:text-text"
                   >
                     {m}
                   </Link>
@@ -108,19 +78,54 @@ export function FieldsScreen({
         </nav>
       </aside>
       <div className="min-w-0 flex-1">
-        <div role="tablist" className="flex items-center gap-6 border-b border-border px-6">
-          {MODULE_TABS.map((t) => (
-            <button
-              key={t}
-              type="button"
-              role="tab"
-              aria-selected={t === "Fields"}
-              disabled={t !== "Fields"}
-              className={`py-4 text-sm ${t === "Fields" ? "border-b-2 border-primary font-semibold text-text" : "text-text-muted"}`}
-            >
-              {t}
-            </button>
-          ))}
+        <div className="border-b border-border px-6 pt-5 pb-3">
+          <h1 className="text-xl font-semibold text-text">{module}</h1>
+        </div>
+        <div
+          role="tablist"
+          aria-label="Module configuration"
+          className="flex items-center gap-6 border-b border-border px-6"
+        >
+          {MODULE_TABS.map((t) => {
+            if (t === "Fields") {
+              return (
+                <button
+                  key={t}
+                  type="button"
+                  role="tab"
+                  aria-selected="true"
+                  className="border-b-2 border-primary py-4 text-sm font-semibold text-text"
+                >
+                  {t}
+                </button>
+              );
+            }
+            if (t === "Layouts") {
+              return (
+                <Link
+                  key={t}
+                  href={`/crm/${orgSlug}/settings/modules/${encodeURIComponent(module)}/layouts`}
+                  role="tab"
+                  aria-selected="false"
+                  className="py-4 text-sm text-text-muted hover:text-text"
+                >
+                  {t}
+                </Link>
+              );
+            }
+            return (
+              <button
+                key={t}
+                type="button"
+                role="tab"
+                aria-selected="false"
+                disabled
+                className="py-4 text-sm text-text-muted opacity-60 cursor-not-allowed"
+              >
+                {t}
+              </button>
+            );
+          })}
           <button
             type="button"
             aria-label="Fields help"
@@ -139,7 +144,7 @@ export function FieldsScreen({
                 role="tab"
                 aria-selected={i === 0}
                 disabled={i !== 0}
-                className={`pb-2 text-sm ${i === 0 ? "border-b-2 border-primary font-semibold text-text" : "text-text-muted"}`}
+                className={`pb-2 text-sm ${i === 0 ? "border-b-2 border-primary font-semibold text-text" : "text-text-muted opacity-60 cursor-not-allowed"}`}
               >
                 {t}
               </button>
@@ -163,7 +168,7 @@ export function FieldsScreen({
             <button
               type="button"
               disabled
-              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-text opacity-60"
+              className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-text opacity-60 cursor-not-allowed"
             >
               Create and Edit Fields
             </button>

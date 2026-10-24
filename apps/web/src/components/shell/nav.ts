@@ -136,6 +136,13 @@ export const shellNav: NavConfig = {
       iconAccentToken: "--color-accent-blue",
     },
     {
+      id: "workqueue",
+      label: "Workqueue",
+      icon: Icons.task,
+      href: (slug) => `/crm/${slug}/workqueue`,
+      match: "exact",
+    },
+    {
       id: "reports",
       label: "Reports",
       icon: Icons.file,
@@ -241,6 +248,15 @@ export const settingsNav: readonly NavLink[] = [
     href: (slug) => `/crm/${slug}/settings/modules`,
     match: "exact",
     group: "Customization",
+  },
+  {
+    id: "workflow-rules",
+    label: "Workflow Rules",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/workflow-rules`,
+    activePrefix: (slug) => `/crm/${slug}/settings/workflow-rules`,
+    match: "prefix",
+    group: "Automation",
   },
   {
     id: "assignment-rules",

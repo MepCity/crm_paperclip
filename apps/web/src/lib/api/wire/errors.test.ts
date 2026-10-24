@@ -5,6 +5,7 @@ import {
   isAppError,
   NotFoundError,
   RecordLockedError,
+  SchemaStaleError,
   UnauthenticatedError,
   ValidationError,
 } from "@crm/core/errors";
@@ -191,5 +192,27 @@ describe("wire module boundary", () => {
     expect(source).not.toMatch(/from ["']@crm\/core["']/);
     expect(source).not.toMatch(/from ["']next/);
     expect(source).not.toMatch(/@crm\/db/);
+  });
+});
+
+describe("schema revision conflicts", () => {
+  it("round trips a distinct 409 code with the opaque current revision", () => {
+    const error = new SchemaStaleError("baseline:7");
+    const encoded = encodeError(error);
+    expect(encoded).toEqual({
+      status: 409,
+      body: {
+        code: "SCHEMA_REVISION_MISMATCH",
+        details: { revision: "baseline:7" },
+        message: error.message,
+        status: "error",
+      },
+    });
+    expect(decodeError(409, encoded.body)).toMatchObject({
+      code: "schema_stale",
+      revision: "baseline:7",
+    });
+    expect(decodeError(400, encoded.body)).toBeInstanceOf(UnexpectedApiError);
+    expect(decodeError(409, { ...encoded.body, details: {} })).toBeInstanceOf(UnexpectedApiError);
   });
 });

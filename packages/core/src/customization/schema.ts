@@ -139,6 +139,8 @@ export const baselineSchema = z.strictObject({
   engineCapabilities: z.record(id, z.boolean()),
 });
 export const patchSchema = z.strictObject({
+  retireFields: z.array(id).optional(),
+  restoreFields: z.array(id).optional(),
   addFields: z.array(fieldSchema).optional(),
   fieldPatches: z
     .record(

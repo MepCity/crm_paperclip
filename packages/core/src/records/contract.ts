@@ -291,6 +291,11 @@ export interface ListResult {
   sort: SortSpec;
 }
 
+/** Required by schema-coordinated adapters; conversion supplies every target module token. */
+export interface RecordWriteOptions {
+  expectedRevision: string | Readonly<Record<string, string>>;
+}
+
 export type RecordInput = Readonly<Record<string, FieldValue>>;
 
 export interface SearchQuery {
@@ -362,10 +367,22 @@ export interface RecordService {
     module: ModuleApiName,
     fields: readonly string[],
   ): Promise<readonly DuplicateGroup[]>;
-  merge(module: ModuleApiName, input: MergeInput): Promise<RecordData>;
+  merge(
+    module: ModuleApiName,
+    input: MergeInput,
+    options?: RecordWriteOptions,
+  ): Promise<RecordData>;
   /** Converts a lead into account/contact/deal targets under one history operation. */
-  convertLead(leadId: string, input: ConvertLeadInput): Promise<ConvertLeadResult>;
-  deduplicate(module: ModuleApiName, fields: readonly string[]): Promise<DeduplicateResult>;
+  convertLead(
+    leadId: string,
+    input: ConvertLeadInput,
+    options?: RecordWriteOptions,
+  ): Promise<ConvertLeadResult>;
+  deduplicate(
+    module: ModuleApiName,
+    fields: readonly string[],
+    options?: RecordWriteOptions,
+  ): Promise<DeduplicateResult>;
   getHomeCurrency(): Promise<CurrencyDefinition>;
   getModule(module: ModuleApiName): Promise<ModuleMetadata>;
   listViews(module: ModuleApiName): Promise<readonly ListView[]>;
@@ -386,11 +403,34 @@ export interface RecordService {
   ): Promise<number>;
   summarize(module: ModuleApiName, query: SummaryQuery): Promise<readonly GroupSummary[]>;
   get(module: ModuleApiName, id: RecordId): Promise<RecordData>;
-  create(module: ModuleApiName, input: RecordInput): Promise<RecordData>;
-  update(module: ModuleApiName, id: RecordId, input: RecordInput): Promise<RecordData>;
-  massUpdate(module: ModuleApiName, ids: readonly RecordId[], input: RecordInput): Promise<void>;
-  changeOwner(module: ModuleApiName, ids: readonly RecordId[], ownerId: string): Promise<void>;
-  delete(module: ModuleApiName, ids: readonly RecordId[]): Promise<void>;
+  create(
+    module: ModuleApiName,
+    input: RecordInput,
+    options?: RecordWriteOptions,
+  ): Promise<RecordData>;
+  update(
+    module: ModuleApiName,
+    id: RecordId,
+    input: RecordInput,
+    options?: RecordWriteOptions,
+  ): Promise<RecordData>;
+  massUpdate(
+    module: ModuleApiName,
+    ids: readonly RecordId[],
+    input: RecordInput,
+    options?: RecordWriteOptions,
+  ): Promise<void>;
+  changeOwner(
+    module: ModuleApiName,
+    ids: readonly RecordId[],
+    ownerId: string,
+    options?: RecordWriteOptions,
+  ): Promise<void>;
+  delete(
+    module: ModuleApiName,
+    ids: readonly RecordId[],
+    options?: RecordWriteOptions,
+  ): Promise<void>;
   listKanbanViews(module: ModuleApiName): Promise<readonly KanbanView[]>;
   getKanbanView(module: ModuleApiName, id: string): Promise<KanbanView>;
   createKanbanView(module: ModuleApiName, input: KanbanViewInput): Promise<KanbanView>;
