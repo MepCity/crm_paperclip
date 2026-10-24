@@ -256,7 +256,7 @@ function CustomViewDialogContent({
           f.apiName === "Deal_Name" ||
           f.apiName === "Subject",
       )?.apiName ??
-      fields.find((f) => f.dataType === "text" || f.dataType === "varchar")?.apiName ??
+      fields.find((f) => f.dataType === "text")?.apiName ??
       fields[0]?.apiName ??
       "";
     setCriteriaRows([
