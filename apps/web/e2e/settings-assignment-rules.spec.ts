@@ -216,7 +216,7 @@ test("populated Assignment rules list AL1–AL5 and detail AD1–AD7 read-only i
   await expect(detailRegion.getByRole("switch")).toHaveCount(0);
 
   // AD2: Ordered entry rows with displayed sequence and condition
-  await expect(page.getByRole("heading", { name: "Rule entries", level: 3 })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Rule entries", level: 2 })).toBeVisible();
   const entriesTable = detailRegion.getByRole("table");
   await expect(entriesTable).toBeVisible();
 
@@ -269,7 +269,7 @@ test("populated Assignment rules list AL1–AL5 and detail AD1–AD7 read-only i
   // AD6: Separate default recipient section with configured fallback
   const fallback = page.getByTestId("assignment-detail-fallback");
   await expect(
-    fallback.getByRole("heading", { name: "Default recipient", level: 3 }),
+    fallback.getByRole("heading", { name: "Default recipient", level: 2 }),
   ).toBeVisible();
   await expect(fallback).toContainText("Groups");
   await expect(fallback).toContainText("synthetic-group-a");
