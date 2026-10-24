@@ -127,12 +127,40 @@ export async function loadQueues(service: RecordService, page: number): Promise<
       if (!bundle) throw new Error("Queue metadata is unavailable.");
       const view = bundle.views.find((view) => view.id === queue.view);
       if (!view) throw new Error(`Queue view is unavailable: ${queue.view}`);
-      // Meetings/Calls have an owner filter; period semantics are left to a later slice.
-      const filters: Criteria = {
+      // Keep ownership explicit even when the selected view already supplies it.
+      const owner: Criteria = {
         field: "Owner",
         comparator: "equal",
         value: { token: "CURRENTUSER" },
       };
+      const filters: Criteria =
+        queue.id === "meetings" || queue.id === "calls"
+          ? {
+              groupOperator: "and",
+              group: [
+                owner,
+                {
+                  field: queue.id === "meetings" ? "Start_DateTime" : "Call_Start_Time",
+                  comparator: "less_equal",
+                  value: { token: "TODAYANDOVERDUE" },
+                },
+                queue.id === "meetings"
+                  ? {
+                      // Meetings have no cancellation field in the exported metadata.
+                      field: "End_DateTime",
+                      comparator: "greater_than",
+                      value: { token: "CURRENTTIME" },
+                    }
+                  : {
+                      groupOperator: "or",
+                      group: [
+                        { field: "Outgoing_Call_Status", comparator: "equal", value: "Scheduled" },
+                        { field: "Outgoing_Call_Status", comparator: "equal", value: "Overdue" },
+                      ],
+                    },
+              ],
+            }
+          : owner;
       const query = { viewId: view.id, page, perPage: PAGE_SIZE, filters };
       const [result, count] = await Promise.all([
         service.list(queue.module, query),
