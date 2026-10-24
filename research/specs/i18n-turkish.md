@@ -1,9 +1,8 @@
 # Turkish language and locale research — R1
 
-Status: documentation research complete; Turkish interface terminology is a
-**provisional translation worksheet**, pending the board-controlled Turkish
-capture window. This is research input to the i18n ADR, not an approved string
-catalogue or an implementation decision. Checked on 2026-10-24.
+Status: public-document research and Turkish-window capture research completed
+on 2026-10-24. Observed terminology is separated from remaining proposals.
+This is research input to the i18n ADR, not an implementation decision.
 
 ## Purpose and evidence boundaries
 
@@ -12,17 +11,20 @@ and Turkish formatting conventions for our English/Turkish product. The parent
 requirement keeps English as our default/fallback; that is a product requirement,
 not evidence of the reference's fallback for every language.
 
-No reference language, locale, calendar preference, translation setting or record
-was changed. No export/import or translation editor was used. A fresh English
-capture attempt failed while creating its output directory, before browser
-inspection; it supplies no new evidence. Existing English observations are
-linked below. No Turkish live capture is claimed.
+The board enabled Turkish and extended the window to approximately 23:30 local
+time. The analyst did not change language, locale, records, translations or saved
+preferences. Capture-only navigation, named existing record links, initial blank
+create forms and content scrolling were used. No fields were filled, no form was
+submitted and no tab/window was closed. Raw captures remain local because they
+contain private data. Only static labels and synthetic format patterns appear here.
 
 Evidence labels:
 
 - **D**: behaviour documented in public reference help; not exercised live.
 - **L**: Turkish locale convention from Unicode CLDR; not reference UI proof.
 - **E**: existing English capture/spec evidence, with its original limitations.
+- **T**: exact text in Turkish-window page/ARIA exports; screenshots inspected,
+  with offscreen/transition limitations stated separately.
 - **P**: analyst-proposed Turkish wording; unverified in the reference or its
   Turkish documentation. Every P row requires capture confirmation or an
   explicit terminology decision before being treated as reference parity.
@@ -96,13 +98,13 @@ users as well as administrators may change their own language, date format and
 time zone. Documentation describes a saved edit; save/validation feedback was
 not exercised.
 
-| English concept | Meaning / documented relationship | Turkish proposal |
+| English concept | Meaning / documented relationship | Turkish label / evidence |
 | --- | --- | --- |
-| Language | User interface language, distinct from country | Dil (P) |
-| Country Locale | Regional locale; updates the initial date format and affects phone display | Ülke Yerel Ayarı (P) |
-| Date Format | Selectable date representation | Tarih Biçimi (P) |
-| Time Format | 12-hour or 24-hour choice | Saat Biçimi (P) |
-| Time Zone | User time zone; distinct from language | Saat Dilimi (P) |
+| Language | User interface language, distinct from country | Dil (T16) |
+| Country Locale | Regional locale; updates the initial date format and affects phone display | Ülke Yerel Ayarı (T16) |
+| Date Format | Selectable date representation | Tarih Biçimi (T16) |
+| Time Format | 12-hour or 24-hour choice | Saat Biçimi (T16) |
+| Time Zone | User time zone; distinct from language | Zaman Dilimi (T16) |
 | Number Format → Grouping | Digit-group separator | Sayı Biçimi → Basamak Ayırıcı (P) |
 | Number Format → Decimal | Decimal separator | Sayı Biçimi → Ondalık Ayırıcı (P) |
 
@@ -112,6 +114,8 @@ E1 observed a dotted date pattern and period/comma number separators while the
 interface was English: English language must not imply US formats. Organization
 time zone, currency settings, and calendar working hours are separate surfaces.
 Precedence, first-login inheritance and cross-session refresh remain unverified.
+T16 now visually confirms the Turkish locale section after content scrolling;
+the English E1 limits still describe that earlier capture only.
 
 ## Turkish formatting baseline
 
@@ -135,89 +139,283 @@ the reference's matching algorithm. Absolute timestamps, date-only due dates,
 relative dates and audit labels must be checked separately. An existing mixed
 date presentation in E1 prevents assuming one global date renderer.
 
-## Terminology worksheet
+## Observed Turkish dictionary
 
-**All Turkish CRM labels in the following tables are P.** They are useful
-translation candidates, not quotations, documentation-confirmed Turkish labels,
-or an approved departure from the reference. No row currently has Turkish live
-evidence. English terms identify concepts; their exact appearance varies by
-module. Keep the English concept stable when updating the Turkish evidence.
+These exact account-visible labels supersede earlier P candidates. Keep spelling
+and context, including awkward wording. Organization-specific renamings versus
+upstream defaults have not been independently established. English concepts are
+semantic keys, not API keys. T proves text evidence; it does not claim every
+exported label was visible in the initial image. Limits are recorded per row.
+
+| English concept / context | Exact observed Turkish text | Evidence | Visibility / boundary |
+| --- | --- | --- | --- |
+| Home | Ana Sayfa | T01 | text; some panel labels clipped/offscreen |
+| Leads | Müşteri Adayları | T01 | text; some panel labels clipped/offscreen |
+| Contacts | Kişiler | T01 | text; some panel labels clipped/offscreen |
+| Accounts | Firmalar | T01 | text; some panel labels clipped/offscreen |
+| Deals | Satış Fırsatları | T01 | text; some panel labels clipped/offscreen |
+| Activities | Aktiviteler | T01 | text; some panel labels clipped/offscreen |
+| Tasks | Görevler | T01 | text; some panel labels clipped/offscreen |
+| Meetings | Toplantılar | T01 | text; some panel labels clipped/offscreen |
+| Calls | Aramalar | T01 | text; some panel labels clipped/offscreen |
+| Campaigns | Kampanyalar | T01 | text; some panel labels clipped/offscreen |
+| Solutions | Çözümler | T01 | text; some panel labels clipped/offscreen |
+| Documents | Belgeler | T01 | text; some panel labels clipped/offscreen |
+| Reports | Raporlar | T01 | text; some panel labels clipped/offscreen |
+| Analytics | Analitikler | T01 | text; some panel labels clipped/offscreen |
+| Workqueue | İş Kuyruğu | T01 | text; some panel labels clipped/offscreen |
+| Visits | Ziyaretler | T01 | text; some panel labels clipped/offscreen |
+| Social | Sosyal | T01 | text; some panel labels clipped/offscreen |
+| Search records | kayıtlar ara | T01 | text; some panel labels clipped/offscreen |
+| Filter | Filtre Uygula | T01 | text; some panel labels clipped/offscreen |
+| Sort | Sırala | T01 | text; some panel labels clipped/offscreen |
+| Actions | Eylemler | T01 | text; some panel labels clipped/offscreen |
+| System Defined Filters | Sistem Tanımlı Filtreler | T01 | text; some panel labels clipped/offscreen |
+| Filter By Fields | Alanlara Göre Filtrele | T01 | text; some panel labels clipped/offscreen |
+| Filter By Related Modules | İlgili Modüllere Göre Filtrele | T01 | text; some panel labels clipped/offscreen |
+| Cases | Servis Dosyaları | T02 | text; image inspected |
+| Setup | Ayarlar | T03 | text; image inspected |
+| Personal Settings | Kişisel Ayarlar | T03 | text; image inspected |
+| Company Settings | Şirket Ayarları | T03 | text; image inspected |
+| Modules and Fields | Modüller ve Alanlar | T03 | text; image inspected |
+| Translations | Çeviriler | T03 | text; image inspected |
+| General | Genel | T03 | text; image inspected |
+| Security Control | Güvenlik Denetimi | T03 | text; image inspected |
+| Channels | Kanallar | T03 | text; image inspected |
+| Customization | Özelleştirme | T03 | text; image inspected |
+| Automation | Otomasyon | T03 | text; image inspected |
+| Data Administration | Veri Yönetimi | T03 | text; image inspected |
+| Developer Hub | Geliştirici Merkezi | T03 | text; image inspected |
+| Recycle Bin | Geri Dönüşüm Kutusu | T03 | text only; below initial viewport |
+| Notifications | Bildirimler | T03 | text only; below initial viewport |
+| Overview | Genel Bakış | T04 | text; image inspected |
+| Timeline | Zaman Çizelgesi | T04 | text; image inspected |
+| Related Lists | İlgili Liste | T04 | text; image inspected |
+| Notes | Notlar | T04 | text; image inspected |
+| Attachments | Eklentiler | T04 | text; image inspected |
+| Edit | Düzenle | T04 | text; image inspected |
+| Convert | Dönüştür | T04 | text; image inspected |
+| Send Email | E-posta Gönder | T04 | text; image inspected |
+| Add Tags | Etiketleri Ekle | T04 | text; image inspected |
+| Open Activities | Açık Aktiviteler | T04 | text; image inspected |
+| Closed Activities | Kapalı Aktiviteler | T04 | text; image inspected |
+| Invited Meetings | Davet Edilen Toplantılar | T04 | text; image inspected |
+| Connected Records | Bağlı Kayıtlar | T04 | text; image inspected |
+| Create Lead | Müşteri Adayı Oluştur | T05 | text; image inspected |
+| First Name | Adı | T05 | text; image inspected |
+| Last Name | Soyadı | T05 | text; image inspected |
+| Company | Şirket | T05 | text; image inspected |
+| Lead Owner | Müşteri Adayı Kayıt Sahibi | T05 | text; image inspected |
+| Title | Ünvan | T05 | text; image inspected |
+| Email | E-posta | T05 | text; image inspected |
+| Phone | Telefon | T05 | text; image inspected |
+| Mobile | Cep Telefonu | T05 | text; image inspected |
+| Website | Web sitesi | T05 | text; image inspected |
+| Industry | Sektör | T05 | text; image inspected |
+| Lead Source | Müşteri Adayı Kaynağı | T05 | text; image inspected |
+| Lead Status | Müşteri Adayı Durumu | T05 | text; image inspected |
+| Rating | Derece | T05 | text; image inspected |
+| Save | Kaydet | T05 | text; image inspected |
+| Save and New | Kaydet ve Yeni | T05 | text; image inspected |
+| Cancel | İptal | T05 | text; image inspected |
+| Edit Page Layout | Sayfa Tasarımını Düzenle | T05 | text; image inspected |
+| Annual Revenue | Yıllık Gelir | T05 | text; image inspected |
+| Number of Employees | Çalışan Sayısı | T05 | text; image inspected |
+| Email Opt Out | E-posta Gönderilmesin | T05 | text; image inspected |
+| Contact Owner | Kişi Kayıt Sahibi | T06 | text; image inspected |
+| Account Name | Firma Adı | T06 | text; image inspected |
+| Create Contact | Kişi Oluştur | T06 | text; image inspected |
+| Department | Bölümü | T06 | text; image inspected |
+| Birth Date | Doğum Tarihi | T06 | text; image inspected |
+| Other Phone | Diğer Telefon | T06 | text; image inspected |
+| Home Phone | Ev Telefonu | T06 | text; image inspected |
+| Assistant | Asistanı | T06 | text; image inspected |
+| Contact Name | Kişi Adı | T07 | text; image inspected |
+| Subject | Konu | T08 | text; right-hand columns clipped |
+| Due Date | Son Tarih | T08 | text; right-hand columns clipped |
+| Status | Durum | T08 | text; right-hand columns clipped |
+| Priority | Öncelik | T08 | text; right-hand columns clipped |
+| Task Owner | Görev Sahibi | T08 | text; right-hand columns clipped |
+| Related To | İlgilisi | T08 | text; right-hand columns clipped |
+| Contact Name / activity lookup | İrtibat Adı | T08 | text; right-hand columns clipped |
+| Call Type | Arama Tipi | T09 | text; owner column clipped |
+| Call Start Time | Arama Saati | T09 | text; owner column clipped |
+| Call Duration | Arama Süresi | T09 | text; owner column clipped |
+| Call Owner | Arama Sahibi | T09 | text; owner column clipped |
+| Create Deal | Satış Fırsatı Oluştur | T10 | text; image inspected |
+| Deal Name | Satış Fırsatı Adı | T10 | text; image inspected |
+| Deal Owner | Satış Fırsatı Kayıt Sahibi | T10 | text; image inspected |
+| Stage | Aşama | T10 | text; image inspected |
+| Amount | Tutar | T10 | text; image inspected |
+| Probability | Olasılık (%) | T10 | text; image inspected |
+| Closing Date | Kapanış Tarihi | T10 | text; image inspected |
+| Description | Açıklama | T10 | text; image inspected |
+| Expected Revenue | Beklenen Ciro | T10 | text; image inspected |
+| Next Step | Sonraki Adım | T10 | text; image inspected |
+| Start Date | Başlangıç Tarihi | T11 | text; right-hand end column clipped |
+| End Date | Bitiş Tarihi | T11 | text; right-hand end column clipped |
+| Create Report | Rapor Oluştur | T12 | text; image inspected |
+| Report Name | Rapor Adı | T12 | text; image inspected |
+| Folder | Klasör | T12 | text; image inspected |
+| Last Accessed | Son Erişim Tarihi | T12 | text; image inspected |
+| Create Dashboard | Pano Oluştur | T13 | text; image inspected |
+| Add Component | Bileşen Ekle | T13 | text; image inspected |
+| Organization Overview | Kuruluşa Genel Bakış | T13 | text; image inspected |
+| My Folders | Klasörlerim | T14 | text; image inspected |
+| Team Folders | EKİP KLASÖRLERİ | T14 | text; image inspected |
+| Today & Overdue | Bugün & Geciken | T15 | text; image inspected |
+| My Workqueue | Benim İş Kuyruğu | T15 | text; image inspected |
+| My Open Activities | Benim Etkinlikleri Aç | T15 | text; image inspected |
+| My Jobs | Benim İşler | T15 | text; image inspected |
+| Total Records | Toplam Kayıtlar | T15 | text; image inspected |
+| Late by {count} days | {count} gün geç | T15 | visible; red overdue text |
+| Locale Information | Lokalizasyon Bilgisi | T16 | visible after content scroll |
+| Language | Dil | T16 | visible after content scroll |
+| Country Locale | Ülke Yerel Ayarı | T16 | visible after content scroll |
+| Date Format | Tarih Biçimi | T16 | visible after content scroll |
+| Time Format | Saat Biçimi | T16 | visible after content scroll |
+| Time Zone | Zaman Dilimi | T16 | visible after content scroll |
+| Number Format | Sayı Biçimi | T16 | visible after content scroll |
+| Preferred Unit for Distance | Mesafe için Tercih Edilen Birim | T16 | visible after content scroll |
+| 'Create Meeting | Toplantı Oluştur | T17 | text; image inspected |
+| Subject / meeting | Başlık | T17 | text; image inspected |
+| From / meeting | Başlangıç | T17 | text; image inspected |
+| To / meeting | Bitiş | T17 | text; image inspected |
+| 'Create Account | Firma Oluştur | T18 | text; image inspected |
+| Account Owner | Firma Kayıt Sahibi | T18 | text; image inspected |
+
+### Mixed-language values and naturally empty states
+
+Tasks and Workqueue retain English `Not Started`, `In Progress`, `Completed`,
+`Highest`, `High`, `Normal` and `Low` values in existing cells. Leads retains
+English status-path values including `Contacted`, `Lost Lead`, `Not Contacted`,
+`Pre-Qualified` and `Not Qualified`; blank form selections display `-None-`.
+Deals stage names and Calls `Outbound` remain English. Do not promote the
+remaining P translations for these values to reference parity or change stored
+option values. These observations do not establish why they remain English or
+whether administrative translations could change them.
+
+Naturally empty lists provide exact read-only messages: Campaigns shows
+`Hiçbir Kampanyalar bulunamadı.`, Cases `Hiçbir Servis Dosyaları bulunamadı.`,
+and Solutions `Hiçbir Çözümler bulunamadı.` No validation, success or error
+message was triggered through a write.
+
+### Live locale and formatting findings
+
+- The read-only locale section is `Lokalizasyon Bilgisi`; its timezone label is
+  `Zaman Dilimi`. Grouping/decimal are not separate displayed row labels here;
+  their editor controls were not opened.
+- The date token and form placeholder use `DD.MM.YYYY`. Numeric lists show dotted
+  day/month/year dates. All format examples in this spec are synthetic.
+- The current time setting displays a twelve-hour preference; Calls shows
+  localized `ÖÖ` / `ÖS` markers. The CLDR 24-hour convention is not proof of this
+  user's selected preference.
+- The number-format illustration uses period grouping/comma decimals with three
+  fraction digits. That illustration does not establish currency precision.
+- Deals and Analytics show `TL`, with period grouping/comma decimals; symbol
+  placement varies by surface. Synthetic patterns: `TL 1.234,56` and
+  `1.234,56 TL`. The earlier CLDR `₺` example is not an observed reference rule.
+- List activity badges use abbreviated Turkish month names (e.g. `Ekm`, `Kas`,
+  `Oca`) and some month-first text. Reports shows a localized relative-hours
+  expression. Workqueue uses red `{count} gün geç`. No universal date renderer
+  can be inferred.
+- Week start was not newly inspected or changed. Monday remains the CLDR
+  baseline. No before/after mutation experiment tested preference persistence.
+
+## Turkish capture register and safety accounting
+
+Each slug has screenshot.png, page.txt, aria.yml, controls.json, network.json and
+meta.json in the local research workspace. Raw private data remains there and is
+not committed or uploaded. This sanitized specification is the deliverable.
+Images were inspected; text-only and transition limits are described explicitly.
+
+| Key | Capture slug | UTC timestamp | Blocked requests |
+| --- | --- | --- | --- |
+| T01 | `m1336-tr-leads-list` | 2026-10-24T18:37:21Z | 2 |
+| T02 | `m1336-tr-cases-list` | 2026-10-24T18:41:46Z | 2 |
+| T03 | `m1336-tr-setup` | 2026-10-24T18:40:17Z | 2 |
+| T04 | `m1336-tr-leads-detail` | 2026-10-24T18:42:57Z | 4 |
+| T05 | `m1336-tr-leads-form` | 2026-10-24T18:43:23Z | 3 |
+| T06 | `m1336-tr-contacts-form` | 2026-10-24T18:44:09Z | 2 |
+| T07 | `m1336-tr-contacts-list` | 2026-10-24T18:37:40Z | 2 |
+| T08 | `m1336-tr-tasks-list` | 2026-10-24T18:38:30Z | 2 |
+| T09 | `m1336-tr-calls-list` | 2026-10-24T18:39:01Z | 2 |
+| T10 | `m1336-tr-deals-form` | 2026-10-24T18:46:03Z | 4 |
+| T11 | `m1336-tr-campaigns-list` | 2026-10-24T18:41:27Z | 2 |
+| T12 | `m1336-tr-reports` | 2026-10-24T18:40:54Z | 2 |
+| T13 | `m1336-tr-analytics` | 2026-10-24T18:41:08Z | 2 |
+| T14 | `m1336-tr-documents-list` | 2026-10-24T18:42:21Z | 1 |
+| T15 | `m1336-tr-workqueue` | 2026-10-24T18:39:30Z | 3 |
+| T16 | `m1336-tr-personal-locale-scroll` | 2026-10-24T18:47:50Z | 2 |
+| T17 | `m1336-tr-meetings-list-final` | 2026-10-24T18:47:26Z | 2 |
+| T18 | `m1336-tr-accounts-form-ready` | 2026-10-24T18:48:21Z | 2 |
+| T19 | `m1336-tr-accounts-list` | 2026-10-24T18:37:58Z | 2 |
+| T20 | `m1336-tr-contacts-detail` | 2026-10-24T18:43:47Z | 4 |
+| T21 | `m1336-tr-accounts-detail-ready` | 2026-10-24T18:47:05Z | 3 |
+| T22 | `m1336-tr-deals-detail` | 2026-10-24T18:45:41Z | 5 |
+| T23 | `m1336-tr-deals-list-ready` | 2026-10-24T18:39:51Z | 4 |
+| T24 | `m1336-tr-solutions-list` | 2026-10-24T18:42:07Z | 2 |
+
+| T25 | `m1336-tr-home` | 2026-10-24T18:36:53Z | 2 |
+| T26 | `m1336-tr-personal-locale` | 2026-10-24T18:40:37Z | 2 |
+| T27 | `m1336-tr-finish` | 2026-10-24T18:48:55Z | 2 |
+
+The register contains 27 completed captures. Five earlier loading, transitional
+or readiness-failed attempts remain local and are not completion evidence.
+
+All 32 attempts together record **84 blocked-request entries** (including the
+five excluded attempts). No block was bypassed:
+
+| Category | Blocked entries |
+| --- | --- |
+| Automatic reminder / notification-status legacy POSTs | 31 / 27 |
+| Deals grouped-count POSTs / module-settings PUTs | 3 / 3 |
+| Analytics metadata PUT / Workqueue view-preference PUT | 1 / 1 |
+| Client-tracking and monitoring telemetry POSTs | 15 |
+| Lead/contact related-count POSTs | 2 |
+| Legacy record-navigation POST | 1 |
+
+Successful non-GET traffic is not zero. Across capture exports there are 98
+successful non-GET endpoint entries (entries aggregate requests): count (19),
+bulk (33), query-run (13), triggers (29), and legacy customization reads (4).
+All are POSTs permitted by the capture guard's read allowlist, including its
+legacy read-action check; no successful PUT/PATCH/DELETE entry was observed.
+This is bounded capture evidence, not a server-side audit. No intentional
+record, translation, locale or saved-preference mutation was executed.
+
+Deals opened in its existing stage-card view. No table-view switch was made,
+because that would persist a preference. Treat this as the current opening view,
+not a table capture. Early short-path Deals/Meetings captures were loading shells
+and are excluded as completed evidence. An Accounts detail attempt with an
+inexact link name failed readiness before any click; the corrected attempt used
+the exact exported named selector. The first Accounts form image was transitional;
+only its later ready capture can establish the painted form. Documents showed
+folder navigation with a blank content area, so it proves shell terminology only.
+Blank forms were left through subsequent navigation, without input or save.
+No tab or window was closed, and only the board may restore English.
+
+## Remaining unverified coverage worksheet
+
+Only the remaining rows below are P candidates, not observed reference labels.
+Combined concepts still require confirmation in their own contexts.
 
 ### Shell and module names
 
 | English concept | Turkish candidate (P) | Confirmation concern |
 | --- | --- | --- |
-| Home | Ana Sayfa | Capitalization |
-| Leads | Potansiyel Müşteriler | Could use a different sales term |
-| Contacts | Kişiler | Distinguish from leads |
-| Accounts | Hesaplar | Company module versus user account |
-| Deals | Anlaşmalar | Could instead use a sales-opportunity term |
-| Activities | Etkinlikler | Parent group versus calendar events |
-| Tasks | Görevler | Module name |
-| Meetings | Toplantılar | Module name |
-| Calls | Aramalar | Distinguish from search |
-| Campaigns | Kampanyalar | Module name |
-| Cases | Destek Talepleri | Could instead use cases terminology |
-| Solutions | Çözümler | Module name |
-| Documents | Belgeler | Module name |
-| Reports | Raporlar | Module name |
-| Analytics | Analizler | May overlap dashboard terminology |
 | Dashboards | Panolar | Distinguish from Analytics |
-| Workqueue | İş Kuyruğu | Exact label particularly uncertain |
-| Visits | Ziyaretler | Module name |
-| Social | Sosyal | Module name |
-| Email | E-posta | Navigation versus field |
 | Calendar | Takvim | Module name |
-| Notes | Notlar | Related list |
-| Attachments | Ekler | Related list |
-| Timeline | Zaman Çizelgesi | Record detail tab |
-| Related Lists | İlgili Listeler | Record detail region |
-| Overview | Genel Bakış | Record detail tab |
-| Setup | Kurulum | Could instead use settings terminology |
-| Personal Settings | Kişisel Ayarlar | Settings navigation |
-| Company Settings | Şirket Ayarları | Organization scope |
-| Locale Information | Yerel Ayar Bilgileri | Section name |
-| Modules and Fields | Modüller ve Alanlar | Setup entry |
-| Translations | Çeviriler | Setup entry |
-| Search records | Kayıtlarda ara | Search placeholder |
 | All Modules | Tüm Modüller | Navigation/search scope |
-| Notifications | Bildirimler | Utility |
-| Recycle Bin | Geri Dönüşüm Kutusu | Utility |
 | Tags | Etiketler | Utility |
 
 ### Common fields
 
 | English concept | Turkish candidate (P) |
 | --- | --- |
-| First Name | Ad |
-| Last Name | Soyad |
 | Full Name | Ad Soyad |
-| Company | Şirket |
-| Account Name | Hesap Adı |
-| Contact Name | Kişi Adı |
-| Deal Name | Anlaşma Adı |
 | Owner | Kayıt Sahibi |
-| Lead Owner | Potansiyel Müşteri Sahibi |
 | Assigned To | Atanan Kişi |
-| Title | Unvan |
-| Subject | Konu |
-| Description | Açıklama |
-| Email | E-posta |
-| Phone | Telefon |
-| Mobile | Cep Telefonu |
-| Website | Web Sitesi |
-| Industry | Sektör |
-| Lead Source | Potansiyel Müşteri Kaynağı |
-| Lead Status | Potansiyel Müşteri Durumu |
-| Status | Durum |
-| Priority | Öncelik |
-| Rating | Derecelendirme |
-| Stage | Aşama |
-| Amount | Tutar |
 | Currency | Para Birimi |
-| Probability | Olasılık |
-| Closing Date | Kapanış Tarihi |
-| Due Date | Bitiş Tarihi |
 | Start Date / End Date | Başlangıç Tarihi / Bitiş Tarihi |
 | Start Time / End Time | Başlangıç Saati / Bitiş Saati |
 | Duration | Süre |
@@ -242,24 +440,17 @@ must be checked in context; the candidates are not interchangeable keys.
 | English concept | Turkish candidate (P) |
 | --- | --- |
 | Create / New | Oluştur / Yeni |
-| Save | Kaydet |
-| Save and New | Kaydet ve Yeni Oluştur |
-| Cancel | İptal |
-| Edit | Düzenle |
 | Delete | Sil |
 | Clone | Kopyala |
-| Convert | Dönüştür |
 | Add / Remove | Ekle / Kaldır |
 | Update | Güncelle |
 | Close | Kapat |
 | Back / Next | Geri / İleri |
 | Search | Ara |
 | Filter / Apply / Clear | Filtrele / Uygula / Temizle |
-| Sort | Sırala |
 | More / Actions | Diğer / İşlemler |
 | Change Owner | Kayıt Sahibini Değiştir |
 | Mark as Completed | Tamamlandı Olarak İşaretle |
-| Send Email | E-posta Gönder |
 | Import / Export | İçe Aktar / Dışa Aktar |
 | Upload / Download | Yükle / İndir |
 | Select All | Tümünü Seç |
@@ -316,7 +507,6 @@ labels; proposed translations do not authorize changing stored option values.
 | This Week / Last Week / Next Week | Bu Hafta / Geçen Hafta / Gelecek Hafta | P |
 | This Month / Last Month / Next Month | Bu Ay / Geçen Ay / Gelecek Ay | P |
 | Overdue | Gecikmiş | P |
-| Late by {count} days | {count} gün gecikmiş | P; exact reference sentence/capitalization unknown |
 | Due in {count} days | {count} gün içinde | P; context may need a due-date verb |
 | {count} days ago | {count} gün önce | L1 linguistic convention; reference label unverified |
 | in {count} days | {count} gün sonra | L1 linguistic convention; reference label unverified |
@@ -327,59 +517,28 @@ order. Preserve numeric meaning, overdue highlighting and count badges when
 localizing. The day-boundary calculation (user zone versus organization zone,
 calendar days versus elapsed 24-hour periods) is not established by these labels.
 
-## Turkish capture window and verification work
 
-Only the board changes the reference language. Once the board reports an active
-Turkish window, the analyst uses the capture tool for these existing/read-only
-surfaces; the analyst neither enables Turkish nor restores English.
+## Open questions and observation limits
 
-1. Shell/Home with module navigation and global utilities; Workqueue with an
-   already-existing overdue item if available. Capture title, groups, counts,
-   selected state and relative date text. Never manufacture an overdue item.
-2. Existing Leads, Contacts, Accounts and Deals list/detail pages: module names,
-   common fields, Overview/Timeline/related-list labels and available actions.
-3. Tasks, Meetings and Calls list/detail pages: subject, owner, dates, priority,
-   status and overdue expressions. Observe only existing values; no completion
-   or status action. Picklist candidates absent from existing records stay open.
-4. Campaigns, Cases, Solutions, Documents, Reports and Analytics landing pages;
-   inspect navigation and headings, without changing a saved view or report.
-5. Setup landing and Personal Settings initial page for translated section/row
-   labels. No edit pencil, locale selector, save, collapse or preference control.
-
-For every successful capture, record slug/time, inspect the image, reconcile text
-and control exports, and check `meta.json` blocked requests and successful
-non-GET accounting. Raw captures remain local and customer data must be redacted
-from any derivative evidence. No record write, export or saved preference change
-is allowed. If a term is offscreen/unreachable under the tool guard, leave it
-unverified instead of inferring it. Broad screen inventories remain in their
-own specs; this document records only language evidence.
-
-## Open questions
-
-1. Board: when is the Turkish window available? Until then the terminology
-   worksheet cannot be promoted to an observed reference dictionary.
-2. Exact Turkish system labels, capitalization and terminology for Leads,
-   Accounts, Deals, Cases, Setup, Analytics and Workqueue are unverified. Does
-   this account have renamed modules or organization translations?
-3. Which custom labels/picklist values remain unchanged in Turkish, and what is
-   their missing-translation fallback? Existing records may reveal only a subset.
-4. Does changing language preserve independent Country Locale, date/time format,
-   zone and separator preferences? Documentation describes distinct fields but
-   does not establish every automatic update or inheritance rule.
-5. What are the exact Turkish overdue phrases and their rounding/zone rules?
-   Only already-existing overdue records may be inspected.
-6. Does the reference use Monday for this user's calendar, or a configured
-   override? CLDR Monday is a baseline, not proof of current calendar settings.
-7. Which currency symbol placement, spacing, precision and rounding appear in
-   lists, forms and reports? Locale must not imply conversion or storage changes.
-8. Reload/session propagation, language change failure states and write-result
-   translations are not observable without a change; use public documentation
-   or a board decision rather than test mutations.
+1. Which observed labels are account-specific renamings rather than system
+   defaults? Account-visible labels are the evidence boundary.
+2. Remaining P rows, unseen option alternatives, grouping/decimal editor labels
+   and localized validation/success/error messages are unverified. Writes are
+   not authorized to resolve these questions.
+3. Does language selection preserve all explicit locale/time/currency preferences,
+   and how does it propagate between sessions? No mutation experiment was run.
+4. Workqueue wording is established, but day-boundary, rounding and timezone
+   precedence are not. Week-start override, currency precision/rounding and
+   locale-aware search/casing remain unverified.
+5. Loading/transition captures and the blank Documents content area must not be
+   treated as complete module coverage. This is language research, not screen QA.
 
 ## Verification and disposition
 
-Documentation-only scope: source/evidence classification, glossary coverage,
-neutral naming, absence of personal values and `git diff --check`. No application
-runtime, UI, API, database or dependency changes; application tests and e2e runs
-are not applicable. Await the saved Turkish-window question before completing
-the capture-dependent terminology research and submitting the final review.
+Documentation-only update: exact dictionary strings checked against capture text,
+completed images inspected, controls and ARIA reconciled for the controls used,
+and blocked plus successful non-GET accounting reviewed. Naming/privacy checks
+and `git diff --check` apply. Application tests, typecheck and e2e are inapplicable
+because no product code changed. The Turkish capture window is no longer needed
+for this R1 delivery. Submit the sanitized update to the configured non-Claude
+reviewer; only the board restores the reference language.
