@@ -39,19 +39,21 @@ test("Home, settings, user identity and sign out work inside the shell", async (
   await expectNoA11yViolations(page);
 
   const slug = new URL(page.url()).pathname.split("/")[2] ?? "";
-  const name = await page.getByRole("button", { name: /Organization switcher:/ }).innerText();
   await page.getByRole("link", { name: "Settings", exact: true }).click();
   await expect(page).toHaveURL(`/crm/${slug}/settings`);
   await expect(page.getByRole("banner").getByRole("heading", { name: "Settings" })).toBeVisible();
   await expect(page).toHaveTitle("Settings | MepCity CRM");
-  await expect(page.getByRole("link", { name: "General" })).toHaveAttribute("aria-current", "page");
-  await expect(page.getByRole("main").getByText(name, { exact: true })).toBeVisible();
-  await expect(page.getByRole("main").getByText(slug, { exact: true })).toBeVisible();
-  await expect(page.getByRole("main").getByRole("textbox")).toHaveCount(0);
-  const unselectedHome = page.getByRole("link", { name: "Home", exact: true });
-  // Visual layout, Rail/pinned link: unselected label and regular role.
-  await expect(unselectedHome).toHaveCSS("color", "rgb(194, 203, 222)");
-  await expectType(page, unselectedHome, "--text-md", "--font-weight-normal");
+  // Navigation rail is hidden on Setup screen
+  await expect(page.locator("#navigation-rail")).toBeHidden();
+  await expect(page.getByRole("banner").getByRole("link", { name: "Back to CRM" })).toBeVisible();
+  await expect(
+    page.getByRole("main").getByRole("heading", { name: "Setup", level: 1 }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("main").getByRole("searchbox", { name: "Search Setup" }),
+  ).toBeVisible();
+  await expect(page.getByRole("main").getByRole("heading", { name: "General" })).toBeVisible();
+  await expect(page.getByRole("main").getByRole("heading", { name: "Channels" })).toBeVisible();
   await expectNoA11yViolations(page);
 
   await page.getByRole("button", { name: "User menu" }).click();
@@ -303,7 +305,7 @@ test("Home icon accent and product selector caret match app-shell pinned-link an
   // app-shell.md › Rail/pinned link: Home icon solid `#5A78FF` in selected and unselected states.
   await expect(homeIcon).toHaveCSS("color", "rgb(90, 120, 255)");
 
-  await page.getByRole("link", { name: "Settings", exact: true }).click();
+  await page.getByRole("link", { name: "Calendar", exact: true }).click();
   const unselectedHome = page.getByRole("link", { name: "Home", exact: true });
   await expect(unselectedHome).toHaveCSS("color", "rgb(194, 203, 222)");
   await expect(unselectedHome.locator("svg")).toHaveCSS("color", "rgb(90, 120, 255)");
