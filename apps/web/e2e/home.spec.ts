@@ -127,7 +127,9 @@ test("Home onboarding body inventory H controls, headings, safe links and GET-on
   // Safe navigation to members settings and back to Home
   await inviteUsersLink.click();
   await expect(page).toHaveURL(`/crm/${slug}/settings/members`);
-  await homeNavLink.click();
+  await page.getByRole("link", { name: "Back to Setup" }).click();
+  await expect(page).toHaveURL(`/crm/${slug}/settings`);
+  await page.getByRole("link", { name: "Back to CRM" }).click();
   await expect(page).toHaveURL(`/crm/${slug}`);
   await expect(onboarding).toBeVisible();
 

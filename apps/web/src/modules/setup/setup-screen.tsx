@@ -87,7 +87,7 @@ export function SetupScreen({
             size="sm"
             data-zcqa="setup_edit"
             isDisabled
-            className="h-9 rounded-lg border-border bg-surface px-4 text-sm font-medium text-text shadow-xs hover:bg-surface-hover"
+            className="h-9 rounded-lg border-border bg-surface px-4 text-sm font-semibold text-text shadow-xs hover:bg-surface-hover"
           >
             Customize Setup
           </Button>

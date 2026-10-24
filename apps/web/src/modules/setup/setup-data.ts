@@ -45,6 +45,7 @@ export const setupCategories: readonly SetupCategory[] = [
       {
         id: "users",
         label: "Users",
+        ariaLabel: "Users / Members",
         href: (slug) => `/crm/${slug}/settings/members`,
         aliases: ["Members"],
       },
