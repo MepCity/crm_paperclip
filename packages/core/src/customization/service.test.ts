@@ -307,6 +307,32 @@ describe("admin customization commands", () => {
     expect(t.audit()).toHaveLength(3);
   });
 
+  it("names the field of a rejected view and gives protected views a clear code", async () => {
+    const t = setup();
+    const view = {
+      id: "shared-names",
+      name: "Shared names",
+      systemDefined: false as const,
+      isDefault: false as const,
+      columns: [required(t.read().fields[0]).id],
+      criteria: null,
+      sort: null,
+    };
+    await expect(
+      t.execute({ type: "view.create", view: { ...view, columns: ["gone-field"] } }),
+    ).rejects.toMatchObject({ fieldErrors: { view_field: ["gone-field"] } });
+    await expect(
+      t.execute({
+        type: "view.create",
+        view: { ...view, criteria: { field: "missing", comparator: "equal", value: 1 } },
+      }),
+    ).rejects.toMatchObject({ fieldErrors: { view_field: ["missing"] } });
+    await expect(t.execute({ type: "view.delete" }, "all-leads")).rejects.toMatchObject({
+      fieldErrors: { view: ["protected_view"] },
+    });
+    expect(t.audit()).toEqual([]);
+  });
+
   it("invalid audit metadata rolls back a fully valid candidate", async () => {
     const t = setup();
     await expect(
