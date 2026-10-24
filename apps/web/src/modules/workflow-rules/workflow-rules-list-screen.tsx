@@ -4,14 +4,7 @@ import type { ReadResult, RulePage, WorkflowRule } from "@crm/core/automation";
 import { buttonSizes, buttonStyles } from "@/components/ui/button-styles";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "@/components/ui/table";
+import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatTrigger } from "./formatters";
 
 export interface WorkflowRulesListScreenProps {
@@ -133,70 +126,72 @@ export function WorkflowRulesListScreen({
       {/* Populated Table (WL1, WL2, WL3, WL4, WL5) */}
       {result.ok && result.value.items.length > 0 ? (
         <div className="overflow-x-auto">
-          <Table aria-label="Workflow rules table">
-            <TableHeader>
-              <TableRow>
-                <TableHead>Name</TableHead>
-                <TableHead>Module</TableHead>
-                <TableHead>Trigger</TableHead>
-                <TableHead>Status</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {result.value.items.map((rule) => {
-                const triggerResult = triggerResults[rule.id];
-                const detailHref = `/crm/${encodeURIComponent(orgSlug)}/settings/workflow-rules/${encodeURIComponent(rule.id)}`;
+          <div className="w-full overflow-auto contain-paint">
+            <table aria-label="Workflow rules table" className="w-full text-left text-sm">
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Name</TableHead>
+                  <TableHead>Module</TableHead>
+                  <TableHead>Trigger</TableHead>
+                  <TableHead>Status</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {result.value.items.map((rule) => {
+                  const triggerResult = triggerResults[rule.id];
+                  const detailHref = `/crm/${encodeURIComponent(orgSlug)}/settings/workflow-rules/${encodeURIComponent(rule.id)}`;
 
-                return (
-                  <TableRow key={rule.id}>
-                    {/* WL2: Name link */}
-                    <TableCell>
-                      <Link
-                        href={detailHref}
-                        className="text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary"
-                      >
-                        {rule.name}
-                      </Link>
-                    </TableCell>
+                  return (
+                    <TableRow key={rule.id}>
+                      {/* WL2: Name link */}
+                      <TableCell>
+                        <Link
+                          href={detailHref}
+                          className="text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary"
+                        >
+                          {rule.name}
+                        </Link>
+                      </TableCell>
 
-                    {/* WL3: Module label */}
-                    <TableCell>{rule.module}</TableCell>
+                      {/* WL3: Module label */}
+                      <TableCell>{rule.module}</TableCell>
 
-                    {/* WL4: Trigger summary */}
-                    <TableCell>
-                      {triggerResult?.ok ? (
-                        <span>{formatTrigger(triggerResult.value.trigger)}</span>
-                      ) : (
-                        <span className="inline-flex items-center gap-1.5 text-xs text-accent-red">
-                          Trigger unavailable
-                          <a
-                            href={href(cursor)}
-                            aria-label={`Retry loading trigger for ${rule.name}`}
-                            className={`inline-flex items-center justify-center ${buttonStyles.ghost} ${buttonSizes.sm} h-6 px-1.5 text-xs text-text hover:bg-surface-hover`}
-                          >
-                            Retry
-                          </a>
+                      {/* WL4: Trigger summary */}
+                      <TableCell>
+                        {triggerResult?.ok ? (
+                          <span>{formatTrigger(triggerResult.value.trigger)}</span>
+                        ) : (
+                          <span className="inline-flex items-center gap-1.5 text-xs text-accent-red">
+                            Trigger unavailable
+                            <a
+                              href={href(cursor)}
+                              aria-label={`Retry loading trigger for ${rule.name}`}
+                              className={`inline-flex items-center justify-center ${buttonStyles.ghost} ${buttonSizes.sm} h-6 px-1.5 text-xs text-text hover:bg-surface-hover`}
+                            >
+                              Retry
+                            </a>
+                          </span>
+                        )}
+                      </TableCell>
+
+                      {/* WL5: Static Status text (RC6) */}
+                      <TableCell>
+                        <span
+                          className={
+                            rule.enabled
+                              ? "inline-block text-xs font-semibold text-accent-green"
+                              : "inline-block text-xs font-semibold text-text-muted"
+                          }
+                        >
+                          {rule.enabled ? "Enabled" : "Disabled"}
                         </span>
-                      )}
-                    </TableCell>
-
-                    {/* WL5: Static Status text (RC6) */}
-                    <TableCell>
-                      <span
-                        className={
-                          rule.enabled
-                            ? "inline-block text-xs font-semibold text-accent-green"
-                            : "inline-block text-xs font-semibold text-text-muted"
-                        }
-                      >
-                        {rule.enabled ? "Enabled" : "Disabled"}
-                      </span>
-                    </TableCell>
-                  </TableRow>
-                );
-              })}
-            </TableBody>
-          </Table>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
+              </TableBody>
+            </table>
+          </div>
 
           {/* Pagination (WL11) */}
           {result.value.nextCursor ? (

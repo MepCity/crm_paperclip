@@ -19,13 +19,18 @@ export function reportPath(orgSlug: string, id?: string) {
 export function ReportsScreen({
   orgSlug,
   port = fixtureReportsPort,
+  initialReports,
 }: {
   orgSlug: string;
   port?: ReportsPort;
+  initialReports?: readonly ReportDefinition[];
 }) {
-  const [reports, setReports] = useState<readonly ReportDefinition[]>([]);
-  const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
+  const [reports, setReports] = useState<readonly ReportDefinition[]>(initialReports ?? []);
+  const [status, setStatus] = useState<"loading" | "ready" | "error">(
+    initialReports ? "ready" : "loading",
+  );
   useEffect(() => {
+    if (initialReports) return;
     let active = true;
     setStatus("loading");
     port
@@ -41,7 +46,7 @@ export function ReportsScreen({
     return () => {
       active = false;
     };
-  }, [port]);
+  }, [port, initialReports]);
 
   return (
     <section aria-label="Reports" className="min-h-full bg-bg p-3 text-md text-text">

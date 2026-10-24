@@ -19,13 +19,17 @@ export function ReportDetailScreen({
   orgSlug,
   reportId,
   port = fixtureReportsPort,
+  initialReport,
 }: {
   orgSlug: string;
   reportId: string;
   port?: ReportsPort;
+  initialReport?: ReportDetail | null;
 }) {
-  const [report, setReport] = useState<ReportDetail | null>(null);
-  const [status, setStatus] = useState<"loading" | "ready" | "missing" | "error">("loading");
+  const [report, setReport] = useState<ReportDetail | null>(initialReport ?? null);
+  const [status, setStatus] = useState<"loading" | "ready" | "missing" | "error">(
+    initialReport !== undefined ? (initialReport ? "ready" : "missing") : "loading",
+  );
   const [now, setNow] = useState(() => Date.now());
   const load = useCallback(() => {
     let active = true;
@@ -44,7 +48,10 @@ export function ReportDetailScreen({
       active = false;
     };
   }, [port, reportId]);
-  useEffect(() => load(), [load]);
+  useEffect(() => {
+    if (initialReport !== undefined) return;
+    load();
+  }, [load, initialReport]);
 
   if (status === "loading") return <p role="status">Loading report…</p>;
   if (status === "error") return <p role="alert">Report could not be loaded.</p>;

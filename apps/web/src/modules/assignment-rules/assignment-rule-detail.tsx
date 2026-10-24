@@ -62,6 +62,7 @@ export function AssignmentRuleDetail({
         aria-label="Assignment Rule"
         className="rounded-lg border border-border bg-surface p-6 shadow-xs"
       >
+        <h1 className="sr-only">Assignment Rule</h1>
         <p role="alert" data-testid={`assignment-detail-${result.error.code}`} className="mb-4">
           {failureText[result.error.code]}
         </p>
@@ -75,6 +76,7 @@ export function AssignmentRuleDetail({
         aria-label="Assignment Rule"
         className="rounded-lg border border-border bg-surface p-6 shadow-xs"
       >
+        <h1 className="sr-only">Assignment Rule</h1>
         <p role="alert" className="mb-4">
           This assignment rule could not be loaded.
         </p>
@@ -91,7 +93,7 @@ export function AssignmentRuleDetail({
     >
       {back}
       <header>
-        <h2 className="text-xl font-semibold text-text">{rule.name}</h2>
+        <h1 className="text-xl font-semibold text-text">{rule.name}</h1>
         <dl className="mt-2 grid grid-cols-[max-content_1fr] gap-x-6 gap-y-1 text-md">
           <dt className="text-text-muted">Module</dt>
           <dd>{rule.module}</dd>
@@ -102,20 +104,30 @@ export function AssignmentRuleDetail({
         </dl>
       </header>
       <div>
-        <h3 className="mb-2 text-lg font-semibold">Rule entries</h3>
+        <h2 className="mb-2 text-lg font-semibold">Rule entries</h2>
         {entries.length === 0 ? (
           <p data-testid="assignment-detail-no-entries" className="text-md text-text-muted">
             This rule has no entries.
           </p>
         ) : (
-          <table className="w-full text-left text-md">
+          <table aria-label="Assignment rule entries" className="w-full text-left text-md">
             <thead>
               <tr className="border-b border-border text-text-muted">
-                <th className="py-2 pr-4">Order</th>
-                <th className="py-2 pr-4">Condition</th>
-                <th className="py-2 pr-4">Recipients</th>
-                <th className="py-2 pr-4">Distribution</th>
-                <th className="py-2">Availability</th>
+                <th scope="col" className="py-2 pr-4">
+                  Order
+                </th>
+                <th scope="col" className="py-2 pr-4">
+                  Condition
+                </th>
+                <th scope="col" className="py-2 pr-4">
+                  Recipients
+                </th>
+                <th scope="col" className="py-2 pr-4">
+                  Distribution
+                </th>
+                <th scope="col" className="py-2">
+                  Availability
+                </th>
               </tr>
             </thead>
             <tbody>
@@ -137,7 +149,7 @@ export function AssignmentRuleDetail({
         )}
       </div>
       <div data-testid="assignment-detail-fallback">
-        <h3 className="mb-2 text-lg font-semibold">Default recipient</h3>
+        <h2 className="mb-2 text-lg font-semibold">Default recipient</h2>
         {rule.fallback ? (
           <RecipientView recipients={rule.fallback} />
         ) : (

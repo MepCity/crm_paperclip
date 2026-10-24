@@ -1,3 +1,4 @@
+import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
 import { assertNoPageErrors, expect, test } from "./support/test";
@@ -32,7 +33,7 @@ test("Workflow Rules list WL1–WL11 and detail WD1–WD6 read-only inventory", 
 
   // --- WL1: Heading and columns in exact order ---
   await expect(page.getByRole("heading", { name: "Workflow Rules", level: 2 })).toBeVisible();
-  const table = page.getByRole("table");
+  const table = page.getByRole("table", { name: "Workflow rules table" });
   await expect(table).toBeVisible();
 
   const columnHeaders = table.getByRole("columnheader");
@@ -114,6 +115,8 @@ test("Workflow Rules list WL1–WL11 and detail WD1–WD6 read-only inventory", 
   await expect(workflowRegion.getByRole("button", { name: /clone/i })).toHaveCount(0);
   await expect(workflowRegion.getByRole("button", { name: /reorder|drag/i })).toHaveCount(0);
 
+  await expectNoA11yViolations(page, { include: ['section[aria-label="Workflow Rules"]'] });
+
   // --- WL6: Module filter ---
   const moduleFilter = page.getByRole("combobox", {
     name: "Filter workflow rules by module",
@@ -183,6 +186,10 @@ test("Workflow Rules list WL1–WL11 and detail WD1–WD6 read-only inventory", 
   await expect(page.getByText("1 day after event")).toBeVisible();
   await expect(page.getByText("Task / Activity")).toBeVisible();
   await expect(page.getByText("task:introductory_call")).toBeVisible();
+
+  await expectNoA11yViolations(page, {
+    include: ['section[aria-label="Workflow Rule Details"]'],
+  });
 
   // RC1–RC6 on detail: no write affordances
   const detailRegion = page.getByRole("region", { name: "Workflow Rule Details" });
