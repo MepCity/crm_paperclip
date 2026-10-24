@@ -33,8 +33,13 @@ test("Manage Tags shares the catalogue with record tags and list filter options"
   await catalogueRead;
   const dialog = page.getByRole("dialog", { name: "Add Tags" });
   const entry = dialog.getByRole("combobox", { name: "Enter Tags" });
-  await entry.fill("Shared");
-  await entry.press("ArrowDown");
+  await expect(async () => {
+    await entry.fill("Shared");
+    await entry.press("ArrowDown");
+    await expect(page.getByRole("option", { name: "Shared catalogue" })).toBeVisible({
+      timeout: 1500,
+    });
+  }).toPass();
   await page.getByRole("option", { name: "Shared catalogue" }).click();
   await dialog.getByRole("button", { name: "Save", exact: true }).click();
   await expect(header.getByRole("button", { name: "Remove tag Shared catalogue" })).toBeVisible();
