@@ -88,7 +88,11 @@ describe("shellNav", () => {
 
     expect(teamspace.id).toBe("teamspace");
     expect(teamspace.label).toBe("Teamspace");
-    expect(teamspace.groups.map((group) => group.id)).toEqual(["sales", "activities"]);
+    expect(teamspace.groups.map((group) => group.id)).toEqual([
+      "sales",
+      "activities",
+      "integrations",
+    ]);
   });
 
   it("populates sales and activities groups from module screen registry", () => {
@@ -131,7 +135,7 @@ describe("shellNav", () => {
       "documents",
       "campaigns",
     ]);
-    expect(teamspace?.links?.map((link) => link.id)).toEqual(["solutions", "cases"]);
+    expect(teamspace?.links?.map((link) => link.id)).toEqual(["solutions", "social", "cases"]);
   });
 
   it("lists the full reference order of ungrouped rows with Solutions before Cases", () => {
@@ -152,6 +156,23 @@ describe("shellNav", () => {
       "my-jobs",
       "services",
     ]);
+  });
+
+  it("opens disconnected integrations without list or create routes", () => {
+    const teamspace = shellNav.sections[0];
+    const visits = teamspace?.groups.find((group) => group.id === "integrations")?.links[0];
+    const social = teamspace?.links?.find((link) => link.id === "social");
+    for (const [link, tab] of [
+      [visits, "Visits"],
+      [social, "Social"],
+    ] as const) {
+      expect(link).toBeDefined();
+      if (!link) continue;
+      expect(link.href("demo")).toBe(`/crm/demo/tab/${tab}`);
+      expect(isNavLinkActive(link, "demo", `/crm/demo/tab/${tab}`)).toBe(true);
+      expect(isNavLinkActive(link, "demo", "/crm/demo/tab/Leads")).toBe(false);
+      expect(createRecordsNav.some((entry) => entry.id === tab)).toBe(false);
+    }
   });
 
   it("gives every module row its own glyph", () => {
