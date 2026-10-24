@@ -1,4 +1,4 @@
-import { mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
+import { mkdtemp, readdir, readFile, rm, statfs, writeFile } from "node:fs/promises";
 import { arch, cpus, loadavg, tmpdir, totalmem } from "node:os";
 import { join } from "node:path";
 import { ensureDatabase, startLocalPostgres } from "@crm/db/local-postgres";
@@ -72,6 +72,24 @@ export function emptyEvidence(args: Args): DeepEvidence {
     boundaries: [],
     samples: [],
   };
+}
+
+export async function getAvailableDiskGB(targetPath = "."): Promise<number> {
+  const stat = await statfs(targetPath);
+  return (Number(stat.bavail) * Number(stat.bsize)) / (1024 * 1024 * 1024);
+}
+
+export async function cleanupOrphanedClusters(baseDir: string): Promise<string[]> {
+  const removed: string[] = [];
+  const entries = await readdir(baseDir).catch(() => []);
+  for (const entry of entries) {
+    if (entry.startsWith("crm-deep-pages-")) {
+      const fullPath = join(baseDir, entry);
+      await rm(fullPath, { recursive: true, force: true }).catch(() => {});
+      removed.push(fullPath);
+    }
+  }
+  return removed;
 }
 export async function switchPolicy(db: pg.Client, model: string, enabled: boolean): Promise<void> {
   const table = model.startsWith("B")
@@ -161,7 +179,7 @@ export async function runDeep(
   );
   for (const line of baselineReport.split("\n")) {
     const match = line.match(
-      /^\| A4b \/ (O[1-4] (?:plain|status) (?:first|offset5000|boundary)) \| \d+ \| [^|]+ \| [^/]+\/ ([\d.]+)/,
+      /^\| A4b \/ (O[1-4] (?:plain|status) (?:first|offset5000|boundary)) \| \d+ \| [\d.]+ \/ [\d.]+ \| [\d.]+ \/ ([\d.]+)/,
     );
     if (match) e.environment[`baseline ${match[1]}`] = Number(match[2]);
   }
@@ -173,11 +191,29 @@ export async function runDeep(
     e.protocol.writes * 2 > e.protocol.rows * 0.8
   )
     throw new Error("invalid protocol");
-  const dir = await mkdtemp(
-    join(process.env.PAPERCLIP_RUN_SCRATCH_DIR ?? tmpdir(), "crm-deep-pages-"),
-  );
+  const scratchBase = process.env.PAPERCLIP_RUN_SCRATCH_DIR ?? tmpdir();
+  await cleanupOrphanedClusters(scratchBase);
+  if (e.protocol.rows >= 10_000) {
+    const availGB = await getAvailableDiskGB(scratchBase);
+    if (availGB < 10) {
+      throw new Error(
+        `Insufficient disk space: ${availGB.toFixed(2)} GiB available, at least 10 GiB required (ENOSPC protection)`,
+      );
+    }
+  }
+  const dir = await mkdtemp(join(scratchBase, "crm-deep-pages-"));
   let server: Awaited<ReturnType<typeof startLocalPostgres>> | undefined;
   const clients: pg.Client[] = [];
+  const checkSafetyDiskSpace = async () => {
+    if (e.protocol.rows >= 10_000) {
+      const availGB = await getAvailableDiskGB(dir);
+      if (availGB < 8) {
+        throw new Error(
+          `Aborting measurement: disk space dropped to ${availGB.toFixed(2)} GiB (< 8 GiB safety threshold)`,
+        );
+      }
+    }
+  };
   const save = async () => {
     e.loadEnd = loadavg();
     if (args.json) await writeFile(args.json, JSON.stringify(e, null, 2));
@@ -291,6 +327,7 @@ export async function runDeep(
               counts.empty + counts.filled,
             );
             await save();
+            await checkSafetyDiskSpace();
           }
     }
     for (const order of ["O1", "O2"] as const) {
@@ -325,6 +362,7 @@ export async function runDeep(
           return Reflect.get(target, key, target);
         },
       });
+      await checkSafetyDiskSpace();
       await writeBatch(db, recordedApp, e, "A4b20", world, loaded.orgALeadIds);
       e.sql[`${second ? "S3" : "S1"} write statements`] = [...statements].join(";\n");
       for (const row of e.writes.slice(before)) row.model = second ? "S3 (36)" : "S1 (20)";

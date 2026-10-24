@@ -1,8 +1,17 @@
+import { mkdir, rm, writeFile } from "node:fs/promises";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
 import { universe } from "./dataset";
 import { deepQuery } from "./deep-pages-queries";
 import { renderDeep } from "./deep-pages-report";
-import { emptyEvidence, inspectDeep, type TimedPlan } from "./deep-pages-run";
+import {
+  cleanupOrphanedClusters,
+  emptyEvidence,
+  getAvailableDiskGB,
+  inspectDeep,
+  type TimedPlan,
+} from "./deep-pages-run";
 import type { ListParams } from "./queries";
 import type { Plan } from "./slots2-measure";
 import { matrixQuery } from "./slots2-queries";
@@ -106,14 +115,43 @@ describe("deep measurement evidence", () => {
           "Actual Rows": 1,
           "Actual Loops": 1,
         },
-        scan(4),
+        {
+          "Node Type": "Result",
+          "Actual Total Time": 4,
+          "Actual Startup Time": 0,
+          Plans: [scan(4)],
+        },
       ],
     };
     e.nodes.push({ order: "O1", off: Array(5).fill(off), on: Array(5).fill(on) });
     const report = renderDeep(e);
     expect(report).toContain(
-      "O1 / 0.0 / Index Scan slot_ix_text_1 | 0.000/0.000 | 3.000/4.000 | 1.000",
+      "O1 / main/Index Scan/slot_ix_text_1#0 / Index Scan slot_ix_text_1 | 0.000/0.000 | 3.000/4.000 | 1.000",
     );
-    expect(report).toContain("O1 / 0.init.0 / Result");
+    expect(report).toContain("O1 / init/Result/#0 / Result");
+  });
+
+  it("checks disk space and cleans up orphaned cluster directories", async () => {
+    const gb = await getAvailableDiskGB(".");
+    expect(gb).toBeGreaterThan(0);
+
+    const testScratch = join(tmpdir(), `test-bench-cleanup-${Date.now()}`);
+    await mkdir(testScratch, { recursive: true });
+    try {
+      const clusterA = join(testScratch, "crm-deep-pages-test1");
+      const clusterB = join(testScratch, "crm-deep-pages-test2");
+      const otherDir = join(testScratch, "other-dir");
+      await mkdir(clusterA, { recursive: true });
+      await mkdir(clusterB, { recursive: true });
+      await mkdir(otherDir, { recursive: true });
+      await writeFile(join(clusterA, "test.txt"), "hello");
+
+      const removed = await cleanupOrphanedClusters(testScratch);
+      expect(removed).toHaveLength(2);
+      expect(removed).toContain(clusterA);
+      expect(removed).toContain(clusterB);
+    } finally {
+      await rm(testScratch, { recursive: true, force: true });
+    }
   });
 });

@@ -4,14 +4,19 @@ import { bestPairs } from "./slots2-measure";
 
 const n = (v: number) => v.toFixed(3);
 const yes = (v: boolean) => (v ? "yes" : "no");
-function flatten(plan: TimedPlan, path = "0"): [string, TimedPlan][] {
-  const normal = (plan.Plans ?? []).filter((p) => !p["Subplan Name"]?.startsWith("InitPlan"));
-  const init = (plan.Plans ?? []).filter((p) => p["Subplan Name"]?.startsWith("InitPlan"));
-  return [
-    [path, plan],
-    ...normal.flatMap((p, i) => flatten(p, `${path}.${i}`)),
-    ...init.flatMap((p, i) => flatten(p, `${path}.init.${i}`)),
-  ];
+function flatten(plan: TimedPlan): [string, TimedPlan][] {
+  const rows: [string, TimedPlan][] = [];
+  const counts = new Map<string, number>();
+  const visit = (node: TimedPlan, inInit = false) => {
+    const init = inInit || !!node["Subplan Name"]?.startsWith("InitPlan");
+    const signature = `${init ? "init" : "main"}/${node["Node Type"]}/${node["Index Name"] ?? node["Relation Name"] ?? ""}`;
+    const occurrence = counts.get(signature) ?? 0;
+    counts.set(signature, occurrence + 1);
+    rows.push([`${signature}#${occurrence}`, node]);
+    for (const child of node.Plans ?? []) visit(child, init);
+  };
+  visit(plan);
+  return rows;
 }
 export function renderDeep(e: DeepEvidence): string {
   const out = [
@@ -105,9 +110,9 @@ export function renderDeep(e: DeepEvidence): string {
     "",
     "## 3. RLS node timings",
     "",
-    "Five paired EXPLAIN (ANALYZE, BUFFERS, TIMING) repetitions for unchanged S1 O1/O2 plain offset5000. Each numeric column is the median of that node across five repetitions. Total time is inclusive of children; rows are rows per loop. Delta per row = (on total time − off total time) / (off rows × off loops); undefined at zero rows. InitPlan paths are separate so policy-only nodes cannot shift the scan alignment; absent nodes contribute zero and have zero loops. Raw plans are in JSON.",
+    "Five paired EXPLAIN (ANALYZE, BUFFERS, TIMING) repetitions for unchanged S1 O1/O2 plain offset5000. Each numeric column is the median of that node across five repetitions. Total time is inclusive of children; rows are rows per loop. Delta per row = (on total time − off total time) / (off rows × off loops); undefined at zero rows. Nodes align by type, index/relation name and traversal occurrence, with tenant InitPlans separate, so added Result/InitPlan nodes cannot shift scan alignment; absent nodes contribute zero and have zero loops. Raw plans are in JSON.",
     "",
-    "| Order / path / node | off/on startup ms | off/on total ms | delta ms | off/on rows | off/on loops | delta µs/row | off/on hit blocks | off/on read blocks |",
+    "| Order / identity / node | off/on startup ms | off/on total ms | delta ms | off/on rows | off/on loops | delta µs/row | off/on hit blocks | off/on read blocks |",
     "| --- | --- | --- | ---: | --- | --- | ---: | --- | --- |",
   );
   for (const pair of e.nodes) {
