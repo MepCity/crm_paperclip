@@ -32,7 +32,7 @@ const flags = z.strictObject({
   edit: z.boolean(),
   quickCreate: z.boolean(),
 });
-const properties = z.strictObject({
+export const propertiesSchema = z.strictObject({
   label: id,
   required: z.boolean(),
   readOnly: z.boolean(),
@@ -54,7 +54,7 @@ const properties = z.strictObject({
     .optional(),
   views: flags,
 });
-export const fieldSchema = properties.extend({
+export const fieldSchema = propertiesSchema.extend({
   id,
   apiName: z.string().regex(/^[A-Za-z][A-Za-z0-9_]*$/),
   dataType,
@@ -64,7 +64,7 @@ export const fieldSchema = properties.extend({
   acceptsJsonArray: z.boolean().optional(),
   lookup: z.strictObject({ module: id, modules: z.array(id).optional() }).optional(),
 });
-const layout = z.strictObject({
+export const layoutSchema = z.strictObject({
   id,
   label: id,
   isDefault: z.boolean(),
@@ -105,7 +105,7 @@ const criteria: z.ZodType<Criteria> = z.lazy(() =>
     }),
   ]),
 );
-const view = z.strictObject({
+export const viewSchema = z.strictObject({
   id,
   name: id,
   systemDefined: z.boolean(),
@@ -129,8 +129,8 @@ export const baselineSchema = z.strictObject({
       systemRequired: z.boolean(),
     }),
   ),
-  layouts: z.array(layout),
-  views: z.array(view),
+  layouts: z.array(layoutSchema),
+  views: z.array(viewSchema),
   reservedApiNames: z.array(id),
   externalCriteriaFields: z.array(id),
   customFieldTypes: z.array(dataType),
@@ -139,32 +139,38 @@ export const baselineSchema = z.strictObject({
   engineCapabilities: z.record(id, z.boolean()),
 });
 export const patchSchema = z.strictObject({
+  moduleProperties: z
+    .strictObject({ singularLabel: id.optional(), pluralLabel: id.optional() })
+    .optional(),
   retireFields: z.array(id).optional(),
   restoreFields: z.array(id).optional(),
   addFields: z.array(fieldSchema).optional(),
   fieldPatches: z
     .record(
       id,
-      properties
+      propertiesSchema
         .partial()
         .refine((value) => Object.values(value).every((entry) => entry !== undefined)),
     )
     .optional(),
-  layouts: z.array(layout).optional(),
-  views: z.array(view).optional(),
+  layouts: z.array(layoutSchema).optional(),
+  views: z.array(viewSchema).optional(),
 });
 export const snapshotSchema = z.strictObject({
+  moduleProperties: z
+    .strictObject({ singularLabel: id.optional(), pluralLabel: id.optional() })
+    .optional(),
   baselineVersion: id,
   revision: z.int().nonnegative(),
   fields: z.array(fieldSchema),
   fieldPatches: z.record(
     id,
-    properties
+    propertiesSchema
       .partial()
       .refine((value) => Object.values(value).every((entry) => entry !== undefined)),
   ),
-  layouts: z.array(layout).optional(),
-  views: z.array(view).optional(),
+  layouts: z.array(layoutSchema).optional(),
+  views: z.array(viewSchema).optional(),
 });
 export function parse<T>(schema: z.ZodType<T>, value: unknown): T {
   const result = schema.safeParse(value);

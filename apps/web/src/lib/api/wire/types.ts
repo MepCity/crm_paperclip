@@ -79,7 +79,11 @@ export type WireWriteResult = {
 
 export type WireViewSummary = Pick<WireView, "id" | "name" | "system_defined" | "default">;
 export type WirePageInfo = Pick<WireInfo, "per_page" | "count" | "page" | "more_records">;
-export type WireModuleResponse = { revision: string; modules: readonly WireModule[] };
+export type WireModuleResponse = {
+  revision: string;
+  modules: readonly WireModule[];
+  capabilities?: { fields: boolean; layouts: boolean; module: boolean; sharedViews: boolean };
+};
 export type WireFieldsResponse = { revision: string; fields: readonly WireField[] };
 export type WireLayoutsResponse = { revision: string; layouts: readonly WireLayout[] };
 export type WireViewsResponse = {
