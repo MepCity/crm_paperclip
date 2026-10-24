@@ -82,7 +82,7 @@ export function SocialConnectedScreen({
             role="tab"
             aria-selected={tab === t}
             onClick={() => setTab(t)}
-            className={`px-3 py-1 text-sm ${tab === t ? "border-b-2 border-primary font-medium" : ""}`}
+            className={`px-3 py-1 text-sm ${tab === t ? "border-b-2 border-primary" : ""}`}
           >
             {t}
           </button>
