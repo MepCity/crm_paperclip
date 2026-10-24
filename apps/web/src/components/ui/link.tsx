@@ -71,17 +71,10 @@ export function Link({
       )}
       render={(domProps, renderProps) =>
         "href" in domProps && !renderProps.isDisabled && !laterModule ? (
-          <NextLink
-            {...domProps}
-            ref={laterRef}
-            prefetch={prefetch}
-            replace={replace}
-            scroll={scroll}
-          />
+          <NextLink {...domProps} prefetch={prefetch} replace={replace} scroll={scroll} />
         ) : (
           <span
             {...domProps}
-            ref={laterRef as Ref<HTMLSpanElement>}
             tabIndex={laterModule ? 0 : domProps.tabIndex}
             role={laterModule ? "link" : domProps.role}
             aria-disabled={
