@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useEffect, useId, useState, useTransition } from "react";
+import { type Ref, useEffect, useId, useRef, useState, useTransition } from "react";
 import { CellValue } from "@/components/records/list/cell-value";
 import { RecordTableFooter } from "@/components/records/list/record-table-footer";
 import { Button } from "@/components/ui/button";
@@ -25,10 +25,12 @@ export function Workqueue({
 }) {
   const router = useRouter();
   const [selected, setSelected] = useState<QueueId>("tasks");
+  const selectedQueueRef = useRef<HTMLButtonElement>(null);
   const [welcome, setWelcome] = useState(false);
   const [source, setSource] = useState<PreviewSource>("live");
   const [filter, setFilter] = useState<PreviewFilter>("today-overdue");
   const [notice, setNotice] = useState<string | null>(null);
+  const unavailableDescId = useId();
   const unavailable = (what: string) =>
     setNotice(`${what} is unavailable in this preview: no changes are made or saved.`);
   const preview = source === "live" ? null : previewQueue(source, filter);
@@ -59,10 +61,19 @@ export function Workqueue({
             <div className="text-sm text-text-muted">{user.role}</div>
           </div>
         </div>
-        <Button variant="ghost" aria-label="Select users" className="border-x border-border px-4">
+        <Button
+          variant="ghost"
+          aria-label="Select users"
+          aria-describedby={unavailableDescId}
+          className="border-x border-border px-4"
+          onPress={() => unavailable("User selection")}
+        >
           <Icons.plus aria-hidden className="size-5" />
         </Button>
       </div>
+      <span id={unavailableDescId} className="sr-only">
+        Action is unavailable in this preview: no changes are made or saved.
+      </span>
       <div className="flex min-h-0 flex-1 gap-4 p-4">
         <aside
           aria-label="Workqueue queues"
@@ -77,10 +88,12 @@ export function Workqueue({
             queues={queues}
             selected={selected}
             onSelect={select}
+            selectedRef={selectedQueueRef}
           />
           <h2 className="mb-2 mt-5 font-semibold">My Jobs</h2>
           <Button
             variant="ghost"
+            aria-describedby={unavailableDescId}
             className="flex w-full justify-between px-2 py-2"
             onPress={() => unavailable("Jobs")}
           >
@@ -92,6 +105,7 @@ export function Workqueue({
               <Button
                 variant="ghost"
                 aria-label="Customize queue"
+                aria-describedby={unavailableDescId}
                 size="sm"
                 onPress={() => unavailable("Queue management")}
               >
@@ -100,6 +114,7 @@ export function Workqueue({
               <Button
                 variant="ghost"
                 aria-label="Suggested queue"
+                aria-describedby={unavailableDescId}
                 size="sm"
                 onPress={() => unavailable("Queue creation")}
               >
@@ -114,6 +129,7 @@ export function Workqueue({
                 <Button
                   variant="ghost"
                   aria-label={`Add ${section} queue`}
+                  aria-describedby={unavailableDescId}
                   size="sm"
                   onPress={() => unavailable("Queue creation")}
                 >
@@ -125,6 +141,7 @@ export function Workqueue({
                 queues={queues}
                 selected={selected}
                 onSelect={select}
+                selectedRef={selectedQueueRef}
               />
             </section>
           ))}
@@ -143,14 +160,28 @@ export function Workqueue({
               isDisabled={pending}
               onPress={() => startTransition(() => router.refresh())}
             >
-              ↻
+              <Icons.refresh aria-hidden className="size-4" />
             </Button>
             <div className="ml-auto flex gap-3">
-              <Button variant="ghost" size="sm">
-                Filter
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Filter"
+                aria-describedby={unavailableDescId}
+                onPress={() => unavailable("Filter")}
+              >
+                <Icons.filter aria-hidden className="size-4" />
               </Button>
-              <Button variant="ghost" size="sm" aria-label="Help">
-                ?
+              <Button
+                variant="ghost"
+                size="sm"
+                aria-label="Help"
+                aria-describedby={unavailableDescId}
+                onPress={() => unavailable("Help")}
+              >
+                <span aria-hidden className="px-1 font-semibold">
+                  ?
+                </span>
               </Button>
             </div>
           </header>
@@ -163,6 +194,7 @@ export function Workqueue({
                 size="sm"
                 aria-pressed={source === option}
                 onPress={() => setSource(option)}
+                className={source === option ? "font-semibold underline" : "font-normal"}
               >
                 {
                   { live: "Live", populated: "Synthetic tasks", zero: "Synthetic zero result" }[
@@ -181,6 +213,7 @@ export function Workqueue({
                     size="sm"
                     aria-pressed={filter === option}
                     onPress={() => setFilter(option)}
+                    className={filter === option ? "font-semibold underline" : "font-normal"}
                   >
                     {option === "today-overdue" ? "Today & Overdue" : "All open"}
                   </Button>
@@ -196,15 +229,13 @@ export function Workqueue({
           )}
           {preview ? (
             <div className="min-h-0 flex-1 overflow-auto">
-              <table
-                aria-label="Preview records"
-                className="w-full border-collapse text-left text-md"
-              >
+              <table className="w-full border-collapse text-left text-md">
                 <thead>
                   <tr>
                     {["Subject", "Due Date", "Status"].map((label) => (
                       <th
                         key={label}
+                        scope="col"
                         className="border-b-2 border-panel-border px-5 py-3 font-normal"
                       >
                         {label}
@@ -237,28 +268,39 @@ export function Workqueue({
             </div>
           ) : (
             <div className="min-h-0 flex-1 overflow-auto">
-              <table
-                aria-label="Queue records"
-                className="w-full border-collapse text-left text-md"
-              >
+              <table className="w-full border-collapse text-left text-md">
                 <thead>
                   <tr>
                     {data?.columns.map((field) => (
                       <th
                         key={field.apiName}
+                        scope="col"
                         className="whitespace-nowrap border-b-2 border-panel-border px-5 py-3 font-normal"
                       >
                         {field.label}
                         {field.apiName === definition.linkField && (
-                          <Button variant="ghost" size="sm" aria-label="Alphabet filter">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            aria-label="Alphabet filter"
+                            aria-describedby={unavailableDescId}
+                            onPress={() => unavailable("Alphabet filter")}
+                          >
                             All
                           </Button>
                         )}
                       </th>
                     ))}
-                    <th className="border-b-2 border-panel-border">
-                      <Button variant="ghost" size="sm" aria-label="View Settings">
-                        <Icons.settings aria-hidden className="size-4" />
+                    <th scope="col" className="border-b-2 border-panel-border">
+                      <span className="sr-only">Settings</span>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        aria-label="View Settings"
+                        aria-describedby={unavailableDescId}
+                        onPress={() => unavailable("View settings")}
+                      >
+                        <Icons.settingsSliders aria-hidden className="size-4" />
                       </Button>
                     </th>
                   </tr>
@@ -358,6 +400,7 @@ export function Workqueue({
             <p>Welcome to Workqueue, your single place to manage all your work across CRM</p>
           </div>
           <Button
+            autoFocus
             onPress={() => {
               try {
                 sessionStorage.setItem(sessionKey, "dismissed");
@@ -365,6 +408,9 @@ export function Workqueue({
                 /* Dismissal still works when session storage is unavailable. */
               }
               setWelcome(false);
+              setTimeout(() => {
+                selectedQueueRef.current?.focus();
+              }, 0);
             }}
           >
             Get Started
@@ -380,27 +426,36 @@ function QueueButtons({
   queues,
   selected,
   onSelect,
+  selectedRef,
 }: {
   section: string;
   queues: readonly QueueData[];
   selected: QueueId;
   onSelect: (id: QueueId) => void;
+  selectedRef?: Ref<HTMLButtonElement>;
 }) {
   return queueDefinitions
     .filter((queue) => queue.section === section)
-    .map((queue) => (
-      <Button
-        key={queue.id}
-        variant="ghost"
-        aria-label={`${queue.label} ${queues.find((data) => data.id === queue.id)?.count ?? 0}`}
-        aria-pressed={selected === queue.id}
-        onPress={() => onSelect(queue.id)}
-        className={`mt-1 flex w-full justify-between gap-2 rounded px-2 py-2 text-left text-sm ${selected === queue.id ? "bg-primary-subtle text-primary" : ""}`}
-      >
-        <span className="min-w-0 whitespace-normal">{queue.label}</span>
-        <span className="shrink-0 rounded-full border border-border px-2 text-xs">
-          {queues.find((data) => data.id === queue.id)?.count ?? 0}
-        </span>
-      </Button>
-    ));
+    .map((queue) => {
+      const isSelected = selected === queue.id;
+      const count = queues.find((data) => data.id === queue.id)?.count ?? 0;
+      return (
+        <Button
+          key={queue.id}
+          ref={isSelected ? selectedRef : undefined}
+          variant="ghost"
+          aria-label={`${queue.label} ${count}`}
+          aria-pressed={isSelected}
+          onPress={() => onSelect(queue.id)}
+          className={`mt-1 flex w-full justify-between gap-2 rounded px-2 py-2 text-left text-sm ${
+            isSelected
+              ? "bg-primary-subtle text-primary font-semibold border-l-2 border-primary"
+              : "font-normal text-text"
+          }`}
+        >
+          <span className="min-w-0 whitespace-normal">{queue.label}</span>
+          <span className="shrink-0 rounded-full border border-border px-2 text-xs">{count}</span>
+        </Button>
+      );
+    });
 }
