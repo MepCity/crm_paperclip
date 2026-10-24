@@ -50,7 +50,7 @@ export function HomePreviewCards({ empty }: { empty: boolean }) {
             <thead>
               <tr>
                 {taskCardFields.map((f) => (
-                  <th key={f} className="pb-2 font-medium text-text-muted">
+                  <th key={f} className="pb-2 font-semibold text-text-muted">
                     {f}
                   </th>
                 ))}
@@ -78,7 +78,7 @@ export function HomePreviewCards({ empty }: { empty: boolean }) {
               <thead>
                 <tr>
                   {dealsCardFields.map((f) => (
-                    <th key={f} className="pb-2 font-medium text-text-muted">
+                    <th key={f} className="pb-2 font-semibold text-text-muted">
                       {f}
                     </th>
                   ))}
