@@ -28,6 +28,7 @@ import { numberInputLocale } from "@/lib/locale";
 import {
   calendarShapeToDisplayDate,
   DATE_MASK_PLACEHOLDER,
+  datePatternToPlaceholder,
   displayDateToModelShape,
 } from "@/lib/records/calendar-date";
 import { REMINDER_OFFSETS, reminderOffsetOf, reminderValue } from "@/lib/records/reminder-options";
@@ -157,20 +158,23 @@ type DateFieldProps = Omit<TextFieldProps, "value" | "onChange"> & {
  * from a date that is already filled in.
  */
 function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
+  const format = useFormat();
+  const pattern = format.datePattern ?? "dd.MM.yyyy";
+  const placeholder = textField.placeholder ?? datePatternToPlaceholder(pattern);
   const [written, setWritten] = useState(value);
-  const [entry, setEntry] = useState(() => calendarShapeToDisplayDate(value));
+  const [entry, setEntry] = useState(() => calendarShapeToDisplayDate(value, pattern));
   if (written !== value) {
     setWritten(value);
-    setEntry(calendarShapeToDisplayDate(value));
+    setEntry(calendarShapeToDisplayDate(value, pattern));
   }
   return (
     <TextCalendarField
       {...textField}
       type="text"
       value={entry}
-      placeholder={textField.placeholder ?? DATE_MASK_PLACEHOLDER}
+      placeholder={placeholder}
       onChange={(next) => {
-        const shape = displayDateToModelShape(next);
+        const shape = displayDateToModelShape(next, pattern);
         // The empty model comes back as "" (`FieldInput` reads a non-string value as empty).
         setWritten(shape ?? "");
         setEntry(next);

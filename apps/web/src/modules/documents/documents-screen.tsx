@@ -1,18 +1,14 @@
 "use client";
 
+import { formatDate } from "@crm/core/format";
 import { useEffect, useMemo, useState } from "react";
 import { Icons } from "@/components/ui/icon";
+import { useFormat } from "@/lib/format-context";
 import { createHttpDocumentsPort } from "@/lib/documents/http-port";
 import { fixtureDocumentsPort } from "./fixture-port";
 import type { DocumentFolder, DocumentItem, DocumentSort, DocumentsPort } from "./port";
 
 const DEFAULT_SORT: DocumentSort = { field: "modifiedAt", direction: "desc" };
-
-const dateFormat = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  timeZone: "UTC",
-});
 
 /** Inert affordance: visible like the reference, but the flow behind it is write-only or unobserved. */
 function CirclePlus({ className = "size-5" }: { className?: string }) {
@@ -72,6 +68,7 @@ function EmptyIllustration() {
 }
 
 export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: DocumentsPort }) {
+  const format = useFormat();
   const [folders, setFolders] = useState<readonly DocumentFolder[]>([]);
   const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
   // Sub-folders entered below the selected root; the last entry is the current folder.
@@ -302,7 +299,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
                 </div>
                 <div className="w-64 text-sm">
                   <div className="text-text-muted">
-                    {dateFormat.format(new Date(row.modifiedAt))} by {row.modifiedBy}
+                    {formatDate(row.modifiedAt, format)} by {row.modifiedBy}
                   </div>
                 </div>
                 {/* D19: row menu unobserved, visible but disabled. */}

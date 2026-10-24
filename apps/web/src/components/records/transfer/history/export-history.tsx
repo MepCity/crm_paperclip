@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useFormat } from "@/lib/format-context";
 import { type ExportHistoryProps, formatTime, reasonMessage, TRANSFER_MODULES } from "./types";
 
 export function ExportHistory({
@@ -22,6 +23,7 @@ export function ExportHistory({
   onRetry,
   moduleLabel,
 }: ExportHistoryProps) {
+  const format = useFormat();
   const [module, setModule] = useState<string>("all");
   if (loading) return <Skeleton variant="block" />;
 
@@ -59,7 +61,7 @@ export function ExportHistory({
               <TableCell>{moduleLabel(j.module)}</TableCell>
               <TableCell>{j.scope}</TableCell>
               <TableCell>{j.createdBy.name}</TableCell>
-              <TableCell>{formatTime(j.createdAt)}</TableCell>
+              <TableCell>{formatTime(j.createdAt, format)}</TableCell>
               <TableCell>{j.rowCount}</TableCell>
               <TableCell>
                 <Badge variant={j.status === "completed" ? "success" : "danger"}>

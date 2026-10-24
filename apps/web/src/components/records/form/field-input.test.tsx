@@ -870,3 +870,22 @@ test("form accepts organization format: 1.234,56 amount maps to 1234.56 and 30.0
   await user.type(dateInput, "30.06.2026");
   expect(changeDate).toHaveBeenLastCalledWith("2026-06-30");
 });
+
+test("date form input derives mask and placeholder from datePattern: MM/dd/yyyy 06/30/2026 maps to 2026-06-30", async () => {
+  const user = userEvent.setup();
+  const changeDate = vi.fn();
+  const orgFormat = formatOptionsFromOrganization({
+    ...DOTTED_DAY_FIRST_FORMAT,
+    datePattern: "MM/dd/yyyy",
+  });
+  render(
+    <FormatProvider format={orgFormat}>
+      <Controlled type="date" initial={null} onChange={changeDate} />
+    </FormatProvider>,
+  );
+  const dateInput = screen.getByRole("textbox", { name: "Example" });
+  expect(dateInput.getAttribute("placeholder")).toBe("MM/DD/YYYY");
+
+  await user.type(dateInput, "06/30/2026");
+  expect(changeDate).toHaveBeenLastCalledWith("2026-06-30");
+});

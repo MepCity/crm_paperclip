@@ -12,6 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useFormat } from "@/lib/format-context";
 import { ImportDetails } from "./import-details";
 import { formatTime, IMPORT_STATUS_LABELS, type ImportHistoryProps, type ImportJob } from "./types";
 import { UndoImportDialog } from "./undo-import-dialog";
@@ -24,6 +25,7 @@ const STATUS_VARIANT = {
 } as const;
 
 export function ImportHistory({ jobs, loading, onUndo, canUndo, moduleLabel }: ImportHistoryProps) {
+  const format = useFormat();
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [undoId, setUndoId] = useState<string | null>(null);
   const details = jobs.find((j) => j.id === detailsId);
@@ -55,7 +57,7 @@ export function ImportHistory({ jobs, loading, onUndo, canUndo, moduleLabel }: I
               <TableCell>{moduleLabel(j.module)}</TableCell>
               <TableCell>{j.fileName}</TableCell>
               <TableCell>{j.createdBy.name}</TableCell>
-              <TableCell>{formatTime(j.createdAt)}</TableCell>
+              <TableCell>{formatTime(j.createdAt, format)}</TableCell>
               <TableCell>{j.counts.created}</TableCell>
               <TableCell>{j.counts.updated}</TableCell>
               <TableCell>{j.counts.skipped}</TableCell>

@@ -211,6 +211,7 @@ export interface ModuleScreenDefinition {
         orgSlug?: string;
         currency?: CurrencyDefinition;
         currencySymbol?: string;
+        format?: FormatOptions;
       },
     ) => {
       title: string;

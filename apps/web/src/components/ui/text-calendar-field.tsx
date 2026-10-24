@@ -4,7 +4,12 @@ import "./record-input.css";
 import { parseDate } from "@internationalized/date";
 import { useEffect, useId, useRef, useState } from "react";
 import { Calendar, FieldError, Input, Label, Popover, TextField } from "react-aria-components";
-import { calendarShapeToDisplayDate, displayDateToModelShape } from "@/lib/records/calendar-date";
+import { useFormat } from "@/lib/format-context";
+import {
+  calendarShapeToDisplayDate,
+  datePatternToPlaceholder,
+  displayDateToModelShape,
+} from "@/lib/records/calendar-date";
 import { CalendarContent } from "./date-picker";
 import type { TextFieldProps } from "./text-field";
 
@@ -38,12 +43,14 @@ export function TextCalendarField({
     document.addEventListener("pointerdown", dismissOutside, true);
     return () => document.removeEventListener("pointerdown", dismissOutside, true);
   }, [open]);
+  const format = useFormat();
+  const pattern = format.datePattern ?? "dd.MM.yyyy";
   let selected = null;
   try {
-    const shape = displayDateToModelShape(value ?? "");
+    const shape = displayDateToModelShape(value ?? "", pattern);
     if (shape) {
       const date = parseDate(shape);
-      if (calendarShapeToDisplayDate(date.toString()) === value) selected = date;
+      if (calendarShapeToDisplayDate(date.toString(), pattern) === value) selected = date;
     }
   } catch {
     /* Invalid and partial entries remain editable and are validated by the form. */
@@ -117,7 +124,7 @@ export function TextCalendarField({
             aria-label={label}
             value={selected}
             onChange={(day) => {
-              onChange?.(calendarShapeToDisplayDate(day.toString()));
+              onChange?.(calendarShapeToDisplayDate(day.toString(), pattern));
               setOpen(false);
               input.current?.focus();
             }}

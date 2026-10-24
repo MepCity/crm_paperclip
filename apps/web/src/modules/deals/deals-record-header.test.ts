@@ -55,4 +55,18 @@ test("formats deal header amounts with currency formatting using currency symbol
   expect(formatDealHeaderAmount(undefined)).toBeUndefined();
   expect(formatDealHeaderAmount("")).toBeUndefined();
   expect(formatDealHeaderAmount("not-a-number")).toBeUndefined();
+
+  const customFormat = {
+    locale: "en-US",
+    timeZone: "UTC",
+    decimalSeparator: ",",
+    groupSeparator: ".",
+  };
+  expect(formatDealHeaderAmount(12500, "TL", customFormat)).toBe("TL 12.500,00");
+  expect(
+    dealsRecordHeaderIdentity(dealRecord({ Deal_Name: "Deal", Amount: 12500 }), {
+      currencySymbol: "TL",
+      format: customFormat,
+    }).subtitle,
+  ).toBe("TL 12.500,00");
 });

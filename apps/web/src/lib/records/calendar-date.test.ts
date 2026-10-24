@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   calendarShapeToDisplayDate,
   DATE_MASK_PLACEHOLDER,
+  datePatternToPlaceholder,
   displayDateToCalendarShape,
   displayDateToModelShape,
   isCalendarDate,
@@ -100,4 +101,23 @@ describe("isCalendarDate", () => {
 
 it("publishes the observed mask as the placeholder", () => {
   expect(DATE_MASK_PLACEHOLDER).toBe("DD.MM.YYYY");
+});
+
+describe("datePattern support", () => {
+  it("derives mask placeholder from datePattern", () => {
+    expect(datePatternToPlaceholder("dd.MM.yyyy")).toBe("DD.MM.YYYY");
+    expect(datePatternToPlaceholder("MM/dd/yyyy")).toBe("MM/DD/YYYY");
+    expect(datePatternToPlaceholder("yyyy-MM-dd")).toBe("YYYY-MM-DD");
+  });
+
+  it("maps MM/dd/yyyy display date to calendar shape ISO 2026-06-30", () => {
+    expect(displayDateToCalendarShape("06/30/2026", "MM/dd/yyyy")).toBe("2026-06-30");
+    expect(displayDateToModelShape("06/30/2026", "MM/dd/yyyy")).toBe("2026-06-30");
+    expect(calendarShapeToDisplayDate("2026-06-30", "MM/dd/yyyy")).toBe("06/30/2026");
+  });
+
+  it("round-trips MM/dd/yyyy pattern", () => {
+    const formatted = calendarShapeToDisplayDate("2026-06-30", "MM/dd/yyyy");
+    expect(displayDateToCalendarShape(formatted, "MM/dd/yyyy")).toBe("2026-06-30");
+  });
 });

@@ -11,6 +11,7 @@ import { Link } from "@/components/ui/link";
 import { TextField } from "@/components/ui/text-field";
 import { useClientRecordService } from "@/lib/api/client/provider";
 import { moduleCreatePath, moduleRecordPath } from "@/lib/crm-paths";
+import { useFormat } from "@/lib/format-context";
 import { isoToDateTimeParts } from "@/lib/records/datetime-parts";
 import { type CalendarView, loadCalendarEvents, shiftDate, visibleRange } from "./calendar-model";
 import "./calendar.css";
@@ -45,9 +46,12 @@ export function CalendarScreen({
     selectDate(value);
     setView("day");
   };
+  const format = useFormat();
   const calendarName = mine ? "My Calendar" : "All Users";
   const label = (value: string, options: Intl.DateTimeFormatOptions) =>
-    new Date(`${value}T12:00:00`).toLocaleDateString("en-GB", options);
+    new Intl.DateTimeFormat(format.locale, { ...options, timeZone: "UTC" }).format(
+      new Date(`${value}T12:00:00Z`),
+    );
   const gridProps = {
     date,
     events: events.data ?? [],

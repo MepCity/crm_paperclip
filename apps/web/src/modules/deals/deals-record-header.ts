@@ -41,6 +41,7 @@ export function dealsRecordHeaderIdentity(
     orgSlug?: string;
     currency?: CurrencyDefinition | { symbol?: string; prefixSymbol?: boolean } | string;
     currencySymbol?: string;
+    format?: FormatOptions;
   },
 ): {
   title: string;
@@ -51,7 +52,7 @@ export function dealsRecordHeaderIdentity(
   const title =
     typeof record.fields.Deal_Name === "string" ? (record.fields.Deal_Name as string) : "";
   const currency = context?.currency ?? context?.currencySymbol ?? "TL";
-  const subtitle = formatDealHeaderAmount(record.fields.Amount, currency);
+  const subtitle = formatDealHeaderAmount(record.fields.Amount, currency, context?.format);
 
   return {
     title,

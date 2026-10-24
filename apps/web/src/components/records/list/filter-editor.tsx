@@ -4,6 +4,8 @@ import { MultiSelect, type MultiSelectOption } from "@/components/ui/multi-selec
 import { NumberField } from "@/components/ui/number-field";
 import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
+import { useFormat } from "@/lib/format-context";
+import { datePatternToPlaceholder } from "@/lib/records/calendar-date";
 import { displayDateToIso, isValidDisplayDateRange } from "@/lib/records/filter-date-input";
 import {
   type AppliedFilterValue,
@@ -122,6 +124,8 @@ export function FilterEditor({
   draft: FilterDraft;
   onChange: (draft: FilterDraft) => void;
 }) {
+  const format = useFormat();
+  const datePlaceholder = datePatternToPlaceholder(format.datePattern ?? "dd.MM.yyyy");
   const operators: readonly FilterOperator[] = filterOperators[editor.fieldType].operators;
   const control = draftOperator(editor, draft)?.control;
   const value = draft.value;
@@ -344,7 +348,7 @@ export function FilterEditor({
             <TextField
               label={`${label} value`}
               hideLabel
-              placeholder="DD.MM.YYYY"
+              placeholder={datePlaceholder}
               value={typeof value === "string" ? value : ""}
               onChange={setValue}
             />

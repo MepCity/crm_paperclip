@@ -278,6 +278,7 @@ export function RecordDetailScreen({
     orgSlug,
     currency: homeCurrencyQuery.data,
     currencySymbol: homeCurrencyQuery.data?.symbol,
+    format: orgFormat,
   });
   const lastUpdate = rules.lastUpdate(record, now, orgFormat);
   const businessFields = rules.businessCard(module, displayRecord);

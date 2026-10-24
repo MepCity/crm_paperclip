@@ -1,15 +1,18 @@
 "use client";
 
+import { formatDateTime } from "@crm/core/format";
 import type { RecycleBinEntry } from "@crm/core/records";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useFormat } from "@/lib/format-context";
 import { type BinActions, type BinSearch, initialBinSearch } from "./contracts";
 import { RecycleBin } from "./recycle-bin";
 
 const perPage = 30;
 
 export function RecycleBinPage({ actions }: { actions: BinActions }) {
+  const format = useFormat();
   const [data, setData] = useState<{ entries: readonly RecycleBinEntry[]; total: number }>({
     entries: [],
     total: 0,
@@ -123,7 +126,7 @@ export function RecycleBinPage({ actions }: { actions: BinActions }) {
           name: entry.name,
           type: entry.module,
           deletedBy: entry.deletedBy,
-          deletedTime: `${new Date(entry.deletedAt).toLocaleString("en-GB", { timeZone: "UTC" })} UTC`,
+          deletedTime: formatDateTime(entry.deletedAt, format),
         }))}
         busy={busy}
         search={query.search}

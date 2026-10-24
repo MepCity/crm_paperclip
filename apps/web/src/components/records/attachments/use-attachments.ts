@@ -1,6 +1,7 @@
 "use client";
 
 import { supportsAttachmentCard } from "@crm/core/attachments/modules";
+import { type FormatOptions, formatDate as formatRecordDate } from "@crm/core/format";
 import type { ModuleApiName } from "@crm/core/records";
 import { useInfiniteQuery, useQueryClient } from "@tanstack/react-query";
 import { useCallback, useMemo, useState } from "react";
@@ -8,6 +9,7 @@ import { toast } from "@/components/ui/toast";
 import { apiFetch, CRM_ORG_HEADER } from "@/lib/api/client/fetch";
 import { useOrgSlug } from "@/lib/api/client/provider";
 import { apiKeys } from "@/lib/api/client/query-keys";
+import { useFormat } from "@/lib/format-context";
 import type { AttachmentRow } from "./attachments-card";
 
 /** Provisional record selection budget (OQ-01, P1): 10 files / 100 MB combined (decimal MB). */
@@ -45,13 +47,17 @@ function attachmentsPath(module: string, id: string, attachmentId?: string): str
   return attachmentId ? `${base}/${encodeURIComponent(attachmentId)}` : base;
 }
 
-function formatDate(iso: string): string {
-  const date = new Date(iso);
-  if (Number.isNaN(date.getTime())) return "";
-  return date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+function formatDate(iso: string, format: FormatOptions): string {
+  try {
+    return formatRecordDate(iso, format);
+  } catch {
+    const date = new Date(iso);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toLocaleDateString(format.locale, { month: "short", day: "numeric", year: "numeric" });
+  }
 }
 
-function toRow(item: WireAttachment): AttachmentRow {
+function toRow(item: WireAttachment, format: FormatOptions): AttachmentRow {
   return {
     id: item.id,
     fileName: item.File_Name,
@@ -59,7 +65,7 @@ function toRow(item: WireAttachment): AttachmentRow {
     type: item.$type,
     ...(item.$type === "link" && item.$link_url ? { linkUrl: item.$link_url } : {}),
     attachedBy: item.Created_By?.name ?? "",
-    createdTime: formatDate(item.Created_Time),
+    createdTime: formatDate(item.Created_Time, format),
   };
 }
 
@@ -94,6 +100,7 @@ export function useAttachments(
   parentId: string,
   options: { enabled?: boolean } = {},
 ): UseAttachments {
+  const format = useFormat();
   const orgSlug = useOrgSlug();
   const queryClient = useQueryClient();
   const key = attachmentsKey(orgSlug, parentModule, parentId);
@@ -198,7 +205,7 @@ export function useAttachments(
     [orgSlug, parentModule, parentId, refresh],
   );
 
-  const rows = useMemo(() => loaded.map(toRow), [loaded]);
+  const rows = useMemo(() => loaded.map((item) => toRow(item, format)), [loaded, format]);
   return {
     rows,
     loading: query.isLoading,

@@ -1,7 +1,12 @@
 "use client";
 
 import { ValidationError } from "@crm/core/errors";
-import { type FormatOptions, formatCurrency, formatNumber } from "@crm/core/format";
+import {
+  type FormatOptions,
+  formatCurrency,
+  formatNumber,
+  formatNumericDate,
+} from "@crm/core/format";
 import type { FieldDefinition, ListQuery, ModuleMetadata, RecordData } from "@crm/core/records";
 import { useQueries, useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
@@ -45,13 +50,16 @@ export function buildOptimisticDealCard(card: BoardCard, targetColumn: BoardColu
   };
 }
 
-export function formatClosingDate(value: string): string {
+export function formatClosingDate(value: string, format: FormatOptions = DEFAULT_FORMAT): string {
   const trimmed = value.trim();
   if (!trimmed) return "";
   const match = trimmed.match(/^(\d{4})-(\d{2})-(\d{2})/);
   if (match) {
-    const [, y, m, d] = match;
-    return `${d}.${m}.${y}`;
+    try {
+      return formatNumericDate(match[0], format);
+    } catch {
+      return trimmed;
+    }
   }
   return trimmed;
 }
@@ -164,7 +172,7 @@ export function buildDealCardRows(
       );
     } else if (key === "Closing_Date") {
       const closingDate = typeof value === "string" ? value.trim() : "";
-      const formatted = closingDate ? formatClosingDate(closingDate) : "";
+      const formatted = closingDate ? formatClosingDate(closingDate, orgFormat) : "";
       if (formatted) {
         const stageKey = typeof deal.fields.Stage === "string" ? deal.fields.Stage : "";
         const overdue = isOverdueClosingDate(

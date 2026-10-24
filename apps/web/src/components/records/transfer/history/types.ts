@@ -1,4 +1,6 @@
 import type { ExportJob, ImportJob, TransferModule } from "@crm/core";
+import { type FormatOptions, formatDateTime } from "@crm/core/format";
+import { DEFAULT_FORMAT } from "@/lib/locale";
 
 export type {
   Actor,
@@ -52,8 +54,10 @@ export function reasonMessage(code?: string): string {
   return REASONS[code] ?? "The row could not be processed.";
 }
 
-export function formatTime(iso: string): string {
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return iso;
-  return d.toLocaleString("en-US", { dateStyle: "medium", timeStyle: "short", timeZone: "UTC" });
+export function formatTime(iso: string, format: FormatOptions = DEFAULT_FORMAT): string {
+  try {
+    return formatDateTime(iso, format);
+  } catch {
+    return iso;
+  }
 }

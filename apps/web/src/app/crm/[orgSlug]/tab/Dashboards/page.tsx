@@ -1,5 +1,6 @@
 import { listMembers } from "@crm/core";
 import { PageTitle } from "@/components/shell/page-title";
+import { loadOrganizationFormat } from "@/lib/format-settings";
 import { getRecordService } from "@/lib/records";
 import { requireOrgContext } from "@/lib/session";
 import { AnalyticsScreen } from "@/modules/analytics/analytics-screen";
@@ -14,8 +15,10 @@ export default async function DashboardsPage({ params }: { params: Promise<{ org
     "use server";
     const ctx = await requireOrgContext(orgSlug);
     const members = await listMembers(ctx);
+    const format = await loadOrganizationFormat();
     return createRecordAnalyticsPort(getRecordService(ctx), {
       ownerNames: new Map(members.map((member) => [member.userId, member.name])),
+      format,
     }).getDashboard();
   }
   return (

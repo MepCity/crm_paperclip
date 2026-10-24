@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDateTime } from "@crm/core/format";
 import type { Tag } from "@crm/core/records";
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -7,6 +8,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Icons } from "@/components/ui/icon";
 import { TextField } from "@/components/ui/text-field";
+import { useFormat } from "@/lib/format-context";
 
 export interface ManageTagsPageProps {
   tags?: readonly Tag[];
@@ -46,6 +48,7 @@ export function ManageTagsPage({
   onHelp,
   onNewTag,
 }: ManageTagsPageProps) {
+  const format = useFormat();
   const titleId = useId();
   const [editing, setEditing] = useState<Tag | "new" | null>(null);
   const [deleting, setDeleting] = useState<Tag | null>(null);
@@ -182,7 +185,7 @@ export function ManageTagsPage({
                   ) : null}
                 </td>
                 <td className="px-6 py-3">
-                  <time dateTime={tag.modifiedAt}>{new Date(tag.modifiedAt).toLocaleString()}</time>
+                  <time dateTime={tag.modifiedAt}>{formatDateTime(tag.modifiedAt, format)}</time>
                 </td>
               </tr>
             ))}

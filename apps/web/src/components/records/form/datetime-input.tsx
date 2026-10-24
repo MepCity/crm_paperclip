@@ -3,9 +3,10 @@
 import { useState } from "react";
 import { TextCalendarField } from "@/components/ui/text-calendar-field";
 import { TextField } from "@/components/ui/text-field";
+import { useFormat } from "@/lib/format-context";
 import {
   calendarShapeToDisplayDate,
-  DATE_MASK_PLACEHOLDER,
+  datePatternToPlaceholder,
   displayDateToModelShape,
 } from "@/lib/records/calendar-date";
 import { dateTimePartsToIso, isoToDateTimeParts } from "@/lib/records/datetime-parts";
@@ -37,6 +38,9 @@ export function DateTimeInput({
   disabled,
   errorMessage,
 }: DateTimeInputProps) {
+  const format = useFormat();
+  const pattern = format.datePattern ?? "dd.MM.yyyy";
+  const placeholder = datePatternToPlaceholder(pattern);
   const [written, setWritten] = useState(value);
   const [parts, setParts] = useState(() => isoToDateTimeParts(value, dateOnly));
   const [writtenDateOnly, setWrittenDateOnly] = useState(dateOnly);
@@ -59,14 +63,14 @@ export function DateTimeInput({
         hideLabel
         type="text"
         name={`${id}-date`}
-        placeholder={DATE_MASK_PLACEHOLDER}
-        value={calendarShapeToDisplayDate(parts.date)}
+        placeholder={placeholder}
+        value={calendarShapeToDisplayDate(parts.date, pattern)}
         isRequired={required}
         isDisabled={disabled}
         isInvalid={Boolean(errorMessage)}
         errorMessage={errorMessage}
         validationBehavior="aria"
-        onChange={(date) => update({ ...parts, date: displayDateToModelShape(date) ?? "" })}
+        onChange={(date) => update({ ...parts, date: displayDateToModelShape(date, pattern) ?? "" })}
       />
       {dateOnly ? null : (
         <TextField

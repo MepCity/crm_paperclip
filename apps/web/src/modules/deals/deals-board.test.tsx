@@ -156,6 +156,13 @@ describe("formatClosingDate", () => {
     expect(formatClosingDate("2026-06-15")).toBe("15.06.2026");
     expect(formatClosingDate("2026-12-31")).toBe("31.12.2026");
     expect(formatClosingDate("2026-01-05T12:00:00.000Z")).toBe("05.01.2026");
+    expect(
+      formatClosingDate("2026-06-15", {
+        locale: "en-US",
+        timeZone: "UTC",
+        datePattern: "MM/dd/yyyy",
+      }),
+    ).toBe("06/15/2026");
   });
 
   test("handles empty or invalid inputs", () => {

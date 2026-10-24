@@ -1,7 +1,9 @@
 "use client";
 
+import { formatNumber } from "@crm/core/format";
 import Link from "next/link";
 import { useState } from "react";
+import { useFormat } from "@/lib/format-context";
 import {
   type ActivityRow,
   type ActivityType,
@@ -144,6 +146,7 @@ function OpenActivities({ orgSlug, empty }: { orgSlug: string; empty: boolean })
 }
 
 export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: string }) {
+  const format = useFormat();
   const total = dealStages.reduce((sum, s) => sum + s.count, 0);
   return (
     <div
@@ -198,7 +201,7 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
                   <tr key={s.stage}>
                     <td className="py-1">{s.stage}</td>
                     <td>{s.count}</td>
-                    <td>{s.amount.toLocaleString("en-US")}</td>
+                    <td>{formatNumber(s.amount, format)}</td>
                   </tr>
                 ))}
               </tbody>
