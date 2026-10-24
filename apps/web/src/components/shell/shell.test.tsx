@@ -138,9 +138,12 @@ test("Navigation groups collapse and expand with mouse and keyboard", async () =
 
 test("Default navigation renders Leads, Contacts, Accounts, Deals, Tasks, Meetings and Calls (under Activities) and omits empty groups", () => {
   render(<Navigation orgSlug="example" />);
-  expect(screen.getAllByRole("link")).toHaveLength(13);
+  expect(screen.getAllByRole("link")).toHaveLength(14);
   expect(screen.getByRole("link", { name: "Reports" }).getAttribute("href")).toBe(
     "/crm/example/tab/Reports",
+  );
+  expect(screen.getByRole("link", { name: "Analytics" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Dashboards",
   );
   expect(screen.getByRole("link", { name: "Leads" }).getAttribute("href")).toBe(
     "/crm/example/tab/Leads/list",
