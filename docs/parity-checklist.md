@@ -1509,3 +1509,16 @@ inventory, pending UI Lead approval; no implementation or module gate claimed.
 | HW-03 | Queue sections, counts and Tasks fields | Screenshot fragments plus explicit export-only inventory; Tasks metadata cross-check | U4: zero badges are not empty tables; no queue, period, filter, sort or row action operated |
 | HW-04 | Capture safety | Both pre-capture Home gates passed; 4/6 blocked requests; no guard changes | U3: automatic user-preference PUT on Workqueue entry blocked; no retry or further capture |
 | HW-05 | First slice proposal | Local fixture-backed read-only Workqueue entry; reuse shell/list/detail components | Broader interactive queue and Home dashboard await evidence and approval; no implementation opened |
+
+## Module 15 — Visits and Social (R1 research)
+
+Source: `research/specs/visits-social.md` (MEP-1257). Bounded read-only
+inventory pending UI Lead approval; no implementation or module gate claimed.
+
+| # | Surface | Evidence / status | Remaining boundary |
+| --- | --- | --- | --- |
+| VS-01 | Visits introduction and shared shell | `m15r1-visits-entry`; S01–S54, V01–V09; painted tracking introduction | U1/U2: enabled list, columns, filters and record Visits cards unobserved |
+| VS-02 | Social disconnected introduction | `m15r1-social-entry`; SO01 and shared shell; no streams or tabs | U3/U4: external account/brand setup and connected states unobserved |
+| VS-03 | Historical Contact Social card and Lead rail entry | `m2d2-card-invoices`, `leads-detail`; RC01–RC04, RL01 | U5: dated evidence; Lead card export-only; association never attempted |
+| VS-04 | Safety and evidence completeness | Both new paint gates passed; zero clicks/steps; 3/2 background POSTs blocked | Shell diagnostics retained; no setup, preference, tracking or account writes allowed |
+| VS-05 | First slice proposal | Fixture-backed disconnected entry and optional existing Contact Social card | Approval required; no fabricated populated schema or external integration |
