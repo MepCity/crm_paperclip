@@ -51,6 +51,28 @@ const mockFields: (FieldDefinition & { id?: string })[] = [
     unique: false,
     massUpdate: false,
   },
+  {
+    id: "f-revenue",
+    apiName: "Annual_Revenue",
+    label: "Annual Revenue",
+    dataType: "currency",
+    required: false,
+    readOnly: false,
+    views: { view: true, create: true, edit: true, quickCreate: true },
+    unique: false,
+    massUpdate: false,
+  },
+  {
+    id: "f-email-opt-out",
+    apiName: "Email_Opt_Out",
+    label: "Email Opt Out",
+    dataType: "boolean",
+    required: false,
+    readOnly: false,
+    views: { view: true, create: true, edit: true, quickCreate: true },
+    unique: false,
+    massUpdate: false,
+  },
 ];
 
 function defaultProps(overrides: Partial<CustomViewDialogProps> = {}): CustomViewDialogProps {
@@ -72,7 +94,6 @@ function defaultProps(overrides: Partial<CustomViewDialogProps> = {}): CustomVie
 describe("CustomViewDialog", () => {
   beforeEach(() => {
     vi.restoreAllMocks();
-    localStorage.clear();
   });
 
   afterEach(() => {
@@ -102,80 +123,50 @@ describe("CustomViewDialog", () => {
     render(
       <CustomViewDialog
         {...defaultProps({
-          initial: { columns: ["Full_Name"] },
-        })}
-      />,
-    );
-
-    // Initial selected has Full_Name
-    expect(screen.getByText("Selected (1)")).toBeTruthy();
-
-    // Click on Company in Available list to add it
-    const companyItem = screen.getByText("Company");
-    await user.click(companyItem);
-
-    expect(screen.getByText("Selected (2)")).toBeTruthy();
-
-    // Remove Full_Name
-    const removeBtn = screen.getByRole("button", { name: "Remove column Lead Name" });
-    await user.click(removeBtn);
-
-    expect(screen.getByText("Selected (1)")).toBeTruthy();
-  });
-
-  it("reorders columns using move up and move down buttons", async () => {
-    const user = userEvent.setup();
-    render(
-      <CustomViewDialog
-        {...defaultProps({
           initial: { columns: ["Full_Name", "Company"] },
         })}
       />,
     );
 
-    const downBtn = screen.getByRole("button", { name: "Move Lead Name down" });
-    await user.click(downBtn);
+    // Initial selected columns
+    expect(screen.getByLabelText("Remove column Lead Name")).toBeTruthy();
+    expect(screen.getByLabelText("Remove column Company")).toBeTruthy();
 
-    // Selected items order changed
-    const selectedList = screen.getByRole("list", { name: "Selected columns" });
-    const items = selectedList.querySelectorAll("li");
-    expect(items[0]?.textContent).toContain("Company");
-    expect(items[1]?.textContent).toContain("Lead Name");
+    // Click to add Email
+    const addEmail = screen.getByRole("button", { name: "Email" });
+    await user.click(addEmail);
+
+    expect(screen.getByLabelText("Remove column Email")).toBeTruthy();
+
+    // Remove Lead Name
+    await user.click(screen.getByLabelText("Remove column Lead Name"));
+    expect(screen.queryByLabelText("Remove column Lead Name")).toBeNull();
   });
 
-  it("adds, edits, and removes criteria rows", async () => {
+  it("adds and updates criteria rows", async () => {
     const user = userEvent.setup();
     render(<CustomViewDialog {...defaultProps()} />);
 
     expect(screen.getByText("No criteria specified.")).toBeTruthy();
 
     await user.click(screen.getByRole("button", { name: "Add Criterion" }));
-    expect(screen.getByTestId("criterion-row-0")).toBeTruthy();
 
-    const valueInput = screen.getByLabelText("Criterion 1 Value");
-    await user.type(valueInput, "Acme");
-    expect((valueInput as HTMLInputElement).value).toBe("Acme");
+    expect(screen.getByLabelText("Criterion 1 Field")).toBeTruthy();
+    expect(screen.getByLabelText("Criterion 1 Comparator")).toBeTruthy();
+    expect(screen.getByLabelText("Criterion 1 Value")).toBeTruthy();
 
-    // Remove criterion
-    await user.click(screen.getByRole("button", { name: "Remove criterion 1" }));
-    expect(screen.queryByTestId("criterion-row-0")).toBeNull();
-    expect(screen.getByText("No criteria specified.")).toBeTruthy();
+    await user.type(screen.getByLabelText("Criterion 1 Value"), "Acme");
+    expect((screen.getByLabelText("Criterion 1 Value") as HTMLInputElement).value).toBe("Acme");
+
+    await user.click(screen.getByLabelText("Remove criterion 1"));
+    expect(screen.queryByLabelText("Criterion 1 Field")).toBeNull();
   });
 
-  it("admin sees sharing options and saves shared view via sendViewCommand", async () => {
+  it("saves a new shared custom view through sendViewCommand with stable field IDs", async () => {
     const user = userEvent.setup();
     const sendSpy = vi.spyOn(api, "sendViewCommand").mockResolvedValue({
       ok: true,
       revision: "rev-2",
-      view: {
-        id: "view-123",
-        name: "Enterprise Leads",
-        systemDefined: false,
-        isDefault: false,
-        columns: ["Full_Name", "Company"],
-        criteria: null,
-        sort: null,
-      },
     });
 
     const onSave = vi.fn();
@@ -194,8 +185,6 @@ describe("CustomViewDialog", () => {
 
     // Sharing section is visible for admin
     expect(screen.getByTestId("sharing-section")).toBeTruthy();
-    expect(screen.getByRole("radio", { name: "Everyone" })).toBeTruthy();
-    expect(screen.getByRole("radio", { name: "Only me" })).toBeTruthy();
 
     // Type name
     await user.type(screen.getByLabelText("Enter Custom View Name"), "Enterprise Leads");
@@ -213,6 +202,8 @@ describe("CustomViewDialog", () => {
         view: expect.objectContaining({
           name: "Enterprise Leads",
           columns: ["f-name", "f-company"],
+          systemDefined: false,
+          isDefault: false,
         }),
       }),
       undefined,
@@ -226,18 +217,112 @@ describe("CustomViewDialog", () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it("member sees NO sharing option and saves private view locally without server mutation", async () => {
+  it("preserves criteria AST with groupOperator OR and typed values", async () => {
     const user = userEvent.setup();
-    const sendSpy = vi.spyOn(api, "sendViewCommand");
-    const onSave = vi.fn();
-    const onClose = vi.fn();
+    const sendSpy = vi.spyOn(api, "sendViewCommand").mockResolvedValue({
+      ok: true,
+      revision: "rev-2",
+    });
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          mode: "edit",
+          isAdmin: true,
+          initial: {
+            id: "view-or-test",
+            name: "OR Leads",
+            columns: ["Full_Name"],
+            criteria: {
+              groupOperator: "or",
+              group: [
+                { field: "Annual_Revenue", comparator: "greater_than", value: 50000 },
+                { field: "Email_Opt_Out", comparator: "equal", value: true },
+              ],
+            },
+          },
+        })}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(sendSpy).toHaveBeenCalledWith(
+      "test-org",
+      "Leads",
+      "PATCH",
+      "rev-1",
+      expect.objectContaining({
+        type: "view.patch",
+        view: expect.objectContaining({
+          id: "view-or-test",
+          name: "OR Leads",
+          criteria: {
+            groupOperator: "or",
+            group: [
+              { field: "f-revenue", comparator: "greater_than", value: 50000 },
+              { field: "f-email-opt-out", comparator: "equal", value: true },
+            ],
+          },
+        }),
+      }),
+      "view-or-test",
+    );
+  });
+
+  it("preserves existing sort without wiping it to null", async () => {
+    const user = userEvent.setup();
+    const sendSpy = vi.spyOn(api, "sendViewCommand").mockResolvedValue({
+      ok: true,
+      revision: "rev-2",
+    });
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          mode: "edit",
+          isAdmin: true,
+          initial: {
+            id: "view-sort-test",
+            name: "Sorted Leads",
+            columns: ["Full_Name", "Company"],
+            sort: { field: "Company", order: "desc" },
+          },
+        })}
+      />,
+    );
+
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    expect(sendSpy).toHaveBeenCalledWith(
+      "test-org",
+      "Leads",
+      "PATCH",
+      "rev-1",
+      expect.objectContaining({
+        type: "view.patch",
+        view: expect.objectContaining({
+          id: "view-sort-test",
+          sort: { field: "f-company", order: "desc" },
+        }),
+      }),
+      "view-sort-test",
+    );
+  });
+
+  it("member sees NO sharing option and receives server rejection on unauthorized save", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(api, "sendViewCommand").mockResolvedValue({
+      ok: false,
+      stale: false,
+      forbidden: true,
+      message: "Only administrators can customize organization views.",
+    });
 
     render(
       <CustomViewDialog
         {...defaultProps({
           isAdmin: false,
-          onSave,
-          onClose,
           initial: { columns: ["Full_Name"] },
         })}
       />,
@@ -251,21 +336,11 @@ describe("CustomViewDialog", () => {
     await user.type(screen.getByLabelText("Enter Custom View Name"), "My Personal Leads");
     await user.click(screen.getByRole("button", { name: "Save" }));
 
-    // Server shared-view endpoint is NOT called
-    expect(sendSpy).not.toHaveBeenCalled();
-
-    // Saved to private views
-    expect(onSave).toHaveBeenCalledWith(
-      expect.objectContaining({
-        name: "My Personal Leads",
-        columns: ["Full_Name"],
-      }),
-    );
-    expect(onClose).toHaveBeenCalled();
-
-    // Verify stored in private views storage
-    const stored = api.getPrivateViews("test-org", "Leads");
-    expect(stored.some((v) => v.name === "My Personal Leads")).toBe(true);
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toContain(
+        "Only administrators can customize organization views.",
+      );
+    });
   });
 
   it("protects system-defined and default views: disables Save and Delete", () => {
@@ -319,7 +394,6 @@ describe("CustomViewDialog", () => {
             name: "Protected Custom",
             systemDefined: false,
             columns: ["Full_Name"],
-            sharedTo: "everyone",
           },
         })}
       />,
@@ -338,7 +412,7 @@ describe("CustomViewDialog", () => {
       ok: false,
       stale: false,
       forbidden: false,
-      message: "View criterion references an inactive or unknown field: retired_field.",
+      message: "View references an inactive or unknown field: retired_field.",
       fieldErrors: { view_field: ["retired_field"] },
     });
 
@@ -349,7 +423,6 @@ describe("CustomViewDialog", () => {
           initial: {
             columns: ["Full_Name"],
             criteria: { field: "retired_field", comparator: "equal", value: "test" },
-            sharedTo: "everyone",
           },
         })}
       />,
@@ -366,6 +439,39 @@ describe("CustomViewDialog", () => {
 
     // Ensure the criterion was not silently dropped
     expect(screen.getByTestId("criterion-row-0")).toBeTruthy();
+  });
+
+  it("retains user draft entries when server reports SCHEMA_REVISION_MISMATCH", async () => {
+    const user = userEvent.setup();
+    vi.spyOn(api, "sendViewCommand").mockResolvedValue({
+      ok: false,
+      stale: true,
+      forbidden: false,
+      message:
+        "The views changed since this page loaded. Refresh to load the latest definition, then save again; your entries are kept.",
+    });
+
+    render(
+      <CustomViewDialog
+        {...defaultProps({
+          initial: { columns: ["Full_Name"] },
+        })}
+      />,
+    );
+
+    await user.type(screen.getByLabelText("Enter Custom View Name"), "Keep My Name");
+    await user.click(screen.getByRole("button", { name: "Save" }));
+
+    await waitFor(() => {
+      expect(screen.getByRole("alert").textContent).toContain(
+        "The views changed since this page loaded",
+      );
+    });
+
+    // Form value is still there
+    expect((screen.getByLabelText("Enter Custom View Name") as HTMLInputElement).value).toBe(
+      "Keep My Name",
+    );
   });
 
   it("deletes a custom view when Delete View is clicked", async () => {
@@ -388,7 +494,6 @@ describe("CustomViewDialog", () => {
             systemDefined: false,
             isDefault: false,
             columns: ["Full_Name"],
-            sharedTo: "everyone",
           },
           onDelete,
           onClose,

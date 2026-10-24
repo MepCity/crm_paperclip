@@ -3,7 +3,6 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { getPrivateViews } from "@/components/records/views/custom-view-api";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
 import { resetPreferenceStoreForTests } from "@/lib/preferences";
@@ -47,7 +46,6 @@ describe("ModuleListScreen Custom View Dialog Integration", () => {
     resetPreferenceStoreForTests();
     navigation.params = new URLSearchParams();
     navigation.push.mockClear();
-    localStorage.clear();
   });
 
   afterEach(() => {
@@ -86,14 +84,48 @@ describe("ModuleListScreen Custom View Dialog Integration", () => {
 
   it("opens Edit Current View dialog from ViewTabStrip menu with initial view populated", async () => {
     const user = userEvent.setup();
+    const customView = {
+      id: "custom-1",
+      name: "My Custom View",
+      systemDefined: false,
+      isDefault: false,
+      columns: ["Full_Name", "Email"],
+      criteria: null,
+      sort: null,
+    };
     const records = createFixtureRecordService(ctx);
-    const service = createClientRecordService(records, {
+    const baseService = createClientRecordService(records, {
       listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
     });
+    const service = {
+      ...baseService,
+      listViewSummaries: async (m: any) => [
+        ...(await records.listViews(m)),
+        { id: customView.id, name: customView.name, systemDefined: false, isDefault: false },
+      ],
+      getView: async (m: any, id: string) =>
+        id === customView.id ? customView : records.getView(m, id),
+      list: async (m: any, q: any) =>
+        q?.viewId === customView.id
+          ? records.list(m, { ...q, viewId: "all-contacts" })
+          : records.list(m, q),
+      count: async (m: any, q: any) =>
+        q?.viewId === customView.id
+          ? records.count(m, { ...q, viewId: "all-contacts" })
+          : records.count(m, q),
+    };
 
-    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={contactsListPageConfig} isAdmin />, {
-      wrapper: wrapper(service),
-    });
+    render(
+      <ModuleListScreen
+        orgSlug={ctx.orgSlug}
+        config={contactsListPageConfig}
+        viewId="custom-1"
+        isAdmin
+      />,
+      {
+        wrapper: wrapper(service),
+      },
+    );
 
     await screen.findByRole("table", { name: "Records" });
 
@@ -105,23 +137,27 @@ describe("ModuleListScreen Custom View Dialog Integration", () => {
     const editItem = await screen.findByRole("menuitem", { name: "Edit Current View" });
     await user.click(editItem);
 
-    // Verify dialog opens in Edit mode
+    // Verify dialog opens in Edit mode with view populated
     const dialog = await screen.findByRole("dialog", { name: /^Edit Custom View/ });
     expect(dialog).toBeTruthy();
-    // Default/system views show the protected banner
-    expect(
-      within(dialog).getByText(
-        /Protected view: System and default views cannot be edited or deleted/,
-      ),
-    ).toBeTruthy();
+    expect(within(dialog).getByDisplayValue("My Custom View")).toBeTruthy();
+    expect(within(dialog).getByRole("button", { name: "Save" })).toBeTruthy();
+    expect(within(dialog).getByRole("button", { name: "Delete View" })).toBeTruthy();
   });
 
-  it("member sees no sharing options and saves private view locally", async () => {
+  it("member sees no sharing options and server rejects unauthorized save", async () => {
     const user = userEvent.setup();
     const records = createFixtureRecordService(ctx);
     const service = createClientRecordService(records, {
       listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
     });
+
+    vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
+      new Response(JSON.stringify({ code: "AUTHENTICATION_FAILURE", message: "Forbidden" }), {
+        status: 403,
+        headers: { "Content-Type": "application/json" },
+      }),
+    );
 
     render(
       <ModuleListScreen
@@ -154,15 +190,12 @@ describe("ModuleListScreen Custom View Dialog Integration", () => {
     const saveBtn = within(dialog).getByRole("button", { name: "Save" });
     await user.click(saveBtn);
 
-    // Dialog closes
+    // Error is shown in alert
     await waitFor(() => {
-      expect(screen.queryByRole("dialog", { name: "New Custom View" })).toBeNull();
+      expect(within(dialog).getByRole("alert").textContent).toContain(
+        "Only administrators can customize organization views.",
+      );
     });
-
-    // Check private views
-    const saved = getPrivateViews(ctx.orgSlug, "Contacts");
-    expect(saved).toHaveLength(1);
-    expect(saved[0]?.name).toBe("My Member View");
   });
 
   it("admin saves shared custom view and navigates to the new view", async () => {
@@ -173,7 +206,7 @@ describe("ModuleListScreen Custom View Dialog Integration", () => {
     });
 
     vi.spyOn(globalThis, "fetch").mockResolvedValueOnce(
-      new Response(JSON.stringify({ custom_views: [{ id: "new-shared-view" }] }), {
+      new Response(JSON.stringify({ revision: "r2", custom_views: [{ id: "new-shared-view" }] }), {
         status: 200,
         headers: { "Content-Type": "application/json" },
       }),

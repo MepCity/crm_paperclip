@@ -11,6 +11,7 @@ import type {
   MergeInput,
   ModuleApiName,
   ModuleMetadata,
+  ModuleReadProjection,
   RecordData,
   RecordId,
   RecordInput,
@@ -46,6 +47,19 @@ export function useModule(module: ModuleApiName) {
   return useQuery<ModuleMetadata>({
     queryKey: apiKeys.module(orgSlug, module),
     queryFn: () => service.getModule(module),
+  });
+}
+
+export function useModuleProjection(module: ModuleApiName, options?: { enabled?: boolean }) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  return useQuery<ModuleReadProjection>({
+    queryKey: apiKeys.moduleProjection(orgSlug, module),
+    queryFn: () =>
+      service.getModuleProjection
+        ? service.getModuleProjection(module)
+        : (service.getModule(module) as unknown as Promise<ModuleReadProjection>),
+    enabled: options?.enabled ?? true,
   });
 }
 

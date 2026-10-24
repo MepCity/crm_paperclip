@@ -1,6 +1,12 @@
 "use client";
 
-import type { Comparator, Criteria, FieldDefinition, ListView } from "@crm/core/records";
+import type {
+  Comparator,
+  Criteria,
+  CriteriaValue,
+  FieldDefinition,
+  ListView,
+} from "@crm/core/records";
 import { useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
@@ -8,12 +14,12 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
-import { deletePrivateView, savePrivateView, sendViewCommand } from "./custom-view-api";
+import { sendViewCommand } from "./custom-view-api";
 import "./custom-view-dialog.css";
 
-export const COMPARATOR_OPTIONS = [
+const COMPARATOR_OPTIONS: { value: Comparator; label: string }[] = [
   { value: "equal", label: "is" },
-  { value: "not_equal", label: "isn't" },
+  { value: "not_equal", label: "is not" },
   { value: "contains", label: "contains" },
   { value: "not_contains", label: "doesn't contain" },
   { value: "starts_with", label: "starts with" },
@@ -26,13 +32,14 @@ export const COMPARATOR_OPTIONS = [
   { value: "greater_equal", label: "greater or equal" },
   { value: "between", label: "between" },
   { value: "not_between", label: "not between" },
-] as const;
+];
 
 export interface CriterionDraft {
   id: string;
-  field: string;
-  comparator: string;
+  field: string; // API name
+  comparator: Comparator;
   value: string;
+  rawTypedValue?: unknown;
 }
 
 export interface CustomViewDialogProps {
@@ -49,29 +56,82 @@ export interface CustomViewDialogProps {
   onClose: () => void;
 }
 
+function parseSingleCriterion(
+  leaf: { field: string; comparator: Comparator; value: unknown },
+  apiNameById: Map<string, string>,
+): CriterionDraft {
+  const fieldName = apiNameById.get(leaf.field) ?? leaf.field;
+  let valueStr = "";
+  if (leaf.value !== null && leaf.value !== undefined) {
+    if (typeof leaf.value === "object") {
+      valueStr = JSON.stringify(leaf.value);
+    } else {
+      valueStr = String(leaf.value);
+    }
+  }
+  return {
+    id: `crit-${fieldName}-${leaf.comparator}-${Math.random()}`,
+    field: fieldName,
+    comparator: leaf.comparator,
+    value: valueStr,
+    rawTypedValue: leaf.value,
+  };
+}
+
 function parseCriteriaDrafts(
   criteria: Criteria | null | undefined,
-  fieldMap: Map<string, string>,
-): CriterionDraft[] {
-  if (!criteria) return [];
+  apiNameById: Map<string, string>,
+): {
+  rows: CriterionDraft[];
+  groupOperator: "and" | "or";
+} {
+  if (!criteria) return { rows: [], groupOperator: "and" };
   if ("group" in criteria) {
-    return criteria.group.flatMap((c) => parseCriteriaDrafts(c, fieldMap));
+    const operator = criteria.groupOperator ?? "and";
+    const rows = criteria.group.flatMap((child) => {
+      if ("group" in child) {
+        return child.group.flatMap((g) => parseCriteriaDrafts(g, apiNameById).rows);
+      }
+      return [parseSingleCriterion(child, apiNameById)];
+    });
+    return { rows, groupOperator: operator };
   }
-  const fieldName = fieldMap.get(criteria.field) ?? criteria.field;
-  const valueStr =
-    criteria.value === null || criteria.value === undefined
-      ? ""
-      : typeof criteria.value === "object"
-        ? JSON.stringify(criteria.value)
-        : String(criteria.value);
-  return [
-    {
-      id: `crit-${fieldName}-${criteria.comparator}-${Math.random()}`,
-      field: fieldName,
-      comparator: criteria.comparator,
-      value: valueStr,
-    },
-  ];
+  return { rows: [parseSingleCriterion(criteria, apiNameById)], groupOperator: "and" };
+}
+
+function buildTypedValue(
+  row: CriterionDraft,
+  def?: FieldDefinition & { id?: string },
+): CriteriaValue {
+  if (row.comparator === "is_empty" || row.comparator === "is_not_empty") {
+    return null;
+  }
+  if (def?.dataType === "boolean") {
+    return row.value === "true" || row.value === "1" || row.rawTypedValue === true;
+  }
+  if (def && ["integer", "double", "currency", "percent", "bigint"].includes(def.dataType)) {
+    if (row.comparator === "between" || row.comparator === "not_between") {
+      if (Array.isArray(row.rawTypedValue) && row.value === row.rawTypedValue.join(", ")) {
+        return row.rawTypedValue as CriteriaValue;
+      }
+      return row.value.split(/,\s*/).map(Number);
+    }
+    return Number(row.value);
+  }
+  if (row.comparator === "between" || row.comparator === "not_between") {
+    if (Array.isArray(row.rawTypedValue) && row.value === row.rawTypedValue.join(", ")) {
+      return row.rawTypedValue as CriteriaValue;
+    }
+    return row.value.split(/,\s*/);
+  }
+  if (
+    typeof row.rawTypedValue === "object" &&
+    row.rawTypedValue !== null &&
+    (JSON.stringify(row.rawTypedValue) === row.value || row.value === "")
+  ) {
+    return row.rawTypedValue as CriteriaValue;
+  }
+  return row.value;
 }
 
 export function CustomViewDialog(props: CustomViewDialogProps) {
@@ -112,6 +172,14 @@ function CustomViewDialogContent({
     return map;
   }, [fields]);
 
+  const fieldByApiName = useMemo(() => {
+    const map = new Map<string, FieldDefinition & { id?: string }>();
+    for (const f of fields) {
+      map.set(f.apiName, f);
+    }
+    return map;
+  }, [fields]);
+
   const [name, setName] = useState(initial?.name ?? "");
   const [sharedTo, setSharedTo] = useState<"only_me" | "everyone">(
     initial?.sharedTo ?? (isAdmin ? "everyone" : "only_me"),
@@ -127,9 +195,16 @@ function CustomViewDialogContent({
   const [selectedColumns, setSelectedColumns] = useState<string[]>(initialColumns);
   const [columnSearch, setColumnSearch] = useState("");
 
-  const [criteriaRows, setCriteriaRows] = useState<CriterionDraft[]>(() =>
-    parseCriteriaDrafts(initial?.criteria, apiNameById),
+  const parsedCriteria = useMemo(
+    () => parseCriteriaDrafts(initial?.criteria, apiNameById),
+    [initial?.criteria, apiNameById],
   );
+
+  const [criteriaRows, setCriteriaRows] = useState<CriterionDraft[]>(parsedCriteria.rows);
+  const [groupOperator, setGroupOperator] = useState<"and" | "or">(parsedCriteria.groupOperator);
+
+  // Preserve existing sort configuration if present
+  const [sort] = useState<{ field: string; order: "asc" | "desc" } | null>(initial?.sort ?? null);
 
   const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -206,7 +281,7 @@ function CustomViewDialogContent({
     setPending(true);
     setError(null);
 
-    // Build criteria
+    // Build criteria with typed values and preserved group structure
     let criteria: Criteria | null = null;
     if (criteriaRows.length === 1 && criteriaRows[0]) {
       const row = criteriaRows[0];
@@ -214,15 +289,15 @@ function CustomViewDialogContent({
       criteria = {
         field: fieldRef,
         comparator: row.comparator as Comparator,
-        value: row.value,
+        value: buildTypedValue(row, fieldByApiName.get(row.field)),
       };
     } else if (criteriaRows.length > 1) {
       criteria = {
-        groupOperator: "and",
+        groupOperator,
         group: criteriaRows.map((row) => ({
           field: idByApiName.get(row.field) ?? row.field,
           comparator: row.comparator as Comparator,
-          value: row.value,
+          value: buildTypedValue(row, fieldByApiName.get(row.field)),
         })),
       };
     }
@@ -231,91 +306,77 @@ function CustomViewDialogContent({
     const columnIds = selectedColumns.map((c) => idByApiName.get(c) ?? c);
     const viewId = initial?.id ?? `view-${Date.now()}`;
 
-    // Admin saving shared view: write to /crm/v9/settings/custom_views
-    if (isAdmin && sharedTo === "everyone") {
-      const commandPayload =
-        mode === "create"
-          ? {
-              type: "view.create" as const,
-              view: {
-                id: viewId,
-                name: trimmedName,
-                systemDefined: false as const,
-                isDefault: false as const,
-                columns: columnIds,
-                criteria,
-                sort: null,
-              },
-            }
-          : {
-              type: "view.patch" as const,
-              view: {
-                id: viewId,
-                name: trimmedName,
-                systemDefined: false as const,
-                isDefault: false as const,
-                columns: columnIds,
-                criteria,
-                sort: null,
-              },
-            };
+    // Preserve sort by translating field name to stable ID if sort is present
+    let sortPayload: { field: string; order: "asc" | "desc" } | null = null;
+    if (sort) {
+      sortPayload = {
+        field: idByApiName.get(sort.field) ?? sort.field,
+        order: sort.order,
+      };
+    }
 
-      const res = await sendViewCommand(
-        orgSlug,
-        module,
-        mode === "create" ? "POST" : "PATCH",
-        expectedRevision,
-        commandPayload,
-        mode === "edit" ? viewId : undefined,
-      );
+    const commandPayload =
+      mode === "create"
+        ? {
+            type: "view.create" as const,
+            view: {
+              id: viewId,
+              name: trimmedName,
+              systemDefined: false as const,
+              isDefault: false as const,
+              columns: columnIds,
+              criteria,
+              sort: sortPayload,
+            },
+          }
+        : {
+            type: "view.patch" as const,
+            view: {
+              id: viewId,
+              name: trimmedName,
+              systemDefined: false as const,
+              isDefault: false as const,
+              columns: columnIds,
+              criteria,
+              sort: sortPayload,
+            },
+          };
 
-      setPending(false);
+    const res = await sendViewCommand(
+      orgSlug,
+      module,
+      mode === "create" ? "POST" : "PATCH",
+      expectedRevision,
+      commandPayload,
+      mode === "edit" ? viewId : undefined,
+    );
 
-      if (res.ok) {
-        const savedView: ListView = res.view ?? {
-          id: viewId,
-          name: trimmedName,
-          systemDefined: false,
-          isDefault: false,
-          columns: selectedColumns,
-          criteria,
-          sort: null,
-        };
-        onSave?.(savedView);
-        onClose();
-        return;
-      }
+    setPending(false);
 
-      if (res.fieldErrors) {
-        if (res.fieldErrors.view_field) {
-          setError(
-            `View references an inactive or unknown field: ${res.fieldErrors.view_field.join(", ")}`,
-          );
-        } else if (res.fieldErrors.view) {
-          setError("protected_view: system and default views are immutable.");
-        } else {
-          setError(res.message);
-        }
-      } else {
-        setError(res.message);
-      }
+    if (res.ok) {
+      const savedView: ListView = res.view ?? {
+        id: viewId,
+        name: trimmedName,
+        systemDefined: false,
+        isDefault: false,
+        columns: selectedColumns,
+        criteria,
+        sort,
+      };
+      onSave?.(savedView);
+      onClose();
       return;
     }
 
-    // Private view save (Member or Admin choosing "Only me")
-    const privateView: ListView = {
-      id: viewId,
-      name: trimmedName,
-      systemDefined: false,
-      isDefault: false,
-      columns: selectedColumns,
-      criteria,
-      sort: null,
-    };
-    savePrivateView(orgSlug, module, privateView);
-    setPending(false);
-    onSave?.(privateView);
-    onClose();
+    if (res.fieldErrors?.view_field && res.fieldErrors.view_field.length > 0) {
+      setError(
+        `View references an inactive or unknown field: ${res.fieldErrors.view_field.join(", ")}`,
+      );
+    } else if (res.fieldErrors?.view?.includes("protected_view")) {
+      setError("protected_view: system and default views are immutable.");
+    } else {
+      setError(res.message);
+    }
   }
 
   async function handleDelete() {
@@ -329,33 +390,25 @@ function CustomViewDialogContent({
     setPending(true);
     setError(null);
 
-    if (isAdmin && sharedTo === "everyone") {
-      const res = await sendViewCommand(
-        orgSlug,
-        module,
-        "DELETE",
-        expectedRevision,
-        { type: "view.delete" },
-        viewId,
-      );
-      setPending(false);
-      if (res.ok) {
-        onDelete?.(viewId);
-        onClose();
-        return;
-      }
-      if (res.fieldErrors?.view) {
-        setError("protected_view: system and default views are immutable.");
-      } else {
-        setError(res.message);
-      }
+    const res = await sendViewCommand(
+      orgSlug,
+      module,
+      "DELETE",
+      expectedRevision,
+      { type: "view.delete" },
+      viewId,
+    );
+    setPending(false);
+    if (res.ok) {
+      onDelete?.(viewId);
+      onClose();
       return;
     }
-
-    deletePrivateView(orgSlug, module, viewId);
-    setPending(false);
-    onDelete?.(viewId);
-    onClose();
+    if (res.fieldErrors?.view?.includes("protected_view")) {
+      setError("protected_view: system and default views are immutable.");
+    } else {
+      setError(res.message);
+    }
   }
 
   return (
@@ -423,6 +476,23 @@ function CustomViewDialogContent({
               </Button>
             </div>
 
+            {criteriaRows.length > 1 ? (
+              <div className="flex items-center gap-2 my-2 text-xs">
+                <span className="text-text-muted">Combine criteria using:</span>
+                <RadioGroup
+                  label="Combine criteria using"
+                  orientation="horizontal"
+                  value={groupOperator}
+                  onChange={(val) => setGroupOperator(val as "and" | "or")}
+                  isDisabled={isProtected || pending}
+                  options={[
+                    { value: "and", label: "Match all (AND)" },
+                    { value: "or", label: "Match any (OR)" },
+                  ]}
+                />
+              </div>
+            ) : null}
+
             {criteriaRows.length === 0 ? (
               <p className="text-sm text-text-muted">No criteria specified.</p>
             ) : (
@@ -456,7 +526,9 @@ function CustomViewDialogContent({
                         items={COMPARATOR_OPTIONS}
                         value={row.comparator}
                         isDisabled={isProtected || pending}
-                        onChange={(val) => updateCriterion(index, { comparator: String(val) })}
+                        onChange={(val) =>
+                          updateCriterion(index, { comparator: String(val) as Comparator })
+                        }
                       >
                         {(item) => <SelectItem id={item.value}>{item.label}</SelectItem>}
                       </Select>

@@ -8,7 +8,6 @@ import type {
   Criteria,
   FieldDefinition,
   ListResult,
-  ListView,
   ModuleApiName,
   ModuleMetadata,
   RecordData,
@@ -24,7 +23,6 @@ import { RecordBoard, type RecordBoardProps } from "@/components/records/board/r
 import { DeduplicateJob } from "@/components/records/deduplicate/dedup-job";
 import { writePrintListQuery } from "@/components/records/print/print-list-handoff";
 import { supportsListPrint } from "@/components/records/print/print-modules";
-import { getPrivateViews } from "@/components/records/views/custom-view-api";
 import { CustomViewDialog } from "@/components/records/views/custom-view-dialog";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
@@ -56,6 +54,7 @@ import {
   invalidateModuleLists,
   useDeleteRecords,
   useModule,
+  useModuleProjection,
   useRecordCount,
   useRecordList,
   useRefreshModuleListData,
@@ -63,6 +62,7 @@ import {
   useView,
   useViews,
 } from "@/lib/api/client/hooks";
+import { useClientRecordService } from "@/lib/api/client/provider";
 import { apiKeys } from "@/lib/api/client/query-keys";
 import {
   moduleDeduplicatePath,
@@ -305,32 +305,17 @@ function ModuleListScreenLoaded({
     mode: "create" | "edit";
     viewId?: string;
   } | null>(null);
-  const [privateViews, setPrivateViews] = useState<ListView[]>(() =>
-    typeof window !== "undefined" ? getPrivateViews(orgSlug, config.module) : [],
-  );
   const campaignsModule =
     config.module === "Leads" || config.module === "Contacts" ? config.module : null;
   const deleteRecords = useDeleteRecords(config.module);
 
   const viewsQuery = useViews(config.module);
   const moduleQuery = useModule(config.module);
+  const projectionQuery = useModuleProjection(config.module);
   const viewQuery = useView(config.module, viewId);
   const users = useUsers();
-  const privateView = useMemo(
-    () => privateViews.find((v) => v.id === viewId),
-    [privateViews, viewId],
-  );
-  const view = viewQuery.data ?? privateView;
-  const combinedViews = useMemo(() => {
-    const list = [...(viewsQuery.data ?? [])];
-    const serverIds = new Set(list.map((v) => v.id));
-    for (const pv of privateViews) {
-      if (!serverIds.has(pv.id)) {
-        list.push({ id: pv.id, name: pv.name, systemDefined: false, isDefault: false });
-      }
-    }
-    return list;
-  }, [viewsQuery.data, privateViews]);
+  const service = useClientRecordService();
+  const view = viewQuery.data;
 
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [selectedColumns, setSelectedColumns] = useState<{
@@ -687,10 +672,10 @@ function ModuleListScreenLoaded({
     (viewQuery.isLoading && !view) ||
     (listQuery !== null && list.isLoading && !list.data);
 
-  if (!privateView && viewQuery.isError && viewQuery.error instanceof NotFoundError) {
+  if (viewQuery.isError && viewQuery.error instanceof NotFoundError) {
     return <ListNotFound />;
   }
-  if (!privateView && viewQuery.isError && !(viewQuery.error instanceof NotFoundError)) {
+  if (viewQuery.isError && !(viewQuery.error instanceof NotFoundError)) {
     throw viewQuery.error;
   }
   if (list.isError && list.error instanceof NotFoundError) {
@@ -886,7 +871,7 @@ function ModuleListScreenLoaded({
     >
       <ViewTabStrip
         viewName={view.name}
-        views={config.inventory ? combinedViews : undefined}
+        views={config.inventory ? viewsQuery.data : undefined}
         pinnedViews={config.pinnedViews}
         searchable={config.viewMenuSearch}
         onViewChange={(id) => {
@@ -897,7 +882,11 @@ function ModuleListScreenLoaded({
           );
         }}
         onNewView={() => setCustomViewModal({ open: true, mode: "create" })}
-        onEditView={(id) => setCustomViewModal({ open: true, mode: "edit", viewId: id })}
+        onEditView={
+          view && !view.systemDefined && !view.isDefault
+            ? (id) => setCustomViewModal({ open: true, mode: "edit", viewId: id })
+            : undefined
+        }
       />
       {selectionActive && presentation === "table" ? (
         <SelectionBar
@@ -1071,29 +1060,41 @@ function ModuleListScreenLoaded({
           module={config.module}
           orgSlug={orgSlug}
           isAdmin={isAdmin}
-          expectedRevision={(moduleQuery.data as unknown as { revision?: string })?.revision ?? ""}
+          expectedRevision={projectionQuery.data?.revision ?? ""}
           initial={customViewModal.mode === "edit" ? view : undefined}
-          fields={moduleQuery.data?.fields ?? []}
+          fields={projectionQuery.data?.fields ?? moduleQuery.data?.fields ?? []}
           onClose={() => setCustomViewModal(null)}
           onSave={(savedView) => {
+            service.invalidate?.(config.module);
+            void queryClient.invalidateQueries({
+              queryKey: apiKeys.module(orgSlug, config.module),
+            });
             void queryClient.invalidateQueries({ queryKey: apiKeys.views(orgSlug, config.module) });
             void queryClient.invalidateQueries({
               queryKey: apiKeys.view(orgSlug, config.module, savedView.id),
             });
-            setPrivateViews(getPrivateViews(orgSlug, config.module));
+            void queryClient.invalidateQueries({
+              queryKey: apiKeys.moduleProjection(orgSlug, config.module),
+            });
+            invalidateModuleLists(queryClient, orgSlug, config.module);
             setCustomViewModal(null);
             if (customViewModal.mode === "create") {
               router.push(config.paths.customList(orgSlug, config.module, savedView.id));
-            } else {
-              invalidateModuleLists(queryClient, orgSlug, config.module);
             }
           }}
           onDelete={(deletedId) => {
+            service.invalidate?.(config.module);
+            void queryClient.invalidateQueries({
+              queryKey: apiKeys.module(orgSlug, config.module),
+            });
             void queryClient.invalidateQueries({ queryKey: apiKeys.views(orgSlug, config.module) });
             void queryClient.invalidateQueries({
               queryKey: apiKeys.view(orgSlug, config.module, deletedId),
             });
-            setPrivateViews(getPrivateViews(orgSlug, config.module));
+            void queryClient.invalidateQueries({
+              queryKey: apiKeys.moduleProjection(orgSlug, config.module),
+            });
+            invalidateModuleLists(queryClient, orgSlug, config.module);
             setCustomViewModal(null);
             if (deletedId === viewId) {
               router.push(config.paths.defaultList(orgSlug, config.module));

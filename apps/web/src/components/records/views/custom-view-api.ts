@@ -33,7 +33,7 @@ export interface CustomViewCommandPayload {
 }
 
 export type ViewApiResult =
-  | { ok: true; revision: string; view?: ListView }
+  | { ok: true; revision: string; viewId?: string; view?: ListView }
   | {
       ok: false;
       stale: boolean;
@@ -41,6 +41,47 @@ export type ViewApiResult =
       message: string;
       fieldErrors?: Record<string, string[]>;
     };
+
+export interface ModuleFieldMeta {
+  id: string;
+  apiName: string;
+  label: string;
+  dataType: string;
+}
+
+/** Fetches real effective fields with stable IDs and current revision from settings. */
+export async function fetchModuleFieldsAndRevision(
+  orgSlug: string,
+  module: string,
+): Promise<{
+  revision: string;
+  fields: ModuleFieldMeta[];
+}> {
+  const res = await fetch(`/crm/v2.2/settings/fields?module=${encodeURIComponent(module)}`, {
+    headers: { "X-CRM-ORG": orgSlug },
+  });
+  if (!res.ok) {
+    throw new Error(`Failed to load fields for module ${module}`);
+  }
+  const body = (await res.json().catch(() => ({}))) as {
+    revision?: string;
+    fields?: Array<{
+      id: string;
+      api_name: string;
+      field_label: string;
+      data_type: string;
+    }>;
+  };
+  return {
+    revision: body.revision ?? "",
+    fields: (body.fields ?? []).map((f) => ({
+      id: f.id,
+      apiName: f.api_name,
+      label: f.field_label,
+      dataType: f.data_type,
+    })),
+  };
+}
 
 /** Sends one revisioned view customization command to the existing view routes. */
 export async function sendViewCommand(
@@ -79,16 +120,24 @@ export async function sendViewCommand(
       return {
         ok: true,
         revision: body.revision ?? "",
+        viewId: "view" in command ? command.view.id : viewId,
         view: body.custom_views?.[0],
       };
     }
 
-    if (res.status === 403 || body.code === "NO_PERMISSION") {
+    if (
+      res.status === 403 ||
+      body.code === "AUTHENTICATION_FAILURE" ||
+      body.code === "NO_PERMISSION"
+    ) {
       return {
         ok: false,
         stale: false,
         forbidden: true,
-        message: body.message ?? "Only administrators can customize shared views.",
+        message:
+          body.message && body.message !== "Forbidden"
+            ? body.message
+            : "Only administrators can customize organization views.",
       };
     }
 
@@ -103,10 +152,16 @@ export async function sendViewCommand(
     }
 
     const fieldErrors = body.details?.fields;
-    const detailList = fieldErrors
-      ? Object.values(fieldErrors).flatMap((val) => (Array.isArray(val) ? val : []))
-      : [];
-    const message = body.message ?? detailList[0] ?? "The view could not be saved.";
+    let message = body.message ?? "The view could not be saved.";
+
+    if (fieldErrors?.view?.includes("protected_view")) {
+      message = "protected_view: system and default views are immutable.";
+    } else if (fieldErrors?.view_field && fieldErrors.view_field.length > 0) {
+      const offending = fieldErrors.view_field[0];
+      message = `View references an inactive or unknown field: ${offending}.`;
+    } else if (fieldErrors?.customization && fieldErrors.customization.length > 0) {
+      message = fieldErrors.customization[0] ?? message;
+    }
 
     return {
       ok: false,
@@ -122,55 +177,5 @@ export async function sendViewCommand(
       forbidden: false,
       message: "The view could not be saved.",
     };
-  }
-}
-
-const STORAGE_PREFIX = "crm:private_views";
-
-function storageKey(orgSlug: string, module: string): string {
-  return `${STORAGE_PREFIX}:${orgSlug}:${module}`;
-}
-
-export function getPrivateViews(orgSlug: string, module: string): ListView[] {
-  try {
-    const raw =
-      typeof window !== "undefined" ? localStorage.getItem(storageKey(orgSlug, module)) : null;
-    if (!raw) return [];
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
-
-export function savePrivateView(orgSlug: string, module: string, view: ListView): ListView {
-  const views = getPrivateViews(orgSlug, module);
-  const existingIndex = views.findIndex((v) => v.id === view.id);
-  const updatedView = { ...view, systemDefined: false, isDefault: false };
-  let nextViews: ListView[];
-  if (existingIndex >= 0) {
-    nextViews = [...views];
-    nextViews[existingIndex] = updatedView;
-  } else {
-    nextViews = [...views, updatedView];
-  }
-  try {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(storageKey(orgSlug, module), JSON.stringify(nextViews));
-    }
-  } catch {
-    // fallback
-  }
-  return updatedView;
-}
-
-export function deletePrivateView(orgSlug: string, module: string, viewId: string): void {
-  const views = getPrivateViews(orgSlug, module);
-  const nextViews = views.filter((v) => v.id !== viewId);
-  try {
-    if (typeof window !== "undefined") {
-      localStorage.setItem(storageKey(orgSlug, module), JSON.stringify(nextViews));
-    }
-  } catch {
-    // fallback
   }
 }
