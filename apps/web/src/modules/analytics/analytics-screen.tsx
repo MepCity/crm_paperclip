@@ -54,7 +54,7 @@ export function AnalyticsScreen({
             variant="recordSelector"
             aria-label="All"
             aria-disabled="true"
-            className="h-8 gap-2 px-3 text-sm font-medium"
+            className="h-8 gap-2 px-3 text-sm"
           >
             <span>All</span>
             <Icons.chevronDown className="size-3.5" aria-hidden />
@@ -127,7 +127,7 @@ export function AnalyticsScreen({
             variant="recordSecondary"
             size="toolbar"
             aria-disabled="true"
-            className="h-8 text-xs font-medium"
+            className="h-8 text-xs font-semibold"
           >
             Add Component
           </Button>

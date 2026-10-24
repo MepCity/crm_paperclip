@@ -291,7 +291,7 @@ export function ProlificRepsContent({ data }: { data: ProlificRepsCardData }) {
         <tbody>
           {reps.map((rep) => (
             <tr key={rep.name} className="border-b border-border/40 last:border-b-0">
-              <td className="py-2 text-text font-medium">
+              <td className="py-2 text-text">
                 {rep.rank}. {rep.name}
               </td>
               <td className="py-2 text-right font-semibold text-text">{rep.amount}</td>
