@@ -1,7 +1,8 @@
 import type { CustomizationCommand } from "@crm/core/customization";
 import { ForbiddenError } from "@crm/core/errors";
 import { invalid } from "./codec";
-import { bodyOf, type Operation } from "./operations";
+import type { Operation } from "./operations";
+import { bodyOf } from "./request-body";
 
 function mutation(
   method: Operation["method"],
