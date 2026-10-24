@@ -1,23 +1,30 @@
-import type { AutomationPort } from "@crm/core/automation";
 import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { render } from "@/test/render";
-import { createSyntheticWorkflowRulesPort, leadWelcomeRule } from "./fixtures";
+import { leadWelcomeRule } from "../automation/synthetic-workflow-fixture";
 import { WorkflowRuleDetailScreen } from "./workflow-rule-detail-screen";
 import { WorkflowRulesListScreen } from "./workflow-rules-list-screen";
+import { WorkflowRulesLoading } from "./workflow-rules-loading";
 
 afterEach(cleanup);
+const result = { ok: true, value: { items: [leadWelcomeRule], nextCursor: null } } as const;
+const triggerResults = { [leadWelcomeRule.id]: { ok: true, value: leadWelcomeRule } } as const;
+
+async function activateLink(user: ReturnType<typeof userEvent.setup>, link: HTMLElement) {
+  expect(document.activeElement).toBe(link);
+  const activate = vi.fn((event: Event) => event.preventDefault());
+  link.addEventListener("click", activate);
+  await user.keyboard("{Enter}");
+  expect(activate).toHaveBeenCalledOnce();
+}
 
 it("exposes table headers and tabs from the module filter to the rule link", async () => {
   const user = userEvent.setup();
   render(
-    <WorkflowRulesListScreen
-      orgSlug="synthetic"
-      port={createSyntheticWorkflowRulesPort([leadWelcomeRule])}
-    />,
+    <WorkflowRulesListScreen orgSlug="synthetic" result={result} triggerResults={triggerResults} />,
   );
-  const table = await screen.findByRole("table", { name: "Workflow rules table" });
+  const table = screen.getByRole("table", { name: "Workflow rules table" });
   expect(within(table).getAllByRole("row")).toHaveLength(2);
   expect(
     within(table)
@@ -29,37 +36,33 @@ it("exposes table headers and tabs from the module filter to the rule link", asy
   expect(document.activeElement).toBe(filter);
   await user.keyboard("{Escape}");
   expect(document.activeElement).toBe(filter);
-  await user.selectOptions(filter, "Leads");
-  const link = await screen.findByRole("link", { name: leadWelcomeRule.name });
   await user.tab();
-  expect(document.activeElement).toBe(link);
+  const link = screen.getByRole("link", { name: leadWelcomeRule.name });
   expect(link.getAttribute("href")).toContain(leadWelcomeRule.id);
-  const activate = vi.fn((event: Event) => event.preventDefault());
-  link.addEventListener("click", activate);
-  await user.keyboard("{Enter}");
-  expect(activate).toHaveBeenCalledOnce();
+  await activateLink(user, link);
 });
 
-it.each(["{Enter}", " "])("activates the named trigger retry with %s", async (key) => {
+it("activates the named trigger retry GET link with Enter", async () => {
   const user = userEvent.setup();
-  const get = vi.fn<AutomationPort["get"]>().mockResolvedValue({
-    ok: false,
-    error: { code: "unavailable" },
-  });
-  const port: AutomationPort = {
-    list: async () => ({ ok: true, value: { items: [leadWelcomeRule], nextCursor: null } }),
-    get,
-  };
-  render(<WorkflowRulesListScreen orgSlug="synthetic" port={port} />);
-  const retry = await screen.findByRole("button", {
+  render(
+    <WorkflowRulesListScreen
+      orgSlug="synthetic"
+      result={result}
+      triggerResults={{}}
+      module="Leads"
+      cursor="current"
+    />,
+  );
+  const retry = screen.getByRole("link", {
     name: `Retry loading trigger for ${leadWelcomeRule.name}`,
   });
+  expect(retry.getAttribute("href")).toBe(
+    "/crm/synthetic/settings/workflow-rules?module=Leads&cursor=current",
+  );
   await user.tab();
   await user.tab();
   await user.tab();
-  expect(document.activeElement).toBe(retry);
-  await user.keyboard(key);
-  expect(get).toHaveBeenCalledTimes(2);
+  await activateLink(user, retry);
 });
 
 it("provides one detail h1, ordered section headings and a keyboard back link", async () => {
@@ -68,7 +71,7 @@ it("provides one detail h1, ordered section headings and a keyboard back link", 
     <WorkflowRuleDetailScreen
       orgSlug="synthetic"
       ruleId={leadWelcomeRule.id}
-      initialResult={{ ok: true, value: leadWelcomeRule }}
+      result={{ ok: true, value: leadWelcomeRule }}
     />,
   );
   expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
@@ -77,78 +80,81 @@ it("provides one detail h1, ordered section headings and a keyboard back link", 
   expect(screen.getByRole("heading", { level: 2, name: "Condition Branches" })).toBeTruthy();
   expect(screen.getByRole("heading", { level: 3, name: "Immediate Actions" })).toBeTruthy();
   await user.tab();
-  expect(document.activeElement).toBe(screen.getByRole("link", { name: "Back to Workflow Rules" }));
+  await activateLink(user, screen.getByRole("link", { name: "Back to Workflow Rules" }));
 });
 
-it("keeps one detail heading in a failed read", () => {
+it.each(["forbidden", "not_found", "unavailable"] as const)(
+  "keeps one detail heading for %s",
+  (code) => {
+    render(
+      <WorkflowRuleDetailScreen
+        orgSlug="synthetic"
+        ruleId="missing"
+        result={{ ok: false, error: { code } }}
+      />,
+    );
+    expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
+  },
+);
+
+it("keeps one detail heading during server navigation", () => {
+  render(<WorkflowRulesLoading orgSlug="synthetic" />);
+  expect(screen.getByRole("heading", { level: 1, name: "Workflow Rule Details" })).toBeTruthy();
+  expect(screen.getByRole("status")).toBeTruthy();
+});
+
+it("activates the next-page GET link after the last row link", async () => {
+  const user = userEvent.setup();
   render(
-    <WorkflowRuleDetailScreen
+    <WorkflowRulesListScreen
       orgSlug="synthetic"
-      ruleId="missing"
-      initialResult={{ ok: false, error: { code: "not_found" } }}
+      result={{ ok: true, value: { items: [leadWelcomeRule], nextCursor: "next" } }}
+      triggerResults={triggerResults}
+      module="Leads"
     />,
   );
-  expect(screen.getAllByRole("heading", { level: 1 })).toHaveLength(1);
-});
-
-it.each(["{Enter}", " "])("pages through rules with %s after the last row link", async (key) => {
-  const user = userEvent.setup();
-  const list = vi
-    .fn<AutomationPort["list"]>()
-    .mockResolvedValueOnce({ ok: true, value: { items: [leadWelcomeRule], nextCursor: "next" } })
-    .mockResolvedValue({ ok: true, value: { items: [], nextCursor: null } });
-  const port: AutomationPort = { list, get: async () => ({ ok: true, value: leadWelcomeRule }) };
-  render(<WorkflowRulesListScreen orgSlug="synthetic" port={port} />);
-  const next = await screen.findByRole("button", { name: "Next page" });
-  await user.tab();
-  await user.tab();
-  await user.tab();
-  expect(document.activeElement).toBe(next);
-  await user.keyboard(key);
-  await screen.findByText("No workflow rules have been configured yet.");
-  expect(list).toHaveBeenLastCalledWith(
-    expect.anything(),
-    expect.objectContaining({ cursor: "next" }),
+  const next = screen.getByRole("link", { name: "Next page" });
+  expect(next.getAttribute("href")).toBe(
+    "/crm/synthetic/settings/workflow-rules?module=Leads&cursor=next",
   );
+  await user.tab();
+  await user.tab();
+  await user.tab();
+  await activateLink(user, next);
 });
 
 it.each(["list", "detail"] as const)(
-  "retries an unavailable %s read from the keyboard",
+  "retries an unavailable %s read with a keyboard GET link",
   async (view) => {
     const user = userEvent.setup();
     const unavailable = { ok: false, error: { code: "unavailable" } } as const;
-    const list = vi.fn<AutomationPort["list"]>().mockResolvedValue({
-      ok: true,
-      value: { items: [], nextCursor: null },
-    });
-    const get = vi
-      .fn<AutomationPort["get"]>()
-      .mockResolvedValue({ ok: true, value: leadWelcomeRule });
-    const port = { list, get };
     if (view === "list") {
       render(
-        <WorkflowRulesListScreen orgSlug="synthetic" port={port} initialResult={unavailable} />,
+        <WorkflowRulesListScreen
+          orgSlug="synthetic"
+          result={unavailable}
+          triggerResults={{}}
+          module="Leads"
+          cursor="current"
+        />,
       );
     } else {
       render(
         <WorkflowRuleDetailScreen
           orgSlug="synthetic"
           ruleId={leadWelcomeRule.id}
-          port={port}
-          initialResult={unavailable}
+          result={unavailable}
         />,
       );
     }
+    const retry = screen.getByRole("link", { name: "Retry" });
+    expect(retry.getAttribute("href")).toBe(
+      view === "list"
+        ? "/crm/synthetic/settings/workflow-rules?module=Leads&cursor=current"
+        : `/crm/synthetic/settings/workflow-rules/${leadWelcomeRule.id}`,
+    );
     await user.tab();
     await user.tab();
-    expect(document.activeElement).toBe(screen.getByRole("button", { name: "Retry" }));
-    await user.keyboard("{Enter}");
-    if (view === "list") {
-      await screen.findByText("No workflow rules have been configured yet.");
-      expect(list).toHaveBeenCalledOnce();
-    } else {
-      await screen.findByRole("heading", { level: 1, name: leadWelcomeRule.name });
-      expect(get).toHaveBeenCalledOnce();
-    }
+    await activateLink(user, retry);
   },
 );
