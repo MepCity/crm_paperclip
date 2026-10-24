@@ -1,7 +1,4 @@
-import { useFormat } from "@/lib/format-context";
-import { numberInputLocale } from "@/lib/locale";
-
-("use client");
+"use client";
 
 import type {
   FieldDefinition,
@@ -26,6 +23,8 @@ import { TextArea } from "@/components/ui/text-area";
 import { TextCalendarField } from "@/components/ui/text-calendar-field";
 import { TextField, type TextFieldProps } from "@/components/ui/text-field";
 import type { ClientRecordService } from "@/lib/api/client/provider";
+import { useFormat } from "@/lib/format-context";
+import { numberInputLocale } from "@/lib/locale";
 import {
   calendarShapeToDisplayDate,
   DATE_MASK_PLACEHOLDER,

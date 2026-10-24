@@ -1,8 +1,7 @@
-import type { FormatOptions } from "@crm/core/format";
-
-("use client");
+"use client";
 
 import { NotFoundError, ValidationError } from "@crm/core/errors";
+import type { FormatOptions } from "@crm/core/format";
 import type {
   ActivityFilterValue,
   CampaignFilterValue,
