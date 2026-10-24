@@ -57,7 +57,7 @@ describe("accountsRelatedLists definition", () => {
       { order: 12, id: "invoices", title: "Invoices", moduleKey: "P2" },
       { order: 13, id: "member-accounts", title: "Member Accounts", moduleKey: "M3" },
       { order: 14, id: "cases", title: "Cases", moduleKey: "M3" },
-      { order: 15, id: "social", title: "Social", moduleKey: "M15" },
+      { order: 15, id: "social", title: "Social", moduleKey: "M2" },
     ];
 
     expectedOrder.forEach((expected, i) => {
@@ -416,5 +416,10 @@ describe("RecordPageFrame with Accounts rail metadata", () => {
     const productsLink = within(rail).getByRole("link", { name: "Products" });
     expect(productsLink.getAttribute("data-later-module")).toBe("P2");
     expect(productsLink.getAttribute("aria-disabled")).toBe("true");
+
+    // 4. The Social rail row is unlocked and scrolls to its card (MEP-1351)
+    const socialLink = within(rail).getByRole("link", { name: "Social" });
+    expect(socialLink.getAttribute("data-later-module")).toBeNull();
+    expect(socialLink.getAttribute("aria-disabled")).toBeNull();
   });
 });

@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useEffect, useRef } from "react";
 import { Disclosure } from "@/components/ui/disclosure";
 import { Link } from "@/components/ui/link";
 import {
@@ -27,8 +28,22 @@ function NavigationLink({
 }) {
   const IconComponent = link.icon;
   const active = isNavLinkActive(link, orgSlug, pathname);
+  const linkRef = useRef<HTMLAnchorElement>(null);
+
+  useEffect(() => {
+    if (active && linkRef.current) {
+      const el = linkRef.current;
+      el.scrollIntoView?.({ block: "center", inline: "nearest" });
+      const timer = setTimeout(() => {
+        el.scrollIntoView?.({ block: "center", inline: "nearest" });
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [active]);
+
   return (
     <Link
+      ref={linkRef}
       href={link.href(orgSlug)}
       variant={nested ? "railNested" : "rail"}
       aria-current={active ? "page" : undefined}

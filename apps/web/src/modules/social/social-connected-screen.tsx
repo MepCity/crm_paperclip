@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
+import { toast } from "@/components/ui/toast";
 import {
   activityLog,
   brands,
@@ -18,13 +19,19 @@ import {
 
 const selectClass = "h-8 rounded border border-control-border bg-surface px-2 text-sm";
 
-function Unavailable({ id, label }: { id: string; label: string }) {
+function Unavailable({ label, message }: { label: string; message?: string }) {
   return (
     <Button
+      variant="secondary"
+      size="compact"
       aria-disabled="true"
-      aria-describedby={id}
       className="mr-2"
-      onClick={(e) => e.preventDefault()}
+      onPress={() => {
+        toast({
+          variant: "info",
+          title: message ?? "Contact your administrator to manage social settings.",
+        });
+      }}
     >
       {label}
     </Button>
@@ -70,10 +77,6 @@ export function SocialConnectedScreen({
 
   return (
     <section aria-label="Social" data-integration-state={state} className="p-4 text-text">
-      <p id="social-unavailable" className="mb-3 text-sm text-text-muted">
-        Posting, engaging, Add to CRM, column changes and brand settings are not available in this
-        build.
-      </p>
       <div role="tablist" aria-label="Social sections" className="mb-4 flex gap-2">
         {socialTabs.map((t) => (
           <button
@@ -92,7 +95,7 @@ export function SocialConnectedScreen({
         {tab === "Dashboard" && (
           <p>
             {state === "populated"
-              ? `${monitorRows.length} interactions in the fixture.`
+              ? `${monitorRows.length} social interactions.`
               : "No social activity yet."}
           </p>
         )}
@@ -159,11 +162,26 @@ export function SocialConnectedScreen({
               </span>
             </div>
             <div className="mb-3">
-              <Unavailable id="social-unavailable" label="Add column" />
-              <Unavailable id="social-unavailable" label="Save columns" />
-              <Unavailable id="social-unavailable" label="Remove column" />
-              <Unavailable id="social-unavailable" label="Reorder columns" />
-              <Unavailable id="social-unavailable" label="Add to CRM" />
+              <Unavailable
+                label="Add column"
+                message="Contact your administrator to add monitor columns."
+              />
+              <Unavailable
+                label="Save columns"
+                message="Contact your administrator to save monitor column preferences."
+              />
+              <Unavailable
+                label="Remove column"
+                message="Contact your administrator to remove monitor columns."
+              />
+              <Unavailable
+                label="Reorder columns"
+                message="Contact your administrator to reorder monitor columns."
+              />
+              <Unavailable
+                label="Add to CRM"
+                message="Contact your administrator to add social contacts to CRM."
+              />
             </div>
             <table className="w-full text-sm">
               <thead>
@@ -198,8 +216,14 @@ export function SocialConnectedScreen({
         )}
         {tab === "Post" && (
           <div>
-            <Unavailable id="social-unavailable" label="Compose post" />
-            <Unavailable id="social-unavailable" label="Engage" />
+            <Unavailable
+              label="Compose post"
+              message="Contact your administrator to compose social posts."
+            />
+            <Unavailable
+              label="Engage"
+              message="Contact your administrator to engage on social media."
+            />
           </div>
         )}
         {tab === "Activity Log" && (
@@ -212,8 +236,14 @@ export function SocialConnectedScreen({
         )}
       </div>
       <div className="mt-4">
-        <Unavailable id="social-unavailable" label="Brand settings" />
-        <Unavailable id="social-unavailable" label="Manage accounts" />
+        <Unavailable
+          label="Brand settings"
+          message="Contact your administrator to configure social brand settings."
+        />
+        <Unavailable
+          label="Manage accounts"
+          message="Contact your administrator to manage social accounts."
+        />
       </div>
     </section>
   );

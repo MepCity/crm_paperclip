@@ -10,14 +10,14 @@ afterEach(() => {
 });
 
 describe("Social entry", () => {
-  it("shows a disconnected introduction and leaves setup inert by pointer and keyboard", async () => {
+  it("shows a disconnected introduction without developer text and leaves setup inert without requests", async () => {
     const request = vi.fn();
     vi.stubGlobal("fetch", request);
     const user = userEvent.setup();
     render(<SocialEntryScreen />);
     const setup = screen.getByRole("button", { name: "Let's Get Started" });
-    expect(setup.getAttribute("aria-disabled")).toBe("true");
-    expect(screen.getByText(/Setup is not available in this build/)).toBeTruthy();
+    expect(screen.queryByText(/Setup is not available in this build/)).toBeNull();
+    expect(screen.queryByText(/Integration not connected/)).toBeNull();
     expect(screen.queryByRole("table")).toBeNull();
     await user.click(setup);
     setup.focus();
