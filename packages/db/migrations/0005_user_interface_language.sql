@@ -1,0 +1,2 @@
+ALTER TABLE "users" ADD COLUMN "ui_language" text DEFAULT 'en' NOT NULL;--> statement-breakpoint
+ALTER TABLE "users" ADD CONSTRAINT "users_ui_language_check" CHECK ("users"."ui_language" in ('en', 'tr'));

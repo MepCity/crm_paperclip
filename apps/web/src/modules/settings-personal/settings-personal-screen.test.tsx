@@ -33,12 +33,16 @@ describe("SettingsPersonalScreen", () => {
     expect(document.querySelectorAll("[data-locale-row]")).toHaveLength(7);
   });
 
-  it("keeps editors inert and Accessibility tab disabled", async () => {
+  it("enables locale editing while keeping unrelated settings inert", async () => {
     render(<SettingsPersonalScreen user={user} />);
     await screen.findByText("Locale Information");
     expect(screen.getByRole("tab", { name: "Accessibility" })).toHaveProperty("disabled", true);
-    for (const n of ["Edit profile", "Edit locale information", "Add group"])
+    for (const n of ["Edit profile", "Add group"])
       expect(screen.getByRole("button", { name: n })).toHaveProperty("disabled", true);
+    expect(screen.getByRole("button", { name: "Edit locale information" })).toHaveProperty(
+      "disabled",
+      false,
+    );
     expect(screen.getByLabelText("Name Format")).toHaveProperty("disabled", true);
     expect(screen.getByLabelText("Sort order")).toHaveProperty("disabled", true);
     expect(screen.getByLabelText("Email value")).toHaveProperty("disabled", true);

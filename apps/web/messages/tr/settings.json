@@ -1,0 +1,14 @@
+{
+  "locale": "Lokalizasyon Bilgisi",
+  "language": "Dil",
+  "editLocale": "Lokalizasyon bilgisini düzenle",
+  "saveError": "Dil kaydedilemedi. Lütfen yeniden deneyin.",
+  "loadError": "Kişisel ayarlar yüklenemedi.",
+  "loading": "Kişisel ayarlar yükleniyor…",
+  "countryLocale": "Ülke Yerel Ayarı",
+  "dateFormat": "Tarih Biçimi",
+  "timeFormat": "Saat Biçimi",
+  "timeZone": "Zaman Dilimi",
+  "distanceUnit": "Mesafe için Tercih Edilen Birim",
+  "numberFormat": "Sayı Biçimi"
+}
