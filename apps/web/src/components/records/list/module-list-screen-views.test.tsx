@@ -1,3 +1,4 @@
+import type { ModuleApiName, RecordService } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { cleanup, render, screen, waitFor, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
@@ -99,18 +100,18 @@ describe("ModuleListScreen Custom View Dialog Integration", () => {
     });
     const service = {
       ...baseService,
-      listViewSummaries: async (m: any) => [
+      listViewSummaries: async (m: ModuleApiName) => [
         ...(await records.listViews(m)),
         { id: customView.id, name: customView.name, systemDefined: false, isDefault: false },
       ],
-      getView: async (m: any, id: string) =>
+      getView: async (m: ModuleApiName, id: string) =>
         id === customView.id ? customView : records.getView(m, id),
-      list: async (m: any, q: any) =>
-        q?.viewId === customView.id
+      list: async (m: ModuleApiName, q: Parameters<RecordService["list"]>[1]) =>
+        q.viewId === customView.id
           ? records.list(m, { ...q, viewId: "all-contacts" })
           : records.list(m, q),
-      count: async (m: any, q: any) =>
-        q?.viewId === customView.id
+      count: async (m: ModuleApiName, q: Parameters<RecordService["count"]>[1]) =>
+        q.viewId === customView.id
           ? records.count(m, { ...q, viewId: "all-contacts" })
           : records.count(m, q),
     };
