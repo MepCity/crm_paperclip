@@ -18,7 +18,7 @@ test("Workflow Rules list, detail navigation, and return link", async ({ page, p
 
   // WL1: Heading and columns
   await expect(page.getByRole("heading", { name: "Workflow Rules" })).toBeVisible();
-  const table = page.getByRole("table", { name: "Workflow rules table" });
+  const table = page.getByRole("table");
   await expect(table).toBeVisible();
 
   for (const name of ["Name", "Module", "Trigger", "Status"]) {

@@ -2,7 +2,7 @@
 
 import type { AutomationPort, ReadResult, RulePage, WorkflowRule } from "@crm/core/automation";
 import type { ModuleApiName, OrgContext } from "@crm/core/records";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
@@ -40,11 +40,14 @@ export function WorkflowRulesListScreen({
   initialResult,
   port,
 }: WorkflowRulesListScreenProps) {
-  const activePort = port ?? createSyntheticWorkflowRulesPort();
+  const activePort = useMemo(() => port ?? createSyntheticWorkflowRulesPort(), [port]);
   const [selectedModule, setSelectedModule] = useState<string>("all");
   const [result, setResult] = useState<ReadResult<RulePage> | null>(initialResult ?? null);
   const [loading, setLoading] = useState<boolean>(!initialResult);
   const [cursor, setCursor] = useState<string | undefined>(undefined);
+
+  // Track which rules have had triggers requested
+  const requestedTriggers = useRef<Set<string>>(new Set());
 
   // Trigger summaries fetched asynchronously per rule (WL4)
   const [triggers, setTriggers] = useState<
@@ -120,25 +123,29 @@ export function WorkflowRulesListScreen({
   useEffect(() => {
     if (result?.ok) {
       for (const item of result.value.items) {
-        if (!triggers[item.id]) {
+        if (!requestedTriggers.current.has(item.id)) {
+          requestedTriggers.current.add(item.id);
           loadTrigger(item.id);
         }
       }
     }
-  }, [result, loadTrigger, triggers]);
+  }, [result, loadTrigger]);
 
   const handleModuleChange = (newModule: string) => {
+    requestedTriggers.current.clear();
     setSelectedModule(newModule);
     setCursor(undefined);
   };
 
   const handleNextPage = () => {
     if (result?.ok && result.value.nextCursor) {
+      requestedTriggers.current.clear();
       setCursor(result.value.nextCursor);
     }
   };
 
   const handleRetryList = () => {
+    requestedTriggers.current.clear();
     fetchRules(selectedModule, cursor);
   };
 

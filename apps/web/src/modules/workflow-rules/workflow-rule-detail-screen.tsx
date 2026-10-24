@@ -2,7 +2,7 @@
 
 import type { AutomationPort, ReadResult, WorkflowRule } from "@crm/core/automation";
 import type { OrgContext } from "@crm/core/records";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
@@ -32,7 +32,7 @@ export function WorkflowRuleDetailScreen({
   initialResult,
   port,
 }: WorkflowRuleDetailScreenProps) {
-  const activePort = port ?? createSyntheticWorkflowRulesPort();
+  const activePort = useMemo(() => port ?? createSyntheticWorkflowRulesPort(), [port]);
   const [result, setResult] = useState<ReadResult<WorkflowRule> | null>(initialResult ?? null);
   const [loading, setLoading] = useState<boolean>(!initialResult);
 
@@ -59,11 +59,15 @@ export function WorkflowRuleDetailScreen({
     }
   }, [activePort, ctx, ruleId]);
 
+  const initialFetchSkipped = useRef(Boolean(initialResult));
+
   useEffect(() => {
-    if (!initialResult) {
-      fetchRule();
+    if (initialFetchSkipped.current) {
+      initialFetchSkipped.current = false;
+      return;
     }
-  }, [fetchRule, initialResult]);
+    fetchRule();
+  }, [fetchRule]);
 
   const listHref = `/crm/${encodeURIComponent(orgSlug)}/settings/workflow-rules`;
 
