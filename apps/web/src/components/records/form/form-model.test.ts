@@ -231,7 +231,7 @@ describe("metadata form model", () => {
       undefined,
       ["CreateOnly"],
     );
-    expect(overridden[0]?.columns[0]?.map((f) => f.apiName)).toEqual(["CreateOnly"]);
+    expect(overridden[0]?.columns[0]?.map((f) => f.apiName)).toEqual(["CreateOnly", "ReadOnly"]);
     expect(overridden[0]?.columns[0]?.[0]?.readOnly).toBe(true);
     expect(overridden[0]?.columns[1]?.map((f) => f.apiName)).toEqual(["Required"]);
 
@@ -331,4 +331,30 @@ describe("stage-driven form rules", () => {
     expect(fields.some((f) => f.apiName === "Reason_For_Loss")).toBe(true);
     expect(fields.some((f) => f.apiName === "Connected_To__s")).toBe(false);
   });
+});
+
+it("retains newly placed fields when applying a specialized form override", () => {
+  const custom = field("Custom_Text");
+  const effective = {
+    ...metadata,
+    fields: [...metadata.fields, custom],
+    layout: [
+      {
+        label: "Information",
+        columnCount: 2,
+        fields: ["Required", "Custom_Text"],
+        columns: [["Required"], ["Custom_Text"]],
+      },
+    ],
+  };
+  for (const mode of ["create", "edit"] as const) {
+    const sections = buildFormModel(effective, mode);
+    const result = applySectionColumnOverrides(
+      sections,
+      { Information: [["Required"], []] },
+      effective,
+      mode,
+    );
+    expect(result[0]?.columns[1]?.map((field) => field.apiName)).toEqual(["Custom_Text"]);
+  }
 });

@@ -9,6 +9,7 @@ import { LIST_PER_PAGE_OPTIONS, type ListPerPage } from "@/lib/records/list-sear
 
 export interface ViewSettingsMenuProps {
   laterModule?: ModuleKey;
+  onManageColumns?: () => void;
   /** Page size in effect: the address value when it carries `per_page`, otherwise the stored preference. */
   perPage: ListPerPage;
   onPerPageChange: (perPage: ListPerPage) => void;
@@ -33,8 +34,8 @@ const WRAP_TEXT_LABEL = "Wrap Text";
 
 /**
  * View Settings control for the header's trailing cell: the page size submenu and the
- * Wrap Text switch under View Mode. Manage Columns and Reset Column Size belong to the
- * customization module, so they are not drawn here.
+ * Wrap Text switch under View Mode. Metadata consumers can supply Manage Columns;
+ * Reset Column Size remains outside this control.
  *
  * `list-settings` names each parent row by its label plus the value in effect
  * ("Records Per Page 30", "View Mode Wrap Text") and puts one glyph at the row's start,
@@ -43,6 +44,7 @@ const WRAP_TEXT_LABEL = "Wrap Text";
  */
 export function ViewSettingsMenu({
   laterModule,
+  onManageColumns,
   perPage,
   onPerPageChange,
   wrapText,
@@ -122,6 +124,16 @@ export function ViewSettingsMenu({
             </MenuItem>
           </Submenu>
         </SubmenuTrigger>
+        {onManageColumns ? (
+          <MenuItem
+            id="manage-columns"
+            textValue="Manage Columns"
+            shouldCloseOnSelect
+            onAction={onManageColumns}
+          >
+            Manage Columns
+          </MenuItem>
+        ) : null}
       </Menu>
     </MenuTrigger>
   );

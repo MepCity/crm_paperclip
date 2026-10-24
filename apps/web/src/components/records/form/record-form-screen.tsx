@@ -16,6 +16,7 @@ import {
   useUpdateRecord,
   useUsers,
 } from "@/lib/api/client/hooks";
+import { SchemaRevisionMismatchError } from "@/lib/api/wire/errors";
 import { addressSubfieldApiNames } from "@/lib/records/composite-address";
 import {
   allDayClearedTime,
@@ -154,7 +155,7 @@ export function RecordFormScreen(props: RecordFormScreenProps) {
   const record = useRecord(props.config.module, loadId);
   const users = useUsers();
   const recordError = needsRecord ? record.error : null;
-  const error = metadata.error ?? users.error ?? recordError;
+  const error = (metadata.data ? null : metadata.error) ?? users.error ?? recordError;
   if (recordError instanceof NotFoundError) return <RecordNotFound />;
   if (error) return <Alert variant="danger">Unable to load the form.</Alert>;
   if (!metadata.data || !users.data || (needsRecord && !record.data))
@@ -172,6 +173,10 @@ export function RecordFormScreen(props: RecordFormScreenProps) {
       key={formKey}
       {...props}
       intent={intent}
+      refreshMetadata={async () => {
+        const result = await metadata.refetch();
+        if (result.error) throw result.error;
+      }}
       metadata={metadata.data}
       sourceRecord={needsRecord ? record.data : undefined}
       users={users.data.map((user) => ({ id: user.userId, name: user.name, email: user.email }))}
@@ -186,8 +191,10 @@ function LoadedRecordForm({
   metadata,
   sourceRecord,
   users,
+  refreshMetadata,
 }: RecordFormScreenProps & {
   intent: FormIntent;
+  refreshMetadata: () => Promise<unknown>;
   metadata: ModuleMetadata;
   sourceRecord?: RecordData;
   users: OwnerOption[];
@@ -274,6 +281,8 @@ function LoadedRecordForm({
     dynamic?.required?.[field.apiName] ?? field.required;
   const [lookupModules, setLookupModules] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [refreshingSchema, setRefreshingSchema] = useState(false);
+  const [schemaChanged, setSchemaChanged] = useState(false);
   const [bannerMessage, setBannerMessage] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [unsavedOpen, setUnsavedOpen] = useState(false);
@@ -460,6 +469,20 @@ function LoadedRecordForm({
     setUnsavedOpen(true);
   }
 
+  async function refreshFields() {
+    if (refreshingSchema) return;
+    setRefreshingSchema(true);
+    try {
+      await refreshMetadata();
+      setSchemaChanged(false);
+      setBannerMessage(null);
+    } catch {
+      setBannerMessage("Unable to refresh the fields. Your draft has been kept. Try again.");
+    } finally {
+      setRefreshingSchema(false);
+    }
+  }
+
   async function save(andNew: boolean) {
     if (writeInFlight.current) return;
     if (!runClientValidation()) return;
@@ -495,6 +518,7 @@ function LoadedRecordForm({
         setErrors(fieldMessages);
         return;
       }
+      if (error instanceof SchemaRevisionMismatchError) setSchemaChanged(true);
       const message = formSaveBannerMessage(error);
       if (message) setBannerMessage(message);
     } finally {
@@ -790,7 +814,24 @@ function LoadedRecordForm({
           saveAndNew: rules.followUp?.label ?? "Save and New",
           save: "Save",
         }}
-        errorBanner={bannerMessage ? <FormErrorBanner>{bannerMessage}</FormErrorBanner> : null}
+        errorBanner={
+          bannerMessage ? (
+            <FormErrorBanner>
+              {bannerMessage}
+              {schemaChanged ? (
+                <Button
+                  variant="secondary"
+                  isDisabled={refreshingSchema}
+                  onPress={() => {
+                    void refreshFields();
+                  }}
+                >
+                  Refresh fields
+                </Button>
+              ) : null}
+            </FormErrorBanner>
+          ) : null
+        }
         disabled={saving}
         onCancel={requestCancel}
         onSave={() => {

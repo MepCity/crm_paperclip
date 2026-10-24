@@ -1787,3 +1787,41 @@ it("keeps system filters in list/count queries across panel toggles and clears t
     expect(countSpy.mock.calls.at(-1)?.[1]?.systemFilters).toBeUndefined();
   });
 });
+
+it("offers an effective custom column and filters retired fields without editing the saved view", async () => {
+  const user = userEvent.setup();
+  const records = createFixtureRecordService(ctx);
+  const service = createClientRecordService(records, {
+    listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+  });
+  const baseline = await records.getModule("Leads");
+  const source = baseline.fields.find((field) => field.apiName === "Company");
+  if (!source) throw new Error("Missing fixture field.");
+  vi.spyOn(service, "getModule").mockResolvedValue({
+    ...baseline,
+    fields: [
+      ...baseline.fields.filter((field) => field.apiName !== "Email"),
+      { ...source, apiName: "Custom_Text", label: "Custom Text" },
+    ],
+  });
+  const getView = vi.spyOn(service, "getView");
+  render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+    wrapper: wrapper(service),
+  });
+  await screen.findByRole("table", { name: "Records" });
+  expect(screen.queryByRole("columnheader", { name: /^Email/ })).toBeNull();
+  expect(screen.getByRole("checkbox", { name: "Custom Text" })).toBeTruthy();
+  const trigger = screen.getByRole("button", { name: "View Settings" });
+  trigger.focus();
+  await user.keyboard("{Enter}");
+  const manage = screen.getByRole("menuitem", { name: "Manage Columns" });
+  manage.focus();
+  await user.keyboard("{Enter}");
+  const dialog = await screen.findByRole("dialog", { name: "Manage Columns Leads" });
+  expect(within(dialog).queryByRole("checkbox", { name: "Email" })).toBeNull();
+  await user.click(within(dialog).getByRole("checkbox", { name: "Custom Text" }));
+  await user.click(within(dialog).getByRole("button", { name: "Save" }));
+  await screen.findByRole("columnheader", { name: /Custom Text/ });
+  const originalView = await getView.mock.results[0]?.value;
+  expect(originalView?.columns).not.toContain("Custom_Text");
+});
