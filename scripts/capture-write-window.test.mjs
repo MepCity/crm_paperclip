@@ -144,7 +144,7 @@ function instance(options = {}) {
   const store = options.store ?? memoryStore();
   const window = new WriteWindow(
     {
-      policy: validatePolicy(policy()),
+      policy: validatePolicy(options.policy ?? policy()),
       policyHash: "test-hash",
       issueId: "window-test",
       agentId: "analyst-test",
@@ -1018,4 +1018,162 @@ test("directory fsync failure after WAL rename also prevents transmission", asyn
   } finally {
     fs.rmSync(dir, { recursive: true });
   }
+});
+
+test("setting restore preflight rejects a foreign address before any mutation", async () => {
+  const { window, store } = instance();
+  let sends = 0;
+  await assert.rejects(
+    window.setting(
+      "setting-test",
+      false,
+      async () => ({ status: 200, body: { value: "operator@example.invalid" } }),
+      async () => {
+        sends++;
+        return success();
+      },
+      async () => true,
+    ),
+    /setting-restore-preflight: recipient/,
+  );
+  assert.equal(sends, 0);
+  assert.equal(store.writes.at(-1).rows.length, 0);
+});
+
+test("setting scalar templates preserve single-item arrays for change and rollback", async () => {
+  const p = policy();
+  p.endpoints.find((rule) => rule.key === "setting-test").body = { value: ["$value"] };
+  const { window } = instance({ policy: p });
+  const bodies = [];
+  await window.setting(
+    "setting-test",
+    true,
+    async () => ({ status: 200, body: { value: false } }),
+    async (request) => {
+      bodies.push(JSON.parse(request.body));
+      return success();
+    },
+    async () => true,
+  );
+  assert.deepEqual(bodies, [{ value: [true] }, { value: [false] }]);
+  assert.equal(window.restorePlan().length, 0);
+});
+
+for (const failure of [null, "delete", "recycle", "throw"]) {
+  test(`normal click adapter verifies delete and purge; failure=${failure}`, async () => {
+    const { window, store } = instance();
+    await click(window);
+    await window.dispatch(create(), async () => success());
+    let handler;
+    const reads = [],
+      blocked = [];
+    const page = {
+      context: () => ({
+        serviceWorkers: () => [],
+        request: {
+          fetch: async (url, options) => {
+            reads.push(url);
+            assert.deepEqual(options, {
+              method: "GET",
+              maxRedirects: 0,
+              maxRetries: 0,
+              failOnStatusCode: false,
+            });
+            if (failure === "throw") throw new Error("synthetic-read-failure");
+            return {
+              status: () =>
+                url.includes(
+                  failure === "delete"
+                    ? "/Documents/"
+                    : failure === "recycle"
+                      ? "/recycle_bin/"
+                      : "/never/",
+                )
+                  ? 200
+                  : 404,
+            };
+          },
+        },
+      }),
+      addInitScript: async () => {},
+      routeWebSocket: async () => {},
+      route: async (_, callback) => {
+        handler = callback;
+      },
+    };
+    await installWindowGuards(page, window, { blocked, fallback: async () => {} });
+    let mutations = 0;
+    for (const operation of ["delete", "recycle"]) {
+      const selector = operation === "delete" ? "#delete-test" : "#purge-test";
+      await window.click({ selector, text: "Delete", attrs: "", scope });
+      const request = {
+        method: "DELETE",
+        url: `https://crm.example.invalid/crm/v1/${operation === "delete" ? "Documents" : "recycle_bin"}/created-test`,
+      };
+      let fulfilled = false,
+        aborted = false;
+      await handler({
+        request: () => ({
+          method: () => request.method,
+          url: () => request.url,
+          postData: () => null,
+          headers: () => ({}),
+        }),
+        fetch: async () => {
+          mutations++;
+          return { status: () => 200, json: async () => success().body };
+        },
+        fulfill: async () => {
+          fulfilled = true;
+        },
+        abort: async () => {
+          aborted = true;
+        },
+      });
+      if (failure === operation || failure === "throw") {
+        assert(aborted && !fulfilled);
+        const saved = store.writes.at(-1);
+        assert.equal(saved.records[0].purged, false);
+        assert.equal(saved.records[0].deleted, operation === "recycle");
+        assert.equal(saved.rows.at(-1).status, "unknown");
+        assert.equal(saved.rows.at(-1).restored, false);
+        assert.equal(
+          (
+            await window.dispatch(create(), async () => {
+              mutations++;
+              return success();
+            })
+          ).reason,
+          "journal-unavailable",
+        );
+        assert.throws(() => window.restorePlan(), /journal-unavailable/);
+        assert.equal(mutations, operation === "delete" ? 1 : 2);
+        return;
+      }
+      assert(fulfilled && !aborted);
+    }
+    assert.equal(reads.length, 2);
+    assert.equal(store.writes.at(-1).records[0].purged, true);
+    assert.equal(window.restorePlan().length, 0);
+  });
+}
+
+test("missing delete verifier retains unresolved WAL and closes subsequent writes", async () => {
+  const { window, store } = instance();
+  await click(window);
+  await window.dispatch(create(), async () => success());
+  await window.click({ selector: "#delete-test", text: "Delete", attrs: "", scope });
+  await assert.rejects(
+    window.dispatch(
+      {
+        method: "DELETE",
+        url: `${create().url}/created-test`,
+      },
+      async () => success(),
+    ),
+    /restore-verification-missing/,
+  );
+  assert.equal(store.writes.at(-1).records[0].deleted, false);
+  assert.equal(store.writes.at(-1).rows.at(-1).status, "unknown");
+  assert.equal((await window.dispatch(create(), success)).reason, "journal-unavailable");
 });

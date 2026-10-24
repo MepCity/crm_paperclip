@@ -156,8 +156,10 @@ node capture.mjs capture '<neutral-page-path>' '<restore-slug>' \
 The command enumerates the journal registry, deletes each owned test object,
 verifies deletion, purges each single registered recycled object and verifies
 its absence. It does not enumerate or empty unrelated recycle-bin contents.
-Missing restore endpoints stop cleanup. A registry entry survives until its
-delete/purge evidence is verified. Restoration uses only exact policy requests,
+Missing restore endpoints stop cleanup. Both normal Delete clicks and restore commands require the exact verification
+GET before committing deleted/purged state. Missing, failed or ambiguous verification
+keeps the WAL unresolved and stops subsequent writes. A registry entry survives
+until its delete/purge evidence is verified. Restoration uses only exact policy requests,
 the browser session's in-memory cookies and CSRF token, and disabled redirects.
 Those credentials are never persisted in the journal or artifacts.
 
@@ -175,7 +177,10 @@ A setting descriptor must have `operation: "setting"`, a literal settings path,
 `read: { "path": "<same-setting-path>", "value": "<response.pointer>" }`.
 The adapter reads the previous scalar value, fsyncs it, performs the narrow
 change and restores/verifies it before returning in the same session. Missing
-previous values or unsupported structured settings never permit a write.
+previous values or unsupported structured settings never permit a write. Before
+the initial mutation, the previous value must pass the same request policy in a
+constructed rollback request; foreign addresses remain rejected. Single-item
+array templates preserve their array shape for both mutation and rollback.
 
 CRM Analyst remains responsible for adding every observation to the window
 issue comment, reviewing the journal, beginning cleanup with time to spare,
