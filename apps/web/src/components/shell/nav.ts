@@ -149,6 +149,13 @@ export const shellNav: NavConfig = {
       href: (slug) => moduleTabPath(slug, "Reports"),
       match: "prefix",
     },
+    {
+      id: "analytics",
+      label: "Analytics",
+      icon: Icons.barChart,
+      href: (slug) => moduleTabPath(slug, "Dashboards"),
+      match: "prefix",
+    },
   ],
   sections: [
     {

@@ -2,6 +2,7 @@ import {
   Activity,
   AlertCircle,
   AlertTriangle,
+  BarChart3,
   BookUser,
   Building2,
   Calendar,
@@ -590,6 +591,7 @@ export const Icons = {
   diagonalExpand: DiagonalExpandIcon,
   recordTag: thin(Tag),
   lock: thin(Lock),
+  barChart: thin(BarChart3),
 };
 
 /** Original silhouette, kept inline rather than adding an image asset. */
