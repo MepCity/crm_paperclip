@@ -15,13 +15,16 @@ export function buildCompositeAddressDetailFields(
   withDetailLabel: (field: FieldDefinition) => FieldDefinition = (field) => field,
 ): DetailFieldEntry[] {
   const byName = new Map(moduleFields.map((field) => [field.apiName, field]));
+  const activeValues = Object.fromEntries(
+    Object.entries(record.fields).filter(([name]) => {
+      const field = byName.get(name);
+      return !field || field.views.view;
+    }),
+  );
   return rules.flatMap((rule) => {
-    const composite = formatCompositeAddress(
-      rule.parentApiName,
-      record.fields,
-      rule.displayFieldApiNames,
-    );
     const addressField = byName.get(rule.parentApiName);
+    if (addressField && !addressField.views.view) return [];
+    if (!addressField && moduleFields.length > 0) return [];
     const field =
       addressField ??
       ({
@@ -34,6 +37,11 @@ export function buildCompositeAddressDetailFields(
         massUpdate: false,
         views: { view: true, create: true, edit: true, quickCreate: false },
       } satisfies FieldDefinition);
+    const composite = formatCompositeAddress(
+      rule.parentApiName,
+      activeValues,
+      rule.displayFieldApiNames,
+    );
     return [
       {
         column: "full" as const,

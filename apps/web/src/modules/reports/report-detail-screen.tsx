@@ -52,13 +52,21 @@ export function ReportDetailScreen({
 
   return (
     <section aria-label="Report detail" className="min-h-full bg-bg text-md text-text">
+      <span id="reports-unavailable" className="sr-only">
+        Not available in this read-only view.
+      </span>
       <header className="flex items-center justify-between gap-4 border-b border-border bg-surface px-3 py-3">
         <div className="flex items-center gap-3">
           <Link href={reportPath(orgSlug)} aria-label="Back to Reports">
             <Icons.arrowLeft className="size-4" aria-hidden />
           </Link>
           <h1 className="text-xl font-semibold">{report.name}</h1>
-          <Button variant="icon" aria-label="Report information" aria-disabled="true">
+          <Button
+            variant="icon"
+            aria-label="Report information"
+            aria-disabled="true"
+            aria-describedby="reports-unavailable"
+          >
             <Icons.info className="size-4" aria-hidden />
           </Button>
         </div>
@@ -71,6 +79,7 @@ export function ReportDetailScreen({
             <button
               type="button"
               aria-disabled="true"
+              aria-describedby="reports-unavailable"
               className="h-8 rounded-l border border-border bg-surface px-3 text-text"
             >
               Edit
@@ -79,6 +88,7 @@ export function ReportDetailScreen({
               type="button"
               aria-label="Report menu"
               aria-disabled="true"
+              aria-describedby="reports-unavailable"
               className="inline-flex h-8 items-center rounded-r border border-l-0 border-border bg-surface px-2 text-text"
             >
               <Icons.chevronDown className="size-4" aria-hidden />
@@ -92,6 +102,7 @@ export function ReportDetailScreen({
             variant="recordSelector"
             aria-label="Filter"
             aria-disabled="true"
+            aria-describedby="reports-unavailable"
             className="gap-2"
           >
             <Icons.filter className="size-4" aria-hidden />
@@ -102,23 +113,34 @@ export function ReportDetailScreen({
               aria-hidden
             />
           </Button>
-          <button type="button" aria-disabled="true" className="px-1 text-text">
+          <button
+            type="button"
+            aria-disabled="true"
+            aria-describedby="reports-unavailable"
+            className="px-1 text-text"
+          >
             Filter By Date
           </button>
-          <button type="button" aria-disabled="true" className="px-1 text-primary">
+          <button
+            type="button"
+            aria-disabled="true"
+            aria-describedby="reports-unavailable"
+            className="px-1 text-primary"
+          >
             Clear
           </button>
         </div>
         <button
           type="button"
           aria-disabled="true"
+          aria-describedby="reports-unavailable"
           className="px-1 text-text underline decoration-dashed underline-offset-4"
         >
           Show Details
         </button>
       </div>
       <div className="overflow-x-auto border border-border bg-surface">
-        <table aria-label="Report results" className="w-full border-collapse text-left">
+        <table className="w-full border-collapse text-left">
           <thead>
             <tr className="border-b border-border bg-bg">
               {report.headings.map((heading, index) => (

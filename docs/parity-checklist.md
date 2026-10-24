@@ -1650,3 +1650,16 @@ inventories remain unchanged; no integration or capture tool used in R2.
 | VS-R2-03 | Social enabled module | D5/D7; SD01–SD05/SD10; documented tabs, filters and prerequisites | Actual account entitlement, enabled layouts, errors and preference persistence unobserved |
 | VS-R2-04 | Associated Social record state | D5/D6; SD06–SD09; RC02/RC03 documented outcomes; Leads/Contacts/Accounts scope | Historical link behaviour not recaptured; record-layout variants and Facebook association flow unresolved |
 | VS-R2-05 | Questions and next slices | U1–U5 partly narrowed; U6 still open; S3 Visits / S4 Social read-only fixture proposals | Implementation approval required; no setup, association, outbound actions or gate claim |
+
+### Module 13 — R4 documentation-based functional spec (MEP-1303)
+
+Source: R4 in `research/specs/reports.md`. Public help only; no capture or
+reference action. All RD/AD entries are **documented, not observed** and await
+UI Lead approval. R1–R3 observations and stop boundaries remain unchanged.
+
+| ID | Scope | Evidence / functional coverage | Remaining boundary |
+| --- | --- | --- | --- |
+| RP-R4-01 | Report result types and operations | RD01–RD08, RD12: types, grouping, aggregates, sorting, filters, joined results and action capabilities | U4 partly answered; actual populated layouts, report drilldown, defaults and sort cycles open |
+| RP-R4-02 | Reports management | RD09–RD11, RD13–RD14: sharing, scheduling, export, Favorites folder and permission vocabulary | U6 partly answered; menu order, favorite persistence, account grants and validation open; no writes authorized |
+| RP-R4-03 | Analytics catalogue and configuration | AD01–AD11: catalogue, component families, periods, filter scopes, sharing, drilldown and permissions | R2 gaps narrowed through docs only; U5 open; no re-entry or initialization acceptance |
+| RP-R4-04 | Question disposition / fixture handoff | U1/U2/U4/U6 partly answered; U3/U5/U7 open; F1–F5 map to existing read-only ports/screens | Grouped/matrix, catalogue and drilldown contracts need separate approval; no app code or module gate |
