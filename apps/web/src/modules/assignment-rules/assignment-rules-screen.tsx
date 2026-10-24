@@ -115,13 +115,21 @@ export function AssignmentRulesScreen({
                   No assignment rules match the selected module.
                 </p>
               ) : (
-                <table className="w-full text-left text-md">
+                <table aria-label="Assignment rules" className="w-full text-left text-md">
                   <thead>
                     <tr className="border-b border-border text-text-muted">
-                      <th className="py-2 pr-4">Order</th>
-                      <th className="py-2 pr-4">Name</th>
-                      <th className="py-2 pr-4">Module</th>
-                      <th className="py-2">Status</th>
+                      <th scope="col" className="py-2 pr-4">
+                        Order
+                      </th>
+                      <th scope="col" className="py-2 pr-4">
+                        Name
+                      </th>
+                      <th scope="col" className="py-2 pr-4">
+                        Module
+                      </th>
+                      <th scope="col" className="py-2">
+                        Status
+                      </th>
                     </tr>
                   </thead>
                   <tbody>

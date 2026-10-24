@@ -87,6 +87,8 @@ export function WorkflowRuleDetailScreen({
         </Link>
       </div>
 
+      {loading || !result?.ok ? <h1 className="sr-only">Workflow Rule Details</h1> : null}
+
       {/* Loading state (WD6) */}
       {loading ? (
         <div role="status" aria-live="polite" className="py-12 text-center text-text-muted">

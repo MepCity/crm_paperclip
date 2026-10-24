@@ -1,3 +1,4 @@
+import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
 import { assertNoPageErrors, expect, test } from "./support/test";
@@ -21,6 +22,7 @@ test("Assignment Rules opens from settings with the introductory state", async (
     "true",
   );
   await expect(page.getByTestId("assignment-introduction")).toBeVisible();
+  await expectNoA11yViolations(page, { include: ['section[aria-label="Assignment Rules"]'] });
   for (const name of ["Thresholds", "Assistant"]) {
     const tab = page.getByRole("tab", { name });
     await tab.focus();
@@ -54,8 +56,16 @@ test("populated synthetic Assignment rules list and open read-only detail", asyn
   await page.getByLabel("Module").selectOption("");
   await page.getByRole("button", { name: "Apply filter" }).click();
   await expect(page.getByRole("link", { name: "Synthetic regional routing" })).toBeVisible();
+  await expect(page.getByRole("table", { name: "Assignment rules", exact: true })).toBeVisible();
+  await expectNoA11yViolations(page, { include: ['section[aria-label="Assignment Rules"]'] });
   await page.getByRole("link", { name: "Synthetic regional routing" }).click();
-  await expect(page.getByRole("heading", { name: "Synthetic regional routing" })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: "Synthetic regional routing", level: 1 }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("region", { name: "Assignment Rule" }).getByRole("heading", { level: 1 }),
+  ).toHaveCount(1);
+  await expectNoA11yViolations(page, { include: ['section[aria-label="Assignment Rule"]'] });
   await expect(page.getByTestId("assignment-detail-fallback")).toContainText("synthetic-group-a");
   await expect(
     page.getByRole("region", { name: "Assignment Rule" }).getByRole("button"),
