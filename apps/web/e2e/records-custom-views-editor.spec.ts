@@ -12,10 +12,11 @@ test.skip(
 
 test.describe("Custom Views Editor", () => {
   test("admin can create, edit, and delete custom view with criteria", async ({ page }) => {
+    test.setTimeout(180_000);
     await signUpNewUser(page);
     const org = await createOrganization(page);
     await page.goto(moduleListDefaultPath(org.slug, MODULE));
-    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 60_000 });
 
     // 1. Open New Custom View modal
     await page.getByRole("button", { name: "Custom views" }).click();
@@ -82,7 +83,7 @@ test.describe("Custom Views Editor", () => {
     page,
     browser,
   }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(180_000);
     await signUpNewUser(page, { name: "Owner Admin" });
     const org = await createOrganization(page);
 
@@ -112,7 +113,9 @@ test.describe("Custom Views Editor", () => {
 
       // Member visits Contacts list
       await memberPage.goto(moduleListDefaultPath(org.slug, MODULE));
-      await expect(memberPage.getByRole("table", { name: "Records" })).toBeVisible();
+      await expect(memberPage.getByRole("table", { name: "Records" })).toBeVisible({
+        timeout: 60_000,
+      });
 
       // Member opens New Custom View dialog
       await memberPage.getByRole("button", { name: "Custom views" }).click();

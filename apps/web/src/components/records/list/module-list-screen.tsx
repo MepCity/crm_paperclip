@@ -1068,6 +1068,7 @@ function ModuleListScreenLoaded({
             service.invalidate?.(config.module);
             void queryClient.invalidateQueries({
               queryKey: apiKeys.module(orgSlug, config.module),
+              exact: true,
             });
             void queryClient.invalidateQueries({ queryKey: apiKeys.views(orgSlug, config.module) });
             void queryClient.invalidateQueries({
@@ -1086,18 +1087,20 @@ function ModuleListScreenLoaded({
             service.invalidate?.(config.module);
             void queryClient.invalidateQueries({
               queryKey: apiKeys.module(orgSlug, config.module),
+              exact: true,
             });
             void queryClient.invalidateQueries({ queryKey: apiKeys.views(orgSlug, config.module) });
             void queryClient.invalidateQueries({
-              queryKey: apiKeys.view(orgSlug, config.module, deletedId),
-            });
-            void queryClient.invalidateQueries({
               queryKey: apiKeys.moduleProjection(orgSlug, config.module),
             });
-            invalidateModuleLists(queryClient, orgSlug, config.module);
             setCustomViewModal(null);
             if (deletedId === viewId) {
               router.push(config.paths.defaultList(orgSlug, config.module));
+            } else {
+              queryClient.removeQueries({
+                queryKey: apiKeys.view(orgSlug, config.module, deletedId),
+              });
+              invalidateModuleLists(queryClient, orgSlug, config.module);
             }
           }}
         />

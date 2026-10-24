@@ -116,7 +116,11 @@ function buildTypedValue(
       }
       return row.value.split(/,\s*/).map(Number);
     }
-    return Number(row.value);
+    const num = Number(row.value);
+    if (!Number.isNaN(num) && row.value.trim() !== "") {
+      return num;
+    }
+    return row.value;
   }
   if (row.comparator === "between" || row.comparator === "not_between") {
     if (Array.isArray(row.rawTypedValue) && row.value === row.rawTypedValue.join(", ")) {
@@ -189,7 +193,8 @@ function CustomViewDialogContent({
     if (initial?.columns && initial.columns.length > 0) {
       return initial.columns.map((c) => apiNameById.get(c) ?? c);
     }
-    return fields.slice(0, 5).map((f) => f.apiName);
+    const visible = fields.filter((f) => f.views?.view !== false);
+    return (visible.length > 0 ? visible : fields).slice(0, 5).map((f) => f.apiName);
   }, [initial?.columns, fields, apiNameById]);
 
   const [selectedColumns, setSelectedColumns] = useState<string[]>(initialColumns);
@@ -242,12 +247,23 @@ function CustomViewDialogContent({
   }
 
   function addCriterion() {
-    const firstField = fields[0]?.apiName ?? "";
+    const defaultField =
+      fields.find(
+        (f) =>
+          f.apiName === "Full_Name" ||
+          f.apiName === "Last_Name" ||
+          f.apiName === "Account_Name" ||
+          f.apiName === "Deal_Name" ||
+          f.apiName === "Subject",
+      )?.apiName ??
+      fields.find((f) => f.dataType === "text" || f.dataType === "varchar")?.apiName ??
+      fields[0]?.apiName ??
+      "";
     setCriteriaRows([
       ...criteriaRows,
       {
         id: `crit-${Date.now()}-${criteriaRows.length}`,
-        field: firstField,
+        field: defaultField,
         comparator: "equal",
         value: "",
       },
