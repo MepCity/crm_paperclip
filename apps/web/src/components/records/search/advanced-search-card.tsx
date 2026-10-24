@@ -5,7 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { moduleRecordPath } from "@/lib/crm-paths";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import { resolveModuleLaterKey, resolveModuleScreenByApiName } from "@/modules/registry";
 import type { ModuleScreenDefinition } from "@/modules/types";
 import { formatFieldValue } from "../field-format";
@@ -42,6 +42,7 @@ export function AdvancedSearchCard({
   onOpenManageColumns,
   orgSlug,
 }: AdvancedSearchCardProps) {
+  const orgFormat = useFormat();
   const startCount = total === 0 ? 0 : (page - 1) * perPage + 1;
   const endCount = Math.min(page * perPage, total);
   const hasPrev = page > 1;
@@ -301,7 +302,7 @@ export function AdvancedSearchCard({
                       fieldDef,
                       val ?? null,
                       ownerNames,
-                      DEFAULT_FORMAT,
+                      orgFormat,
                       { orgSlug },
                     );
                     if (formatted.kind === "empty") {

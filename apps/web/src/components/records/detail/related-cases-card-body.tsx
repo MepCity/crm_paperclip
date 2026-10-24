@@ -6,7 +6,7 @@ import { FieldValueView } from "@/components/records/detail/field-value";
 import { RelatedRecordsListError } from "@/components/records/detail/related-records-list-error";
 import { Link } from "@/components/ui/link";
 import { useModule, useRecordList, useUsers, useView, useViews } from "@/lib/api/client/hooks";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 
 const LIST_PAGE_SIZE = 100;
 
@@ -29,6 +29,7 @@ export function RelatedCasesCardBody({
   filterField,
   caseRecordPath,
 }: RelatedCasesCardBodyProps) {
+  const orgFormat = useFormat();
   const [page, setPage] = useState(1);
   const moduleQuery = useModule("Cases");
   const viewsQuery = useViews("Cases");
@@ -133,7 +134,7 @@ export function RelatedCasesCardBody({
                       field={field}
                       value={value}
                       ownerNames={ownerNames}
-                      format={DEFAULT_FORMAT}
+                      format={orgFormat}
                     />
                   </td>
                 );

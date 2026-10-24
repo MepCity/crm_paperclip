@@ -1,5 +1,6 @@
 "use client";
 
+import { usePathname } from "next/navigation";
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
@@ -23,6 +24,11 @@ export function AppShell({
   user: ShellUser;
   children: ReactNode;
 }) {
+  const pathname = usePathname();
+  const isSettings =
+    pathname === `/crm/${orgSlug}/settings` || pathname.startsWith(`/crm/${orgSlug}/settings/`);
+  const isSettingsHome =
+    pathname === `/crm/${orgSlug}/settings` || pathname === `/crm/${orgSlug}/settings/`;
   const [title, setTitle] = useState("Loading");
   const [railVisible, setRailVisible] = useState<boolean | null>(null);
   const mainContent = useRef<HTMLElement>(null);
@@ -55,7 +61,7 @@ export function AppShell({
         <aside
           aria-label="Navigation rail"
           id="navigation-rail"
-          className={`${railVisible === null ? "hidden md:flex" : railVisible ? "flex" : "hidden"} absolute inset-y-0 bottom-(--size-utility-strip-height) left-0 z-30 w-(--size-rail-width) max-w-full shrink-0 flex-col bg-rail-surface md:static`}
+          className={`${isSettings ? "hidden" : railVisible === null ? "hidden md:flex" : railVisible ? "flex" : "hidden"} absolute inset-y-0 bottom-(--size-utility-strip-height) left-0 z-30 w-(--size-rail-width) max-w-full shrink-0 flex-col bg-rail-surface md:static`}
         >
           <div className="relative flex h-(--size-topbar-height) shrink-0 items-start gap-2 pl-(--size-rail-header-inset) pr-(--size-rail-inset) pt-(--size-rail-header-top)">
             <div className="min-w-0 flex-1">
@@ -79,19 +85,30 @@ export function AppShell({
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="relative flex h-(--size-topbar-height) shrink-0 items-center justify-between gap-2 border-b border-topbar-border bg-topbar-surface px-(--size-topbar-title-inset)">
             <div className="flex min-w-0 items-center gap-2">
-              {railVisible !== true && (
-                <Button
-                  ref={showControl}
+              {isSettings ? (
+                <Link
                   variant="icon"
-                  size="compact"
-                  aria-label="Show Menu"
-                  aria-controls="navigation-rail"
-                  aria-expanded={false}
-                  onPress={() => toggleRail(true)}
-                  className={`${railVisible === null ? "md:hidden" : ""} size-(--size-topbar-avatar) shrink-0`}
+                  aria-label={isSettingsHome ? "Back to CRM" : "Back to Setup"}
+                  href={isSettingsHome ? `/crm/${orgSlug}` : `/crm/${orgSlug}/settings`}
+                  className="size-(--size-topbar-control-pitch) flex shrink-0 items-center justify-center rounded-full hover:bg-surface-hover"
                 >
-                  <Icons.showMenu className="size-(--size-topbar-icon)" aria-hidden />
-                </Button>
+                  <Icons.arrowLeft className="size-(--size-topbar-icon)" aria-hidden />
+                </Link>
+              ) : (
+                railVisible !== true && (
+                  <Button
+                    ref={showControl}
+                    variant="icon"
+                    size="compact"
+                    aria-label="Show Menu"
+                    aria-controls="navigation-rail"
+                    aria-expanded={false}
+                    onPress={() => toggleRail(true)}
+                    className={`${railVisible === null ? "md:hidden" : ""} size-(--size-topbar-avatar) shrink-0`}
+                  >
+                    <Icons.showMenu className="size-(--size-topbar-icon)" aria-hidden />
+                  </Button>
+                )
               )}
               <h1 className="truncate text-xl font-semibold text-text">{title}</h1>
             </div>
@@ -110,7 +127,7 @@ export function AppShell({
                 variant="icon"
                 aria-label="Settings"
                 href={`/crm/${orgSlug}/settings`}
-                className="size-(--size-topbar-control-pitch)"
+                className={`size-(--size-topbar-control-pitch) ${isSettings ? "rounded-md bg-surface-hover font-semibold text-text" : ""}`}
               >
                 <Icons.settings className="size-(--size-topbar-icon)" aria-hidden />
               </Link>
@@ -121,7 +138,7 @@ export function AppShell({
             ref={mainContent}
             id="main-content"
             tabIndex={-1}
-            className="min-h-0 flex-1 overflow-auto bg-surface outline-none"
+            className={`min-h-0 flex-1 overflow-auto outline-none ${isSettingsHome ? "bg-bg" : "bg-surface"}`}
           >
             <PreferenceProvider orgSlug={orgSlug} userId={user.id}>
               {children}

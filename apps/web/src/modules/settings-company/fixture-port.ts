@@ -1,3 +1,4 @@
+import { DOTTED_DAY_FIRST_FORMAT } from "@crm/core/format";
 import type { CompanyDetails, CompanyDetailsPort } from "./port";
 
 /** Synthetic demonstration data, independent of reference organization values. */
@@ -17,5 +18,8 @@ export const fixtureCompanyDetails: CompanyDetails = {
 export const fixtureCompanyDetailsPort: CompanyDetailsPort = {
   async readCompanyDetails() {
     return structuredClone(fixtureCompanyDetails);
+  },
+  async readOrganizationFormat() {
+    return structuredClone(DOTTED_DAY_FIRST_FORMAT);
   },
 };
