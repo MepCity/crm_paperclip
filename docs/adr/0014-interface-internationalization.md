@@ -1,6 +1,7 @@
 # ADR 0014 — English and Turkish interface internationalization
 
-- Status: Proposed; architecture draft, not implementation authorization
+- Status: Accepted (CTO, 2026-10-24); implementation waits for R1
+  reconciliation (item 1 below) and its own issues
 - Date: 2026-10-24
 - Issue: MEP-1337; umbrella: MEP-1335; research dependency: MEP-1336 (R1)
 - Tier: high
@@ -275,8 +276,9 @@ Before acceptance/implementation, reconcile:
 
 1. R1's Language codes, selector/save flow, exact Turkish terminology and evidence
    gaps. This draft does not certify reference UI or unknown save behaviour.
-2. CTO confirmation of no browser detection and reserved-but-disabled organization
-   language default; organization format continues to override numeric conventions.
+2. Confirmed by the CTO at acceptance: no browser detection; the organization
+   language default stays reserved and disabled; organization format keeps
+   deciding numeric and date conventions.
 3. Preference persistence placement and exact mutation codec under the accepted
    auth/persistence foundation; no migrations or duplicate settings stores here.
 4. Final scope/grouping and owners of the three implementation slices after R1;
