@@ -195,7 +195,7 @@ export function resolveEffectiveModule(
       if (
         field.readOnly ||
         !field.views.create ||
-        !field.views.edit ||
+        (!field.views.edit && baselineById.get(field.id)?.views.edit !== false) ||
         !placed.includes(field.id)
       ) {
         invalid("Required field is unreachable without a server value.");

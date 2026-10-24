@@ -11,6 +11,7 @@
     "./format": "./src/format/index.ts",
     "./transfer/types": "./src/transfer/types.ts",
     "./testing": "./src/testing.ts",
+    "./automation": "./src/automation/index.ts",
     "./attachments": "./src/attachments/index.ts",
     "./attachments/modules": "./src/attachments/modules.ts",
     "./records": "./src/records/index.ts",

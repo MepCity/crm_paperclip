@@ -1,9 +1,9 @@
 "use client";
 
+import type { ReadResult, RulePage } from "@crm/core/automation";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/ui/tabs";
-import type { ReadResult, RulePage } from "./port";
 
 export function AssignmentRulesScreen({ result }: { result: ReadResult<RulePage> }) {
   return (
