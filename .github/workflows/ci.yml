@@ -119,7 +119,7 @@ jobs:
       - name: Install process cleanup tool
         run: sudo apt-get update && sudo apt-get install -y lsof
       - name: Browser tests
-        run: pnpm test:e2e --shard=${{ matrix.shard }}/4 --reporter=list,github,html,json
+        run: pnpm test:e2e --shard=${{ matrix.shard }}/4
         env:
           PLAYWRIGHT_HTML_OPEN: never
           PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
@@ -175,7 +175,7 @@ jobs:
         if: steps.browsers.outputs.cache-hit != 'true'
         run: pnpm --dir apps/web exec playwright install --with-deps chromium
       - name: Browser tests
-        run: pnpm test:e2e --reporter=list,github,html,json
+        run: pnpm test:e2e
         env:
           PLAYWRIGHT_HTML_OPEN: never
           PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
