@@ -76,3 +76,39 @@ test("searchable draws the search box only when enabled and filters case-insensi
   await user.clear(box);
   expect(screen.getAllByRole("menuitem", { name: /Tasks$/ })).toHaveLength(2);
 });
+
+test("calls onNewView when New Custom View is clicked and handler is provided", async () => {
+  const user = userEvent.setup();
+  const onNewView = vi.fn();
+  render(
+    <ViewTabStrip
+      viewName="All Contacts"
+      views={[{ id: "all", name: "All Contacts" }]}
+      onNewView={onNewView}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Custom views" }));
+  const newItem = screen.getByRole("menuitem", { name: "New Custom View" });
+  expect(newItem.getAttribute("data-later-module")).toBeNull();
+  await user.click(newItem);
+  expect(onNewView).toHaveBeenCalledTimes(1);
+});
+
+test("renders Edit Current View and calls onEditView with active view id", async () => {
+  const user = userEvent.setup();
+  const onEditView = vi.fn();
+  render(
+    <ViewTabStrip
+      viewName="My Contacts"
+      views={[
+        { id: "all", name: "All Contacts" },
+        { id: "mine", name: "My Contacts" },
+      ]}
+      onEditView={onEditView}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Custom views" }));
+  const editItem = screen.getByRole("menuitem", { name: "Edit Current View" });
+  await user.click(editItem);
+  expect(onEditView).toHaveBeenCalledWith("mine");
+});

@@ -14,6 +14,9 @@ export interface ViewTabStripProps {
   pinnedViews?: readonly string[];
   /** Draws a Search box above Public Views that filters the rows by name (Tasks only). */
   searchable?: boolean;
+  onNewView?: () => void;
+  onEditView?: (id: string) => void;
+  onManageViews?: () => void;
 }
 
 export function ViewTabStrip({
@@ -22,6 +25,9 @@ export function ViewTabStrip({
   onViewChange,
   pinnedViews,
   searchable,
+  onNewView,
+  onEditView,
+  onManageViews,
 }: ViewTabStripProps) {
   const [publicOpen, setPublicOpen] = useState(true);
   const [query, setQuery] = useState("");
@@ -125,10 +131,25 @@ export function ViewTabStrip({
             <MenuDivider />
             <MenuItem id="dropdown">Show custom views as Dropdown</MenuItem>
             <MenuDivider />
-            <MenuItem id="new" laterModule="M11">
+            {onEditView ? (
+              <MenuItem
+                id="edit"
+                onAction={() => {
+                  const current = views?.find((v) => v.name === viewName);
+                  if (current) onEditView(current.id);
+                }}
+              >
+                Edit Current View
+              </MenuItem>
+            ) : null}
+            <MenuItem id="new" laterModule={onNewView ? undefined : "M11"} onAction={onNewView}>
               New Custom View
             </MenuItem>
-            <MenuItem id="manage" laterModule="M11">
+            <MenuItem
+              id="manage"
+              laterModule={onManageViews ? undefined : "M11"}
+              onAction={onManageViews}
+            >
               Manage Custom View
             </MenuItem>
           </Menu>

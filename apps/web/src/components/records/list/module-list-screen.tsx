@@ -8,6 +8,7 @@ import type {
   Criteria,
   FieldDefinition,
   ListResult,
+  ListView,
   ModuleApiName,
   ModuleMetadata,
   RecordData,
@@ -16,12 +17,15 @@ import type {
   SystemFiltersValue,
 } from "@crm/core/records";
 import { IMPORT_MODULES, TRANSFER_MODULES } from "@crm/core/transfer/types";
+import { useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { RecordBoard, type RecordBoardProps } from "@/components/records/board/record-board";
 import { DeduplicateJob } from "@/components/records/deduplicate/dedup-job";
 import { writePrintListQuery } from "@/components/records/print/print-list-handoff";
 import { supportsListPrint } from "@/components/records/print/print-modules";
+import { getPrivateViews } from "@/components/records/views/custom-view-api";
+import { CustomViewDialog } from "@/components/records/views/custom-view-dialog";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ModuleKey } from "@/components/ui/later-module";
@@ -49,6 +53,7 @@ import { SelectionTagsDialog } from "./selection-tags-dialog";
 import type { SystemFilterDraft } from "./system-filter-editor";
 import "./module-list-page.css";
 import {
+  invalidateModuleLists,
   useDeleteRecords,
   useModule,
   useRecordCount,
@@ -58,6 +63,7 @@ import {
   useView,
   useViews,
 } from "@/lib/api/client/hooks";
+import { apiKeys } from "@/lib/api/client/query-keys";
 import {
   moduleDeduplicatePath,
   moduleDraftsPath,
@@ -181,6 +187,8 @@ export interface ModuleListScreenProps {
   viewId?: string;
   /** The signed-in user; a quick-create dialog uses it as the default Host. */
   currentUserId?: string;
+  userRole?: "admin" | "member";
+  isAdmin?: boolean;
 }
 
 function ListNotFound() {
@@ -196,6 +204,8 @@ export function ModuleListScreen({
   config,
   viewId: routeViewId,
   currentUserId,
+  userRole,
+  isAdmin,
 }: ModuleListScreenProps) {
   const viewsQuery = useViews(config.module);
   const resolvedViewId = useMemo(() => {
@@ -218,6 +228,8 @@ export function ModuleListScreen({
       routeViewId={routeViewId}
       viewId={resolvedViewId}
       currentUserId={currentUserId}
+      userRole={userRole}
+      isAdmin={isAdmin}
     />
   );
 }
@@ -228,8 +240,12 @@ function ModuleListScreenLoaded({
   routeViewId,
   viewId,
   currentUserId,
+  userRole,
+  isAdmin: explicitIsAdmin,
 }: ModuleListScreenProps & { routeViewId?: string; viewId: string }) {
   const orgFormat = useFormat();
+  const isAdmin = Boolean(explicitIsAdmin ?? userRole === "admin");
+  const queryClient = useQueryClient();
   const router = useRouter();
   const refreshModuleListData = useRefreshModuleListData(config.module);
   const searchParams = useSearchParams();
@@ -284,6 +300,14 @@ function ModuleListScreenLoaded({
   const [exportOpen, setExportOpen] = useState(false);
   const [exportSelected, setExportSelected] = useState<string[] | undefined>(undefined);
   const [campaignsOpen, setCampaignsOpen] = useState(false);
+  const [customViewModal, setCustomViewModal] = useState<{
+    open: boolean;
+    mode: "create" | "edit";
+    viewId?: string;
+  } | null>(null);
+  const [privateViews, setPrivateViews] = useState<ListView[]>(() =>
+    typeof window !== "undefined" ? getPrivateViews(orgSlug, config.module) : [],
+  );
   const campaignsModule =
     config.module === "Leads" || config.module === "Contacts" ? config.module : null;
   const deleteRecords = useDeleteRecords(config.module);
@@ -292,7 +316,21 @@ function ModuleListScreenLoaded({
   const moduleQuery = useModule(config.module);
   const viewQuery = useView(config.module, viewId);
   const users = useUsers();
-  const view = viewQuery.data;
+  const privateView = useMemo(
+    () => privateViews.find((v) => v.id === viewId),
+    [privateViews, viewId],
+  );
+  const view = viewQuery.data ?? privateView;
+  const combinedViews = useMemo(() => {
+    const list = [...(viewsQuery.data ?? [])];
+    const serverIds = new Set(list.map((v) => v.id));
+    for (const pv of privateViews) {
+      if (!serverIds.has(pv.id)) {
+        list.push({ id: pv.id, name: pv.name, systemDefined: false, isDefault: false });
+      }
+    }
+    return list;
+  }, [viewsQuery.data, privateViews]);
 
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [selectedColumns, setSelectedColumns] = useState<{
@@ -649,10 +687,10 @@ function ModuleListScreenLoaded({
     (viewQuery.isLoading && !view) ||
     (listQuery !== null && list.isLoading && !list.data);
 
-  if (viewQuery.isError && viewQuery.error instanceof NotFoundError) {
+  if (!privateView && viewQuery.isError && viewQuery.error instanceof NotFoundError) {
     return <ListNotFound />;
   }
-  if (viewQuery.isError && !(viewQuery.error instanceof NotFoundError)) {
+  if (!privateView && viewQuery.isError && !(viewQuery.error instanceof NotFoundError)) {
     throw viewQuery.error;
   }
   if (list.isError && list.error instanceof NotFoundError) {
@@ -848,7 +886,7 @@ function ModuleListScreenLoaded({
     >
       <ViewTabStrip
         viewName={view.name}
-        views={config.inventory ? viewsQuery.data : undefined}
+        views={config.inventory ? combinedViews : undefined}
         pinnedViews={config.pinnedViews}
         searchable={config.viewMenuSearch}
         onViewChange={(id) => {
@@ -858,6 +896,8 @@ function ModuleListScreenLoaded({
             withSearchParams(config.paths.customList(orgSlug, config.module, id), params),
           );
         }}
+        onNewView={() => setCustomViewModal({ open: true, mode: "create" })}
+        onEditView={(id) => setCustomViewModal({ open: true, mode: "edit", viewId: id })}
       />
       {selectionActive && presentation === "table" ? (
         <SelectionBar
@@ -1022,6 +1062,43 @@ function ModuleListScreenLoaded({
           allFields={moduleQuery.data.fields.filter((field) => field.views.view)}
           selectedColumns={columns.map((field) => field.apiName)}
           onSave={(names) => setSelectedColumns({ viewId, names })}
+        />
+      ) : null}
+      {customViewModal?.open ? (
+        <CustomViewDialog
+          open
+          mode={customViewModal.mode}
+          module={config.module}
+          orgSlug={orgSlug}
+          isAdmin={isAdmin}
+          expectedRevision={(moduleQuery.data as unknown as { revision?: string })?.revision ?? ""}
+          initial={customViewModal.mode === "edit" ? view : undefined}
+          fields={moduleQuery.data?.fields ?? []}
+          onClose={() => setCustomViewModal(null)}
+          onSave={(savedView) => {
+            void queryClient.invalidateQueries({ queryKey: apiKeys.views(orgSlug, config.module) });
+            void queryClient.invalidateQueries({
+              queryKey: apiKeys.view(orgSlug, config.module, savedView.id),
+            });
+            setPrivateViews(getPrivateViews(orgSlug, config.module));
+            setCustomViewModal(null);
+            if (customViewModal.mode === "create") {
+              router.push(config.paths.customList(orgSlug, config.module, savedView.id));
+            } else {
+              invalidateModuleLists(queryClient, orgSlug, config.module);
+            }
+          }}
+          onDelete={(deletedId) => {
+            void queryClient.invalidateQueries({ queryKey: apiKeys.views(orgSlug, config.module) });
+            void queryClient.invalidateQueries({
+              queryKey: apiKeys.view(orgSlug, config.module, deletedId),
+            });
+            setPrivateViews(getPrivateViews(orgSlug, config.module));
+            setCustomViewModal(null);
+            if (deletedId === viewId) {
+              router.push(config.paths.defaultList(orgSlug, config.module));
+            }
+          }}
         />
       ) : null}
       <div className="module-list-body">
