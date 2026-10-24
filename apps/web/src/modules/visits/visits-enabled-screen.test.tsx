@@ -35,9 +35,7 @@ describe("Visits enabled fixture", () => {
     render(<VisitDetailScreen orgSlug="o" visitId="visit-1" />);
     for (const label of ["IP Address", "Browser", "Portal Name", "Search Engine"])
       expect(screen.getByText(label)).toBeTruthy();
-    expect(
-      within(screen.getByRole("table", { name: "Actions Performed" })).getAllByRole("row"),
-    ).toHaveLength(4);
+    expect(within(screen.getByRole("table")).getAllByRole("row")).toHaveLength(4);
     expect(screen.getByText("Add Note").closest("button")?.getAttribute("aria-disabled")).toBe(
       "true",
     );

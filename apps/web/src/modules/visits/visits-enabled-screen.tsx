@@ -110,7 +110,7 @@ export function VisitsEnabledScreen({
             No visits in this view.
           </p>
         ) : (
-          <Table aria-label="Visits table">
+          <Table>
             <TableHeader>
               <TableRow>
                 {listColumns.map((c) => (
@@ -173,7 +173,7 @@ export function VisitDetailScreen({ orgSlug, visitId }: { orgSlug: string; visit
         ))}
       </dl>
       <h3 className="mt-8 text-xl font-semibold">Actions Performed</h3>
-      <Table aria-label="Actions Performed">
+      <Table>
         <TableHeader>
           <TableRow>
             <TableHead>Action Type</TableHead>
