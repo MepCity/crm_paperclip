@@ -2,7 +2,7 @@ import { PageTitle } from "@/components/shell/page-title";
 import { requireOrgContext } from "@/lib/session";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import { createAutomationPort } from "@/modules/automation/port";
-import { getSyntheticWorkflowFixtures } from "@/modules/workflow-rules/fixtures";
+import { readWorkflowRule } from "@/modules/workflow-rules/reads";
 import { WorkflowRuleDetailScreen } from "@/modules/workflow-rules/workflow-rule-detail-screen";
 
 export const metadata = shellPageMetadata(shellPageTitle.settings);
@@ -14,26 +14,12 @@ export default async function WorkflowRuleDetailPage({
 }) {
   const { orgSlug, ruleId } = await params;
   const ctx = await requireOrgContext(orgSlug);
-  const fixtures = getSyntheticWorkflowFixtures(ctx.orgId);
-  const port = createAutomationPort({ fixtures });
-  const result = await port.get(ctx, {
-    kind: "workflow",
-    id: ruleId,
-  });
+  const result = await readWorkflowRule(createAutomationPort(), ctx, ruleId);
 
   return (
     <>
       <PageTitle title={shellPageTitle.settings} />
-      <WorkflowRuleDetailScreen
-        orgSlug={orgSlug}
-        ruleId={ruleId}
-        ctx={ctx}
-        initialResult={
-          result.ok && result.value.kind === "workflow"
-            ? { ok: true, value: result.value }
-            : undefined
-        }
-      />
+      <WorkflowRuleDetailScreen orgSlug={orgSlug} ruleId={ruleId} result={result} />
     </>
   );
 }

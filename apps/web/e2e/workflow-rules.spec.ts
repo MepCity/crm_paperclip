@@ -7,7 +7,10 @@ test("Workflow Rules list WL1–WL11 and detail WD1–WD6 read-only inventory", 
   pageErrors,
 }) => {
   await signUpNewUser(page);
-  const org = await createOrganization(page);
+  const org = await createOrganization(
+    page,
+    `Synthetic Populated Workflow ${crypto.randomUUID().slice(0, 8)}`,
+  );
 
   // Monitor all requests after setup to ensure zero non-GET requests occur
   const nonGetRequests: string[] = [];
@@ -260,5 +263,19 @@ test("Workflow Rules list WL1–WL11 and detail WD1–WD6 read-only inventory", 
   expect(nonGetRequests).toEqual([]);
 
   // Clean page errors
+  assertNoPageErrors(pageErrors);
+});
+
+test("ordinary organizations show no workflow rules or foreign detail", async ({
+  page,
+  pageErrors,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(`/crm/${org.slug}/settings/workflow-rules`);
+  await expect(page.getByText("No workflow rules have been configured yet.")).toBeVisible();
+  await expect(page.getByRole("table")).toHaveCount(0);
+  await page.goto(`/crm/${org.slug}/settings/workflow-rules/wf-rule-lead-welcome`);
+  await expect(page.getByText("Workflow rule not found.")).toBeVisible();
   assertNoPageErrors(pageErrors);
 });
