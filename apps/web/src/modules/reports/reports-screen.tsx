@@ -9,6 +9,7 @@ import { Link } from "@/components/ui/link";
 import { TextField } from "@/components/ui/text-field";
 import { fixtureReportsPort } from "./fixture-port";
 import type { ReportDefinition, ReportsPort } from "./port";
+import { ReportsCategorySelector } from "./reports-category-selector";
 
 export function reportPath(orgSlug: string, id?: string) {
   const root = `/crm/${encodeURIComponent(orgSlug)}/tab/Reports`;
@@ -48,15 +49,7 @@ export function ReportsScreen({
         Not available in this read-only view.
       </span>
       <div className="flex flex-wrap items-center justify-between gap-4 pb-3">
-        <Button
-          variant="recordSelector"
-          aria-label="All Reports"
-          aria-disabled="true"
-          aria-describedby="reports-unavailable"
-          className="gap-4"
-        >
-          All Reports <Icons.chevronDown className="size-4" aria-hidden />
-        </Button>
+        <ReportsCategorySelector />
         <div className="flex items-center gap-4">
           <div className="w-60 rounded-md border border-control-border bg-surface px-2">
             <TextField

@@ -219,3 +219,57 @@ public documentation and a gap record after R1 approval.
 
 Captures remain in the local research workspace. No screenshots or customer
 content are copied into the repository.
+
+## R9 — documentation-based answers (MEP-1302)
+
+Checked 2026-10-24. Public first-party help only; no capture, mailbox access,
+message opening, synchronization, connection or preference change. Earlier
+observations and access-gap disposition remain valid. The numbered items below
+are proposals for UI Lead review, all **documented, not observed**. They do not
+certify the current installation or delivered implementation.
+
+### Public source register
+
+Titles are neutralized; product names and hosts are omitted deliberately.
+Locate each in the first-party help knowledge base by the breadcrumb and
+article topic below. Pages were read, not just search summaries.
+
+| Ref | Neutral page title / topic locator | Sections used |
+| --- | --- | --- |
+| E-D1 | CRM › sales email client › Getting started › Your sales-focused email client | Permissions and Availability; Configuration; Accessing; Folders and Labels |
+| E-D2 | CRM › sales email client › Emails › Compose, Organize and Configure Emails | Compose an email; Add response reminder; Schedule Emails |
+| E-D3 | CRM › sales email client › Emails › Email Views and Email Sentiment | Access Email Views; default-view notes |
+| E-D4 | CRM › Troubleshooting › Troubleshooting the sales email client | Missing emails; deleted thread still visible |
+| E-D5 | CRM › Connect with customers › Email › User functions › Configuring Email Compose Setting | While composing an email; Schedule the email |
+| E-D6 | CRM › Customize CRM account › Record-level customization › Customizing Record's Detail Page | Customize an individual related list › Emails |
+
+### Question dispositions and implementation consequences
+
+| Original question | Verdict | Documentation answer / remaining gap | Implementation consequence |
+| --- | --- | --- | --- |
+| 1 — Role/license | Partly answered | E-D1 specifies Enterprise or above, profile-level Email Integration permission, and completed IMAP/POP3 setup. Any profile type can configure it; administrators can restrict module access. The tab appears after configuration. This does not identify which prerequisite failed for the capture user or prove the denied route is this documented client. | ED01: keep entitlement, profile authorization and connection state distinct; no administrator-only assumption or invented route. |
+| 2 — Sent/draft/scheduled/tracked lists | Partly answered | E-D1 names Inbox, Drafts and Sent. E-D2 explicitly locates queued messages in a Scheduled folder and permits editing there; editing without saving can prevent delivery and produce a failure notice. Save draft and sent-message response reminders are documented. E-D3 describes statistical views, not a folder literally named Tracked. Exact columns, ordering, pagination and current visual layout remain unknown. | ED02–ED05 define capability proposals; no unseen folder layout or tracking folder is certified. |
+| 3 — List-load synchronization / path | Still open for trigger and path | E-D4 describes mapped folders and asynchronous delays: messages commonly take 3–6 minutes; deletion propagation can take about 10 minutes. It supplies neither an HTTP sync endpoint nor proof that opening a list initiates sync. These are troubleshooting estimates, not a service-level guarantee. | ED06: list reads must not implicitly connect or start synchronization based on this research. Provider execution remains under its separately approved contract; invent no reference endpoint. |
+| 4 — No connected mailbox | Partly answered | E-D1 documents setup before tab availability, but no exact disconnected inbox illustration, text, CTA or redirect. It does not document an accessible empty message list without setup. An authorized-but-empty folder is another state. | ED07: retain disconnected, empty and access-denied states separately; existing fixture UI is an implementation choice pending visual evidence. Never reuse the access dialog as proof of the disconnected design. |
+
+### Proposed capability items — documented, not observed
+
+| # | Proposal and source | Boundary |
+| --- | --- | --- |
+| ED01 | Entitlement/profile/connection prerequisites (E-D1; question 1) | Local account diagnosis and exact denied-screen mapping remain open. |
+| ED02 | Separate Sent and Drafts capabilities (E-D1/E-D2) | Resuming or discarding drafts is a write path; no editor was opened. |
+| ED03 | Scheduled capability (E-D2); record Emails also includes scheduled mail (E-D6) | Inbox Scheduled folder and record Scheduled scope are different surfaces; exact list parity remains open. |
+| ED04 | Statistical views (E-D3): Unread = incoming unread; Unopened = outgoing not opened; Not Responded = outgoing opened without response; Not Replied = incoming read without reply; All Messages = all statuses | Views cannot be deleted/customized. Unread and All Messages remain when Email Insights is disabled; other listed statistical views depend on it. A missing tracking event is not evidence of an unopened message. |
+| ED05 | Draft ownership and scheduled permissions (E-D5): minimizing compose saves a record-related draft; owner resumes editing, others see a reader with Edit only when permitted; scheduled edit/delete follows email sharing | Exact autosave timing and permission evaluation remain unobserved. E-D6 documents related-list subject, sentiment, emotions, intent, date, source, sender and delivery status; those are not certified inbox columns. |
+| ED06 | Asynchronous mail propagation (E-D4; question 3) | No list-load trigger, sync method/path, retry or polling contract established. |
+| ED07 | Setup prerequisite and distinct disconnected state (E-D1; question 4) | No exact empty-state design established; do not connect to resolve it. |
+
+### R9 verification and retained questions
+
+Documentation coverage answers the capability questions only. Remaining gate
+questions: deployed entitlement/route mapping, exact folder UI, tracking-view
+placement, list-load sync semantics/endpoint and no-mailbox visual state.
+W3/W4/W7/W8/W12/W19 restrictions remain unchanged. No public page authorizes a
+reference experiment. Checks: question coverage and unique ED IDs, source-row
+cross-references, relative links, `git diff --check` and forbidden-term hook.
+No application tests are required for these Markdown-only changes.

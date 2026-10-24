@@ -117,3 +117,36 @@ custom scalar fields have no executable hooks. Future import mappings and other
 metadata consumers must supply their dependency inventory before being enabled.
 The coordinator and fixture state are process-local; neither claims durable or
 multi-process transaction guarantees. Slice J supplies that boundary.
+
+## Slice E: authenticated commands
+
+`CustomizationService` accepts a freshly resolved `OrgContext`; HTTP membership
+resolution stays in `apiRoute`. Only current organization admins may execute
+commands. Disabled/uncoordinated services and members fail before payload parsing.
+Strict command codecs reject unknown keys, unsupported scalar types and changes
+to field identity/type. Field, module, layout and shared-view commands publish
+through the same coordinator. System/default views and the existing single default
+layout identity remain protected. Private/kanban view rights are unchanged.
+
+`applyPatch` accepts metadata-only audit information. Snapshot and audit entries
+are prepared before a single state replacement; validation/compatibility/audit
+failure publishes neither. `auditEntries` is an internal immutable inspection
+port, not an HTTP audit-log endpoint. Labels, constraints and record values are
+absent from audit entries. Direct adapter calls remain trusted internal/test
+operations; authenticated callers use the service.
+
+Settings reads and coordinated writes use the same opaque baseline/revision
+token (`schemaRevision`). Mutations return `{ revision }`; clients refetch the
+module's settings bundle and preserve local drafts on a 409 stale response.
+Record mutation operations forward an optional `expectedRevision` (a per-module
+map for conversion); the coordinated service rejects missing/stale tokens rather
+than silently supplying the current token on behalf of an old client.
+
+HTTP editing is explicitly off by default and always off in production. Enable
+`MEP_EPHEMERAL_CUSTOMIZATION=1` only in development/test **before starting the
+process**. The adapter selection point then attaches one shared coordinator before
+any organization record store is opened. Late attachment is rejected. Module
+responses expose role/gate capabilities. These changes are process-local, lose
+edits on restart and provide no durable production settings; slice J remains the
+persistence gate. Full route payloads and error mapping are recorded in the
+MEP-1246 `contract` issue document.
