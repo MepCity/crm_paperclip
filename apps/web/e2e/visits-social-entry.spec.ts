@@ -3,6 +3,8 @@ import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
 import { assertNoPageErrors, expect, test } from "./support/test";
 
+test.use({ viewport: { width: 1470, height: 835 } });
+
 test("Visits and Social entry controls stay local inside the shell", async ({
   page,
   pageErrors,
