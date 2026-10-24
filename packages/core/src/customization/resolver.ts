@@ -248,8 +248,8 @@ export function resolveEffectiveModule(
   return immutable({
     inheritsBaselineLayouts: overlay.layouts === undefined,
     apiName: baseline.apiName,
-    singularLabel: baseline.singularLabel,
-    pluralLabel: baseline.pluralLabel,
+    singularLabel: overlay.moduleProperties?.singularLabel ?? baseline.singularLabel,
+    pluralLabel: overlay.moduleProperties?.pluralLabel ?? baseline.pluralLabel,
     baselineVersion: baseline.version,
     revision: overlay.revision,
     fields,

@@ -1,3 +1,4 @@
+import type { CustomizationService } from "@crm/core/customization";
 import { NotFoundError } from "@crm/core/errors";
 import type {
   ConvertLeadInput,
@@ -5,6 +6,7 @@ import type {
   ListQuery,
   ModuleMetadataReader,
   RecordService,
+  RecordWriteOptions,
   SearchQuery,
   SortSpec,
 } from "@crm/core/records";
@@ -29,12 +31,14 @@ import {
   object,
   referenceKeys,
 } from "./codec";
+import { customizationOperations } from "./customization";
 import { kanbanViewOperations } from "./kanban-views";
 import type { WireMember } from "./types";
 
 export type OperationDeps = {
   records: RecordService & ModuleMetadataReader;
   members: () => Promise<readonly WireMember[]>;
+  customization?: () => CustomizationService;
 };
 export type OperationRequest = {
   params?: Record<string, string>;
@@ -45,7 +49,7 @@ export type OperationRequest = {
 };
 export type OperationResult = { status: 200; body: unknown } | { status: 204; body: null };
 export type Operation = {
-  method: "GET" | "POST" | "PUT" | "DELETE";
+  method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
   path: string;
   run(deps: OperationDeps, request: OperationRequest): Promise<OperationResult>;
 };
@@ -68,7 +72,7 @@ function paging(input: OperationRequest, fallback: number) {
     perPage: positive(input.query.per_page, fallback, "perPage"),
   };
 }
-async function bodyOf(input: OperationRequest): Promise<unknown> {
+export async function bodyOf(input: OperationRequest): Promise<unknown> {
   if (input.body !== undefined) return input.body;
   const text = await input.request?.text();
   if (!text) return undefined;
@@ -77,6 +81,18 @@ async function bodyOf(input: OperationRequest): Promise<unknown> {
   } catch {
     return invalid("data", "Send valid JSON.");
   }
+}
+/** Forward the schema token without inventing a current revision for an old client. */
+function writeOptions(body: Record<string, unknown>): [] | [RecordWriteOptions] {
+  const token = body.expectedRevision;
+  if (token === undefined) return [];
+  const valid = (value: unknown): value is string =>
+    typeof value === "string" && /^[A-Za-z0-9._:-]{1,64}$/.test(value);
+  if (valid(token)) return [{ expectedRevision: token }];
+  const revisions = object(token, "expectedRevision");
+  if (!Object.keys(revisions).length || Object.values(revisions).some((value) => !valid(value)))
+    invalid("expectedRevision");
+  return [{ expectedRevision: revisions as Record<string, string> }];
 }
 // Match the existing long-text field limit without narrowing searches to short labels.
 export const MAX_SEARCH_LENGTH = 2000;
@@ -243,11 +259,15 @@ export const operations = {
       if (typeof body.masterId !== "string" || !body.masterId) invalid("masterId");
       const metadata = await records.getModule(module);
       return ok(
-        await records.merge(module, {
-          masterId: body.masterId,
-          duplicateIds: stringList(body.duplicateIds, "duplicateIds"),
-          values: decodeInput(body.values, metadata),
-        }),
+        await records.merge(
+          module,
+          {
+            masterId: body.masterId,
+            duplicateIds: stringList(body.duplicateIds, "duplicateIds"),
+            values: decodeInput(body.values, metadata),
+          },
+          ...writeOptions(body),
+        ),
       );
     },
   },
@@ -268,7 +288,7 @@ export const operations = {
         ...(contact ? { contact } : {}),
         ...(deal ? { deal } : {}),
       };
-      return ok(await records.convertLead(recordIdOf(input), request));
+      return ok(await records.convertLead(recordIdOf(input), request, ...writeOptions(body)));
     },
   },
   deduplicate: {
@@ -276,7 +296,13 @@ export const operations = {
     path: "/crm/v2.2/{module}/actions/deduplicate",
     async run({ records }, input) {
       const body = object(await bodyOf(input), "fields");
-      return ok(await records.deduplicate(moduleOf(input), stringList(body.fields, "fields")));
+      return ok(
+        await records.deduplicate(
+          moduleOf(input),
+          stringList(body.fields, "fields"),
+          ...writeOptions(body),
+        ),
+      );
     },
   },
   currencies: {
@@ -289,9 +315,13 @@ export const operations = {
   module: {
     method: "GET",
     path: "/crm/v2.2/settings/modules/{module}",
-    async run({ records }, input) {
+    async run({ records, customization }, input) {
       const metadata = await records.getModuleProjection(moduleOf(input));
-      return ok({ modules: [encodeModule(metadata)], revision: metadata.revision });
+      return ok({
+        modules: [encodeModule(metadata)],
+        revision: metadata.revision,
+        ...(customization ? { capabilities: customization().capabilities(moduleOf(input)) } : {}),
+      });
     },
   },
   fields: {
@@ -440,7 +470,11 @@ export const operations = {
       if (!Array.isArray(body.data) || body.data.length !== 1)
         invalid("data", "Send exactly one record.");
       const recordMembers = await members();
-      const record = await records.create(module, decodeInput(body.data[0], metadata));
+      const record = await records.create(
+        module,
+        decodeInput(body.data[0], metadata),
+        ...writeOptions(body),
+      );
       return ok(encodeRecordWriteResult(record, metadata, recordMembers, "record added"));
     },
   },
@@ -458,6 +492,7 @@ export const operations = {
         module,
         recordIdOf(input),
         decodeInput(body.data[0], metadata),
+        ...writeOptions(body),
       );
       return ok(encodeRecordWriteResult(record, metadata, recordMembers, "record updated"));
     },
@@ -467,7 +502,8 @@ export const operations = {
     path: "/crm/v2.2/{module}/{recordId}",
     async run({ records }, input) {
       const ids = [recordIdOf(input)];
-      await records.delete(moduleOf(input), ids);
+      const body = object((await bodyOf(input)) ?? {}, "data");
+      await records.delete(moduleOf(input), ids, ...writeOptions(body));
       return ok(encodeWriteResult(ids, "record deleted"));
     },
   },
@@ -477,7 +513,7 @@ export const operations = {
     async run({ records }, input) {
       const body = object(await bodyOf(input), "ids");
       const ids = idsOf(body);
-      await records.delete(moduleOf(input), ids);
+      await records.delete(moduleOf(input), ids, ...writeOptions(body));
       return ok(encodeWriteResult(ids, "record is deleted"));
     },
   },
@@ -491,7 +527,12 @@ export const operations = {
       if (!Array.isArray(body.data) || body.data.length !== 1)
         invalid("data", "Send exactly one record.");
       const metadata = await records.getModule(module);
-      await records.massUpdate(module, ids, decodeInput(body.data[0], metadata));
+      await records.massUpdate(
+        module,
+        ids,
+        decodeInput(body.data[0], metadata),
+        ...writeOptions(body),
+      );
       return ok(encodeWriteResult(ids, "record updated"));
     },
   },
@@ -504,11 +545,12 @@ export const operations = {
       const owner = object(body.owner, "Owner");
       referenceKeys(owner, ["id", "name", "email"], "Owner");
       if (typeof owner.id !== "string") invalid("Owner");
-      await records.changeOwner(moduleOf(input), ids, owner.id);
+      await records.changeOwner(moduleOf(input), ids, owner.id, ...writeOptions(body));
       return ok(encodeWriteResult(ids, "owner is successfully updated"));
     },
   },
   ...kanbanViewOperations,
+  ...customizationOperations,
 } satisfies Record<string, Operation>;
 
 export function operationPath(
