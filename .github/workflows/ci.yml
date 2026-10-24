@@ -21,9 +21,9 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 40
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm
@@ -48,9 +48,9 @@ jobs:
     env:
       CI: "1"
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm
@@ -79,9 +79,9 @@ jobs:
       MEP_E2E_LOCK: "0"
       MEP_E2E_CI_GROUP: ubuntu
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm
@@ -93,7 +93,7 @@ jobs:
         run: echo "version=$(node -p 'require("@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
       - name: Cache Chromium
         id: browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-chromium-${{ steps.playwright.outputs.version }}
@@ -117,7 +117,7 @@ jobs:
           sed 's/^/::notice title=E2E measurements::/' "$GITHUB_STEP_SUMMARY"
       - name: Upload browser report and traces
         if: always() && !cancelled()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-${{ matrix.shard }}
           path: |
@@ -136,9 +136,9 @@ jobs:
       MEP_E2E_LOCK: "0"
       MEP_E2E_CI_GROUP: macos
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
           node-version: 24
           cache: pnpm
@@ -150,7 +150,7 @@ jobs:
         run: echo "version=$(node -p 'require("@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
       - name: Cache Chromium
         id: browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/Library/Caches/ms-playwright
           key: ${{ runner.os }}-chromium-${{ steps.playwright.outputs.version }}
@@ -169,7 +169,7 @@ jobs:
           sed 's/^/::notice title=E2E measurements::/' "$GITHUB_STEP_SUMMARY"
       - name: Upload browser report and traces
         if: always() && !cancelled()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: e2e-macos
           path: |
