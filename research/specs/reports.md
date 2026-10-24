@@ -1,4 +1,4 @@
-# Reports and Analytics — R1 read-only research
+# Reports and Analytics — read-only research
 
 ## Purpose and evidence boundary
 
@@ -265,10 +265,13 @@ rather than being inferred from button labels or generic module metadata.
 - U1: Is the missing report-folder panel expected for All Reports, or affected
   by initialization errors? Folder contents have no safe observed navigation
   link in this state. Do not guess folder URLs or switch persisted views.
-- U2: What categories does R01 contain, and does selection persist? No selector
-  was opened under this issue's navigation-links-only click restriction.
+- U2: Partially answered in R3: the initial category options and selector
+  structure are observed below. Selection persistence and the full scrolled
+  folder catalogue remain unverified; no category was selected.
 - U3: Empty report-list/folder/search states, search matching/debounce and
-  pagination remain unobserved. The empty V result is not evidence for them.
+  pagination remain unobserved. R3 stopped after the category capture
+  exceeded the base non-GET ledger; no search was entered. The capture tool
+  also has no text-entry/clear step. The empty V result is not evidence for them.
 - U4: Exact report types, populated results, drilldown, totals, grouping,
   filter defaults and sort cycles need separate evidence. One report is not
   sufficient to generalize all report schemas.
@@ -440,3 +443,111 @@ authorization nor permission to relax any capture guard.
 Verification for this documentation-only closure: reviewed the complete
 MEP-1230 decision against the capture ledger, component inventory and checklist;
 checked the Markdown diff. No application, unit or e2e code changed.
+
+
+## R3 — Reports category selector and search boundary (MEP-1281)
+
+### Observed selector structure
+
+On 2026-10-24, a click-free Reports base passed a unique All Reports combobox
+readiness probe. The screenshot independently confirms the Reports title,
+report-definition columns and thirteen painted rows; the export has fifty
+existing-report links. No report was opened. The probe refines R2's ambiguous
+combobox probe without changing the content acceptance boundary.
+
+A second capture opened R01 once. Its step-1 screenshot and ARIA preserve the
+open state; explicit Escape then closed it, evidenced by step-2 and final
+screenshots and final `aria-expanded: false`. All Reports stayed selected.
+The selector overlays the upper-left portion of the table. It has a Search
+Folder input, a scrollable category/folder list, and two footer entries. All
+Reports has a checkmark and a tinted selected row. No option or footer was
+clicked, no search field was filled, and the list was not scrolled.
+
+The initial visible options, in order, are All Reports, My Reports, Favorites,
+Recently Viewed, Shared Reports, Scheduled Reports and Recently Deleted.
+Below a divider, an account/contact report-folder row is only partly visible.
+ARIA additionally exports folder options covering account/contact,
+deal, lead, campaign, case/solution, product, vendor, quote, sales order,
+purchase order, invoice, sales metrics, email and meeting report groupings
+(fourteen folder options in total). These are export-only contents except the
+partly painted first row; they do not certify the complete scrolled catalogue.
+No folder identifiers or customer-defined values are reproduced.
+
+### New control inventory — continues after R08
+
+Source: `m13r3-reports-category/step-1.png` and `step-1.yml`; Module 13 owns
+all rows. The final controls.json is the **closed** state and must not be used
+as an open-menu control export. Nested option/link pairs count once.
+
+| # | Position | Control / type | Observed behaviour / limit |
+| --- | --- | --- | --- |
+| R09 | Selector panel top | Search Folder textbox | Empty and focused-looking; matching and text entry untested |
+| R10 | List first row | All Reports option/link | Current checkmark and selected background; not selected again |
+| R11 | List second row | My Reports option/link | Visible; destination not visited |
+| R12 | List third row | Favorites option/link | Visible; no favorite or view preference changed |
+| R13 | List fourth row | Recently Viewed option/link | Visible; destination not visited |
+| R14 | List fifth row | Shared Reports option/link | Visible; sharing not invoked |
+| R15 | List sixth row | Scheduled Reports option/link | Visible; schedule list not opened |
+| R16 | List seventh row | Recently Deleted option/link | Visible; no deleted view or restoration invoked |
+| R17 | Below category divider, clipped at list bottom | First report-folder option/link | Account/contact grouping only partly painted; no scroll or folder selection |
+| R18 | Panel footer, upper row | Manage Folders button | Gear and label visible; not opened; management/write behaviour unknown |
+| R19 | Panel footer, lower row | Advanced analytics integration entry | Two-line integration label/icon; not opened; destination and action unknown |
+
+R01 is now observed opening and closing with Escape, without changing its
+selection. R02 remains the untouched report-list search input. The open menu's
+Search Folder (R09) is a separate input and is not evidence for R02 search.
+Existing H/R inventories remain historical capture-specific mappings.
+
+### Capture ledger and mandatory stop
+
+Exactly two captures ran, with no retry. Both ready gates passed with zero
+failed scripts; both report forty API ledger entries. Existing shell/router
+and sortable-function diagnostics remain; a passed probe is not proof that
+all initialization errors disappeared. Both resting exports contain 297
+controls, without R2's transient row ellipsis; that does not invalidate R08's
+prior observed state.
+
+| Capture | Requested clicks / steps | Evidence | Blocked requests |
+| --- | --- | --- | --- |
+| `m13r3-reports-base` | 0 / 0 | Six standard files; painted populated list | 2: reminder retrieval POST ×1, notification-status POST ×1 |
+| `m13r3-reports-category` | 1 / 2 | Six standard files plus open step-1 and closed step-2 PNG/YML | 5: same reminder/status POSTs ×1 each, telemetry URL-monitor POST ×2, telemetry log POST ×1 |
+
+Before the click, the All Reports label, selector and exported attributes
+passed the capture tool's dangerous-text/control guard with no exception.
+The click result is `clicked`; Escape is `pressed`. No skipped clicks,
+allowed-open exceptions, automatic Escape, remaining dialog, file chooser,
+download, print, popup or window-open request is recorded in either capture.
+No write guard was relaxed.
+
+The path-and-count comparison includes successful non-GET network entries
+**and blocked attempts**. Each capture contains the same external visitor-trigger
+POST path with count one. Reminder and notification POST paths also match at
+one each. The category capture adds two blocked telemetry URL-monitor POSTs
+and one blocked telemetry log POST, absent from this base. Even though these
+are telemetry and were blocked, they exceed the issue's non-GET baseline.
+**Stop condition triggered: no third/search capture, retry or further browser
+action was performed.** Timing or causal attribution to the selector is not
+established by the ledger; the conservative stop does not require it.
+No new successful non-GET path/count or reference mutation is evidenced.
+
+### U2/U3 disposition and implementation boundary
+
+U2 is partially answered: the visible options, initial selected state, panel
+structure and Escape dismissal are evidenced. Selection persistence, category
+contents and scrolled folders remain open. U1's folder-panel question remains;
+a folder option is not evidence for folder contents or a separate folder pane.
+
+U3 stays open: no non-matching query was entered, no empty-search state was
+captured and nothing needed clearing. Independently, the installed capture
+parser supports click/hover/scroll and Escape only, with no text-entry or clear
+operation. No direct browser access, fabricated search route or capture-tool
+modification was used to bypass that limitation. Further search research needs
+separate authorization after the non-GET stop boundary and safe tool support
+are addressed. U4–U7 and all R2 Analytics access gaps are unchanged.
+
+This is a bounded partial research handoff for UI Lead approval, not completed
+U2/U3 parity or authorization to implement category selection/search semantics.
+Verification: visually inspected base, open and closed screenshots; reconciled
+step ARIA and final controls; compared both non-GET ledgers by method/path/count;
+reviewed the documentation diff. No application code changed; no unit/e2e run
+is applicable to these documentation-only findings.

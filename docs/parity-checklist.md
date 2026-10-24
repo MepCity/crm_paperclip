@@ -1563,6 +1563,19 @@ recapture. Analytics behaviour and the implementation gate remain unapproved.
 | RP-R2-04 | Analytics automatic-write boundary | R1 metadata PUT blocked; no R2 entry or repeat | U5 remains an accepted access gap; no re-entry, guard change or successful-initialization inference |
 | RP-R2-05 | Capture safety ledger | New capture: zero clicks/steps, seven blocked background requests; external visitor-trigger POST same count as R1 | MEP-1230: no new capture; bounded research closed. AC01–AC06 resting presentation only, incomplete initialization caveat |
 
+### Module 13 — R3 category selector and mandatory stop (MEP-1281)
+
+Source: R3 in `research/specs/reports.md`; partial research awaiting UI Lead.
+
+| # | Surface | Evidence / status | Remaining boundary |
+| --- | --- | --- | --- |
+| RP-R3-01 | Category selector open/closed | `m13r3-reports-category` step-1/step-2; R09–R19, seven visible category options, search and footers; Escape closes R01 | U2 partial: no selection, persistence or scrolled folder catalogue verified |
+| RP-R3-02 | Empty report search | No third capture or query entered | U3 open: category capture exceeded non-GET baseline; tool also lacks text entry/clear |
+| RP-R3-03 | Paint and safety audit | Base and category readiness passed; 0/1 clicks, 0/2 steps; 2/5 blocked requests | Category adds URL-monitor POST ×2 and log POST ×1, all blocked; mandatory stop, no retry; successful visitor-trigger POST count stays one |
+
+No category, folder, preference or report was changed. No implementation or
+module gate is claimed. U1 and U4–U7, plus R2 Analytics gaps, remain open.
+
 ## Module 14 — Home and Workqueue (R1 research)
 
 Source: `research/specs/home-workqueue.md` (MEP-1241). Bounded read-only
