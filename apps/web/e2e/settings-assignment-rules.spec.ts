@@ -205,9 +205,7 @@ test("populated Assignment rules list AL1–AL5 and detail AD1–AD7 read-only i
   await expect(
     page.getByRole("heading", { name: "Synthetic regional routing", level: 1 }),
   ).toBeVisible();
-  await expect(
-    detailRegion.getByRole("heading", { level: 1 }),
-  ).toHaveCount(1);
+  await expect(detailRegion.getByRole("heading", { level: 1 })).toHaveCount(1);
   await expectNoA11yViolations(page, { include: ['section[aria-label="Assignment Rule"]'] });
   await expect(detailRegion.getByText("Leads")).toBeVisible();
   await expect(page.getByTestId("assignment-detail-status")).toHaveText("Active");
@@ -289,9 +287,7 @@ test("populated Assignment rules list AL1–AL5 and detail AD1–AD7 read-only i
   await expect(
     page.getByRole("heading", { name: "Synthetic contact intake", level: 1 }),
   ).toBeVisible();
-  await expect(
-    detailRegion2.getByRole("heading", { level: 1 }),
-  ).toHaveCount(1);
+  await expect(detailRegion2.getByRole("heading", { level: 1 })).toHaveCount(1);
   await expect(detailRegion2.getByText("Contacts")).toBeVisible();
   await expect(page.getByTestId("assignment-detail-status")).toHaveText("Inactive");
   await expect(detailRegion2.getByText("No description")).toBeVisible();
