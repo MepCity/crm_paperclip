@@ -1,4 +1,8 @@
-import { type AutomationPort, createMemoryAutomationPort } from "@crm/core/automation";
+import {
+  type AutomationPort,
+  createMemoryAutomationPort,
+  type MemoryAutomationOptions,
+} from "@crm/core/automation";
 import type { OrgContext } from "@crm/core/records";
 import { syntheticAssignmentRules } from "./synthetic-fixture";
 
@@ -10,8 +14,10 @@ export const POPULATED_FIXTURE_ORG_PREFIX = "Synthetic Populated";
  * Default fixture is empty and fully synthetic; no reference data, no write capability.
  * The populated synthetic fixture is opt-in by organization name prefix (above), so e2e runs
  * it in CI without an environment switch; all other organizations get the empty fixture.
+ * Explicit options (tests) bypass the prefix selection.
  */
-export function createAutomationPort(): AutomationPort {
+export function createAutomationPort(options?: MemoryAutomationOptions): AutomationPort {
+  if (options) return createMemoryAutomationPort(options);
   const forOrg = (ctx: OrgContext) =>
     createMemoryAutomationPort({
       fixtures: ctx.orgName.startsWith(POPULATED_FIXTURE_ORG_PREFIX)

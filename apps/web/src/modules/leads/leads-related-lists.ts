@@ -1,9 +1,11 @@
+import { createElement } from "react";
 import { campaignsCardBody } from "@/components/records/campaigns/campaigns-card";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
 import { emailsCard } from "../emails/record-card";
 import { notesCardBody } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
+import { SocialRecordCardBody } from "../social/social-record-card";
 import type { RelatedListDefinition } from "../types";
 
 export interface LeadsRelatedListBadges {
@@ -140,6 +142,14 @@ export function createLeadsRelatedLists(
         },
       ],
       emptyStateText: "No records found",
+    },
+    {
+      id: "social",
+      renderBody: () => createElement(SocialRecordCardBody),
+      title: "Social",
+      moduleKey: "M2",
+      order: 6,
+      targetId: "related-list-social",
     },
   ];
 }

@@ -66,7 +66,7 @@ describe("Assignment detail (AD1–AD7)", () => {
     expect(rows[0]?.textContent).toContain("Round robin");
     expect(rows[0]?.textContent).toContain("Require available");
     expect(rows[0]?.textContent).toContain("synthetic-user-a, synthetic-user-b");
-    expect(rows[0]?.textContent).toContain("${CURRENTUSER}");
+    expect(rows[0]?.textContent).toContain("$" + "{CURRENTUSER}");
     expect(rows[1]?.textContent).toContain("All records");
     expect(rows[1]?.textContent).toContain("Ignore availability");
     expect(rows[2]?.textContent).toContain("Definition: synthetic-definition-1");

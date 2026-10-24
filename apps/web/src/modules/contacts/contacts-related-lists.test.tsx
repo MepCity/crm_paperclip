@@ -30,7 +30,7 @@ describe("contactsRelatedLists definition", () => {
       { order: 14, id: "emails", title: "Emails", moduleKey: "M10" },
       { order: 15, id: "invoices", title: "Invoices", moduleKey: "P2" },
       { order: 16, id: "campaigns", title: "Campaigns", moduleKey: "M2" },
-      { order: 17, id: "social", title: "Social", moduleKey: "M15" },
+      { order: 17, id: "social", title: "Social", moduleKey: "M2" },
       { order: 18, id: "reporting-contacts", title: "Reporting Contacts", moduleKey: "M2" },
       { order: 19, id: "voice-of-the-customer", title: "Voice of the Customer", moduleKey: "P3" },
     ];
@@ -63,6 +63,7 @@ describe("contactsRelatedLists definition", () => {
         card.id === "reporting-contacts" ||
         card.id === "campaigns" ||
         card.id === "cases" ||
+        card.id === "social" ||
         card.id === "notes"
       ) {
         expect(card.moduleKey).toBe("M2");
@@ -196,13 +197,11 @@ describe("RelatedCardsContainer with Contacts card set", () => {
       "false",
     );
 
-    // D-87, D-88 Social links (M15) in two-panel layout
-    const twitterLink = screen.getByRole("link", { name: "Associate Twitter" });
-    expect(twitterLink.getAttribute("data-later-module")).toBe("M15");
-    const facebookLink = screen.getByRole("link", { name: "Associate Facebook" });
-    expect(facebookLink.getAttribute("data-later-module")).toBe("M15");
+    // D-87, D-88 Social card: two inert associate controls, no later-module marker
     const socialSection = screen.getByRole("region", { name: "Social" });
-    expect(within(socialSection).getByText(/You cannot search a profile in Facebook/)).toBeTruthy();
+    expect(within(socialSection).getByRole("button", { name: "Associate Twitter" })).toBeTruthy();
+    expect(within(socialSection).getByRole("button", { name: "Associate Facebook" })).toBeTruthy();
+    expect(socialSection.querySelector("[data-later-module]")).toBeNull();
 
     // Notes card (M6): the body needs a record; the card itself is rendered
     expect(screen.getByRole("region", { name: "Notes" })).toBeTruthy();

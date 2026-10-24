@@ -4,6 +4,7 @@ export type ErrorCode =
   | "unauthenticated"
   | "forbidden"
   | "not_found"
+  | "schema_stale"
   | "conflict"
   | "validation"
   | "record_locked"
@@ -131,4 +132,12 @@ export function parseInput<Schema extends z.ZodType>(
     }
   }
   throw new ValidationError(fieldErrors, formMessage);
+}
+
+/** A stale schema is distinct from a duplicate record or ordinary conflict. */
+export class SchemaStaleError extends AppError {
+  override name = "SchemaStaleError";
+  constructor(readonly revision: string) {
+    super("schema_stale", "The schema changed. Refresh metadata before retrying.");
+  }
 }

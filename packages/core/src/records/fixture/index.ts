@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { ATTACHMENT_PARENT_MODULES } from "../../attachments/modules";
+import type { InMemorySchemaCoordinator } from "../../customization/coordinator";
 import {
   ConflictError,
   ForbiddenError,
@@ -69,12 +70,15 @@ import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteri
 import { type DeletionManifest, fixtureRecycleBinService, retainDeletion } from "./recycle-bin";
 import { type FixtureReferenceModule, resolveRecordReferences } from "./references";
 import { type FixtureModuleBundle, fixtureModules } from "./registry";
+import { schemaRecordService } from "./schema-service";
+import { validateSchemaRecord } from "./schema-validation";
 import { relatedFilterHistory } from "./system-filter-history";
 import { fixtureTagService, projectTags } from "./tags";
 import { assertUniqueFieldValues, projectRecordsWithOverrides } from "./unique";
 import { validateInput } from "./validation";
 
 interface FixtureStore {
+  schema?: InMemorySchemaCoordinator;
   modules: Map<string, FixtureModuleStore>;
   memberIds: Set<string>;
   deduplicating: Set<string>;
@@ -139,6 +143,8 @@ const normalizeInput = (
 };
 
 export interface FixtureRecordServiceOptions extends FixtureHistoryPermissions {
+  /** Internal ephemeral schema integration; shared by every service for this organization. */
+  schema?: InMemorySchemaCoordinator;
   actorName?: string;
   source?: HistorySource;
   /** Internal synchronous failure seam; runs before staged history publication. */
@@ -244,6 +250,34 @@ export function createFixtureRecordService(
     stores.set(ctx.orgId, store);
   }
   const state = store;
+  if (!state.schema && options?.schema && state.memberIds.size)
+    throw new ConflictError(
+      "Schema coordination must be configured before opening organization records.",
+    );
+  if (state.schema && options?.schema && state.schema !== options.schema)
+    throw new ConflictError("Organization already has a schema coordinator.");
+  state.schema ??= options?.schema;
+  const schema = state.schema;
+  for (const [module, bundle] of Object.entries(fixtureModules)) {
+    if (!schema?.metadata.hasModule(module)) continue;
+    schema.register(ctx.orgId, module, {
+      records: () => {
+        const current = state.modules.get(module);
+        return [...(current?.records.values() ?? []), ...(current?.deletedRecords?.values() ?? [])];
+      },
+      // Built-in code can depend on any baseline field. Custom scalar fields have no
+      // executable hooks; layouts and views are checked by the metadata resolver.
+      dependencies: () => ({
+        complete: true,
+        fieldIds: bundle.metadata.fields.map((f) => {
+          return (
+            schema.read(ctx.orgId, module).fields.find((field) => field.apiName === f.apiName)
+              ?.id ?? f.apiName
+          );
+        }),
+      }),
+    });
+  }
   // A development hot reload may retain a store from before discovery was added.
   state.deduplicating ??= new Set();
   state.history ??= new Map();
@@ -269,7 +303,47 @@ export function createFixtureRecordService(
   const moduleExists = (module: string) => {
     moduleBundle(module);
   };
-  const bundleFor = (module: string) => moduleBundle(module);
+  const bundleFor = (module: string): FixtureModuleBundle => {
+    const bundle = moduleBundle(module);
+    if (!schema?.metadata.hasModule(module)) return bundle;
+    const effective = schema.read(ctx.orgId, module);
+    const byId = new Map(effective.fields.map((field) => [field.id, field.apiName]));
+    const name = (id: string) => {
+      const apiName = byId.get(id);
+      if (!apiName) throw new ValidationError({ fields: ["Inactive schema field reference."] });
+      return apiName;
+    };
+    const criteria = (value: import("../contract").Criteria): import("../contract").Criteria =>
+      "group" in value
+        ? { ...value, group: value.group.map(criteria) }
+        : { ...value, field: name(value.field) };
+    return {
+      ...bundle,
+      metadata: {
+        ...bundle.metadata,
+        businessCardFields: bundle.metadata.businessCardFields.filter((name) =>
+          effective.fields.some((field) => field.apiName === name),
+        ),
+        fields: effective.fields,
+        layout:
+          effective.layouts[0]?.sections.map((section) => ({
+            label: section.label,
+            columnCount: section.columnCount,
+            columns: section.columns.map((column) => column.map(name)),
+            fields: section.columns.flat().map(name),
+          })) ?? [],
+      },
+      views: effective.views.map((view) => ({
+        ...view,
+        columns: view.columns.map(name),
+        criteria: view.criteria ? criteria(view.criteria) : null,
+        sort: view.sort ? { ...view.sort, field: name(view.sort.field) } : null,
+      })),
+      searchFields: bundle.searchFields.filter((apiName) =>
+        effective.fields.some((f) => f.apiName === apiName),
+      ),
+    };
+  };
   const kanbanViews = createFixtureKanbanViews(ctx, bundleFor);
   let transactionOriginal: Map<string, FixtureModuleStore> | undefined;
   let hookCopies = new Set<string>();
@@ -342,10 +416,21 @@ export function createFixtureRecordService(
             ),
           }
         : record;
+    const activeRecord = schema?.metadata.hasModule(module)
+      ? {
+          ...publicRecord,
+          fields: Object.fromEntries(
+            bundle.metadata.fields.map((field) => [
+              field.apiName,
+              publicRecord.fields[field.apiName] ?? null,
+            ]),
+          ),
+        }
+      : publicRecord;
     return resolveRecordReferences(
       bundle.metadata.fields.some((field) => field.apiName === "Tag")
-        ? projectTags(moduleStore(module), bundle.readRecord?.(publicRecord, now) ?? publicRecord)
-        : (bundle.readRecord?.(publicRecord, now) ?? publicRecord),
+        ? projectTags(moduleStore(module), bundle.readRecord?.(activeRecord, now) ?? activeRecord)
+        : (bundle.readRecord?.(activeRecord, now) ?? activeRecord),
       bundle.metadata.fields,
       referenceModules(),
     );
@@ -358,7 +443,12 @@ export function createFixtureRecordService(
     const optional = bundle.optionalFields?.(fields);
     return optional?.length
       ? bundle.metadata.fields.map((f) =>
-          optional.includes(f.apiName) ? { ...f, required: false } : f,
+          optional.includes(f.apiName) &&
+          moduleBundle(bundle.metadata.apiName).metadata.fields.find(
+            (base) => base.apiName === f.apiName,
+          )?.required === f.required
+            ? { ...f, required: false }
+            : f,
         )
       : bundle.metadata.fields;
   };
@@ -549,7 +639,11 @@ export function createFixtureRecordService(
     if (ids.length < 1 || ids.length > 500)
       throw new ValidationError({ ids: ["Choose between 1 and 500 records."] }, undefined, "limit");
   };
-  const atomic = <T>(operation: FixtureHistoryOperation, write: () => T): T => {
+  const atomic = <T>(operation: FixtureHistoryOperation, write: () => T): T =>
+    schema
+      ? schema.commit(ctx.orgId, () => atomicWrite(operation, write))
+      : atomicWrite(operation, write);
+  const atomicWrite = <T>(operation: FixtureHistoryOperation, write: () => T): T => {
     const previous = state.modules;
     const previousDeletions = state.deletions;
     state.deletions = new Map(previousDeletions);
@@ -559,6 +653,28 @@ export function createFixtureRecordService(
     hookCopies = new Set();
     try {
       const result = write();
+      if (schema) {
+        for (const [module, current] of state.modules) {
+          if (!schema.metadata.hasModule(module)) continue;
+          const effective = schema.read(ctx.orgId, module);
+          const baselineFields = moduleBundle(module).metadata.fields;
+          const constraints = effective.fields.filter((field) => {
+            const original = baselineFields.find((f) => f.apiName === field.apiName);
+            return (
+              !original ||
+              ["required", "maxLength", "picklist"].some(
+                (key) =>
+                  JSON.stringify(original[key as keyof typeof original]) !==
+                  JSON.stringify(field[key as keyof typeof field]),
+              )
+            );
+          });
+          for (const record of current.records.values()) {
+            if (previous.get(module)?.records.get(record.id) !== record)
+              validateSchemaRecord({ ...effective, fields: constraints }, record);
+          }
+        }
+      }
       const commit = {
         sequence: state.sequence + 1,
         occurredAt: clock().toISOString(),
@@ -1017,7 +1133,12 @@ export function createFixtureRecordService(
       },
     );
   };
-  return {
+  const service: RecordService & {
+    attachmentLifecycle: typeof attachmentLifecycle;
+    history: RecordHistoryService;
+    tags: TagService;
+    recycleBin: RecycleBinService;
+  } = {
     convertLead,
     attachmentLifecycle: {
       ...attachmentLifecycle,
@@ -1403,6 +1524,7 @@ export function createFixtureRecordService(
       });
     },
   };
+  return schema ? schemaRecordService(ctx, service, schema) : service;
 }
 
 /** Internal lifecycle access for the server-side blob adapter; never a wire API. */
