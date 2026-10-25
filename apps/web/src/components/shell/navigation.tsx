@@ -31,15 +31,10 @@ function NavigationLink({
   const linkRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
-    if (active && linkRef.current) {
-      const el = linkRef.current;
-      el.scrollIntoView?.({ block: "center", inline: "nearest" });
-      const timer = setTimeout(() => {
-        el.scrollIntoView?.({ block: "center", inline: "nearest" });
-      }, 50);
-      return () => clearTimeout(timer);
+    if (active && link.id === "social" && linkRef.current) {
+      linkRef.current.scrollIntoView?.({ block: "center", inline: "nearest" });
     }
-  }, [active]);
+  }, [active, link.id]);
 
   return (
     <Link
