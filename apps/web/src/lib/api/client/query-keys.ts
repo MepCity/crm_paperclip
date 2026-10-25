@@ -13,6 +13,8 @@ export const apiKeys = {
   exports: (orgSlug: string) => [...root(orgSlug), "exports"] as const,
   users: (orgSlug: string) => [...root(orgSlug), "users"] as const,
   module: (orgSlug: string, module: string) => [...root(orgSlug), "module", module] as const,
+  moduleProjection: (orgSlug: string, module: string) =>
+    [...apiKeys.module(orgSlug, module), "projection"] as const,
   views: (orgSlug: string, module: string) =>
     [...apiKeys.module(orgSlug, module), "views"] as const,
   view: (orgSlug: string, module: string, viewId: string) =>

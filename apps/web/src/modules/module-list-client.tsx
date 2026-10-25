@@ -18,11 +18,13 @@ export function ModuleListClient({
   viewId,
   definition,
   currentUserId,
+  userRole,
 }: {
   orgSlug: string;
   viewId?: string;
   definition: ModuleScreenDefinition;
   currentUserId?: string;
+  userRole?: "admin" | "member";
 }) {
   const tagClient = useMemo<TagCatalogClient>(
     () => ({
@@ -78,6 +80,7 @@ export function ModuleListClient({
         config={config}
         viewId={viewId}
         currentUserId={currentUserId}
+        userRole={userRole}
       />
     </TagCatalogProvider>
   );

@@ -11,6 +11,7 @@ import type {
   MergeInput,
   ModuleApiName,
   ModuleMetadata,
+  ModuleReadProjection,
   RecordData,
   RecordId,
   RecordInput,
@@ -49,6 +50,19 @@ export function useModule(module: ModuleApiName) {
   });
 }
 
+export function useModuleProjection(module: ModuleApiName, options?: { enabled?: boolean }) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  return useQuery<ModuleReadProjection>({
+    queryKey: apiKeys.moduleProjection(orgSlug, module),
+    queryFn: () =>
+      service.getModuleProjection
+        ? service.getModuleProjection(module)
+        : (service.getModule(module) as unknown as Promise<ModuleReadProjection>),
+    enabled: options?.enabled ?? true,
+  });
+}
+
 export function useViews(module: ModuleApiName, options?: { enabled?: boolean }) {
   const orgSlug = useOrgSlug();
   const service = useClientRecordService();
@@ -59,13 +73,13 @@ export function useViews(module: ModuleApiName, options?: { enabled?: boolean })
   });
 }
 
-export function useView(module: ModuleApiName, viewId: string) {
+export function useView(module: ModuleApiName, viewId: string, options?: { enabled?: boolean }) {
   const orgSlug = useOrgSlug();
   const service = useClientRecordService();
   return useQuery({
     queryKey: apiKeys.view(orgSlug, module, viewId),
     queryFn: () => service.getView(module, viewId),
-    enabled: Boolean(viewId),
+    enabled: Boolean(viewId) && (options?.enabled ?? true),
   });
 }
 

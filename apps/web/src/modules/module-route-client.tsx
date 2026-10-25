@@ -42,6 +42,7 @@ export function ModuleRouteClient({
   viewId,
   recordId,
   currentUserId,
+  userRole,
   createPrefill,
 }: {
   moduleTab: string;
@@ -50,6 +51,7 @@ export function ModuleRouteClient({
   viewId?: string;
   recordId?: string;
   currentUserId: string;
+  userRole?: "admin" | "member";
   createPrefill?: Readonly<Record<string, FieldValue>>;
 }) {
   const definition = resolveModuleScreen(moduleTab);
@@ -78,6 +80,7 @@ export function ModuleRouteClient({
         orgSlug={orgSlug}
         viewId={viewId}
         currentUserId={currentUserId}
+        userRole={userRole}
       />
     );
   if (kind === "print-list")

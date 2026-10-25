@@ -57,6 +57,7 @@ async function renderModuleRoute(props: RouteProps, kind: ModuleRouteKind) {
       viewId={typeof printViewId === "string" ? printViewId : route.viewId}
       kind={kind}
       currentUserId={context.userId}
+      userRole={context.role}
       createPrefill={createPrefill}
     />
   );

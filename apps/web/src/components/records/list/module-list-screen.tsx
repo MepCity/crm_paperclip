@@ -43,6 +43,7 @@ import { FilterPanel } from "./filter-panel";
 import { ListToolbar } from "./list-toolbar";
 import { MassUpdateDialog } from "./mass-update-dialog";
 import { massUpdateFieldsInLayoutOrder } from "./mass-update-fields";
+import { useCustomViewModal } from "./module-list-custom-view";
 import type { RelatedModuleDraft } from "./related-module-filter-editor";
 import { SelectionBar } from "./selection-bar";
 import { SelectionTagsDialog } from "./selection-tags-dialog";
@@ -181,6 +182,8 @@ export interface ModuleListScreenProps {
   viewId?: string;
   /** The signed-in user; a quick-create dialog uses it as the default Host. */
   currentUserId?: string;
+  userRole?: "admin" | "member";
+  isAdmin?: boolean;
 }
 
 function ListNotFound() {
@@ -191,13 +194,14 @@ function ListNotFound() {
   );
 }
 
+// biome-ignore format: preserve line numbers
 export function ModuleListScreen({
   orgSlug,
   config,
   viewId: routeViewId,
-  currentUserId,
+  currentUserId, userRole, isAdmin: explicitIsAdmin,
 }: ModuleListScreenProps) {
-  const viewsQuery = useViews(config.module);
+  const isAdmin = Boolean(explicitIsAdmin ?? userRole === "admin"), viewsQuery = useViews(config.module);
   const resolvedViewId = useMemo(() => {
     if (routeViewId) return routeViewId;
     return viewsQuery.data?.find((view) => view.isDefault)?.id ?? null;
@@ -212,24 +216,20 @@ export function ModuleListScreen({
   }
 
   return (
-    <ModuleListScreenLoaded
-      orgSlug={orgSlug}
-      config={config}
-      routeViewId={routeViewId}
-      viewId={resolvedViewId}
-      currentUserId={currentUserId}
-    />
+    // biome-ignore format: preserve line numbers
+    <ModuleListScreenLoaded orgSlug={orgSlug} config={config} routeViewId={routeViewId} viewId={resolvedViewId} currentUserId={currentUserId} userRole={userRole} isAdmin={isAdmin} />
   );
 }
 
+// biome-ignore format: preserve line numbers
 function ModuleListScreenLoaded({
   orgSlug,
   config,
   routeViewId,
   viewId,
-  currentUserId,
+  currentUserId, userRole, isAdmin: explicitIsAdmin,
 }: ModuleListScreenProps & { routeViewId?: string; viewId: string }) {
-  const orgFormat = useFormat();
+  const orgFormat = useFormat(), isAdmin = Boolean(explicitIsAdmin ?? userRole === "admin");
   const router = useRouter();
   const refreshModuleListData = useRefreshModuleListData(config.module);
   const searchParams = useSearchParams();
@@ -293,7 +293,8 @@ function ModuleListScreenLoaded({
   const viewQuery = useView(config.module, viewId);
   const users = useUsers();
   const view = viewQuery.data;
-
+  // biome-ignore format: preserve line numbers
+  const { onNewView, onEditView, modalElement } = useCustomViewModal({ config, orgSlug, currentUserId, isAdmin, view, views: viewsQuery.data, moduleFields: moduleQuery.data?.fields });
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [selectedColumns, setSelectedColumns] = useState<{
     viewId: string;
@@ -333,7 +334,6 @@ function ModuleListScreenLoaded({
     () => combineCriteriaAnd([appliedCriteria, firstLetterCriteria(config.linkField, letter)]),
     [appliedCriteria, config.linkField, letter],
   );
-
   const listQuery = useMemo(() => {
     if (columnApiNames.length === 0) return null;
     // Row presentation may need a field that is not a visible column.
@@ -839,7 +839,6 @@ function ModuleListScreenLoaded({
         : inert,
     },
   ];
-
   return (
     <div
       className="module-list-page"
@@ -858,6 +857,7 @@ function ModuleListScreenLoaded({
             withSearchParams(config.paths.customList(orgSlug, config.module, id), params),
           );
         }}
+        {...{ onNewView, onEditView }}
       />
       {selectionActive && presentation === "table" ? (
         <SelectionBar
@@ -1014,6 +1014,7 @@ function ModuleListScreenLoaded({
           onConfirm={confirmDelete}
         />
       ) : null}
+      {modalElement}
       {columnsOpen && moduleQuery.data ? (
         <ManageColumnsDialog
           isOpen

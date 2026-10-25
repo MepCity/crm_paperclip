@@ -226,4 +226,94 @@ describe("customization HTTP authorization and publication", () => {
     expect(route).not.toHaveProperty("POST");
     expect(route).not.toHaveProperty("DELETE");
   });
+
+  it("sequential create, patch with criteria AST and sort, and delete over HTTP", async () => {
+    const projection = await getRecordService(a.ctx).getModuleProjection("Leads");
+    const field0 = projection.fields[0];
+    const field1 = projection.fields[1];
+    if (!field0 || !field1) throw new Error("Expected at least two fields");
+    const fieldId1 = field0.id;
+    const fieldId2 = field1.id;
+    const viewId = "seq-test-view";
+
+    // 1. Create with sort and single criterion
+    const initialRev = await revision();
+    const createRes = await call(
+      operations.createSharedView,
+      {
+        expectedRevision: initialRev,
+        command: {
+          type: "view.create",
+          view: {
+            id: viewId,
+            name: "Initial View",
+            systemDefined: false,
+            isDefault: false,
+            columns: [fieldId1, fieldId2],
+            criteria: { field: fieldId1, comparator: "is_not_empty", value: null },
+            sort: { field: fieldId2, order: "asc" },
+          },
+        },
+      },
+      { viewId },
+    );
+    expect(createRes.status).toBe(200);
+    const createdRev = (await createRes.json()).revision;
+    expect(createdRev).not.toBe(initialRev);
+
+    // Verify view is accessible via getView
+    const viewAfterCreate = await getRecordService(a.ctx).getView("Leads", viewId);
+    expect(viewAfterCreate.name).toBe("Initial View");
+    expect(viewAfterCreate.sort).toEqual({ field: field1.apiName, order: "asc" });
+
+    // 2. Patch with group criteria and preserve sort
+    const patchRes = await call(
+      operations.patchSharedView,
+      {
+        expectedRevision: createdRev,
+        command: {
+          type: "view.patch",
+          view: {
+            id: viewId,
+            name: "Patched View",
+            systemDefined: false,
+            isDefault: false,
+            columns: [fieldId1],
+            criteria: {
+              groupOperator: "or",
+              group: [
+                { field: fieldId1, comparator: "is_not_empty", value: null },
+                { field: fieldId2, comparator: "equal", value: "Test" },
+              ],
+            },
+            sort: { field: fieldId2, order: "asc" },
+          },
+        },
+      },
+      { viewId },
+    );
+    expect(patchRes.status).toBe(200);
+    const patchedRev = (await patchRes.json()).revision;
+    expect(patchedRev).not.toBe(createdRev);
+
+    // Verify view is updated
+    const viewAfterPatch = await getRecordService(a.ctx).getView("Leads", viewId);
+    expect(viewAfterPatch.name).toBe("Patched View");
+    expect(viewAfterPatch.columns).toEqual([field0.apiName]);
+    expect(viewAfterPatch.criteria).toMatchObject({ groupOperator: "or" });
+
+    // 3. Delete
+    const deleteRes = await call(
+      operations.deleteSharedView,
+      {
+        expectedRevision: patchedRev,
+        command: { type: "view.delete" },
+      },
+      { viewId },
+    );
+    expect(deleteRes.status).toBe(200);
+    await expect(getRecordService(a.ctx).getView("Leads", viewId)).rejects.toMatchObject({
+      code: "not_found",
+    });
+  });
 });
