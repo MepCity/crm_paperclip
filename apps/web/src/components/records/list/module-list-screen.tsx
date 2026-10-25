@@ -199,9 +199,9 @@ export function ModuleListScreen({
   orgSlug,
   config,
   viewId: routeViewId,
-  currentUserId, isAdmin,
+  currentUserId, userRole, isAdmin: explicitIsAdmin,
 }: ModuleListScreenProps) {
-  const viewsQuery = useViews(config.module);
+  const isAdmin = Boolean(explicitIsAdmin ?? userRole === "admin"), viewsQuery = useViews(config.module);
   const resolvedViewId = useMemo(() => {
     if (routeViewId) return routeViewId;
     return viewsQuery.data?.find((view) => view.isDefault)?.id ?? null;
@@ -217,7 +217,7 @@ export function ModuleListScreen({
 
   return (
     // biome-ignore format: preserve line numbers
-    <ModuleListScreenLoaded orgSlug={orgSlug} config={config} routeViewId={routeViewId} viewId={resolvedViewId} currentUserId={currentUserId} isAdmin={isAdmin} />
+    <ModuleListScreenLoaded orgSlug={orgSlug} config={config} routeViewId={routeViewId} viewId={resolvedViewId} currentUserId={currentUserId} userRole={userRole} isAdmin={isAdmin} />
   );
 }
 
@@ -227,9 +227,9 @@ function ModuleListScreenLoaded({
   config,
   routeViewId,
   viewId,
-  currentUserId, isAdmin,
+  currentUserId, userRole, isAdmin: explicitIsAdmin,
 }: ModuleListScreenProps & { routeViewId?: string; viewId: string }) {
-  const orgFormat = useFormat();
+  const orgFormat = useFormat(), isAdmin = Boolean(explicitIsAdmin ?? userRole === "admin");
   const router = useRouter();
   const refreshModuleListData = useRefreshModuleListData(config.module);
   const searchParams = useSearchParams();

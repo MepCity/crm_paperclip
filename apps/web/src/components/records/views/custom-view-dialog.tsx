@@ -14,31 +14,9 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { sendViewCommand } from "./custom-view-api";
 import "./custom-view-dialog.css";
-
-const uiText = (text: string) => text;
-const opt = <T extends string>(value: T, label: string, extra?: { isDisabled?: boolean }) => ({
-  value,
-  label,
-  ...extra,
-});
-const COMPARATOR_OPTIONS: { value: Comparator; label: string }[] = [
-  opt("equal", "is"),
-  opt("not_equal", "is not"),
-  opt("contains", "contains"),
-  opt("not_contains", "doesn't contain"),
-  opt("starts_with", "starts with"),
-  opt("ends_with", "ends with"),
-  opt("is_empty", "is empty"),
-  opt("is_not_empty", "is not empty"),
-  opt("less_than", "less than"),
-  opt("greater_than", "greater than"),
-  opt("less_equal", "less or equal"),
-  opt("greater_equal", "greater or equal"),
-  opt("between", "between"),
-  opt("not_between", "not between"),
-];
 
 export interface CriterionDraft {
   id: string;
@@ -350,8 +328,46 @@ function CustomViewDialogContent({
   // Preserve existing sort configuration if present
   const [sort] = useState<{ field: string; order: "asc" | "desc" } | null>(initial?.sort ?? null);
 
+  const t = useUiTranslations();
   const [pending, setPending] = useState(false);
-  const [error, setFormError] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const comparatorOptions = useMemo(
+    () => [
+      { value: "equal" as const, label: t("common.customViews.comparators.equal") },
+      { value: "not_equal" as const, label: t("common.customViews.comparators.notEqual") },
+      { value: "contains" as const, label: t("common.customViews.comparators.contains") },
+      { value: "not_contains" as const, label: t("common.customViews.comparators.notContains") },
+      { value: "starts_with" as const, label: t("common.customViews.comparators.startsWith") },
+      { value: "ends_with" as const, label: t("common.customViews.comparators.endsWith") },
+      { value: "is_empty" as const, label: t("common.customViews.comparators.isEmpty") },
+      { value: "is_not_empty" as const, label: t("common.customViews.comparators.isNotEmpty") },
+      { value: "less_than" as const, label: t("common.customViews.comparators.lessThan") },
+      { value: "greater_than" as const, label: t("common.customViews.comparators.greaterThan") },
+      { value: "less_equal" as const, label: t("common.customViews.comparators.lessEqual") },
+      { value: "greater_equal" as const, label: t("common.customViews.comparators.greaterEqual") },
+      { value: "between" as const, label: t("common.customViews.comparators.between") },
+      { value: "not_between" as const, label: t("common.customViews.comparators.notBetween") },
+    ],
+    [t],
+  );
+
+  const sharingOptions = useMemo(
+    () => [
+      { value: "everyone", label: t("common.customViews.everyone") },
+      { value: "only_me", label: t("common.customViews.onlyMe"), isDisabled: true },
+      { value: "selected_users", label: t("common.customViews.selectedUsers"), isDisabled: true },
+    ],
+    [t],
+  );
+
+  const groupOperatorOptions = useMemo(
+    () => [
+      { value: "and", label: t("common.customViews.matchAllAnd") },
+      { value: "or", label: t("common.customViews.matchAnyOr") },
+    ],
+    [t],
+  );
 
   const isActionDisabled =
     isProtected ||
@@ -454,33 +470,31 @@ function CustomViewDialogContent({
       return;
     }
     if (revisionError) {
-      setFormError(`Failed to load module customization metadata: ${revisionError}`);
+      setError(t("common.customViews.errors.metadataFailed", { error: revisionError }));
       return;
     }
     if (isProtected) {
-      setFormError("protected_view: system and default views are immutable.");
+      setError(t("common.customViews.errors.protectedView"));
       return;
     }
 
     const trimmedName = name.trim();
     if (!trimmedName) {
-      setFormError("Enter a custom view name.");
+      setError(t("common.customViews.errors.enterName"));
       return;
     }
     if (selectedColumns.length === 0) {
-      setFormError("Select at least one column.");
+      setError(t("common.customViews.errors.selectColumn"));
       return;
     }
 
     if (sharedTo === "only_me") {
-      setFormError(
-        "Private custom views ('Only me') are not supported for organization views. Only shared views ('Everyone') can be saved.",
-      );
+      setError(t("common.customViews.errors.privateUnsupported"));
       return;
     }
 
     setPending(true);
-    setFormError(null);
+    setError(null);
 
     // Build criteria with typed values and preserved AST structure using stable field IDs
     const criteria = rebuildCriteriaAst(
@@ -558,13 +572,15 @@ function CustomViewDialogContent({
     }
 
     if (res.fieldErrors?.view_field && res.fieldErrors.view_field.length > 0) {
-      setFormError(
-        `View references an inactive or unknown field: ${res.fieldErrors.view_field.join(", ")}`,
+      setError(
+        t("common.customViews.errors.inactiveField", {
+          fields: res.fieldErrors.view_field.join(", "),
+        }),
       );
     } else if (res.fieldErrors?.view?.includes("protected_view")) {
-      setFormError("protected_view: system and default views are immutable.");
+      setError(t("common.customViews.errors.protectedView"));
     } else {
-      setFormError(res.message);
+      setError(res.message);
     }
   }
 
@@ -573,18 +589,18 @@ function CustomViewDialogContent({
       return;
     }
     if (revisionError) {
-      setFormError(`Failed to load module customization metadata: ${revisionError}`);
+      setError(t("common.customViews.errors.metadataFailed", { error: revisionError }));
       return;
     }
     if (isProtected) {
-      setFormError("protected_view: system and default views are immutable.");
+      setError(t("common.customViews.errors.protectedView"));
       return;
     }
     const viewId = initial?.id;
     if (!viewId) return;
 
     setPending(true);
-    setFormError(null);
+    setError(null);
 
     const res = await sendViewCommand(
       orgSlug,
@@ -604,9 +620,9 @@ function CustomViewDialogContent({
     }
 
     if (res.fieldErrors?.view?.includes("protected_view")) {
-      setFormError("protected_view: system and default views are immutable.");
+      setError(t("common.customViews.errors.protectedView"));
     } else {
-      setFormError(res.message);
+      setError(res.message);
     }
   }
 
@@ -622,12 +638,14 @@ function CustomViewDialogContent({
       <div className="custom-view-content" data-mode={mode}>
         <header className="custom-view-header">
           <h2 id={titleId} className="text-xl font-semibold">
-            {mode === "create" ? "New Custom View" : `Edit Custom View - ${initial?.name ?? ""}`}
+            {mode === "create"
+              ? t("common.customViews.newView")
+              : t("common.customViews.editView", { name: initial?.name ?? "" })}
           </h2>
           <Button
             variant="ghost"
             size="listIcon"
-            aria-label={uiText("Close Modal")}
+            aria-label={t("common.customViews.closeModal")}
             onPress={onClose}
           >
             <Icons.close aria-hidden className="h-4 w-4" />
@@ -640,7 +658,7 @@ function CustomViewDialogContent({
               role="alert"
               className="rounded-md border border-warning/40 bg-warning/10 p-3 text-sm text-warning"
             >
-              {uiText("Protected view: System and default views cannot be edited or deleted.")}
+              {t("common.customViews.protectedViewWarning")}
             </div>
           ) : null}
 
@@ -649,7 +667,7 @@ function CustomViewDialogContent({
               role="alert"
               className="rounded-md border border-danger/40 bg-danger/10 p-3 text-sm text-danger"
             >
-              {uiText("Failed to load module customization metadata:")} {revisionError}
+              {t("common.customViews.loadMetadataError")} {revisionError}
             </div>
           ) : null}
 
@@ -667,20 +685,20 @@ function CustomViewDialogContent({
               role="status"
               className="rounded-md border border-neutral-200 bg-neutral-50 p-2 text-xs text-text-muted"
             >
-              {uiText("Loading module customization metadata...")}
+              {t("common.customViews.loadingMetadata")}
             </div>
           ) : null}
 
           {/* View Name */}
           <div className="custom-view-section">
             <TextField
-              label={uiText("Enter Custom View Name")}
+              label={t("common.customViews.viewNameLabel")}
               value={name}
               onChange={setName}
               autoFocus
               isRequired
               isDisabled={isProtected || pending}
-              placeholder={uiText("Enter Custom View Name")}
+              placeholder={t("common.customViews.viewNamePlaceholder")}
             />
           </div>
 
@@ -688,7 +706,7 @@ function CustomViewDialogContent({
           <div className="custom-view-section">
             <div className="flex items-center justify-between">
               <span className="custom-view-section-title">
-                {uiText("Specify Criteria")} - "{module}"
+                {t("common.customViews.specifyCriteria")} - "{module}"
               </span>
               <Button
                 variant="secondary"
@@ -696,26 +714,28 @@ function CustomViewDialogContent({
                 isDisabled={isProtected || pending}
                 onPress={addCriterion}
               >
-                {uiText("Add Criterion")}
+                {t("common.customViews.addCriterion")}
               </Button>
             </div>
 
             {criteriaRows.length > 1 ? (
               <div className="flex items-center gap-2 my-2 text-xs">
-                <span className="text-text-muted">{uiText("Combine criteria using:")}</span>
+                <span className="text-text-muted">
+                  {t("common.customViews.combineCriteriaPrompt")}
+                </span>
                 <RadioGroup
-                  label={uiText("Combine criteria using")}
+                  label={t("common.customViews.combineCriteriaLabel")}
                   orientation="horizontal"
                   value={groupOperator}
                   onChange={(val) => setGroupOperator(val as "and" | "or")}
                   isDisabled={isProtected || pending}
-                  options={[opt("and", "Match all (AND)"), opt("or", "Match any (OR)")]}
+                  options={groupOperatorOptions}
                 />
               </div>
             ) : null}
 
             {criteriaRows.length === 0 ? (
-              <p className="text-sm text-text-muted">{uiText("No criteria specified.")}</p>
+              <p className="text-sm text-text-muted">{t("common.customViews.noCriteria")}</p>
             ) : (
               <div className="custom-view-criteria-list">
                 {criteriaRows.map((row, index) => {
@@ -729,9 +749,11 @@ function CustomViewDialogContent({
                     >
                       <span className="text-xs font-semibold text-text-muted w-4">{index + 1}</span>
                       <Select
-                        label={uiText("Criterion Field")}
+                        label={t("common.customViews.criterionField")}
                         hideLabel
-                        aria-label={`Criterion ${index + 1} Field`}
+                        aria-label={t("common.customViews.criterionFieldAria", {
+                          index: index + 1,
+                        })}
                         items={fields.map((f) => ({ value: f.apiName, label: f.label }))}
                         value={row.field}
                         isDisabled={isProtected || pending}
@@ -741,10 +763,12 @@ function CustomViewDialogContent({
                       </Select>
 
                       <Select
-                        label={uiText("Comparator")}
+                        label={t("common.customViews.comparator")}
                         hideLabel
-                        aria-label={`Criterion ${index + 1} Comparator`}
-                        items={COMPARATOR_OPTIONS}
+                        aria-label={t("common.customViews.criterionComparatorAria", {
+                          index: index + 1,
+                        })}
+                        items={comparatorOptions}
                         value={row.comparator}
                         isDisabled={isProtected || pending}
                         onChange={(val) =>
@@ -756,20 +780,24 @@ function CustomViewDialogContent({
 
                       {!isValueHidden ? (
                         <TextField
-                          label={uiText("Value")}
+                          label={t("common.customViews.value")}
                           hideLabel
-                          aria-label={`Criterion ${index + 1} Value`}
+                          aria-label={t("common.customViews.criterionValueAria", {
+                            index: index + 1,
+                          })}
                           value={row.value}
                           isDisabled={isProtected || pending}
                           onChange={(val) => updateCriterion(index, { value: val })}
-                          placeholder={uiText("Type here")}
+                          placeholder={t("common.customViews.typeHere")}
                         />
                       ) : null}
 
                       <Button
                         variant="ghost"
                         size="listIcon"
-                        aria-label={`Remove criterion ${index + 1}`}
+                        aria-label={t("common.customViews.removeCriterionAria", {
+                          index: index + 1,
+                        })}
                         isDisabled={isProtected || pending}
                         onPress={() => removeCriterion(index)}
                       >
@@ -785,23 +813,26 @@ function CustomViewDialogContent({
           {/* Choose Columns */}
           <div className="custom-view-section">
             <span className="custom-view-section-title">
-              {uiText("Choose Column for Default List View")}
+              {t("common.customViews.chooseColumns")}
             </span>
             <div className="custom-view-columns-container">
               {/* Available */}
               <div className="custom-view-column-box">
                 <div className="custom-view-column-header">
-                  <span>{uiText("Available")}</span>
+                  <span>{t("common.customViews.available")}</span>
                   <TextField
-                    label={uiText("Search available columns")}
+                    label={t("common.customViews.searchAvailableColumns")}
                     hideLabel
                     value={columnSearch}
                     onChange={setColumnSearch}
-                    placeholder={uiText("Search")}
+                    placeholder={t("common.actions.search")}
                     className="mt-1"
                   />
                 </div>
-                <ul className="custom-view-column-list" aria-label={uiText("Available columns")}>
+                <ul
+                  className="custom-view-column-list"
+                  aria-label={t("common.customViews.availableColumns")}
+                >
                   {availableColumns.map((f) => (
                     <li key={f.apiName}>
                       <button
@@ -821,9 +852,12 @@ function CustomViewDialogContent({
               {/* Selected */}
               <div className="custom-view-column-box">
                 <div className="custom-view-column-header">
-                  {uiText("Selected")} ({selectedColumns.length})
+                  {t("common.customViews.selected")} ({selectedColumns.length})
                 </div>
-                <ul className="custom-view-column-list" aria-label={uiText("Selected columns")}>
+                <ul
+                  className="custom-view-column-list"
+                  aria-label={t("common.customViews.selectedColumns")}
+                >
                   {selectedColumns.map((apiName, index) => {
                     const f = fields.find((item) => item.apiName === apiName);
                     const label = f?.label ?? apiName;
@@ -833,7 +867,7 @@ function CustomViewDialogContent({
                         <div className="flex items-center gap-1">
                           <button
                             type="button"
-                            aria-label={`Move ${label} up`}
+                            aria-label={t("common.customViews.moveColumnUp", { label })}
                             disabled={index === 0 || isProtected || pending}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -845,7 +879,7 @@ function CustomViewDialogContent({
                           </button>
                           <button
                             type="button"
-                            aria-label={`Move ${label} down`}
+                            aria-label={t("common.customViews.moveColumnDown", { label })}
                             disabled={
                               index === selectedColumns.length - 1 || isProtected || pending
                             }
@@ -859,7 +893,7 @@ function CustomViewDialogContent({
                           </button>
                           <button
                             type="button"
-                            aria-label={`Remove column ${label}`}
+                            aria-label={t("common.customViews.removeColumn", { label })}
                             disabled={isProtected || pending}
                             onClick={(e) => {
                               e.stopPropagation();
@@ -881,27 +915,23 @@ function CustomViewDialogContent({
           {/* Share this with: ONLY shown for admin */}
           {isAdmin ? (
             <div className="custom-view-section" data-testid="sharing-section">
-              <span className="custom-view-section-title">{uiText("Share this with:")}</span>
+              <span className="custom-view-section-title">
+                {t("common.customViews.shareWithPrompt")}
+              </span>
               <RadioGroup
-                label={uiText("Share this with")}
+                label={t("common.customViews.shareWithLabel")}
                 orientation="horizontal"
                 value={sharedTo}
                 onChange={(val) => {
                   if (val === "only_me") {
-                    setFormError(
-                      "Private custom views ('Only me') are not supported for organization views. Only shared views ('Everyone') can be saved.",
-                    );
+                    setError(t("common.customViews.errors.privateUnsupported"));
                     return;
                   }
-                  setFormError(null);
+                  setError(null);
                   setSharedTo(val as "everyone");
                 }}
                 isDisabled={isProtected || pending}
-                options={[
-                  opt("everyone", "Everyone"),
-                  opt("only_me", "Only me", { isDisabled: true }),
-                  opt("selected_users", "Selected users", { isDisabled: true }),
-                ]}
+                options={sharingOptions}
               />
             </div>
           ) : null}
@@ -911,16 +941,16 @@ function CustomViewDialogContent({
           <div>
             {mode === "edit" ? (
               <Button variant="danger" isDisabled={isActionDisabled} onPress={handleDelete}>
-                {uiText("Delete View")}
+                {t("common.customViews.deleteView")}
               </Button>
             ) : null}
           </div>
           <div className="flex items-center gap-2">
             <Button variant="secondary" onPress={onClose} isDisabled={pending}>
-              {uiText("Cancel")}
+              {t("common.actions.cancel")}
             </Button>
             <Button isDisabled={isActionDisabled} isPending={pending} onPress={handleSave}>
-              {uiText("Save")}
+              {t("common.actions.save")}
             </Button>
           </div>
         </footer>

@@ -281,4 +281,28 @@ describe("ModuleListScreen Custom View Dialog Integration", () => {
     // Navigates to custom view route
     expect(navigation.push).toHaveBeenCalledWith(expect.stringContaining("custom-view/"));
   });
+
+  it("enables New Custom View when userRole='admin' is passed without explicit isAdmin", async () => {
+    const user = userEvent.setup();
+    const records = createFixtureRecordService(ctx);
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "Admin", email: "admin@example.test" }],
+    });
+
+    render(
+      <ModuleListScreen orgSlug={ctx.orgSlug} config={contactsListPageConfig} userRole="admin" />,
+      { wrapper: wrapper(service) },
+    );
+
+    await screen.findByRole("table", { name: "Records" });
+
+    const viewsBtn = screen.getByRole("button", { name: "Custom views" });
+    await user.click(viewsBtn);
+
+    const newItem = await screen.findByRole("menuitem", { name: "New Custom View" });
+    expect(newItem.getAttribute("data-later-module")).toBeNull();
+
+    await user.click(newItem);
+    expect(await screen.findByRole("dialog", { name: /^New Custom View/ })).toBeTruthy();
+  });
 });

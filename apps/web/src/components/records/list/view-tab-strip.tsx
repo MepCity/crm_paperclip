@@ -1,11 +1,11 @@
 "use client";
-
 import type { ListView } from "@crm/core/records";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Menu, MenuDivider, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { TextField } from "@/components/ui/text-field";
+import { useUiTranslations } from "@/i18n/client-provider";
 
 // biome-ignore format: preserve line numbers
 export interface ViewTabStripProps {
@@ -20,7 +20,7 @@ export interface ViewTabStripProps {
 
 // biome-ignore format: preserve line numbers
 export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searchable, onNewView, onEditView, onManageViews }: ViewTabStripProps) {
-  const [publicOpen, setPublicOpen] = useState(true), [query, setQuery] = useState("");
+  const t = useUiTranslations(); const [publicOpen, setPublicOpen] = useState(true), [query, setQuery] = useState("");
   // biome-ignore format: preserve line numbers
   const itemNewProps = onNewView ? { onAction: onNewView } : { laterModule: "M11" as const };
   // biome-ignore format: preserve line numbers
@@ -139,7 +139,7 @@ export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searc
                   if (current) onEditView(current.id);
                 }}
               >
-                {"Edit Current View"}
+                {t("common.customViews.editCurrentView")}
               </MenuItem>
             ) : null}
           </Menu>

@@ -14,7 +14,8 @@ export function useCustomViewModal({
   config,
   orgSlug,
   currentUserId,
-  isAdmin = false,
+  userRole,
+  isAdmin: explicitIsAdmin,
   view,
   views,
   moduleFields,
@@ -22,11 +23,13 @@ export function useCustomViewModal({
   config: ModuleListScreenConfig;
   orgSlug: string;
   currentUserId?: string;
+  userRole?: "admin" | "member";
   isAdmin?: boolean;
   view?: ListView;
   views?: readonly { id: string; name: string; isDefault?: boolean; systemDefined?: boolean }[];
   moduleFields?: readonly FieldDefinition[];
 }) {
+  const isAdmin = Boolean(explicitIsAdmin ?? userRole === "admin");
   const queryClient = useQueryClient();
   const router = useRouter();
   const service = useClientRecordService();
