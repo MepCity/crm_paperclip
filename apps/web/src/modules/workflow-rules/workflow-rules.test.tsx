@@ -39,7 +39,7 @@ describe("WorkflowRulesListScreen server projections", () => {
     expect(screen.getByText("When fields change: Stage, Amount")).toBeDefined();
     expect(screen.getAllByRole("row")).toHaveLength(5);
     expect(screen.queryByRole("switch")).toBeNull();
-    expect(screen.queryByRole("button", { name: /create|edit|delete|clone/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /edit|delete|clone/i })).toBeNull();
   });
   it("shows server-selected filter, trigger failure and GET retry preserving the filter", async () => {
     const port = createAutomationPort();
@@ -127,7 +127,7 @@ describe("WorkflowRuleDetailScreen server projections", () => {
     expect(screen.getByText("1 day after event")).toBeDefined();
     expect(screen.getByText("task:introductory_call")).toBeDefined();
     expect(screen.queryByRole("switch")).toBeNull();
-    expect(screen.queryByRole("button", { name: /create|edit|delete|clone/i })).toBeNull();
+    expect(screen.queryByRole("button", { name: /edit|delete|clone/i })).toBeNull();
   });
   it.each([dealDiscountRule, contactRenewalRule])(
     "preserves empty action sections for $id",

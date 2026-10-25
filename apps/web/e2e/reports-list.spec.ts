@@ -22,8 +22,7 @@ test("Reports landing: columns, inert controls and report placeholder navigation
   await expect(table.getByRole("row").nth(1).getByRole("cell").nth(4)).toHaveText("-");
   await expect(table.getByRole("row").nth(3)).toContainText("01.10.2026");
   const create = page.getByRole("button", { name: "Create Report" });
-  await expect(create).toHaveAttribute("aria-disabled", "true");
-  await expect(create).toHaveAccessibleDescription(/Not available/);
+  await expect(create).toBeEnabled();
   await page.screenshot({ path: testInfo.outputPath("reports-landing.png"), fullPage: true });
   const search = page.getByRole("textbox", { name: "Search All Reports" });
   await expect(search).toHaveAttribute("readonly", "");
@@ -36,7 +35,6 @@ test("Reports landing: columns, inert controls and report placeholder navigation
   });
 
   for (const name of [
-    "Create Report",
     "Reports help",
     "Favorite Weekly outreach overview",
     "Report actions: Weekly outreach overview",
@@ -232,4 +230,18 @@ test("Reports read-only contract: opening list and navigating to report issues z
   await expect(page.getByRole("table")).toBeVisible();
 
   expect(nonGetRequests).toEqual([]);
+});
+
+test("report creation stops at the observed primary-module entry", async ({ page }, testInfo) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(`/crm/${org.slug}/tab/Reports`);
+  await page.getByRole("button", { name: "Create Report", exact: true }).click();
+  const form = page.getByRole("dialog", { name: "Create Report" });
+  await expect(form.getByRole("button", { name: "Continue" })).toBeDisabled();
+  await form.getByRole("button", { name: /Select Primary Module/ }).click();
+  await page.getByRole("option", { name: "Leads", exact: true }).click();
+  await page.screenshot({ path: testInfo.outputPath("report-primary-module.png") });
+  await form.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page.getByRole("table")).toBeVisible();
 });

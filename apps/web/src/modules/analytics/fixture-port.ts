@@ -124,3 +124,14 @@ export function createFixtureAnalyticsPort(
 }
 
 export const fixtureAnalyticsPort: AnalyticsPort = createFixtureAnalyticsPort();
+
+/** Unsaved/live-window UI slice; intentionally independent of record adapters. */
+export function createFixtureDashboardCreationPort(): import("./port").DashboardCreationPort {
+  return {
+    async createEmptyDashboard(input) {
+      return { ...input, components: [] };
+    },
+  };
+}
+
+export const fixtureDashboardCreationPort = createFixtureDashboardCreationPort();
