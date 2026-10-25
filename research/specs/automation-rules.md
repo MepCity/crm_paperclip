@@ -505,7 +505,7 @@ an ADR approval, engine implementation, persistence decision or completion claim
 for either coding slice. UI Lead review of these numbered proposals is the next
 step; new reference capture is neither required nor authorized by R3.
 
-## W3 — write-window gap disposition (MEP-1345)
+## W3 — superseded gap disposition (MEP-1345)
 
 2026-10-25. This section records an evidence-limited disposition, not completed
 write observation. The final Platform Lead decision in MEP-1355 applies to
@@ -553,3 +553,50 @@ Verification: AW1–AW10 coverage, preservation of prior evidence, neutral-langu
 and privacy checks, and git diff --check. Documentation only; application tests
 and reference captures are inapplicable. Submit through the issue's existing
 independent review stage; acceptance means gap documentation only.
+
+## W3 — live observation and verified cleanup continuation
+
+2026-10-25, MEP-1345. The board's 11:07 Istanbul decision supersedes the gap
+disposition above. Its no-write/empty-journal statements describe that earlier
+run only. They are not the current task state or completion criteria.
+
+The live Assignment wizard opened with Module, Rule Name, Description, Cancel
+and Next. Six module choices were exposed. The prefixed test rule used Leads.
+**Next persists the rule shell**: the earlier `w3-assignment-next-fixed` capture
+and durable journal record a POST returning 201 to
+`/crm/v2.2/settings/automation/assignment_rules`, with a `module` query key.
+The request contains one `assignment_rules` item with `name`, `default_assignee`
+(`id`, `name`) and `module.api_name`. Session/user values are intentionally
+omitted. This is an observed creation shape, not an approved application API
+contract. A criteria-row builder opened afterwards; no rule entry or assignment
+target was saved. No automation execution, activation or send was observed.
+
+The analyst could not reach a permitted delete affordance. The board reports
+having cancelled the unsaved entry and deleted the shell at 16:35 Istanbul.
+Fresh captures `w3-board-cleanup-verify` (16:37) and
+`w3-board-cleanup-journal` (16:38) show the Assignment introduction screen with
+no test rule. The official absence proof marks the W3 object cleaned. The
+local journal records board deletion and restored YES; cumulative outgoing
+writes remain one, the earlier create. Deletion wire shape and confirmation
+messages were not captured and must not be inferred from board cleanup.
+
+| # | Fresh Assignment body control/state | Evidence / limit |
+| --- | --- | --- |
+| W3-CV1 | Rules, Thresholds and assistant tabs | Rules selected; no tab clicked |
+| W3-CV2 | Assignment Rules heading and explanatory text | Introduction body; no populated rows |
+| W3-CV3 | Create Assignment Rule button with plus | Visible; not clicked in this continuation |
+| W3-CV4 | Test-rule absence | Both screenshots and text agree; no filter/search applied |
+
+`w3-workflow-after-cleanup` (16:40 Istanbul) still shows a blank content body.
+The route-model response fails JSON parsing. This is a loading failure, not an
+empty rule list. No Workflow builder, actions, schedule, validation, edit or
+status transition is evidenced. AW1–AW6 remain open; AW7 has live create
+evidence, AW8 only partial builder evidence, AW9 only board-reported deletion
+with analyst-verified absence, and AW10 only the introduction/failed-load states.
+Literal success/error/validation messages and all remaining write flows remain
+unobserved. No parity, ADR or module-gate approval follows from this section.
+
+Verification: fresh screenshot/text/meta inspection; absence proof; journal
+openItems contains no W3 object and no open settings. The separately retained
+W2 item is unaffected. This continuation sends zero reference writes and changes
+no setting or preference. Raw captures remain private research evidence.

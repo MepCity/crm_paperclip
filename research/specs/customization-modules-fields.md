@@ -1243,7 +1243,7 @@ the specification; no application tests, typecheck or e2e are needed. UI Lead
 is the final spec reviewer. The budget and paint failure are disclosed so that
 five-screen acceptance cannot be mistaken for complete six-screen evidence.
 
-## W3 — customization save-flow gap disposition (MEP-1345)
+## W3 — superseded customization gap disposition (MEP-1345)
 
 2026-10-25. The final Platform Lead decision in MEP-1355 applies to W2–W4:
 no live write observation without an evidenced endpoint/body/restore contract.
@@ -1280,3 +1280,26 @@ Verification: CW1–CW6 coverage, preservation of existing evidence, privacy and
 neutral-language checks, and git diff --check. Only documentation changed, so
 application tests and new reference captures are inapplicable. The issue's
 existing independent review stage reviews gap documentation only.
+
+## W3 — live continuation after Assignment cleanup
+
+2026-10-25, MEP-1345. The board's 11:07 Istanbul decision supersedes the prior
+W3 gap disposition as a completion decision. Historical no-reference-opened
+statements above apply only to that earlier run.
+
+After the board deleted the Assignment test shell and the analyst verified its
+absence, `w3-layouts-after-1368` navigated to the established Leads Layouts path
+at 16:38 Istanbul. The screenshot still shows a skeleton and loading indicator;
+no layout table or builder is rendered. The PageLayout POST remains blocked
+by click-lock. MEP-1368 permits only evidenced `isModuleAccessable` reads and
+explicitly leaves unproven request actions blocked. No action value was guessed,
+request replayed or guard changed. A loading indicator is diagnostic evidence,
+not an accepted Layouts empty state or a permission denial.
+
+CW1–CW6 remain open: no field, layout or custom view has been created, saved,
+edited or deleted in this issue. There is no customization value to restore.
+The capture reports cumulative allowedWrites one (the earlier Assignment
+create), no W3 open object and no open setting; the separately retained W2 item
+is unaffected. No new reference write, setting, preference or send occurred.
+Verification: screenshot, text and meta audit. Product tests are inapplicable;
+raw research captures remain private and are not repository assets.
