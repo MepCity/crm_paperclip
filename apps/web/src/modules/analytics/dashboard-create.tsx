@@ -256,9 +256,9 @@ function QuickChart({ onCancel }: { onCancel: () => void }) {
                       variant="ghost"
                       aria-label="Add criterion"
                       isDisabled
-                      className="text-accent-green"
+                      className="text-accent-green data-disabled:opacity-100!"
                     >
-                      <Icons.plus className="size-5 rounded-full border border-current" />
+                      <Icons.plus className="size-5 rounded-full border border-current text-accent-green" />
                     </Button>
                   </div>
                 </section>

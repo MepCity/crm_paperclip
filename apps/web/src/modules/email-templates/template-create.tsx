@@ -1,5 +1,6 @@
 "use client";
 
+import { Code, Image, Link, Quote, Table } from "lucide-react";
 import { useId, useRef, useState } from "react";
 import {
   applyNoteEditorCommand,
@@ -251,9 +252,15 @@ function TemplateEditor({
                 {text}
               </Button>
             ))}
-            {["Link", "Image", "Table", "Source", "Quote"].map((label) => (
-              <Button key={label} variant="ghost" size="compact" isDisabled>
-                {label}
+            {[
+              { label: "Link", icon: Link },
+              { label: "Image", icon: Image },
+              { label: "Table", icon: Table },
+              { label: "Source", icon: Code },
+              { label: "Quote", icon: Quote },
+            ].map(({ label, icon: Icon }) => (
+              <Button key={label} aria-label={label} variant="ghost" size="compact" isDisabled>
+                <Icon className="size-4" aria-hidden />
               </Button>
             ))}
           </div>

@@ -90,12 +90,21 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
               <p className="mt-2 text-primary">{description || "Add Description"}</p>
             </div>
           </header>
-          <div className="relative ml-12 border-l-2 border-primary pl-28 space-y-24">
+          <div className="relative ml-12 pl-28 space-y-24">
             <div className="relative flex items-start">
+              <span aria-hidden className="absolute -left-28 top-12 h-0.5 w-28 bg-primary" />
+              {step === "criteria" && (
+                <span
+                  aria-hidden
+                  className="absolute -left-28 top-12 h-[calc(100%+6rem)] w-0.5 bg-primary"
+                />
+              )}
               <span className="absolute -left-40 flex size-24 items-center justify-center rounded-full bg-primary text-primary-text">
                 WHEN
               </span>
-              <div className="w-full max-w-lg rounded-xl border border-border bg-surface p-7 space-y-5">
+              <div
+                className={`relative w-full max-w-lg rounded-xl border border-border bg-surface p-6 ${step === "criteria" ? "space-y-3" : "space-y-5"}`}
+              >
                 {step === "criteria" ? (
                   <>
                     <p>
@@ -104,8 +113,14 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
                     <p>
                       Repeat <strong>Once</strong>
                     </p>
-                    <Button variant="ghost" size="compact" onPress={() => setStep("when")}>
-                      Edit
+                    <Button
+                      variant="ghost"
+                      size="compact"
+                      aria-label="Edit"
+                      className="absolute top-4 right-4"
+                      onPress={() => setStep("when")}
+                    >
+                      <Icons.fieldEdit className="size-3" aria-hidden />
                     </Button>
                   </>
                 ) : (
@@ -163,6 +178,7 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
             </div>
             {step === "criteria" && (
               <div className="relative">
+                <span aria-hidden className="absolute -left-28 top-20 h-0.5 w-28 bg-primary" />
                 <span className="absolute -left-40 top-8 flex size-24 rotate-45 items-center justify-center rounded-lg bg-primary text-primary-text">
                   <span className="-rotate-45 text-sm">CONDITION 1</span>
                 </span>
@@ -204,9 +220,9 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
                       variant="ghost"
                       aria-label="Add criterion"
                       isDisabled
-                      className="text-accent-green"
+                      className="text-accent-green data-disabled:opacity-100!"
                     >
-                      <Icons.plus className="size-5 rounded-full border border-current" />
+                      <Icons.plus className="size-5 rounded-full border border-current text-accent-green" />
                     </Button>
                   </div>
                   <div className="flex justify-end">
