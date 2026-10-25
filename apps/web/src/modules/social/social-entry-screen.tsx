@@ -128,7 +128,7 @@ export function SocialEntryScreen() {
         your social media accounts with your CRM.
       </h2>
       <Button
-        className="mt-6 bg-none! bg-success! text-white! hover:bg-success-hover! font-medium px-6 py-2 rounded-md shadow-sm"
+        className="mt-6 bg-none! bg-success! text-white! hover:bg-success-hover! font-semibold px-6 py-2 rounded-md shadow-sm"
         onPress={() => {
           toast({
             variant: "info",
