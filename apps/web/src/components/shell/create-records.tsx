@@ -6,6 +6,8 @@ import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { TextField } from "@/components/ui/text-field";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useShellLabel } from "@/i18n/shell-labels";
 import { type CreateRecordEntry, createRecordsNav } from "./nav";
 import "./create-records.css";
 
@@ -22,10 +24,13 @@ export function CreateRecordsMenu({
   orgSlug: string;
   entries?: readonly CreateRecordEntry[];
 }) {
+  const t = useUiTranslations();
+  const label = useShellLabel();
+  const translated = entries.map((entry) => ({ ...entry, label: label(entry.id, entry.label) }));
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
   const search = useRef<HTMLDivElement | null>(null);
-  const visible = entries.filter((entry) => matchesEntry(entry, query));
+  const visible = translated.filter((entry) => matchesEntry(entry, query));
   useEffect(() => {
     if (!open) return;
     // The reference opens with the search box focused. React Aria focuses the dialog itself
@@ -45,13 +50,13 @@ export function CreateRecordsMenu({
       <Button
         variant="icon"
         size="compact"
-        aria-label="Create Records"
+        aria-label={t("shell.createRecords")}
         className="create-records-trigger size-(--size-topbar-quick-create) shrink-0"
       >
         <Icons.plus className="size-(--size-topbar-icon)" aria-hidden />
       </Button>
       <Popover
-        title="Create Records"
+        title={t("shell.createRecords")}
         placement="bottom end"
         offset={0}
         className="create-records-panel w-(--size-create-menu-width) h-(--size-create-menu-height)"
@@ -59,8 +64,8 @@ export function CreateRecordsMenu({
       >
         <div className="create-records-search" ref={search}>
           <TextField
-            label="Search"
-            placeholder="Search"
+            label={t("common.actions.search")}
+            placeholder={t("common.actions.search")}
             variant="filter-search"
             value={query}
             onChange={setQuery}

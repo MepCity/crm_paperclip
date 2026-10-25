@@ -36,6 +36,13 @@
       "when": 1792785600000,
       "tag": "0004_tenant_context_foundation",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792868606322,
+      "tag": "0005_user_interface_language",
+      "breakpoints": true
     }
   ]
 }

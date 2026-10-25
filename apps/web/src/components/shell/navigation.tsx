@@ -4,6 +4,8 @@ import { usePathname } from "next/navigation";
 import { useEffect, useRef } from "react";
 import { Disclosure } from "@/components/ui/disclosure";
 import { Link } from "@/components/ui/link";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useShellLabel } from "@/i18n/shell-labels";
 import {
   isNavLinkActive,
   type NavConfig,
@@ -26,6 +28,7 @@ function NavigationLink({
   /** Ungrouped teamspace row: top-level geometry with the muted module-icon colour. */
   flat?: boolean;
 }) {
+  const label = useShellLabel();
   const IconComponent = link.icon;
   const active = isNavLinkActive(link, orgSlug, pathname);
   const linkRef = useRef<HTMLAnchorElement>(null);
@@ -49,7 +52,7 @@ function NavigationLink({
           aria-hidden
         />
       </span>
-      <span>{link.label}</span>
+      <span>{label(link.id, link.label)}</span>
     </Link>
   );
 }
@@ -61,6 +64,8 @@ export function Navigation({
   orgSlug: string;
   config?: NavConfig;
 }) {
+  const label = useShellLabel();
+  const t = useUiTranslations();
   const pathname = usePathname();
   const sections = config.sections
     .map((section) => ({
@@ -69,7 +74,7 @@ export function Navigation({
     }))
     .filter((section) => section.groups.length > 0 || (section.links?.length ?? 0) > 0);
   return (
-    <nav aria-label="Main navigation" className="flex-1 overflow-y-auto">
+    <nav aria-label={t("shell.navigation")} className="flex-1 overflow-y-auto">
       <div
         className={`${sections.length ? "min-h-(--size-rail-pinned-region)" : ""} flex flex-col gap-(--size-rail-row-gap) px-(--size-rail-inset) pt-(--size-rail-nav-start)`}
       >
@@ -80,17 +85,17 @@ export function Navigation({
       {sections.map((section) => (
         <section
           key={section.id}
-          aria-label={section.label}
+          aria-label={label(section.id, section.label)}
           className="border-t border-rail-border pt-(--size-rail-teamspace-top)"
         >
           <div className="ml-(--size-rail-selector-inset) flex h-(--size-rail-selector-height) items-center text-base font-semibold text-rail-text">
-            {section.label}
+            {label(section.id, section.label)}
           </div>
           <div className="mt-(--size-rail-teamspace-group-gap) px-(--size-rail-inset)">
             {section.groups.map((group) => (
               <Disclosure
                 key={group.id}
-                label={group.label}
+                label={label(group.id, group.label)}
                 icon={group.icon}
                 variant="rail"
                 defaultExpanded

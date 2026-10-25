@@ -13,6 +13,7 @@ import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { SearchLayer } from "@/components/ui/search-layer";
 import { Spinner } from "@/components/ui/spinner";
 import { TextField } from "@/components/ui/text-field";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { useGlobalSearch } from "@/lib/api/client/hooks";
 import { ApiProvider, type ClientRecordService } from "@/lib/api/client/provider";
 import { formatModuleSearchSecondaryLine } from "@/modules/global-search-format";
@@ -45,6 +46,7 @@ export function GlobalSearch({
 }
 
 function SearchControl({ orgSlug, userId }: { orgSlug: string; userId: string }) {
+  const t = useUiTranslations();
   const router = useRouter();
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -89,11 +91,11 @@ function SearchControl({ orgSlug, userId }: { orgSlug: string; userId: string })
       <Button
         variant="icon"
         size="compact"
-        aria-label="Search records"
+        aria-label={t("shell.searchRecords")}
         className="h-(--size-topbar-control-pitch) w-(--size-topbar-control-pitch) justify-center! gap-2 bg-primary/10! px-0! sm:w-56 sm:justify-start! sm:px-3!"
       >
         <Icons.filterSearch className="size-(--size-topbar-icon)" aria-hidden />
-        <span className="hidden sm:inline">Search records</span>
+        <span className="hidden sm:inline">{t("shell.searchRecords")}</span>
       </Button>
       <SearchLayer>
         <div className="p-2">

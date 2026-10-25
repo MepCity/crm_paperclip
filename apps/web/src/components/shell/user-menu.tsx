@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { type AuthResult, signOut } from "@/lib/auth-client";
 
 export interface ShellUser {
@@ -21,6 +22,7 @@ export function UserMenu({
   user: ShellUser;
   onSignOut?: () => Promise<AuthResult>;
 }) {
+  const t = useUiTranslations();
   const router = useRouter();
   const [error, setError] = useState<string>();
   const [pending, setPending] = useState(false);
@@ -40,9 +42,9 @@ export function UserMenu({
       if (result.ok) {
         router.replace("/sign-in");
         router.refresh();
-      } else setError(result.message);
+      } else setError(result.message || t("shell.signOutError"));
     } catch {
-      setError("Sign out failed. Please try again.");
+      setError(t("shell.signOutError"));
     } finally {
       setPending(false);
     }
@@ -53,7 +55,7 @@ export function UserMenu({
         <Button
           variant="avatar"
           size="avatar"
-          aria-label="User menu"
+          aria-label={t("shell.userMenu")}
           isPending={pending}
           className="size-(--size-topbar-avatar) shrink-0"
         >
@@ -61,7 +63,7 @@ export function UserMenu({
         </Button>
         <Menu
           appearance="measured"
-          aria-label="User actions"
+          aria-label={t("shell.userActions")}
           header={
             <>
               <p className="font-semibold break-words">{user.name}</p>
@@ -70,9 +72,14 @@ export function UserMenu({
           }
           onAction={() => void logout()}
         >
-          <MenuItem appearance="measured" id="sign-out" textValue="Sign out" isDisabled={pending}>
+          <MenuItem
+            appearance="measured"
+            id="sign-out"
+            textValue={t("shell.signOut")}
+            isDisabled={pending}
+          >
             <Icons.signOut className="size-(--size-menu-icon)" aria-hidden />
-            Sign out
+            {t("shell.signOut")}
           </MenuItem>
         </Menu>
       </MenuTrigger>
