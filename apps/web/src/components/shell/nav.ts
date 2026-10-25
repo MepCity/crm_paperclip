@@ -103,7 +103,8 @@ function flatNavLinks(): NavLink[] {
       label: "Social",
       icon: Icons.messageSquare,
       href: (slug) => moduleTabPath(slug, "Social"),
-      match: "exact",
+      activePrefix: (slug) => moduleTabPath(slug, "Social"),
+      match: "prefix",
     },
   ];
   return entries.sort((a, b) => rank(a.id) - rank(b.id));
@@ -184,7 +185,8 @@ export const shellNav: NavConfig = {
               label: "Visits",
               icon: Icons.activity,
               href: (slug) => moduleTabPath(slug, "Visits"),
-              match: "exact",
+              activePrefix: (slug) => moduleTabPath(slug, "Visits"),
+              match: "prefix",
             },
           ],
         },

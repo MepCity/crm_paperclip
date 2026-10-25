@@ -26,10 +26,10 @@ test("Visits enabled fixture: list to detail with unavailable controls and full 
   const sendToWebmaster = page.getByRole("button", { name: "Send to Webmaster" });
   await expect(sendToWebmaster).toBeVisible();
   await expect(sendToWebmaster).toHaveAttribute("aria-disabled", "true");
-  await expect(sendToWebmaster).toHaveAccessibleDescription(
-    /Sending is not available in this build\./,
-  );
   await sendToWebmaster.click({ force: true });
+  await expect(
+    page.getByText("Contact your administrator to send tracking instructions to your webmaster."),
+  ).toBeVisible();
   await sendToWebmaster.focus();
   await sendToWebmaster.press("Enter");
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -51,10 +51,10 @@ test("Visits enabled fixture: list to detail with unavailable controls and full 
   const manageColumns = page.getByRole("button", { name: "Manage Columns" });
   await expect(manageColumns).toBeVisible();
   await expect(manageColumns).toHaveAttribute("aria-disabled", "true");
-  await expect(manageColumns).toHaveAccessibleDescription(
-    /Column preferences are not available in this build\./,
-  );
   await manageColumns.click({ force: true });
+  await expect(
+    page.getByText("Contact your administrator to configure column preferences.").first(),
+  ).toBeVisible();
   await manageColumns.focus();
   await manageColumns.press("Enter");
   await expect(page.getByRole("dialog")).toHaveCount(0);
@@ -176,7 +176,7 @@ test("Visits enabled fixture: list to detail with unavailable controls and full 
   }
   await expect(page.getByText("192.0.2.1", { exact: true })).toBeVisible();
   await expect(page.locator("dd").filter({ hasText: "Sample Visitor 1" })).toBeVisible();
-  await expect(page.getByText("Synthetic Agent 1.0", { exact: true })).toBeVisible();
+  await expect(page.getByText("Chrome / macOS", { exact: true })).toBeVisible();
   await expect(page.getByText("Alpha Site Portal", { exact: true })).toBeVisible();
 
   // Actions Performed table
@@ -196,18 +196,20 @@ test("Visits enabled fixture: list to detail with unavailable controls and full 
   const addNote = page.getByRole("button", { name: "Add Note" });
   await expect(addNote).toBeVisible();
   await expect(addNote).toHaveAttribute("aria-disabled", "true");
-  await expect(addNote).toHaveAccessibleDescription(/Notes are not available in this build\./);
   await addNote.click({ force: true });
+  await expect(
+    page.getByText("Contact your administrator to configure notes for visitor tracking."),
+  ).toBeVisible();
   await addNote.focus();
   await addNote.press("Enter");
 
   const attachFile = page.getByRole("button", { name: "Attach File" });
   await expect(attachFile).toBeVisible();
   await expect(attachFile).toHaveAttribute("aria-disabled", "true");
-  await expect(attachFile).toHaveAccessibleDescription(
-    /Attachments are not available in this build\./,
-  );
   await attachFile.click({ force: true });
+  await expect(
+    page.getByText("Contact your administrator to configure attachments for visitor tracking."),
+  ).toBeVisible();
   await attachFile.focus();
   await attachFile.press("Enter");
 

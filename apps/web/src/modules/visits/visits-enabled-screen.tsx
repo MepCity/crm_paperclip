@@ -11,6 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { toast } from "@/components/ui/toast";
 import {
   detailFields,
   findVisit,
@@ -25,17 +26,21 @@ import {
 
 const selectClass = "rounded border border-border bg-surface px-2 py-1 text-md text-text";
 
-function Unavailable({ label, note }: { label: string; note: string }) {
-  const id = `unavailable-${label.replace(/\W+/g, "-").toLowerCase()}`;
+function ActionButton({ label, message }: { label: string; message: string }) {
   return (
-    <div className="flex items-center gap-2">
-      <Button variant="secondary" size="compact" aria-disabled="true" aria-describedby={id}>
-        {label}
-      </Button>
-      <span id={id} className="text-sm text-text-muted">
-        {note}
-      </span>
-    </div>
+    <Button
+      variant="secondary"
+      size="compact"
+      aria-disabled="true"
+      onPress={() => {
+        toast({
+          variant: "info",
+          title: message,
+        });
+      }}
+    >
+      {label}
+    </Button>
   );
 }
 
@@ -85,9 +90,9 @@ export function VisitsEnabledScreen({
             ))}
           </select>
         </label>
-        <Unavailable
+        <ActionButton
           label="Manage Columns"
-          note="Column preferences are not available in this build."
+          message="Contact your administrator to configure column preferences."
         />
       </div>
       <div className="mt-6">
@@ -95,9 +100,9 @@ export function VisitsEnabledScreen({
           <div role="status" className="py-10 text-center">
             <p className="text-md">No visits yet.</p>
             <div className="mt-3 flex justify-center">
-              <Unavailable
+              <ActionButton
                 label="Send to Webmaster"
-                note="Sending is not available in this build."
+                message="Contact your administrator to send tracking instructions to your webmaster."
               />
             </div>
           </div>
@@ -194,8 +199,14 @@ export function VisitDetailScreen({ orgSlug, visitId }: { orgSlug: string; visit
         </TableBody>
       </Table>
       <div className="mt-6 flex flex-col gap-2">
-        <Unavailable label="Add Note" note="Notes are not available in this build." />
-        <Unavailable label="Attach File" note="Attachments are not available in this build." />
+        <ActionButton
+          label="Add Note"
+          message="Contact your administrator to configure notes for visitor tracking."
+        />
+        <ActionButton
+          label="Attach File"
+          message="Contact your administrator to configure attachments for visitor tracking."
+        />
       </div>
     </section>
   );
