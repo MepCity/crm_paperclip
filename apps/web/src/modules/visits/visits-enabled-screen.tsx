@@ -12,6 +12,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { toast } from "@/components/ui/toast";
+import type { MessageKey, MessageValues } from "@/i18n/catalogs";
+import { useUiTranslations } from "@/i18n/client-provider";
 import {
   detailFields,
   findVisit,
@@ -44,6 +46,39 @@ function ActionButton({ label, message }: { label: string; message: string }) {
   );
 }
 
+function getViewLabel(
+  t: (key: MessageKey, values?: MessageValues) => string,
+  id: VisitViewId,
+  fallback: string,
+): string {
+  switch (id) {
+    case "all":
+      return t("modules.visits.allVisits");
+    case "today":
+      return t("modules.visits.todaysVisits");
+    case "top":
+      return t("modules.visits.topVisits");
+    case "today-top":
+      return t("modules.visits.todaysTopVisits");
+    case "leads":
+      return t("modules.visits.visitsByLeads");
+    case "contacts":
+      return t("modules.visits.visitsByContacts");
+    default:
+      return fallback;
+  }
+}
+
+function getFieldLabel(
+  t: (key: MessageKey, values?: MessageValues) => string,
+  key: keyof Visit,
+  fallback: string,
+): string {
+  const messageKey = `modules.visits.${key}` as MessageKey;
+  const text = t(messageKey);
+  return text.startsWith("modules.visits.") ? fallback : text;
+}
+
 export function VisitsEnabledScreen({
   orgSlug,
   availability,
@@ -51,19 +86,20 @@ export function VisitsEnabledScreen({
   orgSlug: string;
   availability: Exclude<VisitsAvailability, "disconnected">;
 }) {
+  const t = useUiTranslations();
   const [accountId, setAccountId] = useState<string>(trackingAccounts[0].id);
   const [view, setView] = useState<VisitViewId>("all");
   const rows = availability === "enabled-empty" ? [] : visitsFor(accountId, view);
   return (
     <section
-      aria-label="Visits"
+      aria-label={t("modules.visits.visits")}
       data-integration-state={availability}
       className="min-h-full bg-bg px-6 py-6 text-text"
     >
-      <h2 className="text-2xl font-semibold">Visits</h2>
+      <h2 className="text-2xl font-semibold">{t("modules.visits.visits")}</h2>
       <div className="mt-4 flex flex-wrap items-center gap-4">
         <label className="flex items-center gap-2 text-md">
-          Tracking account
+          {t("modules.visits.trackingAccount")}
           <select
             className={selectClass}
             value={accountId}
@@ -77,7 +113,7 @@ export function VisitsEnabledScreen({
           </select>
         </label>
         <label className="flex items-center gap-2 text-md">
-          View
+          {t("modules.visits.view")}
           <select
             className={selectClass}
             value={view}
@@ -85,41 +121,41 @@ export function VisitsEnabledScreen({
           >
             {visitViews.map((v) => (
               <option key={v.id} value={v.id}>
-                {v.label}
+                {getViewLabel(t, v.id, v.label)}
               </option>
             ))}
           </select>
         </label>
         <ActionButton
-          label="Manage Columns"
-          message="Contact your administrator to configure column preferences."
+          label={t("modules.visits.manageColumns")}
+          message={t("modules.visits.manageColumnsMsg")}
         />
       </div>
       <div className="mt-6">
         {availability === "enabled-empty" ? (
           <div role="status" className="py-10 text-center">
-            <p className="text-md">No visits yet.</p>
+            <p className="text-md">{t("modules.visits.noVisitsYet")}</p>
             <div className="mt-3 flex justify-center">
               <ActionButton
-                label="Send to Webmaster"
-                message="Contact your administrator to send tracking instructions to your webmaster."
+                label={t("modules.visits.sendToWebmaster")}
+                message={t("modules.visits.sendToWebmasterMsg")}
               />
             </div>
           </div>
         ) : rows === "ranking-unavailable" ? (
           <p role="status" className="py-10 text-center text-md text-text-muted">
-            Ranking criteria not available
+            {t("modules.visits.rankingUnavailable")}
           </p>
         ) : rows.length === 0 ? (
           <p role="status" className="py-10 text-center text-md text-text-muted">
-            No visits in this view.
+            {t("modules.visits.noVisitsInView")}
           </p>
         ) : (
           <Table>
             <TableHeader>
               <TableRow>
                 {listColumns.map((c) => (
-                  <TableHead key={c.key}>{c.label}</TableHead>
+                  <TableHead key={c.key}>{getFieldLabel(t, c.key, c.label)}</TableHead>
                 ))}
               </TableRow>
             </TableHeader>
@@ -151,14 +187,15 @@ export function VisitsEnabledScreen({
 }
 
 export function VisitDetailScreen({ orgSlug, visitId }: { orgSlug: string; visitId: string }) {
+  const t = useUiTranslations();
   const visit: Visit | undefined = findVisit(visitId);
   const back = `/crm/${encodeURIComponent(orgSlug)}/tab/Visits?state=populated`;
   if (!visit) {
     return (
       <section aria-label="Visit detail" className="px-6 py-6 text-text">
-        <p role="alert">Visit not found.</p>
+        <p role="alert">{t("modules.visits.visitNotFound")}</p>
         <Link href={back} className="text-primary hover:underline">
-          Back to Visits
+          {t("modules.visits.backToVisits")}
         </Link>
       </section>
     );
@@ -166,25 +203,25 @@ export function VisitDetailScreen({ orgSlug, visitId }: { orgSlug: string; visit
   return (
     <section aria-label="Visit detail" className="min-h-full bg-bg px-6 py-6 text-text">
       <Link href={back} className="text-md text-primary hover:underline">
-        Back to Visits
+        {t("modules.visits.backToVisits")}
       </Link>
       <h2 className="mt-2 text-2xl font-semibold">{visit.visitedBy}</h2>
       <dl className="mt-4 grid max-w-3xl grid-cols-2 gap-x-6 gap-y-2">
         {detailFields.map((f) => (
           <div key={f.key} className="flex flex-col">
-            <dt className="text-sm text-text-muted">{f.label}</dt>
+            <dt className="text-sm text-text-muted">{getFieldLabel(t, f.key, f.label)}</dt>
             <dd className="text-md">{String(visit[f.key])}</dd>
           </div>
         ))}
       </dl>
-      <h3 className="mt-8 text-xl font-semibold">Actions Performed</h3>
+      <h3 className="mt-8 text-xl font-semibold">{t("modules.visits.actionsPerformed")}</h3>
       <Table>
         <TableHeader>
           <TableRow>
-            <TableHead>Action Type</TableHead>
-            <TableHead>Actions</TableHead>
-            <TableHead>Time Spent</TableHead>
-            <TableHead>Action Performed Time</TableHead>
+            <TableHead>{t("modules.visits.actionType")}</TableHead>
+            <TableHead>{t("modules.visits.actions")}</TableHead>
+            <TableHead>{t("modules.visits.timeSpentHeader")}</TableHead>
+            <TableHead>{t("modules.visits.actionPerformedTime")}</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -200,12 +237,12 @@ export function VisitDetailScreen({ orgSlug, visitId }: { orgSlug: string; visit
       </Table>
       <div className="mt-6 flex flex-col gap-2">
         <ActionButton
-          label="Add Note"
-          message="Contact your administrator to configure notes for visitor tracking."
+          label={t("modules.visits.addNote")}
+          message={t("modules.visits.addNoteMsg")}
         />
         <ActionButton
-          label="Attach File"
-          message="Contact your administrator to configure attachments for visitor tracking."
+          label={t("modules.visits.attachFile")}
+          message={t("modules.visits.attachFileMsg")}
         />
       </div>
     </section>

@@ -4,30 +4,43 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { toast } from "@/components/ui/toast";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { integrationState } from "./fixture";
 
 const slides = [
   {
+    titleKey: "modules.visits.generateQualifiedLeads",
+    textKey: "modules.visits.identifyProspects",
     title: "Generate More Qualified Leads",
     text: "Identify important prospects on your website, engage them in real time and convert them to leads-all without leaving your CRM window.",
   },
   {
+    titleKey: "modules.visits.understandVisitors",
+    textKey: "modules.visits.exploreVisitors",
     title: "Understand Your Visitors",
     text: "Explore how visitors discover your website and the pages that interest them.",
   },
   {
+    titleKey: "modules.visits.startConversations",
+    textKey: "modules.visits.reachVisitors",
     title: "Start Meaningful Conversations",
     text: "Reach visitors while they explore your website.",
   },
   {
+    titleKey: "modules.visits.recognizeReturning",
+    textKey: "modules.visits.keepEngagement",
     title: "Recognize Returning Interest",
     text: "Keep website engagement in context as relationships grow.",
   },
   {
+    titleKey: "modules.visits.connectVisits",
+    textKey: "modules.visits.bringInsights",
     title: "Connect Visits and Conversations",
     text: "Bring visitor insights together with your team's customer conversations.",
   },
   {
+    titleKey: "modules.visits.helpTeamFollowUp",
+    textKey: "modules.visits.useInterest",
     title: "Help Your Team Follow Up",
     text: "Use visitor interest to focus on the next conversation.",
   },
@@ -277,6 +290,7 @@ function VisitorArtwork({ slide: _slide }: { slide: number }) {
 }
 
 export function VisitsEntryScreen() {
+  const t = useUiTranslations();
   const [index, setIndex] = useState(0);
   const slide = slides[index] ?? slides[0];
   const step = (offset: number) =>
@@ -287,8 +301,8 @@ export function VisitsEntryScreen() {
       data-integration-state={integrationState.status}
       className="min-h-full bg-bg px-6 py-16 text-center text-text"
     >
-      <h2 className="text-2xl font-semibold">Visitor Tracking</h2>
-      <p className="mt-1 text-md text-text-muted">Powered by a visitor tracking integration</p>
+      <h2 className="text-2xl font-semibold">{t("modules.visits.visitorTracking")}</h2>
+      <p className="mt-1 text-md text-text-muted">{t("modules.visits.visitorTrackingSubtitle")}</p>
       <section
         aria-label="Visitor tracking features"
         aria-roledescription="carousel"
@@ -298,7 +312,7 @@ export function VisitsEntryScreen() {
           <Button
             variant="icon"
             size="compact"
-            aria-label="Previous slide"
+            aria-label={t("modules.visits.previousSlide")}
             onPress={() => step(-1)}
             className="size-8 rounded-full! bg-border!"
           >
@@ -308,7 +322,7 @@ export function VisitsEntryScreen() {
           <Button
             variant="icon"
             size="compact"
-            aria-label="Next slide"
+            aria-label={t("modules.visits.nextSlide")}
             onPress={() => step(1)}
             className="size-8 rounded-full! bg-border!"
           >
@@ -316,10 +330,13 @@ export function VisitsEntryScreen() {
           </Button>
         </div>
         <div aria-live="polite" aria-atomic="true" className="mt-5 min-h-20">
-          <h3 className="text-xl font-semibold">{slide.title}</h3>
-          <p className="mx-auto mt-2 max-w-xl text-md">{slide.text}</p>
+          <h3 className="text-xl font-semibold">{t(slide.titleKey)}</h3>
+          <p className="mx-auto mt-2 max-w-xl text-md">{t(slide.textKey)}</p>
         </div>
-        <fieldset className="mt-3 flex justify-center gap-3" aria-label="Choose a slide">
+        <fieldset
+          className="mt-3 flex justify-center gap-3"
+          aria-label={t("modules.visits.chooseSlide")}
+        >
           {slides.map((item, position) => (
             <Button
               key={item.title}
@@ -343,11 +360,11 @@ export function VisitsEntryScreen() {
         onPress={() => {
           toast({
             variant: "info",
-            title: "Contact your administrator to set up visitor tracking.",
+            title: t("modules.visits.getStartedMsg"),
           });
         }}
       >
-        Get Started
+        {t("modules.visits.getStarted")}
       </Button>
     </section>
   );

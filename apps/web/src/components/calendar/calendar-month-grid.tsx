@@ -2,6 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { monthDays } from "./calendar-date";
 import { CalendarEventButton } from "./calendar-event-button";
 import { type CalendarEvent, eventsOnDay } from "./layout-timed-events";
@@ -25,6 +26,7 @@ export function CalendarMonthGrid({
   onSlotClick,
   onDayClick,
 }: CalendarMonthGridProps) {
+  const t = useUiTranslations();
   if (!Number.isInteger(maxVisibleEvents) || maxVisibleEvents < 0)
     throw new RangeError("Invalid event limit");
   const weeks = monthDays(date, weekStartsOn);
@@ -32,7 +34,7 @@ export function CalendarMonthGrid({
     <table
       role="grid"
       tabIndex={-1}
-      aria-label={`Month calendar ${date.slice(0, 7)}`}
+      aria-label={t("modules.calendar.monthCalendar", { month: date.slice(0, 7) })}
       className="w-full table-fixed border-collapse bg-surface text-text"
     >
       <thead>
@@ -70,7 +72,7 @@ export function CalendarMonthGrid({
                     className={
                       day.slice(0, 7) !== date.slice(0, 7) ? "text-text-muted!" : undefined
                     }
-                    aria-label={`Open day ${day}`}
+                    aria-label={t("modules.calendar.openDay", { day })}
                     onPress={() => onDayClick?.(day)}
                   >
                     {Number(day.slice(8))}
@@ -88,16 +90,16 @@ export function CalendarMonthGrid({
                     <Button
                       variant="ghost"
                       size="sm"
-                      aria-label={`${extra} more events on ${day}`}
+                      aria-label={t("modules.calendar.moreEventsOnDay", { count: extra, day })}
                       onPress={() => onDayClick?.(day)}
                     >
-                      +{extra} more
+                      {t("modules.calendar.moreEvents", { count: extra })}
                     </Button>
                   )}
                   <Button
                     variant="ghost"
                     size="sm"
-                    aria-label={`Create event ${day}`}
+                    aria-label={t("modules.calendar.createEventOnDay", { day })}
                     onPress={() => onSlotClick?.(`${day}T00:00`)}
                   >
                     +

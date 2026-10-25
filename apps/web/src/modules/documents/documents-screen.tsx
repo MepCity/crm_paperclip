@@ -2,17 +2,13 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { Icons } from "@/components/ui/icon";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { createHttpDocumentsPort } from "@/lib/documents/http-port";
+import { useFormat } from "@/lib/format-context";
 import { fixtureDocumentsPort } from "./fixture-port";
 import type { DocumentFolder, DocumentItem, DocumentSort, DocumentsPort } from "./port";
 
 const DEFAULT_SORT: DocumentSort = { field: "modifiedAt", direction: "desc" };
-
-const dateFormat = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  day: "numeric",
-  timeZone: "UTC",
-});
 
 /** Inert affordance: visible like the reference, but the flow behind it is write-only or unobserved. */
 function CirclePlus({ className = "size-5" }: { className?: string }) {
@@ -72,6 +68,17 @@ function EmptyIllustration() {
 }
 
 export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: DocumentsPort }) {
+  const t = useUiTranslations();
+  const orgFormat = useFormat();
+  const dateFormat = useMemo(
+    () =>
+      new Intl.DateTimeFormat(orgFormat.language ?? orgFormat.locale, {
+        month: "short",
+        day: "numeric",
+        timeZone: orgFormat.timeZone,
+      }),
+    [orgFormat],
+  );
   const [folders, setFolders] = useState<readonly DocumentFolder[]>([]);
   const [selectedRoot, setSelectedRoot] = useState<string | null>(null);
   // Sub-folders entered below the selected root; the last entry is the current folder.
@@ -146,7 +153,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
       data-documents
     >
       <aside
-        aria-label="Folders"
+        aria-label={t("modules.documents.folders")}
         className="flex w-64 shrink-0 flex-col rounded-lg border border-border bg-surface px-3 py-3"
       >
         {myFolders.map((folder) => (
@@ -155,12 +162,13 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
             folder={folder}
             selected={rootId === folder.id}
             onSelect={selectRoot}
+            lockedLabel={t("modules.documents.locked")}
           />
         ))}
         <div className="mt-3 flex items-center justify-between px-1 text-xs font-semibold uppercase text-accent-blue">
           <span className="flex items-center gap-1">
             <Icons.chevronDown className="size-3" aria-hidden="true" />
-            Team Folders
+            {t("modules.documents.teamFolders")}
           </span>
           {/* Folder creation is a write flow: visible, inert. */}
           <InertButton label="Add team folder">
@@ -173,6 +181,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
             folder={folder}
             selected={rootId === folder.id}
             onSelect={selectRoot}
+            lockedLabel={t("modules.documents.locked")}
           />
         ))}
         {/* External file-service link: destination not observed, disabled for now. */}
@@ -231,10 +240,10 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
               <InertButton label="Sort">
                 <Icons.sort className="size-4" />
               </InertButton>
-              <InertButton label="Filter">
+              <InertButton label={t("modules.documents.filter")}>
                 <Icons.filter className="size-4" />
               </InertButton>
-              <InertButton label="View">
+              <InertButton label={t("modules.documents.view")}>
                 <Icons.viewTypeList className="size-4" />
               </InertButton>
             </div>
@@ -244,17 +253,17 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
             <div className="flex items-center border-b border-border py-2 pl-4 pr-6 text-sm font-semibold text-text-muted">
               {/* D18: selection model unobserved, visible but disabled. */}
               <span className="w-12">
-                <InertButton label="Select all" disabled>
+                <InertButton label={t("modules.documents.selectAll")} disabled>
                   <span className="size-4 rounded-sm border border-border" />
                 </InertButton>
               </span>
-              <span className="flex-1">Name</span>
+              <span className="flex-1">{t("modules.documents.name")}</span>
               <span className="flex w-64 items-center gap-1">
-                Last Modified
+                {t("modules.documents.lastModified")}
                 <Icons.columnSortDesc className="size-3" aria-label="Sorted descending" />
               </span>
               {/* Column configuration: unobserved, inert. */}
-              <InertButton label="Columns">
+              <InertButton label={t("modules.documents.columns")}>
                 <CirclePlus />
               </InertButton>
             </div>
@@ -262,18 +271,18 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
 
           {failed ? (
             <p role="alert" className="px-4 py-6 text-sm text-danger">
-              Documents could not be loaded.
+              {t("modules.documents.loadError")}
             </p>
           ) : null}
 
           {isEmpty ? (
             <div className="flex flex-1 flex-col items-center justify-center gap-3 text-text-muted">
               <EmptyIllustration />
-              <p className="text-base font-semibold">No items available.</p>
+              <p className="text-base font-semibold">{t("modules.documents.empty")}</p>
             </div>
           ) : null}
 
-          <ul aria-label="Documents" className={isEmpty || failed ? "hidden" : "flex-1"}>
+          <ul aria-label={t("shell.documents")} className={isEmpty || failed ? "hidden" : "flex-1"}>
             {shown.map((row) => (
               <li
                 key={row.id}
@@ -297,16 +306,21 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
                     ) : (
                       <span className="font-semibold">{row.name}</span>
                     )}
-                    <div className="text-sm text-text-muted">Uploaded by {row.uploadedBy}</div>
+                    <div className="text-sm text-text-muted">
+                      {t("modules.documents.uploadedBy", { user: row.uploadedBy })}
+                    </div>
                   </div>
                 </div>
                 <div className="w-64 text-sm">
                   <div className="text-text-muted">
-                    {dateFormat.format(new Date(row.modifiedAt))} by {row.modifiedBy}
+                    {t("modules.documents.modifiedBy", {
+                      date: dateFormat.format(new Date(row.modifiedAt)),
+                      user: row.modifiedBy,
+                    })}
                   </div>
                 </div>
                 {/* D19: row menu unobserved, visible but disabled. */}
-                <InertButton label="More actions" disabled>
+                <InertButton label={t("modules.documents.moreActions")} disabled>
                   <Icons.ellipsis className="size-4" />
                 </InertButton>
               </li>
@@ -319,16 +333,16 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
           className="flex w-16 shrink-0 flex-col items-center gap-4 border-l border-border py-3 text-xs"
         >
           {/* Details pane and assistant: panel behaviour not observed, inert. */}
-          <InertButton label="Details">
+          <InertButton label={t("modules.documents.details")}>
             <span className="flex flex-col items-center gap-1">
               <Icons.info className="size-4" />
-              <span className="text-xs">Details</span>
+              <span className="text-xs">{t("modules.documents.details")}</span>
             </span>
           </InertButton>
-          <InertButton label="Assistant">
+          <InertButton label={t("modules.documents.assistant")}>
             <span className="flex flex-col items-center gap-1">
               <Icons.sparkles className="size-4" />
-              <span className="text-xs">Assistant</span>
+              <span className="text-xs">{t("modules.documents.assistant")}</span>
             </span>
           </InertButton>
         </aside>
@@ -341,10 +355,12 @@ function FolderRow({
   folder,
   selected,
   onSelect,
+  lockedLabel = "Locked",
 }: {
   folder: DocumentFolder;
   selected: boolean;
   onSelect: (id: string) => void;
+  lockedLabel?: string;
 }) {
   return (
     <button
@@ -357,7 +373,7 @@ function FolderRow({
     >
       <Icons.folder className="size-4" aria-hidden="true" />
       <span className="flex-1">{folder.name}</span>
-      {folder.locked ? <Icons.lock className="size-3.5" aria-label="Locked" /> : null}
+      {folder.locked ? <Icons.lock className="size-3.5" aria-label={lockedLabel} /> : null}
     </button>
   );
 }

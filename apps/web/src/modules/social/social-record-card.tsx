@@ -1,6 +1,7 @@
 "use client";
 
 import { toast } from "@/components/ui/toast";
+import { useUiTranslations } from "@/i18n/client-provider";
 
 const DEFAULT_GUIDANCE =
   "You cannot search a profile in Facebook. This has to be associated from the Social Tab";
@@ -84,6 +85,18 @@ function SocialIllustration() {
 
 /** Unassociated Social card body for record detail; static, issues no request. */
 export function SocialRecordCardBody() {
+  const t = useUiTranslations();
+  const getNetworkLabel = (id: string, fallback: string) => {
+    if (id === "twitter") return t("modules.social.associateTwitter");
+    if (id === "facebook") return t("modules.social.associateFacebook");
+    return fallback;
+  };
+  const getNetworkMessage = (id: string, fallback: string) => {
+    if (id === "twitter") return t("modules.social.associateTwitterMsg");
+    if (id === "facebook") return t("modules.social.associateFacebookMsg");
+    return fallback;
+  };
+
   return (
     <div className="flex divide-x divide-panel-border py-4">
       <div className="flex min-w-[210px] flex-col gap-3 pr-8">
@@ -96,20 +109,22 @@ export function SocialRecordCardBody() {
               onClick={() => {
                 toast({
                   variant: "info",
-                  title: network.message,
+                  title: getNetworkMessage(network.id, network.message),
                 });
               }}
               className="group flex items-center gap-2.5 w-fit cursor-pointer text-left text-md font-normal text-primary hover:underline"
             >
               <Icon />
-              <span>{network.label}</span>
+              <span>{getNetworkLabel(network.id, network.label)}</span>
             </button>
           );
         })}
       </div>
       <div className="flex max-w-lg items-center gap-6 pl-8">
         <SocialIllustration />
-        <p className="text-sm leading-relaxed text-text-muted">{DEFAULT_GUIDANCE}</p>
+        <p className="text-sm leading-relaxed text-text-muted">
+          {t("modules.social.guidance") || DEFAULT_GUIDANCE}
+        </p>
       </div>
     </div>
   );

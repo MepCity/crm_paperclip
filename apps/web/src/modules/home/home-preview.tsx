@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import { useUiTranslations } from "@/i18n/client-provider";
 import {
   type ActivityRow,
   type ActivityType,
@@ -51,6 +52,7 @@ const activityTypes: ActivityType[] = ["Tasks", "Meetings", "Calls"];
 
 /** HD13 Open Activities card. Empty copy is a local proposal; loading/error are not modelled (fixtures). */
 function OpenActivities({ orgSlug, empty }: { orgSlug: string; empty: boolean }) {
+  const t = useUiTranslations();
   const [period, setPeriod] = useState<HomePeriod>("today");
   const { overdue, inPeriod } = filterActivities(
     empty ? [] : activityRows,
@@ -61,7 +63,9 @@ function OpenActivities({ orgSlug, empty }: { orgSlug: string; empty: boolean })
   const renderGroup = (label: string, rows: ActivityRow[]) =>
     rows.length === 0 ? null : (
       <div key={label} data-testid={`activities-${label.toLowerCase()}`}>
-        <h4 className="mt-3 text-sm font-semibold">{label}</h4>
+        <h4 className="mt-3 text-sm font-semibold">
+          {label === "Overdue" ? t("modules.home.overdue") : t("modules.home.upcoming")}
+        </h4>
         {activityTypes.map((type) => {
           const typed = rows.filter((r) => r.type === type);
           if (typed.length === 0) return null;
@@ -108,13 +112,13 @@ function OpenActivities({ orgSlug, empty }: { orgSlug: string; empty: boolean })
     );
   return (
     <section
-      aria-label="Open Activities"
+      aria-label={t("modules.home.openActivities")}
       className="rounded-md border border-border bg-surface p-5 md:col-span-2"
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold">Open Activities</h3>
+        <h3 className="text-base font-semibold">{t("modules.home.openActivities")}</h3>
         <select
-          aria-label="Activity period"
+          aria-label={t("modules.home.activityPeriod")}
           value={period}
           onChange={(e) => setPeriod(e.target.value as HomePeriod)}
           className="h-8 rounded-md border border-border bg-surface px-2 text-sm"
@@ -144,13 +148,14 @@ function OpenActivities({ orgSlug, empty }: { orgSlug: string; empty: boolean })
 }
 
 export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: string }) {
+  const t = useUiTranslations();
   const total = dealStages.reduce((sum, s) => sum + s.count, 0);
   return (
     <div
       className="mx-auto grid max-w-6xl gap-6 px-8 py-6 md:grid-cols-2"
       data-testid="home-preview"
     >
-      <Card title="Open Tasks" source={taskCardSource} fields={taskCardFields}>
+      <Card title={t("modules.home.openTasks")} source={taskCardSource} fields={taskCardFields}>
         {empty ? (
           <p className="text-sm text-text-muted">{emptyCopy}</p>
         ) : (
@@ -178,7 +183,11 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
         )}
       </Card>
       <OpenActivities orgSlug={orgSlug} empty={empty} />
-      <Card title="Pipeline Deals by Stage" source={dealsCardSource} fields={dealsCardFields}>
+      <Card
+        title={t("modules.home.pipelineDeals")}
+        source={dealsCardSource}
+        fields={dealsCardFields}
+      >
         {empty ? (
           <p className="text-sm text-text-muted">{emptyCopy}</p>
         ) : (
@@ -204,7 +213,7 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
               </tbody>
             </table>
             <p className="mt-3 text-sm" data-testid="deals-total">
-              Total deals: {total}
+              {t("modules.home.totalDeals", { count: total })}
             </p>
           </>
         )}
