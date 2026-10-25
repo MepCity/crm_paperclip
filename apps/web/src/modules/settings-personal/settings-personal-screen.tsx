@@ -1,6 +1,6 @@
 "use client";
 
-import { Pencil } from "lucide-react";
+import { ChevronDown, ChevronUp, Pencil, User } from "lucide-react";
 import { type ReactNode, useEffect, useState } from "react";
 import { useUiLanguage, useUiTranslations } from "@/i18n/client-provider";
 import { fixturePersonalSettingsPort } from "./fixture-port";
@@ -42,7 +42,7 @@ function Rows({ rows }: { rows: { label: string; value: string }[] }) {
     <dl className="grid grid-cols-[200px_1fr] gap-x-6 gap-y-2 text-sm">
       {rows.map((r) => (
         <div key={r.label} className="contents">
-          <dt className="text-muted-foreground">{r.label}</dt>
+          <dt className="text-right text-muted-foreground">{r.label}</dt>
           <dd>
             <button
               type="button"
@@ -108,12 +108,12 @@ export function SettingsPersonalScreen({
           Accessibility
         </button>
       </div>
-      <div className="flex items-center gap-4 px-6 py-5">
+      <div className="flex items-center gap-5 px-6 py-5">
         <div
           aria-hidden
-          className="flex h-14 w-14 items-center justify-center rounded-full bg-muted text-lg font-semibold"
+          className="flex size-20 shrink-0 items-center justify-center rounded-full border border-border bg-surface-muted text-text-muted"
         >
-          {data.name.charAt(0).toUpperCase()}
+          <User className="size-10 text-text-muted" />
         </div>
         <div>
           <div className="flex items-center gap-2">
@@ -132,11 +132,21 @@ export function SettingsPersonalScreen({
       <div className="px-6 pb-2">
         <button
           type="button"
-          className="text-sm text-primary"
+          className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
           aria-expanded={!hidden}
           onClick={() => setHidden((h) => !h)}
         >
-          {hidden ? "Show Details" : "Hide Details"}
+          {hidden ? (
+            <>
+              Show Details
+              <ChevronDown className="size-4" aria-hidden="true" />
+            </>
+          ) : (
+            <>
+              Hide Details
+              <ChevronUp className="size-4" aria-hidden="true" />
+            </>
+          )}
         </button>
       </div>
       {hidden ? null : (
@@ -175,7 +185,7 @@ export function SettingsPersonalScreen({
               <dl className="grid grid-cols-[200px_1fr] gap-x-6 gap-y-2 text-sm">
                 {localeRows.map(([, key]) => (
                   <div key={key} className="contents">
-                    <dt className="text-muted-foreground">
+                    <dt className="text-right text-muted-foreground">
                       {t(key === "language" ? "settings.language" : `settings.${key}`)}
                     </dt>
                     <dd data-locale-row={key}>
@@ -204,13 +214,13 @@ export function SettingsPersonalScreen({
           </Section>
           <Section title="Display Name Format & Preferences">
             <div className="grid grid-cols-[200px_1fr] gap-x-6 gap-y-2 text-sm">
-              <label htmlFor="name-format" className="text-muted-foreground">
+              <label htmlFor="name-format" className="text-right text-muted-foreground">
                 Name Format
               </label>
               <select id="name-format" disabled value={data.nameFormat} onChange={() => {}}>
                 <option>{data.nameFormat}</option>
               </select>
-              <label htmlFor="sort-order" className="text-muted-foreground">
+              <label htmlFor="sort-order" className="text-right text-muted-foreground">
                 Sort order
               </label>
               <select id="sort-order" disabled value={data.sortOrder} onChange={() => {}}>

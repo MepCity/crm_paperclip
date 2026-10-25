@@ -24,14 +24,85 @@ Critical path of a run is about 7.3 min (shard 2); `fast` is the longest at p90 
 
 ## 2. Slowest tests
 
-Not available. Per-test and per-file durations are only in the e2e report/trace artifacts and the vitest reporter output, and artifact downloads and job logs need an authenticated GitHub session, which this run does not have. Local full-suite timing is forbidden on the shared machine. Follow-up: add `--reporter=json` (vitest) and keep the Playwright JSON report in the uploaded artifact, then publish a top-20 table in the CI step summary (proposal 1 below).
+Measured from GitHub Actions CI run `40083180630` (commit `8e9ac920ae558cfece6d9da22bc5c5fba97394d9`, branch `mep/MEP-1315`, 2026-10-24). Per-file durations are published in the job step summaries (`$GITHUB_STEP_SUMMARY`) and archived as workflow artifacts (`fast-results` for Vitest, `e2e-1`..`4` and `e2e-macos` for Playwright).
+
+### 2.1 Fast (unit & component tests) — slowest 20 files
+
+Duration is file end minus start timestamp from Vitest JSON report (`test-results/vitest.json`). Total unit/component execution was 456 s (7.6 min, within the baseline median 7.0 min and p90 9.2 min).
+
+| File | Duration (s) | Tests |
+| --- | ---: | ---: |
+| module-list-screen.test.tsx | 62.447 | 54 |
+| http-record-service.contract.test.ts | 31.019 | 403 |
+| record-form-screen.test.tsx | 16.396 | 40 |
+| fixture.test.ts | 10.582 | 210 |
+| advanced-search-screen.test.tsx | 10.271 | 15 |
+| e2e-lock.test.ts | 8.046 | 12 |
+| filter-editor.test.tsx | 7.886 | 30 |
+| deals.test.ts | 7.027 | 76 |
+| notes-card-body.test.tsx | 6.744 | 9 |
+| lead-record-screen.test.tsx | 6.559 | 16 |
+| global-search.test.tsx | 6.275 | 13 |
+| filter-panel-tags.test.tsx | 5.633 | 7 |
+| cases-solutions.test.ts | 5.261 | 118 |
+| recycle-bin-page.test.tsx | 5.031 | 10 |
+| events.test.ts | 4.438 | 75 |
+| calls.test.ts | 4.303 | 67 |
+| tasks.test.ts | 3.960 | 73 |
+| accounts.test.ts | 3.874 | 65 |
+| export-dialog.test.tsx | 3.790 | 8 |
+| account-record-screen.test.tsx | 3.757 | 5 |
+
+Top 2 files (`module-list-screen.test.tsx` at ~62 s and `http-record-service.contract.test.ts` at ~31 s) account for ~20% of total unit test wall time.
+
+### 2.2 E2E specs — slowest 20 specs (across all 4 shards)
+
+Duration sums all test attempts from the Playwright JSON reports (`apps/web/test-results/results.json`). Parallel tests overlap in wall time.
+
+| File | Duration (s) | Tests | Shard |
+| --- | ---: | ---: | ---: |
+| accounts-detail.spec.ts | 119.430 | 24 | 1 |
+| leads-list.spec.ts | 97.013 | 30 | 3 |
+| contacts-detail.spec.ts | 79.351 | 24 | 2 |
+| deals-detail.spec.ts | 72.288 | 22 | 2 |
+| records-bulk-actions.spec.ts | 61.234 | 12 | 4 |
+| accounts-form.spec.ts | 51.062 | 13 | 1 |
+| button-typography.spec.ts | 45.392 | 4 | 1 |
+| leads-detail.spec.ts | 45.107 | 16 | 3 |
+| contacts-form.spec.ts | 44.459 | 15 | 2 |
+| deals-form.spec.ts | 41.937 | 14 | 2 |
+| cases-list.spec.ts | 41.619 | 8 | 1 |
+| filter-editors.spec.ts | 39.017 | 5 | 2 & 3 |
+| calls-form.spec.ts | 31.992 | 9 | 1 |
+| records-inline-edit-validation.spec.ts | 31.236 | 8 | 4 |
+| deals-board.spec.ts | 30.834 | 10 | 2 |
+| campaigns-form.spec.ts | 28.880 | 9 | 1 |
+| field-input.spec.ts | 28.663 | 4 | 2 |
+| shell.spec.ts | 28.240 | 9 | 4 |
+| dev-ui-inputs.spec.ts | 27.700 | 6 | 2 |
+| filter-panel.spec.ts | 27.635 | 2 | 3 |
+
+### 2.3 Step summary overhead measurement
+
+Measured via GitHub Actions Jobs API timestamps for run `40083180630`:
+
+- `Summarize test durations` step duration:
+  - `fast`: 0 s
+  - `e2e (1/4)`: 0 s
+  - `e2e (2/4)`: 0 s
+  - `e2e (3/4)`: 1 s
+  - `e2e (4/4)`: 0 s
+  - `e2e (macOS geometry)`: 1 s
+- Artifact upload (`fast-results`): 2 s
+- JSON reporter generation overhead: negligible (< 1 s in vitest / playwright)
+- Total added time: ~2–3 s per job, well below the 15 s ceiling.
 
 ## 3. Speed-up proposals (ranked)
 
 | # | Proposal | Est. saving | Risk |
 |---|---|---|---|
 | 1 | Publish per-file durations (vitest JSON + Playwright JSON) in the step summary, so the other items can be targeted | none directly; enables the rest | Very low |
-| 2 | Split `fast` unit/component tests into two parallel jobs (or vitest shards), as lint/typecheck and 7 min of tests run serially today | about 3 min on the p90 critical path (9.7 to about 6.5) | Low; one more runner per push |
+| 2 | Split `fast` unit/component tests into two parallel jobs (or vitest shards), as lint/typecheck and 7 min of tests run serially today | **Measured:** 2.9 min saved vs p90 (9.7 min baseline down to 6.8 min wall time, run 40128174309; fast aggregating job 34 s) | Implemented (MEP-1316) |
 | 3 | Rebalance e2e shards: shard 2 is 1.7 min slower than shard 4 | about 0.5 to 1 min on the critical path | Low; needs per-spec timings (item 1) |
 | 4 | Reuse the test database template between specs instead of re-creating it | unmeasured, likely 5 to 10% of the browser step | Medium; test isolation |
 | 5 | Skip the macOS geometry job for changes that touch no layout or CSS code | saves a macOS runner, about 3 min of cost, not critical path | Medium; a path filter can miss a layout-affecting change |
