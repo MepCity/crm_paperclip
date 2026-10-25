@@ -236,7 +236,8 @@ function ModuleListScreenLoaded({
   const singularLabel = adapter.getModuleSingular(config.module, config.singularLabel);
   const pluralLabel = adapter.getModulePlural(config.module, config.pluralLabel);
   const linkFieldLabel = adapter.getNamedLabel(config.linkFieldLabel);
-  const orgFormat = useFormat(), isAdmin = Boolean(explicitIsAdmin ?? userRole === "admin");
+  const orgFormat = useFormat();
+  const isAdmin = Boolean(explicitIsAdmin ?? userRole === "admin");
   const router = useRouter();
   const refreshModuleListData = useRefreshModuleListData(config.module);
   const searchParams = useSearchParams();
