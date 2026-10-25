@@ -600,3 +600,71 @@ Verification: fresh screenshot/text/meta inspection; absence proof; journal
 openItems contains no W3 object and no open settings. The separately retained
 W2 item is unaffected. This continuation sends zero reference writes and changes
 no setting or preference. Raw captures remain private research evidence.
+
+
+## W3 — Workflow access through Setup navigation
+
+2026-10-25, MEP-1345. Offline diagnosis MEP-1372 did not establish the cause
+of the direct-route model error. A fresh live continuation establishes a usable
+navigation path without any guard, policy, script or journal modification:
+open `/crm/<org>/settings/assignment-rules`, then click the visible Workflow
+Rules sidebar link. `w3-workflow-spa-reviewed` shows the populated Workflow
+list. The earlier direct-route captures remain evidence of a failed load;
+they do not describe the intended list or prove universal unavailability.
+
+The main card contains Rules and Usage tabs, a heading and explanatory text,
+a promotional banner, assistant creation entry, Reorder Rules, Create Rule,
+two presentation icons, a table with selection checkbox, Rule Name, module
+filter, execution trigger, action count, Modified Date and Status. A populated
+row is visible. Existing row values and status are not copied or changed.
+No presentation, reorder, filter or status control was clicked.
+
+| # | Observed control/state | Evidence |
+| --- | --- | --- |
+| W3-WF1 | Create Rule | `w3-workflow-create-form`; opens a compact top modal over the list |
+| W3-WF2 | Module selector | Initial placeholder is Select Module; `w3-workflow-module-options` exposes module and subform groups |
+| W3-WF3 | Rule Name | Required red edge; text input; filled only with the prefixed test name |
+| W3-WF4 | Description | Optional multiline input; resize affordance |
+| W3-WF5 | Cancel and Next | Modal footer, Next visually disabled before required inputs |
+| W3-WF6 | First Next | `w3-workflow-next`; Leads + test name opens a full-page builder, outgoing write counter unchanged |
+| W3-WF7 | Builder | Global top bar retained; Setup sidebar absent; back arrow, test title, module subtitle and Add Description |
+| W3-WF8 | WHEN card | Blue circle linked to outlined card, execution selector, Next; Save and Cancel fixed at bottom |
+
+The first Next is a client-side transition in this observed Workflow path,
+unlike the Assignment first Next documented above. No persistence, validation
+message or successful save is established by the builder opening. Cumulative
+outgoing writes remain one (the earlier cleaned Assignment create), with no
+open W3 object or setting. Raw screenshots and customer-bearing controls stay
+in the private research workspace.
+
+`w3-workflow-trigger-options` exposes four execution-source choices: Record
+Action, Date/Time Field, Record Score and Record Notes (translated by meaning;
+localized labels remain in private evidence). No choice was selected in that
+capture. The menu belongs to the unsaved WHEN card, not a persisted preference.
+
+`w3-workflow-date-trigger` selects Date/Time Field and reveals a second selector
+asking which date/time field should drive execution. The existing WHEN Next
+remains below; footer Save and Cancel remain visible. No rule is saved and no
+criteria, action, activation or execution is established by this selection.
+
+`w3-workflow-date-fields` lists five date/time choices for Leads: Created Time,
+Modified Time, Last Activity Time, Unsubscribed Time and Last Enrichment Time.
+`w3-workflow-date-next-boundary` selects Created Time and reveals execution-date
+relation (localized value shown as On), execution time (Immediately) and repeat
+(Once) selectors. These three selectors were not opened or changed. This is the
+WHEN date trigger, not evidence of the later scheduled-action builder.
+
+The enabled WHEN Next control (`#step3Btn`, `data-zcqa="triggerSubmit"`) is
+**skipped** by the unchanged attribute guard: `dangerous attribute: step3Btn
+triggerSubmit primary lyte-button => check(event) ;`. No alternate selector,
+request replay, script execution or guard override was attempted. The criteria
+and action stages, save, validation, edit, status and deletion remain open.
+This boundary requires a reviewed continuation; the former no-guard-relaxation
+decision is not silently superseded. Customization's separately evidenced
+PageLayout loading blocker remains unchanged and was not recaptured here.
+
+Eight live captures in this continuation report cumulative allowedWrites=1,
+all from the earlier cleaned Assignment create. New outgoing mutation attempts
+are zero; openItems contains no W3 record and no setting. Blocked requests are
+background click-lock, host and telemetry requests; all eight metadata files
+were inspected. No pending W3 cleanup is created by the unsaved builder.
