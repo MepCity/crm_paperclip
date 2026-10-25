@@ -7,6 +7,7 @@ import { Icons } from "@/components/ui/icon";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { SearchableSelect } from "@/components/ui/searchable-select";
 import { Select, SelectItem } from "@/components/ui/select";
+import { useUiTranslations } from "@/i18n/client-provider";
 import "./list-chrome.css";
 
 /** ListBox key for the None option; no field API name uses this spelling. */
@@ -37,6 +38,7 @@ export interface SortPopoverProps {
 }
 
 export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
+  const t = useUiTranslations();
   const [open, setOpen] = useState(false);
   const [field, setField] = useState(sort?.field ?? "");
   const [order, setOrder] = useState<SortSpec["order"]>(sort?.order ?? "asc");
@@ -54,7 +56,7 @@ export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
     <PopoverTrigger isOpen={open} onOpenChange={changeOpen}>
       <Button variant="ghost" size="listToolbar" className="gap-1" data-part="sort">
         <Icons.sort aria-hidden="true" className="h-4 w-4" />
-        Sort
+        {t("records.list.sort")}
       </Button>
       <Popover
         title="Sort"

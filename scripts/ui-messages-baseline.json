@@ -1674,54 +1674,6 @@
     "hash": "47d2a515ef2f05b8"
   },
   {
-    "file": "apps/web/src/components/records/detail/record-detail-screen.tsx",
-    "line": 463,
-    "column": 8,
-    "hash": "d2314997346772c4"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/record-detail-screen.tsx",
-    "line": 496,
-    "column": 23,
-    "hash": "7d9eb7acb13e2462"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/record-detail-screen.tsx",
-    "line": 521,
-    "column": 24,
-    "hash": "e2d0a54968ead24e"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/record-detail-screen.tsx",
-    "line": 522,
-    "column": 23,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/record-detail-screen.tsx",
-    "line": 552,
-    "column": 28,
-    "hash": "76900f1bfd16c8d4"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/record-detail-screen.tsx",
-    "line": 570,
-    "column": 30,
-    "hash": "464c4ffd019e1e96"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/record-detail-screen.tsx",
-    "line": 601,
-    "column": 36,
-    "hash": "d4b1ea5708dd5329"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/record-detail-screen.tsx",
-    "line": 602,
-    "column": 36,
-    "hash": "9dcff98e275f0cb9"
-  },
-  {
     "file": "apps/web/src/components/records/detail/record-page-footer.tsx",
     "line": 10,
     "column": 18,
@@ -2083,51 +2035,33 @@
   },
   {
     "file": "apps/web/src/components/records/form/record-form-inventory-chrome.tsx",
-    "line": 16,
+    "line": 17,
     "column": 18,
     "hash": "1fb688efabcc7ac4"
   },
   {
     "file": "apps/web/src/components/records/form/record-form-inventory-chrome.tsx",
-    "line": 19,
+    "line": 20,
     "column": 62,
     "hash": "1fb688efabcc7ac4"
   },
   {
     "file": "apps/web/src/components/records/form/record-form-inventory-chrome.tsx",
-    "line": 38,
+    "line": 39,
     "column": 61,
     "hash": "f44df12c1827cd75"
   },
   {
     "file": "apps/web/src/components/records/form/record-form-inventory-chrome.tsx",
-    "line": 45,
+    "line": 46,
     "column": 8,
     "hash": "b1391a0d58199773"
   },
   {
     "file": "apps/web/src/components/records/form/record-form-inventory-chrome.tsx",
-    "line": 49,
+    "line": 50,
     "column": 73,
     "hash": "387ba9ef94205512"
-  },
-  {
-    "file": "apps/web/src/components/records/form/record-form-inventory-chrome.tsx",
-    "line": 64,
-    "column": 6,
-    "hash": "0ec6dc9c29aab907"
-  },
-  {
-    "file": "apps/web/src/components/records/form/record-form-screen.tsx",
-    "line": 105,
-    "column": 10,
-    "hash": "4b514fb988fff8c3"
-  },
-  {
-    "file": "apps/web/src/components/records/form/record-form-screen.tsx",
-    "line": 831,
-    "column": 18,
-    "hash": "d7211fba65a9e6d8"
   },
   {
     "file": "apps/web/src/components/records/form/select-record-dialog.tsx",
@@ -2218,30 +2152,6 @@
     "line": 626,
     "column": 16,
     "hash": "1ff57a29d7c9d11b"
-  },
-  {
-    "file": "apps/web/src/components/records/form/unsaved-changes-dialog.tsx",
-    "line": 16,
-    "column": 13,
-    "hash": "c60cd0a69429283a"
-  },
-  {
-    "file": "apps/web/src/components/records/form/unsaved-changes-dialog.tsx",
-    "line": 17,
-    "column": 15,
-    "hash": "7704da2545e4c2c1"
-  },
-  {
-    "file": "apps/web/src/components/records/form/unsaved-changes-dialog.tsx",
-    "line": 18,
-    "column": 19,
-    "hash": "109143344d6a85b8"
-  },
-  {
-    "file": "apps/web/src/components/records/form/unsaved-changes-dialog.tsx",
-    "line": 19,
-    "column": 20,
-    "hash": "1a0432d8e5c88a21"
   },
   {
     "file": "apps/web/src/components/records/list/activity-filter-editor.tsx",
@@ -2370,36 +2280,6 @@
     "hash": "b6a91f73783b4fb0"
   },
   {
-    "file": "apps/web/src/components/records/list/change-owner-dialog.tsx",
-    "line": 123,
-    "column": 14,
-    "hash": "00c10076da9bef65"
-  },
-  {
-    "file": "apps/web/src/components/records/list/change-owner-dialog.tsx",
-    "line": 156,
-    "column": 16,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/components/records/list/change-owner-dialog.tsx",
-    "line": 166,
-    "column": 16,
-    "hash": "00c10076da9bef65"
-  },
-  {
-    "file": "apps/web/src/components/records/list/change-owner-dialog.tsx",
-    "line": 175,
-    "column": 17,
-    "hash": "d7bb9fac5e57aabc"
-  },
-  {
-    "file": "apps/web/src/components/records/list/change-owner-dialog.tsx",
-    "line": 185,
-    "column": 23,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
     "line": 23,
     "column": 28,
@@ -2496,230 +2376,116 @@
     "hash": "8f44d1ea3ccaa10c"
   },
   {
-    "file": "apps/web/src/components/records/list/filter-panel.tsx",
-    "line": 550,
-    "column": 16,
-    "hash": "fa8f08b9e1f675cc"
-  },
-  {
-    "file": "apps/web/src/components/records/list/filter-panel.tsx",
-    "line": 566,
-    "column": 14,
-    "hash": "83b12c2216efb4fd"
-  },
-  {
-    "file": "apps/web/src/components/records/list/list-toolbar.tsx",
-    "line": 65,
-    "column": 13,
-    "hash": "638e249f4a15ebb8"
-  },
-  {
-    "file": "apps/web/src/components/records/list/list-toolbar.tsx",
-    "line": 80,
-    "column": 24,
-    "hash": "db11d85b397673ef"
-  },
-  {
-    "file": "apps/web/src/components/records/list/list-toolbar.tsx",
-    "line": 94,
-    "column": 67,
-    "hash": "ff8059dc6752afdd"
-  },
-  {
-    "file": "apps/web/src/components/records/list/mass-update-dialog.tsx",
-    "line": 154,
-    "column": 56,
-    "hash": "5a264945a25df60f"
-  },
-  {
-    "file": "apps/web/src/components/records/list/mass-update-dialog.tsx",
-    "line": 161,
-    "column": 21,
-    "hash": "f45fc1dfdc96db27"
-  },
-  {
-    "file": "apps/web/src/components/records/list/mass-update-dialog.tsx",
-    "line": 166,
-    "column": 39,
-    "hash": "beb32211dfac5c5e"
-  },
-  {
-    "file": "apps/web/src/components/records/list/mass-update-dialog.tsx",
-    "line": 210,
-    "column": 12,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/components/records/list/mass-update-dialog.tsx",
-    "line": 220,
-    "column": 12,
-    "hash": "c1c1009d3f37ec05"
-  },
-  {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 810,
+    "line": 829,
     "column": 31,
     "hash": "2836cfca8acae68d"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 811,
+    "line": 830,
     "column": 33,
     "hash": "5a9133cebfab7531"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 814,
-    "column": 14,
-    "hash": "00c10076da9bef65"
-  },
-  {
-    "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 817,
+    "line": 836,
     "column": 30,
     "hash": "75c4d64dd295ea85"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 820,
+    "line": 839,
     "column": 14,
     "hash": "fee59ce0ce197df2"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 823,
+    "line": 842,
     "column": 42,
     "hash": "d22a513c3f7305ec"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 824,
+    "line": 843,
     "column": 40,
     "hash": "97330d2cf2b46bb8"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 825,
+    "line": 844,
     "column": 32,
     "hash": "07c60b2f79382eb1"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 826,
+    "line": 845,
     "column": 34,
     "hash": "86a94a959b984925"
   },
   {
-    "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 827,
-    "column": 28,
-    "hash": "e2d0a54968ead24e"
-  },
-  {
-    "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 1009,
-    "column": 24,
-    "hash": "e2d0a54968ead24e"
-  },
-  {
-    "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 1010,
-    "column": 23,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/components/records/list/record-table-footer.tsx",
-    "line": 41,
-    "column": 18,
-    "hash": "7c7cadfb8c8e3d9b"
-  },
-  {
-    "file": "apps/web/src/components/records/list/record-table-footer.tsx",
-    "line": 45,
-    "column": 39,
-    "hash": "d3b8771e2e3e6ace"
-  },
-  {
-    "file": "apps/web/src/components/records/list/record-table-footer.tsx",
-    "line": 56,
-    "column": 19,
-    "hash": "a57b08a480b822a0"
-  },
-  {
-    "file": "apps/web/src/components/records/list/record-table-footer.tsx",
-    "line": 74,
-    "column": 19,
-    "hash": "1ff57a29d7c9d11b"
-  },
-  {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 171,
+    "line": 173,
     "column": 89,
     "hash": "47a84e92d5b225ee"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 191,
+    "line": 193,
     "column": 29,
     "hash": "a17599396adc6090"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 204,
+    "line": 206,
     "column": 45,
     "hash": "185d8ef0ae5ea9b8"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 224,
-    "column": 33,
-    "hash": "094c58437c0d18e4"
-  },
-  {
-    "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 269,
+    "line": 271,
     "column": 42,
     "hash": "8a7525b1492fb848"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 279,
+    "line": 281,
     "column": 42,
     "hash": "20d0af43d405945d"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 326,
+    "line": 328,
     "column": 38,
     "hash": "423d9be21c71ad1d"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 372,
+    "line": 374,
     "column": 40,
     "hash": "d6e645b7d2b2da64"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 459,
+    "line": 461,
     "column": 60,
     "hash": "cddeba5cfc9a05ad"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 463,
+    "line": 465,
     "column": 13,
     "hash": "cddeba5cfc9a05ad"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 466,
+    "line": 468,
     "column": 61,
     "hash": "5c4419a6999d2a7a"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 470,
+    "line": 472,
     "column": 13,
     "hash": "5c4419a6999d2a7a"
   },
@@ -2778,36 +2544,6 @@
     "hash": "41bdcc21222034c1"
   },
   {
-    "file": "apps/web/src/components/records/list/selection-bar.tsx",
-    "line": 55,
-    "column": 10,
-    "hash": "83b12c2216efb4fd"
-  },
-  {
-    "file": "apps/web/src/components/records/list/selection-bar.tsx",
-    "line": 69,
-    "column": 10,
-    "hash": "5908bccf22118371"
-  },
-  {
-    "file": "apps/web/src/components/records/list/selection-bar.tsx",
-    "line": 78,
-    "column": 10,
-    "hash": "1331275bc537b4c2"
-  },
-  {
-    "file": "apps/web/src/components/records/list/selection-bar.tsx",
-    "line": 86,
-    "column": 10,
-    "hash": "5a264945a25df60f"
-  },
-  {
-    "file": "apps/web/src/components/records/list/selection-bar.tsx",
-    "line": 95,
-    "column": 26,
-    "hash": "ff8059dc6752afdd"
-  },
-  {
     "file": "apps/web/src/components/records/list/selection-tags-dialog.tsx",
     "line": 58,
     "column": 16,
@@ -2839,55 +2575,49 @@
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 56,
-    "column": 62,
-    "hash": "bec69036aa27e7fa"
-  },
-  {
-    "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 60,
+    "line": 62,
     "column": 15,
     "hash": "bec69036aa27e7fa"
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 82,
+    "line": 84,
     "column": 19,
     "hash": "6be090825c997103"
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 85,
+    "line": 87,
     "column": 35,
     "hash": "77184595bde3befc"
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 86,
+    "line": 88,
     "column": 36,
     "hash": "79479a6c76d8416a"
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 99,
+    "line": 101,
     "column": 85,
     "hash": "19766ed6ccb2f4a3"
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 109,
+    "line": 111,
     "column": 12,
     "hash": "31e392d1c0378bec"
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 129,
+    "line": 131,
     "column": 29,
     "hash": "dc937b59892604f5"
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 137,
+    "line": 139,
     "column": 13,
     "hash": "6d2227555fccff99"
   },
@@ -3295,63 +3025,15 @@
   },
   {
     "file": "apps/web/src/components/records/notes/note-composer.tsx",
-    "line": 114,
+    "line": 116,
     "column": 8,
     "hash": "322c0e13ef4fa485"
   },
   {
     "file": "apps/web/src/components/records/notes/note-composer.tsx",
-    "line": 148,
-    "column": 20,
-    "hash": "7e8cd2056da73a7f"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-composer.tsx",
-    "line": 149,
-    "column": 21,
-    "hash": "7e8cd2056da73a7f"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-composer.tsx",
-    "line": 161,
-    "column": 20,
-    "hash": "d29b2363524511f4"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-composer.tsx",
-    "line": 189,
+    "line": 191,
     "column": 22,
     "hash": "29d4198e41d8221a"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-composer.tsx",
-    "line": 217,
-    "column": 57,
-    "hash": "5ff61612189b7291"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-composer.tsx",
-    "line": 230,
-    "column": 24,
-    "hash": "2f343666aaa88c44"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-composer.tsx",
-    "line": 239,
-    "column": 26,
-    "hash": "87fbe4fb79b1d700"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-composer.tsx",
-    "line": 247,
-    "column": 66,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-composer.tsx",
-    "line": 250,
-    "column": 70,
-    "hash": "1509f561f2416598"
   },
   {
     "file": "apps/web/src/components/records/notes/note-format-toolbar.tsx",
@@ -4084,48 +3766,6 @@
     "line": 97,
     "column": 32,
     "hash": "762bdd8279a5dcb2"
-  },
-  {
-    "file": "apps/web/src/components/records/search/manage-columns-dialog.tsx",
-    "line": 77,
-    "column": 77,
-    "hash": "78f5748d35c323c6"
-  },
-  {
-    "file": "apps/web/src/components/records/search/manage-columns-dialog.tsx",
-    "line": 83,
-    "column": 21,
-    "hash": "ae0215400b52c4bb"
-  },
-  {
-    "file": "apps/web/src/components/records/search/manage-columns-dialog.tsx",
-    "line": 85,
-    "column": 27,
-    "hash": "49c266baaaa70981"
-  },
-  {
-    "file": "apps/web/src/components/records/search/manage-columns-dialog.tsx",
-    "line": 94,
-    "column": 24,
-    "hash": "bf7179c4438288f2"
-  },
-  {
-    "file": "apps/web/src/components/records/search/manage-columns-dialog.tsx",
-    "line": 111,
-    "column": 71,
-    "hash": "e3c725ad6f0bbed0"
-  },
-  {
-    "file": "apps/web/src/components/records/search/manage-columns-dialog.tsx",
-    "line": 116,
-    "column": 59,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/components/records/search/manage-columns-dialog.tsx",
-    "line": 119,
-    "column": 60,
-    "hash": "1509f561f2416598"
   },
   {
     "file": "apps/web/src/components/records/tags/manage-tags-client.tsx",
@@ -10171,111 +9811,33 @@
   },
   {
     "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 62,
-    "column": 19,
-    "hash": "261c39aeef98c27f"
-  },
-  {
-    "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 96,
-    "column": 39,
-    "hash": "93dd270cc37e0f67"
-  },
-  {
-    "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 153,
+    "line": 162,
     "column": 61,
     "hash": "19397c3e2c2edd7d"
   },
   {
     "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 157,
+    "line": 166,
     "column": 68,
     "hash": "ba3bbbe10d8bef66"
   },
   {
     "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 202,
+    "line": 211,
     "column": 42,
     "hash": "1cf75721dd8e9616"
   },
   {
     "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 215,
+    "line": 224,
     "column": 41,
     "hash": "7e3dcd1a7c66cf9a"
   },
   {
     "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 223,
-    "column": 45,
-    "hash": "451022a422c284f7"
-  },
-  {
-    "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 238,
+    "line": 247,
     "column": 61,
     "hash": "2f72431466f219b6"
-  },
-  {
-    "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 266,
-    "column": 19,
-    "hash": "1a3369a6fdd01f06"
-  },
-  {
-    "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 273,
-    "column": 23,
-    "hash": "49e96d7cdf58069c"
-  },
-  {
-    "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 279,
-    "column": 23,
-    "hash": "7bc14493b71ba90b"
-  },
-  {
-    "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 287,
-    "column": 23,
-    "hash": "d051f5254fbf94b7"
-  },
-  {
-    "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 295,
-    "column": 23,
-    "hash": "de838855e4a6e04e"
-  },
-  {
-    "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 308,
-    "column": 30,
-    "hash": "4cc6fca1078e8b6e"
-  },
-  {
-    "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 316,
-    "column": 14,
-    "hash": "5cd425f518c2e59a"
-  },
-  {
-    "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 319,
-    "column": 78,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 326,
-    "column": 47,
-    "hash": "62b34994944f739c"
-  },
-  {
-    "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 327,
-    "column": 50,
-    "hash": "35227e9ec3d14662"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",

@@ -12,6 +12,7 @@ import { RadioGroup } from "@/components/ui/radio-group";
 import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import { toast } from "@/components/ui/toast";
+import { useUiTranslations } from "@/i18n/client-provider";
 import {
   useConvertLead,
   useModule,
@@ -24,8 +25,6 @@ import { moduleRecordPath } from "@/lib/crm-paths";
 
 type Mode = "new" | "existing";
 type DealErrors = Partial<Record<"Deal_Name" | "Closing_Date" | "Stage", string>>;
-
-const NEW_LABEL = { Accounts: "Create New Account", Contacts: "Create New Contact" } as const;
 
 function ExistingRecordSelect({
   module,
@@ -40,6 +39,7 @@ function ExistingRecordSelect({
   onChange: (id: string | null) => void;
   errorMessage?: string;
 }) {
+  const t = useUiTranslations();
   const views = useViews(module);
   const viewId = views.data?.find((view) => view.isDefault)?.id ?? "";
   const list = useRecordList(
@@ -59,7 +59,7 @@ function ExistingRecordSelect({
       onSelectionChange={(key) => onChange(key === null ? null : String(key))}
       errorMessage={errorMessage}
       isInvalid={Boolean(errorMessage)}
-      placeholder="Select a record"
+      placeholder={t("records.convert.selectRecord")}
     >
       {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
     </Select>
@@ -83,17 +83,21 @@ function TargetChoice({
   onExisting: (id: string | null) => void;
   existingError?: string;
 }) {
-  const label = NEW_LABEL[module];
+  const t = useUiTranslations();
+  const label =
+    module === "Accounts"
+      ? t("records.convert.createNewAccount")
+      : t("records.convert.createNewContact");
   return (
     <div className="flex flex-col gap-2" data-convert-target={module}>
       <RadioGroup
-        label={module === "Accounts" ? "Account" : "Contact"}
+        label={module === "Accounts" ? t("records.convert.account") : t("records.convert.contact")}
         orientation="horizontal"
         value={mode}
         onChange={(value) => onMode(value as Mode)}
         options={[
           { value: "new", label },
-          { value: "existing", label: "Choose existing" },
+          { value: "existing", label: t("records.convert.chooseExisting") },
         ]}
       />
       {mode === "new" ? (
@@ -106,7 +110,11 @@ function TargetChoice({
       ) : (
         <ExistingRecordSelect
           module={module}
-          label={`Existing ${module === "Accounts" ? "Account" : "Contact"}`}
+          label={
+            module === "Accounts"
+              ? t("records.convert.existingAccount")
+              : t("records.convert.existingContact")
+          }
           selectedId={existingId}
           onChange={onExisting}
           errorMessage={existingError}
@@ -117,6 +125,7 @@ function TargetChoice({
 }
 
 export function LeadConvertScreen({ orgSlug, recordId }: { orgSlug: string; recordId: string }) {
+  const t = useUiTranslations();
   const router = useRouter();
   const lead = useRecord("Leads", recordId);
   const dealModule = useModule("Deals");
@@ -220,7 +229,7 @@ export function LeadConvertScreen({ orgSlug, recordId }: { orgSlug: string; reco
     <div data-lead-convert className="flex min-h-full bg-surface text-text">
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="flex h-[52px] shrink-0 items-center gap-2 border-b border-panel-border px-8">
-          <h1 className="text-xl font-bold">Convert Lead</h1>
+          <h1 className="text-xl font-bold">{t("records.convert.title")}</h1>
           <span className="text-md font-semibold text-text-muted">
             ({fullName}
             {company ? ` - ${company}` : ""})
@@ -263,20 +272,20 @@ export function LeadConvertScreen({ orgSlug, recordId }: { orgSlug: string; reco
             existingError={existingErrors.contact}
           />
           <Checkbox
-            label="Create a new Deal for this Account."
+            label={t("records.convert.createDeal")}
             isSelected={withDeal}
             onChange={setWithDeal}
           />
           {withDeal ? (
             <div data-convert-deal className="flex w-[600px] flex-col gap-4">
               <NumberField
-                label="Amount"
+                label={t("records.convert.amount")}
                 prefix="TL"
                 value={amount ?? Number.NaN}
                 onChange={(value) => setAmount(Number.isNaN(value) ? null : value)}
               />
               <TextField
-                label="Deal Name"
+                label={t("records.convert.dealName")}
                 isRequired
                 value={effectiveDealName}
                 onChange={setDealName}
@@ -284,7 +293,7 @@ export function LeadConvertScreen({ orgSlug, recordId }: { orgSlug: string; reco
                 isInvalid={Boolean(dealErrors.Deal_Name)}
               />
               <DatePicker
-                label="Closing Date"
+                label={t("records.convert.closingDate")}
                 isRequired
                 value={closingDate}
                 onChange={setClosingDate}
@@ -292,7 +301,7 @@ export function LeadConvertScreen({ orgSlug, recordId }: { orgSlug: string; reco
                 isInvalid={Boolean(dealErrors.Closing_Date)}
               />
               <Select
-                label="Stage"
+                label={t("records.convert.stage")}
                 isRequired
                 items={stageOptions.map((option) => ({ ...option, id: option.storedValue }))}
                 selectedKey={effectiveStage}
@@ -305,7 +314,11 @@ export function LeadConvertScreen({ orgSlug, recordId }: { orgSlug: string; reco
             </div>
           ) : null}
           <div className="flex w-[180px] flex-col gap-1">
-            <TextField label="Owner of the New Records" value={ownerName} isReadOnly />
+            <TextField
+              label={t("records.convert.ownerOfNewRecords")}
+              value={ownerName}
+              isReadOnly
+            />
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -314,17 +327,17 @@ export function LeadConvertScreen({ orgSlug, recordId }: { orgSlug: string; reco
               size="record"
               isDisabled={converted || convert.isPending}
             >
-              Convert
+              {t("records.convert.convertButton")}
             </Button>
             <Button variant="recordSecondary" size="record" onPress={cancel}>
-              Cancel
+              {t("records.convert.cancelButton")}
             </Button>
           </div>
         </form>
       </div>
       <aside className="w-[300px] shrink-0 border-l border-panel-border px-4 py-6">
-        <h2 className="text-md font-semibold">Quick Links</h2>
-        <p className="mt-3 text-md text-primary">Lead Conversion Mapping</p>
+        <h2 className="text-md font-semibold">{t("records.convert.quickLinks")}</h2>
+        <p className="mt-3 text-md text-primary">{t("records.convert.conversionMapping")}</p>
       </aside>
     </div>
   );
