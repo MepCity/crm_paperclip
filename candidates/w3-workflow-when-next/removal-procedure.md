@@ -21,30 +21,26 @@ At `2026-10-26T04:00:00Z`:
 
 ---
 
-## 2. Manual Removal & Rollback Procedure
+## 2. Manual Removal & Rollback Procedure (Non-Git Capture Tree)
 
-If the candidate patch was applied to `write-window-observe.mjs` during an approved observation session, it must be removed upon completion of the observation or when the window closes.
+> [!NOTE]
+> The research capture workspace (`~/Desktop/mepcity-research`) is an unversioned directory, not a Git repository. Rollback is executed strictly via reverse patch (`patch -p1 -R`), followed by text and test verification.
 
 ### Step 2.1: Reverse Patch Application
 From the repository root (or worktree):
 ```bash
-# Using patch in reverse mode (-R)
-patch -p1 -R -d "$HOME/Desktop/mepcity-research" < candidates/w3-workflow-when-next/w3-workflow-when-next.patch
+patch -p1 -R --batch -d "$HOME/Desktop/mepcity-research" < candidates/w3-workflow-when-next/w3-workflow-when-next.patch
 ```
 
-Alternatively, from the capture tools directory:
+### Step 2.2: Verify Clean Baseline (Zero Candidate Trace)
+Verify that the candidate marker comment is completely absent from `write-window-observe.mjs`:
 ```bash
-cd "$HOME/Desktop/mepcity-research/tools/capture"
-# Revert write-window-observe.mjs to clean baseline
-git checkout -- write-window-observe.mjs
-```
-
-### Step 2.2: Verify Clean Baseline
-Confirm that no diff remains in the research capture workspace:
-```bash
-cd "$HOME/Desktop/mepcity-research/tools/capture"
-git status --porcelain write-window-observe.mjs
-# Output must be empty.
+if grep -q "W3 Candidate (MEP-1374)" "$HOME/Desktop/mepcity-research/tools/capture/write-window-observe.mjs"; then
+  echo "ERROR: Candidate marker still present!" >&2
+  exit 1
+else
+  echo "Clean: candidate marker completely removed from write-window-observe.mjs."
+fi
 ```
 
 ### Step 2.3: Execute Full Baseline Test Suite
@@ -71,5 +67,5 @@ console.log("Journal cleanup audit passed.");
 
 ## 3. Summary of Safety Invariants
 
-- **No lingering code**: Once reverted, the production capture tool contains zero trace of the candidate exception.
+- **No lingering code**: Once reverted via `patch -p1 -R`, the production capture tool contains zero trace of the candidate exception.
 - **Fail-closed default**: If manual removal is delayed, automatic time-based lockout prevents any live execution past 04:00 UTC / 07:00 Istanbul.
