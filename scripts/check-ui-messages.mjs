@@ -141,6 +141,25 @@ export function compareBaseline(actual, baseline) {
   };
 }
 
+export const COMPLETED_MODULE_PREFIXES = [
+  "apps/web/src/components/shell/",
+  "apps/web/src/modules/settings-personal/",
+];
+
+export function filterUnauthorizedExemptions(
+  added,
+  main,
+  completedPrefixes = COMPLETED_MODULE_PREFIXES,
+) {
+  const mainByFileHash = new Set(main.map((m) => `${m.file}:${m.hash}`));
+  return added.filter((hit) => {
+    // If the same file and hash already existed in main, it is a shifted line, not a new exemption.
+    if (mainByFileHash.has(`${hit.file}:${hit.hash}`)) return false;
+    // Completed modules allow no new baseline additions.
+    return completedPrefixes.some((p) => hit.file.startsWith(p));
+  });
+}
+
 if (
   process.argv[1] &&
   fileURLToPath(import.meta.url) ===
@@ -172,7 +191,8 @@ if (
     /* Initial adoption has no main baseline yet. */
   }
   const result = compareBaseline(scanWorkspace(root), baseline);
-  const expanded = main ? compareBaseline(baseline, main).added : [];
+  const rawExpanded = main ? compareBaseline(baseline, main).added : [];
+  const expanded = filterUnauthorizedExemptions(rawExpanded, main || []);
   if (result.added.length || result.stale.length || expanded.length) {
     console.error(JSON.stringify({ ...result, unauthorizedExemptions: expanded }, null, 2));
     process.exitCode = 1;

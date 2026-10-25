@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 // @ts-expect-error The CLI is a JavaScript module used directly by CI.
-import { compareBaseline, scanSource } from "./check-ui-messages.mjs";
+import { compareBaseline, filterUnauthorizedExemptions, scanSource } from "./check-ui-messages.mjs";
 
 describe("UI message AST guard", () => {
   it("catches JSX, accessible names, label arrays and feedback strings", () => {
@@ -20,5 +20,23 @@ describe("UI message AST guard", () => {
     const before = scanSource(`const x = <p>Hello</p>`);
     const after = scanSource(`\nconst x = <p>Hello</p>`);
     expect(compareBaseline(after, before)).toMatchObject({ added: after, stale: before });
+  });
+  it("filters out shifted lines and uncompleted module additions while enforcing completed modules", () => {
+    const main = [
+      { file: "apps/web/src/components/shell/nav.ts", line: 10, column: 5, hash: "abc" },
+      { file: "apps/web/src/modules/leads/leads.tsx", line: 20, column: 5, hash: "def" },
+    ];
+    const addedVsMain = [
+      // Shifted line in shell: same file and hash, different line -> allowed
+      { file: "apps/web/src/components/shell/nav.ts", line: 11, column: 5, hash: "abc" },
+      // Brand new literal in shell -> rejected as unauthorized
+      { file: "apps/web/src/components/shell/nav.ts", line: 15, column: 5, hash: "new_shell" },
+      // Brand new literal in uncompleted module -> allowed in baseline
+      { file: "apps/web/src/modules/visits/visits.tsx", line: 5, column: 5, hash: "new_visits" },
+    ];
+    const unauthorized = filterUnauthorizedExemptions(addedVsMain, main);
+    expect(unauthorized).toEqual([
+      { file: "apps/web/src/components/shell/nav.ts", line: 15, column: 5, hash: "new_shell" },
+    ]);
   });
 });
