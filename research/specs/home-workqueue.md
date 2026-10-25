@@ -500,3 +500,40 @@ The current independent review stage checks this gap record, not live parity.
 No ADR or module gate is approved by this delivery. Future live observation
 requires the separately approved single-flow path described in MEP-1355;
 documenting the gap does not authorize that attempt.
+
+
+## W4 continuation — 25 October 2026, after dashboard cleanup
+
+Fresh screenshot, control and accessibility exports were reconciled for
+`w4-home-continuation`, `w4-workqueue-continuation` and
+`w4-workqueue-period-menu`. Home still shows the setup introduction with Atla;
+there is no visible page/widget editor. Atla was not operated: the capture
+onboarding guard remains in force. No onboarding preference was changed.
+
+Workqueue navigation now shows the queue body without a welcome overlay. Tasks
+is highlighted; the main panel renders **Bu kuyruğu görüntüleme izniniz yok.
+Lütfen Yöneticinize başvurun** and an explanation mentioning an unavailable
+queue, disabled module permission or disabled organized module. This is the
+rendered state under capture restrictions, not proof that the real user lacks
+permission: background requests were blocked and XMLHttpRequest diagnostics
+occurred. No permission or module setting was changed to investigate it.
+
+| ID | Control/state | Observed behaviour |
+| --- | --- | --- |
+| WC01 | Activity period dropdown | Opens beneath the activity-section header; current Bugün & Geciken is checked |
+| WC02 | Period options | Bugün & Geciken, Bugün, Yarın, Geciken, Bu Hafta, Gelecek Hafta, Bu Ay, Önümüzdeki Ay, Belirli Bir Tarihte |
+| WC03 | Belirli Bir Tarihte caret | Submenu affordance visible; submenu and date application not observed |
+| WC04 | Activity rows | Tasks, Meetings, Calls with right-hand count badges; Tasks has selected-row tint and left accent |
+| WC05 | Queue permission illustration/message | Replaces the record table; no test-record row actions accessible |
+| WC06 | Customize queue / Suggested queue | Gear and plus beside personal-queue heading; not operated |
+
+Only the dropdown was opened; no period option, filter, sort, queue management
+or record action was applied. No result/count transition or preference restore
+is certified. HW01–HW03 and QW02–QW04 remain open; QW01 now has live menu/default
+coverage but its application/persistence portion remains open.
+
+Home has two blocked legacy background POSTs. Both Workqueue captures report
+five blocked requests, categorized click-lock, host and denied-path. The latter
+include background queue data access; they were not retried outside the tool.
+Both managed captures retain W4 allowedWrites=3 and openItems containing only the
+separately retained W2 Documents item, with no open setting. No W4 write occurred.

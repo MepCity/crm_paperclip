@@ -815,7 +815,7 @@ No report, folder, component, schedule, export or external connection was create
 
 The cleanup capture attempted only Panoyu Sil on the registered test dashboard.
 It was skipped with `dangerous attribute: delDashboard`; no delete request was
-sent. **The test dashboard remains present and is not marked cleaned.** Further
+sent. **At that pause the test dashboard remained present and was not marked cleaned.** Further
 reference activity stopped immediately and the board was notified. No guard,
 policy module or tool was modified to circumvent the refusal; no new repair
 chain was opened. The existing journal and registered object remain intact.
@@ -854,3 +854,79 @@ AW01: empty private create/save observed; editing and successful deletion remain
 open, with cleanup pending. AW02: component-type and chart-source menus observed;
 component form/save/edit/delete remain open. AW03: period/filter operation remains
 unobserved. No parity, architecture or module-gate approval is claimed.
+
+
+## W4 board cleanup verified — 25 October 2026
+
+The board reported deleting only the empty private test dashboard through
+Panoyu Sil → Sil at 20:44 UTC. The saved captures
+`w4-board-dashboard-absence` (20:46 UTC) and
+`w4-board-dashboard-list-check` (20:48 UTC) were inspected on continuation.
+Neither page export contains the test name; the latter opens the dashboard
+selector using its unique visible current-dashboard label. These are passive
+absence evidence, not an analyst-observed delete confirmation or success message.
+The official cleanup proof already marked the dashboard cleaned and removed it
+from managed open items. The journal records board removal and restored: YES.
+No duplicate cleanup flag or deletion was executed in this continuation.
+
+W4 cumulative allowed writes remains three: the prior create and two passive
+access traces. No open W4 object or setting remains. The retained W2 Documents
+item is a separate disposition and is not certified cleaned here. Historical
+pause statements above describe the earlier state; they do not override this
+verified cleanup. Report builder, report/folder lifecycle, component lifecycle,
+and dashboard edit/period/filter gaps remain open. Dashboard deletion is now
+board-reported and absence-verified, not capture-observed end to end.
+
+
+### Unsaved quick-chart form continuation
+
+`w4-unsaved-chart-source` opens a fresh unsaved dashboard editor and Grafik,
+then `w4-unsaved-quick-chart` opens Hızlı çizelge. Neither dashboard nor component
+was saved. The source dialog offers Hızlı çizelge and Raporlardan. The quick-chart
+modal is wide, with configuration on the left and preview on the right.
+
+| ID | Control / initial state | Observed behaviour |
+| --- | --- | --- |
+| UC01 | Bileşen Adı | Empty focused textbox |
+| UC02 | Modüller | Modül seçin dropdown; required upstream selection for preview |
+| UC03 | Ölçüm (y ekseni) | Ölçüm seç, disabled-looking before module selection |
+| UC04 | Gruplandırma | Gruplandırmayı seç, disabled-looking before module selection |
+| UC05 | + Kriter filtresi | Visible below grouping; inactive-looking initially |
+| UC06 | Kategori Alanı Oluştur | Visible with grouping-category explanation |
+| UC07 | Diğer seçenekler | Section below main configuration |
+| UC08 | Bileşen Filtrelerini Görüntüle | Unchecked checkbox beside Alan seç dropdown; not toggled |
+| UC09 | Sütun grafik | Chart-type dropdown above preview; initial column chart |
+| UC10 | Preview | Explains that a visual preview appears after choosing a module |
+| UC11 | İptal / Bitti | Modal footer; no Bitti or dashboard Save operation performed |
+| UC12 | Yardım | Upper-right help affordance; not operated |
+
+`w4-unsaved-chart-modules` opens the module menu, exposing core CRM modules,
+activities, commercial modules, service modules, Notes, Email and forecast
+entries. Exported unique selectors were used; no positional selector was used.
+This adds live initial-form coverage to AW02; component persistence, successful
+validation, edit/delete and dashboard period/filter operations remain open.
+
+
+`w4-unsaved-chart-selected` selects Leads from the exported module selector.
+An optional related-module dropdown appears; the measure defaults to record
+count for Leads, the grouping selector becomes available, and criterion addition
+becomes active-looking. The preview changes from explanatory text to a two-bar
+example with record-count axis. Preview labels/values are not reproduced and
+are not certified as live aggregation. No data or component definition was saved.
+
+
+`w4-unsaved-chart-criteria` opens + Kriter filtresi in that unsaved form.
+The link becomes a bordered criterion region with Kaldır, numbered row 1,
+field dropdown, initially inactive operator/value controls and green add-row
+plus. No criterion value was entered or applied; no saved filter was created.
+The capture contains seven refused background requests; none was retried outside
+the tool. All quick-chart observations used read-only transport guards.
+
+
+`w4-unsaved-exit-audit` opens the unsaved chart form and cancels the component,
+then cancels the new dashboard editor through their exported exact selectors.
+Both cancel steps succeed. The managed final audit still reports allowedWrites=3,
+no open W4 record and no open setting; only the separately retained W2 item
+remains. Seven background requests are refused, including passive dashboard
+metadata access without a click lock. No transient editor content was saved.
+These cancellation observations do not certify a saved-component delete flow.
