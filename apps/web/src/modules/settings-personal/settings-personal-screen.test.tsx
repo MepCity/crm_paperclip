@@ -42,5 +42,11 @@ describe("SettingsPersonalScreen", () => {
     expect(screen.getByLabelText("Name Format")).toHaveProperty("disabled", true);
     expect(screen.getByLabelText("Sort order")).toHaveProperty("disabled", true);
     expect(screen.getByLabelText("Email value")).toHaveProperty("disabled", true);
+    const hideBtn = screen.getByRole("button", { name: /hide details/i });
+    expect(hideBtn).toBeDefined();
+    const dt = document.querySelector("dt");
+    expect(dt?.className).toContain("text-right");
+    const avatar = document.querySelector("[aria-hidden].rounded-full.size-20");
+    expect(avatar).toBeDefined();
   });
 });

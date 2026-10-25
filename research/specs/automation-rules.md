@@ -504,3 +504,52 @@ previous evidence and unresolved questions. This is a screen specification, not
 an ADR approval, engine implementation, persistence decision or completion claim
 for either coding slice. UI Lead review of these numbered proposals is the next
 step; new reference capture is neither required nor authorized by R3.
+
+## W3 — write-window gap disposition (MEP-1345)
+
+2026-10-25. This section records an evidence-limited disposition, not completed
+write observation. The final Platform Lead decision in MEP-1355 applies to
+W2–W4: without an evidenced live endpoint/body/restore contract, no live write
+observation proceeds. Synthetic policy examples are not live contracts. The
+capture guards and activation requirements remain unchanged. W0 tool completion
+and W2 documentation acceptance do not establish these missing contracts.
+
+The board's temporary observation permission does not establish tool support.
+No policy was fabricated or published, no guard bypass was attempted, and no
+reference page was opened for this issue. The existing R1–R3 observations and
+documentation-based functional scope above retain their original provenance.
+This section adds no new visual, control, request or literal-message evidence.
+
+| Key | Requested flow | W3 result / evidence still required |
+| --- | --- | --- |
+| AW1 | Create a prefixed Workflow rule | Unobserved / gap. Need the actual form, required fields, inactive creation contract and verified cleanup. No rule created. |
+| AW2 | Workflow trigger and criteria builders | Unobserved / gap. Need field/operator/value controls, condition grouping and validation. Prior documentation is functional background only. |
+| AW3 | Workflow immediate-action builder | Unobserved / gap. Need action picker and configuration states. No action executed; email recipients must remain restricted to the board under the window rules. |
+| AW4 | Workflow scheduled-action builder | Unobserved / gap. Need timing controls, limits and save outcomes. No schedule or delayed action created. |
+| AW5 | Edit a test Workflow rule | Unobserved / gap. Need populated editor, save/cancel outcomes and persistence evidence. No existing rule changed. |
+| AW6 | Activate, deactivate and delete test Workflow rule | Unobserved / gap. No status toggle or delete attempted. Current tool policy requires inactive Automation payloads, so activation is unsupported; do not relax it to satisfy the observation list. Cleanup and single-object absence verification need proven contracts. |
+| AW7 | Create a prefixed Assignment rule | Unobserved / gap. A0's creation affordance is previously observed; the creation wizard and save outcome are not. No rule created. |
+| AW8 | Assignment criteria and recipient/action builders | Unobserved / gap. Need ordered entries, recipient choices, distribution, fallback and any follow-up action controls. No actual user/role/group assignment or record processing attempted. |
+| AW9 | Edit, activate/deactivate and delete test Assignment rule | Unobserved / gap. Need editor, status availability, confirmation and persistence/cleanup evidence. Do not infer that a Workflow-style switch exists for Assignment. |
+| AW10 | Literal validation, success/error, empty/loading/permission states | Unobserved / gap for the write flows above. No empty submission, duplicate-name probe or failed write was attempted; no literal message, numbered control inventory or screenshot is invented. |
+
+AW1–AW10 retain U4/U7/U16 and all relevant visual questions as open. The
+Workflow render failure remains diagnostic evidence; this disposition does not
+turn it into a normal empty state. Read-only local implementation slices above
+are not expanded to builders, execution or persistence. No Automation gate,
+engine contract, ADR or functional/visual parity claim is approved here.
+
+For any later research, CRM Analyst must first establish a single-flow live
+contract through permitted evidence and obtain the separately reviewed policy
+and approvals required by MEP-1355. Platform Lead owns contract/policy decisions;
+UI Lead owns screen-evidence interpretation. No new adapter or implementation
+issue is opened on speculative wire formats in this task.
+
+Scope-specific restore statement: this issue created no rule, action, schedule
+or test record, sent no email and changed no status or preference. There is
+nothing from this issue to restore. The local window journal was inspected and
+contains only its empty table scaffold. This is not the W5 global cleanup report.
+Verification: AW1–AW10 coverage, preservation of prior evidence, neutral-language
+and privacy checks, and git diff --check. Documentation only; application tests
+and reference captures are inapplicable. Submit through the issue's existing
+independent review stage; acceptance means gap documentation only.

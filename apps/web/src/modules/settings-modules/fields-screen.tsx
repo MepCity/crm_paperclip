@@ -44,7 +44,11 @@ function FieldsScreenBody({
   const [query, setQuery] = useState("");
   const [moduleQuery, setModuleQuery] = useState("");
   const [searching, setSearching] = useState(false);
-  const shown = useMemo(() => filterFieldRows(rows, query), [rows, query]);
+  const sortedRows = useMemo(
+    () => [...rows].sort((a, b) => a.label.localeCompare(b.label, "en", { sensitivity: "base" })),
+    [rows],
+  );
+  const shown = useMemo(() => filterFieldRows(sortedRows, query), [sortedRows, query]);
   const modules = SIDEBAR_MODULES.filter(
     (m) => !moduleQuery.trim() || m.toLowerCase().includes(moduleQuery.trim().toLowerCase()),
   );
@@ -161,7 +165,11 @@ function FieldsScreenBody({
           </button>
         </div>
         <div className="p-6">
-          <div role="tablist" aria-label="Field views" className="mb-4 flex gap-6">
+          <div
+            role="tablist"
+            aria-label="Field views"
+            className="mb-4 inline-flex rounded-full border border-border bg-surface-muted p-1"
+          >
             {SUBTABS.map((t, i) => (
               <button
                 key={t}
@@ -169,7 +177,11 @@ function FieldsScreenBody({
                 role="tab"
                 aria-selected={i === 0}
                 disabled={i !== 0}
-                className={`pb-2 text-sm ${i === 0 ? "border-b-2 border-primary font-semibold text-text" : "text-text-muted opacity-60 cursor-not-allowed"}`}
+                className={`rounded-full px-4 py-1 text-sm transition-colors ${
+                  i === 0
+                    ? "bg-surface font-semibold text-text shadow-xs"
+                    : "text-text-muted opacity-60 cursor-not-allowed"
+                }`}
               >
                 {t}
               </button>
