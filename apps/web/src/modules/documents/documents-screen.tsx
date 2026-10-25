@@ -171,7 +171,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
             {t("modules.documents.teamFolders")}
           </span>
           {/* Folder creation is a write flow: visible, inert. */}
-          <InertButton label="Add team folder">
+          <InertButton label={t("modules.documents.addTeamFolder")}>
             <CirclePlus />
           </InertButton>
         </div>
@@ -190,7 +190,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
           disabled
           className="mt-auto flex items-center justify-between rounded border border-border px-2 py-2 text-left text-sm text-text-muted"
         >
-          Open external file service
+          {t("modules.documents.openExternalFileService")}
           <Icons.arrowLeft className="size-4 rotate-135" aria-hidden="true" />
         </button>
       </aside>
@@ -198,11 +198,14 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
       <div className="flex min-w-0 flex-1 rounded-lg border border-border bg-surface">
         <main className="flex min-w-0 flex-1 flex-col">
           <header className="flex items-center justify-between border-b border-border px-4 py-3">
-            <nav aria-label="Breadcrumb" className="flex items-center gap-1 text-sm">
+            <nav
+              aria-label={t("modules.documents.breadcrumb")}
+              className="flex items-center gap-1 text-sm"
+            >
               <Icons.chevronRight className="size-4 text-text-muted" aria-hidden="true" />
               {/* Collection step: ancestor behaviour unobserved, inert. */}
-              <InertButton label="Apps">
-                <span className="px-1 text-sm">Apps</span>
+              <InertButton label={t("modules.documents.apps")}>
+                <span className="px-1 text-sm">{t("modules.documents.apps")}</span>
               </InertButton>
               {crumbs.map((crumb) => {
                 const last = crumb.depth === crumbs.length - 1;
@@ -216,7 +219,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
                       >
                         {crumb.label}
                         {/* D21: dropdown content never observed (open question): inert arrow. */}
-                        <InertButton label="Sub folders">
+                        <InertButton label={t("modules.documents.subFolders")}>
                           <Icons.chevronDown className="size-3" aria-hidden="true" />
                         </InertButton>
                       </span>
@@ -237,7 +240,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
             </nav>
             <div className="flex items-center gap-1">
               {/* Sort, filter and view controls: behaviour not observed, inert. */}
-              <InertButton label="Sort">
+              <InertButton label={t("modules.documents.sort")}>
                 <Icons.sort className="size-4" />
               </InertButton>
               <InertButton label={t("modules.documents.filter")}>
@@ -260,7 +263,10 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
               <span className="flex-1">{t("modules.documents.name")}</span>
               <span className="flex w-64 items-center gap-1">
                 {t("modules.documents.lastModified")}
-                <Icons.columnSortDesc className="size-3" aria-label="Sorted descending" />
+                <Icons.columnSortDesc
+                  className="size-3"
+                  aria-label={t("modules.documents.sortedDescending")}
+                />
               </span>
               {/* Column configuration: unobserved, inert. */}
               <InertButton label={t("modules.documents.columns")}>
@@ -329,7 +335,7 @@ export function DocumentsScreen({ port = fixtureDocumentsPort }: { port?: Docume
         </main>
 
         <aside
-          aria-label="Side strip"
+          aria-label={t("modules.documents.sideStrip")}
           className="flex w-16 shrink-0 flex-col items-center gap-4 border-l border-border py-3 text-xs"
         >
           {/* Details pane and assistant: panel behaviour not observed, inert. */}

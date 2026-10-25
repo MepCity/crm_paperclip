@@ -20,7 +20,6 @@ import {
   dealsCardSource,
   emptyCopy,
   type HomeView,
-  pageOptions,
   taskCardFields,
   taskCardSource,
   taskRows,
@@ -32,17 +31,21 @@ function Card({
   source,
   fields,
   children,
+  t,
 }: {
   title: string;
   source: string;
   fields: readonly string[];
   children: React.ReactNode;
+  t: ReturnType<typeof useUiTranslations>;
 }) {
   return (
     <section aria-label={title} className="rounded-md border border-border bg-surface p-5">
       <h3 className="text-base font-semibold">{title}</h3>
-      <p className="mt-1 text-xs text-text-muted">Source: {source}</p>
-      <p className="text-xs text-text-muted">Fields: {fields.join(", ")}</p>
+      <p className="mt-1 text-xs text-text-muted">{t("modules.home.sourceLabel", { source })}</p>
+      <p className="text-xs text-text-muted">
+        {t("modules.home.fieldsLabel", { fields: fields.join(", ") })}
+      </p>
       <div className="mt-4">{children}</div>
     </section>
   );
@@ -130,9 +133,7 @@ function OpenActivities({ orgSlug, empty }: { orgSlug: string; empty: boolean })
           ))}
         </select>
       </div>
-      <p className="mt-1 text-xs text-text-muted">
-        Source: Open Activities · Tasks, Meetings, Calls
-      </p>
+      <p className="mt-1 text-xs text-text-muted">{t("modules.home.openActivitiesSource")}</p>
       {overdue.length + inPeriod.length === 0 ? (
         <p className="mt-4 text-sm text-text-muted" data-testid="activities-empty">
           {emptyCopy}
@@ -155,7 +156,12 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
       className="mx-auto grid max-w-6xl gap-6 px-8 py-6 md:grid-cols-2"
       data-testid="home-preview"
     >
-      <Card title={t("modules.home.openTasks")} source={taskCardSource} fields={taskCardFields}>
+      <Card
+        title={t("modules.home.openTasks")}
+        source={taskCardSource}
+        fields={taskCardFields}
+        t={t}
+      >
         {empty ? (
           <p className="text-sm text-text-muted">{emptyCopy}</p>
         ) : (
@@ -187,6 +193,7 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
         title={t("modules.home.pipelineDeals")}
         source={dealsCardSource}
         fields={dealsCardFields}
+        t={t}
       >
         {empty ? (
           <p className="text-sm text-text-muted">{emptyCopy}</p>
@@ -222,7 +229,6 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
   );
 }
 
-/** HD01: local-only page selector. No persistence, no request; not the account's real page list. */
 export function HomeContent({
   orgSlug,
   userName,
@@ -232,29 +238,9 @@ export function HomeContent({
   userName: string;
   initialView: HomeView;
 }) {
-  const [view, setView] = useState<HomeView>(initialView);
-  const selected = view === "onboarding" ? "onboarding" : "preview";
-  return (
-    <>
-      <div className="mx-auto flex max-w-6xl justify-end px-8 pt-4">
-        <select
-          aria-label="Home page"
-          value={selected}
-          onChange={(e) => setView(e.target.value === "preview" ? "preview" : "onboarding")}
-          className="h-9 rounded-md border border-border bg-surface px-3 text-sm"
-        >
-          {pageOptions.map((o) => (
-            <option key={o.id} value={o.id}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      {view === "onboarding" ? (
-        <HomeOnboarding orgSlug={orgSlug} userName={userName} />
-      ) : (
-        <HomePreviewCards empty={view === "preview-empty"} orgSlug={orgSlug} />
-      )}
-    </>
+  return initialView === "onboarding" ? (
+    <HomeOnboarding orgSlug={orgSlug} userName={userName} />
+  ) : (
+    <HomePreviewCards empty={initialView === "preview-empty"} orgSlug={orgSlug} />
   );
 }

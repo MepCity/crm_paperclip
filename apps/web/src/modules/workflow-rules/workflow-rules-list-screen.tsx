@@ -53,7 +53,7 @@ export function WorkflowRulesListScreen({
           </label>
           <select
             id="workflow-module-filter"
-            aria-label="Filter workflow rules by module"
+            aria-label={t("modules.workflow.filterAriaLabel")}
             value={selectedModule}
             onChange={(e) => {
               const query = new URLSearchParams();
@@ -121,7 +121,10 @@ export function WorkflowRulesListScreen({
       {result.ok && result.value.items.length > 0 ? (
         <div className="overflow-x-auto">
           <div className="w-full overflow-auto contain-paint">
-            <table aria-label="Workflow rules table" className="w-full text-left text-sm">
+            <table
+              aria-label={t("modules.workflow.tableAriaLabel")}
+              className="w-full text-left text-sm"
+            >
               <TableHeader>
                 <TableRow>
                   <TableHead>{t("modules.workflow.name")}</TableHead>

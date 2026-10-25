@@ -4,63 +4,24 @@ import { ArrowDown, Search, X } from "lucide-react";
 import { useCallback, useId, useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/components/ui/link";
+import { type MessageKey, SAFE_ERROR } from "@/i18n/catalogs";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { type SetupCategory, type SetupLinkItem, setupCategories } from "./setup-data";
 
 function getCategoryTitle(cat: SetupCategory, t: ReturnType<typeof useUiTranslations>): string {
-  switch (cat.id) {
-    case "general":
-      return t("modules.setup.general");
-    case "security-control":
-      return t("modules.setup.securityControl");
-    case "channels":
-      return t("modules.setup.channels");
-    case "customization":
-      return t("modules.setup.customization");
-    case "automation":
-      return t("modules.setup.automation");
-    case "data-administration":
-      return t("modules.setup.dataAdministration");
-    default:
-      return cat.title;
-  }
+  try {
+    const val = t(`modules.setup.categories.${cat.id}` as MessageKey);
+    if (val && val !== SAFE_ERROR) return val;
+  } catch {}
+  return cat.title;
 }
 
 function getItemLabel(item: SetupLinkItem, t: ReturnType<typeof useUiTranslations>): string {
-  switch (item.id) {
-    case "personal-settings":
-      return t("modules.setup.personalSettings");
-    case "users":
-      return t("modules.setup.users");
-    case "company-details":
-      return t("modules.setup.companyDetails");
-    case "currencies":
-      return t("modules.setup.currencies");
-    case "calendar-booking":
-      return t("modules.setup.calendarBooking");
-    case "email":
-      return t("modules.setup.email");
-    case "social":
-      return t("modules.setup.social");
-    case "modules-fields":
-      return t("modules.setup.modulesAndFields");
-    case "layouts":
-      return t("modules.setup.layouts");
-    case "workflow-rules":
-      return t("modules.setup.workflowRules");
-    case "assignment-rules":
-      return t("modules.setup.assignmentRules");
-    case "import":
-      return t("modules.setup.import");
-    case "export":
-      return t("modules.setup.export");
-    case "recycle-bin":
-      return t("modules.setup.recycleBin");
-    case "templates":
-      return t("modules.setup.templates");
-    default:
-      return item.label;
-  }
+  try {
+    const val = t(`modules.setup.items.${item.id}` as MessageKey);
+    if (val && val !== SAFE_ERROR) return val;
+  } catch {}
+  return item.label;
 }
 
 export function SetupScreen({
@@ -162,7 +123,7 @@ export function SetupScreen({
       </div>
 
       {/* Category Cards Navigation Grid */}
-      <nav aria-label="Settings navigation">
+      <nav aria-label={t("modules.setup.navigation")}>
         {filteredCategories.length === 0 ? (
           <div className="rounded-xl border border-border/80 bg-surface p-12 text-center text-text-muted shadow-xs">
             <p className="text-base">{t("modules.setup.noSettings", { query })}</p>
@@ -179,6 +140,7 @@ export function SetupScreen({
                 title={categoryTitle(category)}
                 getItemLabel={itemLabel}
                 orgSlug={orgSlug}
+                t={t}
               />
             ))}
           </div>
@@ -203,11 +165,13 @@ function SetupCard({
   title,
   getItemLabel,
   orgSlug,
+  t,
 }: {
   category: SetupCategory;
   title: string;
   getItemLabel: (item: SetupLinkItem) => string;
   orgSlug: string;
+  t: ReturnType<typeof useUiTranslations>;
 }) {
   const Icon = category.icon;
 
@@ -222,7 +186,13 @@ function SetupCard({
       </h2>
       <ul className="flex flex-1 flex-col space-y-2 text-[13.5px]">
         {category.items.map((item) => (
-          <SetupItemRow key={item.id} item={item} label={getItemLabel(item)} orgSlug={orgSlug} />
+          <SetupItemRow
+            key={item.id}
+            item={item}
+            label={getItemLabel(item)}
+            orgSlug={orgSlug}
+            t={t}
+          />
         ))}
       </ul>
     </section>
@@ -233,22 +203,30 @@ function SetupItemRow({
   item,
   label,
   orgSlug,
+  t,
 }: {
   item: SetupLinkItem;
   label: string;
   orgSlug: string;
+  t: ReturnType<typeof useUiTranslations>;
 }) {
+  const newBadge = t("modules.setup.newBadge");
+  const notConfigured = t("modules.setup.notConfigured");
+
   if (item.href && !item.disabled) {
     return (
       <li>
         <Link
           href={item.href(orgSlug)}
-          aria-label={item.ariaLabel ?? label}
           className="block leading-snug text-text transition-colors hover:text-accent-blue hover:underline"
         >
           {label}
           {item.badge === "sparkles" && (
-            <span className="ml-1 inline-flex text-xs text-amber-500" role="img" aria-label="New">
+            <span
+              className="ml-1 inline-flex text-xs text-amber-500"
+              role="img"
+              aria-label={newBadge}
+            >
               ✨
             </span>
           )}
@@ -259,11 +237,11 @@ function SetupItemRow({
 
   return (
     <li className="flex items-center leading-snug text-text/75">
-      <span className="cursor-default select-none" title="Not configured">
+      <span className="cursor-default select-none" title={notConfigured}>
         {label}
       </span>
       {item.badge === "sparkles" && (
-        <span className="ml-1 inline-flex text-xs text-amber-500" role="img" aria-label="New">
+        <span className="ml-1 inline-flex text-xs text-amber-500" role="img" aria-label={newBadge}>
           ✨
         </span>
       )}

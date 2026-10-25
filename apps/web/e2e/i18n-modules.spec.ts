@@ -91,6 +91,12 @@ test.describe("CRM modules Turkish localization", () => {
     await page.getByRole("button", { name: "Save", exact: true }).click();
     await expect(page.locator("html")).toHaveAttribute("lang", "tr");
 
+    // 0. Home onboarding
+    await page.goto(`/crm/${org.slug}`);
+    await expect(page.locator("[data-testid='home-onboarding']")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "CRM'inizi kurun" })).toBeVisible();
+    await expect(page.getByRole("button", { name: "Ekibinizi davet edin" })).toBeVisible();
+
     // 1. Documents
     await page.goto(`/crm/${org.slug}/tab/Documents`);
     await expect(page.getByText("Ekip Klasörleri")).toBeVisible();
@@ -105,7 +111,8 @@ test.describe("CRM modules Turkish localization", () => {
 
     // 3. Setup (Customization)
     await page.goto(`/crm/${org.slug}/settings`);
-    await expect(page.getByRole("heading", { name: "Kurulum" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ayarlar", level: 1 })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Modüller ve Alanlar" })).toBeVisible();
 
     // 4. Automation (Workflow Rules)
     await page.goto(`/crm/${org.slug}/settings/workflow-rules`);

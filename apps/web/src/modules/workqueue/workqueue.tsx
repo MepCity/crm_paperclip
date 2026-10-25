@@ -35,7 +35,7 @@ export function Workqueue({
   const [notice, setNotice] = useState<string | null>(null);
   const unavailableDescId = useId();
   const unavailable = (what: string) =>
-    setNotice(`${what} is unavailable in this preview: no changes are made or saved.`);
+    setNotice(t("modules.workqueue.unavailableNotice", { what }));
   const [pending, startTransition] = useTransition();
   const welcomeTitleId = useId();
   const sessionKey = `workqueue-welcome:${orgSlug}:${user.id}`;
@@ -71,16 +71,16 @@ export function Workqueue({
         </div>
         <Button
           variant="ghost"
-          aria-label="Select users"
+          aria-label={t("modules.workqueue.selectUsers")}
           aria-describedby={unavailableDescId}
           className="border-x border-border px-4"
-          onPress={() => unavailable("User selection")}
+          onPress={() => unavailable(t("modules.workqueue.userSelection"))}
         >
           <Icons.plus aria-hidden className="size-5" />
         </Button>
       </div>
       <span id={unavailableDescId} className="sr-only">
-        Action is unavailable in this preview: no changes are made or saved.
+        {t("modules.workqueue.unavailableSrOnly")}
       </span>
       <div className="flex min-h-0 flex-1 gap-4 p-4">
         <aside
@@ -91,9 +91,11 @@ export function Workqueue({
           <Button
             variant="ghost"
             className="workqueue-period"
-            aria-label={`Activity period: ${t("modules.workqueue.todayOverdue")}`}
+            aria-label={t("modules.workqueue.activityPeriodLabel", {
+              period: t("modules.workqueue.todayOverdue"),
+            })}
             aria-describedby={unavailableDescId}
-            onPress={() => unavailable("Activity period selection")}
+            onPress={() => unavailable(t("modules.workqueue.activityPeriodSelection"))}
           >
             <span>{t("modules.workqueue.todayOverdue")}</span>
             <Icons.chevronDown aria-hidden className="size-3" />
@@ -124,7 +126,7 @@ export function Workqueue({
             <div>
               <Button
                 variant="ghost"
-                aria-label="Customize queue"
+                aria-label={t("modules.workqueue.customizeQueue")}
                 aria-describedby={unavailableDescId}
                 size="sm"
                 onPress={() => unavailable("Queue management")}
@@ -133,7 +135,7 @@ export function Workqueue({
               </Button>
               <Button
                 variant="ghost"
-                aria-label="Suggested queue"
+                aria-label={t("modules.workqueue.suggestedQueue")}
                 aria-describedby={unavailableDescId}
                 size="sm"
                 onPress={() => unavailable("Queue creation")}
@@ -157,7 +159,11 @@ export function Workqueue({
                   <h3 className="text-sm font-semibold">{sectionLabel}</h3>
                   <Button
                     variant="ghost"
-                    aria-label={`Add ${sectionLabel} queue`}
+                    aria-label={
+                      section === "Leads"
+                        ? t("modules.workqueue.addLeadsQueue")
+                        : `Add ${sectionLabel} queue`
+                    }
                     aria-describedby={unavailableDescId}
                     size="sm"
                     onPress={() => unavailable("Queue creation")}
@@ -187,7 +193,7 @@ export function Workqueue({
             <Button
               variant="ghost"
               size="sm"
-              aria-label="Refresh queue"
+              aria-label={t("modules.workqueue.refreshQueue")}
               isDisabled={pending}
               onPress={() => startTransition(() => router.refresh())}
             >
@@ -199,7 +205,7 @@ export function Workqueue({
                 size="sm"
                 aria-label={t("modules.workqueue.filter")}
                 aria-describedby={unavailableDescId}
-                onPress={() => unavailable("Filter")}
+                onPress={() => unavailable(t("modules.workqueue.filter"))}
               >
                 <Icons.filter aria-hidden className="size-4" />
                 <span className="ml-2">{t("modules.workqueue.filter")}</span>
@@ -207,9 +213,9 @@ export function Workqueue({
               <Button
                 variant="ghost"
                 size="sm"
-                aria-label="Help"
+                aria-label={t("modules.workqueue.help")}
                 aria-describedby={unavailableDescId}
-                onPress={() => unavailable("Help")}
+                onPress={() => unavailable(t("modules.workqueue.help"))}
               >
                 <span aria-hidden className="px-1 font-semibold">
                   ?
@@ -237,23 +243,23 @@ export function Workqueue({
                         <Button
                           variant="ghost"
                           size="sm"
-                          aria-label="Alphabet filter"
+                          aria-label={t("modules.workqueue.alphabetFilter")}
                           aria-describedby={unavailableDescId}
-                          onPress={() => unavailable("Alphabet filter")}
+                          onPress={() => unavailable(t("modules.workqueue.alphabetFilter"))}
                         >
-                          All
+                          {t("modules.workqueue.all")}
                         </Button>
                       )}
                     </th>
                   ))}
                   <th scope="col" className="border-b-2 border-panel-border">
-                    <span className="sr-only">Settings</span>
+                    <span className="sr-only">{t("modules.workqueue.settings")}</span>
                     <Button
                       variant="ghost"
                       size="sm"
-                      aria-label="View Settings"
+                      aria-label={t("modules.workqueue.viewSettings")}
                       aria-describedby={unavailableDescId}
-                      onPress={() => unavailable("View settings")}
+                      onPress={() => unavailable(t("modules.workqueue.viewSettings"))}
                     >
                       <Icons.settingsSliders aria-hidden className="size-4" />
                     </Button>

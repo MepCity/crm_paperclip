@@ -115,7 +115,7 @@ export function ReportsScreen({
             <thead>
               <tr className="border-b-2 border-border">
                 <th scope="col">
-                  <span className="sr-only">Selection and favorite</span>
+                  <span className="sr-only">{t("modules.reports.selectionAndFavorite")}</span>
                 </th>
                 {columnHeadings.map((heading) => (
                   <th key={heading} scope="col" className="px-3 py-2 font-semibold">
