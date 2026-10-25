@@ -895,7 +895,9 @@ function ModuleListScreenLoaded({
         }}
         onNewView={isAdmin ? () => setCustomViewModal({ open: true, mode: "create" }) : undefined}
         onEditView={
-          isAdmin ? (id) => setCustomViewModal({ open: true, mode: "edit", viewId: id }) : undefined
+          isAdmin && view && !view.systemDefined && !view.isDefault
+            ? (id) => setCustomViewModal({ open: true, mode: "edit", viewId: id })
+            : undefined
         }
       />
       {selectionActive && presentation === "table" ? (
