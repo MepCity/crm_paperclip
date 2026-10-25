@@ -1,14 +1,30 @@
 import { createTranslator } from "next-intl";
 import commonEn from "../../messages/en/common.json";
+import metadataEn from "../../messages/en/metadata.json";
+import recordsEn from "../../messages/en/records.json";
 import settingsEn from "../../messages/en/settings.json";
 import shellEn from "../../messages/en/shell.json";
 import commonTr from "../../messages/tr/common.json";
+import metadataTr from "../../messages/tr/metadata.json";
+import recordsTr from "../../messages/tr/records.json";
 import settingsTr from "../../messages/tr/settings.json";
 import shellTr from "../../messages/tr/shell.json";
 import type { UiLanguage } from "./resolve-language";
 
-export const english = { common: commonEn, shell: shellEn, settings: settingsEn };
-export const turkish = { common: commonTr, shell: shellTr, settings: settingsTr };
+export const english = {
+  common: commonEn,
+  shell: shellEn,
+  settings: settingsEn,
+  metadata: metadataEn,
+  records: recordsEn,
+};
+export const turkish = {
+  common: commonTr,
+  shell: shellTr,
+  settings: settingsTr,
+  metadata: metadataTr,
+  records: recordsTr,
+};
 export type Messages = typeof english;
 type Paths<T> = {
   [K in keyof T & string]: T[K] extends string ? K : `${K}.${Paths<T[K]>}`;

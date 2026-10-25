@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { claimOpeningFocus } from "@/components/ui/opening-focus";
 import { RecordChoice } from "@/components/ui/record-choice";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { useMassUpdate } from "@/lib/api/client/hooks";
 import "./mass-update-dialog.css";
 
@@ -20,10 +21,6 @@ export interface MassUpdateDialogProps {
   fields: readonly FieldDefinition[];
   users?: readonly OwnerOption[];
   onSuccess: () => void;
-}
-
-function requiredEmptyMessage(field: FieldDefinition): string {
-  return `${field.label} cannot be empty.`;
 }
 
 function isEmptyValue(field: FieldDefinition, value: FieldValue | undefined): boolean {
@@ -41,6 +38,7 @@ export function MassUpdateDialog({
   users = [],
   onSuccess,
 }: MassUpdateDialogProps) {
+  const t = useUiTranslations();
   const titleId = useId();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [selectedApiName, setSelectedApiName] = useState<string | null>(null);
@@ -92,7 +90,7 @@ export function MassUpdateDialog({
     if (!selectedField || busy) return;
     setGeneralError(null);
     if (isEmptyValue(selectedField, value)) {
-      setFieldError(requiredEmptyMessage(selectedField));
+      setFieldError(t("records.form.fieldRequired", { field: selectedField.label }));
       return;
     }
     setFieldError(null);
@@ -152,18 +150,18 @@ export function MassUpdateDialog({
     >
       <div data-mass-update-dialog>
         <h2 id={titleId} className="mass-update-title">
-          Mass Update
+          {t("records.actions.massUpdate")}
         </h2>
         <div className="mass-update-field-row">
           <div className="mass-update-field-selector">
             <RecordChoice
               id="mass-update-field"
-              label="Field"
+              label={t("records.form.field") || "Field"}
               hideLabel
               value={selectedApiName}
               onChange={(next) => onFieldChange(next)}
               options={[
-                { value: null, label: "Select a field" },
+                { value: null, label: t("records.list.selectAField") },
                 ...fieldOptions.map((option) => ({
                   value: option.value,
                   label: option.label,
@@ -208,7 +206,7 @@ export function MassUpdateDialog({
             isDisabled={busy}
             onPress={close}
           >
-            Cancel
+            {t("common.actions.cancel")}
           </Button>
           <Button
             variant="primary"
@@ -218,7 +216,7 @@ export function MassUpdateDialog({
             isPending={busy}
             onPress={() => void submit()}
           >
-            Update
+            {t("records.list.update")}
           </Button>
         </div>
       </div>

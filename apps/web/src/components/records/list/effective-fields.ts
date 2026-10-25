@@ -23,7 +23,7 @@ export function effectiveFilterGroups(
       );
       if (!field) return [];
       used.add(field.apiName);
-      return [{ ...item, id: field.apiName, label: item.label }];
+      return [{ ...item, id: field.apiName, label: field.label }];
     });
     for (const field of visible) {
       if (used.has(field.apiName)) continue;

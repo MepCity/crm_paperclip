@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Menu, type MenuAction, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import { useUiTranslations } from "@/i18n/client-provider";
 
 export interface SelectionBarProps {
   laterInventory?: boolean;
@@ -16,15 +17,6 @@ export interface SelectionBarProps {
   onMassUpdate?: () => void;
 }
 
-/**
- * `list-views.md` › Selection toolbar records the single-record counter "**1 Record Selected.**"
- * The plural form is `Not observed`, so `N Records Selected.` is an Interim extension of the
- * measured singular pattern (issue MEP-162). The trailing period is measured.
- */
-function selectionLabel(count: number): string {
-  return `${count} Record${count === 1 ? "" : "s"} Selected.`;
-}
-
 export function SelectionBar({
   laterInventory = false,
   tagsEnabled = false,
@@ -35,6 +27,7 @@ export function SelectionBar({
   onTags,
   onMassUpdate,
 }: SelectionBarProps) {
+  const t = useUiTranslations();
   if (selectedCount <= 0) return null;
 
   return (
@@ -46,14 +39,16 @@ export function SelectionBar({
         className="flex h-(--size-list-selection-counter-height) w-(--size-list-selection-counter-width) items-center justify-between text-md font-normal text-text"
         data-part="selection-strip"
       >
-        <span data-part="selection-count">{selectionLabel(selectedCount)}</span>
+        <span data-part="selection-count">
+          {t("records.list.selectedCount", { count: selectedCount })}
+        </span>
         <Button
           variant="ghost"
           size="compact"
           className="h-(--size-list-selection-clear-height) w-(--size-list-selection-clear-width) justify-start text-md font-normal text-primary data-hovered:bg-transparent data-hovered:underline data-pressed:bg-transparent"
           onPress={onClear}
         >
-          Clear
+          {t("records.list.clear")}
         </Button>
       </div>
       <div
@@ -67,7 +62,7 @@ export function SelectionBar({
           laterModule={laterInventory ? "M10" : undefined}
           onPress={onSendEmail}
         >
-          Send Email
+          {t("records.list.sendEmail")}
         </Button>
         <Button
           variant="selection"
@@ -76,7 +71,7 @@ export function SelectionBar({
           laterModule={laterInventory && !tagsEnabled ? "M6" : undefined}
           onPress={onTags}
         >
-          Tags
+          {t("records.list.tags")}
         </Button>
         <Button
           variant="selection"
@@ -84,7 +79,7 @@ export function SelectionBar({
           className="w-(--size-list-mass-update-button-width)"
           onPress={onMassUpdate}
         >
-          Mass Update
+          {t("records.list.massUpdate")}
         </Button>
         {actions.length > 0 ? (
           <MenuTrigger>
@@ -92,7 +87,7 @@ export function SelectionBar({
               variant="selection"
               size="listSelection"
               className="w-(--size-list-selection-actions-width) px-0"
-              aria-label="Actions"
+              aria-label={t("records.list.actions")}
             >
               <Icons.ellipsis aria-hidden="true" className="h-4 w-4 shrink-0" />
             </Button>

@@ -26,6 +26,8 @@ import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ModuleKey } from "@/components/ui/later-module";
 import type { MenuAction } from "@/components/ui/menu";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { moduleListPrintPath } from "@/lib/crm-paths";
 import {
   combineCriteriaAnd,
@@ -229,7 +231,13 @@ function ModuleListScreenLoaded({
   viewId,
   currentUserId, userRole, isAdmin: explicitIsAdmin,
 }: ModuleListScreenProps & { routeViewId?: string; viewId: string }) {
-  const orgFormat = useFormat(), isAdmin = Boolean(explicitIsAdmin ?? userRole === "admin");
+  const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
+  const singularLabel = adapter.getModuleSingular(config.module, config.singularLabel);
+  const pluralLabel = adapter.getModulePlural(config.module, config.pluralLabel);
+  const linkFieldLabel = adapter.getNamedLabel(config.linkFieldLabel);
+  const orgFormat = useFormat();
+  const isAdmin = Boolean(explicitIsAdmin ?? userRole === "admin");
   const router = useRouter();
   const refreshModuleListData = useRefreshModuleListData(config.module);
   const searchParams = useSearchParams();
@@ -442,19 +450,20 @@ function ModuleListScreenLoaded({
     return map;
   }, [users.data]);
 
+  const adaptedFields = useMemo(() => {
+    return (moduleQuery.data?.fields ?? []).map((field) =>
+      adapter.adaptField(config.module, field),
+    );
+  }, [adapter, config.module, moduleQuery.data?.fields]);
+
   const columns = useMemo((): FieldDefinition[] => {
-    return effectiveColumns(columnApiNames, moduleQuery.data?.fields ?? []);
-  }, [columnApiNames, moduleQuery.data?.fields]);
+    return effectiveColumns(columnApiNames, adaptedFields);
+  }, [columnApiNames, adaptedFields]);
 
   const filterGroups = useMemo(
     () =>
-      effectiveFilterGroups(
-        config.filterGroups,
-        moduleQuery.data?.fields ?? [],
-        config.linkField,
-        config.linkFieldLabel,
-      ),
-    [config.filterGroups, config.linkField, config.linkFieldLabel, moduleQuery.data?.fields],
+      effectiveFilterGroups(config.filterGroups, adaptedFields, config.linkField, linkFieldLabel),
+    [config.filterGroups, config.linkField, linkFieldLabel, adaptedFields],
   );
 
   const massUpdateFields = useMemo(
@@ -643,7 +652,7 @@ function ModuleListScreenLoaded({
   }
 
   const appliedSort = appliedSortFromState(searchState, eligibleSortFields);
-  const emptyMessage = `No ${config.pluralLabel} found.`;
+  const emptyMessage = t("records.list.emptyModule", { plural: pluralLabel });
   const initialLoading =
     moduleQuery.isLoading ||
     (viewQuery.isLoading && !view) ||
@@ -761,12 +770,15 @@ function ModuleListScreenLoaded({
 
   const deleteTitle =
     pageSelectedIds.length === 1
-      ? `Delete ${config.singularLabel}`
-      : `Delete ${config.pluralLabel}`;
+      ? t("records.actions.delete", { module: singularLabel })
+      : t("records.actions.delete", { module: pluralLabel });
   const deleteMessage =
     pageSelectedIds.length === 1
-      ? `Are you sure you want to delete the selected ${config.singularLabel}?`
-      : `Are you sure you want to delete the ${pageSelectedIds.length} selected ${config.pluralLabel}?`;
+      ? t("records.list.deleteSingle", { module: singularLabel })
+      : t("records.list.deleteMultiple", {
+          count: pageSelectedIds.length,
+          module: pluralLabel,
+        });
 
   const previousState: ListSearchState = { ...searchState, page: Math.max(1, page - 1) };
   const nextState: ListSearchState = { ...searchState, page: page + 1 };
@@ -796,6 +808,14 @@ function ModuleListScreenLoaded({
   const transferModule = isTransferModule(config.module) ? config.module : null;
   const exportSelectedTooLarge = pageSelectedIds.length > MAX_EXPORT_SELECTION;
   const importEnabled = (IMPORT_MODULES as readonly string[]).includes(config.module);
+  const isStandardCreate = config.createLabel === `Create ${config.singularLabel}`;
+  const createLabel = isStandardCreate
+    ? t("records.actions.create", { module: singularLabel })
+    : config.createLabel;
+  const isStandardFilterTitle = config.filterTitle === `Filter ${config.pluralLabel} by`;
+  const filterTitle = isStandardFilterTitle
+    ? t("records.filter.filterBy", { plural: pluralLabel })
+    : config.filterTitle;
   const createItems: readonly MenuAction[] | undefined = importEnabled
     ? [
         {
@@ -811,7 +831,7 @@ function ModuleListScreenLoaded({
     { id: "create-task", label: "Create Task", onAction: inert },
     {
       id: "change-owner",
-      label: "Change Owner",
+      label: t("records.actions.changeOwner"),
       onAction: ownerField ? () => setChangeOwnerOpen(true) : inert,
     },
     { id: "cadences", label: "Cadences", onAction: inert },
@@ -824,7 +844,7 @@ function ModuleListScreenLoaded({
     { id: "print-using-canvas", label: "Print Using Canvas", onAction: inert },
     { id: "mail-merge", label: "Mail Merge", onAction: inert },
     { id: "mass-convert", label: "Mass Convert", onAction: inert },
-    { id: "delete", label: "Delete", onAction: openDeleteDialog },
+    { id: "delete", label: t("common.actions.delete"), onAction: openDeleteDialog },
     {
       id: "export-selected",
       label: exportSelectedTooLarge
@@ -916,7 +936,7 @@ function ModuleListScreenLoaded({
               : {}),
           }))}
           create={{
-            label: config.createLabel,
+            label: createLabel,
             href: config.quickCreate ? undefined : config.paths.create(orgSlug, config.module),
             onPress: config.quickCreate ? () => setQuickCreateOpen(true) : undefined,
             items: createItems,
@@ -1006,8 +1026,8 @@ function ModuleListScreenLoaded({
           }}
           title={deleteTitle}
           message={deleteMessage}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
+          confirmLabel={t("common.actions.delete")}
+          cancelLabel={t("common.actions.cancel")}
           tone="danger"
           busy={deleteRecords.isPending}
           errorMessage={deleteError}
@@ -1019,7 +1039,7 @@ function ModuleListScreenLoaded({
         <ManageColumnsDialog
           isOpen
           onClose={() => setColumnsOpen(false)}
-          moduleLabel={config.pluralLabel}
+          moduleLabel={pluralLabel}
           allFields={moduleQuery.data.fields.filter((field) => field.views.view)}
           selectedColumns={columns.map((field) => field.apiName)}
           onSave={(names) => setSelectedColumns({ viewId, names })}
@@ -1029,9 +1049,9 @@ function ModuleListScreenLoaded({
         {filterOpen ? (
           <FilterPanel
             key={viewId}
-            title={config.filterTitle}
-            searchLabel="Search filter choices"
-            searchPlaceholder="Search"
+            title={filterTitle}
+            searchLabel={t("records.filter.searchChoices")}
+            searchPlaceholder={t("common.actions.search")}
             groups={filterGroups}
             initialFilters={appliedFilters}
             initialActivityFilter={appliedActivityFilter}
@@ -1080,7 +1100,7 @@ function ModuleListScreenLoaded({
               columns={columns}
               records={records}
               linkField={config.linkField}
-              linkFieldLabel={config.linkFieldLabel}
+              linkFieldLabel={linkFieldLabel}
               rowHref={(record) => config.paths.record(orgSlug, config.module, record.id)}
               selectedIds={pageSelectedIds}
               onSelectedIdsChange={(ids) => {

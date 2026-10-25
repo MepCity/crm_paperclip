@@ -28,6 +28,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Icons } from "@/components/ui/icon";
 import { resolveLaterModule } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import {
   useDeleteRecords,
   useHomeCurrency,
@@ -139,6 +141,8 @@ export function RecordDetailScreen({
   buildDetailSlots,
   saveRecord: saveRecordOverride,
 }: RecordDetailScreenProps) {
+  const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
   const orgFormat = useFormat();
   const moduleApiName = definition.apiName;
   const rules = definition.detail;
@@ -202,10 +206,21 @@ export function RecordDetailScreen({
     [usersQuery.data],
   );
 
-  const relatedLists = useMemo(() => {
+  const adaptedModule = useMemo(
+    () => (moduleQuery.data ? adapter.adaptModule(moduleQuery.data) : null),
+    [adapter, moduleQuery.data],
+  );
+
+  const rawRelatedLists = useMemo(() => {
     if (recordQuery.data && buildRelatedLists) return buildRelatedLists(recordQuery.data);
     return rules.relatedLists ?? [];
   }, [buildRelatedLists, recordQuery.data, rules.relatedLists]);
+  const relatedLists = useMemo(() => {
+    return rawRelatedLists.map((item) => ({
+      ...item,
+      title: adapter.getRelatedListTitle(item.id, item.title),
+    }));
+  }, [adapter, rawRelatedLists]);
   const hasRelatedLists = relatedLists.length > 0;
   const relatedEntries = useMemo(() => {
     const selfModuleKey = resolveModuleLaterKey(moduleApiName);
@@ -229,6 +244,19 @@ export function RecordDetailScreen({
         : undefined,
     }));
   }, [moduleApiName, relatedLists]);
+
+  const singularLabel = adaptedModule?.singularLabel ?? definition.singularLabel;
+  const isStandardDeleteTitle =
+    !rules.deleteTitle || rules.deleteTitle === `Delete ${definition.singularLabel}`;
+  const deleteTitle = isStandardDeleteTitle
+    ? t("records.detail.deleteTitle", { module: singularLabel })
+    : rules.deleteTitle;
+  const isStandardDeleteMessage =
+    !rules.deleteMessage ||
+    rules.deleteMessage === `Are you sure you want to delete this ${definition.singularLabel}?`;
+  const deleteMessage = isStandardDeleteMessage
+    ? t("records.detail.deleteMessage", { module: singularLabel })
+    : rules.deleteMessage;
 
   const loading =
     moduleQuery.isLoading ||
@@ -280,8 +308,8 @@ export function RecordDetailScreen({
     currencySymbol: homeCurrencyQuery.data?.symbol,
   });
   const lastUpdate = rules.lastUpdate(record, now, orgFormat);
-  const businessFields = rules.businessCard(module, displayRecord);
-  const detailSections = rules.sections(module, displayRecord);
+  const businessFields = rules.businessCard(adaptedModule ?? module, displayRecord);
+  const detailSections = rules.sections(adaptedModule ?? module, displayRecord);
 
   async function persistRecord(input: RecordInput) {
     if (saveRecordOverride) {
@@ -312,7 +340,7 @@ export function RecordDetailScreen({
       setDeleteOpen(false);
       router.push(backHref);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Delete failed.";
+      const message = error instanceof Error ? error.message : t("records.detail.deleteFailed");
       setDeleteError(message);
       throw error;
     }
@@ -461,7 +489,7 @@ export function RecordDetailScreen({
         laterModule="M11"
         className="flex items-center h-(--size-menu-item-height) px-(--size-record-rail-text-inset) text-md font-normal text-primary hover:underline"
       >
-        Add Related List
+        {t("records.detail.addRelatedList")}
       </Link>
       {detailSlots?.relatedRailAfterFooter}
       {railChrome?.linksGroup ? (
@@ -493,7 +521,7 @@ export function RecordDetailScreen({
           title={headerConfirm.title}
           message={headerConfirm.message}
           confirmLabel={headerConfirm.confirmLabel}
-          cancelLabel="Close"
+          cancelLabel={t("common.actions.close")}
           busy={headerConfirmBusy}
           errorMessage={headerConfirmError}
           onConfirm={async () => {
@@ -503,7 +531,9 @@ export function RecordDetailScreen({
               await headerConfirm.onConfirm();
               setHeaderConfirm(null);
             } catch (error) {
-              setHeaderConfirmError(error instanceof Error ? error.message : "Action failed.");
+              setHeaderConfirmError(
+                error instanceof Error ? error.message : t("common.errorShort"),
+              );
             } finally {
               setHeaderConfirmBusy(false);
             }
@@ -516,10 +546,10 @@ export function RecordDetailScreen({
           onOpenChange={(open) => {
             if (!open && !deleteRecords.isPending) setDeleteOpen(false);
           }}
-          title={rules.deleteTitle}
-          message={rules.deleteMessage}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
+          title={deleteTitle}
+          message={deleteMessage}
+          confirmLabel={t("common.actions.delete")}
+          cancelLabel={t("common.actions.cancel")}
           tone="danger"
           busy={deleteRecords.isPending}
           errorMessage={deleteError}
@@ -549,7 +579,7 @@ export function RecordDetailScreen({
                 />
               ) : undefined
             }
-            back={{ label: "Back", href: backHref }}
+            back={{ label: t("common.actions.back"), href: backHref }}
             titleGlyph={rules.titleGlyph}
             titleSuffix={titleSuffix}
             commands={
@@ -567,23 +597,23 @@ export function RecordDetailScreen({
                     ...(rules.headerCommands ?? []),
                     {
                       id: "edit",
-                      label: "Edit",
+                      label: t("common.actions.edit"),
                       variant: "secondary",
                       href: paths.edit(orgSlug, definition.tab, recordId),
                     },
                   ]
             }
             menuGroups={moreMenuGroups}
-            moreLabel="More Options"
-            previousLabel="Previous Record"
-            nextLabel="Next Record"
+            moreLabel={t("records.actions.moreOptions")}
+            previousLabel={t("records.detail.previousRecord")}
+            nextLabel={t("records.detail.nextRecord")}
             previousHref={
               previousId ? paths.record(orgSlug, definition.tab, previousId) : undefined
             }
             nextHref={nextId ? paths.record(orgSlug, definition.tab, nextId) : undefined}
           />
         }
-        relatedListLabel="Related List"
+        relatedListLabel={t("records.detail.relatedList")}
         relatedEntries={relatedEntries}
         selectedRelatedId={selectedRelatedId}
         onRelatedSelectionChange={setSelectedRelatedId}
@@ -594,12 +624,12 @@ export function RecordDetailScreen({
             <LastUpdateLabel text={lastUpdate} inTabRow />
           ) : undefined
         }
-        tabsLabel="Record detail"
+        tabsLabel={t("records.detail.recordDetail")}
         selectedTabId={selectedTabId}
         onTabChange={setSelectedTabId}
         tabs={[
-          { id: "overview", label: "Overview", content: overview },
-          { id: "timeline", label: "Timeline", content: timeline },
+          { id: "overview", label: t("records.detail.overview"), content: overview },
+          { id: "timeline", label: t("records.detail.timeline"), content: timeline },
         ]}
         relatedRailVisible={railVisible && !activityLayout}
         railControl={
@@ -610,7 +640,7 @@ export function RecordDetailScreen({
         sidePanel={
           rules.SidePanel ? <rules.SidePanel record={displayRecord} orgSlug={orgSlug} /> : undefined
         }
-        scrollTopLabel="Scroll To Top"
+        scrollTopLabel={t("records.detail.scrollToTop")}
       />
     </>
   );

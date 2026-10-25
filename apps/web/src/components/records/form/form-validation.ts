@@ -37,11 +37,12 @@ function validateField(
   field: FieldDefinition,
   value: FieldValue | undefined,
   label: string,
+  formatEmpty?: (label: string) => string,
 ): string | undefined {
   if (skippedField(field)) return undefined;
   const normalized = normalizeFormValue(field, value);
   if (field.required && (normalized === null || isZeroDuration(normalized)))
-    return validationEmptyMessage(label);
+    return formatEmpty ? formatEmpty(label) : validationEmptyMessage(label);
   if (normalized === null) return undefined;
 
   if (field.dataType === "email") {
@@ -87,10 +88,11 @@ export function validateRecordForm(
   fields: readonly FieldDefinition[],
   values: Record<string, FieldValue | undefined>,
   resolveLabel: (field: FieldDefinition) => string,
+  formatEmpty?: (label: string) => string,
 ): Record<string, string> {
   const errors: Record<string, string> = {};
   for (const field of fields) {
-    const message = validateField(field, values[field.apiName], resolveLabel(field));
+    const message = validateField(field, values[field.apiName], resolveLabel(field), formatEmpty);
     if (message) errors[field.apiName] = message;
   }
   return errors;

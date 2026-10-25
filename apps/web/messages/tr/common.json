@@ -2,6 +2,7 @@
   "actions": {
     "save": "Kaydet",
     "cancel": "İptal",
+    "back": "Geri",
     "edit": "Düzenle",
     "delete": "Sil",
     "close": "Kapat",

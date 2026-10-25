@@ -1,6 +1,7 @@
 "use client";
 
 import { Link } from "@/components/ui/link";
+import { useUiTranslations } from "@/i18n/client-provider";
 
 export interface RecordTableFooterProps {
   /** Matching record count. `null` when the count has not arrived yet. */
@@ -29,6 +30,7 @@ export function RecordTableFooter({
   previousHref,
   nextHref,
 }: RecordTableFooterProps) {
+  const t = useUiTranslations();
   const from = recordCount === 0 ? 0 : (page - 1) * pageSize + 1;
   const to = recordCount === 0 ? 0 : from + recordCount - 1;
   const previous = page > 1 ? previousHref : null;
@@ -38,11 +40,11 @@ export function RecordTableFooter({
   return (
     <fieldset
       data-part="footer"
-      aria-label="Records summary"
+      aria-label={t("records.list.recordsSummary")}
       className="m-0 box-content flex h-(--size-list-footer-height) min-w-0 items-center justify-between border-x-0 border-y border-panel-border bg-surface py-0 ps-(--size-list-inset) pe-(--size-list-footer-end) text-md font-normal text-text"
     >
       <span className="inline-flex items-center gap-1">
-        <span data-part="total-label">Total Records</span>
+        <span data-part="total-label">{t("records.list.totalRecords")}</span>
         {total !== null && (
           <span data-part="total-value" className="font-semibold">
             {total}
@@ -53,7 +55,7 @@ export function RecordTableFooter({
         <span className="inline-flex items-center">
           <PageControl
             part="previous"
-            label="Previous"
+            label={t("records.list.previous")}
             href={previous}
             direction="previous"
             className="me-(--size-list-footer-gap-before)"
@@ -63,7 +65,7 @@ export function RecordTableFooter({
               {from}
             </span>
             <span data-part="range-to-word" className="font-normal text-text-muted">
-              {" to "}
+              {t("records.list.to")}
             </span>
             <span data-part="range-end" className="font-semibold">
               {to}
@@ -71,7 +73,7 @@ export function RecordTableFooter({
           </span>
           <PageControl
             part="next"
-            label="Next"
+            label={t("records.list.next")}
             href={next}
             direction="next"
             className="ms-(--size-list-footer-gap-after)"
