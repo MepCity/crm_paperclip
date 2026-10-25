@@ -505,7 +505,7 @@ an ADR approval, engine implementation, persistence decision or completion claim
 for either coding slice. UI Lead review of these numbered proposals is the next
 step; new reference capture is neither required nor authorized by R3.
 
-## W3 — write-window gap disposition (MEP-1345)
+## W3 — superseded gap disposition (MEP-1345)
 
 2026-10-25. This section records an evidence-limited disposition, not completed
 write observation. The final Platform Lead decision in MEP-1355 applies to
@@ -553,3 +553,175 @@ Verification: AW1–AW10 coverage, preservation of prior evidence, neutral-langu
 and privacy checks, and git diff --check. Documentation only; application tests
 and reference captures are inapplicable. Submit through the issue's existing
 independent review stage; acceptance means gap documentation only.
+
+## W3 — live observation and verified cleanup continuation
+
+2026-10-25, MEP-1345. The board's 11:07 Istanbul decision supersedes the gap
+disposition above. Its no-write/empty-journal statements describe that earlier
+run only. They are not the current task state or completion criteria.
+
+The live Assignment wizard opened with Module, Rule Name, Description, Cancel
+and Next. Six module choices were exposed. The prefixed test rule used Leads.
+**Next persists the rule shell**: the earlier `w3-assignment-next-fixed` capture
+and durable journal record a POST returning 201 to
+`/crm/v2.2/settings/automation/assignment_rules`, with a `module` query key.
+The request contains one `assignment_rules` item with `name`, `default_assignee`
+(`id`, `name`) and `module.api_name`. Session/user values are intentionally
+omitted. This is an observed creation shape, not an approved application API
+contract. A criteria-row builder opened afterwards; no rule entry or assignment
+target was saved. No automation execution, activation or send was observed.
+
+The analyst could not reach a permitted delete affordance. The board reports
+having cancelled the unsaved entry and deleted the shell at 16:35 Istanbul.
+Fresh captures `w3-board-cleanup-verify` (16:37) and
+`w3-board-cleanup-journal` (16:38) show the Assignment introduction screen with
+no test rule. The official absence proof marks the W3 object cleaned. The
+local journal records board deletion and restored YES; cumulative outgoing
+writes remain one, the earlier create. Deletion wire shape and confirmation
+messages were not captured and must not be inferred from board cleanup.
+
+| # | Fresh Assignment body control/state | Evidence / limit |
+| --- | --- | --- |
+| W3-CV1 | Rules, Thresholds and assistant tabs | Rules selected; no tab clicked |
+| W3-CV2 | Assignment Rules heading and explanatory text | Introduction body; no populated rows |
+| W3-CV3 | Create Assignment Rule button with plus | Visible; not clicked in this continuation |
+| W3-CV4 | Test-rule absence | Both screenshots and text agree; no filter/search applied |
+
+`w3-workflow-after-cleanup` (16:40 Istanbul) still shows a blank content body.
+The route-model response fails JSON parsing. This is a loading failure, not an
+empty rule list. No Workflow builder, actions, schedule, validation, edit or
+status transition is evidenced. AW1–AW6 remain open; AW7 has live create
+evidence, AW8 only partial builder evidence, AW9 only board-reported deletion
+with analyst-verified absence, and AW10 only the introduction/failed-load states.
+Literal success/error/validation messages and all remaining write flows remain
+unobserved. No parity, ADR or module-gate approval follows from this section.
+
+Verification: fresh screenshot/text/meta inspection; absence proof; journal
+openItems contains no W3 object and no open settings. The separately retained
+W2 item is unaffected. This continuation sends zero reference writes and changes
+no setting or preference. Raw captures remain private research evidence.
+
+
+## W3 — Workflow access through Setup navigation
+
+2026-10-25, MEP-1345. Offline diagnosis MEP-1372 did not establish the cause
+of the direct-route model error. A fresh live continuation establishes a usable
+navigation path without any guard, policy, script or journal modification:
+open `/crm/<org>/settings/assignment-rules`, then click the visible Workflow
+Rules sidebar link. `w3-workflow-spa-reviewed` shows the populated Workflow
+list. The earlier direct-route captures remain evidence of a failed load;
+they do not describe the intended list or prove universal unavailability.
+
+The main card contains Rules and Usage tabs, a heading and explanatory text,
+a promotional banner, assistant creation entry, Reorder Rules, Create Rule,
+two presentation icons, a table with selection checkbox, Rule Name, module
+filter, execution trigger, action count, Modified Date and Status. A populated
+row is visible. Existing row values and status are not copied or changed.
+No presentation, reorder, filter or status control was clicked.
+
+| # | Observed control/state | Evidence |
+| --- | --- | --- |
+| W3-WF1 | Create Rule | `w3-workflow-create-form`; opens a compact top modal over the list |
+| W3-WF2 | Module selector | Initial placeholder is Select Module; `w3-workflow-module-options` exposes module and subform groups |
+| W3-WF3 | Rule Name | Required red edge; text input; filled only with the prefixed test name |
+| W3-WF4 | Description | Optional multiline input; resize affordance |
+| W3-WF5 | Cancel and Next | Modal footer, Next visually disabled before required inputs |
+| W3-WF6 | First Next | `w3-workflow-next`; Leads + test name opens a full-page builder, outgoing write counter unchanged |
+| W3-WF7 | Builder | Global top bar retained; Setup sidebar absent; back arrow, test title, module subtitle and Add Description |
+| W3-WF8 | WHEN card | Blue circle linked to outlined card, execution selector, Next; Save and Cancel fixed at bottom |
+
+The first Next is a client-side transition in this observed Workflow path,
+unlike the Assignment first Next documented above. No persistence, validation
+message or successful save is established by the builder opening. Cumulative
+outgoing writes remain one (the earlier cleaned Assignment create), with no
+open W3 object or setting. Raw screenshots and customer-bearing controls stay
+in the private research workspace.
+
+`w3-workflow-trigger-options` exposes four execution-source choices: Record
+Action, Date/Time Field, Record Score and Record Notes (translated by meaning;
+localized labels remain in private evidence). No choice was selected in that
+capture. The menu belongs to the unsaved WHEN card, not a persisted preference.
+
+`w3-workflow-date-trigger` selects Date/Time Field and reveals a second selector
+asking which date/time field should drive execution. The existing WHEN Next
+remains below; footer Save and Cancel remain visible. No rule is saved and no
+criteria, action, activation or execution is established by this selection.
+
+`w3-workflow-date-fields` lists five date/time choices for Leads: Created Time,
+Modified Time, Last Activity Time, Unsubscribed Time and Last Enrichment Time.
+`w3-workflow-date-next-boundary` selects Created Time and reveals execution-date
+relation (localized value shown as On), execution time (Immediately) and repeat
+(Once) selectors. These three selectors were not opened or changed. This is the
+WHEN date trigger, not evidence of the later scheduled-action builder.
+
+The enabled WHEN Next control (`#step3Btn`, `data-zcqa="triggerSubmit"`) is
+**skipped** by the unchanged attribute guard: `dangerous attribute: step3Btn
+triggerSubmit primary lyte-button => check(event) ;`. No alternate selector,
+request replay, script execution or guard override was attempted. The criteria
+and action stages, save, validation, edit, status and deletion remain open.
+This boundary requires a reviewed continuation; the former no-guard-relaxation
+decision is not silently superseded. Customization's separately evidenced
+PageLayout loading blocker remains unchanged and was not recaptured here.
+
+Eight live captures in this continuation report cumulative allowedWrites=1,
+all from the earlier cleaned Assignment create. New outgoing mutation attempts
+are zero; openItems contains no W3 record and no setting. Blocked requests are
+background click-lock, host and telemetry requests; all eight metadata files
+were inspected. No pending W3 cleanup is created by the unsaved builder.
+
+
+## W3 — approved WHEN Next activation and final observation boundary
+
+2026-10-25, MEP-1345. The board accepted activation plan revision 2 and
+instructed the analyst to finish the bounded observation, then continue W1
+before W4, without opening another capture-tool repair chain. Remaining flows
+may stay documentation-based under that later instruction; this does not
+turn an unobserved write into live evidence or approve module parity.
+
+The exact reviewed MEP-1374 patch matched its uploaded artifact. A clean dry
+run and 18/18 synthetic candidate checks passed before temporary installation.
+The installed diff contained only the reviewed addition; 22/22 baseline checks
+passed. In `w3-workflow-activated-next`, the exact WHEN Next control was clicked
+successfully at 20:40 Istanbul. The full-page unsaved builder advanced from
+Created Time / Once to **Condition 1**. This observed transition sends no new
+mutation; unknown Save and later transitions are not inferred from it.
+
+| # | Criteria screen inventory | Observed state |
+| --- | --- | --- |
+| W3-F1 | Header | Back arrow, prefixed unsaved test title, Leads subtitle, Add Description |
+| W3-F2 | WHEN summary | Solid blue circle and connector; white summary card with Created Time and Once; edit affordance |
+| W3-F3 | Condition 1 | Blue diamond on the same vertical connector; white card with blue outline and shadow |
+| W3-F4 | Scope | Specific matching records selected by default; All Leads unselected; neither changed |
+| W3-F5 | Criterion row | Circled 1, field dropdown, operator dropdown, empty value input, green outlined plus |
+| W3-F6 | Initial inputs | Both dropdowns show Select; operator and value look muted; menus and value not exercised |
+| W3-F7 | Done | Blue button aligned to the lower right of the criterion card; not clicked |
+| W3-F8 | Footer | Fixed white footer with Save and Cancel at the left; neither clicked |
+
+This adds live initial criteria-screen evidence to AW2 only. No criterion
+was completed, no action or scheduled-action editor opened, and no Workflow
+rule was saved, edited, activated, deactivated or deleted. AW1 save outcome,
+remaining AW2 interactions, AW3–AW6, and literal validation/success/error text
+remain unobserved live. AW7–AW10 retain only their earlier partial Assignment
+evidence and verified shell cleanup. These limits must remain visible to
+implementation and review; existing documentation is the fallback, not proof
+of exact messages or wire shapes. CW1–CW6 retain their separately recorded
+loading boundary; Layouts was excluded from the activation and not retried.
+
+The candidate was removed immediately after this single bounded observation
+using the reviewed reverse patch. Byte comparison against the saved preinstall
+baseline passed, the candidate marker is absent, and baseline checks again
+passed 22/22. No policy, endpoint permission or durable journal was reset.
+The capture reports cumulative allowedWrites=1, solely the previously cleaned
+Assignment create, with no W3 open record or setting. Background blocked
+requests are click-lock, host and telemetry; no new Workflow mutation or
+Workflow write-block was observed. The retained W2 item remains separate.
+Raw captures stay in the private research workspace; no customer-bearing
+screen or control export is committed.
+
+
+`w3-workflow-final-absence` (20:42 Istanbul) reopens the populated Workflow
+list after patch removal, without filters or view changes. Screenshot and text
+show no prefixed Workflow test rule. Its real managed openItems again contains
+only the retained W2 item, no W3 object or setting; allowedWrites remains one.
+This confirms the unsaved builder left no persisted W3 rule in the observed
+list. It is not a deletion-flow observation or W2 cleanup verification.
