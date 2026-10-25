@@ -1,6 +1,7 @@
 # Documents: write flows and permissions
 
-Status: documentation research for MEP-927; pending UI Lead review.
+Status: documentation research for MEP-927; MEP-1344 window disposition added
+on 2026-10-25, pending independent document review.
 Read on 2026-10-20. Complements [Documents](documents.md), approved in MEP-922.
 Input to ADR 0008, not an approved implementation or schema.
 
@@ -389,3 +390,66 @@ Required permission checks include CRM tab/profile gates, folder membership,
 item grants, source/destination move rights, download/share policies, version and
 trash authority, and record access versus ownership. Enforce these independently;
 a global “can edit documents” flag cannot express the documented distinctions.
+
+## W2 observation-window disposition (MEP-1344)
+
+### Decision and evidence boundary
+
+The Platform Lead's final decision in MEP-1355 explicitly applies to W2–W4:
+unsupported flows remain **not observed, gap**. W0 completion (MEP-1342) proves
+the guarded tool was reviewed; it does not establish a live Documents policy,
+write request format, success response or verified cleanup contract. W1
+(MEP-1343) completed with the same documentation-only disposition.
+
+At this checkpoint the local window directory contains only the empty change-log
+scaffold, with no policy file or transaction rows. The W2 issue has no published
+`capture-write-window-policy` block. The required board-authored recipient
+confirmation is also absent; no agent substitutes its own comment for it.
+The tool's supported contract in [the window guide](../../docs/capture-write-window.md)
+rejects multipart uploads, unknown request formats and frame selectors for write
+controls. Documents uses an embedded file-service surface. Synthetic JSON routes
+are not evidence of that surface's write or cleanup behavior.
+
+No reference session was opened for MEP-1344, and no new screenshot, control
+inventory, request trace or literal result message was collected. Existing
+documentation and safe baseline evidence above remain at their original evidence
+level. No new public-source claim is introduced by this addendum.
+
+### U1–U13 coverage
+
+All thirteen questions remain unresolved for live deployment behavior. This table
+records the requested observation and the precise remaining evidence gap; it does
+not replace the documented capabilities or ownership table above.
+
+| ID | Requested W2 observation | Window result and remaining gap |
+| --- | --- | --- |
+| U1 | Create a test folder and subfolder; exercise name validation | Not observed, gap: required/blank/length/reserved-name and duplicate messages remain unknown. |
+| U2 | Create a test team folder and edit its members | Not observed, gap: embedded member editor, grant precedence, last-admin handling and lock meaning remain unverified. |
+| U3 | Upload a small test file and inspect available sources | Not observed, gap: multipart upload is unsupported; actual sources, byte/count limits and nested restrictions remain unknown. |
+| U4 | Upload the same filename again | Not observed, gap: replacement/version/keep/skip options, suffixing, mixed failures and retry/cancel behavior remain unknown. |
+| U5 | Preview and download the test file | Not observed, gap: no test file was created; actual preview limits, unsupported/loading/permission errors and download packaging remain unverified. |
+| U6 | Upload a version; check out, check in and discard checkout | Not observed, gap: authority, lock conflicts, note validation, numbering, retention and concurrent-upload outcomes remain unknown. |
+| U7 | Rename and move test content | Not observed, gap: embedded dialogs, collision/cycle validation, destination permissions and share-change warnings remain unknown. |
+| U8 | Trash, restore and permanently delete only test items | Not observed, gap: no owned test item or verified delete/purge contract exists; retention, restore conflicts and linked-attachment effects remain unknown. |
+| U9 | Share test content internally without creating an external link | Not observed, gap: recipient/access validation, notifications, revocation and embedded dialog availability remain unknown. External-link creation stays outside W2 scope. |
+| U10 | Change and restore sort/filter/view preferences | Not observed, gap: no exact read/write/restore setting contract exists; comparator, header cycle, persistence and D11/D14 identity remain unknown. |
+| U11 | Open Details for file, folder and no selection | Not observed, gap: no preference-changing panel action was attempted; D16 contents, tabs and persistence remain unverified. |
+| U12 | Attach a document to an owned test record | Not observed, gap: no owned test record or safe attachment/cleanup contract exists; picker identity, link/copy semantics and lifecycle remain unresolved. |
+| U13 | Capture validation, success, error, empty/loading/partial/permission states | Not observed, gap: no literal messages or new state captures are claimed for any W2 flow. |
+
+### Restore statement and follow-up boundary
+
+MEP-1344 created no test folder, file, version, team membership, share, attachment
+or record; it changed no preference or setting and initiated no download or
+notification. There is no issue-scoped mutation to restore. The empty journal is
+consistent with that statement; it is not proof of other issues' activity and
+does not replace the W5 global cleanup report (MEP-1347).
+
+This is completion of the window gap record, **not functional parity approval**
+and not acceptance of ADR 0008's proposed write behavior. U1–U13 and their
+existing decision owners remain open. No ADR status, permission or data contract
+is changed. Under MEP-1355, a future live flow requires the actual board
+confirmation, a single-flow contract derived from read-only evidence, and a
+separate high-tier issue with Platform Lead and CTO approval. The decision
+forbids starting that path after the cleanup cutoff; this document grants no
+exception to the window expiry.
