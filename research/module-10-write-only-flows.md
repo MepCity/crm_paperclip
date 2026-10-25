@@ -446,7 +446,12 @@ error; it does not establish weekly/monthly layouts or ordinary event tiles.
 - R9 should preserve the distinction between documented capabilities and
   unobserved results/validation. This note authorizes no further live action.
 
-## 10. W1 window disposition — no live write observations
+## 10. Historical W1 disposition — superseded by the board
+
+This section records the earlier closure only. The board superseded it on
+2026-10-25 at 11:07 and directed live W1 observation at 22:00. Section 11
+records the subsequent evidence. The activation and future-issue requirements
+below are historical, not current prerequisites.
 
 Decision date: 2026-10-25. Authority: Platform Lead's final decision in
 MEP-1355, including the board's recorded statement that no `BoardRecipient:`
@@ -523,3 +528,120 @@ The local window change log contains its header and no operation rows at the
 preflight check. There is no issue-scoped test item or setting to restore.
 This statement does not replace the umbrella W5 final cleanup report or
 assert the state of other issues.
+
+## 11. W1 live follow-up — 2026-10-25
+
+The board's 11:07 decision replaced section 10's gap-only closure. The 21:58
+and 22:00 instructions resumed W1 before W4, retained the board-only recipient
+rule and prohibited a new tooling chain. Existing capture observe mode v2 was
+activated for Email and Calendar. Its policy and private recipient remained in
+the local research workspace; only neutral policy placeholders were published
+on the issue. No guard or capture-tool source was changed.
+
+### Live evidence and numbered controls
+
+These observations use the Turkish interface. Screenshot evidence establishes
+visible structure; a clicked control alone does not establish successful
+creation or saving. Raw evidence remains outside the repository. Runtime
+errors mean these captures are partial evidence, not a clean-screen parity
+approval. No loading or empty state was deliberately manufactured.
+
+| ID | Surface / control | Observed result | Capture slug |
+| --- | --- | --- | --- |
+| L01 | Calendar, `Oluştur` | Opens a menu with `Toplantı`, `Arama`, `Uygun Değil Olarak İşaretle`. | `w1-calendar-create-open` |
+| L02 | Calendar, `Toplantı` | Click recorded; no meeting editor appears in the final capture. | `w1-meeting-form` |
+| L03 | Previously observed direct meeting-create route | Resolves to a create route with layout and redirect parameters, but no meeting fields appear. No event is created. | `w1-meeting-direct` |
+| L04 | Mail area | Permission error shown; no composer, folder list or message is opened. | `w1-email-access` |
+| L05 | Templates, `Yeni Şablon` | Opens `Oluştur E-posta Şablonu`, with `Modül Seç`, a module selector, `İptal` and `Sonraki`. | `w1-template-new` |
+| L06 | Template module dialog, `Sonraki` | Opens `Şablon Galerisi`. | `w1-template-gallery` |
+| L07 | Gallery categories | `Tümü`, `Temel`, `Kutlama`, `Davet`, `İzleme`, `Ürün Promosyonu`, `Bildirim`; cards include `Boş`. | `w1-template-gallery` |
+| L08 | Gallery, `Boş` | Click recorded, gallery remains. This does not prove that the card's selection action was executed. | `w1-template-blank` |
+| L09 | Gallery, `HTML/Düz Metin ekle` | Opens a full-page editor outside the setup rail, with a dark header, name and subject prompts, module badge, `Eklentiler`, `İptal`, `Ön izleme`, and `Kaydet`. | `w1-template-html` |
+| L10 | Template name field | Test-prefixed name entered. An initial exact-text Save selector matched four elements and was skipped; no positional selector was used. | `w1-template-validation` |
+| L11 | Visible exact `Kaydet` label | Opens `Şimdi Kaydet` and `Taslak olarak Kaydet`. | `w1-template-save-menu` |
+| L12 | Compose settings | Font family/size, preview, sender/reply-to selectors and `E-posta İmzası` are visible. Existing values and addresses are not reproduced here. | `w1-compose-settings` |
+| L13 | Compose settings, `Yeni İmza Ekle` | Opens signature-name input, sender association selector, rich-text toolbar/editor, `Düz metin`, `Kaydet`, `İptal`. | `w1-signature-open` |
+| L14 | New signature, test-prefixed name, empty sender/body, `Kaydet` | Shows the sender-association validation below. No mutation request is allowed or sent. | `w1-signature-validation` |
+| L15 | Template menu, `Şimdi Kaydet` | Tool skips the click because its save-handler attribute is guarded. No folder picker, template save or save validation was reached. No guard workaround or new tool task was attempted. | `w1-template-save-validation` |
+
+The template editor screenshot shows a formatting toolbar above a centered
+white message canvas. It includes font/size, emphasis, alignment, lists,
+indentation, links, images, tables, source and quote controls. A footer hint
+instructs users to type `#` to insert a merge field. This establishes the
+visible hint only: the picker, inserted syntax and resolution were not tested.
+No reference icon, font, image or template asset was copied into the product.
+
+### Exact observed text
+
+| State | Exact text | Evidence / limit |
+| --- | --- | --- |
+| Mail access denial heading | `İzin Reddedildi` | `w1-email-access`; access failure, not send failure. |
+| Mail access denial body | `Bu işlemi gerçekleştirmek için yeterli izniniz yok. Yöneticiniz ile irtibata geçin.` | Same capture; no permission or connection was changed. |
+| Signature validation | `En az bir Gönderen adresini ilişkilendirin.` | `w1-signature-validation`; extracted twice, one Save attempt. No success state inferred. |
+
+### Remaining W1–W19 coverage
+
+Earlier public-documentation findings remain documentation claims. The rows
+below describe what this live follow-up adds and what remains unverified.
+
+| Flow | Live follow-up result / retained gap |
+| --- | --- |
+| W1 | Mail area access denied. Compose/send, recipient validation and send success remain unobserved. |
+| W2 | Reply/reply-all/forward remain unobserved; no existing message or recipient was used. |
+| W3 | Draft save/edit/delete and autosave remain unobserved. A template's draft-save menu is not evidence for mail drafts. |
+| W4 | Scheduled-mail create/edit/cancel and time-zone validation remain unobserved. |
+| W5 | Calendar create menu observed; meeting fields and board-only invitation not reached. No invitation sent. |
+| W6 | RSVP remains unobserved; no external inbox or reply action was used. |
+| W7 | Mail access denial observed. Provider setup, reconnect/disconnect and connection testing remain unobserved and excluded. |
+| W8 | No sync triggered; first-sync, matching and deduplication remain documentation/access gaps. |
+| W9 | Module dialog, gallery, full-page editor and save menu observed; successful create/edit/copy/delete, merge-field insertion and preview resolution remain unverified. |
+| W10 | No external calendar connection or integration; sync/conflict/deletion propagation remain gaps. |
+| W11 | No import; notification text remains documentation-only. |
+| W12 | No tracked mail, remote content or saved tracking choice; status transitions remain unverified. |
+| W13 | No record-originated send or association change; matching remains unverified. |
+| W14 | No delivery attempt or induced bounce; failure/unsubscribe wording remains unverified. |
+| W15 | Mass/campaign sending excluded; no preview, send or merge operation performed. |
+| W16 | No automation created here; retain Module 12 evidence separately. |
+| W17 | Create menu observed, but meeting editor unavailable through menu and direct route. Create/edit/delete, recurrence, drag/resize and conflicts remain unverified. |
+| W18 | Attachment upload/remove/send and limits remain unverified. Seeing the template attachment entry does not establish upload behaviour. |
+| W19 | Access denial is not evidence for organization-wide sharing rules. No sharing/permission choice was changed. |
+
+Signature editor and one validation branch are observed. Signature persistence,
+edit/delete and sender association remain unverified. Compose preference saving,
+working hours and calendar default saves remain unobserved. No setting was
+changed to unlock another page. These limits do not authorize another tooling
+chain or imply functional parity.
+
+### Runtime, blocked requests and cleanup
+
+Every completed capture reports `allowedWrites: 0`. Load-time reminder,
+notification and calendar-query POSTs were refused with `click-lock`; external
+visitor requests were refused with `host`; telemetry requests were refused as
+telemetry or outside the permitted path. These are blocked requests, not
+observed business validation or successful writes. The compose-settings
+capture also records blocked path requests. No refused request was replayed.
+
+Calendar captures report the sortable runtime error; the direct create route
+also reports a collection-removal error. Template pages report the sortable
+parent-data error; HTML editor captures additionally report an undefined
+feature variable. Signature pages report the parent-data error and an undefined
+editor proofreading object. These are research-runtime limitations, not
+reference business error messages for implementation.
+
+The current W1 journal has no mutation rows, contracts, registered records or
+settings. Only unsaved test-prefixed form input was entered. No mail, draft,
+template, signature, event, invitation or attachment was persisted, sent,
+deleted or purged; no preference was changed. Consequently W1 has no created
+item or setting to restore. This is supported by capture mutation counters
+and the journal, rather than by a successful cleanup flow that was never run.
+
+The shared journal's historical open-items list still includes a Documents
+test object from W2. It is not a W1 creation or proof of its current existence;
+W1 neither deletes it nor marks it cleaned. W5 must reconcile that historical
+entry against W2's actual cleanup evidence. This report is issue-scoped and
+does not replace W5's global restore verification.
+
+Under the board's 22:00 direction, unavailable flows retain the documented
+behaviour and explicit gaps above. There is no new tool-adapter chain or
+claim that all W1–W19 write flows passed. Review should check evidence accuracy
+and scope only; this report is not a Module 10 functional parity gate.
