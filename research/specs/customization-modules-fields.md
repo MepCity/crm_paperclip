@@ -1303,3 +1303,19 @@ create), no W3 open object and no open setting; the separately retained W2 item
 is unaffected. No new reference write, setting, preference or send occurred.
 Verification: screenshot, text and meta audit. Product tests are inapplicable;
 raw research captures remain private and are not repository assets.
+
+
+## W3 — final scope under the 20:40 board direction
+
+2026-10-25, MEP-1345. The later board direction permits remaining flows to
+stay documentation-based and prohibits another tool-repair chain. The approved
+Workflow WHEN Next exception excludes Customization and Layouts. It was used
+only for that Workflow transition and removed immediately afterwards; it adds
+no customization evidence or permission.
+
+CW1–CW6 remain unobserved live at the earlier loading boundary. No test field,
+layout or view was created, saved, edited or deleted; no existing configuration
+or persisted preference changed. There is no W3 customization value to restore.
+Existing public-documentation statements remain fallback guidance and must not
+be treated as captured validation text, success/error messages, save contracts
+or module parity approval. No further tool fix is requested by this delivery.

@@ -668,3 +668,60 @@ all from the earlier cleaned Assignment create. New outgoing mutation attempts
 are zero; openItems contains no W3 record and no setting. Blocked requests are
 background click-lock, host and telemetry requests; all eight metadata files
 were inspected. No pending W3 cleanup is created by the unsaved builder.
+
+
+## W3 — approved WHEN Next activation and final observation boundary
+
+2026-10-25, MEP-1345. The board accepted activation plan revision 2 and
+instructed the analyst to finish the bounded observation, then continue W1
+before W4, without opening another capture-tool repair chain. Remaining flows
+may stay documentation-based under that later instruction; this does not
+turn an unobserved write into live evidence or approve module parity.
+
+The exact reviewed MEP-1374 patch matched its uploaded artifact. A clean dry
+run and 18/18 synthetic candidate checks passed before temporary installation.
+The installed diff contained only the reviewed addition; 22/22 baseline checks
+passed. In `w3-workflow-activated-next`, the exact WHEN Next control was clicked
+successfully at 20:40 Istanbul. The full-page unsaved builder advanced from
+Created Time / Once to **Condition 1**. This observed transition sends no new
+mutation; unknown Save and later transitions are not inferred from it.
+
+| # | Criteria screen inventory | Observed state |
+| --- | --- | --- |
+| W3-F1 | Header | Back arrow, prefixed unsaved test title, Leads subtitle, Add Description |
+| W3-F2 | WHEN summary | Solid blue circle and connector; white summary card with Created Time and Once; edit affordance |
+| W3-F3 | Condition 1 | Blue diamond on the same vertical connector; white card with blue outline and shadow |
+| W3-F4 | Scope | Specific matching records selected by default; All Leads unselected; neither changed |
+| W3-F5 | Criterion row | Circled 1, field dropdown, operator dropdown, empty value input, green outlined plus |
+| W3-F6 | Initial inputs | Both dropdowns show Select; operator and value look muted; menus and value not exercised |
+| W3-F7 | Done | Blue button aligned to the lower right of the criterion card; not clicked |
+| W3-F8 | Footer | Fixed white footer with Save and Cancel at the left; neither clicked |
+
+This adds live initial criteria-screen evidence to AW2 only. No criterion
+was completed, no action or scheduled-action editor opened, and no Workflow
+rule was saved, edited, activated, deactivated or deleted. AW1 save outcome,
+remaining AW2 interactions, AW3–AW6, and literal validation/success/error text
+remain unobserved live. AW7–AW10 retain only their earlier partial Assignment
+evidence and verified shell cleanup. These limits must remain visible to
+implementation and review; existing documentation is the fallback, not proof
+of exact messages or wire shapes. CW1–CW6 retain their separately recorded
+loading boundary; Layouts was excluded from the activation and not retried.
+
+The candidate was removed immediately after this single bounded observation
+using the reviewed reverse patch. Byte comparison against the saved preinstall
+baseline passed, the candidate marker is absent, and baseline checks again
+passed 22/22. No policy, endpoint permission or durable journal was reset.
+The capture reports cumulative allowedWrites=1, solely the previously cleaned
+Assignment create, with no W3 open record or setting. Background blocked
+requests are click-lock, host and telemetry; no new Workflow mutation or
+Workflow write-block was observed. The retained W2 item remains separate.
+Raw captures stay in the private research workspace; no customer-bearing
+screen or control export is committed.
+
+
+`w3-workflow-final-absence` (20:42 Istanbul) reopens the populated Workflow
+list after patch removal, without filters or view changes. Screenshot and text
+show no prefixed Workflow test rule. Its real managed openItems again contains
+only the retained W2 item, no W3 object or setting; allowedWrites remains one.
+This confirms the unsaved builder left no persisted W3 rule in the observed
+list. It is not a deletion-flow observation or W2 cleanup verification.
