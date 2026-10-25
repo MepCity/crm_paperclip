@@ -426,3 +426,41 @@ local conventions pending evidence; do not claim them as observed parity.
 
 S3/S4 acceptance must explicitly label documentation-derived behaviour. No
 populated-state capture completeness or Module 15 gate is asserted by R2.
+
+## W4 write-window disposition — 2026-10-25
+
+MEP-1346 includes only Visits/Social states reachable **without connecting an
+external account**. The final Platform Lead decision in
+[MEP-1355](/MEP/issues/MEP-1355#comment-68b28723-d4fb-4860-b352-c92690ff7d75)
+also covers W4: no live write observation without a proven endpoint/body/restore
+contract, and no synthetic policy presented as a live contract. No new capture
+or connection attempt was made. The R1 disconnected introductions remain the
+painted baseline; R2 enabled-state documentation remains documentation only.
+
+### Visits and Social gap inventory
+
+| ID | Requested scope | W4 disposition / missing evidence |
+| --- | --- | --- |
+| VW01 | Visits settings/states reachable without an external account | Open / no fresh observation. R1 introduction and R2 prerequisites do not establish a configuration form, current permissions, enabled-empty state or save validation |
+| SW01 | Social settings/states reachable without an external account | Open / no fresh observation. R1 introduction and R2 permission vocabulary do not establish this account's brand settings, denied state or validation |
+| SW02 | Distinguish disconnected, denied, expired authorization and service error | Open. Earlier introduction evidence does not certify those other states or their literal messages; no authentication or integration fault was induced |
+| VSX01 | External-account authorization, tracking setup and social connection | Excluded by the W4 scope; not attempted and not a newly approved follow-up |
+
+VW/SW IDs track gaps, not screenshot-certified controls. No new numbered
+painted inventory, success/error/validation text, loading behaviour or setting
+defaults were obtained. Existing V/SO/RC and documented VD/SD inventories retain
+their stated provenance. No new endpoint, request shape or restoration method
+is inferred. Existing captures were not replayed merely to restate entry states.
+
+### Audit and next boundary
+
+W4 did not open the reference CRM, connect a service, create a brand, install
+tracking, associate/unlink a profile, publish/send/interact or change settings
+or preferences. No `ZZTEST-` object was created and there is no W4 restoration
+action. The local window journal still contains only its empty table scaffold;
+this does not replace [W5](/MEP/issues/MEP-1347) global verification.
+
+The existing independent review stage checks gap documentation and evidence
+limits, not enabled-state parity. No ADR/module-gate acceptance is claimed.
+A future supported live observation requires the separate single-flow approval
+path in MEP-1355; external connections remain outside this task's scope.
