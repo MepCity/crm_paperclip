@@ -688,9 +688,13 @@ R2 Analytics gaps narrowed only functionally. All remaining access/visual
 questions above persist. UI Lead approval of this spec is not a module gate
 or permission to implement undocumented defaults or reference writes.
 
-## W4 write-window disposition — 2026-10-25
+## W4 historical gap disposition — superseded on 2026-10-25
 
-MEP-1346 resumes after W0 and W3 completed. The final Platform Lead decision
+Historical record only: the board reopened MEP-1346 for live observation on
+25 October. The following gap-only disposition is superseded; the live
+continuation below is authoritative for new observations.
+
+MEP-1346 resumed after W0 and W3 completed. The then-current Platform Lead decision
 in [MEP-1355](/MEP/issues/MEP-1355#comment-68b28723-d4fb-4860-b352-c92690ff7d75)
 applies to W2–W4: unsupported live flows close as **unobserved gaps**. Installed
 window tooling is not a verified live endpoint/body/restore contract. No
@@ -740,3 +744,113 @@ The existing independent review stage checks this documentation and evidence
 boundary. This disposition is neither parity acceptance nor ADR/module-gate
 approval. A future live attempt requires the separately approved single-flow
 path in MEP-1355; it must not be inferred from this gap inventory.
+
+## W4 live continuation — 2026-10-25, cleanup pending
+
+The board reopened the window for live observation; W1 completed before this
+continuation. The earlier W4 gap disposition is historical, not the current
+completion result. This section records actual Turkish-interface observations.
+W4 is **incomplete and paused for cleanup**. Home/Workqueue and Visits/Social
+were not reached in this continuation. Their earlier evidence limits remain.
+
+### Observed flow and controls
+
+The Reports entry opens a populated list. Rapor Oluştur opens a modal over the
+list. Its module selector starts empty; Devam appears disabled until a module
+is chosen. The menu exposes CRM modules, including Leads, Contacts, Accounts,
+Deals, Tasks, Meetings and Calls. Selecting Leads updates the field and enables
+Devam. This is unsaved form state, not a created report. The attempted Devam
+click was refused by the capture guard because of its savePrimaryModule
+attribute. One preceding role selector matched no element; the later exported
+unique option selector successfully selected Leads. No report builder/save,
+validation message, report definition or report cleanup was observed.
+
+Analytics Pano Oluştur opens an editor with a narrow app navigation rail,
+a component palette on the left, and name/description/access controls above
+an empty grid. Its initial name is Untitled Dashboard and its access is
+Yalnızca ben. Saving the independently named ZZTEST test dashboard with no
+description or components succeeds. The resulting dashboard shows its test
+name, private access, Panoyu Sil, and the empty message
+**Herhangi bir Bileşen Bulunamadı** with Bileşen Ekle. A component is therefore
+not required for this observed save. No transient success toast is certified.
+
+| ID | Visible control / state | Position and observed behaviour | Source / owner |
+| --- | --- | --- | --- |
+| WL01 | Rapor Oluştur | Reports toolbar; opens primary-module modal | reports-entry/create; Reports |
+| WL02 | Birincil Modül Seç | Modal dropdown; empty placeholder, then chosen module | report-module/selected-module; Reports |
+| WL03 | Module choices | Dropdown list; unique Leads option selected | report-module/selected-module; Reports |
+| WL04 | İptal | Modal footer; visible, not operated | report-create; Reports |
+| WL05 | Devam | Modal footer; enabled after selection; attempted click guard-blocked | report-builder/selected-module; Reports |
+| WL06 | Pano Oluştur | Analytics toolbar; opens new editor | analytics-entry/dashboard-create; Analytics |
+| WL07 | Pano Adını Gir | Editor header textbox; initial default replaced with test name | dashboard-create/save-validation; Analytics |
+| WL08 | Açıklama Gir | Editor header textbox; left empty | dashboard-create; Analytics |
+| WL09 | Yalnızca ben and access pencil | Header; initial private access, not operated | dashboard-create; Analytics |
+| WL10 | Favorite star | Header beside name; not operated | dashboard-create; Analytics |
+| WL11 | İptal | Editor upper right; visible, not operated | dashboard-create; Analytics |
+| WL12 | Kaydet | Editor upper right; saves empty test dashboard | dashboard-save-validation; Analytics |
+| WL13 | Component type palette | Left editor rail; Chart, KPI, Comparator, Anomaly Detector, Target Meter, Funnel, Cohort, Quadrant, Zone, Stage, Waterfall; gallery below viewport in initial editor | dashboard-create/add-component; Analytics |
+| WL14 | Bileşen Ekle | Empty dashboard action; opens component-type modal | dashboard-add-component; Analytics |
+| WL15 | Galeriden seç | Component modal; visible, not operated | dashboard-add-component; Analytics |
+| WL16 | Grafik | Component modal; opens chart-source choice | dashboard-chart-form; Analytics |
+| WL17 | Hızlı çizelge | Chart-source dialog; instant chart choice, not operated | dashboard-chart-form; Analytics |
+| WL18 | Raporlardan | Chart-source dialog; existing-report choice, not operated | dashboard-chart-form; Analytics |
+| WL19 | Panoyu Sil | Saved test dashboard toolbar; cleanup attempt guard-blocked | dashboard-delete-open; Analytics |
+| WL20 | Close icon | Upper-right of component and chart-source dialogs; visible, not operated | dashboard-add-component/chart-form; Analytics |
+
+Source abbreviations above have the prefix `w4-`. The full stable capture slugs
+are in the audit table below. Screenshots were inspected alongside controls.json
+and aria.yml. Duplicate wrappers are not counted separately. The app shell and
+utility controls remain owned by the existing shell inventory; new editor rail
+appearance was automatic, not an operated persistent collapse preference.
+
+### Mutation and restore audit
+
+The managed journal records three successful outgoing requests at
+19:18:49–19:18:51 UTC: one dashboard create (HTTP 201), then two metadata updates
+(HTTP 200) recording the same test dashboard as recently accessed. The latter
+are passive access traces permitted by the board; no explicit preference change
+was requested. The create used private access and no components. No customer
+record, existing dashboard, recipient, sharing permission or setting changed.
+No report, folder, component, schedule, export or external connection was created.
+
+The cleanup capture attempted only Panoyu Sil on the registered test dashboard.
+It was skipped with `dangerous attribute: delDashboard`; no delete request was
+sent. **The test dashboard remains present and is not marked cleaned.** Further
+reference activity stopped immediately and the board was notified. No guard,
+policy module or tool was modified to circumvent the refusal; no new repair
+chain was opened. The existing journal and registered object remain intact.
+The board must remove the single empty test dashboard through the UI and report
+the outcome; CRM Analyst then obtains fresh passive absence evidence before
+using the official cleanup-proof flag. A board report alone is not absence proof.
+The separately retained W2 test folder is not a W4 cleanup result.
+
+| Capture slug | Steps / outcome | W4 cumulative writes | Blocked request count |
+| --- | --- | --- | --- |
+| w4-reports-entry | Entry; no steps | 0 | 2 |
+| w4-report-create | Create opening clicked | 0 | 3 |
+| w4-report-module | Create opening and dropdown clicked | 0 | 3 |
+| w4-report-builder | Two openings; unmatched option and blocked Devam | 0 | 3 |
+| w4-report-selected-module | Three clicks; module selected | 0 | 3 |
+| w4-analytics-entry | Entry; no steps | 0 | 4 |
+| w4-dashboard-create | Editor opened | 0 | 4 |
+| w4-dashboard-save-validation | Editor opened, test name filled, Save clicked | 3 | 4 |
+| w4-dashboard-add-component | Component modal opened | 3 | 4 |
+| w4-dashboard-chart-form | Component modal and chart-source dialog opened | 3 | 4 |
+| w4-dashboard-delete-open | Delete opening skipped by guard | 3 | 4 |
+
+Blocked background requests have click-lock/host reasons; they were not retried
+outside the tool. Runtime shell/sortable diagnostics remain capture limitations.
+No permission-denied, server-error, loading or successful delete state was learned.
+No raw IDs, account values, private addresses or request payload values are
+reproduced here. The managed journal is the wire evidence, not a synthetic API
+contract. Screenshots remain outside the repository.
+
+### Coverage remaining at pause
+
+RW01–RW04: primary-module entry observed only; tabular/summary/matrix builder,
+grouping, filtering, sorting and saved reports remain open. RW05–RW10: folder,
+favorite, sharing, scheduling, export and report deletion remain unobserved.
+AW01: empty private create/save observed; editing and successful deletion remain
+open, with cleanup pending. AW02: component-type and chart-source menus observed;
+component form/save/edit/delete remain open. AW03: period/filter operation remains
+unobserved. No parity, architecture or module-gate approval is claimed.
