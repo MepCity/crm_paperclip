@@ -1,8 +1,12 @@
 import { cleanup, fireEvent, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { LanguageProvider } from "@/i18n/client-provider";
 import { render } from "@/test/render";
 import { resolveHomeView } from "./fixture";
-import { HomeContent } from "./home-preview";
+import { HomeOnboarding } from "./home-onboarding";
+import { HomeContent, HomePreviewCards } from "./home-preview";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 afterEach(cleanup);
 
@@ -16,19 +20,31 @@ describe("resolveHomeView", () => {
 });
 
 describe("HomeContent", () => {
-  it("shows onboarding by default and switches locally via the selector", () => {
+  it("shows onboarding by default", () => {
     render(<HomeContent orgSlug="acme" userName="Ada" initialView="onboarding" />);
     expect(screen.getByTestId("home-onboarding")).toBeTruthy();
-    fireEvent.change(screen.getByRole("combobox", { name: "Home page" }), {
-      target: { value: "preview" },
-    });
+  });
+
+  it("renders preview cards when requested", () => {
+    render(<HomeContent orgSlug="acme" userName="Ada" initialView="preview" />);
     expect(screen.getByTestId("home-preview")).toBeTruthy();
     expect(screen.getByText("Total deals: 9")).toBeTruthy();
     expect(screen.getAllByText("Send revised proposal").length).toBeGreaterThan(0);
   });
+});
 
+describe("HomeOnboarding", () => {
+  it("renders onboarding intro and setup crm cards", () => {
+    render(<HomeOnboarding orgSlug="acme" userName="Ada" />);
+    expect(screen.getByTestId("home-onboarding")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Set up your CRM" })).toBeTruthy();
+    expect(screen.getAllByText("Invite your team").length).toBeGreaterThan(0);
+  });
+});
+
+describe("HomePreviewCards", () => {
   it("shows Open Activities with period filtering and detail links", () => {
-    render(<HomeContent orgSlug="acme" userName="Ada" initialView="preview" />);
+    render(<HomePreviewCards orgSlug="acme" empty={false} />);
     expect(screen.getByText("Follow-up call").closest("a")?.getAttribute("href")).toBe(
       "/crm/acme/tab/Calls/c1",
     );
@@ -45,7 +61,28 @@ describe("HomeContent", () => {
   });
 
   it("renders labelled empty states", () => {
-    render(<HomeContent orgSlug="acme" userName="Ada" initialView="preview-empty" />);
+    render(<HomePreviewCards orgSlug="acme" empty={true} />);
     expect(screen.getAllByText(/local preview convention/)).toHaveLength(3);
   });
+});
+
+it("translates preview periods and headings without changing period IDs", () => {
+  render(
+    <LanguageProvider language="tr">
+      <HomePreviewCards orgSlug="acme" empty={false} />
+    </LanguageProvider>,
+  );
+  expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual([
+    "Bugün",
+    "Bu Hafta",
+    "Gelecek Hafta",
+    "Sonraki 7 Gün",
+  ]);
+  expect(screen.getAllByRole("columnheader", { name: "Son Tarih" }).length).toBeGreaterThan(0);
+  expect(screen.getByRole("table", { name: "Geciken Görevler" })).toBeTruthy();
+  fireEvent.change(screen.getByRole("combobox", { name: "Aktivite dönemi" }), {
+    target: { value: "next-week" },
+  });
+  expect(screen.getByRole("columnheader", { name: "Başlangıç" })).toBeTruthy();
+  expect(screen.getByText("Quarterly review")).toBeTruthy();
 });

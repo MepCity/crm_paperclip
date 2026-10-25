@@ -1,6 +1,7 @@
 import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
+import { useUiTranslations } from "@/i18n/client-provider";
 import type {
   AccountKpiCardData,
   KpiCardData,
@@ -21,6 +22,7 @@ export function DashboardCard({
   onRefresh?: () => void;
   children: ReactNode;
 }) {
+  const t = useUiTranslations();
   return (
     <section
       aria-label={title}
@@ -36,7 +38,7 @@ export function DashboardCard({
         <Button
           variant="icon"
           size="compact"
-          aria-label="Refresh Component"
+          aria-label={t("modules.analytics.refreshComponent")}
           onClick={onRefresh}
           className="text-text-muted hover:text-text"
         >
@@ -49,7 +51,9 @@ export function DashboardCard({
 }
 
 /** Standard dependency-free empty-state illustration for dashboard cards. */
-export function CardEmptyIllustration({ label = "No data available" }: { label?: string }) {
+export function CardEmptyIllustration({ label }: { label?: string }) {
+  const t = useUiTranslations();
+  const displayLabel = label ?? t("modules.analytics.noDataAvailable");
   return (
     <div
       data-testid="empty-illustration"
@@ -68,7 +72,7 @@ export function CardEmptyIllustration({ label = "No data available" }: { label?:
         <circle cx="36" cy="16" r="2" fill="currentColor" />
         <line x1="6" y1="36" x2="42" y2="36" />
       </svg>
-      <span className="text-xs text-text-muted">{label}</span>
+      <span className="text-xs text-text-muted">{displayLabel}</span>
     </div>
   );
 }
@@ -109,6 +113,7 @@ export function AccountsKpiContent({ data }: { data: AccountKpiCardData }) {
 
 /** A11.01: Lead generation target semicircular gauge. */
 export function LeadTargetContent({ data }: { data: LeadTargetCardData }) {
+  const t = useUiTranslations();
   if (data.state === "empty") {
     return <CardEmptyIllustration />;
   }
@@ -145,14 +150,14 @@ export function LeadTargetContent({ data }: { data: LeadTargetCardData }) {
           {current}
         </text>
         <text x="100" y="102" textAnchor="middle" className="fill-text-muted text-[10px]">
-          Remaining : {remaining}
+          {t("modules.analytics.remaining", { count: remaining })}
         </text>
         {/* Endpoints */}
         <text x="35" y="105" textAnchor="middle" className="fill-text-muted text-[9px]">
           0
         </text>
         <text x="165" y="105" textAnchor="middle" className="fill-text-muted text-[9px]">
-          Target: {target}
+          {t("modules.analytics.target", { count: target })}
         </text>
       </svg>
     </div>
@@ -161,6 +166,7 @@ export function LeadTargetContent({ data }: { data: LeadTargetCardData }) {
 
 /** A11.02: Revenue target horizontal progress bar. */
 export function RevenueTargetContent({ data }: { data: RevenueTargetCardData }) {
+  const t = useUiTranslations();
   if (data.state === "empty") {
     return <CardEmptyIllustration />;
   }
@@ -168,12 +174,20 @@ export function RevenueTargetContent({ data }: { data: RevenueTargetCardData }) 
   return (
     <div className="flex flex-col justify-center px-2 py-2">
       <div className="flex items-center justify-between text-xs text-text-muted pb-1">
-        <span>{data.category ?? "Entire Org"}</span>
-        <span>{data.sumMetric ?? "Sum of Amount"}</span>
+        <span>{data.category ?? t("modules.analytics.entireOrg")}</span>
+        <span>{data.sumMetric ?? t("modules.analytics.sumOfAmount")}</span>
       </div>
       <div className="flex items-center justify-between text-xs font-semibold text-text pb-2">
-        <span>Target : {data.formattedTarget ?? "$10,000,000.00"}</span>
-        <span>Achieved : {data.formattedAchieved ?? "$785,000.00"}</span>
+        <span>
+          {t("modules.analytics.targetFormatted", {
+            amount: data.formattedTarget ?? "$10,000,000.00",
+          })}
+        </span>
+        <span>
+          {t("modules.analytics.achievedFormatted", {
+            amount: data.formattedAchieved ?? "$785,000.00",
+          })}
+        </span>
       </div>
       <div className="relative h-6 w-full overflow-hidden rounded-md bg-border/50">
         <div
@@ -183,7 +197,7 @@ export function RevenueTargetContent({ data }: { data: RevenueTargetCardData }) 
       </div>
       <div className="mt-3 flex items-center gap-2 text-xs text-text-muted">
         <span className="inline-block size-3 rounded-xs bg-accent-blue" aria-hidden="true" />
-        <span>Achieved</span>
+        <span>{t("modules.analytics.achieved")}</span>
       </div>
     </div>
   );
@@ -277,6 +291,7 @@ export function LeadsBySourceContent({ data }: { data: LeadSourceCardData }) {
 
 /** A12.03: Prolific sales reps scorecard. */
 export function ProlificRepsContent({ data }: { data: ProlificRepsCardData }) {
+  const t = useUiTranslations();
   if (data.state === "empty") {
     return <CardEmptyIllustration />;
   }
@@ -284,8 +299,8 @@ export function ProlificRepsContent({ data }: { data: ProlificRepsCardData }) {
   return (
     <div className="flex flex-col px-1 py-1">
       <div className="flex items-center justify-between border-b border-border pb-1.5 text-xs font-semibold text-text-muted">
-        <span>{data.ownerColumnLabel ?? "Deal Owner"}</span>
-        <span>{data.amountColumnLabel ?? "Sum of Amount"}</span>
+        <span>{data.ownerColumnLabel ?? t("modules.analytics.dealOwner")}</span>
+        <span>{data.amountColumnLabel ?? t("modules.analytics.sumOfAmount")}</span>
       </div>
       <table className="w-full text-xs">
         <tbody>

@@ -1,27 +1,35 @@
 import type { ActionKind, Condition, Timing, Trigger } from "@crm/core/automation";
 import type { Comparator, Criteria, CriteriaValue } from "@crm/core/records";
+import type { MessageKey, MessageValues } from "@/i18n/catalogs";
 
-export function formatTrigger(trigger: Trigger): string {
+export function formatTrigger(
+  trigger: Trigger,
+  t?: (key: MessageKey, values?: MessageValues) => string,
+): string {
   switch (trigger.kind) {
     case "record":
       switch (trigger.on) {
         case "create":
-          return "On record creation";
+          return t ? t("modules.workflow.onRecordCreate") : "On record creation";
         case "edit":
-          return "On record edit";
+          return t ? t("modules.workflow.onRecordEdit") : "On record edit";
         case "create_or_edit":
-          return "On record creation or edit";
+          return t ? t("modules.workflow.onRecordCreateOrEdit") : "On record creation or edit";
         case "delete":
-          return "On record deletion";
+          return t ? t("modules.workflow.onRecordDelete") : "On record deletion";
         default:
           return `Record event (${trigger.on})`;
       }
     case "field_change":
-      return `When fields change: ${trigger.fields.join(", ")}`;
+      return t
+        ? t("modules.workflow.whenFieldsChange", { fields: trigger.fields.join(", ") })
+        : `When fields change: ${trigger.fields.join(", ")}`;
     case "date":
-      return `Date field: ${trigger.field} (${trigger.timezone})`;
+      return t
+        ? t("modules.workflow.dateField", { field: trigger.field, timezone: trigger.timezone })
+        : `Date field: ${trigger.field} (${trigger.timezone})`;
     default:
-      return "Unknown trigger";
+      return t ? t("modules.workflow.unknownTrigger") : "Unknown trigger";
   }
 }
 

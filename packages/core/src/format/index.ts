@@ -21,6 +21,8 @@ export type FormatOptions = {
   clock?: 12 | 24;
   /** Replaces the `Intl` currency symbol, keyed by ISO 4217 code. */
   currencySymbols?: Readonly<Record<string, string>>;
+  /** Interface language for relative time and UI-dependent date text. */
+  language?: string;
 };
 
 export {
@@ -242,7 +244,8 @@ export function formatRelativeTime(
   options: FormatOptions,
 ): string {
   const difference = instant(value).getTime() - instant(now).getTime();
-  const formatter = new Intl.RelativeTimeFormat(options.locale, { numeric: "auto" });
+  const locale = options.language ?? options.locale;
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: "auto" });
 
   for (const [unit, milliseconds] of RELATIVE_UNITS) {
     const amount = Math.trunc(difference / milliseconds);

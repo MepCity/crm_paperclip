@@ -1,7 +1,10 @@
 // @vitest-environment jsdom
 import { cleanup, fireEvent, render, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { LanguageProvider } from "@/i18n/client-provider";
 import { SetupScreen } from "./setup-screen";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 afterEach(cleanup);
 
@@ -70,5 +73,18 @@ describe("SetupScreen", () => {
     const clearButton = screen.getByRole("button", { name: "Clear search" });
     fireEvent.click(clearButton);
     expect(screen.getByRole("heading", { name: "Channels" })).toBeDefined();
+  });
+
+  it("renders in Turkish with Ayarlar heading and localized items", () => {
+    render(
+      <LanguageProvider language="tr">
+        <SetupScreen orgSlug="demo" />
+      </LanguageProvider>,
+    );
+
+    expect(screen.getByRole("heading", { name: "Ayarlar", level: 1 })).toBeDefined();
+    expect(screen.getByRole("link", { name: "Modüller ve Alanlar" })).toBeDefined();
+    expect(screen.getByRole("heading", { name: "Genel" })).toBeDefined();
+    expect(screen.getByRole("heading", { name: "Geliştirici Merkezi" })).toBeDefined();
   });
 });

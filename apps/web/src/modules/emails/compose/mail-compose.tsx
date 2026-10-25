@@ -8,6 +8,7 @@ import { Select, SelectItem } from "@/components/ui/select";
 import { TextArea } from "@/components/ui/text-area";
 import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { resolveAllowedType } from "../../../../../../packages/core/src/attachments/file-policy";
 import { parseRecipientList } from "../../../../../../packages/core/src/mail/recipient-list";
 import { browserComposeOrg, createHttpComposePort } from "./http-port";
@@ -34,6 +35,7 @@ export function MailCompose({
   onClose: () => void;
   onSent: (result: { id: string }) => void;
 }) {
+  const t = useUiTranslations();
   const titleId = useId();
   const orgSlug = browserComposeOrg();
   // Existing app mounts pass the fixture; organization routes use the HTTP default.
@@ -77,17 +79,17 @@ export function MailCompose({
     if (sending.current) return;
     const parsed = recipientFields.map((field) => parseRecipientList(values[field]));
     if (parsed.some((field) => field.invalid.length)) {
-      setError("Enter valid email addresses in To, Cc and Bcc.");
+      setError(t("modules.emails.invalidRecipients"));
       return;
     }
     const count = parsed.reduce((total, field) => total + field.recipients.length, 0);
     if (!count || count > 100) {
-      setError(count ? "Use at most 100 recipients." : "Add at least one recipient.");
+      setError(count ? t("modules.emails.recipientLimit") : t("modules.emails.requireRecipient"));
       return;
     }
     const mailbox = mailboxes.find((item) => item.id === activeMailboxId);
     if (!mailbox) {
-      setError("Select a connected mailbox.");
+      setError(t("modules.emails.selectMailbox"));
       return;
     }
     sending.current = true;
@@ -116,12 +118,20 @@ export function MailCompose({
       onSent(result);
       onClose();
     } catch {
-      setError("Unable to send your message. Please try again.");
+      setError(t("modules.emails.sendError"));
     } finally {
       sending.current = false;
       setPending(false);
     }
   }
+
+  const fieldLabel = (field: "To" | "Cc" | "Bcc") =>
+    field === "To"
+      ? t("modules.emails.toField")
+      : field === "Cc"
+        ? t("modules.emails.ccField")
+        : t("modules.emails.bccField");
+
   return (
     <>
       <TopAlignedModal
@@ -134,9 +144,9 @@ export function MailCompose({
       >
         <div className="max-h-screen overflow-y-auto p-6 text-text">
           <h2 id={titleId} className="mb-4 text-xl font-semibold">
-            Compose Email
+            {t("modules.emails.composeTitle")}
           </h2>
-          <p className="mb-3 text-sm text-text-muted">Fixture mode: no email will be delivered.</p>
+          <p className="mb-3 text-sm text-text-muted">{t("modules.emails.fixtureMode")}</p>
           <Form
             validationBehavior="aria"
             onSubmit={(event) => {
@@ -145,7 +155,7 @@ export function MailCompose({
             }}
           >
             <Select
-              label="From"
+              label={t("modules.emails.fromField")}
               items={mailboxes}
               value={activeMailboxId}
               onChange={(key) => {
@@ -166,7 +176,7 @@ export function MailCompose({
               return (
                 <div key={field}>
                   <TextField
-                    label={field}
+                    label={fieldLabel(field)}
                     value={values[field]}
                     isDisabled={pending}
                     onChange={(value) => {
@@ -174,7 +184,7 @@ export function MailCompose({
                       setValues((previous) => ({ ...previous, [field]: value }));
                     }}
                     isInvalid={parsed.invalid.length > 0}
-                    errorMessage="Enter valid email addresses."
+                    errorMessage={t("modules.emails.enterValidEmail")}
                   />
                   <ul aria-label={`${field} recipients`} className="mt-1 flex flex-wrap gap-1">
                     {parsed.recipients.map((recipient) => (
@@ -188,7 +198,10 @@ export function MailCompose({
                         <Button
                           variant="ghost"
                           size="sm"
-                          aria-label={`Remove ${field} ${recipient.address}`}
+                          aria-label={t("modules.emails.removeRecipient", {
+                            field,
+                            address: recipient.address,
+                          })}
                           isDisabled={pending}
                           onPress={() => {
                             changed();
@@ -226,12 +239,12 @@ export function MailCompose({
                     isDisabled={pending}
                     onPress={() => setVisible((previous) => ({ ...previous, [field]: true }))}
                   >
-                    {field}
+                    {fieldLabel(field)}
                   </Button>
                 ))}
             </div>
             <TextField
-              label="Subject"
+              label={t("modules.emails.subject")}
               value={subject}
               maxLength={998}
               onChange={(value) => {
@@ -241,7 +254,7 @@ export function MailCompose({
               isDisabled={pending}
             />
             <TextArea
-              label="Message"
+              label={t("modules.emails.message")}
               value={body}
               rows={8}
               onChange={(value) => {
@@ -256,14 +269,14 @@ export function MailCompose({
                 isDisabled={pending}
                 onPress={() => fileInput.current?.click()}
               >
-                Attach files
+                {t("modules.emails.attachFiles")}
               </Button>
               <input
                 ref={fileInput}
                 type="file"
                 multiple
                 hidden
-                aria-label="Attach files"
+                aria-label={t("modules.emails.attachFiles")}
                 disabled={pending}
                 onChange={(event) => {
                   const next = [
@@ -277,7 +290,7 @@ export function MailCompose({
                     next.length > 50 ||
                     next.reduce((total, file) => total + file.size, 0) > composeAttachmentByteLimit
                   ) {
-                    setError("Attach at most 50 files, up to 20 MB in total.");
+                    setError(t("modules.emails.attachmentLimitError"));
                     return;
                   }
                   try {
@@ -286,29 +299,29 @@ export function MailCompose({
                       resolveAllowedType({ fileName: file.name, mediaType: file.type });
                     }
                   } catch {
-                    setError("This attachment type or filename is not allowed.");
+                    setError(t("modules.emails.attachmentTypeError"));
                     return;
                   }
                   changed();
                   setFiles(next);
                 }}
               />
-              <p className="text-sm text-text-muted">Up to 50 attachments, 20 MB total.</p>
-              <ul aria-label="Attachments">
+              <p className="text-sm text-text-muted">{t("modules.emails.attachmentsLimit")}</p>
+              <ul aria-label={t("modules.emails.attachments")}>
                 {files.map((file, index) => (
                   <li key={file.composeId} className="flex items-center justify-between gap-2">
                     <span>{file.name}</span>
                     <Button
                       variant="ghost"
                       size="sm"
-                      aria-label={`Remove attachment ${index + 1}`}
+                      aria-label={t("modules.emails.removeAttachment", { index: index + 1 })}
                       isDisabled={pending}
                       onPress={() => {
                         changed();
                         setFiles(files.filter((_, i) => i !== index));
                       }}
                     >
-                      Remove
+                      {t("modules.emails.remove")}
                     </Button>
                   </li>
                 ))}
@@ -321,7 +334,7 @@ export function MailCompose({
             )}
             <div className="flex justify-end gap-2">
               <Button variant="secondary" isDisabled={pending} onPress={requestClose}>
-                Cancel
+                {t("modules.emails.cancel")}
               </Button>
               <Button
                 variant="primary"
@@ -329,7 +342,7 @@ export function MailCompose({
                 isPending={pending}
                 isDisabled={pending || mailboxes.length === 0}
               >
-                {pending ? "Sending…" : "Send"}
+                {pending ? t("modules.emails.sending") : t("modules.emails.send")}
               </Button>
             </div>
           </Form>
@@ -338,10 +351,10 @@ export function MailCompose({
       <ConfirmDialog
         isOpen={confirmDiscard}
         onOpenChange={setConfirmDiscard}
-        title="Discard message?"
-        message="Your changes will be lost."
-        confirmLabel="Discard"
-        cancelLabel="Keep editing"
+        title={t("modules.emails.discardTitle")}
+        message={t("modules.emails.discardMessage")}
+        confirmLabel={t("modules.emails.discardConfirm")}
+        cancelLabel={t("modules.emails.keepEditing")}
         onConfirm={onClose}
       />
     </>
