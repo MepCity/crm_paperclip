@@ -249,3 +249,8 @@ Rules enforced by the tool:
   capture metadata (`openItems`).
 - Expiry, journal durability and the read-only default are unchanged. Not supported:
   `--write-window-restore` and `--write-window-setting` with a version 2 policy.
+
+## Observe mode: extra scope and parent evidence
+
+- Board evidence (`BoardRecipient:` line, optional policy block) is also read from board-authored comments on the window issue's direct parent, same company only. Agent comments never count.
+- Writes on a second host (for example the file service behind the Documents iframe) need an entry in the local, untracked `write-window/scope.json` next to the journal: `{"scopes":[{"host":"<host>","pathPrefix":"/<prefix>/"}]}` (max 4). All other write guards stay in force; host and prefix never go into the repository or comments.
