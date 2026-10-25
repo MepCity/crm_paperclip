@@ -1,0 +1,20 @@
+✔ W3 Candidate: exact #step3Btn control in visible Workflow builder with visible ZZTEST name is allowed (1.045666ms)
+✔ W3 Candidate: supported selector variations (#step3Btn[data-zcqa='triggerSubmit'] and English 'Next') (0.307ms)
+✔ W3 Candidate: unknown write semantics remain fail-closed (NO write lock is granted) (1.476084ms)
+✔ W3 Candidate: rejects when registered ZZTEST name is not visible on page (0.124417ms)
+✔ W3 Candidate: rejects when no ZZTEST name is registered (0.105667ms)
+✔ W3 Candidate: rejects page scope violation (different page URL) (0.30975ms)
+✔ W3 Candidate: rejects foreign controls with same name or selector alias (0.366875ms)
+✔ W3 Candidate: rejects wrong attributes (missing step3Btn or triggerSubmit) (0.128541ms)
+✔ W3 Candidate: rejects text containing dangerous actions or non-Next labels (0.3905ms)
+✔ W3 Candidate: rejects when observation window has expired (0.30975ms)
+✔ W3 Candidate: rejects when observation window has not started (0.097958ms)
+✔ W3 Candidate: Assignment rule Sonraki and Save controls retain existing behavior (0.200292ms)
+ℹ tests 12
+ℹ suites 0
+ℹ pass 12
+ℹ fail 0
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 8.581708

@@ -1,0 +1,20 @@
+--- a/tools/capture/write-window-observe.mjs
++++ b/tools/capture/write-window-observe.mjs
+@@ -374,6 +374,17 @@
+       this.#lock();
+       return true;
+     }
++    // W3 Candidate (MEP-1374): Workflow WHEN Next control (#step3Btn, data-zcqa="triggerSubmit").
++    // Scoped strictly to the visible Workflow builder showing our registered ZZTEST- name, during active W3 window.
++    // Unknown write semantics remain fail-closed: Next is not assumed to be non-persistent, but NO write lock is granted.
++    // Any outgoing mutation attempt will fail closed with "click-lock", preventing unverified server persistence.
++    const isWfNextSelector = selector === "#step3Btn" || selector === '#step3Btn[data-zcqa="triggerSubmit"]' || selector === '[data-zcqa="triggerSubmit"]#step3Btn';
++    if (/^(Next|Sonraki)$/i.test(text.trim()) && isWfNextSelector && /\bstep3Btn\b/.test(attrs) && /\btriggerSubmit\b/.test(attrs)) {
++      if (!page || !(await this.#nameVisible(page, st.zzName))) return this.#deny("click-name-not-visible");
++      const pageUrl = typeof page.url === "function" ? page.url() : (typeof page.url === "string" ? page.url : "");
++      if (!pageUrl || !/\/settings\/workflow-rules(\/|\?|#|$)/i.test(pageUrl)) return this.#deny("click-page-scope");
++      return true;
++    }
+     if (!WRITE_LABEL.test(text.trim())) return false; // not a write control: normal read-only click rules apply
+     // A menu entry that only opens the confirmation dialog is not a write; its confirm button is.
+     if (/^(Çöp Kutusuna Taşı|Geri Yükle|Kalıcı Olarak Sil|Kalıcı Sil)$/i.test(text.trim()) && !/success-button|confirm|dialog|modal/i.test(`${attrs} ${selector}`)) return false;
