@@ -21,22 +21,31 @@ describe("UI message AST guard", () => {
     const after = scanSource(`\nconst x = <p>Hello</p>`);
     expect(compareBaseline(after, before)).toMatchObject({ added: after, stale: before });
   });
-  it("filters out shifted lines and uncompleted module additions while enforcing completed modules", () => {
+  it("allows shifted lines and visits/social additions while rejecting new hashes and increased counts elsewhere", () => {
     const main = [
       { file: "apps/web/src/components/shell/nav.ts", line: 10, column: 5, hash: "abc" },
       { file: "apps/web/src/modules/leads/leads.tsx", line: 20, column: 5, hash: "def" },
     ];
     const addedVsMain = [
-      // Shifted line in shell: same file and hash, different line -> allowed
+      // Shifted line in shell: same file and hash, count does not increase -> allowed
       { file: "apps/web/src/components/shell/nav.ts", line: 11, column: 5, hash: "abc" },
-      // Brand new literal in shell -> rejected as unauthorized
+      // Increased count in shell: second copy of existing hash -> rejected
+      { file: "apps/web/src/components/shell/nav.ts", line: 25, column: 5, hash: "abc" },
+      // Brand new literal in shell -> rejected
       { file: "apps/web/src/components/shell/nav.ts", line: 15, column: 5, hash: "new_shell" },
-      // Brand new literal in uncompleted module -> allowed in baseline
+      // Brand new literal in leads -> rejected
+      { file: "apps/web/src/modules/leads/leads.tsx", line: 30, column: 5, hash: "new_leads" },
+      // Brand new literal in components/ui -> rejected
+      { file: "apps/web/src/components/ui/button.tsx", line: 10, column: 5, hash: "new_btn" },
+      // Brand new literal in visits -> allowed
       { file: "apps/web/src/modules/visits/visits.tsx", line: 5, column: 5, hash: "new_visits" },
     ];
     const unauthorized = filterUnauthorizedExemptions(addedVsMain, main);
     expect(unauthorized).toEqual([
+      { file: "apps/web/src/components/shell/nav.ts", line: 25, column: 5, hash: "abc" },
       { file: "apps/web/src/components/shell/nav.ts", line: 15, column: 5, hash: "new_shell" },
+      { file: "apps/web/src/modules/leads/leads.tsx", line: 30, column: 5, hash: "new_leads" },
+      { file: "apps/web/src/components/ui/button.tsx", line: 10, column: 5, hash: "new_btn" },
     ]);
   });
 });

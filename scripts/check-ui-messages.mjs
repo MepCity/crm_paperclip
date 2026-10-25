@@ -146,17 +146,57 @@ export const COMPLETED_MODULE_PREFIXES = [
   "apps/web/src/modules/settings-personal/",
 ];
 
+export const ALLOWED_NEW_EXEMPTION_PREFIXES = [
+  "apps/web/src/modules/visits/",
+  "apps/web/src/modules/social/",
+];
+
 export function filterUnauthorizedExemptions(
   added,
   main,
-  completedPrefixes = COMPLETED_MODULE_PREFIXES,
+  allowedPrefixes = ALLOWED_NEW_EXEMPTION_PREFIXES,
+  baseline = null,
 ) {
-  const mainByFileHash = new Set(main.map((m) => `${m.file}:${m.hash}`));
+  const mainCounts = new Map();
+  for (const item of main) {
+    const key = `${item.file}:${item.hash}`;
+    mainCounts.set(key, (mainCounts.get(key) || 0) + 1);
+  }
+
+  const unmovedCounts = new Map();
+  if (baseline) {
+    const id = (hit) => `${hit.file}:${hit.line}:${hit.column}:${hit.hash}`;
+    const mainIds = new Set(main.map(id));
+    for (const item of baseline) {
+      if (mainIds.has(id(item))) {
+        const key = `${item.file}:${item.hash}`;
+        unmovedCounts.set(key, (unmovedCounts.get(key) || 0) + 1);
+      }
+    }
+  }
+
+  const shiftQuota = new Map();
+  for (const [key, count] of mainCounts.entries()) {
+    const unmoved = unmovedCounts.get(key) || 0;
+    shiftQuota.set(key, Math.max(0, count - unmoved));
+  }
+
   return added.filter((hit) => {
-    // If the same file and hash already existed in main, it is a shifted line, not a new exemption.
-    if (mainByFileHash.has(`${hit.file}:${hit.hash}`)) return false;
-    // Completed modules allow no new baseline additions.
-    return completedPrefixes.some((p) => hit.file.startsWith(p));
+    // 2. Count increase or new hash is allowed only in visits and social
+    if (allowedPrefixes.some((p) => hit.file.startsWith(p))) {
+      return false;
+    }
+
+    // 1. Same file:hash without count increase is a line/col shift; allowed
+    const key = `${hit.file}:${hit.hash}`;
+    const quota = shiftQuota.get(key) || 0;
+    if (quota > 0) {
+      shiftQuota.set(key, quota - 1);
+      return false;
+    }
+
+    // Unauthorized: new hash or increased count in any other path
+    return true;
   });
 }
 
@@ -192,7 +232,12 @@ if (
   }
   const result = compareBaseline(scanWorkspace(root), baseline);
   const rawExpanded = main ? compareBaseline(baseline, main).added : [];
-  const expanded = filterUnauthorizedExemptions(rawExpanded, main || []);
+  const expanded = filterUnauthorizedExemptions(
+    rawExpanded,
+    main || [],
+    ALLOWED_NEW_EXEMPTION_PREFIXES,
+    baseline,
+  );
   if (result.added.length || result.stale.length || expanded.length) {
     console.error(JSON.stringify({ ...result, unauthorizedExemptions: expanded }, null, 2));
     process.exitCode = 1;
