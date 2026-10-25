@@ -1242,3 +1242,41 @@ neutral-language/privacy review and `git diff --check`. This change updates only
 the specification; no application tests, typecheck or e2e are needed. UI Lead
 is the final spec reviewer. The budget and paint failure are disclosed so that
 five-screen acceptance cannot be mistaken for complete six-screen evidence.
+
+## W3 — customization save-flow gap disposition (MEP-1345)
+
+2026-10-25. The final Platform Lead decision in MEP-1355 applies to W2–W4:
+no live write observation without an evidenced endpoint/body/restore contract.
+W0 installation and W2 gap-document acceptance do not provide that contract.
+This is a gap disposition under the temporary board window, not a new capture
+or completion of the previously unobserved save flows.
+
+| Key | Requested flow | W3 result / evidence still required |
+| --- | --- | --- |
+| CW1 | Create/save a prefixed test field | Unobserved / gap. Need field-type editor, required configuration, validation and saved field evidence. No field added; no metadata changed. |
+| CW2 | Edit/delete the test field and verify restoration | Unobserved / gap. Need editor persistence, deletion constraints and verified absence. Existing fields were not touched. |
+| CW3 | Create/save or edit a test layout | Unobserved / gap. Need layout builder, field placement, save/cancel behaviour and previous-value restoration. No layout, sharing choice or module visibility changed. |
+| CW4 | Delete test layout and verify restoration | Unobserved / gap. Need safe single-layout deletion and absence checks. No test layout exists from this issue. |
+| CW5 | Create/save/edit/delete a prefixed test view | Unobserved / gap. Need view form, criteria/column controls, save outcomes and verified removal. Custom Views was not a visible module-settings tab in prior evidence; no destination or editor is inferred. No saved filter, column order, width or view preference changed. |
+| CW6 | Literal validation/success/error and empty/loading/permission states | Unobserved / gap for CW1–CW5. No empty submission or duplicate probe attempted; exact text and visible controls remain unknown. No numbered inventory or screenshot is fabricated. |
+
+CW1–CW6 preserve open question 5 and the earlier invalid Buttons/Links and
+Deals Fields paint findings. They neither resolve those routes nor authorize
+extra retries. Existing resting-screen inventories, metadata provenance and
+accepted screen counts remain unchanged. No new save endpoint, field definition,
+layout data shape or ADR decision is asserted. No customization parity or
+module-gate completion is claimed.
+
+A later observation needs permitted evidence for one supported live flow and
+the review/approval path required by MEP-1355 before any write. Platform Lead
+owns wire/restore policy; UI Lead owns screen-evidence interpretation. Guessed
+contracts and synthetic policies must not be used to unlock live writes.
+
+Scope-specific restore statement: no reference page was opened for this issue;
+no field, layout, view, record or setting was created, changed or deleted.
+There is nothing from this issue to restore. The local window journal contains
+only an empty scaffold; this statement does not replace W5 global verification.
+Verification: CW1–CW6 coverage, preservation of existing evidence, privacy and
+neutral-language checks, and git diff --check. Only documentation changed, so
+application tests and new reference captures are inapplicable. The issue's
+existing independent review stage reviews gap documentation only.
