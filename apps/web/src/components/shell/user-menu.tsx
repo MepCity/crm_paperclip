@@ -42,7 +42,7 @@ export function UserMenu({
       if (result.ok) {
         router.replace("/sign-in");
         router.refresh();
-      } else setError(t("shell.signOutError"));
+      } else setError(result.message || t("shell.signOutError"));
     } catch {
       setError(t("shell.signOutError"));
     } finally {

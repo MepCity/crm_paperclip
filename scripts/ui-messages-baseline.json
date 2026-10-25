@@ -2377,49 +2377,49 @@
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 829,
+    "line": 830,
     "column": 31,
     "hash": "2836cfca8acae68d"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 830,
+    "line": 831,
     "column": 33,
     "hash": "5a9133cebfab7531"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 836,
+    "line": 837,
     "column": 30,
     "hash": "75c4d64dd295ea85"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 839,
+    "line": 840,
     "column": 14,
     "hash": "fee59ce0ce197df2"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 842,
+    "line": 843,
     "column": 42,
     "hash": "d22a513c3f7305ec"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 843,
+    "line": 844,
     "column": 40,
     "hash": "97330d2cf2b46bb8"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 844,
+    "line": 845,
     "column": 32,
     "hash": "07c60b2f79382eb1"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 845,
+    "line": 846,
     "column": 34,
     "hash": "86a94a959b984925"
   },
@@ -4705,121 +4705,121 @@
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 115,
+    "line": 116,
     "column": 10,
     "hash": "b4e929d8bcfe0418"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 142,
+    "line": 143,
     "column": 14,
     "hash": "3a78695388b38b5c"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 150,
+    "line": 151,
     "column": 14,
     "hash": "24984fe2592707f8"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 157,
+    "line": 158,
     "column": 14,
     "hash": "dacca3cba3f346a4"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 164,
+    "line": 165,
     "column": 14,
     "hash": "94c116ee118a7299"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 173,
+    "line": 174,
     "column": 14,
     "hash": "0d24b42db450ca85"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 179,
+    "line": 180,
     "column": 18,
     "hash": "090512d93fcc3c0d"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 184,
+    "line": 185,
     "column": 22,
     "hash": "f514c310bd9e7f02"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 200,
+    "line": 202,
     "column": 12,
     "hash": "c910d474dcd724bf"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 208,
+    "line": 210,
     "column": 12,
     "hash": "1044a4c056d0d685"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 216,
+    "line": 218,
     "column": 12,
     "hash": "2c57faa0b6257edd"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 224,
+    "line": 226,
     "column": 12,
     "hash": "a749cc4a01647267"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 232,
+    "line": 234,
     "column": 12,
     "hash": "d079ee92c1cb3559"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 240,
+    "line": 242,
     "column": 12,
     "hash": "fadf4711a2619a30"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 248,
+    "line": 250,
     "column": 12,
     "hash": "969ccbd3cf6300ec"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 257,
+    "line": 259,
     "column": 12,
     "hash": "ef9992233a1892eb"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 265,
+    "line": 267,
     "column": 12,
     "hash": "6ee71699e8b69061"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 273,
+    "line": 275,
     "column": 12,
     "hash": "31d61c75fac97fd9"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 281,
+    "line": 283,
     "column": 12,
     "hash": "39c7fb1dc54fd272"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 290,
+    "line": 292,
     "column": 12,
     "hash": "b186714a4117b87a"
   },
@@ -5515,387 +5515,375 @@
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 37,
+    "line": 38,
     "column": 12,
     "hash": "9024c197d84940e4"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 38,
+    "line": 39,
     "column": 39,
     "hash": "b8c42654c8ce61a0"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 43,
+    "line": 44,
     "column": 55,
     "hash": "e0e31ce86d0b155c"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 44,
+    "line": 45,
     "column": 48,
     "hash": "969ccbd3cf6300ec"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 45,
+    "line": 46,
     "column": 50,
     "hash": "63dceb8800b2dd4a"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 46,
+    "line": 47,
     "column": 26,
     "hash": "cbaad3cf4a6507e5"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 47,
+    "line": 48,
     "column": 23,
     "hash": "00d84ab46e6345e1"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 48,
+    "line": 49,
     "column": 32,
     "hash": "90b8b09ae6709abe"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 103,
+    "line": 104,
     "column": 14,
     "hash": "96d741b61505fddc"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 110,
+    "line": 111,
     "column": 14,
     "hash": "893a48f90e1e083a"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 119,
+    "line": 120,
     "column": 14,
     "hash": "d09bc8ad384c8b51"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 126,
+    "line": 127,
     "column": 14,
     "hash": "d1186c9926ccdc62"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 141,
+    "line": 142,
     "column": 14,
     "hash": "8a7525b1492fb848"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 148,
+    "line": 149,
     "column": 16,
     "hash": "9fd728c66c9a256b"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 156,
+    "line": 157,
     "column": 14,
     "hash": "2108240e6f54d4f4"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 165,
+    "line": 166,
     "column": 14,
     "hash": "634de114775082f0"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 172,
+    "line": 173,
     "column": 18,
     "hash": "d406ade2958cb5b6"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 189,
+    "line": 190,
     "column": 14,
     "hash": "145603eb8a0bfa98"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 197,
+    "line": 198,
     "column": 16,
     "hash": "9fd728c66c9a256b"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 204,
+    "line": 205,
     "column": 18,
     "hash": "8ece895c9b32c643"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 211,
+    "line": 212,
     "column": 18,
     "hash": "e4b2f6c8d687c65d"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 229,
+    "line": 230,
     "column": 14,
     "hash": "b450645debe2cf0a"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 237,
+    "line": 238,
     "column": 18,
     "hash": "ff8f9c66114472c6"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 245,
+    "line": 246,
     "column": 18,
     "hash": "8ece895c9b32c643"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 252,
+    "line": 253,
     "column": 18,
     "hash": "18fdd549b2ed367a"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 259,
+    "line": 260,
     "column": 18,
     "hash": "464c4ffd019e1e96"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 266,
+    "line": 267,
     "column": 18,
     "hash": "c5276e27afba47df"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 273,
+    "line": 274,
     "column": 18,
     "hash": "07548c2c6511d4d1"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 286,
+    "line": 287,
     "column": 14,
     "hash": "373197624e9dd578"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 293,
+    "line": 294,
     "column": 18,
     "hash": "0e216164aa1991a8"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 299,
+    "line": 300,
     "column": 31,
     "hash": "e1dd7fef1179c4fd"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 300,
+    "line": 301,
     "column": 32,
     "hash": "f592e6a4db3c6638"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 301,
+    "line": 302,
     "column": 35,
     "hash": "4724f344c1c0e4a1"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 305,
+    "line": 306,
     "column": 16,
     "hash": "c16bc82bf1f04ede"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 314,
+    "line": 315,
     "column": 14,
     "hash": "c7634afcce2a39ab"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 322,
+    "line": 323,
     "column": 18,
     "hash": "c1dc92c680d9eae8"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 328,
+    "line": 329,
     "column": 18,
     "hash": "3c41dd4a71018673"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 334,
+    "line": 335,
     "column": 18,
     "hash": "c5276e27afba47df"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 341,
+    "line": 342,
     "column": 18,
     "hash": "07548c2c6511d4d1"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 352,
+    "line": 353,
     "column": 14,
     "hash": "b51b3696ac1bb6d3"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 360,
+    "line": 361,
     "column": 18,
     "hash": "3c41dd4a71018673"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 366,
+    "line": 367,
     "column": 18,
     "hash": "c5276e27afba47df"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 373,
+    "line": 374,
     "column": 18,
     "hash": "07548c2c6511d4d1"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 383,
+    "line": 384,
     "column": 14,
     "hash": "4edc8bfafc6bd936"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 390,
+    "line": 391,
     "column": 18,
     "hash": "0d7b5d5d70fd10a0"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 399,
+    "line": 400,
     "column": 14,
     "hash": "8dc37869d63b05bd"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 406,
+    "line": 407,
     "column": 18,
     "hash": "8ece895c9b32c643"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 412,
+    "line": 413,
     "column": 18,
     "hash": "18fdd549b2ed367a"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 421,
+    "line": 422,
     "column": 14,
     "hash": "3de162de1fec4684"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 428,
+    "line": 429,
     "column": 18,
     "hash": "8ece895c9b32c643"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 434,
+    "line": 435,
     "column": 18,
     "hash": "18fdd549b2ed367a"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 443,
+    "line": 444,
     "column": 14,
     "hash": "b80355750958f901"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 449,
+    "line": 450,
     "column": 16,
     "hash": "9fd728c66c9a256b"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 455,
+    "line": 456,
     "column": 18,
     "hash": "8ece895c9b32c643"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 461,
+    "line": 462,
     "column": 18,
     "hash": "18fdd549b2ed367a"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 478,
+    "line": 479,
     "column": 14,
     "hash": "eabe6df766e4afad"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 484,
+    "line": 485,
     "column": 16,
     "hash": "9fd728c66c9a256b"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 491,
+    "line": 492,
     "column": 18,
     "hash": "18fdd549b2ed367a"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 509,
+    "line": 510,
     "column": 14,
     "hash": "2249bd503ec47d72"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 516,
+    "line": 517,
     "column": 18,
     "hash": "8ece895c9b32c643"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 522,
+    "line": 523,
     "column": 18,
     "hash": "18fdd549b2ed367a"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 532,
+    "line": 533,
     "column": 14,
     "hash": "f1b7505afa5c9e2b"
-  },
-  {
-    "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 537,
-    "column": 39,
-    "hash": "f10ab892ba42ffa3"
-  },
-  {
-    "file": "apps/web/src/modules/accounts/accounts-related-lists.ts",
-    "line": 538,
-    "column": 40,
-    "hash": "5f632294cd2846e6"
   },
   {
     "file": "apps/web/src/modules/accounts/accounts-timeline.ts",
@@ -12151,177 +12139,243 @@
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 51,
+    "line": 58,
     "column": 20,
     "hash": "17ad8cd474a81ac0"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 55,
+    "line": 62,
     "column": 25,
     "hash": "950b520d8da8296d"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 72,
+    "line": 79,
     "column": 25,
     "hash": "f1b7505afa5c9e2b"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 73,
-    "column": 75,
-    "hash": "d7f38ccb9931b44a"
-  },
-  {
-    "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 77,
+    "line": 80,
     "column": 38,
     "hash": "7da8bd5bb5751272"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 103,
+    "line": 106,
     "column": 28,
     "hash": "900a704da75398e6"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 113,
+    "line": 116,
     "column": 28,
     "hash": "1744b96470b51bf3"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 123,
+    "line": 126,
     "column": 28,
     "hash": "090ed4316f1d99fd"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 133,
+    "line": 136,
     "column": 28,
     "hash": "f148224ae44fb843"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 143,
+    "line": 146,
     "column": 28,
     "hash": "a3c831e825f18e8e"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 151,
+    "line": 154,
     "column": 69,
     "hash": "49c266baaaa70981"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 154,
+    "line": 157,
     "column": 80,
     "hash": "0e91610117029a62"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 162,
-    "column": 58,
+    "line": 166,
+    "column": 23,
     "hash": "98be79c6ebd053a9"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 163,
-    "column": 58,
+    "line": 167,
+    "column": 25,
+    "hash": "c394a21a2396ca66"
+  },
+  {
+    "file": "apps/web/src/modules/social/social-connected-screen.tsx",
+    "line": 170,
+    "column": 23,
     "hash": "9685a319d0008d47"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 164,
-    "column": 58,
+    "line": 171,
+    "column": 25,
+    "hash": "803d2a0984160f35"
+  },
+  {
+    "file": "apps/web/src/modules/social/social-connected-screen.tsx",
+    "line": 174,
+    "column": 23,
     "hash": "9807a23d19fdf7b2"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 165,
-    "column": 58,
+    "line": 175,
+    "column": 25,
+    "hash": "eacb702689a77e99"
+  },
+  {
+    "file": "apps/web/src/modules/social/social-connected-screen.tsx",
+    "line": 178,
+    "column": 23,
     "hash": "72834494991c2bb0"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 166,
-    "column": 58,
+    "line": 179,
+    "column": 25,
+    "hash": "f7f7b1b3e540c21c"
+  },
+  {
+    "file": "apps/web/src/modules/social/social-connected-screen.tsx",
+    "line": 182,
+    "column": 23,
     "hash": "3e48249541b47dfc"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 181,
+    "line": 183,
+    "column": 25,
+    "hash": "9914a3183112dc92"
+  },
+  {
+    "file": "apps/web/src/modules/social/social-connected-screen.tsx",
+    "line": 199,
     "column": 57,
     "hash": "73b187f74d0e96d6"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 201,
-    "column": 56,
+    "line": 220,
+    "column": 21,
     "hash": "6e588aaed9700f0a"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 202,
-    "column": 56,
+    "line": 221,
+    "column": 23,
+    "hash": "4516b287dd380e89"
+  },
+  {
+    "file": "apps/web/src/modules/social/social-connected-screen.tsx",
+    "line": 224,
+    "column": 21,
     "hash": "3e78dfab958097aa"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 210,
+    "line": 225,
+    "column": 23,
+    "hash": "f604e7b5a5ad832d"
+  },
+  {
+    "file": "apps/web/src/modules/social/social-connected-screen.tsx",
+    "line": 234,
     "column": 43,
     "hash": "aa570486b4d1c22f"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 215,
-    "column": 52,
+    "line": 240,
+    "column": 17,
     "hash": "a5147fbbae953832"
   },
   {
     "file": "apps/web/src/modules/social/social-connected-screen.tsx",
-    "line": 216,
-    "column": 52,
+    "line": 241,
+    "column": 19,
+    "hash": "af1803e757750ed2"
+  },
+  {
+    "file": "apps/web/src/modules/social/social-connected-screen.tsx",
+    "line": 244,
+    "column": 17,
     "hash": "daeaf38abf628351"
   },
   {
+    "file": "apps/web/src/modules/social/social-connected-screen.tsx",
+    "line": 245,
+    "column": 19,
+    "hash": "7957f8c9025ce926"
+  },
+  {
     "file": "apps/web/src/modules/social/social-entry-screen.tsx",
-    "line": 10,
+    "line": 121,
     "column": 18,
     "hash": "3babb7e39dbe606a"
   },
   {
     "file": "apps/web/src/modules/social/social-entry-screen.tsx",
-    "line": 26,
-    "column": 53,
-    "hash": "59f5c2c7af1285a4"
+    "line": 126,
+    "column": 69,
+    "hash": "07cc29e26e47f727"
   },
   {
     "file": "apps/web/src/modules/social/social-entry-screen.tsx",
-    "line": 34,
+    "line": 135,
+    "column": 20,
+    "hash": "50db8d6024ba83e1"
+  },
+  {
+    "file": "apps/web/src/modules/social/social-entry-screen.tsx",
+    "line": 138,
     "column": 8,
     "hash": "7a9267ac27560c89"
   },
   {
-    "file": "apps/web/src/modules/social/social-entry-screen.tsx",
-    "line": 37,
-    "column": 78,
-    "hash": "9160aa2864e4e198"
+    "file": "apps/web/src/modules/social/social-record-card.tsx",
+    "line": 31,
+    "column": 6,
+    "hash": "252f10c83610ebca"
   },
   {
     "file": "apps/web/src/modules/social/social-record-card.tsx",
-    "line": 6,
-    "column": 27,
+    "line": 40,
+    "column": 12,
     "hash": "f10ab892ba42ffa3"
   },
   {
     "file": "apps/web/src/modules/social/social-record-card.tsx",
-    "line": 7,
-    "column": 28,
+    "line": 42,
+    "column": 14,
+    "hash": "3d9ff2e7cdd2f408"
+  },
+  {
+    "file": "apps/web/src/modules/social/social-record-card.tsx",
+    "line": 46,
+    "column": 12,
     "hash": "5f632294cd2846e6"
+  },
+  {
+    "file": "apps/web/src/modules/social/social-record-card.tsx",
+    "line": 48,
+    "column": 14,
+    "hash": "af1b4981736d5a4d"
   },
   {
     "file": "apps/web/src/modules/solutions/definition.ts",
@@ -12601,219 +12655,441 @@
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 54,
+    "line": 59,
     "column": 18,
     "hash": "f514c310bd9e7f02"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 58,
+    "line": 63,
     "column": 46,
     "hash": "f514c310bd9e7f02"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 60,
+    "line": 65,
     "column": 60,
     "hash": "dde3a6e5fbe525d8"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 74,
+    "line": 79,
     "column": 60,
     "hash": "dcc839a4015c4b7d"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 89,
+    "line": 94,
     "column": 17,
     "hash": "78f5748d35c323c6"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 96,
+    "line": 95,
+    "column": 19,
+    "hash": "c1a89d7bce7dfc46"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
+    "line": 101,
     "column": 36,
     "hash": "1887ae0dea73609d"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 99,
+    "line": 104,
     "column": 23,
     "hash": "09d0c5885b92d55b"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
     "line": 105,
+    "column": 25,
+    "hash": "609183f94596e57b"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
+    "line": 110,
     "column": 82,
     "hash": "0441e13846145da0"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 109,
+    "line": 114,
     "column": 82,
     "hash": "5a7eae3f11205064"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 153,
+    "line": 158,
     "column": 27,
     "hash": "c2e36bec42893ed2"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 154,
+    "line": 159,
     "column": 25,
     "hash": "cf650fffb6360444"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 155,
+    "line": 160,
     "column": 68,
     "hash": "1a1e6f9535027358"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 162,
+    "line": 167,
     "column": 25,
     "hash": "c2e36bec42893ed2"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 163,
+    "line": 168,
     "column": 74,
     "hash": "1a1e6f9535027358"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 175,
+    "line": 180,
     "column": 50,
     "hash": "6dac2da86598c09f"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 179,
+    "line": 184,
     "column": 24,
     "hash": "4a7870205fd96778"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 180,
+    "line": 185,
     "column": 24,
     "hash": "ff8059dc6752afdd"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 181,
+    "line": 186,
     "column": 24,
     "hash": "3574459a743dae1e"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 182,
+    "line": 187,
     "column": 24,
     "hash": "76cf8e5545ecc40f"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 197,
-    "column": 28,
+    "line": 203,
+    "column": 17,
     "hash": "e30f00b3a3fd2d00"
   },
   {
     "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 198,
-    "column": 28,
+    "line": 204,
+    "column": 19,
+    "hash": "b0e7a71caee8231b"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
+    "line": 207,
+    "column": 17,
     "hash": "8ba973bfad5d07c3"
   },
   {
+    "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
+    "line": 208,
+    "column": 19,
+    "hash": "c83b854b312f80a2"
+  },
+  {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 10,
+    "line": 11,
     "column": 12,
     "hash": "7e35333588252c01"
   },
   {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 14,
+    "line": 15,
     "column": 12,
     "hash": "6e299878af11fe67"
   },
   {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 18,
+    "line": 19,
     "column": 12,
     "hash": "d0c85489117c667e"
   },
   {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 22,
+    "line": 23,
     "column": 12,
     "hash": "376d940aad00747f"
   },
   {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 26,
+    "line": 27,
     "column": 12,
     "hash": "ec07c6ffaf2b6c2c"
   },
   {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 30,
+    "line": 31,
     "column": 12,
     "hash": "fb5c7dfd16459cb6"
   },
   {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 80,
+    "line": 81,
+    "column": 80,
+    "hash": "a1682a1ae9b4c7fb"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 87,
+    "column": 99,
+    "hash": "f1b73a5f49a17615"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 90,
+    "column": 100,
+    "hash": "de4743c879734dc3"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 93,
+    "column": 100,
+    "hash": "920e413c7d411b61"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 100,
+    "column": 99,
+    "hash": "339cb33fe76d2a31"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 103,
+    "column": 82,
+    "hash": "a73cb4563ee2e72c"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 114,
+    "column": 10,
+    "hash": "9c2e8e1786527e31"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 119,
+    "column": 81,
+    "hash": "e6b05c156797e809"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 122,
+    "column": 82,
+    "hash": "4c398a52ab948e91"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 126,
+    "column": 84,
+    "hash": "18fdd549b2ed367a"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 131,
+    "column": 82,
+    "hash": "c785bd5b59a6bfa1"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 134,
+    "column": 83,
+    "hash": "7638a37745a8d873"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 138,
+    "column": 85,
+    "hash": "bfa4c0f795f8538f"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 143,
+    "column": 82,
+    "hash": "ad1773aa5a15134a"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 146,
+    "column": 83,
+    "hash": "0506e91d7e9ef7bf"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 150,
+    "column": 85,
+    "hash": "b4cc4b07c300103a"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 167,
+    "column": 101,
+    "hash": "1bf7d377edff083f"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 172,
+    "column": 82,
+    "hash": "0a30a815d67d7dd2"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 175,
+    "column": 83,
+    "hash": "3574459a743dae1e"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 179,
+    "column": 100,
+    "hash": "dfe95783edfef791"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 182,
+    "column": 83,
+    "hash": "d0dc6fee226b290b"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 186,
+    "column": 100,
+    "hash": "5697d03daef4de9c"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 189,
+    "column": 83,
+    "hash": "408ee7db63b41825"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 201,
+    "column": 10,
+    "hash": "13f1b3bc74987a36"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 220,
+    "column": 101,
+    "hash": "fc0e6719735509f8"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 223,
+    "column": 82,
+    "hash": "b0153bdab9bb2389"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 231,
+    "column": 101,
+    "hash": "4d8ca8e59c813f36"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 237,
+    "column": 85,
+    "hash": "b565fb1a53b2026b"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 240,
+    "column": 83,
+    "hash": "1e264a5853aac08d"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 258,
+    "column": 10,
+    "hash": "d5590907a82a4767"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 261,
+    "column": 85,
+    "hash": "9896ed1768df4dc5"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 264,
+    "column": 85,
+    "hash": "49dca65f362fee40"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 267,
+    "column": 83,
+    "hash": "63a19555b88b40fb"
+  },
+  {
+    "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
+    "line": 286,
     "column": 18,
     "hash": "34b2f2f34b7fafd9"
   },
   {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 84,
+    "line": 290,
     "column": 46,
     "hash": "a1682a1ae9b4c7fb"
   },
   {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 85,
+    "line": 291,
     "column": 51,
     "hash": "54e0ffe00567938a"
   },
   {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 87,
+    "line": 293,
     "column": 20,
     "hash": "5ce9c335903ca9e5"
   },
   {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 95,
+    "line": 301,
     "column": 24,
     "hash": "bfb549220c60fc91"
   },
   {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 105,
+    "line": 311,
     "column": 24,
     "hash": "cdc93d1c8fe9a2af"
   },
   {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 116,
+    "line": 322,
     "column": 73,
     "hash": "f444a603518528e6"
   },
   {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 135,
-    "column": 100,
-    "hash": "983f311018642b0a"
+    "line": 346,
+    "column": 20,
+    "hash": "bddef5dab3bbf2f3"
   },
   {
     "file": "apps/web/src/modules/visits/visits-entry-screen.tsx",
-    "line": 138,
-    "column": 78,
-    "hash": "9160aa2864e4e198"
+    "line": 349,
+    "column": 8,
+    "hash": "983f311018642b0a"
   },
   {
     "file": "apps/web/src/modules/workflow-rules/workflow-rule-detail-screen.tsx",

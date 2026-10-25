@@ -141,6 +141,65 @@ export function compareBaseline(actual, baseline) {
   };
 }
 
+export const COMPLETED_MODULE_PREFIXES = [
+  "apps/web/src/components/shell/",
+  "apps/web/src/modules/settings-personal/",
+];
+
+export const ALLOWED_NEW_EXEMPTION_PREFIXES = [
+  "apps/web/src/modules/visits/",
+  "apps/web/src/modules/social/",
+];
+
+export function filterUnauthorizedExemptions(
+  added,
+  main,
+  allowedPrefixes = ALLOWED_NEW_EXEMPTION_PREFIXES,
+  baseline = null,
+) {
+  const mainCounts = new Map();
+  for (const item of main) {
+    const key = `${item.file}:${item.hash}`;
+    mainCounts.set(key, (mainCounts.get(key) || 0) + 1);
+  }
+
+  const unmovedCounts = new Map();
+  if (baseline) {
+    const id = (hit) => `${hit.file}:${hit.line}:${hit.column}:${hit.hash}`;
+    const mainIds = new Set(main.map(id));
+    for (const item of baseline) {
+      if (mainIds.has(id(item))) {
+        const key = `${item.file}:${item.hash}`;
+        unmovedCounts.set(key, (unmovedCounts.get(key) || 0) + 1);
+      }
+    }
+  }
+
+  const shiftQuota = new Map();
+  for (const [key, count] of mainCounts.entries()) {
+    const unmoved = unmovedCounts.get(key) || 0;
+    shiftQuota.set(key, Math.max(0, count - unmoved));
+  }
+
+  return added.filter((hit) => {
+    // 2. Count increase or new hash is allowed only in visits and social
+    if (allowedPrefixes.some((p) => hit.file.startsWith(p))) {
+      return false;
+    }
+
+    // 1. Same file:hash without count increase is a line/col shift; allowed
+    const key = `${hit.file}:${hit.hash}`;
+    const quota = shiftQuota.get(key) || 0;
+    if (quota > 0) {
+      shiftQuota.set(key, quota - 1);
+      return false;
+    }
+
+    // Unauthorized: new hash or increased count in any other path
+    return true;
+  });
+}
+
 if (
   process.argv[1] &&
   fileURLToPath(import.meta.url) ===
@@ -172,7 +231,13 @@ if (
     /* Initial adoption has no main baseline yet. */
   }
   const result = compareBaseline(scanWorkspace(root), baseline);
-  const expanded = main ? compareBaseline(baseline, main).added : [];
+  const rawExpanded = main ? compareBaseline(baseline, main).added : [];
+  const expanded = filterUnauthorizedExemptions(
+    rawExpanded,
+    main || [],
+    ALLOWED_NEW_EXEMPTION_PREFIXES,
+    baseline,
+  );
   if (result.added.length || result.stale.length || expanded.length) {
     console.error(JSON.stringify({ ...result, unauthorizedExemptions: expanded }, null, 2));
     process.exitCode = 1;

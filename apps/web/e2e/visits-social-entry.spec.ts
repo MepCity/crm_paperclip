@@ -59,7 +59,7 @@ test("Visits and Social entry controls stay local inside the shell", async ({
 
   // V02–V07: Direct indicator selection and slide text verification
   const expectedSlides = [
-    { title: "Generate More Qualified Leads", text: "Discover interested visitors" },
+    { title: "Generate More Qualified Leads", text: "Identify important prospects" },
     { title: "Understand Your Visitors", text: "Explore how visitors discover" },
     { title: "Start Meaningful Conversations", text: "Reach visitors while" },
     { title: "Recognize Returning Interest", text: "Keep website engagement" },
@@ -98,19 +98,17 @@ test("Visits and Social entry controls stay local inside the shell", async ({
     await expect(nav.locator('[aria-current="page"]')).toHaveCount(1);
     const setup = page.getByRole("button", { name: label, exact: true });
     await expect(setup).toBeVisible();
-    await page.screenshot({ path: testInfo.outputPath(`${module.toLowerCase()}-entry.png`) });
-    await expect(setup).toHaveAttribute("aria-disabled", "true");
-    if (module === "Visits") {
-      // V09: Accessible description explaining setup unavailability
-      await expect(setup).toHaveAccessibleDescription(
-        /Integration not connected\. Setup is not available in this build\./,
-      );
-    }
     await setup.click({ force: true });
+    await expect(
+      page.getByText(
+        module === "Visits"
+          ? "Contact your administrator to set up visitor tracking."
+          : "Contact your administrator to set up social media accounts.",
+      ),
+    ).toBeVisible();
     await setup.focus();
     await setup.press("Enter");
     await setup.press("Space");
-    await expect(page.getByText(/Integration not connected/)).toBeVisible();
     await expect(page).toHaveURL(`/crm/${slug}/tab/${module}`);
     await expect(page.getByRole("dialog")).toHaveCount(0);
     await expect(page.getByRole("table")).toHaveCount(0);
@@ -122,7 +120,35 @@ test("Visits and Social entry controls stay local inside the shell", async ({
     "aria-pressed",
     "true",
   );
+  await page.screenshot({ path: testInfo.outputPath("visits-entry.png") });
   await page.goto(`/crm/${slug}/tab/Social`);
   await expect(page.getByRole("heading", { name: /Engage customers/ })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("social-entry.png") });
+
+  // Contact Social card verification & screenshot
+  await page.goto(`/crm/${slug}/tab/Contacts/300000000000000000`);
+  await expect(page.locator("[data-record-frame]")).toBeVisible();
+  const contactSocialCard = page.locator("#related-list-social");
+  await contactSocialCard.scrollIntoViewIfNeeded();
+  await expect(contactSocialCard).toBeVisible();
+  await expect(
+    contactSocialCard.getByText(
+      "You cannot search a profile in Facebook. This has to be associated from the Social Tab",
+    ),
+  ).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("contact-social.png") });
+
+  // Account Social rail link & card verification & screenshot
+  await page.goto(`/crm/${slug}/tab/Accounts/500000000000000000`);
+  await expect(page.locator("[data-record-frame]")).toBeVisible();
+  const accountRailSocial = page
+    .locator("#record-related-rail")
+    .getByRole("link", { name: "Social", exact: true });
+  await expect(accountRailSocial).not.toHaveAttribute("aria-disabled", "true");
+  await accountRailSocial.click();
+  const accountSocialCard = page.locator("#related-list-social");
+  await expect(accountSocialCard).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("account-social.png") });
+
   assertNoPageErrors(pageErrors);
 });

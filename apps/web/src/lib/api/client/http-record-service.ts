@@ -9,6 +9,7 @@ import type {
   ListView,
   ModuleApiName,
   ModuleMetadata,
+  ModuleReadProjection,
   RecordData,
   RecordHistoryPage,
   RecordHistoryQuery,
@@ -20,6 +21,7 @@ import type {
 import {
   decodeActivitySummaries,
   decodeCurrency,
+  decodeField,
   decodeList,
   decodeModule,
   decodeRecord,
@@ -67,6 +69,7 @@ export type ViewSummary = Pick<ListView, "id" | "name" | "systemDefined" | "isDe
 
 export type ClientRecordService = RecordService & {
   invalidate?(module: ModuleApiName): void;
+  getModuleProjection?(module: ModuleApiName): Promise<ModuleReadProjection>;
   listViewSummaries(module: ModuleApiName): Promise<readonly ViewSummary[]>;
   listUsers(): Promise<readonly OrgMember[]>;
   /** Optional for in-memory screen fixtures; HTTP clients always supply this reader. */
@@ -79,6 +82,7 @@ export type ClientRecordService = RecordService & {
 
 export type HttpRecordService = ClientRecordService & {
   invalidate(module: ModuleApiName): void;
+  getModuleProjection(module: ModuleApiName): Promise<ModuleReadProjection>;
   listHistory(
     module: ModuleApiName,
     recordId: RecordId,
@@ -354,6 +358,23 @@ export function createHttpRecordService({
       return decodeCurrency(requiredWire(currencies[0], "Currency"));
     },
     getModule: loadModuleMetadata,
+
+    async getModuleProjection(module: ModuleApiName): Promise<ModuleReadProjection> {
+      const bundle = await loadModuleWire(module);
+      const metadata = metadataFromWire(bundle);
+      const fields = bundle.fields.map((field) => ({
+        ...decodeField(field),
+        id: field.id,
+        custom: field.custom_field,
+      }));
+      return {
+        ...metadata,
+        revision: bundle.revision,
+        layoutId: bundle.layout.id,
+        fields,
+        views: await service.listViews(module),
+      };
+    },
 
     async listViews(module: ModuleApiName): Promise<readonly ListView[]> {
       const summaries = await service.listViewSummaries(module);
