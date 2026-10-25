@@ -16,14 +16,12 @@ import type {
   SystemFiltersValue,
 } from "@crm/core/records";
 import { IMPORT_MODULES, TRANSFER_MODULES } from "@crm/core/transfer/types";
-import { useQueryClient } from "@tanstack/react-query";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { RecordBoard, type RecordBoardProps } from "@/components/records/board/record-board";
 import { DeduplicateJob } from "@/components/records/deduplicate/dedup-job";
 import { writePrintListQuery } from "@/components/records/print/print-list-handoff";
 import { supportsListPrint } from "@/components/records/print/print-modules";
-import { CustomViewDialog } from "@/components/records/views/custom-view-dialog";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ModuleKey } from "@/components/ui/later-module";
@@ -45,16 +43,15 @@ import { FilterPanel } from "./filter-panel";
 import { ListToolbar } from "./list-toolbar";
 import { MassUpdateDialog } from "./mass-update-dialog";
 import { massUpdateFieldsInLayoutOrder } from "./mass-update-fields";
+import { useCustomViewModal } from "./module-list-custom-view";
 import type { RelatedModuleDraft } from "./related-module-filter-editor";
 import { SelectionBar } from "./selection-bar";
 import { SelectionTagsDialog } from "./selection-tags-dialog";
 import type { SystemFilterDraft } from "./system-filter-editor";
 import "./module-list-page.css";
 import {
-  invalidateModuleLists,
   useDeleteRecords,
   useModule,
-  useModuleProjection,
   useRecordCount,
   useRecordList,
   useRefreshModuleListData,
@@ -62,8 +59,6 @@ import {
   useView,
   useViews,
 } from "@/lib/api/client/hooks";
-import { useClientRecordService } from "@/lib/api/client/provider";
-import { apiKeys } from "@/lib/api/client/query-keys";
 import {
   moduleDeduplicatePath,
   moduleDraftsPath,
@@ -199,13 +194,12 @@ function ListNotFound() {
   );
 }
 
+// biome-ignore format: preserve line numbers
 export function ModuleListScreen({
   orgSlug,
   config,
   viewId: routeViewId,
-  currentUserId,
-  userRole,
-  isAdmin,
+  currentUserId, isAdmin,
 }: ModuleListScreenProps) {
   const viewsQuery = useViews(config.module);
   const resolvedViewId = useMemo(() => {
@@ -222,30 +216,20 @@ export function ModuleListScreen({
   }
 
   return (
-    <ModuleListScreenLoaded
-      orgSlug={orgSlug}
-      config={config}
-      routeViewId={routeViewId}
-      viewId={resolvedViewId}
-      currentUserId={currentUserId}
-      userRole={userRole}
-      isAdmin={isAdmin}
-    />
+    // biome-ignore format: preserve line numbers
+    <ModuleListScreenLoaded orgSlug={orgSlug} config={config} routeViewId={routeViewId} viewId={resolvedViewId} currentUserId={currentUserId} isAdmin={isAdmin} />
   );
 }
 
+// biome-ignore format: preserve line numbers
 function ModuleListScreenLoaded({
   orgSlug,
   config,
   routeViewId,
   viewId,
-  currentUserId,
-  userRole,
-  isAdmin: explicitIsAdmin,
+  currentUserId, isAdmin,
 }: ModuleListScreenProps & { routeViewId?: string; viewId: string }) {
   const orgFormat = useFormat();
-  const isAdmin = Boolean(explicitIsAdmin ?? userRole === "admin");
-  const queryClient = useQueryClient();
   const router = useRouter();
   const refreshModuleListData = useRefreshModuleListData(config.module);
   const searchParams = useSearchParams();
@@ -300,28 +284,17 @@ function ModuleListScreenLoaded({
   const [exportOpen, setExportOpen] = useState(false);
   const [exportSelected, setExportSelected] = useState<string[] | undefined>(undefined);
   const [campaignsOpen, setCampaignsOpen] = useState(false);
-  const [customViewModal, setCustomViewModal] = useState<{
-    open: boolean;
-    mode: "create" | "edit";
-    viewId?: string;
-  } | null>(null);
   const campaignsModule =
     config.module === "Leads" || config.module === "Contacts" ? config.module : null;
   const deleteRecords = useDeleteRecords(config.module);
 
   const viewsQuery = useViews(config.module);
   const moduleQuery = useModule(config.module);
-  const projectionQuery = useModuleProjection(config.module, {
-    enabled: Boolean(customViewModal?.open && isAdmin),
-  });
   const viewQuery = useView(config.module, viewId);
   const users = useUsers();
-  const service = useClientRecordService();
-
   const view = viewQuery.data;
-  const combinedViews = viewsQuery.data ?? [];
-  const serverViewId = viewId;
-
+  // biome-ignore format: preserve line numbers
+  const { onNewView, onEditView, modalElement } = useCustomViewModal({ config, orgSlug, currentUserId, isAdmin, view, views: viewsQuery.data, moduleFields: moduleQuery.data?.fields });
   const [columnsOpen, setColumnsOpen] = useState(false);
   const [selectedColumns, setSelectedColumns] = useState<{
     viewId: string;
@@ -361,24 +334,16 @@ function ModuleListScreenLoaded({
     () => combineCriteriaAnd([appliedCriteria, firstLetterCriteria(config.linkField, letter)]),
     [appliedCriteria, config.linkField, letter],
   );
-
-  const effectiveListCriteria = listCriteria;
-
   const listQuery = useMemo(() => {
     if (columnApiNames.length === 0) return null;
     // Row presentation may need a field that is not a visible column.
     const queryFields = config.allDayField
       ? [...new Set([...columnApiNames, config.allDayField])]
       : columnApiNames;
-    const base = listQueryFromSearchState(
-      serverViewId,
-      queryFields,
-      searchState,
-      eligibleSortFields,
-    );
+    const base = listQueryFromSearchState(viewId, queryFields, searchState, eligibleSortFields);
     return {
       ...base,
-      ...(effectiveListCriteria ? { filters: effectiveListCriteria } : {}),
+      ...(listCriteria ? { filters: listCriteria } : {}),
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
       ...(appliedCampaignFilter ? { campaignFilter: appliedCampaignFilter } : {}),
       ...(appliedSystemFilters ? { systemFilters: appliedSystemFilters } : {}),
@@ -393,16 +358,16 @@ function ModuleListScreenLoaded({
     columnApiNames,
     config.allDayField,
     config.activityRibbon,
-    effectiveListCriteria,
     eligibleSortFields,
+    listCriteria,
     searchState,
-    serverViewId,
+    viewId,
   ]);
 
   const countQuery = useMemo(
     () => ({
-      viewId: serverViewId,
-      ...(effectiveListCriteria ? { filters: effectiveListCriteria } : {}),
+      viewId,
+      ...(listCriteria ? { filters: listCriteria } : {}),
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
       ...(appliedCampaignFilter ? { campaignFilter: appliedCampaignFilter } : {}),
       ...(appliedSystemFilters ? { systemFilters: appliedSystemFilters } : {}),
@@ -413,8 +378,8 @@ function ModuleListScreenLoaded({
       appliedCampaignFilter,
       appliedSystemFilters,
       appliedRelatedModules,
-      effectiveListCriteria,
-      serverViewId,
+      listCriteria,
+      viewId,
     ],
   );
 
@@ -874,7 +839,6 @@ function ModuleListScreenLoaded({
         : inert,
     },
   ];
-
   return (
     <div
       className="module-list-page"
@@ -883,7 +847,7 @@ function ModuleListScreenLoaded({
     >
       <ViewTabStrip
         viewName={view.name}
-        views={config.inventory ? combinedViews : undefined}
+        views={config.inventory ? viewsQuery.data : undefined}
         pinnedViews={config.pinnedViews}
         searchable={config.viewMenuSearch}
         onViewChange={(id) => {
@@ -893,12 +857,7 @@ function ModuleListScreenLoaded({
             withSearchParams(config.paths.customList(orgSlug, config.module, id), params),
           );
         }}
-        onNewView={isAdmin ? () => setCustomViewModal({ open: true, mode: "create" }) : undefined}
-        onEditView={
-          isAdmin && view && !view.systemDefined && !view.isDefault
-            ? (id) => setCustomViewModal({ open: true, mode: "edit", viewId: id })
-            : undefined
-        }
+        {...{ onNewView, onEditView }}
       />
       {selectionActive && presentation === "table" ? (
         <SelectionBar
@@ -1055,6 +1014,7 @@ function ModuleListScreenLoaded({
           onConfirm={confirmDelete}
         />
       ) : null}
+      {modalElement}
       {columnsOpen && moduleQuery.data ? (
         <ManageColumnsDialog
           isOpen
@@ -1063,81 +1023,6 @@ function ModuleListScreenLoaded({
           allFields={moduleQuery.data.fields.filter((field) => field.views.view)}
           selectedColumns={columns.map((field) => field.apiName)}
           onSave={(names) => setSelectedColumns({ viewId, names })}
-        />
-      ) : null}
-      {customViewModal?.open ? (
-        <CustomViewDialog
-          open
-          mode={customViewModal.mode}
-          module={config.module}
-          orgSlug={orgSlug}
-          userId={currentUserId}
-          isAdmin={isAdmin}
-          expectedRevision={projectionQuery.data?.revision ?? ""}
-          isLoadingRevision={
-            isAdmin &&
-            (projectionQuery.isLoading ||
-              (Boolean(!projectionQuery.data?.revision) && !projectionQuery.isError))
-          }
-          revisionError={
-            projectionQuery.isError
-              ? projectionQuery.error instanceof Error
-                ? projectionQuery.error.message
-                : String(projectionQuery.error)
-              : null
-          }
-          initial={
-            customViewModal.mode === "edit"
-              ? customViewModal.viewId && customViewModal.viewId !== view?.id
-                ? (viewsQuery.data?.find((v) => v.id === customViewModal.viewId) ?? view)
-                : view
-              : undefined
-          }
-          fields={projectionQuery.data?.fields ?? moduleQuery.data?.fields ?? []}
-          onClose={() => setCustomViewModal(null)}
-          onSave={(savedView) => {
-            service.invalidate?.(config.module);
-            void queryClient.invalidateQueries({
-              queryKey: apiKeys.module(orgSlug, config.module),
-              exact: true,
-            });
-            void queryClient.invalidateQueries({
-              queryKey: apiKeys.views(orgSlug, config.module),
-            });
-            void queryClient.invalidateQueries({
-              queryKey: apiKeys.view(orgSlug, config.module, savedView.id),
-            });
-            void queryClient.invalidateQueries({
-              queryKey: apiKeys.moduleProjection(orgSlug, config.module),
-            });
-            invalidateModuleLists(queryClient, orgSlug, config.module);
-            setCustomViewModal(null);
-            if (customViewModal.mode === "create") {
-              router.push(config.paths.customList(orgSlug, config.module, savedView.id));
-            }
-          }}
-          onDelete={(deletedId) => {
-            service.invalidate?.(config.module);
-            void queryClient.invalidateQueries({
-              queryKey: apiKeys.module(orgSlug, config.module),
-              exact: true,
-            });
-            void queryClient.invalidateQueries({
-              queryKey: apiKeys.views(orgSlug, config.module),
-            });
-            void queryClient.invalidateQueries({
-              queryKey: apiKeys.moduleProjection(orgSlug, config.module),
-            });
-            setCustomViewModal(null);
-            if (deletedId === viewId) {
-              router.push(config.paths.defaultList(orgSlug, config.module));
-            } else {
-              queryClient.removeQueries({
-                queryKey: apiKeys.view(orgSlug, config.module, deletedId),
-              });
-              invalidateModuleLists(queryClient, orgSlug, config.module);
-            }
-          }}
         />
       ) : null}
       <div className="module-list-body">

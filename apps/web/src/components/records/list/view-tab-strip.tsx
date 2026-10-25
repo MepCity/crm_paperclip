@@ -7,6 +7,7 @@ import { Icons } from "@/components/ui/icon";
 import { Menu, MenuDivider, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { TextField } from "@/components/ui/text-field";
 
+// biome-ignore format: preserve line numbers
 export interface ViewTabStripProps {
   viewName: string;
   views?: readonly Pick<ListView, "id" | "name">[];
@@ -14,23 +15,16 @@ export interface ViewTabStripProps {
   pinnedViews?: readonly string[];
   /** Draws a Search box above Public Views that filters the rows by name (Tasks only). */
   searchable?: boolean;
-  onNewView?: () => void;
-  onEditView?: (id: string) => void;
-  onManageViews?: () => void;
+  onNewView?: () => void; onEditView?: (id: string) => void; onManageViews?: () => void;
 }
 
-export function ViewTabStrip({
-  viewName,
-  views,
-  onViewChange,
-  pinnedViews,
-  searchable,
-  onNewView,
-  onEditView,
-  onManageViews,
-}: ViewTabStripProps) {
-  const [publicOpen, setPublicOpen] = useState(true);
-  const [query, setQuery] = useState("");
+// biome-ignore format: preserve line numbers
+export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searchable, onNewView, onEditView, onManageViews }: ViewTabStripProps) {
+  const [publicOpen, setPublicOpen] = useState(true), [query, setQuery] = useState("");
+  // biome-ignore format: preserve line numbers
+  const itemNewProps = onNewView ? { onAction: onNewView } : { laterModule: "M11" as const };
+  // biome-ignore format: preserve line numbers
+  const mgrProps = onManageViews ? { onAction: onManageViews } : { laterModule: "M11" as const };
   const needle = query.trim().toLowerCase();
   const visibleViews = needle
     ? views?.filter((view) => view.name.toLowerCase().includes(needle))
@@ -131,6 +125,12 @@ export function ViewTabStrip({
             <MenuDivider />
             <MenuItem id="dropdown">Show custom views as Dropdown</MenuItem>
             <MenuDivider />
+            <MenuItem id="new" {...itemNewProps}>
+              New Custom View
+            </MenuItem>
+            <MenuItem id="manage"     {...mgrProps}>
+              Manage Custom View
+            </MenuItem>
             {onEditView ? (
               <MenuItem
                 id="edit"
@@ -139,19 +139,9 @@ export function ViewTabStrip({
                   if (current) onEditView(current.id);
                 }}
               >
-                Edit Current View
+                {"Edit Current View"}
               </MenuItem>
             ) : null}
-            <MenuItem id="new" laterModule={onNewView ? undefined : "M11"} onAction={onNewView}>
-              New Custom View
-            </MenuItem>
-            <MenuItem
-              id="manage"
-              laterModule={onManageViews ? undefined : "M11"}
-              onAction={onManageViews}
-            >
-              Manage Custom View
-            </MenuItem>
           </Menu>
         </MenuTrigger>
       ) : null}

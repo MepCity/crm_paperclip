@@ -142,12 +142,13 @@ export async function sendViewCommand(
     }
 
     if (res.status === 409 || body.code === "SCHEMA_REVISION_MISMATCH") {
+      const staleMessage =
+        "The views changed since this page loaded. Refresh to load the latest definition, then save again; your entries are kept.";
       return {
         ok: false,
         stale: true,
         forbidden: false,
-        message:
-          "The views changed since this page loaded. Refresh to load the latest definition, then save again; your entries are kept.",
+        message: staleMessage,
       };
     }
 
@@ -171,11 +172,12 @@ export async function sendViewCommand(
       fieldErrors,
     };
   } catch {
+    const fallbackErrorMessage = "The view could not be saved.";
     return {
       ok: false,
       stale: false,
       forbidden: false,
-      message: "The view could not be saved.",
+      message: fallbackErrorMessage,
     };
   }
 }
