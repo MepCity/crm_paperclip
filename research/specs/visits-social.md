@@ -496,3 +496,28 @@ writes were performed in these captures. Settings, profile association and
 publishing behaviour remain unobserved; no network/payload or success/error
 contract is invented. VW01, SW01 and SW02 remain bounded by the unconnected
 state; VSX01 external-account connection remains excluded by the board.
+
+
+## W4 final scope disposition — 26 October 2026
+
+The board's 00:25 Istanbul answer accepts the captured Visits loading/settled
+introduction and disconnected Social introduction as sufficient W4 live
+coverage. It directs closure without another live attempt, tool repair or
+guard relaxation. This supersedes the earlier pending-route disposition.
+
+VW01 and SW01 have live entry-state coverage only. Settings, enabled views,
+profile association, publishing and SW02 denied/expired/service-error states
+remain **not observed, documentation-based** to the extent supported by the
+existing R2 VD/SD sources. Unsupported messages and account-specific behaviour
+remain unknown. VSX01 external authorization/tracking/social connection stays
+excluded; no external account was connected and no message was sent.
+
+No Visits/Social object or setting was created. The historical empty-journal
+statements predate the Analytics experiment: final shared W4 allowedWrites=3,
+with that test dashboard board-deleted and absence-verified. The existing
+`w4-unsaved-exit-audit` has no open W4 object or setting; the separately retained
+W2 Documents item remains outside this claim. No fresh reference action or
+cleanup flag was issued for closure. [W5](/MEP/issues/MEP-1347) owns window-wide
+verification; its board-named 05:00 Istanbul check is not scheduled or certified
+by this document. This bounded W4 delivery is ready for independent review;
+no enabled-state parity, architecture or module-gate acceptance is claimed.

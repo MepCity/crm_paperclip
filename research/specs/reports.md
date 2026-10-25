@@ -930,3 +930,38 @@ no open W4 record and no open setting; only the separately retained W2 item
 remains. Seven background requests are refused, including passive dashboard
 metadata access without a click lock. No transient editor content was saved.
 These cancellation observations do not certify a saved-component delete flow.
+
+
+## W4 final scope disposition — 26 October 2026
+
+The board answered the supported-route interaction at 00:25 Istanbul on
+26 October and accepted the live coverage already collected as sufficient for
+W4. This supersedes the earlier pending-route/pause disposition, not the
+historical evidence limits. No new capture, write, tool repair or guard
+relaxation is authorized or performed for this closure.
+
+| Flow | Final evidence classification |
+| --- | --- |
+| Report entry and primary-module selection | Live observed entry only; RW01–RW04 builder, grouping, filtering, sorting and save remain **not observed, documentation-based** (R4 RD inventory) |
+| Report folder, favorite, sharing, scheduling, export and delete | RW05–RW10 **not observed, documentation-based**; retain each R4 source boundary, with no tested request/payload, download or recipient behaviour |
+| Empty private dashboard create | Live save observed (HTTP 201); no component persisted |
+| Dashboard delete control and confirmation | Analyst attempt blocked by delDashboard; **not observed, documentation-based** for the control flow; board-reported removal and passive absence verification establish cleanup only |
+| Dashboard edit and component create/edit/delete | **Not observed, documentation-based** (R4 AD inventory); quick-chart source/module/measure/criterion form and two Cancel steps are live observed, unsaved coverage only |
+| Dashboard/component period and filters | AW03 **not observed, documentation-based** (R4 AD04–AD06); no saved configuration or default inferred |
+
+Report savePrimaryModule and dashboard delDashboard guards remain unchanged.
+Documentation-based means the previously cited public-documentation candidates
+retain their original provenance; missing validation, success/error text,
+account-specific availability and wire contracts remain unknown. It does not
+turn an unobserved operation into verified parity.
+
+Cleanup reconciliation uses the already recorded board removal, two absence
+captures and `w4-unsaved-exit-audit`: cumulative allowedWrites=3 (one create,
+two passive access traces); no open W4 object or setting. No new cleanup flag
+or reference operation was issued. The separately retained W2 Documents item
+is outside this W4 cleanup claim. [W5](/MEP/issues/MEP-1347) retains window-wide
+verification ownership; the board named 05:00 Istanbul for that check, and this
+closure does not create or certify its schedule.
+
+This is the final bounded W4 research delivery for independent review under
+the board's reduced scope. It is not parity, architecture or module-gate approval.

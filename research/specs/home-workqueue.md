@@ -537,3 +537,33 @@ five blocked requests, categorized click-lock, host and denied-path. The latter
 include background queue data access; they were not retried outside the tool.
 Both managed captures retain W4 allowedWrites=3 and openItems containing only the
 separately retained W2 Documents item, with no open setting. No W4 write occurred.
+
+
+## W4 final scope disposition — 26 October 2026
+
+The board's 00:25 Istanbul answer accepts the collected live coverage as
+sufficient for W4 and closes further attempts. This final disposition
+supersedes earlier pending-route/gap-only closure statements. No new capture,
+write, tool repair or guard relaxation was performed for this closure.
+
+| Flow | Final evidence classification |
+| --- | --- |
+| Home introduction | Live observed setup curtain; onboarding was not dismissed |
+| Personal Home page add/edit/remove and widget add/edit/remove | HW01–HW03 **not observed, documentation-based** (R2 HD inventory); no saved layout, validation, confirmation or restoration behaviour certified |
+| Workqueue period menu/default | Live observed choices and current checkmark (WC01–WC03); date submenu, application, result counts and persistence **not observed, documentation-based** (R2 WD inventory) |
+| Workqueue filters, sorting and record/queue write actions | QW02–QW04 **not observed, documentation-based** (R2 WD inventory); no real or test row operated |
+| Workqueue permission-like state | Live rendered warning under blocked background requests; not an account permission conclusion |
+
+Documentation-based candidates keep their existing source limits; missing
+account-specific behaviour, success/error messages and requests remain unknown.
+The board accepted these limits, not an observed write contract or parity claim.
+There will be no new Home widget or Workqueue write attempt in W4.
+
+The earlier empty-journal statements describe the pre-live checkpoint only.
+The final shared W4 audit is cumulative allowedWrites=3 for the already cleaned
+Analytics dashboard and two passive access traces. Home/Workqueue introduced
+no saved object or setting; `w4-unsaved-exit-audit` records no open W4 item or
+setting. The separate W2 retention exception is not certified cleaned here.
+[W5](/MEP/issues/MEP-1347) owns global verification; the board named 05:00
+Istanbul, without this closure creating or certifying that schedule. This final
+bounded research delivery is ready for independent review, not a module gate.
