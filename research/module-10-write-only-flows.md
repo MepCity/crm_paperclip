@@ -1,6 +1,8 @@
 # Module 10 — flows that can only be studied by writing
 
-- Status: Draft for CEO/board review
+- Status: Write-observation window closed as an observation gap (MEP-1343,
+  Platform Lead decision MEP-1355, 2026-10-25). Earlier documentation findings
+  remain separate from live evidence; see section 10.
 - Companion: `module-10-email-calendar-research-plan.md`,
   `module-10-night-test-protocol-draft.md`, `docs/adr/0009-real-email-and-calendar.md`
 - Rule: the reference CRM stays strictly read-only. Nothing here is run. The
@@ -443,3 +445,81 @@ error; it does not establish weekly/monthly layouts or ordinary event tiles.
   view switch, sidebar collapse, search or date navigation is invoked.
 - R9 should preserve the distinction between documented capabilities and
   unobserved results/validation. This note authorizes no further live action.
+
+## 10. W1 window disposition — no live write observations
+
+Decision date: 2026-10-25. Authority: Platform Lead's final decision in
+MEP-1355, including the board's recorded statement that no `BoardRecipient:`
+confirmation had been supplied. The dependency is complete because a gap
+closure was chosen, not because live activation became available.
+
+The temporary window permitted bounded observations by the CRM Analyst, but
+it did not itself satisfy the installed capture tool's activation conditions.
+No live policy file is installed in the research write-window directory. The
+issue has no activation policy block, and actual endpoint, body and cleanup
+contracts have not been established. The existing W0 examples are not proof
+of live request formats. The tool's recipient confirmation requirement was
+retained; no agent-authored confirmation or substitute policy was introduced.
+No capture-tool code or protection was changed for this issue.
+
+All rows below mean **not observed — gap** for this window. Earlier public
+help findings above remain documentation claims, not observed results.
+
+| Flow | Window result and remaining observation gap |
+| --- | --- |
+| W1 | Not observed — gap. Compose, empty/invalid recipient validation, send feedback, record email and timeline results. |
+| W2 | Not observed — gap. Reply/reply-all/forward recipients, quotes, subject prefixes, attachment carry-over and thread results. |
+| W3 | Not observed — gap. Draft create/save/edit/delete, autosave timing and resulting draft lists. |
+| W4 | Not observed — gap. Schedule, time-zone/past-time validation, edit and cancellation results. |
+| W5 | Not observed — gap. Meeting creation, board-only invitation, reschedule/cancel notices and invitation content. |
+| W6 | Not observed — gap. RSVP states, transitions, organizer feedback and external-invitee processing. |
+| W7 | Not observed — gap. Connection tests, reconnect/disconnect and permission/error states. No provider connection is authorized by this closure. |
+| W8 | Not observed — gap. First/ongoing sync, matching and deduplication. No sync was triggered. |
+| W9 | Not observed — gap. Template create/edit/copy/delete, merge-field picker, preview and validation. |
+| W10 | Not observed — gap. Calendar integration, conflicts and deletion propagation. No external service was connected. |
+| W11 | Not observed — gap. Import completion notification text. No import was performed. |
+| W12 | Not observed — gap. Saved tracking choices, open/click results and status transitions. |
+| W13 | Not observed — gap. Record-originated send, manual association/removal and address matching results. |
+| W14 | Not observed — gap. Delivery failures, bounce/unsubscribe feedback and blocked-address wording. No failure was deliberately induced. |
+| W15 | Not observed — gap. Mass-mail/merge preview and results. Mass/campaign sending was excluded from the window. |
+| W16 | Not observed — gap. Workflow email actions belong to Module 12; no automation was created here. |
+| W17 | Not observed — gap. Calendar event create/edit/delete, recurrence scopes, drag/resize and conflicts. |
+| W18 | Not observed — gap. File attachment upload/remove/send, limits and inline-image feedback. |
+| W19 | Not observed — gap. Saved mail-sharing/permission choices and downstream visibility. |
+
+Additional requested settings observations also remain gaps: signature
+create/edit/delete and sender association, compose/email preference saving,
+personal working hours, organization business hours and calendar defaults.
+No previous/new setting values were collected because no setting was changed.
+
+### Exact text and evidence boundary
+
+There are no new observed validation, success or error messages, screenshots,
+numbered control inventories, loading/empty states or permission-state captures
+from this window. No live reference route or browser action was taken in this
+issue. Historical capture limits in the companion specs remain unchanged.
+Do not implement guessed messages as if this window verified them.
+
+### Open questions retained
+
+1. What are the exact field-validation and success/error texts for the requested
+   mail, template, signature, calendar and settings writes?
+2. What live endpoint/body and reversible cleanup contracts would permit a
+   separately approved, single-flow capture adapter? No such adapter is claimed.
+3. What are the unresolved invitation/RSVP, recurrence/drag/resize, draft,
+   scheduled-send, association and sharing results listed in the table?
+4. Which mail/calendar states require unavailable access or a provider
+   connection? This closure establishes neither access nor a connection.
+
+These are recorded gaps, not pending permission requests or scheduled retries.
+A future live observation needs a new bounded issue and the required platform
+approvals; this document does not authorize it.
+
+### Issue-scoped cleanup statement
+
+No reference record, draft, message, template, event, attachment, invitation,
+automation or setting was created, changed, sent or deleted by this issue.
+The local window change log contains its header and no operation rows at the
+preflight check. There is no issue-scoped test item or setting to restore.
+This statement does not replace the umbrella W5 final cleanup report or
+assert the state of other issues.
