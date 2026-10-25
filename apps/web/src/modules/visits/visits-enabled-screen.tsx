@@ -192,7 +192,7 @@ export function VisitDetailScreen({ orgSlug, visitId }: { orgSlug: string; visit
   const back = `/crm/${encodeURIComponent(orgSlug)}/tab/Visits?state=populated`;
   if (!visit) {
     return (
-      <section aria-label="Visit detail" className="px-6 py-6 text-text">
+      <section aria-label={t("modules.visits.visitDetail")} className="px-6 py-6 text-text">
         <p role="alert">{t("modules.visits.visitNotFound")}</p>
         <Link href={back} className="text-primary hover:underline">
           {t("modules.visits.backToVisits")}
@@ -201,7 +201,10 @@ export function VisitDetailScreen({ orgSlug, visitId }: { orgSlug: string; visit
     );
   }
   return (
-    <section aria-label="Visit detail" className="min-h-full bg-bg px-6 py-6 text-text">
+    <section
+      aria-label={t("modules.visits.visitDetail")}
+      className="min-h-full bg-bg px-6 py-6 text-text"
+    >
       <Link href={back} className="text-md text-primary hover:underline">
         {t("modules.visits.backToVisits")}
       </Link>

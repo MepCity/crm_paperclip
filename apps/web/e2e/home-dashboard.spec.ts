@@ -4,7 +4,7 @@ import { assertNoPageErrors, expect, test } from "./support/test";
 
 test.use({ viewport: { width: 1470, height: 900 } });
 
-test("Home personal page preview (HD01/HD06/HD16): selector, cards, empty state, no writes", async ({
+test("Home personal page preview (HD01/HD06/HD16): period selector, cards, empty state, no writes", async ({
   page,
   pageErrors,
 }) => {
@@ -16,7 +16,8 @@ test("Home personal page preview (HD01/HD06/HD16): selector, cards, empty state,
   });
 
   await expect(page.getByTestId("home-onboarding")).toBeVisible();
-  await page.getByRole("combobox", { name: "Home page" }).selectOption("preview");
+  await expect(page.getByRole("combobox", { name: "Home page" })).toHaveCount(0);
+  await page.goto(`/crm/${org.slug}?state=preview`);
   await expect(page.getByRole("region", { name: "Open Tasks" })).toBeVisible();
   await expect(page.getByRole("region", { name: "Pipeline Deals by Stage" })).toBeVisible();
   await expect(page.getByTestId("deals-total")).toHaveText("Total deals: 9");
@@ -25,7 +26,7 @@ test("Home personal page preview (HD01/HD06/HD16): selector, cards, empty state,
   await expect(page.getByTestId("activities-overdue")).toBeVisible();
   await page.getByRole("combobox", { name: "Activity period" }).selectOption("next-week");
   await expect(page.getByText("Quarterly review")).toBeVisible();
-  await page.getByRole("combobox", { name: "Home page" }).selectOption("onboarding");
+  await page.goto(`/crm/${org.slug}`);
   await expect(page.getByTestId("home-onboarding")).toBeVisible();
 
   await page.goto(`/crm/${org.slug}?state=preview-empty`);

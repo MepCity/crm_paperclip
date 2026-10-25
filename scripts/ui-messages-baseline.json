@@ -11244,18 +11244,6 @@
     "hash": "0e76960093379060"
   },
   {
-    "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 195,
-    "column": 27,
-    "hash": "c2e36bec42893ed2"
-  },
-  {
-    "file": "apps/web/src/modules/visits/visits-enabled-screen.tsx",
-    "line": 204,
-    "column": 25,
-    "hash": "c2e36bec42893ed2"
-  },
-  {
     "file": "apps/web/src/modules/workflow-rules/workflow-rules-loading.tsx",
     "line": 12,
     "column": 41,

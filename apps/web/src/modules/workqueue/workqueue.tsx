@@ -115,7 +115,7 @@ export function Workqueue({
             variant="ghost"
             aria-describedby={unavailableDescId}
             className="workqueue-row"
-            onPress={() => unavailable("Jobs")}
+            onPress={() => unavailable(t("modules.workqueue.jobs"))}
           >
             <QueueIcon id="blueprint" />
             <span className="workqueue-label">{t("modules.workqueue.blueprint")}</span>
@@ -129,7 +129,7 @@ export function Workqueue({
                 aria-label={t("modules.workqueue.customizeQueue")}
                 aria-describedby={unavailableDescId}
                 size="sm"
-                onPress={() => unavailable("Queue management")}
+                onPress={() => unavailable(t("modules.workqueue.queueManagement"))}
               >
                 <Icons.settings aria-hidden className="size-4" />
               </Button>
@@ -138,7 +138,7 @@ export function Workqueue({
                 aria-label={t("modules.workqueue.suggestedQueue")}
                 aria-describedby={unavailableDescId}
                 size="sm"
-                onPress={() => unavailable("Queue creation")}
+                onPress={() => unavailable(t("modules.workqueue.queueCreation"))}
               >
                 <Icons.plus aria-hidden className="size-4" />
               </Button>
@@ -159,14 +159,10 @@ export function Workqueue({
                   <h3 className="text-sm font-semibold">{sectionLabel}</h3>
                   <Button
                     variant="ghost"
-                    aria-label={
-                      section === "Leads"
-                        ? t("modules.workqueue.addLeadsQueue")
-                        : `Add ${sectionLabel} queue`
-                    }
+                    aria-label={t("modules.workqueue.addSectionQueue", { section: sectionLabel })}
                     aria-describedby={unavailableDescId}
                     size="sm"
-                    onPress={() => unavailable("Queue creation")}
+                    onPress={() => unavailable(t("modules.workqueue.queueCreation"))}
                   >
                     <Icons.plus aria-hidden className="size-4" />
                   </Button>
@@ -184,7 +180,9 @@ export function Workqueue({
           })}
         </aside>
         <section
-          aria-label={`${definition.label} queue`}
+          aria-label={t("modules.workqueue.queueRegion", {
+            queue: getQueueLabel(definition.id, t),
+          })}
           aria-busy={pending}
           className="workqueue-table flex min-w-0 flex-1 flex-col overflow-hidden rounded-md border border-panel-border bg-surface"
         >

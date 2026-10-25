@@ -1,9 +1,12 @@
 import { cleanup, fireEvent, screen } from "@testing-library/react";
-import { afterEach, describe, expect, it } from "vitest";
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { LanguageProvider } from "@/i18n/client-provider";
 import { render } from "@/test/render";
 import { resolveHomeView } from "./fixture";
 import { HomeOnboarding } from "./home-onboarding";
 import { HomeContent, HomePreviewCards } from "./home-preview";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 afterEach(cleanup);
 
@@ -61,4 +64,25 @@ describe("HomePreviewCards", () => {
     render(<HomePreviewCards orgSlug="acme" empty={true} />);
     expect(screen.getAllByText(/local preview convention/)).toHaveLength(3);
   });
+});
+
+it("translates preview periods and headings without changing period IDs", () => {
+  render(
+    <LanguageProvider language="tr">
+      <HomePreviewCards orgSlug="acme" empty={false} />
+    </LanguageProvider>,
+  );
+  expect(screen.getAllByRole("option").map((option) => option.textContent)).toEqual([
+    "Bugün",
+    "Bu Hafta",
+    "Gelecek Hafta",
+    "Sonraki 7 Gün",
+  ]);
+  expect(screen.getAllByRole("columnheader", { name: "Son Tarih" }).length).toBeGreaterThan(0);
+  expect(screen.getByRole("table", { name: "Geciken Görevler" })).toBeTruthy();
+  fireEvent.change(screen.getByRole("combobox", { name: "Aktivite dönemi" }), {
+    target: { value: "next-week" },
+  });
+  expect(screen.getByRole("columnheader", { name: "Başlangıç" })).toBeTruthy();
+  expect(screen.getByText("Quarterly review")).toBeTruthy();
 });

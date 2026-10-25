@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import type { MessageKey } from "@/i18n/catalogs";
 import { useUiTranslations } from "@/i18n/client-provider";
 import {
   type ActivityRow,
@@ -17,14 +18,44 @@ import {
 import {
   dealStages,
   dealsCardFields,
-  dealsCardSource,
   emptyCopy,
   type HomeView,
   taskCardFields,
-  taskCardSource,
   taskRows,
 } from "./fixture";
 import { HomeOnboarding } from "./home-onboarding";
+
+const fieldKeys: Record<string, MessageKey> = {
+  Subject: "modules.home.columns.subject",
+  "Due Date": "modules.home.columns.dueDate",
+  Status: "modules.home.columns.status",
+  Priority: "modules.home.columns.priority",
+  "Related To": "modules.home.columns.relatedTo",
+  "Contact Name": "modules.home.columns.contactName",
+  Title: "modules.home.columns.title",
+  From: "modules.home.columns.from",
+  To: "modules.home.columns.to",
+  "Call Start time": "modules.home.columns.callStartTime",
+  Stage: "modules.home.columns.stage",
+  Deals: "modules.home.columns.deals",
+  Amount: "modules.home.columns.amount",
+};
+const periodKeys: Record<HomePeriod, MessageKey> = {
+  today: "modules.home.today",
+  "this-week": "modules.home.thisWeek",
+  "next-week": "modules.home.nextWeek",
+  "next-7-days": "modules.home.next7Days",
+};
+const typeKeys: Record<ActivityType, MessageKey> = {
+  Tasks: "modules.home.tasks",
+  Meetings: "modules.home.meetings",
+  Calls: "modules.home.calls",
+};
+
+function fieldLabel(field: string, t: ReturnType<typeof useUiTranslations>) {
+  const key = fieldKeys[field];
+  return key ? t(key) : field;
+}
 
 function Card({
   title,
@@ -44,7 +75,9 @@ function Card({
       <h3 className="text-base font-semibold">{title}</h3>
       <p className="mt-1 text-xs text-text-muted">{t("modules.home.sourceLabel", { source })}</p>
       <p className="text-xs text-text-muted">
-        {t("modules.home.fieldsLabel", { fields: fields.join(", ") })}
+        {t("modules.home.fieldsLabel", {
+          fields: fields.map((field) => fieldLabel(field, t)).join(", "),
+        })}
       </p>
       <div className="mt-4">{children}</div>
     </section>
@@ -76,13 +109,16 @@ function OpenActivities({ orgSlug, empty }: { orgSlug: string; empty: boolean })
             <table
               key={type}
               className="mt-2 w-full text-left text-sm"
-              aria-label={`${label} ${type}`}
+              aria-label={t("modules.home.activityTable", {
+                group: t(label === "Overdue" ? "modules.home.overdue" : "modules.home.upcoming"),
+                type: t(typeKeys[type]),
+              })}
             >
               <thead>
                 <tr>
                   {activityFields[type].map((f) => (
                     <th key={f} className="pb-1 font-semibold text-text-muted">
-                      {f}
+                      {fieldLabel(f, t)}
                     </th>
                   ))}
                 </tr>
@@ -128,7 +164,7 @@ function OpenActivities({ orgSlug, empty }: { orgSlug: string; empty: boolean })
         >
           {homePeriods.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.label}
+              {t(periodKeys[p.id])}
             </option>
           ))}
         </select>
@@ -158,7 +194,7 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
     >
       <Card
         title={t("modules.home.openTasks")}
-        source={taskCardSource}
+        source={t("modules.home.taskSource")}
         fields={taskCardFields}
         t={t}
       >
@@ -170,7 +206,7 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
               <tr>
                 {taskCardFields.map((f) => (
                   <th key={f} className="pb-2 font-semibold text-text-muted">
-                    {f}
+                    {fieldLabel(f, t)}
                   </th>
                 ))}
               </tr>
@@ -191,7 +227,7 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
       <OpenActivities orgSlug={orgSlug} empty={empty} />
       <Card
         title={t("modules.home.pipelineDeals")}
-        source={dealsCardSource}
+        source={t("modules.home.dealSource")}
         fields={dealsCardFields}
         t={t}
       >
@@ -204,7 +240,7 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
                 <tr>
                   {dealsCardFields.map((f) => (
                     <th key={f} className="pb-2 font-semibold text-text-muted">
-                      {f}
+                      {fieldLabel(f, t)}
                     </th>
                   ))}
                 </tr>

@@ -441,7 +441,12 @@
     "suggestedQueue": "Önerilen kuyruk",
     "addLeadsQueue": "Müşteri Adayları kuyruğu ekle",
     "unavailableNotice": "{what} bu önizlemede kullanılamaz: hiçbir değişiklik yapılmaz veya kaydedilmez.",
-    "unavailableSrOnly": "İşlem bu önizlemede kullanılamaz: hiçbir değişiklik yapılmaz veya kaydedilmez."
+    "unavailableSrOnly": "İşlem bu önizlemede kullanılamaz: hiçbir değişiklik yapılmaz veya kaydedilmez.",
+    "jobs": "İşler",
+    "queueManagement": "Kuyruk yönetimi",
+    "queueCreation": "Kuyruk oluşturma",
+    "addSectionQueue": "{section} kuyruğu ekle",
+    "queueRegion": "{queue} kuyruğu"
   },
   "home": {
     "openTasks": "Açık Görevler",
@@ -453,7 +458,27 @@
     "totalDeals": "Toplam fırsatlar: {count}",
     "today": "Bugün",
     "thisWeek": "Bu Hafta",
+    "nextWeek": "Gelecek Hafta",
+    "next7Days": "Sonraki 7 Gün",
     "thisMonth": "Bu Ay",
+    "tasks": "Görevler",
+    "meetings": "Toplantılar",
+    "calls": "Aramalar",
+    "columns": {
+      "subject": "Konu",
+      "dueDate": "Son Tarih",
+      "status": "Durum",
+      "priority": "Öncelik",
+      "relatedTo": "İlgilisi",
+      "contactName": "Kişi Adı",
+      "title": "Başlık",
+      "from": "Başlangıç",
+      "to": "Bitiş",
+      "callStartTime": "Arama Saati",
+      "stage": "Aşama",
+      "deals": "Satış Fırsatları",
+      "amount": "Tutar"
+    },
     "welcomeUser": "Hoş geldiniz, {name}",
     "skip": "Atla",
     "hello": "Merhaba",
@@ -500,7 +525,10 @@
         "description": "CRM'inizi daha akıllı ve daha etkileşimli hale getirmek için halihazırda kullandığınız araçları bağlayın.",
         "action": "Entegrasyonlara göz at"
       }
-    }
+    },
+    "activityTable": "{group} {type}",
+    "taskSource": "Özel Görünüm · Görevler · Açık Görevler",
+    "dealSource": "Toplama · Satış Fırsatları · Aşamaya Göre Satış Fırsatları"
   },
   "visits": {
     "visits": "Ziyaretler",
@@ -567,7 +595,8 @@
     "bringInsights": "Ziyaretçi içgörülerini ekibinizin müşteri konuşmalarıyla bir araya getirin.",
     "useInterest": "Bir sonraki konuşmaya odaklanmak için ziyaretçi ilgisinden yararlanın.",
     "visitsIntro": "Ziyaretçi tanıtımı",
-    "trackingFeatures": "Ziyaretçi takip özellikleri"
+    "trackingFeatures": "Ziyaretçi takip özellikleri",
+    "visitDetail": "Ziyaret detayı"
   },
   "social": {
     "social": "Sosyal",

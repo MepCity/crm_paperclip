@@ -441,7 +441,12 @@
     "suggestedQueue": "Suggested queue",
     "addLeadsQueue": "Add Leads queue",
     "unavailableNotice": "{what} is unavailable in this preview: no changes are made or saved.",
-    "unavailableSrOnly": "Action is unavailable in this preview: no changes are made or saved."
+    "unavailableSrOnly": "Action is unavailable in this preview: no changes are made or saved.",
+    "jobs": "Jobs",
+    "queueManagement": "Queue management",
+    "queueCreation": "Queue creation",
+    "addSectionQueue": "Add {section} queue",
+    "queueRegion": "{queue} queue"
   },
   "home": {
     "openTasks": "Open Tasks",
@@ -453,7 +458,27 @@
     "totalDeals": "Total deals: {count}",
     "today": "Today",
     "thisWeek": "This Week",
+    "nextWeek": "Next Week",
+    "next7Days": "Next 7 Days",
     "thisMonth": "This Month",
+    "tasks": "Tasks",
+    "meetings": "Meetings",
+    "calls": "Calls",
+    "columns": {
+      "subject": "Subject",
+      "dueDate": "Due Date",
+      "status": "Status",
+      "priority": "Priority",
+      "relatedTo": "Related To",
+      "contactName": "Contact Name",
+      "title": "Title",
+      "from": "From",
+      "to": "To",
+      "callStartTime": "Call Start time",
+      "stage": "Stage",
+      "deals": "Deals",
+      "amount": "Amount"
+    },
     "welcomeUser": "Welcome, {name}",
     "skip": "Skip",
     "hello": "Hello",
@@ -500,7 +525,10 @@
         "description": "Connect the tools you already use to make your CRM smarter and more interactive.",
         "action": "Browse integrations"
       }
-    }
+    },
+    "activityTable": "{group} {type}",
+    "taskSource": "Custom View · Tasks · Open Tasks",
+    "dealSource": "Aggregation · Deals · Pipeline Deals by Stage"
   },
   "visits": {
     "visits": "Visits",
@@ -567,7 +595,8 @@
     "bringInsights": "Bring visitor insights together with your team's customer conversations.",
     "useInterest": "Use visitor interest to focus on the next conversation.",
     "visitsIntro": "Visits introduction",
-    "trackingFeatures": "Visitor tracking features"
+    "trackingFeatures": "Visitor tracking features",
+    "visitDetail": "Visit detail"
   },
   "social": {
     "social": "Social",

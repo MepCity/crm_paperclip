@@ -97,6 +97,20 @@ test.describe("CRM modules Turkish localization", () => {
     await expect(page.getByRole("heading", { name: "CRM'inizi kurun" })).toBeVisible();
     await expect(page.getByRole("button", { name: "Ekibinizi davet edin" })).toBeVisible();
 
+    await page.goto(`/crm/${org.slug}?state=preview`);
+    await expect(page.getByRole("option", { name: "Bugün", exact: true })).toBeAttached();
+    await expect(page.getByRole("option", { name: "Bu Hafta", exact: true })).toBeAttached();
+    await expect(page.getByRole("option", { name: "Gelecek Hafta", exact: true })).toBeAttached();
+    await expect(page.getByRole("option", { name: "Sonraki 7 Gün", exact: true })).toBeAttached();
+    await expect(
+      page.getByRole("columnheader", { name: "Son Tarih", exact: true }).first(),
+    ).toBeVisible();
+    await expect(
+      page.getByRole("columnheader", { name: "Konu", exact: true }).first(),
+    ).toBeVisible();
+    await page.getByRole("combobox", { name: "Aktivite dönemi" }).selectOption("next-week");
+    await expect(page.getByRole("columnheader", { name: "Başlangıç", exact: true })).toBeVisible();
+
     // 1. Documents
     await page.goto(`/crm/${org.slug}/tab/Documents`);
     await expect(page.getByText("Ekip Klasörleri")).toBeVisible();
@@ -131,6 +145,18 @@ test.describe("CRM modules Turkish localization", () => {
     await page.goto(`/crm/${org.slug}/workqueue`);
     await expect(page.getByRole("heading", { name: "Benim İş Kuyruğu" })).toBeVisible();
     await expect(page.getByRole("heading", { name: "Görevler" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Başlayın", exact: true }).click();
+    await expect(page.getByRole("button", { name: "Kişiler kuyruğu ekle" })).toBeVisible();
+    await page.getByRole("button", { name: "Kuyruğu özelleştir" }).click();
+    await expect(
+      page.getByText(
+        "Kuyruk yönetimi bu önizlemede kullanılamaz: hiçbir değişiklik yapılmaz veya kaydedilmez.",
+      ),
+    ).toBeVisible();
+
+    await page.goto(`/crm/${org.slug}/tab/Visits/missing-visit`);
+    await expect(page.getByRole("region", { name: "Ziyaret detayı" })).toBeVisible();
 
     // 7. Visits & Social
     await page.goto(`/crm/${org.slug}/tab/Visits`);
