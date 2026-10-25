@@ -32,6 +32,8 @@ it("exposes table headers and tabs from the module filter to the rule link", asy
       .map((h) => h.textContent),
   ).toEqual(["Name", "Module", "Trigger", "Status"]);
   await user.tab();
+  expect(document.activeElement).toBe(screen.getByRole("button", { name: "Create Rule" }));
+  await user.tab();
   const filter = screen.getByRole("combobox", { name: "Filter workflow rules by module" });
   expect(document.activeElement).toBe(filter);
   await user.keyboard("{Escape}");
@@ -59,6 +61,7 @@ it("activates the named trigger retry GET link with Enter", async () => {
   expect(retry.getAttribute("href")).toBe(
     "/crm/synthetic/settings/workflow-rules?module=Leads&cursor=current",
   );
+  await user.tab();
   await user.tab();
   await user.tab();
   await user.tab();
@@ -117,6 +120,7 @@ it("activates the next-page GET link after the last row link", async () => {
   expect(next.getAttribute("href")).toBe(
     "/crm/synthetic/settings/workflow-rules?module=Leads&cursor=next",
   );
+  await user.tab();
   await user.tab();
   await user.tab();
   await user.tab();

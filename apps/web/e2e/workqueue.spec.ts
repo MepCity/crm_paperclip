@@ -65,6 +65,12 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
   // W04: Left: My Open Activity period (WD01)
   await expect(rail.getByRole("heading", { name: "My Open Activity", exact: true })).toBeVisible();
   await expect(rail.getByText("Today & Overdue", { exact: true })).toBeVisible();
+  await rail.getByRole("button", { name: "Activity period: Today & Overdue" }).click();
+  await expect(page.getByRole("menuitemradio")).toHaveCount(9);
+  await expect(
+    page.getByRole("menuitemradio", { name: "Today & Overdue", exact: true }),
+  ).toHaveAttribute("aria-checked", "true");
+  await page.keyboard.press("Escape");
 
   // W05, W06, W07: Activity queues in documented order (WD01)
   // Documented order: Tasks -> Meetings -> Calls
