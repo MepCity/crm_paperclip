@@ -687,3 +687,56 @@ R4 closes this bounded documentation research with U4/U6 partly answered and
 R2 Analytics gaps narrowed only functionally. All remaining access/visual
 questions above persist. UI Lead approval of this spec is not a module gate
 or permission to implement undocumented defaults or reference writes.
+
+## W4 write-window disposition — 2026-10-25
+
+MEP-1346 resumes after W0 and W3 completed. The final Platform Lead decision
+in [MEP-1355](/MEP/issues/MEP-1355#comment-68b28723-d4fb-4860-b352-c92690ff7d75)
+applies to W2–W4: unsupported live flows close as **unobserved gaps**. Installed
+window tooling is not a verified live endpoint/body/restore contract. No
+synthetic policy may be presented as a live contract. Send/invitation flows
+also require a board-authored recipient confirmation; the address in the task
+description alone does not satisfy that tool requirement. No policy, guard or
+adapter was changed here, and no new live observation was attempted.
+
+### Reports and Analytics gap inventory
+
+Every row below is **unobserved / open**. Existing R1–R4 observations and
+documentation remain evidence only to their stated extent. Requested test
+objects would have used the `ZZTEST-` prefix; none was created.
+
+| ID | Requested flow | Missing evidence / retained boundary |
+| --- | --- | --- |
+| RW01 | Create and save a tabular report | Builder steps, required fields, validation, save result, list insertion and cleanup verification |
+| RW02 | Create and save a summary report | Group configuration, subtotals, saved result and delete verification; RD02 is documentation only |
+| RW03 | Create and save a matrix report | Row/column configuration, intersections, validation and saved result; RD03 is documentation only |
+| RW04 | Grouping, filters and sorting | Editor options/defaults, apply versus persistence, result refresh and restored state; RD04–RD07 do not certify live behaviour |
+| RW05 | Create, organize and delete a report folder | Folder form, permissions, moving a test report, deletion restrictions and final absence |
+| RW06 | Favorite and unfavorite a test report | Persistence, category membership, ordering and restoration; the visible star is not proof of a successful toggle |
+| RW07 | Share a test report with the board user only | User picker, effective access, validation and exact restoration; no other recipient or user is authorized |
+| RW08 | Schedule report delivery to the board recipient only | Recipient confirmation, supported live contract, format/recurrence/timezone defaults, save result and cancellation; no scheduler or delivery created |
+| RW09 | Export a test report | Format dialog, validation, download/result and file contents remain unobserved; RD11 remains documentation, not a tested export contract |
+| RW10 | Delete test reports and verify cleanup | Confirmation, success/error state, disappearance and any recycle-bin lifecycle; no deletion was executed |
+| AW01 | Create, edit and delete a dashboard | Name/access defaults, validation, saved catalogue state and cleanup; AD01/AD07 remain documentation only |
+| AW02 | Add, edit and delete a dashboard component | Type-specific forms, required fields, preview, persistence, errors and cleanup; AD03 does not establish one universal form |
+| AW03 | Dashboard/component period and filters | Visible choices, default period, temporary versus saved values, refresh and restoration; AD04–AD06 remain documentation only |
+
+No literal validation, success, error, permission-denied, empty or loading copy
+was learned in W4. No new screenshot or numbered painted control inventory
+exists for these flows; RW/AW IDs track gaps, not observed controls. Previously
+blocked Analytics initialization writes remain blocked and unexplained. No
+guessed request paths, payloads, restoration procedures or API shapes are added.
+
+### Audit and next boundary
+
+W4 did not open the reference CRM, create a report/folder/dashboard/component,
+favorite, share, schedule, export, send, delete or change any preference. There
+is no W4 test object or setting to restore. The local write-window journal was
+inspected and contains its empty table scaffold only; it was not altered.
+This is a scoped no-write statement, not the global W5 cleanup report.
+
+[MEP-1347](/MEP/issues/MEP-1347) owns the window-wide verification and closure.
+The existing independent review stage checks this documentation and evidence
+boundary. This disposition is neither parity acceptance nor ADR/module-gate
+approval. A future live attempt requires the separately approved single-flow
+path in MEP-1355; it must not be inferred from this gap inventory.
