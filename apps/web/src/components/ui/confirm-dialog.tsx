@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-components";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { Button, type buttonStyles } from "./button";
 
 export interface ConfirmDialogProps {
@@ -61,6 +62,7 @@ function ConfirmDialogBody({
   descriptionId: string;
   onPendingChange: (pending: boolean) => void;
 }) {
+  const t = useUiTranslations();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [pending, setPending] = useState(false);
   const started = useRef(false);
@@ -110,7 +112,7 @@ function ConfirmDialogBody({
           onPress={close}
           isDisabled={disabled}
         >
-          {cancelLabel}
+          {cancelLabel === "Cancel" ? t("common.actions.cancel") : cancelLabel}
         </Button>
         <Button
           variant={resolvedConfirmVariant}
@@ -148,7 +150,11 @@ function ConfirmDialogBody({
             );
           }}
         >
-          {confirmLabel}
+          {confirmLabel === "Delete"
+            ? t("common.actions.delete")
+            : confirmLabel === "Save"
+              ? t("common.actions.save")
+              : confirmLabel}
         </Button>
       </div>
     </>

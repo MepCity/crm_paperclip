@@ -20,8 +20,10 @@
     "ipc:sweep": "tsx scripts/ipc-sweep.ts"
   },
   "devDependencies": {
+    "@babel/parser": "8.0.8",
     "@biomejs/biome": "^2.5.15",
     "@crm/db": "workspace:*",
+    "@formatjs/icu-messageformat-parser": "3.5.22",
     "@types/node": "^26.6.4",
     "@types/pg": "^8.23.1",
     "pg": "^8.23.1",

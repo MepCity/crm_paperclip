@@ -5,6 +5,7 @@ import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { PreferenceProvider } from "@/lib/preferences";
 import { CreateRecordsMenu } from "./create-records";
 import { GlobalSearch } from "./global-search";
@@ -24,6 +25,7 @@ export function AppShell({
   user: ShellUser;
   children: ReactNode;
 }) {
+  const t = useUiTranslations();
   const pathname = usePathname();
   const isSettings =
     pathname === `/crm/${orgSlug}/settings` || pathname.startsWith(`/crm/${orgSlug}/settings/`);
@@ -56,10 +58,10 @@ export function AppShell({
           }}
           className="sr-only focus:not-sr-only focus:fixed focus:left-4 focus:top-4 focus:z-50 focus:rounded-md focus:bg-surface focus:p-3 focus:text-text"
         >
-          Skip to content
+          {t("shell.skip")}
         </Link>
         <aside
-          aria-label="Navigation rail"
+          aria-label={t("shell.rail")}
           id="navigation-rail"
           className={`${isSettings ? "hidden" : railVisible === null ? "hidden md:flex" : railVisible ? "flex" : "hidden"} absolute inset-y-0 bottom-(--size-utility-strip-height) left-0 z-30 w-(--size-rail-width) max-w-full shrink-0 flex-col bg-rail-surface md:static`}
         >
@@ -71,7 +73,7 @@ export function AppShell({
               ref={hideControl}
               variant="railIcon"
               size="compact"
-              aria-label="Hide Menu"
+              aria-label={t("shell.hideMenu")}
               aria-controls="navigation-rail"
               aria-expanded={true}
               onPress={() => toggleRail(false)}
@@ -88,7 +90,7 @@ export function AppShell({
               {isSettings ? (
                 <Link
                   variant="icon"
-                  aria-label={isSettingsHome ? "Back to CRM" : "Back to Setup"}
+                  aria-label={isSettingsHome ? t("shell.backCrm") : t("shell.backSetup")}
                   href={isSettingsHome ? `/crm/${orgSlug}` : `/crm/${orgSlug}/settings`}
                   className="size-(--size-topbar-control-pitch) flex shrink-0 items-center justify-center rounded-full hover:bg-surface-hover"
                 >
@@ -100,7 +102,7 @@ export function AppShell({
                     ref={showControl}
                     variant="icon"
                     size="compact"
-                    aria-label="Show Menu"
+                    aria-label={t("shell.showMenu")}
                     aria-controls="navigation-rail"
                     aria-expanded={false}
                     onPress={() => toggleRail(true)}
@@ -117,7 +119,7 @@ export function AppShell({
               <CreateRecordsMenu orgSlug={orgSlug} />
               <Link
                 variant="icon"
-                aria-label="Calendar"
+                aria-label={t("shell.calendar")}
                 href={`/crm/${orgSlug}/calendar`}
                 className="size-(--size-topbar-control-pitch)"
               >
@@ -125,7 +127,7 @@ export function AppShell({
               </Link>
               <Link
                 variant="icon"
-                aria-label="Settings"
+                aria-label={t("shell.settings")}
                 href={`/crm/${orgSlug}/settings`}
                 className={`size-(--size-topbar-control-pitch) ${isSettings ? "rounded-md bg-surface-hover font-semibold text-text" : ""}`}
               >

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { ToastProvider } from "@/components/ui/toast";
+import { LanguageProvider } from "@/i18n/client-provider";
+import { requestLanguage } from "@/i18n/request";
 import { APP_NAME } from "../app-info";
-import { UiProvider } from "../components/ui/ui-provider";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -12,13 +13,14 @@ export const metadata: Metadata = {
   },
 };
 
-export default function RootLayout({ children }: { children: ReactNode }) {
+export default async function RootLayout({ children }: { children: ReactNode }) {
+  const language = await requestLanguage();
   return (
-    <html lang="en">
+    <html lang={language}>
       <body>
-        <UiProvider>
+        <LanguageProvider language={language}>
           <ToastProvider>{children}</ToastProvider>
-        </UiProvider>
+        </LanguageProvider>
       </body>
     </html>
   );

@@ -1,0 +1,14 @@
+{
+  "locale": "Locale Information",
+  "language": "Language",
+  "editLocale": "Edit locale information",
+  "saveError": "Language could not be saved. Please try again.",
+  "loadError": "Personal settings could not be loaded.",
+  "loading": "Loading personal settings…",
+  "countryLocale": "Country Locale",
+  "dateFormat": "Date Format",
+  "timeFormat": "Time Format",
+  "timeZone": "Time Zone",
+  "distanceUnit": "Preferred Unit for Distance",
+  "numberFormat": "Number Format"
+}
