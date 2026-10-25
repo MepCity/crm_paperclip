@@ -456,3 +456,47 @@ Later implementation checks should cover count/result consistency, supported
 module guards, safe existing-record navigation and absence of mutation requests.
 Research verification is documentation/diff review plus the forbidden-term hook;
 no application code changed, so no application tests are required for R2.
+
+## W4 write-window disposition — 2026-10-25
+
+MEP-1346 follows the final Platform Lead decision in
+[MEP-1355](/MEP/issues/MEP-1355#comment-68b28723-d4fb-4860-b352-c92690ff7d75):
+W2–W4 flows without a proven live endpoint/body/restore contract remain
+**unobserved gaps**. Window-tool installation does not supply that contract.
+No synthetic live policy, guard exception or adapter change was introduced.
+Existing R1 painted evidence and R2 public-documentation proposals retain
+their original limits; they are not successful write observations.
+
+### Home and Workqueue gap inventory
+
+Every row is **unobserved / open**. These IDs are gap tracking, not new
+numbered screenshot controls.
+
+| ID | Requested flow | Missing evidence / retained boundary |
+| --- | --- | --- |
+| HW01 | Add and remove a personal Home page | Page form, required fields, validation, save result, navigation insertion and final absence |
+| HW02 | Add, edit and remove Home widgets | Type-specific configuration, validation, saved layout, update result and cleanup; HD candidates remain documentation only |
+| HW03 | Edit and restore an existing Home page or widget | Exact previous values, supported setting scope, saved change and same-session verified restoration; no current layout was modified |
+| QW01 | Workqueue period selection | Complete choices/defaults, result/count update and whether the choice persists; Home activity periods must not be substituted |
+| QW02 | Workqueue filters | Fields/operators/values, apply/clear, count consistency, empty results and restoration; no saved filter was created |
+| QW03 | Workqueue sorting | Available columns, default/direction cycle, ties and preference persistence; no sort preference was changed |
+| QW04 | Workqueue actions on a test record | Supported row actions per module, confirmation/validation, permission failures, resulting record/queue state and cleanup; no real row was used |
+
+The R1 welcome dialog was not dismissed or bypassed. The automatic preference
+update blocked on earlier entry was not retried or allowed. No new capture was
+taken, so no additional painted control inventory or literal validation,
+success, error, empty, permission-denied or loading messages are claimed.
+No request or persistence contract is inferred from the earlier blocked call.
+
+### Audit and next boundary
+
+W4 did not open the reference CRM, add/edit/delete a page or widget, select
+a queue period/filter/sort, operate a row or change a preference. No test
+record was created. There is no W4 setting or object requiring restoration.
+The local write-window journal remains an empty table scaffold. This scoped
+statement does not replace [W5](/MEP/issues/MEP-1347) window-wide verification.
+
+The current independent review stage checks this gap record, not live parity.
+No ADR or module gate is approved by this delivery. Future live observation
+requires the separately approved single-flow path described in MEP-1355;
+documenting the gap does not authorize that attempt.
