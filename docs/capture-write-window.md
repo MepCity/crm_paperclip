@@ -199,3 +199,62 @@ The suite uses reserved `.invalid` hosts/addresses, synthetic identities,
 in-memory API responses and fake transports. Run the existing capture guard,
 step, partial-metadata and runtime tests as regression coverage. No product
 screen changed, so product E2E and a full application test run are inapplicable.
+
+## Observe mode (policy version 2, MEP-1360)
+
+Board decision 2026-10-25: the window may learn the wire contract from the first
+`ZZTEST-` write instead of requiring it up front, and cleanup goes through the UI.
+Version 1 policies behave exactly as before. A version 2 policy has no endpoint
+list:
+
+```json
+{"version":2,"windowIssueId":"<issue-uuid>","notBefore":"<iso>","expiresAt":"2026-10-26T04:00:00Z",
+ "boardRecipient":"<board address>","host":"<crm host>","objectPrefix":"ZZTEST-",
+ "modules":["Documents"]}
+```
+
+Publish it as a ```` ```capture-write-window-policy ```` block in the window issue
+description **or** in a board-user comment, together with the board-authored line
+`BoardRecipient: <address>`. Identity checks (CRM Analyst, assigned and executing,
+board or CTO issuer, in progress, time window) are unchanged.
+
+Command flags (all with `--write-window <issue> --agent crm-analyst
+--write-window-policy <file>`): `--zz-name ZZTEST-...` (required for any write, the
+object under test), `--fill`, `--upload <selector> <file>` (a file named `ZZTEST-*`,
+at most 1 MB, inside the research workspace `write-window/files/` directory; it is
+attached with no file chooser, so iframe/multipart uploads work), `--click`.
+
+Rules enforced by the tool:
+
+- A write request is sent only after a click on a write control (Save, Send, Create,
+  Add, Upload, Delete, ...) whose `ZZTEST-` name is visible on the page, within 60 s
+  and at most 6 writes per click. Import, export, mass, bulk, campaign, connect,
+  payment, login/logout, "select all", "empty", users/roles/profiles/license paths
+  are always refused.
+- The request must carry the `--zz-name` value (JSON, form or multipart), or only
+  registered ids, or belong to a logged setting change. Any e-mail address other than
+  the board recipient anywhere in path, query or body blocks the request.
+- Before sending, the method, id-normalised path, content type, body shape (JSON key
+  skeleton, multipart parts, form keys) and body hash are journaled and fsynced; the
+  first occurrence is stored in `contracts` (the observed wire contract). Ids in the
+  response of a write that carried the name are registered for that object.
+- Delete, trash and single recycle-bin purge are UI clicks. The click must sit in the
+  same row or dialog as the name, the object must be registered, and the request must
+  hit exactly one registered id (comma lists are refused).
+- Settings: log the previous value first with `--zz-setting "<name>=<value>"`
+  (journaled before any click). After reverting in the UI, run with
+  `--zz-setting-restored "<name>=<observed value>"`; it must equal the logged value.
+- Cleanup proof: `--zz-cleaned ZZTEST-...` on a page where the name must be absent in
+  every frame; the capture screenshot is the evidence. Open items are listed in the
+  capture metadata (`openItems`).
+- Expiry, journal durability and the read-only default are unchanged. Not supported:
+  `--write-window-restore` and `--write-window-setting` with a version 2 policy.
+
+## Observe mode: extra scope and parent evidence
+
+- Board evidence (`BoardRecipient:` line, optional policy block) is also read from board-authored comments on the window issue's direct parent, same company only. Agent comments never count.
+- Writes on a second host (for example the file service behind the Documents iframe) need an entry in the local, untracked `write-window/scope.json` next to the journal: `{"scopes":[{"host":"<host>","pathPrefix":"/<prefix>/"}]}` (max 4). All other write guards stay in force; host and prefix never go into the repository or comments.
+- The published policy block may use the neutral placeholders `"@board"` (recipient) and `"@primary"` (host); the real values stay in the local policy file, and the recipient is still proven by the board-authored `BoardRecipient:` line.
+- Observe-mode page guards no longer replace `Worker` (dedicated worker requests still pass the page route, checked offline); `SharedWorker` is refused with a real constructor. WebSocket and EventSource are left native (sockets are closed by the route, EventSource is read-only).
+- Observe-mode telemetry blocking applies to write methods only; a GET for a page script whose path merely contains "tracking" is a read and passes (blocking it left the Documents page without its file-service frame).
+- Controls inventory also lists unnamed small icons with a pointer cursor outside fields/cards (kind "pointer"), e.g. a header "+", with the same unique non-positional selector rules; clicking still goes through the normal guards.
