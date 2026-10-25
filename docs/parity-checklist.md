@@ -1519,6 +1519,66 @@ and obtain the pending board decisions before claiming full readiness.
 No reference CRM access or capture was performed for this checklist update
 (MEP-1265).
 
+## Module 11 — Customization
+
+Specs: `research/specs/customization-modules-fields.md`,
+`customization-company-locale.md`, `customization-personal-locale.md`.
+Closing QA is MEP-1349 on `main` `72f020a1`. The twelve minor findings were
+fixed in MEP-1352 and merged (`c8b5e697`, head `e15ec9e6`); Grok QA accepted
+that head by side-by-side comparison. Rows below are the MEP-1349 `parity`
+proposal adjusted to that fixed state. This checklist update did not open the
+reference CRM (MEP-1353).
+
+### Modules and Fields
+
+| # | Surface | Closing QA result | Verification |
+| --- | --- | --- | --- |
+| M11-MF-01 | Tab strip: Modules, Web Tabs, Global Sets, Deal Management; Modules selected | Done | `m11r1-modules-base` MF-36–39; MEP-1349 |
+| M11-MF-02 | Toolbar: module search, Custom Module, Team Module, assistant action, Create New Module | Done. The assistant control is a framed button with its own icon, carries no vendor or product name, and stays inert | MF-40–42; MEP-1352 item 4 |
+| M11-MF-03 | Table columns: Displayed In Tabs As, Module Name, Teamspace, Shared To, Last Modified, Status | Done | MF-43–73 |
+| M11-MF-04 | Module rows, including Workqueue between Home and Leads, with `1 Teamspaces` and a green status switch | Done. Workqueue was missing at closing QA and was added in MEP-1352 | MEP-1352 item 1 |
+| M11-MF-05 | Green status switch; information icon only beside the Leads and Contacts switches | Done. The icon was absent at closing QA | MEP-1352 item 2 |
+| M11-MF-06 | Leads Layouts: Back to Modules, module list, Layouts tab, Create New Layout, Standard row, overflow menu, status switch. No second settings sidebar and no static "Modules and Fields." title | Done. The double sidebar and static title were removed in MEP-1352 | ML-01–53; MEP-1352 items 3 and 7 |
+| M11-MF-07 | Leads Fields: Field Listing, Field Permissions and AI Governance as a pill segment with Field Listing selected; search; Create and Edit Fields; Fields, Data Type and Custom Field columns. Labels are alphabetical (Address, address subfields, Annual Revenue, Company) | Done. Closing QA still had schema order and underline tabs | FL-01–54; MEP-1352 items 5 and 6 |
+| M11-MF-08 | Contacts, Accounts and Deals layouts and fields on the dynamic routes, with the correct schema fields. Contacts and Accounts layouts hide the overflow menu, as in the reference | Done | MEP-1202; `m11r4-*` |
+
+### Company details and currencies
+
+| # | Surface | Closing QA result | Verification |
+| --- | --- | --- | --- |
+| M11-CD-01 | Tab strip: Company Details, Fiscal Year, Domain Mapping, Business hours, Holidays, Currencies, Hierarchy Preference. No static "Company Details." title | Done. The static title was removed in MEP-1352 | CD-48–54; MEP-1352 item 9 |
+| M11-CD-02 | Identity card: organization name, edit pencil, org id, email, phone, mobile, fax, website and address icons | Done | CD-55 |
+| M11-CD-03 | Access URL heading, edit pencil, URL value and copy control | Done | CD-56–57 |
+| M11-CD-04 | Locale Information with the Time Zone row and edit pencil | Done | CD-58 |
+| M11-CD-05 | Team Licenses explanation and a disabled Get Team User License button. A neutral note is available on hover | Done. The copy and button were missing at closing QA | CD-59–60; MEP-1352 item 8 |
+| M11-CD-06 | Currencies confirmation: Help, home-currency notice, Turkish Lira - TRY suggestion, Change Home Currency and Yes, Confirm Home Currency | Done | `m11r2-currencies` CR-61–63 |
+
+### Personal settings
+
+| # | Surface | Closing QA result | Verification |
+| --- | --- | --- | --- |
+| M11-PS-01 | Personal Settings selected, Accessibility present. No static "Personal Settings." title | Done. The static title was removed in MEP-1352 | PL-48–49; MEP-1352 item 12 |
+| M11-PS-02 | Profile card: name, Administrator, role and organization, email, pencil, and an about-80px circular silhouette | Done. Closing QA still showed a 40px initial | PL-50–53; MEP-1352 item 10 |
+| M11-PS-03 | User Information: Hide Details with an up chevron; First Name through Date of Birth; labels right-aligned | Done. The chevron and alignment were fixed in MEP-1352 | PL-54–65; MEP-1352 items 11 and 12 |
+| M11-PS-04 | Address Information with street and city rows | Done | PL-66 |
+
+### Record-screen projection (MEP-1196 spot check)
+
+| # | Surface | Closing QA result | Verification |
+| --- | --- | --- | --- |
+| M11-RS-01 | Leads list: schema projection, filter panel, columns, paging and actions | Done | `/tab/Leads/list`; MEP-1349 |
+| M11-RS-02 | Leads create: fields in layout order, TL on the currency field, required-field rules | Done | `/tab/Leads/create` |
+| M11-RS-03 | Leads detail: stage strip, summary, details and related lists | Done | `/tab/Leads/:id` |
+| M11-RS-04 | Contacts form and detail, including the organization date placeholder DD.MM.YYYY | Done | `/tab/Contacts/*` |
+
+Screens compared at closing QA and again after the fix: Modules and Fields,
+Leads Fields, Leads Layouts, Company Details and Personal Settings. No
+developer or test control remained on those screens. Evidence specs:
+`e2e/settings-modules.spec.ts`, `e2e/settings-company.spec.ts`,
+`e2e/settings-personal.spec.ts` (MEP-1352 handoff, 39 tests with the Activities
+set). This section does not reopen write flows that the specs still mark
+unobserved.
+
 ## Module 12 — Automation
 
 Research: `research/specs/automation-rules.md` (R1 approved; R2 evidence retained;
@@ -1650,6 +1710,48 @@ inventories remain unchanged; no integration or capture tool used in R2.
 | VS-R2-03 | Social enabled module | D5/D7; SD01–SD05/SD10; documented tabs, filters and prerequisites | Actual account entitlement, enabled layouts, errors and preference persistence unobserved |
 | VS-R2-04 | Associated Social record state | D5/D6; SD06–SD09; RC02/RC03 documented outcomes; Leads/Contacts/Accounts scope | Historical link behaviour not recaptured; record-layout variants and Facebook association flow unresolved |
 | VS-R2-05 | Questions and next slices | U1–U5 partly narrowed; U6 still open; S3 Visits / S4 Social read-only fixture proposals | Implementation approval required; no setup, association, outbound actions or gate claim |
+
+### Module 15 — closing QA (MEP-1350, fixes MEP-1351 / MEP-1357)
+
+Source: the MEP-1350 `parity` proposal, compared at 1470×835 against the
+English Visits entry, Social entry and Contact Social captures. Enabled Visits
+and connected Social had no English capture. Blocking findings 1–13 and minor
+finding 16 were fixed in MEP-1351; the CI follow-up MEP-1357 (head `85002da5`)
+merged as `e2d9b12f`. Grok QA accepted the screen fixes and, separately, the
+retired font-weight change. Findings 14, 15 and 17–19 stayed open on purpose.
+This checklist update did not open the reference CRM (MEP-1353). R1 and R2
+rows above stay historical research evidence.
+
+| # | Surface | Closing QA result | Verification |
+| --- | --- | --- | --- |
+| VS-QA-01 | Visits entry carousel V01–V08 | Done. Arrows and six dots; first dot selected | MEP-1350 |
+| VS-QA-02 | Visits Get Started (V09) | Done. The extra "not available in this build" sentence is gone. The button is blue. A click shows a neutral administrator message; live tracking setup is not claimed | MEP-1351 item 1 |
+| VS-QA-03 | Visits service attribution line | Partial, accepted. Neutral wording; the vendor name is omitted on purpose and the line sits in the reference place | MEP-1350 item 15 |
+| VS-QA-04 | Visits promotional artwork and slide sentence | Done. Original visitor-panel artwork replaced the wireframe, and the green Live label was removed from that artwork. The slide sentence matches the spec meaning | MEP-1351 items 2–3; redelivery removed Live |
+| VS-QA-05 | Social Let's Get Started (SO01), illustration and body sentence | Done. Green button, no build sentence, two linked network jars, and the full sentence including "valuable" and "through social media" | MEP-1351 items 4–5 and 16 |
+| VS-QA-06 | Social rail selection | Done. The selected Social row is fully visible | MEP-1351 item 6 |
+| VS-QA-07 | Shared shell controls that are present (search, create, calendar, setup, profile) | Done | S34 S35 S38 S40 S41 |
+| VS-QA-08 | Shared shell controls still absent (Agents, MCP, teamspace search, assistant, notifications, marketplace, app grid, bottom tray) | Open, deferred. Belongs to the global shell package, not this module fix | MEP-1350 item 14; S06 S07 S09 S11 S36 S37 S39 S42 S43–S54 |
+| VS-QA-09 | Visits enabled-empty column and filter controls (VD01 VD02) | Partial. No English capture; plain selects only | MEP-1350 |
+| VS-QA-10 | Visits enabled-empty actions VD03 and VD07 | Done for the developer sentence. "not available in this build" was removed | MEP-1351 item 7 |
+| VS-QA-11 | Visits populated list columns and row link | Partial. No English capture | MEP-1350 |
+| VS-QA-12 | Visits populated row values | Done. Synthetic Agent / Synthetic Owner replaced by the ordinary seeds (Chrome / macOS, Support Representative) | MEP-1351 item 8 |
+| VS-QA-13 | Visits Top views ranking message | Partial, accepted. No English capture; the criteria were an open research gap | MEP-1350 item 17 |
+| VS-QA-14 | Visit detail field grid and Actions Performed | Partial. No English capture | MEP-1350 |
+| VS-QA-15 | Visit detail notes, attachments and Visits navigation state | Done for the closing defect. Developer copy was removed and Visits keeps `aria-current` on the detail route | MEP-1351 item 9 |
+| VS-QA-16 | Social connected tabs and filters (SD01–SD03) | Partial. No English capture | MEP-1350 |
+| VS-QA-17 | Social dashboard copy and unavailable Monitor, Post and Activity actions | Done for the developer copy. The dashboard reads "4 social interactions." The build banner is gone and unavailable actions are compact secondary buttons with an administrator message | MEP-1351 items 10–11 |
+| VS-QA-18 | Social permission denied | Partial, accepted. One sentence and no build banner; no English capture | MEP-1350 item 19 |
+| VS-QA-19 | Lead Social rail entry (RL01) | Done | MEP-1350 |
+| VS-QA-20 | Lead and Contact Social card (RC02 RC03) and Contact rail/up (RC01 RC04) | Done. Network marks and the Facebook association sentence are on the card. Contact rail entry and the up control were already present | MEP-1351 item 12 |
+| VS-QA-21 | Account Social rail | Done. The rail entry is enabled and focuses `#related-list-social` | MEP-1351 item 13 |
+| VS-QA-22 | Lead and Contact Visit Summary and Visits related list | Partial, accepted. Not painted in R1; R2 is documentation only; the cards are absent here | MEP-1350 item 18 |
+
+Evidence specs from the MEP-1351 handoff, with the Activities set:
+`e2e/visits-social-entry.spec.ts`, `e2e/visits-enabled.spec.ts`,
+`e2e/social-connected.spec.ts` (36 tests). MEP-1357 re-checked
+`e2e/visits-social-entry.spec.ts` after the font-weight fix. No developer or
+test control remained on the accepted entry screens.
 
 ### Module 13 — R4 documentation-based functional spec (MEP-1303)
 
