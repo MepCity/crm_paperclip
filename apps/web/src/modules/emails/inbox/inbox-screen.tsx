@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Icons } from "@/components/ui/icon";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { useFormat } from "@/lib/format-context";
 import { fetchComposeMailboxes } from "../compose/http-port";
 import { MailCompose } from "../compose/mail-compose";
@@ -24,26 +25,27 @@ function addressLabel(person: EmailAddress) {
 }
 
 function MessageContent({ message }: { message: EmailMessage }) {
+  const t = useUiTranslations();
   const orgFormat = useFormat();
   return (
     <div className="space-y-4 px-4 pb-4 text-sm">
       <dl className="space-y-1 break-words text-text-muted">
         <div>
-          <dt className="inline font-semibold">From: </dt>
+          <dt className="inline font-semibold">{t("modules.emails.from")} </dt>
           <dd className="inline">{addressLabel(message.from)}</dd>
         </div>
         <div>
-          <dt className="inline font-semibold">To: </dt>
+          <dt className="inline font-semibold">{t("modules.emails.to")} </dt>
           <dd className="inline">{message.to.map(addressLabel).join(", ")}</dd>
         </div>
         {message.cc.length > 0 && (
           <div>
-            <dt className="inline font-semibold">Cc: </dt>
+            <dt className="inline font-semibold">{t("modules.emails.cc")} </dt>
             <dd className="inline">{message.cc.map(addressLabel).join(", ")}</dd>
           </div>
         )}
         <div>
-          <dt className="inline font-semibold">Date: </dt>
+          <dt className="inline font-semibold">{t("modules.emails.date")} </dt>
           <dd className="inline">
             <time dateTime={message.date}>{formatDateTime(message.date, orgFormat)}</time>
           </dd>
@@ -51,8 +53,13 @@ function MessageContent({ message }: { message: EmailMessage }) {
       </dl>
       <p className="whitespace-pre-wrap break-words leading-relaxed">{message.body}</p>
       {message.attachments.length > 0 && (
-        <section aria-label="Attachments" className="border-t border-border pt-3">
-          <h3 className="mb-2 font-semibold">Attachments ({message.attachments.length})</h3>
+        <section
+          aria-label={t("modules.emails.attachments")}
+          className="border-t border-border pt-3"
+        >
+          <h3 className="mb-2 font-semibold">
+            {t("modules.emails.attachmentsCount", { count: message.attachments.length })}
+          </h3>
           <ul className="space-y-2">
             {message.attachments.map((attachment) => (
               <li
@@ -84,6 +91,7 @@ export function InboxScreen({
   messageParam: string | null;
   onNavigate: (folder: EmailFolder, messageId?: string) => void;
 }) {
+  const t = useUiTranslations();
   const orgFormat = useFormat();
   const [composeOpen, setComposeOpen] = useState(false);
   const [mailboxes, setMailboxes] = useState<readonly ComposeMailbox[]>([]);
@@ -112,12 +120,34 @@ export function InboxScreen({
   if (!loadState && !model.connected) {
     return (
       <EmptyState
-        title="No mailbox connected"
-        description="Your emails will appear here when a mailbox is connected."
+        title={t("modules.emails.noMailboxConnected")}
+        description={t("modules.emails.noMailboxDesc")}
       />
     );
   }
-  const folderLabel = emailFolders.find((item) => item.id === folder)?.label;
+
+  const folderName = (id: string, fallback: string) => {
+    switch (id) {
+      case "inbox":
+        return t("modules.emails.folderInbox");
+      case "sent":
+        return t("modules.emails.folderSent");
+      case "drafts":
+        return t("modules.emails.folderDrafts");
+      case "scheduled":
+        return t("modules.emails.folderScheduled");
+      case "trash":
+        return t("modules.emails.folderTrash");
+      default:
+        return fallback;
+    }
+  };
+
+  const currentFolderDef = emailFolders.find((item) => item.id === folder);
+  const folderLabel = currentFolderDef
+    ? folderName(currentFolderDef.id, currentFolderDef.label)
+    : folder;
+
   return (
     <div className="m-3 overflow-x-auto rounded-md border border-border bg-surface text-text">
       <div className="flex items-center justify-between border-b border-border p-3">
@@ -129,9 +159,9 @@ export function InboxScreen({
             setComposeOpen(true);
           }}
         >
-          Compose
+          {t("modules.emails.compose")}
         </Button>
-        {sent && <p role="status">Message sent (fixture)</p>}
+        {sent && <p role="status">{t("modules.emails.sendSuccess")}</p>}
       </div>
       {composeOpen && (
         <MailCompose
@@ -142,46 +172,51 @@ export function InboxScreen({
       )}
       <div className="flex min-h-96 min-w-0 flex-col lg:flex-row">
         <nav
-          aria-label="Email folders"
+          aria-label={t("modules.emails.emailFolders")}
           className="shrink-0 border-b border-border p-3 lg:w-44 lg:border-r lg:border-b-0"
         >
-          <h1 className="mb-4 px-2 text-xl font-semibold">Emails</h1>
+          <h1 className="mb-4 px-2 text-xl font-semibold">{t("modules.emails.emailsHeading")}</h1>
           <ul className="space-y-1">
-            {emailFolders.map((item) => (
-              <li key={item.id}>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  aria-label={`${item.label} ${model.conversations.filter((conversation) => conversation.folder === item.id).length}`}
-                  aria-current={folder === item.id ? "page" : undefined}
-                  onPress={() => onNavigate(item.id)}
-                  className={`w-full justify-between gap-3 ${folder === item.id ? "bg-primary-subtle! text-text!" : ""}`}
-                >
-                  <span>{item.label}</span>
-                  <span>
-                    {
-                      model.conversations.filter((conversation) => conversation.folder === item.id)
-                        .length
-                    }
-                  </span>
-                </Button>
-              </li>
-            ))}
+            {emailFolders.map((item) => {
+              const label = folderName(item.id, item.label);
+              const count = model.conversations.filter(
+                (conversation) => conversation.folder === item.id,
+              ).length;
+              return (
+                <li key={item.id}>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={`${label} ${count}`}
+                    aria-current={folder === item.id ? "page" : undefined}
+                    onPress={() => onNavigate(item.id)}
+                    className={`w-full justify-between gap-3 ${folder === item.id ? "bg-primary-subtle! text-text!" : ""}`}
+                  >
+                    <span>{label}</span>
+                    <span>{count}</span>
+                  </Button>
+                </li>
+              );
+            })}
           </ul>
         </nav>
         <section
-          aria-label="Message list"
+          aria-label={t("modules.emails.messageList")}
           className="min-w-0 border-b border-border lg:w-80 lg:shrink-0 lg:border-r lg:border-b-0"
         >
           <h2 className="border-b border-border p-4 text-lg font-semibold">{folderLabel}</h2>
           {loadState ? (
             <div role={loadState === "error" ? "alert" : "status"}>
               <EmptyState
-                title={loadState === "loading" ? "Loading emails..." : "Unable to load emails"}
+                title={
+                  loadState === "loading"
+                    ? t("modules.emails.loadingEmails")
+                    : t("modules.emails.unableToLoad")
+                }
               />
             </div>
           ) : conversations.length === 0 ? (
-            <EmptyState title={`No messages in ${folderLabel}`} />
+            <EmptyState title={t("modules.emails.emptyFolder", { folder: folderLabel })} />
           ) : (
             <ul aria-label={`${folderLabel} messages`}>
               {conversations.map((conversation) => {
@@ -199,7 +234,7 @@ export function InboxScreen({
                       <span className="flex items-start justify-between gap-2">
                         <span className="truncate">{latest.from.name}</span>
                         {conversation.unread && (
-                          <span className="text-xs text-primary">Unread</span>
+                          <span className="text-xs text-primary">{t("modules.emails.unread")}</span>
                         )}
                       </span>
                       <span className="block truncate">{conversation.subject}</span>
@@ -211,7 +246,7 @@ export function InboxScreen({
                         {conversation.messages.some(
                           (message) => message.attachments.length > 0,
                         ) && (
-                          <span role="img" aria-label="Has attachments">
+                          <span role="img" aria-label={t("modules.emails.hasAttachments")}>
                             <Icons.file aria-hidden className="size-4" />
                           </span>
                         )}
@@ -223,7 +258,7 @@ export function InboxScreen({
             </ul>
           )}
         </section>
-        <section aria-label="Reading pane" className="min-w-0 flex-1 p-4">
+        <section aria-label={t("modules.emails.readingPane")} className="min-w-0 flex-1 p-4">
           {!loadState && selected ? (
             <article key={selected.id}>
               <h2 className="mb-4 break-words text-xl font-semibold">{selected.subject}</h2>
@@ -242,8 +277,8 @@ export function InboxScreen({
             </article>
           ) : (
             <EmptyState
-              title="Select a message"
-              description="Choose a message to read its conversation."
+              title={t("modules.emails.selectMessage")}
+              description={t("modules.emails.selectMessageDesc")}
             />
           )}
         </section>

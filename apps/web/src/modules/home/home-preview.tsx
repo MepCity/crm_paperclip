@@ -2,6 +2,8 @@
 
 import Link from "next/link";
 import { useState } from "react";
+import type { MessageKey } from "@/i18n/catalogs";
+import { useUiTranslations } from "@/i18n/client-provider";
 import {
   type ActivityRow,
   type ActivityType,
@@ -16,32 +18,67 @@ import {
 import {
   dealStages,
   dealsCardFields,
-  dealsCardSource,
   emptyCopy,
   type HomeView,
-  pageOptions,
   taskCardFields,
-  taskCardSource,
   taskRows,
 } from "./fixture";
 import { HomeOnboarding } from "./home-onboarding";
+
+const fieldKeys: Record<string, MessageKey> = {
+  Subject: "modules.home.columns.subject",
+  "Due Date": "modules.home.columns.dueDate",
+  Status: "modules.home.columns.status",
+  Priority: "modules.home.columns.priority",
+  "Related To": "modules.home.columns.relatedTo",
+  "Contact Name": "modules.home.columns.contactName",
+  Title: "modules.home.columns.title",
+  From: "modules.home.columns.from",
+  To: "modules.home.columns.to",
+  "Call Start time": "modules.home.columns.callStartTime",
+  Stage: "modules.home.columns.stage",
+  Deals: "modules.home.columns.deals",
+  Amount: "modules.home.columns.amount",
+};
+const periodKeys: Record<HomePeriod, MessageKey> = {
+  today: "modules.home.today",
+  "this-week": "modules.home.thisWeek",
+  "next-week": "modules.home.nextWeek",
+  "next-7-days": "modules.home.next7Days",
+};
+const typeKeys: Record<ActivityType, MessageKey> = {
+  Tasks: "modules.home.tasks",
+  Meetings: "modules.home.meetings",
+  Calls: "modules.home.calls",
+};
+
+function fieldLabel(field: string, t: ReturnType<typeof useUiTranslations>) {
+  const key = fieldKeys[field];
+  return key ? t(key) : field;
+}
 
 function Card({
   title,
   source,
   fields,
   children,
+  t,
 }: {
   title: string;
   source: string;
   fields: readonly string[];
   children: React.ReactNode;
+  t: ReturnType<typeof useUiTranslations>;
 }) {
   return (
     <section aria-label={title} className="rounded-md border border-border bg-surface p-5">
       <h3 className="text-base font-semibold">{title}</h3>
-      <p className="mt-1 text-xs text-text-muted">Source: {source}</p>
-      <p className="text-xs text-text-muted">Fields: {fields.join(", ")}</p>
+      <p className="mt-1 text-xs text-text-muted">{t("modules.home.sourceLabel", { source })}</p>
+      <p className="text-xs text-text-muted">
+        {t("modules.home.fieldsLabel", {
+          fields: fields.map((field) => fieldLabel(field, t)).join(", "),
+        })}
+      </p>
       <div className="mt-4">{children}</div>
     </section>
   );
@@ -51,6 +88,7 @@ const activityTypes: ActivityType[] = ["Tasks", "Meetings", "Calls"];
 
 /** HD13 Open Activities card. Empty copy is a local proposal; loading/error are not modelled (fixtures). */
 function OpenActivities({ orgSlug, empty }: { orgSlug: string; empty: boolean }) {
+  const t = useUiTranslations();
   const [period, setPeriod] = useState<HomePeriod>("today");
   const { overdue, inPeriod } = filterActivities(
     empty ? [] : activityRows,
@@ -61,7 +99,9 @@ function OpenActivities({ orgSlug, empty }: { orgSlug: string; empty: boolean })
   const renderGroup = (label: string, rows: ActivityRow[]) =>
     rows.length === 0 ? null : (
       <div key={label} data-testid={`activities-${label.toLowerCase()}`}>
-        <h4 className="mt-3 text-sm font-semibold">{label}</h4>
+        <h4 className="mt-3 text-sm font-semibold">
+          {label === "Overdue" ? t("modules.home.overdue") : t("modules.home.upcoming")}
+        </h4>
         {activityTypes.map((type) => {
           const typed = rows.filter((r) => r.type === type);
           if (typed.length === 0) return null;
@@ -69,13 +109,16 @@ function OpenActivities({ orgSlug, empty }: { orgSlug: string; empty: boolean })
             <table
               key={type}
               className="mt-2 w-full text-left text-sm"
-              aria-label={`${label} ${type}`}
+              aria-label={t("modules.home.activityTable", {
+                group: t(label === "Overdue" ? "modules.home.overdue" : "modules.home.upcoming"),
+                type: t(typeKeys[type]),
+              })}
             >
               <thead>
                 <tr>
                   {activityFields[type].map((f) => (
                     <th key={f} className="pb-1 font-semibold text-text-muted">
-                      {f}
+                      {fieldLabel(f, t)}
                     </th>
                   ))}
                 </tr>
@@ -108,27 +151,25 @@ function OpenActivities({ orgSlug, empty }: { orgSlug: string; empty: boolean })
     );
   return (
     <section
-      aria-label="Open Activities"
+      aria-label={t("modules.home.openActivities")}
       className="rounded-md border border-border bg-surface p-5 md:col-span-2"
     >
       <div className="flex items-center justify-between">
-        <h3 className="text-base font-semibold">Open Activities</h3>
+        <h3 className="text-base font-semibold">{t("modules.home.openActivities")}</h3>
         <select
-          aria-label="Activity period"
+          aria-label={t("modules.home.activityPeriod")}
           value={period}
           onChange={(e) => setPeriod(e.target.value as HomePeriod)}
           className="h-8 rounded-md border border-border bg-surface px-2 text-sm"
         >
           {homePeriods.map((p) => (
             <option key={p.id} value={p.id}>
-              {p.label}
+              {t(periodKeys[p.id])}
             </option>
           ))}
         </select>
       </div>
-      <p className="mt-1 text-xs text-text-muted">
-        Source: Open Activities · Tasks, Meetings, Calls
-      </p>
+      <p className="mt-1 text-xs text-text-muted">{t("modules.home.openActivitiesSource")}</p>
       {overdue.length + inPeriod.length === 0 ? (
         <p className="mt-4 text-sm text-text-muted" data-testid="activities-empty">
           {emptyCopy}
@@ -144,13 +185,19 @@ function OpenActivities({ orgSlug, empty }: { orgSlug: string; empty: boolean })
 }
 
 export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: string }) {
+  const t = useUiTranslations();
   const total = dealStages.reduce((sum, s) => sum + s.count, 0);
   return (
     <div
       className="mx-auto grid max-w-6xl gap-6 px-8 py-6 md:grid-cols-2"
       data-testid="home-preview"
     >
-      <Card title="Open Tasks" source={taskCardSource} fields={taskCardFields}>
+      <Card
+        title={t("modules.home.openTasks")}
+        source={t("modules.home.taskSource")}
+        fields={taskCardFields}
+        t={t}
+      >
         {empty ? (
           <p className="text-sm text-text-muted">{emptyCopy}</p>
         ) : (
@@ -159,7 +206,7 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
               <tr>
                 {taskCardFields.map((f) => (
                   <th key={f} className="pb-2 font-semibold text-text-muted">
-                    {f}
+                    {fieldLabel(f, t)}
                   </th>
                 ))}
               </tr>
@@ -178,7 +225,12 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
         )}
       </Card>
       <OpenActivities orgSlug={orgSlug} empty={empty} />
-      <Card title="Pipeline Deals by Stage" source={dealsCardSource} fields={dealsCardFields}>
+      <Card
+        title={t("modules.home.pipelineDeals")}
+        source={t("modules.home.dealSource")}
+        fields={dealsCardFields}
+        t={t}
+      >
         {empty ? (
           <p className="text-sm text-text-muted">{emptyCopy}</p>
         ) : (
@@ -188,7 +240,7 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
                 <tr>
                   {dealsCardFields.map((f) => (
                     <th key={f} className="pb-2 font-semibold text-text-muted">
-                      {f}
+                      {fieldLabel(f, t)}
                     </th>
                   ))}
                 </tr>
@@ -204,7 +256,7 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
               </tbody>
             </table>
             <p className="mt-3 text-sm" data-testid="deals-total">
-              Total deals: {total}
+              {t("modules.home.totalDeals", { count: total })}
             </p>
           </>
         )}
@@ -213,7 +265,6 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
   );
 }
 
-/** HD01: local-only page selector. No persistence, no request; not the account's real page list. */
 export function HomeContent({
   orgSlug,
   userName,
@@ -223,29 +274,9 @@ export function HomeContent({
   userName: string;
   initialView: HomeView;
 }) {
-  const [view, setView] = useState<HomeView>(initialView);
-  const selected = view === "onboarding" ? "onboarding" : "preview";
-  return (
-    <>
-      <div className="mx-auto flex max-w-6xl justify-end px-8 pt-4">
-        <select
-          aria-label="Home page"
-          value={selected}
-          onChange={(e) => setView(e.target.value === "preview" ? "preview" : "onboarding")}
-          className="h-9 rounded-md border border-border bg-surface px-3 text-sm"
-        >
-          {pageOptions.map((o) => (
-            <option key={o.id} value={o.id}>
-              {o.label}
-            </option>
-          ))}
-        </select>
-      </div>
-      {view === "onboarding" ? (
-        <HomeOnboarding orgSlug={orgSlug} userName={userName} />
-      ) : (
-        <HomePreviewCards empty={view === "preview-empty"} orgSlug={orgSlug} />
-      )}
-    </>
+  return initialView === "onboarding" ? (
+    <HomeOnboarding orgSlug={orgSlug} userName={userName} />
+  ) : (
+    <HomePreviewCards empty={initialView === "preview-empty"} orgSlug={orgSlug} />
   );
 }

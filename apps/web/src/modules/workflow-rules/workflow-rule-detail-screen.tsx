@@ -4,6 +4,7 @@ import type { ReadResult, WorkflowRule } from "@crm/core/automation";
 import { buttonSizes, buttonStyles } from "@/components/ui/button-styles";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { formatActionKind, formatCondition, formatTiming, formatTrigger } from "./formatters";
 
 export interface WorkflowRuleDetailScreenProps {
@@ -17,11 +18,12 @@ export function WorkflowRuleDetailScreen({
   ruleId,
   result,
 }: WorkflowRuleDetailScreenProps) {
+  const t = useUiTranslations();
   const listHref = `/crm/${encodeURIComponent(orgSlug)}/settings/workflow-rules`;
 
   return (
     <section
-      aria-label="Workflow Rule Details"
+      aria-label={t("modules.workflow.ruleDetails")}
       className="relative min-h-screen rounded-lg border border-border bg-surface shadow-xs p-6"
     >
       {/* Return link to list (WD1 / WD6) */}
@@ -31,11 +33,11 @@ export function WorkflowRuleDetailScreen({
           className="inline-flex items-center gap-1.5 text-sm font-semibold text-primary hover:underline focus:outline-none focus:ring-2 focus:ring-primary"
         >
           <Icons.chevronLeft className="size-4" aria-hidden="true" />
-          <span>Back to Workflow Rules</span>
+          <span>{t("modules.workflow.backToList")}</span>
         </Link>
       </div>
 
-      {!result.ok ? <h1 className="sr-only">Workflow Rule Details</h1> : null}
+      {!result.ok ? <h1 className="sr-only">{t("modules.workflow.ruleDetails")}</h1> : null}
 
       {/* Forbidden State (WD6) */}
       {!result.ok && result.error.code === "forbidden" ? (
@@ -44,10 +46,8 @@ export function WorkflowRuleDetailScreen({
           className="rounded-md border border-border bg-surface-muted p-6 text-center"
         >
           <Icons.warning className="inline size-6 text-accent-orange mb-2" aria-hidden="true" />
-          <p className="text-md font-semibold text-text">Access denied.</p>
-          <p className="text-sm text-text-muted mt-1">
-            You do not have permission to view this workflow rule.
-          </p>
+          <p className="text-md font-semibold text-text">{t("modules.workflow.accessDenied")}</p>
+          <p className="text-sm text-text-muted mt-1">{t("modules.workflow.noPermission")}</p>
         </div>
       ) : null}
 
@@ -58,10 +58,8 @@ export function WorkflowRuleDetailScreen({
           className="rounded-md border border-border bg-surface-muted p-6 text-center"
         >
           <Icons.error className="inline size-6 text-text-muted mb-2" aria-hidden="true" />
-          <p className="text-md font-semibold text-text">Workflow rule not found.</p>
-          <p className="text-sm text-text-muted mt-1">
-            The requested workflow rule does not exist or may have been removed.
-          </p>
+          <p className="text-md font-semibold text-text">{t("modules.workflow.notFound")}</p>
+          <p className="text-sm text-text-muted mt-1">{t("modules.workflow.notFoundDesc")}</p>
         </div>
       ) : null}
 
@@ -72,17 +70,13 @@ export function WorkflowRuleDetailScreen({
           className="rounded-md border border-border bg-surface-muted p-6 text-center"
         >
           <Icons.error className="inline size-6 text-accent-red mb-2" aria-hidden="true" />
-          <p className="text-md font-semibold text-text">
-            Workflow rule details could not be loaded.
-          </p>
-          <p className="text-sm text-text-muted mt-1">
-            A temporary problem occurred while retrieving rule details.
-          </p>
+          <p className="text-md font-semibold text-text">{t("modules.workflow.loadDetailError")}</p>
+          <p className="text-sm text-text-muted mt-1">{t("modules.workflow.tempDetailProblem")}</p>
           <a
             href={`${listHref}/${encodeURIComponent(ruleId)}`}
             className={`mt-4 inline-flex items-center justify-center ${buttonStyles.secondary} ${buttonSizes.sm}`}
           >
-            Retry
+            {t("modules.workflow.retry")}
           </a>
         </div>
       ) : null}
@@ -96,7 +90,7 @@ export function WorkflowRuleDetailScreen({
               <h1 className="text-2xl font-bold text-text">{result.value.name}</h1>
               <div className="flex items-center gap-3">
                 <span className="rounded-full bg-surface-muted px-3 py-1 text-xs font-semibold text-text">
-                  Module: {result.value.module}
+                  {t("modules.workflow.modulePrefix", { module: result.value.module })}
                 </span>
                 <span
                   className={
@@ -105,29 +99,37 @@ export function WorkflowRuleDetailScreen({
                       : "rounded-full bg-surface-muted px-3 py-1 text-xs font-semibold text-text-muted"
                   }
                 >
-                  {result.value.enabled ? "Enabled" : "Disabled"}
+                  {result.value.enabled
+                    ? t("modules.workflow.enabled")
+                    : t("modules.workflow.disabled")}
                 </span>
               </div>
             </div>
             <p className="mt-2 text-sm text-text-muted">
-              {result.value.description || "No description provided."}
+              {result.value.description || t("modules.workflow.noDescription")}
             </p>
           </div>
 
           {/* WD2: Trigger Region */}
           <div className="rounded-lg border border-border bg-surface-muted/30 p-5">
-            <h2 className="text-base font-semibold text-text mb-2">Trigger</h2>
+            <h2 className="text-base font-semibold text-text mb-2">
+              {t("modules.workflow.trigger")}
+            </h2>
             <div className="text-sm text-text">
-              <span className="font-semibold text-text-muted mr-2">Execution basis:</span>
-              <span>{formatTrigger(result.value.trigger)}</span>
+              <span className="font-semibold text-text-muted mr-2">
+                {t("modules.workflow.executionBasis")}
+              </span>
+              <span>{formatTrigger(result.value.trigger, t)}</span>
             </div>
           </div>
 
           {/* WD3: Condition Branches */}
           <div>
-            <h2 className="text-lg font-semibold text-text mb-4">Condition Branches</h2>
+            <h2 className="text-lg font-semibold text-text mb-4">
+              {t("modules.workflow.conditionBranches")}
+            </h2>
             {result.value.branches.length === 0 ? (
-              <p className="text-sm text-text-muted italic">No condition branches configured.</p>
+              <p className="text-sm text-text-muted italic">{t("modules.workflow.noBranches")}</p>
             ) : (
               <div className="space-y-6">
                 {[...result.value.branches]
@@ -139,13 +141,15 @@ export function WorkflowRuleDetailScreen({
                     >
                       <div className="flex items-center justify-between border-b border-border pb-3">
                         <span className="text-sm font-semibold text-text">
-                          Branch {branch.position}
+                          {t("modules.workflow.branch", { position: branch.position })}
                         </span>
                       </div>
 
                       {/* Condition criteria */}
                       <div className="text-sm">
-                        <span className="font-semibold text-text-muted mr-2">Criteria:</span>
+                        <span className="font-semibold text-text-muted mr-2">
+                          {t("modules.workflow.criteria")}
+                        </span>
                         <code className="rounded bg-surface-muted px-2 py-1 text-xs text-text font-mono">
                           {formatCondition(branch.condition)}
                         </code>
@@ -153,10 +157,12 @@ export function WorkflowRuleDetailScreen({
 
                       {/* WD4: Immediate Actions */}
                       <div className="pt-2">
-                        <h3 className="text-sm font-semibold text-text mb-2">Immediate Actions</h3>
+                        <h3 className="text-sm font-semibold text-text mb-2">
+                          {t("modules.workflow.immediateActions")}
+                        </h3>
                         {branch.immediate.length === 0 ? (
                           <p className="text-xs text-text-muted italic">
-                            No immediate actions configured.
+                            {t("modules.workflow.noImmediateActions")}
                           </p>
                         ) : (
                           <ul className="divide-y divide-border rounded-md border border-border bg-surface-muted/20">
@@ -179,10 +185,12 @@ export function WorkflowRuleDetailScreen({
 
                       {/* WD5: Scheduled Groups */}
                       <div className="pt-2">
-                        <h3 className="text-sm font-semibold text-text mb-2">Scheduled Actions</h3>
+                        <h3 className="text-sm font-semibold text-text mb-2">
+                          {t("modules.workflow.scheduledActions")}
+                        </h3>
                         {branch.scheduled.length === 0 ? (
                           <p className="text-xs text-text-muted italic">
-                            No scheduled actions configured.
+                            {t("modules.workflow.noScheduledActions")}
                           </p>
                         ) : (
                           <div className="space-y-3">
@@ -192,7 +200,9 @@ export function WorkflowRuleDetailScreen({
                                 className="rounded-md border border-border bg-surface-muted/20 p-3 space-y-2"
                               >
                                 <div className="text-xs font-semibold text-text">
-                                  <span className="text-text-muted mr-1.5">Timing:</span>
+                                  <span className="text-text-muted mr-1.5">
+                                    {t("modules.workflow.timing")}
+                                  </span>
                                   <span>{formatTiming(sched.timing)}</span>
                                 </div>
                                 <ul className="divide-y divide-border rounded border border-border bg-surface">

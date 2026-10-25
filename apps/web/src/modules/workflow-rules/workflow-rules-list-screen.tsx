@@ -5,6 +5,7 @@ import { buttonSizes, buttonStyles } from "@/components/ui/button-styles";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { formatTrigger } from "./formatters";
 
 export interface WorkflowRulesListScreenProps {
@@ -24,6 +25,7 @@ export function WorkflowRulesListScreen({
   module,
   cursor,
 }: WorkflowRulesListScreenProps) {
+  const t = useUiTranslations();
   const selectedModule = module ?? "all";
   const base = `/crm/${encodeURIComponent(orgSlug)}/settings/workflow-rules`;
   const href = (nextCursor?: string) => {
@@ -35,25 +37,23 @@ export function WorkflowRulesListScreen({
 
   return (
     <section
-      aria-label="Workflow Rules"
+      aria-label={t("modules.workflow.workflowRules")}
       className="relative min-h-screen rounded-lg border border-border bg-surface shadow-xs p-6"
     >
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-xl font-semibold text-text">Workflow Rules</h2>
-          <p className="text-sm text-text-muted mt-1">
-            Automate actions based on record triggers and criteria.
-          </p>
+          <h2 className="text-xl font-semibold text-text">{t("modules.workflow.workflowRules")}</h2>
+          <p className="text-sm text-text-muted mt-1">{t("modules.workflow.description")}</p>
         </div>
 
         {/* Module Filter (WL6) */}
         <div className="flex items-center gap-2">
           <label htmlFor="workflow-module-filter" className="text-sm font-semibold text-text">
-            Filter by module:
+            {t("modules.workflow.filterByModule")}
           </label>
           <select
             id="workflow-module-filter"
-            aria-label="Filter workflow rules by module"
+            aria-label={t("modules.workflow.filterAriaLabel")}
             value={selectedModule}
             onChange={(e) => {
               const query = new URLSearchParams();
@@ -62,7 +62,7 @@ export function WorkflowRulesListScreen({
             }}
             className="h-9 rounded-md border border-border bg-surface px-3 py-1 text-sm text-text shadow-xs focus:border-primary focus:outline-none"
           >
-            <option value="all">All modules</option>
+            <option value="all">{t("modules.workflow.allModules")}</option>
             {DEFAULT_MODULES.map((m) => (
               <option key={m} value={m}>
                 {m}
@@ -79,10 +79,8 @@ export function WorkflowRulesListScreen({
           className="rounded-md border border-border bg-surface-muted p-6 text-center"
         >
           <Icons.warning className="inline size-6 text-accent-orange mb-2" aria-hidden="true" />
-          <p className="text-md font-semibold text-text">Access denied.</p>
-          <p className="text-sm text-text-muted mt-1">
-            You do not have permission to view workflow rules.
-          </p>
+          <p className="text-md font-semibold text-text">{t("modules.workflow.accessDenied")}</p>
+          <p className="text-sm text-text-muted mt-1">{t("modules.workflow.noPermission")}</p>
         </div>
       ) : null}
 
@@ -93,15 +91,13 @@ export function WorkflowRulesListScreen({
           className="rounded-md border border-border bg-surface-muted p-6 text-center"
         >
           <Icons.error className="inline size-6 text-accent-red mb-2" aria-hidden="true" />
-          <p className="text-md font-semibold text-text">Workflow rules could not be loaded.</p>
-          <p className="text-sm text-text-muted mt-1">
-            A temporary problem occurred while retrieving workflow rules.
-          </p>
+          <p className="text-md font-semibold text-text">{t("modules.workflow.loadError")}</p>
+          <p className="text-sm text-text-muted mt-1">{t("modules.workflow.tempProblem")}</p>
           <a
             href={href(cursor)}
             className={`mt-4 inline-flex items-center justify-center ${buttonStyles.secondary} ${buttonSizes.sm}`}
           >
-            Retry
+            {t("modules.workflow.retry")}
           </a>
         </div>
       ) : null}
@@ -114,12 +110,10 @@ export function WorkflowRulesListScreen({
         >
           <p className="text-md font-semibold text-text">
             {selectedModule === "all"
-              ? "No workflow rules have been configured yet."
-              : `No workflow rules found for module "${selectedModule}".`}
+              ? t("modules.workflow.emptyAll")
+              : t("modules.workflow.emptyModule", { module: selectedModule })}
           </p>
-          <p className="text-sm text-text-muted mt-1">
-            Workflow rules automate business logic when records are created or updated.
-          </p>
+          <p className="text-sm text-text-muted mt-1">{t("modules.workflow.emptyDescription")}</p>
         </div>
       ) : null}
 
@@ -127,13 +121,16 @@ export function WorkflowRulesListScreen({
       {result.ok && result.value.items.length > 0 ? (
         <div className="overflow-x-auto">
           <div className="w-full overflow-auto contain-paint">
-            <table aria-label="Workflow rules table" className="w-full text-left text-sm">
+            <table
+              aria-label={t("modules.workflow.tableAriaLabel")}
+              className="w-full text-left text-sm"
+            >
               <TableHeader>
                 <TableRow>
-                  <TableHead>Name</TableHead>
-                  <TableHead>Module</TableHead>
-                  <TableHead>Trigger</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>{t("modules.workflow.name")}</TableHead>
+                  <TableHead>{t("modules.workflow.module")}</TableHead>
+                  <TableHead>{t("modules.workflow.trigger")}</TableHead>
+                  <TableHead>{t("modules.workflow.status")}</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
@@ -159,16 +156,16 @@ export function WorkflowRulesListScreen({
                       {/* WL4: Trigger summary */}
                       <TableCell>
                         {triggerResult?.ok ? (
-                          <span>{formatTrigger(triggerResult.value.trigger)}</span>
+                          <span>{formatTrigger(triggerResult.value.trigger, t)}</span>
                         ) : (
                           <span className="inline-flex items-center gap-1.5 text-xs text-accent-red">
-                            Trigger unavailable
+                            {t("modules.workflow.triggerUnavailable")}
                             <a
                               href={href(cursor)}
                               aria-label={`Retry loading trigger for ${rule.name}`}
                               className={`inline-flex items-center justify-center ${buttonStyles.ghost} ${buttonSizes.sm} h-6 px-1.5 text-xs text-text hover:bg-surface-hover`}
                             >
-                              Retry
+                              {t("modules.workflow.retry")}
                             </a>
                           </span>
                         )}
@@ -183,7 +180,9 @@ export function WorkflowRulesListScreen({
                               : "inline-block text-xs font-semibold text-text-muted"
                           }
                         >
-                          {rule.enabled ? "Enabled" : "Disabled"}
+                          {rule.enabled
+                            ? t("modules.workflow.enabled")
+                            : t("modules.workflow.disabled")}
                         </span>
                       </TableCell>
                     </TableRow>
@@ -200,7 +199,7 @@ export function WorkflowRulesListScreen({
                 href={href(result.value.nextCursor)}
                 className={`inline-flex items-center justify-center ${buttonStyles.secondary} ${buttonSizes.sm}`}
               >
-                Next page
+                {t("modules.workflow.nextPage")}
               </a>
             </div>
           ) : null}

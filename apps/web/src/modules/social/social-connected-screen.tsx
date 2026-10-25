@@ -3,6 +3,8 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
+import type { MessageKey, MessageValues } from "@/i18n/catalogs";
+import { useUiTranslations } from "@/i18n/client-provider";
 import {
   activityLog,
   brands,
@@ -20,6 +22,7 @@ import {
 const selectClass = "h-8 rounded border border-control-border bg-surface px-2 text-sm";
 
 function Unavailable({ label, message }: { label: string; message?: string }) {
+  const t = useUiTranslations();
   return (
     <Button
       variant="secondary"
@@ -29,7 +32,7 @@ function Unavailable({ label, message }: { label: string; message?: string }) {
       onPress={() => {
         toast({
           variant: "info",
-          title: message ?? "Contact your administrator to manage social settings.",
+          title: message ?? t("modules.social.adminSettingsMsg"),
         });
       }}
     >
@@ -38,11 +41,62 @@ function Unavailable({ label, message }: { label: string; message?: string }) {
   );
 }
 
+function getTabLabel(
+  t: (key: MessageKey, values?: MessageValues) => string,
+  tab: SocialTab,
+): string {
+  switch (tab) {
+    case "Dashboard":
+      return t("modules.social.dashboard");
+    case "Monitor":
+      return t("modules.social.monitor");
+    case "Post":
+      return t("modules.social.post");
+    case "Activity Log":
+      return t("modules.social.activityLog");
+    default:
+      return tab;
+  }
+}
+
+function getNetworkLabel(
+  t: (key: MessageKey, values?: MessageValues) => string,
+  network: string,
+): string {
+  if (network === "All networks") return t("modules.social.allNetworks");
+  return network;
+}
+
+function getBrandLabel(
+  t: (key: MessageKey, values?: MessageValues) => string,
+  brand: string,
+): string {
+  if (brand === "All brands") return t("modules.social.allBrands");
+  return brand;
+}
+
+function getModuleLabel(
+  t: (key: MessageKey, values?: MessageValues) => string,
+  mod: string,
+): string {
+  if (mod === "All modules") return t("modules.social.allModules");
+  return mod;
+}
+
+function getKindLabel(
+  t: (key: MessageKey, values?: MessageValues) => string,
+  kind: InteractionKind,
+): string {
+  if (kind === "Message") return t("modules.social.message");
+  return kind;
+}
+
 export function SocialConnectedScreen({
   state,
 }: {
   state: "connected-empty" | "populated" | "permission-denied";
 }) {
+  const t = useUiTranslations();
   const [tab, setTab] = useState<SocialTab>("Dashboard");
   const [kind, setKind] = useState<InteractionKind>("Conversation");
   const [network, setNetwork] = useState<string>(networks[0]);
@@ -55,11 +109,11 @@ export function SocialConnectedScreen({
   if (state === ("permission-denied" satisfies SocialState)) {
     return (
       <section
-        aria-label="Social access"
+        aria-label={t("modules.social.socialAccess")}
         data-integration-state="permission-denied"
         className="p-6 text-text"
       >
-        <p role="alert">You do not have permission to use the Social tab.</p>
+        <p role="alert">{t("modules.social.permissionDenied")}</p>
       </section>
     );
   }
@@ -76,18 +130,26 @@ export function SocialConnectedScreen({
   );
 
   return (
-    <section aria-label="Social" data-integration-state={state} className="p-4 text-text">
-      <div role="tablist" aria-label="Social sections" className="mb-4 flex gap-2">
-        {socialTabs.map((t) => (
+    <section
+      aria-label={t("modules.social.social")}
+      data-integration-state={state}
+      className="p-4 text-text"
+    >
+      <div
+        role="tablist"
+        aria-label={t("modules.social.socialSections")}
+        className="mb-4 flex gap-2"
+      >
+        {socialTabs.map((currentTab) => (
           <button
-            key={t}
+            key={currentTab}
             type="button"
             role="tab"
-            aria-selected={tab === t}
-            onClick={() => setTab(t)}
-            className={`px-3 py-1 text-sm ${tab === t ? "border-b-2 border-primary" : ""}`}
+            aria-selected={tab === currentTab}
+            onClick={() => setTab(currentTab)}
+            className={`px-3 py-1 text-sm ${tab === currentTab ? "border-b-2 border-primary" : ""}`}
           >
-            {t}
+            {getTabLabel(t, currentTab)}
           </button>
         ))}
       </div>
@@ -95,55 +157,63 @@ export function SocialConnectedScreen({
         {tab === "Dashboard" && (
           <p>
             {state === "populated"
-              ? `${monitorRows.length} social interactions.`
-              : "No social activity yet."}
+              ? t("modules.social.interactionsCount", { count: monitorRows.length })
+              : t("modules.social.noSocialActivity")}
           </p>
         )}
         {tab === "Monitor" && (
           <div>
             <div className="mb-3 flex flex-wrap items-center gap-2">
               <select
-                aria-label="Interaction type"
+                aria-label={t("modules.social.interactionType")}
                 className={selectClass}
                 value={kind}
                 onChange={(e) => setKind(e.target.value as InteractionKind)}
               >
                 {interactionKinds.map((k) => (
-                  <option key={k}>{k}</option>
+                  <option key={k} value={k}>
+                    {getKindLabel(t, k)}
+                  </option>
                 ))}
               </select>
               <select
-                aria-label="Network"
+                aria-label={t("modules.social.network")}
                 className={selectClass}
                 value={network}
                 onChange={(e) => setNetwork(e.target.value)}
               >
                 {networks.map((n) => (
-                  <option key={n}>{n}</option>
+                  <option key={n} value={n}>
+                    {getNetworkLabel(t, n)}
+                  </option>
                 ))}
               </select>
               <select
-                aria-label="Brand"
+                aria-label={t("modules.social.brand")}
                 className={selectClass}
                 value={brand}
                 onChange={(e) => setBrand(e.target.value)}
               >
                 {brands.map((n) => (
-                  <option key={n}>{n}</option>
+                  <option key={n} value={n}>
+                    {getBrandLabel(t, n)}
+                  </option>
                 ))}
               </select>
               <select
-                aria-label="Module"
+                aria-label={t("modules.social.module")}
                 className={selectClass}
                 value={mod}
                 onChange={(e) => setMod(e.target.value)}
               >
                 {crmModules.map((n) => (
-                  <option key={n}>{n}</option>
+                  <option key={n} value={n}>
+                    {getModuleLabel(t, n)}
+                  </option>
                 ))}
               </select>
               <input
-                aria-label="Search monitor"
+                aria-label={t("modules.social.searchMonitor")}
                 className={selectClass}
                 value={draft}
                 onChange={(e) => setDraft(e.target.value)}
@@ -152,10 +222,10 @@ export function SocialConnectedScreen({
                 }}
               />
               <Button type="button" onClick={() => setQuery(draft)}>
-                Search
+                {t("modules.social.search")}
               </Button>
               <Button type="button" onClick={() => setRefreshes((n) => n + 1)}>
-                Refresh
+                {t("modules.social.refresh")}
               </Button>
               <span data-testid="refresh-count" className="sr-only">
                 {refreshes}
@@ -163,24 +233,24 @@ export function SocialConnectedScreen({
             </div>
             <div className="mb-3">
               <Unavailable
-                label="Add column"
-                message="Contact your administrator to add monitor columns."
+                label={t("modules.social.addColumn")}
+                message={t("modules.social.addColumnsMsg")}
               />
               <Unavailable
-                label="Save columns"
-                message="Contact your administrator to save monitor column preferences."
+                label={t("modules.social.saveColumns")}
+                message={t("modules.social.saveColumnsMsg")}
               />
               <Unavailable
-                label="Remove column"
-                message="Contact your administrator to remove monitor columns."
+                label={t("modules.social.removeColumn")}
+                message={t("modules.social.removeColumnsMsg")}
               />
               <Unavailable
-                label="Reorder columns"
-                message="Contact your administrator to reorder monitor columns."
+                label={t("modules.social.reorderColumns")}
+                message={t("modules.social.reorderColumnsMsg")}
               />
               <Unavailable
-                label="Add to CRM"
-                message="Contact your administrator to add social contacts to CRM."
+                label={t("modules.social.addToCrm")}
+                message={t("modules.social.addToCrmMsg")}
               />
             </div>
             <table className="w-full text-sm">
@@ -196,7 +266,7 @@ export function SocialConnectedScreen({
               <tbody>
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={monitorColumns.length}>No interactions found.</td>
+                    <td colSpan={monitorColumns.length}>{t("modules.social.noInteractions")}</td>
                   </tr>
                 ) : (
                   rows.map((r) => (
@@ -217,12 +287,12 @@ export function SocialConnectedScreen({
         {tab === "Post" && (
           <div>
             <Unavailable
-              label="Compose post"
-              message="Contact your administrator to compose social posts."
+              label={t("modules.social.composePost")}
+              message={t("modules.social.composePostMsg")}
             />
             <Unavailable
-              label="Engage"
-              message="Contact your administrator to engage on social media."
+              label={t("modules.social.engage")}
+              message={t("modules.social.engageMsg")}
             />
           </div>
         )}
@@ -231,18 +301,18 @@ export function SocialConnectedScreen({
             {(state === "populated" ? activityLog : []).map((a) => (
               <li key={a}>{a}</li>
             ))}
-            {state !== "populated" && <li>No activity recorded.</li>}
+            {state !== "populated" && <li>{t("modules.social.noActivityRecorded")}</li>}
           </ul>
         )}
       </div>
       <div className="mt-4">
         <Unavailable
-          label="Brand settings"
-          message="Contact your administrator to configure social brand settings."
+          label={t("modules.social.brandSettings")}
+          message={t("modules.social.brandSettingsMsg")}
         />
         <Unavailable
-          label="Manage accounts"
-          message="Contact your administrator to manage social accounts."
+          label={t("modules.social.manageAccounts")}
+          message={t("modules.social.manageAccountsMsg")}
         />
       </div>
     </section>
