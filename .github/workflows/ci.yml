@@ -71,6 +71,10 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Lint (biome)
         run: pnpm exec biome check .
+      - name: Guard new UI messages
+        run: |
+          git fetch origin main --depth=1
+          node scripts/check-ui-messages.mjs
       - name: Typecheck
         run: node scripts/typecheck.mjs
       - name: Verify unit test shards
