@@ -254,3 +254,4 @@ Rules enforced by the tool:
 
 - Board evidence (`BoardRecipient:` line, optional policy block) is also read from board-authored comments on the window issue's direct parent, same company only. Agent comments never count.
 - Writes on a second host (for example the file service behind the Documents iframe) need an entry in the local, untracked `write-window/scope.json` next to the journal: `{"scopes":[{"host":"<host>","pathPrefix":"/<prefix>/"}]}` (max 4). All other write guards stay in force; host and prefix never go into the repository or comments.
+- The published policy block may use the neutral placeholders `"@board"` (recipient) and `"@primary"` (host); the real values stay in the local policy file, and the recipient is still proven by the board-authored `BoardRecipient:` line.
