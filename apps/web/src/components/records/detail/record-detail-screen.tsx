@@ -311,7 +311,12 @@ export function RecordDetailScreen({
   });
   const lastUpdate = rules.lastUpdate(record, now, orgFormat);
   const businessFields = rules.businessCard(adaptedModule ?? module, displayRecord);
-  const detailSections = rules.sections(adaptedModule ?? module, displayRecord);
+  const detailSections = rules
+    .sections({ ...(adaptedModule ?? module), layout: module.layout }, displayRecord)
+    .map((section) => ({
+      ...section,
+      title: adapter.getLayoutSectionLabel(moduleApiName, section.title),
+    }));
 
   async function persistRecord(input: RecordInput) {
     if (saveRecordOverride) {
@@ -497,7 +502,7 @@ export function RecordDetailScreen({
       {railChrome?.linksGroup ? (
         <>
           <h3 className="px-(--size-record-rail-text-inset) pt-2 text-sm font-semibold text-text-muted">
-            {railChrome.linksGroup.title}
+            {adapter.getRelatedListTitle("links", railChrome.linksGroup.title)}
           </h3>
           <Link
             href={`#${railChrome.linksGroup.addLink.id}`}
@@ -505,7 +510,7 @@ export function RecordDetailScreen({
             laterModule={railChrome.linksGroup.addLink.moduleKey}
             className="flex items-center h-(--size-menu-item-height) px-(--size-record-rail-text-inset) text-md font-normal text-primary hover:underline"
           >
-            {railChrome.linksGroup.addLink.label}
+            {adapter.getRelatedListTitle("addLink", railChrome.linksGroup.addLink.label)}
           </Link>
         </>
       ) : null}

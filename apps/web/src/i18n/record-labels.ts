@@ -22,7 +22,7 @@ export function builtInViewLabel(
   translatedPlural: string,
   t: (key: MessageKey, values?: MessageValues) => string,
 ): string {
-  if (!view.systemDefined && !view.isDefault) return view.name;
+  if (!view.systemDefined) return view.name;
   const names = {
     [`All ${plural}`]: "records.chrome.allRecords",
     [`My ${plural}`]: "records.chrome.myRecords",

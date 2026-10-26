@@ -44,7 +44,7 @@ export function ParticipantsInput({
         <span id={id} className="record-form-participants__value">
           {entries.length === 0
             ? t("records.participants.none")
-            : t("common.selected", { count: entries.length })}
+            : t("records.participants.selected", { count: entries.length })}
         </span>
         <Button
           type="button"

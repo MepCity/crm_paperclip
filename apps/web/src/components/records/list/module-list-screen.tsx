@@ -165,7 +165,11 @@ export interface ModuleListScreenConfig {
    */
   toolbarActions?: readonly Omit<MenuAction, "onAction">[];
   /** Create opens this dialog over the list instead of the create page (Meetings). */
-  renderCreateControl?: (props: { orgSlug: string; currentUserId: string }) => ReactNode;
+  renderCreateControl?: (props: {
+    orgSlug: string;
+    currentUserId: string;
+    items?: readonly MenuAction[];
+  }) => ReactNode;
   quickCreate?: (props: {
     orgSlug: string;
     currentUserId: string;
@@ -237,7 +241,7 @@ function ModuleListScreenLoaded({
   const adapter = useMetadataDisplayAdapter();
   const singularLabel = adapter.getModuleSingular(config.module, config.singularLabel);
   const pluralLabel = adapter.getModulePlural(config.module, config.pluralLabel);
-  const linkFieldLabel = adapter.getNamedLabel(config.linkFieldLabel);
+  const linkFieldLabel = adapter.getFieldLabel(config.module, { apiName: config.linkField, label: config.linkFieldLabel });
   const orgFormat = useFormat();
   const isAdmin = Boolean(explicitIsAdmin ?? userRole === "admin");
   const router = useRouter();
@@ -940,7 +944,7 @@ function ModuleListScreenLoaded({
                 }
               : {}),
           }))}
-          createControl={config.renderCreateControl?.({ orgSlug, currentUserId: currentUserId ?? "" })}
+          createControl={config.renderCreateControl?.({ orgSlug, currentUserId: currentUserId ?? "", items: createItems })}
           create={{
             label: createLabel,
             href: config.quickCreate ? undefined : config.paths.create(orgSlug, config.module),

@@ -22,6 +22,14 @@ test("translates built-in view names and preserves user-created names", () => {
   ).toBe("All Leads");
   expect(
     builtInViewLabel(
+      { name: "All Leads", systemDefined: false, isDefault: true },
+      "Leads",
+      "Müşteri Adayları",
+      t,
+    ),
+  ).toBe("All Leads");
+  expect(
+    builtInViewLabel(
       { name: "My Contacts", systemDefined: true, isDefault: false },
       "Contacts",
       "Kişiler",

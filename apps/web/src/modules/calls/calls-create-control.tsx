@@ -10,7 +10,7 @@ import { FormRow } from "@/components/records/form/form-row";
 import { validateRecordForm } from "@/components/records/form/form-validation";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
-import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import { Menu, type MenuAction, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { useCreateRecord, useModule, useUsers } from "@/lib/api/client/hooks";
@@ -18,29 +18,65 @@ import { moduleRecordPath } from "@/lib/crm-paths";
 import { nextFullHour } from "@/lib/records/datetime-parts";
 import { buildCallsFormDefaults, CALLS_FORM_FALLBACK_COLUMNS } from "./calls-form-rules";
 
-export function renderCallsCreateControl(props: { orgSlug: string; currentUserId: string }) {
+export function renderCallsCreateControl(props: {
+  orgSlug: string;
+  currentUserId: string;
+  items?: readonly MenuAction[];
+}) {
   return <CallsCreateControl {...props} />;
 }
 
-export function CallsCreateControl(props: { orgSlug: string; currentUserId: string }) {
+export function CallsCreateControl(props: {
+  orgSlug: string;
+  currentUserId: string;
+  items?: readonly MenuAction[];
+}) {
   const t = useUiTranslations();
   const [mode, setMode] = useState<"schedule" | "log" | null>(null);
   return (
     <>
-      <MenuTrigger>
-        <Button size="splitPrimary">
-          {t("records.actions.create", { module: t("metadata.modules.Calls.singular") })}
-          <Icons.chevronDown aria-hidden className="ml-3 size-4" />
-        </Button>
-        <Menu>
-          <MenuItem id="schedule" onAction={() => setMode("schedule")}>
-            {t("records.calls.schedule")}
-          </MenuItem>
-          <MenuItem id="log" onAction={() => setMode("log")}>
-            {t("records.calls.log")}
-          </MenuItem>
-        </Menu>
-      </MenuTrigger>
+      <div className="inline-flex shrink-0 items-center" data-split-button>
+        <MenuTrigger>
+          <Button
+            size="splitPrimary"
+            className={props.items?.length ? "rounded-r-none" : undefined}
+          >
+            {t("records.actions.create", { module: t("metadata.modules.Calls.singular") })}
+          </Button>
+          <Menu>
+            <MenuItem id="schedule" onAction={() => setMode("schedule")}>
+              {t("records.calls.schedule")}
+            </MenuItem>
+            <MenuItem id="log" onAction={() => setMode("log")}>
+              {t("records.calls.log")}
+            </MenuItem>
+          </Menu>
+        </MenuTrigger>
+        {props.items?.length ? (
+          <MenuTrigger>
+            <Button
+              size="splitArrow"
+              className="rounded-l-none"
+              aria-label={t("records.chrome.more")}
+            >
+              <Icons.chevronDown aria-hidden className="size-4" />
+            </Button>
+            <Menu
+              width="create"
+              items={props.items}
+              onAction={(id) =>
+                props.items?.find((item) => item.id === id && !item.laterModule)?.onAction()
+              }
+            >
+              {(item) => (
+                <MenuItem id={item.id} isDisabled={item.isDisabled} laterModule={item.laterModule}>
+                  {item.label}
+                </MenuItem>
+              )}
+            </Menu>
+          </MenuTrigger>
+        ) : null}
+      </div>
       {mode ? <CallCreateDialog {...props} mode={mode} onClose={() => setMode(null)} /> : null}
     </>
   );

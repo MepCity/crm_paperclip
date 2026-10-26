@@ -215,7 +215,9 @@
     "start": "START ",
     "closing": "CLOSING ",
     "noAttachment": "No Attachment",
-    "noRecords": "No records found"
+    "noRecords": "No records found",
+    "hierarchyView": "Hierarchy View",
+    "more": "More"
   },
   "calls": {
     "schedule": "Schedule a call",
@@ -271,6 +273,18 @@
     "add": "+ Add",
     "remove": "Remove",
     "removePerson": "Remove {name}",
-    "list": "{label} list"
+    "list": "{label} list",
+    "selected": "{count} selected"
+  },
+  "reminders": {
+    "PT0M": "At start",
+    "PT5M": "5 minutes before",
+    "PT10M": "10 minutes before",
+    "PT15M": "15 minutes before",
+    "PT30M": "30 minutes before",
+    "PT1H": "1 hour before",
+    "PT2H": "2 hours before",
+    "P1D": "1 day before",
+    "P2D": "2 days before"
   }
 }

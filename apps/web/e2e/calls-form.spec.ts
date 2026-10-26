@@ -16,7 +16,7 @@ async function openCreate(page: Page) {
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(moduleListDefaultPath(org.slug, CALLS_TAB));
-  await page.getByRole("link", { name: "Create Call", exact: true }).click();
+  await page.goto(`/crm/${org.slug}/tab/Calls/create`);
   await expect(page.getByRole("heading", { name: "Create Call" })).toBeVisible();
   return org;
 }

@@ -289,7 +289,11 @@ export function ContactHierarchyModal({
                   data-part="account-root"
                   className="contact-hierarchy-account-row"
                 >
-                  <Icons.building aria-hidden className="size-4 shrink-0 text-text-muted" />
+                  <Icons.recordLookup
+                    module="Accounts"
+                    aria-hidden
+                    className="size-4 shrink-0 text-text-strong"
+                  />
                   <span>{tree.rootAccount.name}</span>
                 </div>
               ) : null}

@@ -1,4 +1,5 @@
 import { Icons } from "@/components/ui/icon";
+import { english } from "@/i18n/catalogs";
 import type { ModuleScreenDefinition } from "../types";
 import { LeadRecordScreen } from "./lead-record-screen";
 import { LeadStatusRibbonSection } from "./lead-status-ribbon-section";
@@ -53,7 +54,12 @@ export const leadsScreenDefinition: ModuleScreenDefinition = {
   detail: {
     addTags: { label: "Add Tags" },
     buildHeaderCommands: (record, { editHref }) => [
-      { id: "send-email", label: "Send Email", variant: "primary", laterModule: "M10" },
+      {
+        id: "send-email",
+        label: english.records.actions.sendEmail,
+        variant: "primary",
+        laterModule: "M10",
+      },
       ...(record.fields.Converted__s === true
         ? []
         : [

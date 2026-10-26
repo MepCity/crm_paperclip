@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { FieldValueView } from "@/components/records/detail/field-value";
 import { RelatedRecordsListError } from "@/components/records/detail/related-records-list-error";
 import { Link } from "@/components/ui/link";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { useModule, useRecordList, useUsers, useView, useViews } from "@/lib/api/client/hooks";
 import { useFormat } from "@/lib/format-context";
@@ -27,6 +28,7 @@ export function RelatedDealsCardBody({
   filterField,
   dealRecordPath,
 }: RelatedDealsCardBodyProps) {
+  const t = useUiTranslations();
   const adapter = useMetadataDisplayAdapter();
   const orgFormat = useFormat();
   const moduleQuery = useModule("Deals");
@@ -87,7 +89,7 @@ export function RelatedDealsCardBody({
   if (rows.length === 0) {
     return (
       <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-        No records found
+        {t("records.chrome.noRecords")}
       </div>
     );
   }

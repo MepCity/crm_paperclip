@@ -215,7 +215,9 @@
     "start": "BAŞLAT ",
     "closing": "KAPANIŞ ",
     "noAttachment": "Ek bulunamadı",
-    "noRecords": "Kayıt bulunamadı"
+    "noRecords": "Kayıt bulunamadı",
+    "hierarchyView": "Hiyerarşi Görünümü",
+    "more": "Diğer"
   },
   "calls": {
     "schedule": "Çağrı zamanla",
@@ -271,6 +273,18 @@
     "add": "+ Ekle",
     "remove": "Kaldır",
     "removePerson": "{name} kaldır",
-    "list": "{label} listesi"
+    "list": "{label} listesi",
+    "selected": "{count} seçili"
+  },
+  "reminders": {
+    "PT0M": "Başlangıçta",
+    "PT5M": "5 dakika önce",
+    "PT10M": "10 dakika önce",
+    "PT15M": "15 dakika önce",
+    "PT30M": "30 dakika önce",
+    "PT1H": "1 saat önce",
+    "PT2H": "2 saat önce",
+    "P1D": "1 gün önce",
+    "P2D": "2 gün önce"
   }
 }

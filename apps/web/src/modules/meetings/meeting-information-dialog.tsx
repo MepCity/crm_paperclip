@@ -98,12 +98,23 @@ export function MeetingInformationDialog({
     const omitted = new Set<string>(meetingsFormRules.omitted ?? []);
     return buildFormModel(metadata.data, "create", meetingsFormRules)
       .flatMap((section) => section.columns.flat())
-      .filter((f) => !shown.has(f.apiName) && !omitted.has(f.apiName));
+      .filter((f) => !shown.has(f.apiName) && !omitted.has(f.apiName) && f.apiName !== "Who_Id");
   }, [metadata.data, windowFields]);
-  const fields = useMemo(
-    () => (expanded ? [...windowFields, ...extraFields] : windowFields),
-    [expanded, windowFields, extraFields],
-  );
+  const fields = useMemo(() => {
+    if (!expanded) return windowFields;
+    const ordered = [...windowFields, ...extraFields];
+    const tail = [
+      "What_Id",
+      "Recurring_Activity",
+      "Remind_Participants",
+      "Description",
+      "Remind_At",
+    ];
+    return [
+      ...ordered.filter((field) => !tail.includes(field.apiName)),
+      ...tail.flatMap((name) => ordered.filter((field) => field.apiName === name)),
+    ];
+  }, [expanded, windowFields, extraFields]);
 
   function change(name: string, value: FieldValue) {
     const writes: Record<string, FieldValue> = { [name]: value };
