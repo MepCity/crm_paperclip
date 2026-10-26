@@ -37,7 +37,7 @@ it("creates a private empty dashboard through the fixture port and displays the 
     "Team overview",
   );
   await user.click(screen.getByRole("button", { name: "Add Component" }));
-  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  await user.click(screen.getByRole("button", { name: "Close" }));
   expect(screen.getByRole("heading", { name: "No Components Found" })).toBeDefined();
   expect(save).toHaveBeenCalledOnce();
 });

@@ -3,10 +3,17 @@ import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/cr
 import { getModuleScreens } from "@/modules/registry";
 
 /** Pinned-link icon accent tokens from the design system (`tokens.css`). */
-export type NavLinkIconAccentToken = "--color-accent-blue";
+export type NavLinkIconAccentToken =
+  | "--color-accent-blue"
+  | "--color-accent-orange"
+  | "--color-accent-purple"
+  | "--color-accent-red";
 
 const navLinkIconAccentClass: Record<NavLinkIconAccentToken, string> = {
   "--color-accent-blue": "text-accent-blue",
+  "--color-accent-orange": "text-accent-orange",
+  "--color-accent-purple": "text-accent-purple",
+  "--color-accent-red": "text-danger",
 };
 
 export function navLinkIconClassName(
@@ -152,6 +159,7 @@ export const shellNav: NavConfig = {
       icon: Icons.task,
       href: (slug) => `/crm/${slug}/workqueue`,
       match: "exact",
+      iconAccentToken: "--color-accent-orange",
     },
     {
       id: "reports",
@@ -159,6 +167,7 @@ export const shellNav: NavConfig = {
       icon: Icons.file,
       href: (slug) => moduleTabPath(slug, "Reports"),
       match: "prefix",
+      iconAccentToken: "--color-accent-red",
     },
     {
       id: "analytics",
@@ -166,6 +175,7 @@ export const shellNav: NavConfig = {
       icon: Icons.barChart,
       href: (slug) => moduleTabPath(slug, "Dashboards"),
       match: "prefix",
+      iconAccentToken: "--color-accent-purple",
     },
   ],
   sections: [

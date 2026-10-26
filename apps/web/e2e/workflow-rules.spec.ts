@@ -283,7 +283,7 @@ test("ordinary organizations show no workflow rules or foreign detail", async ({
   const org = await createOrganization(page);
   await page.goto(`/crm/${org.slug}/settings/workflow-rules`);
   await expect(page.getByText("No workflow rules have been configured yet.")).toBeVisible();
-  await expect(page.getByRole("table")).toHaveCount(0);
+  await expect(page.getByRole("table")).toBeVisible();
   await page.goto(`/crm/${org.slug}/settings/workflow-rules/wf-rule-lead-welcome`);
   await expect(page.getByText("Workflow rule not found.")).toBeVisible();
   assertNoPageErrors(pageErrors);
@@ -335,7 +335,7 @@ test("Turkish workflow creation shows the observed header, summary and scope", a
   });
   expect(language.ok()).toBe(true);
   await page.goto(`/crm/${org.slug}/settings/workflow-rules`);
-  await page.getByRole("button", { name: "Kural Oluştur", exact: true }).click();
+  await page.getByRole("button", { name: "Yeni Kural Oluştur", exact: true }).click();
   await page.getByRole("button", { name: /Modül/ }).click();
   await page
     .getByRole("listbox", { name: "Modül", exact: true })

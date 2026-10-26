@@ -1,5 +1,6 @@
 import { listMembers } from "@crm/core";
 import { PageTitle } from "@/components/shell/page-title";
+import { getUiTranslations } from "@/i18n/request";
 import { getRecordService } from "@/lib/records";
 import { requireOrgContext } from "@/lib/session";
 import { AnalyticsScreen } from "@/modules/analytics/analytics-screen";
@@ -18,9 +19,10 @@ export default async function DashboardsPage({ params }: { params: Promise<{ org
       ownerNames: new Map(members.map((member) => [member.userId, member.name])),
     }).getDashboard();
   }
+  const t = await getUiTranslations();
   return (
     <>
-      <PageTitle title="Analytics" />
+      <PageTitle title={t("shell.analytics")} />
       <AnalyticsScreen orgSlug={orgSlug} port={{ getDashboard }} />
     </>
   );

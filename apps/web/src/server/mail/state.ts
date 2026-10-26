@@ -4,8 +4,11 @@ import { createMailJobCatalog } from "@crm/core/mail/outbox";
 import { createMailSeed } from "./seed";
 
 /** Ephemeral staging state only. No worker consumes this queue and no provider is connected. */
-export async function createMailState(ctx: OrgContext) {
-  const seed = await createMailSeed(ctx);
+export async function createMailState(
+  ctx: OrgContext,
+  options: { includeMessages?: boolean } = {},
+) {
+  const seed = await createMailSeed(ctx, { includeMessages: options.includeMessages ?? false });
   let tail = Promise.resolve();
   return {
     ...seed,

@@ -13,6 +13,7 @@ import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 
 const categories = [
   "all",
@@ -41,6 +42,7 @@ export function TemplateCreate({
   onClose: () => void;
 }) {
   const t = useUiTranslations();
+  const display = useMetadataDisplayAdapter();
   const titleId = useId();
   const [step, setStep] = useState<"module" | "gallery" | "editor">("module");
   const [module, setModule] = useState("Leads");
@@ -68,14 +70,20 @@ export function TemplateCreate({
           <h2 id={titleId} className="text-xl font-semibold">
             {t("modules.observedFlows.createEmailTemplate")}
           </h2>
-          <Select
-            label={t("modules.observedFlows.selectModule")}
-            items={modules.filter((m) => m !== "All Modules").map((id) => ({ id }))}
-            value={module}
-            onChange={(key) => setModule(String(key))}
-          >
-            {(item) => <SelectItem id={item.id}>{item.id}</SelectItem>}
-          </Select>
+          <div className="flex items-center gap-5">
+            <span>{t("modules.observedFlows.module")}</span>
+            <div className="w-64">
+              <Select
+                label={t("modules.observedFlows.selectModule")}
+                hideLabel
+                items={modules.filter((m) => m !== "All Modules").map((id) => ({ id }))}
+                value={module}
+                onChange={(key) => setModule(String(key))}
+              >
+                {(item) => <SelectItem id={item.id}>{display.getModulePlural(item.id)}</SelectItem>}
+              </Select>
+            </div>
+          </div>
           <div className="flex justify-end gap-3">
             <Button variant="secondary" onPress={onClose}>
               {t("modules.observedFlows.cancel")}

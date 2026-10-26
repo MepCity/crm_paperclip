@@ -117,25 +117,9 @@ test.describe("CRM modules Turkish localization", () => {
     await page.getByRole("button", { name: "Save", exact: true }).click();
     await expect(page.locator("html")).toHaveAttribute("lang", "tr");
 
-    // 0. Home onboarding
     await page.goto(`/crm/${org.slug}`);
-    await expect(page.locator("[data-testid='home-onboarding']")).toBeVisible();
-    await expect(page.getByRole("heading", { name: "CRM'inizi kurun" })).toBeVisible();
-    await expect(page.getByRole("button", { name: "Ekibinizi davet edin" })).toBeVisible();
-
-    await page.goto(`/crm/${org.slug}?state=preview`);
-    await expect(page.getByRole("option", { name: "Bugün", exact: true })).toBeAttached();
-    await expect(page.getByRole("option", { name: "Bu Hafta", exact: true })).toBeAttached();
-    await expect(page.getByRole("option", { name: "Gelecek Hafta", exact: true })).toBeAttached();
-    await expect(page.getByRole("option", { name: "Sonraki 7 Gün", exact: true })).toBeAttached();
-    await expect(
-      page.getByRole("columnheader", { name: "Son Tarih", exact: true }).first(),
-    ).toBeVisible();
-    await expect(
-      page.getByRole("columnheader", { name: "Konu", exact: true }).first(),
-    ).toBeVisible();
-    await page.getByRole("combobox", { name: "Aktivite dönemi" }).selectOption("next-week");
-    await expect(page.getByRole("columnheader", { name: "Başlangıç", exact: true })).toBeVisible();
+    await expect(page.getByTestId("home-canvas")).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Ana Sayfa", exact: true })).toBeVisible();
 
     // 1. Documents
     await page.goto(`/crm/${org.slug}/tab/Documents`);
@@ -160,7 +144,6 @@ test.describe("CRM modules Turkish localization", () => {
     await page.goto(`/crm/${org.slug}/settings/workflow-rules`);
     await expect(page.getByRole("heading", { name: "İş Akışı Kuralları" })).toBeVisible();
 
-    // 5. Reports & Analytics
     await page.goto(`/crm/${org.slug}/tab/Reports`);
     await expect(page.getByRole("button", { name: "Tüm Raporlar" })).toBeVisible();
     await expect(page.getByRole("columnheader", { name: "Rapor Adı" })).toBeVisible();

@@ -43,14 +43,8 @@
   },
   {
     "file": "apps/web/src/app/crm/[orgSlug]/calendar/page.tsx",
-    "line": 6,
+    "line": 7,
     "column": 34,
-    "hash": "d5d0a30b517e3bea"
-  },
-  {
-    "file": "apps/web/src/app/crm/[orgSlug]/calendar/page.tsx",
-    "line": 13,
-    "column": 24,
     "hash": "d5d0a30b517e3bea"
   },
   {
@@ -90,21 +84,9 @@
     "hash": "fa56abc468388b10"
   },
   {
-    "file": "apps/web/src/app/crm/[orgSlug]/settings/templates/page.tsx",
-    "line": 23,
-    "column": 31,
-    "hash": "21e624fe7af50bd9"
-  },
-  {
     "file": "apps/web/src/app/crm/[orgSlug]/tab/Dashboards/page.tsx",
-    "line": 8,
+    "line": 9,
     "column": 34,
-    "hash": "94c116ee118a7299"
-  },
-  {
-    "file": "apps/web/src/app/crm/[orgSlug]/tab/Dashboards/page.tsx",
-    "line": 23,
-    "column": 24,
     "hash": "94c116ee118a7299"
   },
   {
@@ -121,14 +103,8 @@
   },
   {
     "file": "apps/web/src/app/crm/[orgSlug]/tab/Emails/page.tsx",
-    "line": 6,
+    "line": 7,
     "column": 34,
-    "hash": "373197624e9dd578"
-  },
-  {
-    "file": "apps/web/src/app/crm/[orgSlug]/tab/Emails/page.tsx",
-    "line": 12,
-    "column": 24,
     "hash": "373197624e9dd578"
   },
   {
@@ -139,14 +115,8 @@
   },
   {
     "file": "apps/web/src/app/crm/[orgSlug]/tab/Reports/page.tsx",
-    "line": 7,
+    "line": 8,
     "column": 34,
-    "hash": "dacca3cba3f346a4"
-  },
-  {
-    "file": "apps/web/src/app/crm/[orgSlug]/tab/Reports/page.tsx",
-    "line": 17,
-    "column": 24,
     "hash": "dacca3cba3f346a4"
   },
   {
@@ -187,14 +157,8 @@
   },
   {
     "file": "apps/web/src/app/crm/[orgSlug]/workqueue/page.tsx",
-    "line": 7,
+    "line": 9,
     "column": 34,
-    "hash": "24984fe2592707f8"
-  },
-  {
-    "file": "apps/web/src/app/crm/[orgSlug]/workqueue/page.tsx",
-    "line": 24,
-    "column": 24,
     "hash": "24984fe2592707f8"
   },
   {
@@ -4681,127 +4645,127 @@
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 103,
+    "line": 110,
     "column": 14,
     "hash": "f1b7505afa5c9e2b"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 116,
+    "line": 123,
     "column": 10,
     "hash": "b4e929d8bcfe0418"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 143,
+    "line": 150,
     "column": 14,
     "hash": "3a78695388b38b5c"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 151,
+    "line": 158,
     "column": 14,
     "hash": "24984fe2592707f8"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 158,
+    "line": 166,
     "column": 14,
     "hash": "dacca3cba3f346a4"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 165,
+    "line": 174,
     "column": 14,
     "hash": "94c116ee118a7299"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 174,
+    "line": 184,
     "column": 14,
     "hash": "0d24b42db450ca85"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 180,
+    "line": 190,
     "column": 18,
     "hash": "090512d93fcc3c0d"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 185,
+    "line": 195,
     "column": 22,
     "hash": "f514c310bd9e7f02"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 202,
+    "line": 212,
     "column": 12,
     "hash": "c910d474dcd724bf"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 210,
+    "line": 220,
     "column": 12,
     "hash": "1044a4c056d0d685"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 218,
+    "line": 228,
     "column": 12,
     "hash": "2c57faa0b6257edd"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 226,
+    "line": 236,
     "column": 12,
     "hash": "a749cc4a01647267"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 234,
+    "line": 244,
     "column": 12,
     "hash": "d079ee92c1cb3559"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 242,
+    "line": 252,
     "column": 12,
     "hash": "fadf4711a2619a30"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 250,
+    "line": 260,
     "column": 12,
     "hash": "969ccbd3cf6300ec"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 259,
+    "line": 269,
     "column": 12,
     "hash": "ef9992233a1892eb"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 267,
+    "line": 277,
     "column": 12,
     "hash": "6ee71699e8b69061"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 275,
+    "line": 285,
     "column": 12,
     "hash": "31d61c75fac97fd9"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 283,
+    "line": 293,
     "column": 12,
     "hash": "39c7fb1dc54fd272"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 292,
+    "line": 302,
     "column": 12,
     "hash": "b186714a4117b87a"
   },
@@ -6120,160 +6084,10 @@
     "hash": "41d434bd7438bb55"
   },
   {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 28,
-    "column": 18,
-    "hash": "b186714a4117b87a"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 32,
-    "column": 29,
-    "hash": "61b86bcee34535e9"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 33,
-    "column": 52,
-    "hash": "4228aeb07c410ffc"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 36,
-    "column": 75,
-    "hash": "fe43448c3110f9a9"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 39,
-    "column": 74,
-    "hash": "391e405152779acc"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 45,
-    "column": 61,
-    "hash": "b186714a4117b87a"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 46,
-    "column": 57,
-    "hash": "5a5c52fff12233ab"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 53,
-    "column": 24,
-    "hash": "42522e73169fe8a0"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 74,
-    "column": 18,
-    "hash": "d8b8392e2c542950"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 81,
-    "column": 59,
-    "hash": "e7917dd689c79692"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 86,
-    "column": 74,
-    "hash": "a67bdafdb751efdc"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 93,
-    "column": 95,
-    "hash": "f148224ae44fb843"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 102,
-    "column": 36,
-    "hash": "ae390de39ea17829"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 109,
-    "column": 101,
-    "hash": "d75f056b1bbfeec2"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 114,
-    "column": 92,
-    "hash": "426664a592c5b5e0"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 118,
-    "column": 35,
-    "hash": "cef0f0af17876434"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 121,
-    "column": 61,
-    "hash": "6be090825c997103"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 124,
-    "column": 61,
-    "hash": "dcd1d5223f73b3a9"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 127,
-    "column": 61,
-    "hash": "f148224ae44fb843"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 130,
-    "column": 56,
-    "hash": "920e413c7d411b61"
-  },
-  {
-    "file": "apps/web/src/modules/assignment-rules/assignment-rules-screen.tsx",
-    "line": 158,
-    "column": 18,
-    "hash": "c08ac736a5e29c29"
-  },
-  {
     "file": "apps/web/src/modules/assignment-rules/criteria-view.tsx",
     "line": 38,
     "column": 74,
     "hash": "1aa1e44dea28a80b"
-  },
-  {
-    "file": "apps/web/src/modules/calendar-booking/calendar-booking-screen.tsx",
-    "line": 51,
-    "column": 88,
-    "hash": "ed23ff310ff3f5b9"
-  },
-  {
-    "file": "apps/web/src/modules/calendar-booking/calendar-booking-screen.tsx",
-    "line": 54,
-    "column": 63,
-    "hash": "d33b3efd50b8a332"
-  },
-  {
-    "file": "apps/web/src/modules/calendar-booking/calendar-booking-screen.tsx",
-    "line": 60,
-    "column": 82,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/modules/calendar-booking/calendar-booking-screen.tsx",
-    "line": 63,
-    "column": 83,
-    "hash": "02874719552c3e23"
   },
   {
     "file": "apps/web/src/modules/calls/calls-detail-sections.ts",
@@ -8262,354 +8076,6 @@
     "hash": "d7a6dfbf48e1fd96"
   },
   {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 23,
-    "column": 39,
-    "hash": "6f38aa51d57ed1cc"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 24,
-    "column": 32,
-    "hash": "8cd3c97b05acb58a"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 25,
-    "column": 31,
-    "hash": "bb21c5663b01ff44"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 26,
-    "column": 40,
-    "hash": "0c17d22a1e1a86b7"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 27,
-    "column": 38,
-    "hash": "5befb20cd57b2493"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 28,
-    "column": 36,
-    "hash": "dd189a989c882140"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 83,
-    "column": 18,
-    "hash": "dd121554df671308"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 86,
-    "column": 29,
-    "hash": "7560f40a798060cb"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 101,
-    "column": 26,
-    "hash": "277ae7560292291a"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 120,
-    "column": 37,
-    "hash": "e2cb3c0fc41c4781"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 122,
-    "column": 38,
-    "hash": "dea46ee63c533873"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 131,
-    "column": 26,
-    "hash": "8cd3c97b05acb58a"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 132,
-    "column": 55,
-    "hash": "3049ba407e80584e"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 137,
-    "column": 26,
-    "hash": "bb21c5663b01ff44"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 138,
-    "column": 55,
-    "hash": "d87452ed83b5c1e9"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 152,
-    "column": 23,
-    "hash": "eca63a7b268fad6d"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 154,
-    "column": 76,
-    "hash": "b79cac926e0b2e34"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 187,
-    "column": 24,
-    "hash": "112dfd0ab185ca2c"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 188,
-    "column": 63,
-    "hash": "e0e91f3890b18fdf"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 192,
-    "column": 45,
-    "hash": "675bdf85c6314495"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 200,
-    "column": 24,
-    "hash": "d9b1b13352f04397"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 201,
-    "column": 47,
-    "hash": "b104e9fc94ff8bfa"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 205,
-    "column": 51,
-    "hash": "558fe3beb34c946e"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 209,
-    "column": 15,
-    "hash": "bff6bce17a6e7be3"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 212,
-    "column": 15,
-    "hash": "253052b7a2ca13c1"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 215,
-    "column": 15,
-    "hash": "058388c855fd742e"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 216,
-    "column": 15,
-    "hash": "ea322b3a83147a52"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 218,
-    "column": 103,
-    "hash": "690d8ad074169aea"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 226,
-    "column": 22,
-    "hash": "b11f5857be3d5214"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 227,
-    "column": 35,
-    "hash": "ebae1e1f1389de20"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 231,
-    "column": 65,
-    "hash": "f6e0bef56031e63c"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 234,
-    "column": 34,
-    "hash": "f6e0bef56031e63c"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 239,
-    "column": 24,
-    "hash": "be1549e7d13b52a5"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 242,
-    "column": 65,
-    "hash": "67bea04ca538cf5b"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 244,
-    "column": 32,
-    "hash": "67bea04ca538cf5b"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 247,
-    "column": 62,
-    "hash": "324b134f57c70c72"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 248,
-    "column": 51,
-    "hash": "91a497dde3eb4d0b"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 250,
-    "column": 65,
-    "hash": "b9b3e4ec9a5c5f67"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 252,
-    "column": 32,
-    "hash": "b9b3e4ec9a5c5f67"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 254,
-    "column": 65,
-    "hash": "7eeea66e373db96a"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 256,
-    "column": 32,
-    "hash": "7eeea66e373db96a"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 260,
-    "column": 70,
-    "hash": "1b54c52818057f31"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 270,
-    "column": 14,
-    "hash": "bacbb92f65a1e163"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 287,
-    "column": 22,
-    "hash": "e855d74822dc411b"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 288,
-    "column": 35,
-    "hash": "f1e7cbdf8fc09e22"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 294,
-    "column": 19,
-    "hash": "ee7578275cbfc201"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 296,
-    "column": 25,
-    "hash": "ee7578275cbfc201"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 303,
-    "column": 30,
-    "hash": "5a264945a25df60f"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 304,
-    "column": 71,
-    "hash": "61ec3ab1415a93b9"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 314,
-    "column": 33,
-    "hash": "5236895593a9448c"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 316,
-    "column": 49,
-    "hash": "6b0cc904d081a8c1"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 317,
-    "column": 49,
-    "hash": "36a142da010bb39c"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 318,
-    "column": 49,
-    "hash": "bbedc70e985fe0b6"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 319,
-    "column": 49,
-    "hash": "1326ededd5a13051"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 321,
-    "column": 59,
-    "hash": "6d7fe92b62ce19de"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 323,
-    "column": 72,
-    "hash": "9d50090d6a710492"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 327,
-    "column": 77,
-    "hash": "748854763bc847c7"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 336,
-    "column": 77,
-    "hash": "ce0171e51b07c9d6"
-  },
-  {
     "file": "apps/web/src/modules/email-settings/port.ts",
     "line": 2,
     "column": 42,
@@ -8641,139 +8107,13 @@
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 91,
-    "column": 55,
-    "hash": "56b564b75c7fdb48"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 93,
-    "column": 27,
-    "hash": "c3259b7da0a8d982"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 104,
-    "column": 14,
-    "hash": "969ccbd3cf6300ec"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 115,
-    "column": 14,
-    "hash": "758f487fe8e9fcc5"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 126,
-    "column": 14,
-    "hash": "07c60b2f79382eb1"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 137,
-    "column": 26,
-    "hash": "7bd30494297e0f94"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 158,
-    "column": 26,
-    "hash": "5e58df6ba297d3ff"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 159,
-    "column": 27,
-    "hash": "5e58df6ba297d3ff"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 169,
-    "column": 24,
-    "hash": "b79cac926e0b2e34"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 184,
-    "column": 22,
-    "hash": "c301789205f14eee"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 191,
-    "column": 26,
-    "hash": "22fc5d8c2951548b"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 194,
-    "column": 14,
-    "hash": "22fc5d8c2951548b"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 226,
-    "column": 26,
-    "hash": "bf69e4e8d84236fb"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 243,
-    "column": 45,
-    "hash": "fae92fccf2bfd298"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 247,
-    "column": 34,
-    "hash": "1fc9a387654d410f"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 255,
-    "column": 28,
-    "hash": "f95e97c2f7677db8"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 256,
-    "column": 28,
-    "hash": "6015680f13679068"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 257,
-    "column": 28,
-    "hash": "9f1b40730a2cbcab"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 258,
-    "column": 28,
-    "hash": "b4a7365740ef880b"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 260,
-    "column": 45,
-    "hash": "67a1892f792aa89b"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 264,
-    "column": 53,
-    "hash": "1093f6bc33aa652e"
-  },
-  {
-    "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 272,
+    "line": 292,
     "column": 36,
     "hash": "ea713ecd8537f77e"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 337,
+    "line": 357,
     "column": 36,
     "hash": "c465e186dd7b0fd9"
   },
@@ -8809,61 +8149,7 @@
   },
   {
     "file": "apps/web/src/modules/emails/record-card/emails-record-card.tsx",
-    "line": 174,
-    "column": 18,
-    "hash": "373197624e9dd578"
-  },
-  {
-    "file": "apps/web/src/modules/emails/record-card/emails-record-card.tsx",
-    "line": 180,
-    "column": 62,
-    "hash": "373197624e9dd578"
-  },
-  {
-    "file": "apps/web/src/modules/emails/record-card/emails-record-card.tsx",
-    "line": 186,
-    "column": 24,
-    "hash": "0e216164aa1991a8"
-  },
-  {
-    "file": "apps/web/src/modules/emails/record-card/emails-record-card.tsx",
-    "line": 192,
-    "column": 45,
-    "hash": "0e216164aa1991a8"
-  },
-  {
-    "file": "apps/web/src/modules/emails/record-card/emails-record-card.tsx",
-    "line": 205,
-    "column": 33,
-    "hash": "749e6a8b38f9ee55"
-  },
-  {
-    "file": "apps/web/src/modules/emails/record-card/emails-record-card.tsx",
-    "line": 208,
-    "column": 42,
-    "hash": "078ec6cbda20df2c"
-  },
-  {
-    "file": "apps/web/src/modules/emails/record-card/emails-record-card.tsx",
-    "line": 238,
-    "column": 33,
-    "hash": "0bec63626b534328"
-  },
-  {
-    "file": "apps/web/src/modules/emails/record-card/emails-record-card.tsx",
-    "line": 242,
-    "column": 33,
-    "hash": "3a41b14e5b0408c7"
-  },
-  {
-    "file": "apps/web/src/modules/emails/record-card/emails-record-card.tsx",
-    "line": 249,
-    "column": 28,
-    "hash": "5cb413eea4a2368b"
-  },
-  {
-    "file": "apps/web/src/modules/emails/record-card/emails-record-card.tsx",
-    "line": 270,
+    "line": 283,
     "column": 68,
     "hash": "1b9f384c1436f607"
   },

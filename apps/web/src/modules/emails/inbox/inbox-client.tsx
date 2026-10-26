@@ -1,7 +1,9 @@
 "use client";
 
+import { isAppError } from "@crm/core/errors";
 import { useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
+import { UnexpectedApiError } from "@/lib/api/wire/errors";
 import { loadInboxHttp } from "./http-loader";
 import { InboxScreen } from "./inbox-screen";
 import { type EmailFolder, emailFolders, type InboxViewModel } from "./view-model";
@@ -11,7 +13,7 @@ export type InboxLoader = (folder: EmailFolder) => Promise<InboxViewModel>;
 type LoadState = {
   folder: EmailFolder;
   load: InboxLoader;
-  status: "loading" | "error" | "ready";
+  status: "loading" | "error" | "denied" | "ready";
   model: InboxViewModel;
 };
 
@@ -34,8 +36,12 @@ export function InboxClient({ load = loadInboxHttp }: { load?: InboxLoader }) {
       try {
         const model = await load(folder);
         if (live) setState({ folder, load, status: "ready", model });
-      } catch {
-        if (live) setState({ folder, load, status: "error", model: emptyModel });
+      } catch (error) {
+        const denied =
+          (isAppError(error) && error.code === "forbidden") ||
+          (error instanceof UnexpectedApiError && error.status === 403);
+        if (live)
+          setState({ folder, load, status: denied ? "denied" : "error", model: emptyModel });
       }
     }
     void fetchFolder();

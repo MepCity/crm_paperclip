@@ -50,10 +50,10 @@ describe("EmailSettingsScreen", () => {
     await user.type(screen.getByRole("searchbox", { name: "Search User, Profile" }), "no-match");
     expect(screen.getByText("No users found.")).toBeDefined();
     await user.click(screen.getByRole("tab", { name: "Organization Emails" }));
-    expect(screen.getByRole("button", { name: "Add Email Address" })).toHaveProperty(
-      "disabled",
-      true,
-    );
+    await user.click(screen.getByRole("button", { name: "Add Email Address" }));
+    expect(screen.getByRole("dialog", { name: "Add Email Address" })).toBeDefined();
+    expect(screen.getByRole("button", { name: "Save" })).toHaveProperty("disabled", true);
+    await user.click(screen.getByRole("button", { name: "Cancel" }));
     await user.click(screen.getByRole("tab", { name: "Custom Email Fields" }));
     expect(push).toHaveBeenLastCalledWith(
       "/crm/demo/settings/email-configuration/custom-email-fields-preference",
@@ -89,7 +89,7 @@ describe("EmailSettingsScreen", () => {
     await user.click(screen.getByRole("tab", { name: "BCC Dropbox" }));
     expect(screen.getByText(/No address has been generated/)).toBeDefined();
     expect(push).toHaveBeenLastCalledWith("/crm/demo/settings/bcc-dropbox");
-    expect(screen.queryByRole("button", { name: "Regenerate" })).toBeNull();
+    expect(screen.getByRole("button", { name: "Regenerate" })).toHaveProperty("disabled", true);
   });
 
   it("reads custom preference state through the port while preventing changes", async () => {

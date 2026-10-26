@@ -1,5 +1,5 @@
-import { PageHeader } from "@/components/shell/page-header";
 import { PageTitle } from "@/components/shell/page-title";
+import { getUiTranslations } from "@/i18n/request";
 import { requireOrgContext } from "@/lib/session";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import { EmailTemplatesScreen } from "@/modules/email-templates/email-templates-screen";
@@ -17,10 +17,10 @@ export default async function TemplatesSettingsPage({
   await requireOrgContext(orgSlug);
   const { type = "email" } = await searchParams;
 
+  const t = await getUiTranslations();
   return (
     <>
-      <PageTitle title={shellPageTitle.settings} />
-      <PageHeader description="Email templates." />
+      <PageTitle title={t("shell.settings")} />
       <EmailTemplatesScreen initialType={type} orgSlug={orgSlug} />
     </>
   );

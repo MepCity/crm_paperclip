@@ -9,6 +9,9 @@ import { type CalendarEvent, eventsOnDay, layoutTimedEvents } from "./layout-tim
 
 export interface CalendarTimeGridProps {
   date: string;
+  slotMinutes?: 30 | 60;
+  dayLabel?: (date: string) => string;
+  timeLabel?: (minute: number) => string;
   view: "day" | "week";
   events: readonly CalendarEvent[];
   weekStartsOn?: number;
@@ -21,6 +24,9 @@ export interface CalendarTimeGridProps {
 
 export function CalendarTimeGrid({
   date,
+  slotMinutes = 30,
+  dayLabel,
+  timeLabel,
   view,
   events,
   weekStartsOn = 0,
@@ -57,7 +63,7 @@ export function CalendarTimeGrid({
                 onPress={() => onDayClick?.(day)}
                 aria-label={t("modules.calendar.openDay", { day })}
               >
-                {day}
+                {dayLabel?.(day) ?? day}
               </Button>
             </th>
           ))}
@@ -84,12 +90,12 @@ export function CalendarTimeGrid({
             </td>
           ))}
         </tr>
-        {Array.from({ length: 48 }, (_, index) => {
-          const minute = index * 30;
+        {Array.from({ length: 1440 / slotMinutes }, (_, index) => {
+          const minute = index * slotMinutes;
           return (
             <tr key={minute}>
               <th scope="row" className="text-xs font-normal text-text-muted">
-                {slotTime(date, minute).slice(11)}
+                {timeLabel?.(minute) ?? slotTime(date, minute).slice(11)}
               </th>
               {days.map((day, dayIndex) => {
                 const nowMinute = now?.startsWith(`${day}T`)
@@ -101,7 +107,7 @@ export function CalendarTimeGrid({
                     tabIndex={-1}
                     key={day}
                     aria-label={slotTime(day, minute)}
-                    className="relative h-8 border border-border p-0 align-top"
+                    className={`relative ${slotMinutes === 60 ? "h-16" : "h-8"} border border-border p-0 align-top`}
                   >
                     <Button
                       variant="ghost"
@@ -112,7 +118,8 @@ export function CalendarTimeGrid({
                     />
                     {(layouts[dayIndex] ?? [])
                       .filter(
-                        (item) => item.startMinute >= minute && item.startMinute < minute + 30,
+                        (item) =>
+                          item.startMinute >= minute && item.startMinute < minute + slotMinutes,
                       )
                       .map((item) => (
                         <CalendarEventButton
@@ -121,20 +128,20 @@ export function CalendarTimeGrid({
                           onEventClick={onEventClick}
                           style={{
                             position: "absolute",
-                            top: `${((item.startMinute - minute) / 30) * 100}%`,
-                            height: `${((item.endMinute - item.startMinute) / 30) * 100}%`,
+                            top: `${((item.startMinute - minute) / slotMinutes) * 100}%`,
+                            height: `${((item.endMinute - item.startMinute) / slotMinutes) * 100}%`,
                             left: `${item.columnIndex * item.width * 100}%`,
                             width: `${item.width * 100}%`,
                             minHeight: 0,
                           }}
                         />
                       ))}
-                    {nowMinute >= minute && nowMinute < minute + 30 && (
+                    {nowMinute >= minute && nowMinute < minute + slotMinutes && (
                       <span
                         role="img"
                         aria-label={`Current time ${now}`}
                         className="pointer-events-none absolute inset-x-0 z-20 border-t border-danger"
-                        style={{ top: `${((nowMinute - minute) / 30) * 100}%` }}
+                        style={{ top: `${((nowMinute - minute) / slotMinutes) * 100}%` }}
                       />
                     )}
                   </td>

@@ -9,6 +9,7 @@ import { useUiTranslations } from "@/i18n/client-provider";
 import { PreferenceProvider } from "@/lib/preferences";
 import { CreateRecordsMenu } from "./create-records";
 import { GlobalSearch } from "./global-search";
+import { navLinkIconClassName, shellNav } from "./nav";
 import { Navigation } from "./navigation";
 import { OrganizationSwitcher, type ShellOrganization } from "./organization-switcher";
 import { PageTitleContext } from "./page-title";
@@ -27,6 +28,7 @@ export function AppShell({
 }) {
   const t = useUiTranslations();
   const pathname = usePathname();
+  const isCalendar = pathname === `/crm/${orgSlug}/calendar`;
   const isSettings =
     pathname === `/crm/${orgSlug}/settings` || pathname.startsWith(`/crm/${orgSlug}/settings/`);
   const isSettingsHome =
@@ -63,9 +65,11 @@ export function AppShell({
         <aside
           aria-label={t("shell.rail")}
           id="navigation-rail"
-          className={`${isSettings ? "hidden" : railVisible === null ? "hidden md:flex" : railVisible ? "flex" : "hidden"} absolute inset-y-0 bottom-(--size-utility-strip-height) left-0 z-30 w-(--size-rail-width) max-w-full shrink-0 flex-col bg-rail-surface md:static`}
+          className={`${isSettings ? "hidden" : railVisible === null ? "hidden md:flex" : railVisible ? "flex" : "hidden"} absolute inset-y-0 bottom-(--size-utility-strip-height) left-0 z-30 ${isCalendar ? "w-20" : "w-(--size-rail-width)"} max-w-full shrink-0 flex-col bg-rail-surface md:static`}
         >
-          <div className="relative flex h-(--size-topbar-height) shrink-0 items-start gap-2 pl-(--size-rail-header-inset) pr-(--size-rail-inset) pt-(--size-rail-header-top)">
+          <div
+            className={`${isCalendar ? "hidden" : "flex"} relative h-(--size-topbar-height) shrink-0 items-start gap-2 pl-(--size-rail-header-inset) pr-(--size-rail-inset) pt-(--size-rail-header-top)`}
+          >
             <div className="min-w-0 flex-1">
               <OrganizationSwitcher organizations={organizations} currentSlug={orgSlug} />
             </div>
@@ -82,7 +86,36 @@ export function AppShell({
               <Icons.hideMenu className="size-(--size-topbar-icon)" aria-hidden />
             </Button>
           </div>
-          <Navigation orgSlug={orgSlug} />
+          {isCalendar ? (
+            <nav aria-label={t("shell.navigation")} className="flex flex-col gap-3 py-4">
+              {shellNav.links.map((link) => (
+                <Link
+                  key={link.id}
+                  href={link.href(orgSlug)}
+                  variant="rail"
+                  className="h-20 flex-col justify-center gap-2 px-1 text-xs"
+                >
+                  <link.icon
+                    aria-hidden
+                    className={navLinkIconClassName(link, { nested: false, active: false })}
+                  />
+                  <span>
+                    {t(
+                      link.id === "home"
+                        ? "shell.home"
+                        : link.id === "workqueue"
+                          ? "shell.workqueue"
+                          : link.id === "reports"
+                            ? "shell.reports"
+                            : "shell.analytics",
+                    )}
+                  </span>
+                </Link>
+              ))}
+            </nav>
+          ) : (
+            <Navigation orgSlug={orgSlug} />
+          )}
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
           <header className="relative flex h-(--size-topbar-height) shrink-0 items-center justify-between gap-2 border-b border-topbar-border bg-topbar-surface px-(--size-topbar-title-inset)">

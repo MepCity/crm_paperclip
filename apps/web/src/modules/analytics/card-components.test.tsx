@@ -2,6 +2,7 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { LanguageProvider } from "@/i18n/client-provider";
 import {
   AccountsKpiContent,
   CardEmptyIllustration,
@@ -370,4 +371,34 @@ describe("ProlificRepsContent (AC09)", () => {
     expect(screen.getByText("Deal Owner")).toBeTruthy();
     expect(screen.getByText("Sum of Amount")).toBeTruthy();
   });
+});
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
+it("translates built-in source storage aliases and comparison captions while retaining custom sources", () => {
+  render(
+    <LanguageProvider language="tr">
+      <AccountsKpiContent
+        data={{
+          state: "value",
+          value: 2,
+          previousPeriodLabel: "Last Month Relative:",
+          previousPeriodValue: 1,
+        }}
+      />
+      <LeadsBySourceContent
+        data={{
+          state: "value",
+          sources: [
+            { label: "OnlineStore", count: 1, percentage: 25, color: "red" },
+            { label: "Sales Mail Alias", count: 1, percentage: 25, color: "blue" },
+            { label: "Team referral", count: 2, percentage: 50, color: "green" },
+          ],
+        }}
+      />
+    </LanguageProvider>,
+  );
+  expect(screen.getByText("Geçen Ay İlgili: 1")).toBeTruthy();
+  expect(screen.getByText("Çevrimiçi Mağaza 1 (25.00 %)")).toBeTruthy();
+  expect(screen.getByText("Satış E-posta Takma Adı 1 (25.00 %)")).toBeTruthy();
+  expect(screen.getByText("Team referral 2 (50.00 %)")).toBeTruthy();
 });
