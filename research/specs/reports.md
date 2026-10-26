@@ -688,9 +688,13 @@ R2 Analytics gaps narrowed only functionally. All remaining access/visual
 questions above persist. UI Lead approval of this spec is not a module gate
 or permission to implement undocumented defaults or reference writes.
 
-## W4 write-window disposition — 2026-10-25
+## W4 historical gap disposition — superseded on 2026-10-25
 
-MEP-1346 resumes after W0 and W3 completed. The final Platform Lead decision
+Historical record only: the board reopened MEP-1346 for live observation on
+25 October. The following gap-only disposition is superseded; the live
+continuation below is authoritative for new observations.
+
+MEP-1346 resumed after W0 and W3 completed. The then-current Platform Lead decision
 in [MEP-1355](/MEP/issues/MEP-1355#comment-68b28723-d4fb-4860-b352-c92690ff7d75)
 applies to W2–W4: unsupported live flows close as **unobserved gaps**. Installed
 window tooling is not a verified live endpoint/body/restore contract. No
@@ -740,3 +744,224 @@ The existing independent review stage checks this documentation and evidence
 boundary. This disposition is neither parity acceptance nor ADR/module-gate
 approval. A future live attempt requires the separately approved single-flow
 path in MEP-1355; it must not be inferred from this gap inventory.
+
+## W4 live continuation — 2026-10-25, cleanup pending
+
+The board reopened the window for live observation; W1 completed before this
+continuation. The earlier W4 gap disposition is historical, not the current
+completion result. This section records actual Turkish-interface observations.
+W4 is **incomplete and paused for cleanup**. Home/Workqueue and Visits/Social
+were not reached in this continuation. Their earlier evidence limits remain.
+
+### Observed flow and controls
+
+The Reports entry opens a populated list. Rapor Oluştur opens a modal over the
+list. Its module selector starts empty; Devam appears disabled until a module
+is chosen. The menu exposes CRM modules, including Leads, Contacts, Accounts,
+Deals, Tasks, Meetings and Calls. Selecting Leads updates the field and enables
+Devam. This is unsaved form state, not a created report. The attempted Devam
+click was refused by the capture guard because of its savePrimaryModule
+attribute. One preceding role selector matched no element; the later exported
+unique option selector successfully selected Leads. No report builder/save,
+validation message, report definition or report cleanup was observed.
+
+Analytics Pano Oluştur opens an editor with a narrow app navigation rail,
+a component palette on the left, and name/description/access controls above
+an empty grid. Its initial name is Untitled Dashboard and its access is
+Yalnızca ben. Saving the independently named ZZTEST test dashboard with no
+description or components succeeds. The resulting dashboard shows its test
+name, private access, Panoyu Sil, and the empty message
+**Herhangi bir Bileşen Bulunamadı** with Bileşen Ekle. A component is therefore
+not required for this observed save. No transient success toast is certified.
+
+| ID | Visible control / state | Position and observed behaviour | Source / owner |
+| --- | --- | --- | --- |
+| WL01 | Rapor Oluştur | Reports toolbar; opens primary-module modal | reports-entry/create; Reports |
+| WL02 | Birincil Modül Seç | Modal dropdown; empty placeholder, then chosen module | report-module/selected-module; Reports |
+| WL03 | Module choices | Dropdown list; unique Leads option selected | report-module/selected-module; Reports |
+| WL04 | İptal | Modal footer; visible, not operated | report-create; Reports |
+| WL05 | Devam | Modal footer; enabled after selection; attempted click guard-blocked | report-builder/selected-module; Reports |
+| WL06 | Pano Oluştur | Analytics toolbar; opens new editor | analytics-entry/dashboard-create; Analytics |
+| WL07 | Pano Adını Gir | Editor header textbox; initial default replaced with test name | dashboard-create/save-validation; Analytics |
+| WL08 | Açıklama Gir | Editor header textbox; left empty | dashboard-create; Analytics |
+| WL09 | Yalnızca ben and access pencil | Header; initial private access, not operated | dashboard-create; Analytics |
+| WL10 | Favorite star | Header beside name; not operated | dashboard-create; Analytics |
+| WL11 | İptal | Editor upper right; visible, not operated | dashboard-create; Analytics |
+| WL12 | Kaydet | Editor upper right; saves empty test dashboard | dashboard-save-validation; Analytics |
+| WL13 | Component type palette | Left editor rail; Chart, KPI, Comparator, Anomaly Detector, Target Meter, Funnel, Cohort, Quadrant, Zone, Stage, Waterfall; gallery below viewport in initial editor | dashboard-create/add-component; Analytics |
+| WL14 | Bileşen Ekle | Empty dashboard action; opens component-type modal | dashboard-add-component; Analytics |
+| WL15 | Galeriden seç | Component modal; visible, not operated | dashboard-add-component; Analytics |
+| WL16 | Grafik | Component modal; opens chart-source choice | dashboard-chart-form; Analytics |
+| WL17 | Hızlı çizelge | Chart-source dialog; instant chart choice, not operated | dashboard-chart-form; Analytics |
+| WL18 | Raporlardan | Chart-source dialog; existing-report choice, not operated | dashboard-chart-form; Analytics |
+| WL19 | Panoyu Sil | Saved test dashboard toolbar; cleanup attempt guard-blocked | dashboard-delete-open; Analytics |
+| WL20 | Close icon | Upper-right of component and chart-source dialogs; visible, not operated | dashboard-add-component/chart-form; Analytics |
+
+Source abbreviations above have the prefix `w4-`. The full stable capture slugs
+are in the audit table below. Screenshots were inspected alongside controls.json
+and aria.yml. Duplicate wrappers are not counted separately. The app shell and
+utility controls remain owned by the existing shell inventory; new editor rail
+appearance was automatic, not an operated persistent collapse preference.
+
+### Mutation and restore audit
+
+The managed journal records three successful outgoing requests at
+19:18:49–19:18:51 UTC: one dashboard create (HTTP 201), then two metadata updates
+(HTTP 200) recording the same test dashboard as recently accessed. The latter
+are passive access traces permitted by the board; no explicit preference change
+was requested. The create used private access and no components. No customer
+record, existing dashboard, recipient, sharing permission or setting changed.
+No report, folder, component, schedule, export or external connection was created.
+
+The cleanup capture attempted only Panoyu Sil on the registered test dashboard.
+It was skipped with `dangerous attribute: delDashboard`; no delete request was
+sent. **At that pause the test dashboard remained present and was not marked cleaned.** Further
+reference activity stopped immediately and the board was notified. No guard,
+policy module or tool was modified to circumvent the refusal; no new repair
+chain was opened. The existing journal and registered object remain intact.
+The board must remove the single empty test dashboard through the UI and report
+the outcome; CRM Analyst then obtains fresh passive absence evidence before
+using the official cleanup-proof flag. A board report alone is not absence proof.
+The separately retained W2 test folder is not a W4 cleanup result.
+
+| Capture slug | Steps / outcome | W4 cumulative writes | Blocked request count |
+| --- | --- | --- | --- |
+| w4-reports-entry | Entry; no steps | 0 | 2 |
+| w4-report-create | Create opening clicked | 0 | 3 |
+| w4-report-module | Create opening and dropdown clicked | 0 | 3 |
+| w4-report-builder | Two openings; unmatched option and blocked Devam | 0 | 3 |
+| w4-report-selected-module | Three clicks; module selected | 0 | 3 |
+| w4-analytics-entry | Entry; no steps | 0 | 4 |
+| w4-dashboard-create | Editor opened | 0 | 4 |
+| w4-dashboard-save-validation | Editor opened, test name filled, Save clicked | 3 | 4 |
+| w4-dashboard-add-component | Component modal opened | 3 | 4 |
+| w4-dashboard-chart-form | Component modal and chart-source dialog opened | 3 | 4 |
+| w4-dashboard-delete-open | Delete opening skipped by guard | 3 | 4 |
+
+Blocked background requests have click-lock/host reasons; they were not retried
+outside the tool. Runtime shell/sortable diagnostics remain capture limitations.
+No permission-denied, server-error, loading or successful delete state was learned.
+No raw IDs, account values, private addresses or request payload values are
+reproduced here. The managed journal is the wire evidence, not a synthetic API
+contract. Screenshots remain outside the repository.
+
+### Coverage remaining at pause
+
+RW01–RW04: primary-module entry observed only; tabular/summary/matrix builder,
+grouping, filtering, sorting and saved reports remain open. RW05–RW10: folder,
+favorite, sharing, scheduling, export and report deletion remain unobserved.
+AW01: empty private create/save observed; editing and successful deletion remain
+open, with cleanup pending. AW02: component-type and chart-source menus observed;
+component form/save/edit/delete remain open. AW03: period/filter operation remains
+unobserved. No parity, architecture or module-gate approval is claimed.
+
+
+## W4 board cleanup verified — 25 October 2026
+
+The board reported deleting only the empty private test dashboard through
+Panoyu Sil → Sil at 20:44 UTC. The saved captures
+`w4-board-dashboard-absence` (20:46 UTC) and
+`w4-board-dashboard-list-check` (20:48 UTC) were inspected on continuation.
+Neither page export contains the test name; the latter opens the dashboard
+selector using its unique visible current-dashboard label. These are passive
+absence evidence, not an analyst-observed delete confirmation or success message.
+The official cleanup proof already marked the dashboard cleaned and removed it
+from managed open items. The journal records board removal and restored: YES.
+No duplicate cleanup flag or deletion was executed in this continuation.
+
+W4 cumulative allowed writes remains three: the prior create and two passive
+access traces. No open W4 object or setting remains. The retained W2 Documents
+item is a separate disposition and is not certified cleaned here. Historical
+pause statements above describe the earlier state; they do not override this
+verified cleanup. Report builder, report/folder lifecycle, component lifecycle,
+and dashboard edit/period/filter gaps remain open. Dashboard deletion is now
+board-reported and absence-verified, not capture-observed end to end.
+
+
+### Unsaved quick-chart form continuation
+
+`w4-unsaved-chart-source` opens a fresh unsaved dashboard editor and Grafik,
+then `w4-unsaved-quick-chart` opens Hızlı çizelge. Neither dashboard nor component
+was saved. The source dialog offers Hızlı çizelge and Raporlardan. The quick-chart
+modal is wide, with configuration on the left and preview on the right.
+
+| ID | Control / initial state | Observed behaviour |
+| --- | --- | --- |
+| UC01 | Bileşen Adı | Empty focused textbox |
+| UC02 | Modüller | Modül seçin dropdown; required upstream selection for preview |
+| UC03 | Ölçüm (y ekseni) | Ölçüm seç, disabled-looking before module selection |
+| UC04 | Gruplandırma | Gruplandırmayı seç, disabled-looking before module selection |
+| UC05 | + Kriter filtresi | Visible below grouping; inactive-looking initially |
+| UC06 | Kategori Alanı Oluştur | Visible with grouping-category explanation |
+| UC07 | Diğer seçenekler | Section below main configuration |
+| UC08 | Bileşen Filtrelerini Görüntüle | Unchecked checkbox beside Alan seç dropdown; not toggled |
+| UC09 | Sütun grafik | Chart-type dropdown above preview; initial column chart |
+| UC10 | Preview | Explains that a visual preview appears after choosing a module |
+| UC11 | İptal / Bitti | Modal footer; no Bitti or dashboard Save operation performed |
+| UC12 | Yardım | Upper-right help affordance; not operated |
+
+`w4-unsaved-chart-modules` opens the module menu, exposing core CRM modules,
+activities, commercial modules, service modules, Notes, Email and forecast
+entries. Exported unique selectors were used; no positional selector was used.
+This adds live initial-form coverage to AW02; component persistence, successful
+validation, edit/delete and dashboard period/filter operations remain open.
+
+
+`w4-unsaved-chart-selected` selects Leads from the exported module selector.
+An optional related-module dropdown appears; the measure defaults to record
+count for Leads, the grouping selector becomes available, and criterion addition
+becomes active-looking. The preview changes from explanatory text to a two-bar
+example with record-count axis. Preview labels/values are not reproduced and
+are not certified as live aggregation. No data or component definition was saved.
+
+
+`w4-unsaved-chart-criteria` opens + Kriter filtresi in that unsaved form.
+The link becomes a bordered criterion region with Kaldır, numbered row 1,
+field dropdown, initially inactive operator/value controls and green add-row
+plus. No criterion value was entered or applied; no saved filter was created.
+The capture contains seven refused background requests; none was retried outside
+the tool. All quick-chart observations used read-only transport guards.
+
+
+`w4-unsaved-exit-audit` opens the unsaved chart form and cancels the component,
+then cancels the new dashboard editor through their exported exact selectors.
+Both cancel steps succeed. The managed final audit still reports allowedWrites=3,
+no open W4 record and no open setting; only the separately retained W2 item
+remains. Seven background requests are refused, including passive dashboard
+metadata access without a click lock. No transient editor content was saved.
+These cancellation observations do not certify a saved-component delete flow.
+
+
+## W4 final scope disposition — 26 October 2026
+
+The board answered the supported-route interaction at 00:25 Istanbul on
+26 October and accepted the live coverage already collected as sufficient for
+W4. This supersedes the earlier pending-route/pause disposition, not the
+historical evidence limits. No new capture, write, tool repair or guard
+relaxation is authorized or performed for this closure.
+
+| Flow | Final evidence classification |
+| --- | --- |
+| Report entry and primary-module selection | Live observed entry only; RW01–RW04 builder, grouping, filtering, sorting and save remain **not observed, documentation-based** (R4 RD inventory) |
+| Report folder, favorite, sharing, scheduling, export and delete | RW05–RW10 **not observed, documentation-based**; retain each R4 source boundary, with no tested request/payload, download or recipient behaviour |
+| Empty private dashboard create | Live save observed (HTTP 201); no component persisted |
+| Dashboard delete control and confirmation | Analyst attempt blocked by delDashboard; **not observed, documentation-based** for the control flow; board-reported removal and passive absence verification establish cleanup only |
+| Dashboard edit and component create/edit/delete | **Not observed, documentation-based** (R4 AD inventory); quick-chart source/module/measure/criterion form and two Cancel steps are live observed, unsaved coverage only |
+| Dashboard/component period and filters | AW03 **not observed, documentation-based** (R4 AD04–AD06); no saved configuration or default inferred |
+
+Report savePrimaryModule and dashboard delDashboard guards remain unchanged.
+Documentation-based means the previously cited public-documentation candidates
+retain their original provenance; missing validation, success/error text,
+account-specific availability and wire contracts remain unknown. It does not
+turn an unobserved operation into verified parity.
+
+Cleanup reconciliation uses the already recorded board removal, two absence
+captures and `w4-unsaved-exit-audit`: cumulative allowedWrites=3 (one create,
+two passive access traces); no open W4 object or setting. No new cleanup flag
+or reference operation was issued. The separately retained W2 Documents item
+is outside this W4 cleanup claim. [W5](/MEP/issues/MEP-1347) retains window-wide
+verification ownership; the board named 05:00 Istanbul for that check, and this
+closure does not create or certify its schedule.
+
+This is the final bounded W4 research delivery for independent review under
+the board's reduced scope. It is not parity, architecture or module-gate approval.
