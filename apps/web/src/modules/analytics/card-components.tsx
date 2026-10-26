@@ -93,6 +93,7 @@ export function KpiCardContent({ data }: { data: KpiCardData<number> }) {
 
 /** A10.04: Accounts KPI card with relative change caption. */
 export function AccountsKpiContent({ data }: { data: AccountKpiCardData }) {
+  const t = useUiTranslations();
   if (data.state === "empty") {
     return <CardEmptyIllustration />;
   }
@@ -104,7 +105,10 @@ export function AccountsKpiContent({ data }: { data: AccountKpiCardData }) {
       )}
       {data.previousPeriodLabel && (
         <span className="mt-1 text-xs text-text-muted">
-          {data.previousPeriodLabel} {data.previousPeriodValue ?? 0}
+          {data.previousPeriodLabel === "Last Month Relative:"
+            ? t("modules.analytics.lastMonthRelative")
+            : data.previousPeriodLabel}{" "}
+          {data.previousPeriodValue ?? 0}
         </span>
       )}
     </div>
@@ -258,9 +262,12 @@ export function LeadsBySourceContent({ data }: { data: LeadSourceCardData }) {
     "Employee Referral": "modules.analyticsSources.employeeReferral",
     "External Referral": "modules.analyticsSources.externalReferral",
     "Online Store": "modules.analyticsSources.onlineStore",
+    OnlineStore: "modules.analyticsSources.onlineStore",
     Partner: "modules.analyticsSources.partner",
     "Public Relations": "modules.analyticsSources.publicRelations",
     "Sales Email Alias": "modules.analyticsSources.salesEmailAlias",
+    "Sales Mail Alias": "modules.analyticsSources.salesEmailAlias",
+    SalesMailAlias: "modules.analyticsSources.salesEmailAlias",
     "Seminar Partner": "modules.analyticsSources.seminarPartner",
     "Seminar-Internal": "modules.analyticsSources.internalSeminar",
     "Trade Show": "modules.analyticsSources.tradeShow",

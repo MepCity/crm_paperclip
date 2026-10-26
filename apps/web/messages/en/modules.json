@@ -415,7 +415,8 @@
     "dealOwner": "Deal Owner",
     "quickDescription": "Create a chart instantly",
     "reportDescription": "Get from existing reports",
-    "untitled": "Untitled Dashboard"
+    "untitled": "Untitled Dashboard",
+    "lastMonthRelative": "Last Month Relative:"
   },
   "workqueue": {
     "workqueue": "Workqueue queues",

@@ -415,7 +415,8 @@
     "dealOwner": "Satış Fırsatı Kayıt Sahibi",
     "quickDescription": "Anında çizelge oluştur",
     "reportDescription": "Mevcut raporlardan al",
-    "untitled": "Adsız Pano"
+    "untitled": "Adsız Pano",
+    "lastMonthRelative": "Geçen Ay İlgili:"
   },
   "workqueue": {
     "workqueue": "İş kuyrukları",
