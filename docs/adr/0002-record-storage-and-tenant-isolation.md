@@ -1,7 +1,7 @@
 # ADR 0002 — Record storage, metadata model and tenant isolation
 
-- Status: Proposed — not accepted. Two measurement expectations failed (MEP-103) and the third review (MEP-344) found that the rule written for that case was not carried out: the typed table was not measured on the deep pages. "Outcome" holds the rule for that measurement, written before it runs. Acceptance waits for it
-- Date: 2026-10-04, revised 2026-10-12
+- Status: Accepted (CTO, 2026-10-26) — slot model (A4b) with keys-first forms; deep pages are a stated exception to the list target. The deep-page measurement (MEP-358) was not run; "Final disposition" under Outcome gives the reason. ADR 0012 already holds the tenancy, role and migration foundation and is authoritative where the two overlap
+- Date: 2026-10-04, revised 2026-10-12, accepted 2026-10-26
 - Decider: CTO
 - Issue: MEP-40
 
@@ -496,6 +496,18 @@ Applied literally, on p95, boundary pages without the filter deciding (they are 
 
 The 3-times threshold is the reopening threshold of this ADR's first rule. S3's write target is the existing 15 ms. A variant that returns a different record set or order than S1 on any page is out.
 
+
+### Final disposition (2026-10-26)
+
+The board delegated the open question to the CTO and asked for one decision (MEP-40, 2026-10-26). The deep-page measurement is cancelled and the ADR is accepted, for this reason:
+
+1. **No result of that measurement changes the stored data model.** Rows one to three of the table above accept the slot model. Row four does not choose the typed table either: it revises the ADR and asks the board whether deep pages must meet the list target. That question is now answered: **no.** A boundary page is about page 2,400 of a 50-row list; the reference offers Previous and Next only, so a user reaches it only by thousands of clicks, and the volumes of this internal CRM are far below the 200,000 records per module measured. Deep pages are therefore accepted as a stated exception (row three's consequence), whatever the measurement would have shown.
+2. **The typed table stays rejected for reasons that are not speed:** customization without code changes (ADR 0011, accepted and implemented as metadata) would need runtime DDL through a privileged executor, a second way into the schema outside the migrations. A 3-times faster page 2,400 does not outweigh that.
+3. **What the measurement would still have chosen is reversible:** keys first in both branches (S2) is a compiler form, and a second index per slot (S3) is a forward migration that adds an index and reshapes no data. Both are taken by the query compiler issue with plan tests, on evidence from our own data, not before.
+4. **Row-level security overhead** stays as recorded (expectation 6 failed; plans equal). Its cause does not change stored data; the compiler's plan tests are the guard.
+
+Accepted therefore: §§1–10 as written, the slot model with keys-first forms, no depth limit, the 100 ms list target for first pages, filters, keyset pages, related lists, counts and reads, 300 ms at offset 5,000, and deep pages as the exception in Consequences. MEP-358 and its gate MEP-376 are cancelled. Reopening trigger: a real module whose list users page beyond offset 5,000 regularly, or a measured first page over the target.
+
 ## Alternatives considered
 
 | Alternative | Why not |
@@ -550,8 +562,8 @@ The 3-times threshold is the reopening threshold of this ADR's first rule. S3's 
 | Profiles, field-level permissions, sharing rules (bodies of `authorize` and record-level policies) | Separate ADR, after the permission screens are researched |
 | Search: fields, matching rule, token table or another index that works under RLS | With the search spec; needs its own measurement |
 | Text sort and equality rules of the reference (case, accents), and where empty values sort in each direction | With the list research; compiler settings |
-| Form of pages beyond offset 5,000: keys first in both branches, or a second index per slot | Deep-page measurement, by the rule in Outcome; before acceptance |
-| Cause of the row-level security overhead on plans that walk many rows | Same measurement |
+| Form of pages beyond offset 5,000: keys first in both branches, or a second index per slot | Query compiler implementation, with plan tests (Final disposition, point 3) |
+| Cause of the row-level security overhead on plans that walk many rows | Only if a compiler plan test shows it on an emitted form |
 | An audit log that keeps field values after a purge | Board decision, if asked for |
 | Whether a child record can be restored while its parent is deleted | With the first child module |
 | Whether restoring a record restores the child records deleted with it; who may see and empty the recycle bin | With the first child module; permissions ADR |
