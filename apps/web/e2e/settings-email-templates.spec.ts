@@ -74,6 +74,16 @@ test("email template create opens module, gallery, full-page editor and both sav
   await page.screenshot({ path: testInfo.outputPath("template-module.png") });
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Template Gallery" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Basic 6", exact: true })).toBeVisible();
+  for (const name of [
+    "Blank",
+    "Single column",
+    "Two columns",
+    "Two columns with image 1",
+    "Two columns with image 2",
+    "Three columns",
+  ])
+    await expect(page.getByText(name, { exact: true })).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("template-gallery.png") });
   await page.getByRole("button", { name: "Add HTML / Plain Text" }).click();
   await page.getByRole("textbox", { name: "Template name" }).fill("Team welcome");

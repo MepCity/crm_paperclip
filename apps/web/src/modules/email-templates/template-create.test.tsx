@@ -1,7 +1,10 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
+import { LanguageProvider } from "@/i18n/client-provider";
 import { TemplateCreate } from "./template-create";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 afterEach(cleanup);
 
@@ -52,4 +55,39 @@ it("cancels the module dialog without entering the gallery", async () => {
   render(<TemplateCreate modules={["Leads"]} onClose={close} />);
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   expect(close).toHaveBeenCalledOnce();
+});
+
+it("renders the observed Turkish gallery labels and editor mode without replacing the HTML canvas", async () => {
+  const user = userEvent.setup();
+  render(
+    <LanguageProvider language="tr">
+      <TemplateCreate modules={["Leads"]} onClose={vi.fn()} />
+    </LanguageProvider>,
+  );
+  await user.click(screen.getByRole("button", { name: "Sonraki" }));
+  expect(screen.getByRole("heading", { name: "Temel 6" })).toBeDefined();
+  for (const name of ["Tümü", "Temel", "Kutlama", "Davet", "İzleme", "Ürün Promosyonu", "Bildirim"])
+    expect(screen.getByRole("button", { name })).toBeDefined();
+  for (const name of [
+    "Boş",
+    "Tek sütun",
+    "İki sütun",
+    "Görüntü 1 ile iki sütun",
+    "Görüntü 2 ile iki sütun",
+    "Üç sütun",
+  ])
+    expect(screen.getByText(name, { exact: true })).toBeDefined();
+  await user.click(screen.getByRole("button", { name: "Kutlama" }));
+  expect(screen.queryByText("Boş", { exact: true })).toBeNull();
+  await user.click(screen.getByRole("button", { name: "HTML/Düz Metin ekle" }));
+  const body = screen.getByRole("textbox", { name: "Şablon içeriği" });
+  await user.type(body, "Merhaba");
+  const plain = screen.getByRole("button", { name: "Düz metin" });
+  expect(plain.closest('[role="toolbar"]')).not.toBeNull();
+  await user.click(plain);
+  expect(screen.getByRole("textbox", { name: "Şablon içeriği" })).toBe(body);
+  expect(body.getAttribute("contenteditable")).toBe("true");
+  expect(body.textContent).toBe("Merhaba");
+  expect(screen.getByRole("button", { name: "HTML" })).toBeDefined();
+  expect(screen.getByRole("button", { name: "İpuçlarını Göster" })).toBeDefined();
 });

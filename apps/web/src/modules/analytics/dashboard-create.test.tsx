@@ -64,6 +64,18 @@ it("opens quick chart, enables upstream fields after module selection, opens the
   expect(within(chart).getByRole("button", { name: /Measure/ }).textContent).toContain(
     "Count of Leads",
   );
+  const measureRow = within(chart).getByRole("button", { name: /Measure/ }).parentElement
+    ?.parentElement;
+  const groupingRow = within(chart).getByRole("button", { name: /Grouping/ }).parentElement
+    ?.parentElement;
+  expect(measureRow?.querySelectorAll("span.rounded-full")).toHaveLength(2);
+  expect(groupingRow?.querySelectorAll("span.rounded-full")).toHaveLength(1);
+  for (const row of [measureRow, groupingRow]) {
+    for (const ring of row?.querySelectorAll("span.rounded-full") ?? []) {
+      expect(ring.childNodes.length).toBe(0);
+      expect(ring.closest('[aria-hidden="true"]')).not.toBeNull();
+    }
+  }
   expect(within(chart).getByRole("region", { name: "Chart preview" }).textContent).toContain(
     "Record count",
   );

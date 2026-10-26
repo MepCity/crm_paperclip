@@ -241,8 +241,8 @@ function QuickChart({ onCancel }: { onCancel: () => void }) {
                 {emptyItem}
               </Select>
               <span aria-hidden className="flex gap-2">
-                <Icons.minus className="size-4 rounded-full border border-current text-danger" />
-                <Icons.plus className="size-4 rounded-full border border-current text-accent-green" />
+                <span className="size-4 rounded-full border border-current text-danger" />
+                <span className="size-4 rounded-full border border-current text-accent-green" />
               </span>
             </div>
             <span aria-hidden className="text-right text-text-muted">
@@ -259,7 +259,7 @@ function QuickChart({ onCancel }: { onCancel: () => void }) {
                 {emptyItem}
               </Select>
               <span aria-hidden className="flex gap-2">
-                <Icons.minus className="size-4 rounded-full border border-current text-danger" />
+                <span className="size-4 rounded-full border border-current text-danger" />
               </span>
             </div>
             <div className="col-span-2">

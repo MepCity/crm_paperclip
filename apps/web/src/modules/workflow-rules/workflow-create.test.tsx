@@ -1,7 +1,10 @@
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
+import { LanguageProvider } from "@/i18n/client-provider";
 import { WorkflowCreate } from "./workflow-create";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 afterEach(cleanup);
 
@@ -43,4 +46,37 @@ it("requires module and name, advances WHEN date trigger to the observed initial
   );
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   expect(close).toHaveBeenCalledOnce();
+});
+
+it("uses the Turkish shell module label in the observed scope without changing the selected radio", async () => {
+  const user = userEvent.setup();
+  render(
+    <LanguageProvider language="tr">
+      <WorkflowCreate onClose={vi.fn()} />
+    </LanguageProvider>,
+  );
+  await user.click(screen.getByRole("button", { name: /Modül/ }));
+  await user.click(screen.getByRole("option", { name: "Müşteri Adayları" }));
+  await user.type(screen.getByRole("textbox", { name: "Kural Adı" }), "Follow-up");
+  await user.click(screen.getByRole("button", { name: "Sonraki" }));
+  await user.click(screen.getByRole("button", { name: /Bu iş akışı kuralını/ }));
+  await user.click(screen.getByRole("option", { name: "Date/Time Field" }));
+  await user.click(screen.getByRole("button", { name: /Yürütme tarih/ }));
+  await user.click(screen.getByRole("option", { name: "Created Time" }));
+  await user.click(screen.getByRole("button", { name: "Sonraki" }));
+  expect(
+    screen.getByRole("radiogroup", {
+      name: "Kuralı hangi müşteri adayları ögesine uygulamak istersiniz?",
+    }),
+  ).toBeDefined();
+  expect(
+    (
+      screen.getByRole("radio", {
+        name: "Müşteri Adayları belirli koşullarla eşleşiyor",
+      }) as HTMLInputElement
+    ).checked,
+  ).toBe(true);
+  const all = screen.getByRole("radio", { name: "Tüm Müşteri Adayları" }) as HTMLInputElement;
+  expect(all.checked).toBe(false);
+  expect(all.disabled).toBe(false);
 });

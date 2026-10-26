@@ -770,6 +770,28 @@
     "executeThisWorkflowRuleBasedOn": "Execute this workflow rule based on",
     "executionDateTimeField": "Execution date/time field",
     "conditionBadge": "CONDITION 1",
-    "condition1": "Condition 1"
+    "condition1": "Condition 1",
+    "galleryCategoriesLabels": {
+      "all": "All",
+      "basic": "Basic",
+      "celebration": "Celebration",
+      "invitation": "Invitation",
+      "followUp": "Follow-up",
+      "productPromotion": "Product Promotion",
+      "notification": "Notification"
+    },
+    "galleryLayouts": {
+      "blank": "Blank",
+      "singleColumn": "Single column",
+      "twoColumns": "Two columns",
+      "twoColumnsImage1": "Two columns with image 1",
+      "twoColumnsImage2": "Two columns with image 2",
+      "threeColumns": "Three columns"
+    },
+    "html": "HTML",
+    "plainText": "Plain text",
+    "workflowScope": "Which {module} would you like to apply this rule to?",
+    "workflowSpecific": "{module} matching certain conditions",
+    "workflowAll": "All {module}"
   }
 }

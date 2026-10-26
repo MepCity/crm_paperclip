@@ -239,7 +239,7 @@ it("translates all nine period choices into Turkish and keeps the observed defau
     "Bu Hafta",
     "Gelecek Hafta",
     "Bu Ay",
-    "Gelecek Ay",
+    "Önümüzdeki Ay",
     "Belirli Bir Tarihte",
   ]);
   expect(options[0]?.getAttribute("aria-checked")).toBe("true");

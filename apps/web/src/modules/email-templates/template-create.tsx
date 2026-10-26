@@ -15,22 +15,22 @@ import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { useUiTranslations } from "@/i18n/client-provider";
 
 const categories = [
-  "All",
-  "Basic",
-  "Celebration",
-  "Invitation",
-  "Follow-up",
-  "Product Promotion",
-  "Notification",
-];
+  "all",
+  "basic",
+  "celebration",
+  "invitation",
+  "followUp",
+  "productPromotion",
+  "notification",
+] as const;
 const layouts = [
-  "Blank",
-  "Single column",
-  "Two columns",
-  "Two columns with image 1",
-  "Two columns with image 2",
-  "Three columns",
-];
+  "blank",
+  "singleColumn",
+  "twoColumns",
+  "twoColumnsImage1",
+  "twoColumnsImage2",
+  "threeColumns",
+] as const;
 
 /** Only the module → gallery → HTML editor transition was observed (L05–L11). */
 export function TemplateCreate({
@@ -44,7 +44,7 @@ export function TemplateCreate({
   const titleId = useId();
   const [step, setStep] = useState<"module" | "gallery" | "editor">("module");
   const [module, setModule] = useState("Leads");
-  const [category, setCategory] = useState("All");
+  const [category, setCategory] = useState<(typeof categories)[number]>("all");
   return (
     <TopAlignedModal
       isOpen
@@ -114,20 +114,22 @@ export function TemplateCreate({
                   aria-pressed={item === category}
                   onPress={() => setCategory(item)}
                 >
-                  {item}
+                  {t(`modules.observedFlows.galleryCategoriesLabels.${item}`)}
                 </Button>
               ))}
             </nav>
             <div className="flex-1 p-10">
               <h3 className="mb-6 flex items-center gap-2 font-semibold">
-                {category === "All" ? "Basic" : category}{" "}
-                {(category === "All" || category === "Basic") && (
+                {t(
+                  `modules.observedFlows.galleryCategoriesLabels.${category === "all" ? "basic" : category}`,
+                )}{" "}
+                {(category === "all" || category === "basic") && (
                   <span className="inline-flex min-w-6 items-center justify-center rounded bg-surface-muted px-2 py-0.5 text-sm font-normal text-text-muted">
                     6
                   </span>
                 )}
               </h3>
-              {(category === "All" || category === "Basic") && (
+              {(category === "all" || category === "basic") && (
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-8">
                   {layouts.map((layout, index) => (
                     <div key={layout} className="text-center">
@@ -143,7 +145,9 @@ export function TemplateCreate({
                           </div>
                         )}
                       </div>
-                      <p className="mt-4 text-text-muted">{layout}</p>
+                      <p className="mt-4 text-text-muted">
+                        {t(`modules.observedFlows.galleryLayouts.${layout}`)}
+                      </p>
                     </div>
                   ))}
                 </div>
@@ -271,7 +275,7 @@ function TemplateEditor({
           ))}
           <div className="absolute left-full top-0 ml-4 flex items-center whitespace-nowrap">
             <Button variant="ghost" aria-pressed={plain} onPress={() => setPlain(!plain)}>
-              {plain ? "HTML" : "Plain text"}
+              {t(plain ? "modules.observedFlows.html" : "modules.observedFlows.plainText")}
             </Button>
             <span aria-hidden>|</span>
             <Button variant="ghost" isDisabled className="data-disabled:opacity-100!">

@@ -117,6 +117,12 @@ test("creates an empty private fixture dashboard and opens the unsaved quick-cha
   await page.getByRole("option", { name: "Leads", exact: true }).click();
   await chart.getByRole("button", { name: "+ Criteria filter", exact: true }).click();
   await expect(chart.getByRole("region", { name: "Criteria filter" })).toBeVisible();
+  const rings = chart.locator("span.rounded-full.border-current");
+  await expect(rings).toHaveCount(3);
+  await expect(chart.locator("svg.size-4.rounded-full.border-current")).toHaveCount(0);
+  await expect(
+    chart.getByRole("region", { name: "Criteria filter" }).locator("svg.text-accent-green"),
+  ).toBeVisible();
   await page.screenshot({ path: testInfo.outputPath("chart-criteria.png") });
   await chart.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(page.getByRole("heading", { name: "No Components Found" })).toBeVisible();

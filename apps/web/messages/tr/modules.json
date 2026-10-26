@@ -454,7 +454,7 @@
       "thisWeek": "Bu Hafta",
       "nextWeek": "Gelecek Hafta",
       "thisMonth": "Bu Ay",
-      "nextMonth": "Gelecek Ay",
+      "nextMonth": "Önümüzdeki Ay",
       "specificDate": "Belirli Bir Tarihte"
     }
   },
@@ -770,6 +770,28 @@
     "executeThisWorkflowRuleBasedOn": "Bu iş akışı kuralını şu temelde yürüt",
     "executionDateTimeField": "Yürütme tarih/saat alanı",
     "conditionBadge": "KOŞUL 1",
-    "condition1": "Koşul 1"
+    "condition1": "Koşul 1",
+    "galleryCategoriesLabels": {
+      "all": "Tümü",
+      "basic": "Temel",
+      "celebration": "Kutlama",
+      "invitation": "Davet",
+      "followUp": "İzleme",
+      "productPromotion": "Ürün Promosyonu",
+      "notification": "Bildirim"
+    },
+    "galleryLayouts": {
+      "blank": "Boş",
+      "singleColumn": "Tek sütun",
+      "twoColumns": "İki sütun",
+      "twoColumnsImage1": "Görüntü 1 ile iki sütun",
+      "twoColumnsImage2": "Görüntü 2 ile iki sütun",
+      "threeColumns": "Üç sütun"
+    },
+    "html": "HTML",
+    "plainText": "Düz metin",
+    "workflowScope": "Kuralı hangi {module} ögesine uygulamak istersiniz?",
+    "workflowSpecific": "{module} belirli koşullarla eşleşiyor",
+    "workflowAll": "Tüm {module}"
   }
 }

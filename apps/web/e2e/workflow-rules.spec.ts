@@ -310,6 +310,14 @@ test("workflow create advances the observed date trigger to initial criteria wit
   await page.getByRole("option", { name: "Created Time", exact: true }).click();
   await page.getByRole("button", { name: "Next", exact: true }).click();
   await expect(page.getByRole("region", { name: "Condition 1" })).toBeVisible();
+  await expect(
+    page.getByRole("radiogroup", { name: "Which Leads would you like to apply this rule to?" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("radio", { name: "Leads matching certain conditions", exact: true }),
+  ).toBeChecked();
+  await expect(page.getByRole("radio", { name: "All Leads", exact: true })).not.toBeChecked();
+  await expect(page.getByRole("radio", { name: "All Leads", exact: true })).toBeEnabled();
   await page.screenshot({ path: testInfo.outputPath("workflow-criteria.png") });
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Workflow Rules", exact: true })).toBeVisible();

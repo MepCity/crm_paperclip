@@ -8,9 +8,15 @@ import { Select, SelectItem } from "@/components/ui/select";
 import { TextArea } from "@/components/ui/text-area";
 import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
-import { useUiTranslations } from "@/i18n/client-provider";
+import { useUiLanguage, useUiTranslations } from "@/i18n/client-provider";
 
-const modules = ["Leads", "Contacts", "Accounts", "Deals"];
+const moduleLabels = {
+  Leads: "shell.leads",
+  Contacts: "shell.contacts",
+  Accounts: "shell.accounts",
+  Deals: "shell.deals",
+} as const;
+const modules = Object.keys(moduleLabels) as (keyof typeof moduleLabels)[];
 const triggers = ["Record Action", "Date/Time Field", "Record Score", "Record Notes"];
 const dates = [
   "Created Time",
@@ -22,9 +28,11 @@ const dates = [
 
 export function WorkflowCreate({ onClose }: { onClose: () => void }) {
   const t = useUiTranslations();
+  const language = useUiLanguage();
   const titleId = useId();
   const [step, setStep] = useState<"details" | "when" | "criteria">("details");
-  const [module, setModule] = useState("");
+  const [module, setModule] = useState<keyof typeof moduleLabels | "">("");
+  const moduleLabel = module ? t(moduleLabels[module]) : "";
   const [name, setName] = useState("");
   const [description, setDescription] = useState("");
   const [trigger, setTrigger] = useState("");
@@ -57,9 +65,9 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
             placeholder={t("modules.observedFlows.selectModule")}
             items={modules.map((id) => ({ id }))}
             value={module || null}
-            onChange={(key) => setModule(String(key))}
+            onChange={(key) => setModule(key as keyof typeof moduleLabels)}
           >
-            {(item) => <SelectItem id={item.id}>{item.id}</SelectItem>}
+            {(item) => <SelectItem id={item.id}>{t(moduleLabels[item.id])}</SelectItem>}
           </Select>
           <TextField
             label={t("modules.observedFlows.ruleName")}
@@ -200,12 +208,21 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
                   className="max-w-5xl rounded-xl border-2 border-primary bg-surface p-8 shadow-md space-y-6"
                 >
                   <RadioGroup
-                    label={`Which ${module} would you like to apply this rule to?`}
+                    label={t("modules.observedFlows.workflowScope", {
+                      module:
+                        language === "tr" ? moduleLabel.toLocaleLowerCase("tr-TR") : moduleLabel,
+                    })}
                     value="specific"
                     orientation="horizontal"
                     options={[
-                      { value: "specific", label: `${module} matching certain conditions` },
-                      { value: "all", label: `All ${module}` },
+                      {
+                        value: "specific",
+                        label: t("modules.observedFlows.workflowSpecific", { module: moduleLabel }),
+                      },
+                      {
+                        value: "all",
+                        label: t("modules.observedFlows.workflowAll", { module: moduleLabel }),
+                      },
                     ]}
                   />
                   <div className="grid grid-cols-[auto_1fr_1fr_2fr_auto] items-end gap-3">
