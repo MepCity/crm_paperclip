@@ -240,7 +240,7 @@ export function ActivityRelationPanel({
                 variant="body"
                 className="text-primary hover:underline"
               >
-                {t("records.chrome.info")}
+                {t("records.chrome.moreInfo")}
               </Link>
             </div>
           </section>
