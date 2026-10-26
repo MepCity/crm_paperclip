@@ -30,12 +30,16 @@ const configurationTabLabels = {
 } as const;
 
 const areas = [
-  { id: "email-configuration", label: "modules.emailSettings.configuration" },
-  { id: "email-parser", label: "modules.emailSettings.parser" },
-  { id: "bcc-dropbox", label: "modules.emailSettings.bcc" },
-  { id: "email-deliverability", label: "modules.emailSettings.deliverability", disabled: true },
-  { id: "email-intelligence", label: "modules.emailSettings.intelligence", disabled: true },
-  { id: "unsubscribe-link", label: "modules.emailSettings.unsubscribe", disabled: true },
+  { id: "email-configuration", messageKey: "modules.emailSettings.configuration" },
+  { id: "email-parser", messageKey: "modules.emailSettings.parser" },
+  { id: "bcc-dropbox", messageKey: "modules.emailSettings.bcc" },
+  {
+    id: "email-deliverability",
+    messageKey: "modules.emailSettings.deliverability",
+    disabled: true,
+  },
+  { id: "email-intelligence", messageKey: "modules.emailSettings.intelligence", disabled: true },
+  { id: "unsubscribe-link", messageKey: "modules.emailSettings.unsubscribe", disabled: true },
 ] as const;
 
 export function EmailSettingsScreen({
@@ -102,7 +106,7 @@ export function EmailSettingsScreen({
               isDisabled={"disabled" in item && item.disabled}
               className="whitespace-nowrap py-4 text-md"
             >
-              {t(item.label as Parameters<typeof t>[0])}
+              {t(item.messageKey)}
             </Tab>
           ))}
         </TabList>
