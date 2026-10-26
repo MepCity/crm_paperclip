@@ -377,7 +377,11 @@
     "updatedJustNow": "Az önce güncellendi",
     "updatedMinAgo": "{count} dk önce güncellendi",
     "updatedHourAgo": "{count} sa önce güncellendi",
-    "primaryDescription": "Rapor oluşturmak istediğiniz modülü seçin. Örneğin, tüm Kişiler ve bunlara geçen ay eklenen Satış Fırsatları için birincil modül olarak Kişiler öğesini seçin."
+    "primaryDescription": "Rapor oluşturmak istediğiniz modülü seçin. Örneğin, tüm Kişiler ve bunlara geçen ay eklenen Satış Fırsatları için birincil modül olarak Kişiler öğesini seçin.",
+    "outreachFolder": "E-posta Raporları",
+    "meetingFolder": "Toplantı Raporları",
+    "outreachDescription": "E-posta etkinliklerini inceleyin.",
+    "meetingDescription": "Toplantı etkinliklerini inceleyin."
   },
   "analytics": {
     "analytics": "Analitikler",

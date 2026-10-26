@@ -377,7 +377,11 @@
     "updatedJustNow": "Updated just now",
     "updatedMinAgo": "Updated {count} min ago",
     "updatedHourAgo": "Updated {count} h ago",
-    "primaryDescription": "Select the module you want to report on. For example, to display all Contacts and the Deals added to them last month, select Contacts as the primary module."
+    "primaryDescription": "Select the module you want to report on. For example, to display all Contacts and the Deals added to them last month, select Contacts as the primary module.",
+    "outreachFolder": "Outreach Reports",
+    "meetingFolder": "Meeting Reports",
+    "outreachDescription": "Review outreach activity.",
+    "meetingDescription": "Review meeting activity."
   },
   "analytics": {
     "analytics": "Analytics",

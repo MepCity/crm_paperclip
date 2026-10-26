@@ -32,6 +32,20 @@ export function ReportsScreen({
 }) {
   const t = useUiTranslations();
   const display = useMetadataDisplayAdapter();
+  const systemText = (value: string | null) => {
+    switch (value) {
+      case "Outreach Reports":
+        return t("modules.reports.outreachFolder");
+      case "Meeting Reports":
+        return t("modules.reports.meetingFolder");
+      case "Review outreach activity.":
+        return t("modules.reports.outreachDescription");
+      case "Review meeting activity.":
+        return t("modules.reports.meetingDescription");
+      default:
+        return value || "-";
+    }
+  };
   const orgFormat = useFormat();
   const [creating, setCreating] = useState(false);
   const [primaryModule, setPrimaryModule] = useState("");
@@ -204,10 +218,10 @@ export function ReportsScreen({
                       </Button>
                     </div>
                   </td>
-                  <td className="truncate px-3 py-4" title={report.description ?? undefined}>
-                    {report.description || "-"}
+                  <td className="truncate px-3 py-4" title={systemText(report.description)}>
+                    {systemText(report.description)}
                   </td>
-                  <td className="truncate px-3 py-4">{report.folder || "-"}</td>
+                  <td className="truncate px-3 py-4">{systemText(report.folder)}</td>
                   <td className="px-3 py-4">
                     {report.lastAccessedDate
                       ? formatDate(

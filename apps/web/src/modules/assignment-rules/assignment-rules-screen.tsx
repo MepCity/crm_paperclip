@@ -132,10 +132,7 @@ export function AssignmentRulesScreen({
             </>
           ) : result.value.items.length === 0 && !module ? (
             <div data-testid="assignment-introduction">
-              <p className="mb-6 text-md text-text-muted">
-                Assignment Rules helps you automatically assign records to users based on specified
-                criteria.
-              </p>
+              <p className="mb-6 text-md text-text-muted">{t("modules.assignment.description")}</p>
               <Button onPress={() => setCreating(true)}>
                 <Icons.plus className="mr-1 size-4" aria-hidden="true" />
                 {t("modules.assignment.create")}

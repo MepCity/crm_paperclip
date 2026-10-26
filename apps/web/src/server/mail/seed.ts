@@ -3,7 +3,7 @@ import { createInMemoryMailRepository } from "@crm/core/mail/repository";
 import type { MailMessage } from "@crm/core/mail/types";
 
 /** Synthetic, request-local staging data; never a connected provider account. */
-export async function createMailSeed(ctx: OrgContext) {
+export async function createMailSeed(ctx: OrgContext, options: { includeMessages?: boolean } = {}) {
   const repository = createInMemoryMailRepository();
   await repository.createMailbox({
     organizationId: ctx.orgId,
@@ -23,6 +23,7 @@ export async function createMailSeed(ctx: OrgContext) {
     providerThreadKey: null,
   });
   const content = new Map<string, { body: string; unread: boolean }>();
+  if (!options.includeMessages) return { repository, content };
   for (const [id, folder, date] of [
     ["message-demo-1", "inbox", "2026-01-01T10:00:00Z"],
     ["message-demo-2", "inbox", "2026-01-02T10:00:00Z"],

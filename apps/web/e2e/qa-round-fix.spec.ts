@@ -27,7 +27,12 @@ test("check-round fixes keep Turkish screens and draft entry flows usable", asyn
   };
   await page.goto(`${root}/tab/Emails`);
   await expect(page.getByRole("heading", { level: 1, name: "E-posta", exact: true })).toBeVisible();
-  await expect(page.getByText(/Synthetic mail preview/)).toHaveCount(0);
+  await expect(
+    page.getByText(/Synthetic mail preview|Example Sender|Example conversation|Message preview\./),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("heading", { name: "Gelen Kutusu klasöründe ileti yok" }),
+  ).toBeVisible();
   await shot("01-inbox");
   await page.route("**/crm/v2.2/mail/conversations?*", (route) =>
     route.fulfill({
@@ -80,6 +85,11 @@ test("check-round fixes keep Turkish screens and draft entry flows usable", asyn
   await shot("09-workflow-when");
   await page.goto(`${root}/settings/assignment-rules`);
   await expect(page.getByRole("heading", { name: "Atama Kuralları", exact: true })).toBeVisible();
+  await expect(
+    page.getByText(
+      "Atama Kuralları, belirtilen kriterlere dayalı olarak kullanıcılara kayıtları otomatik olarak atamaya yardımcı olur.",
+    ),
+  ).toBeVisible();
   await shot("10-assignment-list");
   await page.getByRole("button", { name: "Atama Kuralı Oluştur", exact: true }).click();
   await expect(page.getByRole("dialog")).toBeVisible();
@@ -89,6 +99,15 @@ test("check-round fixes keep Turkish screens and draft entry flows usable", asyn
     page.getByRole("heading", { level: 1, name: "Raporlar", exact: true }),
   ).toBeVisible();
   await expect(page.getByText(/synthetic/i)).toHaveCount(0);
+  await expect(
+    page.getByText(/Review (outreach|meeting) activity|Outreach Reports|Meeting Reports/),
+  ).toHaveCount(0);
+  await expect(
+    page.getByRole("cell", { name: "E-posta Raporları", exact: true }).first(),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("cell", { name: "Toplantı Raporları", exact: true }).first(),
+  ).toBeVisible();
   await shot("11-reports");
   await page.getByRole("button", { name: "Rapor Oluştur", exact: true }).click();
   await expect(page.getByRole("dialog", { name: "Yeni Rapor Oluştur" })).toBeVisible();
