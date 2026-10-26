@@ -20,16 +20,15 @@ describe("resolveHomeView", () => {
 });
 
 describe("HomeContent", () => {
-  it("shows onboarding by default", () => {
+  it("shows the observed empty canvas by default", () => {
     render(<HomeContent orgSlug="acme" userName="Ada" initialView="onboarding" />);
-    expect(screen.getByTestId("home-onboarding")).toBeTruthy();
+    expect(screen.getByTestId("home-canvas")).toBeTruthy();
   });
 
-  it("renders preview cards when requested", () => {
+  it("does not expose fixture previews through the home route", () => {
     render(<HomeContent orgSlug="acme" userName="Ada" initialView="preview" />);
-    expect(screen.getByTestId("home-preview")).toBeTruthy();
-    expect(screen.getByText("Total deals: 9")).toBeTruthy();
-    expect(screen.getAllByText("Send revised proposal").length).toBeGreaterThan(0);
+    expect(screen.getByTestId("home-canvas")).toBeTruthy();
+    expect(screen.queryByTestId("home-preview")).toBeNull();
   });
 });
 

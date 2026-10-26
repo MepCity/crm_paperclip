@@ -10,6 +10,7 @@ import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { useFormat } from "@/lib/format-context";
 import { fixtureReportsPort } from "./fixture-port";
 import type { ReportDefinition, ReportsPort } from "./port";
@@ -30,6 +31,7 @@ export function ReportsScreen({
   initialReports?: readonly ReportDefinition[];
 }) {
   const t = useUiTranslations();
+  const display = useMetadataDisplayAdapter();
   const orgFormat = useFormat();
   const [creating, setCreating] = useState(false);
   const [primaryModule, setPrimaryModule] = useState("");
@@ -79,6 +81,7 @@ export function ReportsScreen({
           <h2 id="report-create-title" className="text-xl font-semibold">
             {t("modules.observedFlows.createReport")}
           </h2>
+          <p className="leading-relaxed">{t("modules.reports.primaryDescription")}</p>
           <Select
             label={t("modules.observedFlows.selectPrimaryModule")}
             placeholder={t("modules.observedFlows.selectModule")}
@@ -88,7 +91,7 @@ export function ReportsScreen({
             value={primaryModule || null}
             onChange={(key) => setPrimaryModule(String(key))}
           >
-            {(item) => <SelectItem id={item.id}>{item.id}</SelectItem>}
+            {(item) => <SelectItem id={item.id}>{display.getModulePlural(item.id)}</SelectItem>}
           </Select>
           <div className="flex justify-end gap-3">
             <Button
@@ -132,7 +135,7 @@ export function ReportsScreen({
             aria-disabled="true"
             aria-describedby="reports-unavailable"
           >
-            <Icons.info className="size-4" aria-hidden />
+            <Icons.folder className="size-4" aria-hidden />
           </Button>
         </div>
       </div>

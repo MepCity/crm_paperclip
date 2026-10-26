@@ -1,4 +1,5 @@
 import { PageTitle } from "@/components/shell/page-title";
+import { getUiTranslations } from "@/i18n/request";
 import { requireUser } from "@/lib/session";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import { resolveHomeView } from "@/modules/home/fixture";
@@ -16,9 +17,10 @@ export default async function HomePage({
   const { orgSlug } = await params;
   const { state } = await searchParams;
   const user = await requireUser(`/crm/${orgSlug}`);
+  const t = await getUiTranslations();
   return (
     <>
-      <PageTitle title={shellPageTitle.home} />
+      <PageTitle title={t("shell.home")} />
       <HomeContent orgSlug={orgSlug} userName={user.name} initialView={resolveHomeView(state)} />
     </>
   );

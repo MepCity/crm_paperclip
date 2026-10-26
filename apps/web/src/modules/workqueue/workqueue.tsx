@@ -11,23 +11,27 @@ import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import type { MessageKey, MessageValues } from "@/i18n/catalogs";
 import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { moduleRecordPath } from "@/lib/crm-paths";
 import { useFormat } from "@/lib/format-context";
 import "./workqueue.css";
 import { PAGE_SIZE, type QueueData, type QueueId, queueDefinitions } from "./queues";
 
 export function Workqueue({
+  accessDenied = false,
   orgSlug,
   user,
   queues,
   page,
 }: {
+  accessDenied?: boolean;
   orgSlug: string;
   user: { id: string; name: string; role: string };
   queues: readonly QueueData[];
   page: number;
 }) {
   const t = useUiTranslations();
+  const display = useMetadataDisplayAdapter();
   const orgFormat = useFormat();
   const router = useRouter();
   const [selected, setSelected] = useState<QueueId>("tasks");
@@ -49,12 +53,40 @@ export function Workqueue({
   }, [sessionKey]);
   const definition = queueDefinitions.find((queue) => queue.id === selected) ?? queueDefinitions[0];
   const data = queues.find((queue) => queue.id === selected);
+  const valueKeys = {
+    "Not Started": "modules.workqueue.values.notStarted",
+    Deferred: "modules.workqueue.values.deferred",
+    "In Progress": "modules.workqueue.values.inProgress",
+    Completed: "modules.workqueue.values.completed",
+    "Waiting for input": "modules.workqueue.values.waitingForInput",
+    High: "modules.workqueue.values.high",
+    Highest: "modules.workqueue.values.highest",
+    Normal: "modules.workqueue.values.normal",
+    Low: "modules.workqueue.values.low",
+    Lowest: "modules.workqueue.values.lowest",
+  } as const;
   const columns =
-    data?.columns.filter(
-      (field) =>
-        selected !== "tasks" ||
-        ["Subject", "Due_Date", "Status", "Priority"].includes(field.apiName),
-    ) ?? [];
+    data?.columns
+      .map((field) => {
+        const adapted = display.adaptField(definition.module, field);
+        if (definition.module !== "Tasks" || !["Status", "Priority"].includes(field.apiName))
+          return adapted;
+        return {
+          ...adapted,
+          picklist: field.picklist?.map((option) => ({
+            ...option,
+            displayValue:
+              option.displayValue === option.storedValue && option.storedValue in valueKeys
+                ? t(valueKeys[option.storedValue as keyof typeof valueKeys])
+                : option.displayValue,
+          })),
+        };
+      })
+      .filter(
+        (field) =>
+          selected !== "tasks" ||
+          ["Subject", "Due_Date", "Status", "Priority"].includes(field.apiName),
+      ) ?? [];
   const base = `/crm/${orgSlug}/workqueue`;
   function select(id: QueueId) {
     setSelected(id);
@@ -216,137 +248,159 @@ export function Workqueue({
           aria-busy={pending}
           className="workqueue-table flex min-w-0 flex-1 flex-col overflow-hidden rounded-md border border-panel-border bg-surface"
         >
-          <header className="flex items-center gap-2 border-b border-border px-5 py-4">
-            <h2 className="text-xl font-semibold">{getQueueLabel(definition.id, t)}</h2>
-            <Button
-              variant="ghost"
-              size="sm"
-              aria-label={t("modules.workqueue.refreshQueue")}
-              isDisabled={pending}
-              onPress={() => startTransition(() => router.refresh())}
+          {accessDenied ? (
+            <div
+              role="alert"
+              className="flex flex-1 flex-col items-center justify-center bg-bg p-12 text-center"
             >
-              <Icons.refresh aria-hidden className="size-4" />
-            </Button>
-            <div className="ml-auto flex gap-3">
-              <Button
-                variant="ghost"
-                size="sm"
-                aria-label={t("modules.workqueue.filter")}
-                aria-describedby={unavailableDescId}
-                onPress={() => unavailable(t("modules.workqueue.filter"))}
-              >
-                <Icons.filter aria-hidden className="size-4" />
-                <span className="ml-2">{t("modules.workqueue.filter")}</span>
-              </Button>
-              <Button
-                variant="ghost"
-                size="sm"
-                aria-label={t("modules.workqueue.help")}
-                aria-describedby={unavailableDescId}
-                onPress={() => unavailable(t("modules.workqueue.help"))}
-              >
-                <span aria-hidden className="px-1 font-semibold">
-                  ?
-                </span>
-              </Button>
+              <Icons.warning aria-hidden className="mb-8 size-28 text-accent-orange" />
+              <h2 className="max-w-2xl text-xl font-semibold">
+                {t("modules.workqueue.permissionTitle")}
+              </h2>
+              <p className="mt-5 max-w-2xl text-text-muted">
+                {t("modules.workqueue.permissionDescription")}
+              </p>
             </div>
-          </header>
-          {notice && (
-            <p role="status" className="border-b border-border px-5 py-2 text-sm text-text-muted">
-              {notice}
-            </p>
-          )}
-          <div className="min-h-0 flex-1 overflow-auto">
-            <table className="w-full border-collapse text-left text-md">
-              <thead>
-                <tr>
-                  {columns.map((field) => (
-                    <th
-                      key={field.apiName}
-                      scope="col"
-                      className="whitespace-nowrap border-b-2 border-panel-border px-5 py-3 font-normal"
-                    >
-                      {field.label}
-                      {field.apiName === definition.linkField && (
+          ) : (
+            <>
+              <header className="flex items-center gap-2 border-b border-border px-5 py-4">
+                <h2 className="text-xl font-semibold">{getQueueLabel(definition.id, t)}</h2>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  aria-label={t("modules.workqueue.refreshQueue")}
+                  isDisabled={pending}
+                  onPress={() => startTransition(() => router.refresh())}
+                >
+                  <Icons.refresh aria-hidden className="size-4" />
+                </Button>
+                <div className="ml-auto flex gap-3">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={t("modules.workqueue.filter")}
+                    aria-describedby={unavailableDescId}
+                    onPress={() => unavailable(t("modules.workqueue.filter"))}
+                  >
+                    <Icons.filter aria-hidden className="size-4" />
+                    <span className="ml-2">{t("modules.workqueue.filter")}</span>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    aria-label={t("modules.workqueue.help")}
+                    aria-describedby={unavailableDescId}
+                    onPress={() => unavailable(t("modules.workqueue.help"))}
+                  >
+                    <span aria-hidden className="px-1 font-semibold">
+                      ?
+                    </span>
+                  </Button>
+                </div>
+              </header>
+              {notice && (
+                <p
+                  role="status"
+                  className="border-b border-border px-5 py-2 text-sm text-text-muted"
+                >
+                  {notice}
+                </p>
+              )}
+              <div className="min-h-0 flex-1 overflow-auto">
+                <table className="w-full border-collapse text-left text-md">
+                  <thead>
+                    <tr>
+                      {columns.map((field) => (
+                        <th
+                          key={field.apiName}
+                          scope="col"
+                          className="whitespace-nowrap border-b-2 border-panel-border px-5 py-3 font-normal"
+                        >
+                          {field.label}
+                          {field.apiName === definition.linkField && (
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              aria-label={t("modules.workqueue.alphabetFilter")}
+                              aria-describedby={unavailableDescId}
+                              onPress={() => unavailable(t("modules.workqueue.alphabetFilter"))}
+                            >
+                              {t("modules.workqueue.all")}
+                            </Button>
+                          )}
+                        </th>
+                      ))}
+                      <th scope="col" className="border-b-2 border-panel-border">
+                        <span className="sr-only">{t("modules.workqueue.settings")}</span>
                         <Button
                           variant="ghost"
                           size="sm"
-                          aria-label={t("modules.workqueue.alphabetFilter")}
+                          aria-label={t("modules.workqueue.viewSettings")}
                           aria-describedby={unavailableDescId}
-                          onPress={() => unavailable(t("modules.workqueue.alphabetFilter"))}
+                          onPress={() => unavailable(t("modules.workqueue.viewSettings"))}
                         >
-                          {t("modules.workqueue.all")}
+                          <Icons.settingsSliders aria-hidden className="size-4" />
                         </Button>
-                      )}
-                    </th>
-                  ))}
-                  <th scope="col" className="border-b-2 border-panel-border">
-                    <span className="sr-only">{t("modules.workqueue.settings")}</span>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      aria-label={t("modules.workqueue.viewSettings")}
-                      aria-describedby={unavailableDescId}
-                      onPress={() => unavailable(t("modules.workqueue.viewSettings"))}
-                    >
-                      <Icons.settingsSliders aria-hidden className="size-4" />
-                    </Button>
-                  </th>
-                </tr>
-              </thead>
-              <tbody>
-                {data?.result.records.map((record) => (
-                  <tr key={record.id}>
-                    {columns.map((field) => (
-                      <td
-                        key={field.apiName}
-                        className="min-w-40 border-b border-row-separator px-5 py-2 align-top"
-                      >
-                        {selected === "tasks" &&
-                        field.apiName === "Due_Date" &&
-                        overdueLabel(record.fields[field.apiName], undefined, t) ? (
-                          <span className="text-danger">
-                            {overdueLabel(record.fields[field.apiName], undefined, t)}
-                          </span>
-                        ) : (
-                          <CellValue
-                            field={field}
-                            value={record.fields[field.apiName] ?? null}
-                            href={
-                              field.apiName === definition.linkField
-                                ? moduleRecordPath(
-                                    orgSlug,
-                                    definition.module === "Events" ? "Meetings" : definition.module,
-                                    record.id,
-                                  )
-                                : undefined
-                            }
-                            orgSlug={orgSlug}
-                            ownerNames={{ [user.id]: user.name }}
-                            format={orgFormat}
-                          />
-                        )}
-                      </td>
+                      </th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {data?.result.records.map((record) => (
+                      <tr key={record.id}>
+                        {columns.map((field) => (
+                          <td
+                            key={field.apiName}
+                            className="min-w-40 border-b border-row-separator px-5 py-2 align-top"
+                          >
+                            {selected === "tasks" &&
+                            field.apiName === "Due_Date" &&
+                            overdueLabel(record.fields[field.apiName], undefined, t) ? (
+                              <span className="text-danger">
+                                {overdueLabel(record.fields[field.apiName], undefined, t)}
+                              </span>
+                            ) : (
+                              <CellValue
+                                field={field}
+                                value={record.fields[field.apiName] ?? null}
+                                href={
+                                  field.apiName === definition.linkField
+                                    ? moduleRecordPath(
+                                        orgSlug,
+                                        definition.module === "Events"
+                                          ? "Meetings"
+                                          : definition.module,
+                                        record.id,
+                                      )
+                                    : undefined
+                                }
+                                orgSlug={orgSlug}
+                                ownerNames={{ [user.id]: user.name }}
+                                format={orgFormat}
+                              />
+                            )}
+                          </td>
+                        ))}
+                        <td className="border-b border-row-separator" />
+                      </tr>
                     ))}
-                    <td className="border-b border-row-separator" />
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-            {data?.result.records.length === 0 && (
-              <p className="p-6 text-text-muted">{t("common.empty")}</p>
-            )}
-          </div>
-          {data && (
-            <RecordTableFooter
-              total={data.count}
-              page={page}
-              pageSize={PAGE_SIZE}
-              recordCount={data.result.records.length}
-              moreRecords={data.result.moreRecords}
-              previousHref={page > 1 ? `${base}?page=${page - 1}` : null}
-              nextHref={data.result.moreRecords ? `${base}?page=${page + 1}` : null}
-            />
+                  </tbody>
+                </table>
+                {data?.result.records.length === 0 && (
+                  <p className="p-6 text-text-muted">{t("common.empty")}</p>
+                )}
+              </div>
+              {data && (
+                <RecordTableFooter
+                  total={data.count}
+                  page={page}
+                  pageSize={PAGE_SIZE}
+                  recordCount={data.result.records.length}
+                  moreRecords={data.result.moreRecords}
+                  previousHref={page > 1 ? `${base}?page=${page - 1}` : null}
+                  nextHref={data.result.moreRecords ? `${base}?page=${page + 1}` : null}
+                />
+              )}
+            </>
           )}
         </section>
       </div>

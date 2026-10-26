@@ -40,7 +40,9 @@ test("Email settings routes, tabs and accepted gaps stay read only", async ({ pa
 
   await page.getByRole("tab", { name: "Organization Emails", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Organization Email Addresses" })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Add Email Address" })).toBeDisabled();
+  await page.getByRole("button", { name: "Add Email Address" }).click();
+  await expect(page.getByRole("dialog", { name: "Add Email Address" })).toBeVisible();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(page).toHaveURL(`${base}/email-configuration/organization-emails`);
   await page.reload();
   await expect(page.getByRole("heading", { name: "Organization Email Addresses" })).toBeVisible();
@@ -57,7 +59,7 @@ test("Email settings routes, tabs and accepted gaps stay read only", async ({ pa
   await expect(page).toHaveURL(`${base}/bcc-dropbox`);
   await expect(page.getByText(/No address has been generated/)).toBeVisible();
   await page.reload();
-  await expect(page.getByRole("heading", { name: "BCC Dropbox" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "BCC Dropbox", exact: true })).toBeVisible();
   expect(mutations).toEqual([]);
 });
 
@@ -73,7 +75,7 @@ test("Turkish signature switch retains the unsaved body and sender validation", 
   });
   expect(language.ok()).toBe(true);
   await page.goto(`/crm/${org.slug}/settings/email-configuration/email-compose-settings`);
-  await page.getByRole("button", { name: "Add New Signature", exact: true }).click();
+  await page.getByRole("button", { name: "Yeni İmza Ekle", exact: true }).click();
   await page.getByRole("textbox", { name: "İmza adı" }).fill("Team signature");
   await page.getByRole("textbox", { name: "İmza içeriği" }).fill("Regards");
   await page.getByRole("button", { name: "Düz metin", exact: true }).click();

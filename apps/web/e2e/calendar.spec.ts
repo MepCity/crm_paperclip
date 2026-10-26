@@ -74,15 +74,8 @@ test("calendar body inventory C controls, Day schedule, safe interactions and GE
   const mainNav = page.getByRole("navigation", { name: "Main navigation" });
   await expect(mainNav).toBeVisible();
 
-  // C-002: Product/home icon (Organization switcher)
-  const orgSwitcher = page.getByRole("button", {
-    name: new RegExp(`^Organization switcher: ${org.name}`),
-  });
-  await expect(orgSwitcher).toBeVisible();
-
-  // C-003: Show/Hide Menu disclosure
-  const hideMenuBtn = page.getByRole("button", { name: "Hide Menu", exact: true });
-  await expect(hideMenuBtn).toBeVisible();
+  // Calendar uses the compact application rail, without the full CRM switcher.
+  await expect(page.getByRole("button", { name: /^Organization switcher:/ })).toHaveCount(0);
 
   // C-004: Home navigation link
   const homeLink = mainNav.getByRole("link", { name: "Home", exact: true });
@@ -202,9 +195,8 @@ test("calendar body inventory C controls, Day schedule, safe interactions and GE
   await expect(monthViewBtn).toHaveAttribute("aria-pressed", "false");
 
   // C-070: Create link (pointing to Meetings create path)
-  const createLink = schedule.getByRole("link", { name: "Create", exact: true });
-  await expect(createLink).toBeVisible();
-  await expect(createLink).toHaveAttribute("href", `/crm/${org.slug}/tab/Meetings/create`);
+  const createButton = schedule.getByRole("button", { name: "Create", exact: true });
+  await expect(createButton).toBeVisible();
 
   // Note: C-071 (Options dropdown) is not implemented
 
@@ -248,14 +240,14 @@ test("calendar body inventory C controls, Day schedule, safe interactions and GE
     dayGrid.getByRole("gridcell", { name: `All day ${initialDate}`, exact: true }),
   ).toBeVisible();
 
-  // 48 half-hour time slots (00:00 to 23:30)
+  // 24 hourly slots (00:00 to 23:00), matching the native calendar.
   const slotButtons = dayGrid.getByRole("button", { name: /^Create event / });
-  await expect(slotButtons).toHaveCount(48);
+  await expect(slotButtons).toHaveCount(24);
   await expect(
     dayGrid.getByRole("button", { name: `Create event ${initialDate}T00:00`, exact: true }),
   ).toBeVisible();
   await expect(
-    dayGrid.getByRole("button", { name: `Create event ${initialDate}T23:30`, exact: true }),
+    dayGrid.getByRole("button", { name: `Create event ${initialDate}T23:00`, exact: true }),
   ).toBeVisible();
 
   // Note: Utility strip C-081 – C-092 and C-096 are not implemented

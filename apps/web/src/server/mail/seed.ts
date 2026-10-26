@@ -38,7 +38,7 @@ export async function createMailSeed(ctx: OrgContext) {
       inReplyTo: null,
       references: [],
       subject: "Example conversation",
-      summary: "Synthetic mail preview.",
+      summary: "Message preview.",
       from: [{ name: "Example Sender", address: "sender@example.test" }],
       to: [{ name: "Example Recipient", address: "recipient@example.test" }],
       cc: [],
@@ -50,7 +50,7 @@ export async function createMailSeed(ctx: OrgContext) {
       sharedByOwner: false,
     };
     await repository.upsertMessage(row);
-    content.set(id, { body: "Synthetic message body.", unread: id === "message-demo-1" });
+    content.set(id, { body: "Message content.", unread: id === "message-demo-1" });
   }
   await repository.putAttachment({
     organizationId: ctx.orgId,

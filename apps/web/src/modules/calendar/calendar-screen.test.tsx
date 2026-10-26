@@ -80,3 +80,14 @@ test("shows loading, recovers errors, changes calendar scope and opens existing 
   await user.click(screen.getByRole("button", { name: "Select date 2026-02-01" }));
   await screen.findByRole("grid", { name: "day calendar 2026-02-01" });
 });
+
+test("opens the calendar creation menu and routes the selected activity to its form", async () => {
+  list.mockResolvedValue({ records: [], moreRecords: false });
+  const user = userEvent.setup();
+  mount();
+  await screen.findByRole("grid");
+  await user.click(screen.getByRole("button", { name: "Create" }));
+  expect(push).not.toHaveBeenCalled();
+  await user.click(screen.getByRole("menuitem", { name: "Meeting" }));
+  expect(push).toHaveBeenCalledWith("/crm/acme/tab/Meetings/create");
+});

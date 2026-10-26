@@ -1,4 +1,5 @@
 import { PageTitle } from "@/components/shell/page-title";
+import { getUiTranslations } from "@/i18n/request";
 import { requireOrgContext } from "@/lib/session";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import { createAutomationPort } from "@/modules/automation/port";
@@ -22,9 +23,10 @@ export default async function WorkflowRulesPage({
     ...(cursor ? { cursor } : {}),
   });
 
+  const t = await getUiTranslations();
   return (
     <>
-      <PageTitle title={shellPageTitle.settings} />
+      <PageTitle title={t("shell.settings")} />
       <WorkflowRulesListScreen
         orgSlug={orgSlug}
         result={result}

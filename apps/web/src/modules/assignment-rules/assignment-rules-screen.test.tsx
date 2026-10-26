@@ -32,7 +32,6 @@ it("shows A0, A1–A6 and selected S12; deferred controls remain focusable and i
     screen.getByRole("tab", { name: "Assistant" }),
     screen.getByRole("button", { name: "Assignment Rules help" }),
     screen.getByRole("button", { name: "Contextual help" }),
-    screen.getByRole("button", { name: "Create Assignment Rule" }),
   ]) {
     control.focus();
     expect(document.activeElement).toBe(control);
@@ -65,4 +64,15 @@ it("offers a read-only retry link on unavailable but not on forbidden", () => {
   unmount();
   render(<AssignmentRulesScreen result={{ ok: false, error: { code: "forbidden" } }} />);
   expect(screen.queryByRole("link", { name: "Try again" })).toBeNull();
+});
+
+it("opens the unsaved assignment entry and cancels without a write", async () => {
+  const user = userEvent.setup();
+  render(<AssignmentRulesScreen result={{ ok: true, value: { items: [], nextCursor: null } }} />);
+  await user.click(screen.getByRole("button", { name: "Create Assignment Rule" }));
+  expect(screen.getByRole("dialog", { name: "Create Assignment Rule" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Next" })).toHaveProperty("disabled", true);
+  await user.type(screen.getByRole("textbox", { name: "Rule Name" }), "Routing draft");
+  await user.click(screen.getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
 });

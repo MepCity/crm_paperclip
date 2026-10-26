@@ -1,4 +1,5 @@
 import { PageTitle } from "@/components/shell/page-title";
+import { getUiTranslations } from "@/i18n/request";
 import { getRecordService } from "@/lib/records";
 import { requireOrgContext } from "@/lib/session";
 import { createRecordReportsPort } from "@/modules/reports/record-port";
@@ -12,9 +13,10 @@ export default async function ReportsPage({ params }: { params: Promise<{ orgSlu
   const port = createRecordReportsPort(getRecordService(ctx));
   const initialReports = await port.listReports();
 
+  const t = await getUiTranslations();
   return (
     <>
-      <PageTitle title="Reports" />
+      <PageTitle title={t("shell.reports")} />
       <ReportsScreen orgSlug={orgSlug} initialReports={initialReports} />
     </>
   );

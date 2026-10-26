@@ -9,6 +9,8 @@ import { Select, SelectItem } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
+import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { fixtureEmailSettingsPort } from "./fixture-port";
 import {
   configurationTabs,
@@ -19,13 +21,21 @@ import {
 } from "./port";
 import { SignatureCreate } from "./signature-create";
 
+const configurationTabLabels = {
+  "email-compose-settings": "modules.emailSettings.composeTab",
+  "email-settings": "modules.emailSettings.emailTab",
+  "email-sharing": "modules.emailSettings.sharingTab",
+  "organization-emails": "modules.emailSettings.orgTab",
+  "custom-email-fields-preference": "modules.emailSettings.customTab",
+} as const;
+
 const areas = [
-  { id: "email-configuration", label: "Email Configuration" },
-  { id: "email-parser", label: "Email Parser" },
-  { id: "bcc-dropbox", label: "BCC Dropbox" },
-  { id: "email-deliverability", label: "Email Deliverability", disabled: true },
-  { id: "email-intelligence", label: "Email Intelligence", disabled: true },
-  { id: "unsubscribe-link", label: "Unsubscribe Link", disabled: true },
+  { id: "email-configuration", label: "modules.emailSettings.configuration" },
+  { id: "email-parser", label: "modules.emailSettings.parser" },
+  { id: "bcc-dropbox", label: "modules.emailSettings.bcc" },
+  { id: "email-deliverability", label: "modules.emailSettings.deliverability", disabled: true },
+  { id: "email-intelligence", label: "modules.emailSettings.intelligence", disabled: true },
+  { id: "unsubscribe-link", label: "modules.emailSettings.unsubscribe", disabled: true },
 ] as const;
 
 export function EmailSettingsScreen({
@@ -39,6 +49,7 @@ export function EmailSettingsScreen({
   initialTab?: EmailConfigurationTab;
   port?: EmailSettingsPort;
 }) {
+  const t = useUiTranslations();
   const router = useRouter();
   const [selectedArea, setSelectedArea] = useState<string>(area);
   const [selectedTab, setSelectedTab] = useState<string>(initialTab);
@@ -80,10 +91,10 @@ export function EmailSettingsScreen({
   return (
     <section
       className="min-h-full rounded-xl border border-border bg-surface"
-      aria-label="Email settings"
+      aria-label={t("modules.emailSettings.settings")}
     >
       <Tabs selectedKey={selectedArea} onSelectionChange={(key) => navigateArea(String(key))}>
-        <TabList aria-label="Email areas" className="overflow-x-auto px-4">
+        <TabList aria-label={t("modules.emailSettings.areas")} className="overflow-x-auto px-4">
           {areas.map((item) => (
             <Tab
               key={item.id}
@@ -91,14 +102,14 @@ export function EmailSettingsScreen({
               isDisabled={"disabled" in item && item.disabled}
               className="whitespace-nowrap py-4 text-md"
             >
-              {item.label}
+              {t(item.label as Parameters<typeof t>[0])}
             </Tab>
           ))}
         </TabList>
         <TabPanel id="email-configuration" className="p-6">
           <Tabs selectedKey={selectedTab} onSelectionChange={(key) => navigateTab(String(key))}>
             <TabList
-              aria-label="Email configuration"
+              aria-label={t("modules.emailSettings.configuration")}
               className="mb-4 w-fit max-w-full overflow-x-auto rounded-full border p-1"
             >
               {configurationTabs.map((item) => (
@@ -108,7 +119,7 @@ export function EmailSettingsScreen({
                   isDisabled={"disabled" in item && item.disabled}
                   className="whitespace-nowrap rounded-full border-transparent px-5 text-md data-selected:border-primary data-selected:bg-primary-subtle"
                 >
-                  {item.label}
+                  {t(configurationTabLabels[item.id])}
                 </Tab>
               ))}
             </TabList>
@@ -117,9 +128,9 @@ export function EmailSettingsScreen({
               .map((item) => (
                 <TabPanel key={item.id} id={item.id}>
                   {load.error ? (
-                    <p role="alert">Email settings could not be loaded.</p>
+                    <p role="alert">{t("modules.emailSettings.loadError")}</p>
                   ) : !load.data ? (
-                    <p role="status">Loading email settings…</p>
+                    <p role="status">{t("modules.emailSettings.loading")}</p>
                   ) : (
                     <ConfigurationContent tab={item.id} data={load.data} />
                   )}
@@ -128,16 +139,43 @@ export function EmailSettingsScreen({
           </Tabs>
         </TabPanel>
         <TabPanel id="email-parser" className="p-6">
-          <Heading title="Email Parser" />
+          <Heading title={t("modules.emailSettings.parser")} />
           <p className="mt-4 text-md text-text-muted">
-            Email Parser data is unavailable. Configuration is not available on this page.
+            {t("modules.emailSettings.parserUnavailable")}
           </p>
         </TabPanel>
         <TabPanel id="bcc-dropbox" className="p-6">
-          <Heading title="BCC Dropbox" />
-          <p className="mt-4 text-md text-text-muted">
-            BCC Dropbox settings are unavailable. No address has been generated.
-          </p>
+          <div className="mb-6 max-w-5xl rounded border border-accent-orange bg-accent-orange/5 p-4">
+            {t("modules.emailSettings.verifyBcc")}
+          </div>
+          <Heading title={t("modules.emailSettings.bcc")} />
+          <p className="mt-4 max-w-5xl">{t("modules.emailSettings.bccDescription")}</p>
+          <h2 className="mt-8 font-semibold">{t("modules.emailSettings.howWorks")}</h2>
+          <p className="mt-3 max-w-5xl">{t("modules.emailSettings.bccHow")}</p>
+          <section className="mt-8 max-w-5xl rounded-lg border border-border bg-bg p-6">
+            <div className="flex items-center justify-between gap-4">
+              <h2 className="font-semibold">{t("modules.emailSettings.bccAddress")}</h2>
+              <div className="flex gap-3">
+                <Button variant="ghost" isDisabled>
+                  {t("modules.emailSettings.regenerate")}
+                </Button>
+                <Button variant="ghost" isDisabled>
+                  {t("modules.emailSettings.downloadCard")}
+                </Button>
+              </div>
+            </div>
+            <p className="my-6 text-text-muted">{t("modules.emailSettings.bccUnavailable")}</p>
+            <div className="max-w-xl">
+              <TextField label={t("modules.emailSettings.excludedDomains")} isDisabled />
+            </div>
+          </section>
+          <h2 className="mt-8 font-semibold">{t("modules.emailSettings.searchPattern")}</h2>
+          <p className="mt-3 max-w-5xl">{t("modules.emailSettings.searchDescription")}</p>
+          <Button variant="ghost" isDisabled>
+            {t("modules.emailSettings.editSearch")}
+          </Button>
+          <h2 className="mt-6 font-semibold">{t("modules.emailSettings.note")}</h2>
+          <p className="mt-3 max-w-5xl">{t("modules.emailSettings.bccNote")}</p>
         </TabPanel>
       </Tabs>
     </section>
@@ -145,14 +183,20 @@ export function EmailSettingsScreen({
 }
 
 function Heading({ title, toggle }: { title: string; toggle?: boolean }) {
+  const t = useUiTranslations();
   return (
     <div className="flex flex-wrap items-center gap-4">
       <h1 className="text-xl font-semibold text-text">{title}</h1>
       {toggle !== undefined && (
-        <Switch label="Custom email preferences" hideLabel isSelected={toggle} isDisabled />
+        <Switch
+          label={t("modules.emailSettings.custom")}
+          hideLabel
+          isSelected={toggle}
+          isDisabled
+        />
       )}
       <Button variant="icon" size="compact" isDisabled className="ml-auto">
-        Help
+        {t("modules.emailSettings.help")}
       </Button>
     </div>
   );
@@ -179,86 +223,124 @@ function ConfigurationContent({
   tab: EmailConfigurationTab;
   data: EmailSettingsSnapshot;
 }) {
+  const t = useUiTranslations();
+  const [addressOpen, setAddressOpen] = useState(false);
   const [signatureOpen, setSignatureOpen] = useState(false);
   if (tab === "email-sharing") return <Sharing data={data} />;
   if (tab === "organization-emails")
     return (
       <>
-        <Heading title="Organization Email Addresses" />
+        {addressOpen && (
+          <TopAlignedModal
+            isOpen
+            aria-labelledby="org-address-title"
+            onOpenChange={(open) => {
+              if (!open) setAddressOpen(false);
+            }}
+            panelStyle={{ width: "min(600px,95vw)" }}
+          >
+            <div className="p-8 space-y-5">
+              <h2 id="org-address-title" className="text-xl font-semibold">
+                {t("modules.emailSettings.addAddress")}
+              </h2>
+              <TextField label={t("modules.emailSettings.displayName")} />
+              <TextField label={t("modules.emailSettings.emailAddress")} type="email" />
+              <p className="text-text-muted">{t("modules.emailSettings.addressUnavailable")}</p>
+              <div className="flex justify-end gap-3">
+                <Button variant="secondary" onPress={() => setAddressOpen(false)}>
+                  {t("common.actions.cancel")}
+                </Button>
+                <Button isDisabled>{t("common.actions.save")}</Button>
+              </div>
+            </div>
+          </TopAlignedModal>
+        )}
+        <Heading title={t("modules.emailSettings.orgTitle")} />
         <p className="mt-3 max-w-5xl text-md leading-relaxed">
-          Add department email addresses to use as From and Reply-To addresses. Each address must be
-          verified before it can be used.
+          {t("modules.emailSettings.orgDescription")}
         </p>
-        <Button isDisabled className="mt-8">
-          Add Email Address
+        <Button onPress={() => setAddressOpen(true)} className="mt-8">
+          {t("modules.emailSettings.addAddress")}
         </Button>
       </>
     );
   if (tab === "custom-email-fields-preference")
     return (
       <>
-        <Heading title="Custom Email Fields Preferences" toggle={data.customEmailFieldsEnabled} />
-        <p className="mt-5 max-w-4xl text-md">
-          Choose whether to sync conversations with addresses stored in custom email fields across
-          CRM records.
-        </p>
-        <p className="mt-5 font-semibold text-md">
-          Enabling custom email preferences allows users to:
-        </p>
+        <Heading
+          title={t("modules.emailSettings.customTitle")}
+          toggle={data.customEmailFieldsEnabled}
+        />
+        <p className="mt-5 max-w-4xl text-md">{t("modules.emailSettings.customDescription")}</p>
+        <p className="mt-5 font-semibold text-md">{t("modules.emailSettings.customAllows")}</p>
         <ul className="mt-3 list-disc space-y-4 pl-5 text-md">
-          <li>
-            View conversations with custom email addresses in the record’s email related list.
-          </li>
-          <li>
-            Get address suggestions from custom email fields when composing email from a record.
-          </li>
-          <li>Include conversations with custom email addresses in email reports.</li>
-          <li>Filter records by the latest email status for custom email addresses.</li>
+          <li>{t("modules.emailSettings.customView")}</li>
+          <li>{t("modules.emailSettings.customSuggest")}</li>
+          <li>{t("modules.emailSettings.customReports")}</li>
+          <li>{t("modules.emailSettings.customFilter")}</li>
         </ul>
         <p className="mt-6 max-w-4xl rounded-md border border-border bg-accent-yellow/10 p-4 text-md">
-          Note: Custom email conversations use the same sharing permissions as the record’s primary
-          and secondary email addresses.
+          {t("modules.emailSettings.customNote")}
         </p>
       </>
     );
   return (
     <>
-      <Heading title="Compose Settings" />
-      <p className="mt-3 text-md">
-        Configure basic default email compose settings to personalize your composing experience.
-      </p>
+      <Heading title={t("modules.emailSettings.composeTitle")} />
+      <p className="mt-3 text-md">{t("modules.emailSettings.composeDescription")}</p>
       <div className="mt-8 grid max-w-3xl grid-cols-1 items-center gap-x-5 gap-y-5 sm:grid-cols-4">
-        <span className="text-md text-text-muted sm:text-right">Default Font Family</span>
+        <span className="text-md text-text-muted sm:text-right">
+          {t("modules.emailSettings.fontFamily")}
+        </span>
         <div className="sm:col-span-3 flex items-center gap-3">
           <div className="w-80 max-w-full">
-            <ClosedSetting label="Default Font Family" value={data.compose.fontFamily} />
+            <ClosedSetting
+              label={t("modules.emailSettings.fontFamily")}
+              value={data.compose.fontFamily}
+            />
           </div>
           <Icons.info
             className="size-4 text-text-muted"
             role="img"
-            aria-label="Font family information"
+            aria-label={t("modules.emailSettings.fontInfo")}
           />
         </div>
-        <span className="text-md text-text-muted sm:text-right">Default Font Size</span>
+        <span className="text-md text-text-muted sm:text-right">
+          {t("modules.emailSettings.fontSize")}
+        </span>
         <div className="sm:col-span-3 w-36">
-          <ClosedSetting label="Default Font Size" value={data.compose.fontSize} />
+          <ClosedSetting
+            label={t("modules.emailSettings.fontSize")}
+            value={data.compose.fontSize}
+          />
         </div>
         <div className="sm:col-start-2 sm:col-span-3 rounded-md border border-control-border p-3">
-          <p className="border-b border-border pb-2 text-md">Preview</p>
-          <p className="py-7 text-center text-sm">Sample email text</p>
+          <p className="border-b border-border pb-2 text-md">
+            {t("modules.emailSettings.preview")}
+          </p>
+          <p className="py-7 text-center text-sm">{t("modules.emailSettings.previewText")}</p>
         </div>
-        <span className="text-md text-text-muted sm:text-right">Default From Address</span>
+        <span className="text-md text-text-muted sm:text-right">
+          {t("modules.emailSettings.from")}
+        </span>
         <div className="sm:col-span-3">
-          <ClosedSetting label="Default From Address" value={data.compose.fromAddress} />
+          <ClosedSetting label={t("modules.emailSettings.from")} value={data.compose.fromAddress} />
         </div>
-        <span className="text-md text-text-muted sm:text-right">Default Reply-To Address</span>
+        <span className="text-md text-text-muted sm:text-right">
+          {t("modules.emailSettings.replyTo")}
+        </span>
         <div className="sm:col-span-3">
-          <ClosedSetting label="Default Reply-To Address" value={data.compose.replyToAddress} />
+          <ClosedSetting
+            label={t("modules.emailSettings.replyTo")}
+            value={data.compose.replyToAddress}
+          />
         </div>
       </div>
-      <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-4">
-        <span className="pt-3 text-md text-text-muted sm:text-right">Email Signature</span>
-        <div className="sm:col-span-3">
+      <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-[12rem_minmax(0,1fr)]">
+        <span className="pt-3 text-md text-text-muted sm:text-right">
+          {t("modules.emailSettings.signature")}
+        </span>
+        <div className="min-w-0">
           {signatureOpen ? (
             <SignatureCreate onCancel={() => setSignatureOpen(false)} />
           ) : (
@@ -268,7 +350,7 @@ function ConfigurationContent({
               className="text-primary"
               onPress={() => setSignatureOpen(true)}
             >
-              Add New Signature
+              {t("modules.emailSettings.newSignature")}
             </Button>
           )}
         </div>
@@ -278,31 +360,40 @@ function ConfigurationContent({
 }
 
 function Sharing({ data }: { data: EmailSettingsSnapshot }) {
+  const t = useUiTranslations();
+  const systemLabels = {
+    "Not Configured": "modules.emailSettings.notConfigured",
+    "User's Choice": "modules.emailSettings.userChoice",
+    Private: "modules.emailSettings.private",
+    All: "modules.emailSettings.all",
+    Active: "modules.emailSettings.active",
+    Inactive: "modules.emailSettings.inactive",
+  } as const;
+  const systemLabel = (value: string) =>
+    value in systemLabels ? t(systemLabels[value as keyof typeof systemLabels]) : value;
   const [query, setQuery] = useState("");
   const users = data.sharingUsers.filter((user) =>
     `${user.name} ${user.profile}`.toLowerCase().includes(query.trim().toLowerCase()),
   );
   return (
     <>
-      <Heading title="Email Sharing Permissions" />
-      <p className="mt-3 text-md">
-        Manage the email sharing permissions of your organization’s users.
-      </p>
+      <Heading title={t("modules.emailSettings.sharingTitle")} />
+      <p className="mt-3 text-md">{t("modules.emailSettings.sharingDescription")}</p>
       <div className="mt-6 mb-4 flex flex-wrap items-center gap-3">
         <div className="w-96 max-w-full">
           <TextField
-            label="Search User, Profile"
+            label={t("modules.emailSettings.searchUsers")}
             hideLabel
-            placeholder="Search User, Profile"
+            placeholder={t("modules.emailSettings.searchUsers")}
             type="search"
             value={query}
             onChange={setQuery}
           />
         </div>
         <div className="ml-auto flex items-center gap-3">
-          <Button isDisabled>Mass Update</Button>
+          <Button isDisabled>{t("modules.emailSettings.massUpdate")}</Button>
           <Button isDisabled variant="ghost" className="text-primary">
-            Preferences ›
+            {t("modules.emailSettings.preferences")}
           </Button>
         </div>
       </div>
@@ -311,20 +402,29 @@ function Sharing({ data }: { data: EmailSettingsSnapshot }) {
           <thead className="border-b border-border">
             <tr>
               <th className="p-4">
-                <Checkbox label="Select all users" hideLabel isDisabled />
+                <Checkbox label={t("modules.emailSettings.selectAllUsers")} hideLabel isDisabled />
               </th>
-              <th className="p-3 font-semibold">Users</th>
-              <th className="p-3 font-semibold">Configuration Type</th>
-              <th className="p-3 font-semibold">Sharing</th>
-              <th className="p-3 font-semibold">Domains Excluded</th>
+              <th className="p-3 font-semibold">{t("modules.emailSettings.users")}</th>
+              <th className="p-3 font-semibold">{t("modules.emailSettings.configurationType")}</th>
+              <th className="p-3 font-semibold">{t("modules.emailSettings.sharing")}</th>
+              <th className="p-3 font-semibold">{t("modules.emailSettings.excluded")}</th>
               <th className="p-3 font-semibold">
                 <span className="flex items-center gap-2">
-                  Emails Shared With
-                  <Icons.info className="size-4" role="img" aria-label="Shared-with information" />
+                  {t("modules.emailSettings.sharedWith")}
+                  <Icons.info
+                    className="size-4"
+                    role="img"
+                    aria-label={t("modules.emailSettings.sharedInfo")}
+                  />
                 </span>
               </th>
               <th className="p-3">
-                <Button variant="icon" size="compact" isDisabled aria-label="Filter columns">
+                <Button
+                  variant="icon"
+                  size="compact"
+                  isDisabled
+                  aria-label={t("modules.emailSettings.filterColumns")}
+                >
                   <Icons.filter className="size-4" />
                 </Button>
               </th>
@@ -334,7 +434,7 @@ function Sharing({ data }: { data: EmailSettingsSnapshot }) {
             {users.length === 0 ? (
               <tr>
                 <td colSpan={7} className="p-8 text-center text-text-muted">
-                  No users found.
+                  {t("modules.emailSettings.noUsers")}
                 </td>
               </tr>
             ) : (
@@ -349,14 +449,25 @@ function Sharing({ data }: { data: EmailSettingsSnapshot }) {
                       <div>
                         {user.name}
                         <p className="mt-1 text-sm text-text-muted">
-                          {user.role} · {user.profile} · {user.status}
+                          <span className="mr-2 rounded border border-border px-2 py-0.5">
+                            {user.role}
+                          </span>
+                          <span className="mr-2 rounded border border-border px-2 py-0.5">
+                            {user.profile}
+                          </span>
+                          <span className="rounded bg-accent-green/10 px-2 py-0.5 text-accent-green">
+                            {systemLabel(user.status)}
+                          </span>
                         </p>
                       </div>
                     </div>
                   </td>
-                  <td className="p-3">{user.configuration}</td>
+                  <td className="p-3">{systemLabel(user.configuration)}</td>
                   <td className="min-w-40 p-3">
-                    <ClosedSetting label={`Sharing for ${user.name}`} value={user.sharing} />
+                    <ClosedSetting
+                      label={`Sharing for ${user.name}`}
+                      value={systemLabel(user.sharing)}
+                    />
                   </td>
                   <td className="p-3">{user.domainsExcluded.join(", ")}</td>
                   <td className="p-3">
@@ -367,7 +478,7 @@ function Sharing({ data }: { data: EmailSettingsSnapshot }) {
                         isDisabled
                         aria-label={`Shared with for ${user.name}`}
                       >
-                        {user.sharedWith}
+                        {systemLabel(user.sharedWith)}
                       </Button>
                     )}
                   </td>

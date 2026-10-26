@@ -7,9 +7,10 @@ import { monthDays } from "@/components/calendar/calendar-date";
 import { CalendarMonthGrid } from "@/components/calendar/calendar-month-grid";
 import { CalendarTimeGrid } from "@/components/calendar/calendar-time-grid";
 import { Button } from "@/components/ui/button";
-import { Link } from "@/components/ui/link";
+import { Icons } from "@/components/ui/icon";
+import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { TextField } from "@/components/ui/text-field";
-import { useUiTranslations } from "@/i18n/client-provider";
+import { useUiLanguage, useUiTranslations } from "@/i18n/client-provider";
 import { useClientRecordService } from "@/lib/api/client/provider";
 import { moduleCreatePath, moduleRecordPath } from "@/lib/crm-paths";
 import { useFormat } from "@/lib/format-context";
@@ -29,6 +30,7 @@ export function CalendarScreen({
   const router = useRouter();
   const service = useClientRecordService();
   const t = useUiTranslations();
+  const language = useUiLanguage();
   const orgFormat = useFormat();
   const today = () => isoToDateTimeParts(new Date().toISOString()).date;
   const [date, setDate] = useState(initialDate ?? today);
@@ -160,9 +162,38 @@ export function CalendarScreen({
               </Button>
             ))}
           </fieldset>
-          <Link variant="primary" href={moduleCreatePath(orgSlug, "Meetings")}>
-            {t("modules.calendar.create")}
-          </Link>
+          <MenuTrigger>
+            <Button>
+              {t("modules.calendar.create")}
+              <Icons.chevronDown className="ml-2 size-4" aria-hidden />
+            </Button>
+            <Menu
+              aria-label={t("modules.calendar.createMenu")}
+              onAction={(key) => router.push(moduleCreatePath(orgSlug, String(key)))}
+            >
+              <MenuItem id="Meetings">{t("shell.meeting")}</MenuItem>
+              <MenuItem id="Calls">{t("shell.call")}</MenuItem>
+              <MenuItem id="unavailable" isDisabled>
+                {t("modules.calendar.markUnavailable")}
+              </MenuItem>
+            </Menu>
+          </MenuTrigger>
+        </div>
+        <div className="flex items-center justify-end gap-3 px-4 py-2">
+          <span className="rounded bg-danger px-2 py-1 text-sm text-white">
+            {t("modules.calendar.overdueEvents")}
+          </span>
+          <details className="relative">
+            <summary className="cursor-pointer">{t("modules.calendar.options")}</summary>
+            <div className="absolute right-0 z-10 rounded border border-border bg-surface p-3">
+              <Button
+                variant="ghost"
+                onPress={() => router.push(`/crm/${orgSlug}/settings/calendar-booking`)}
+              >
+                {t("shell.calendar-booking")}
+              </Button>
+            </div>
+          </details>
         </div>
         <div className="calendar-date-strip">
           <TextField
@@ -229,7 +260,20 @@ export function CalendarScreen({
               {view === "month" ? (
                 <CalendarMonthGrid {...gridProps} />
               ) : (
-                <CalendarTimeGrid {...gridProps} view={view} />
+                <CalendarTimeGrid
+                  {...gridProps}
+                  view={view}
+                  slotMinutes={60}
+                  dayLabel={(value) =>
+                    new Date(`${value}T12:00:00`).toLocaleDateString(
+                      language === "tr" ? "tr-TR" : "en-US",
+                      { day: "numeric", weekday: "long" },
+                    )
+                  }
+                  timeLabel={(minute) =>
+                    `${String(Math.floor(minute / 60) % 12 || 12).padStart(2, "0")}:00 ${minute < 720 ? (language === "tr" ? "ÖÖ" : "AM") : language === "tr" ? "ÖS" : "PM"}`
+                  }
+                />
               )}
             </div>
           </>

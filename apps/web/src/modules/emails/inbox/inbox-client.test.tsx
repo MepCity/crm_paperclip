@@ -1,3 +1,4 @@
+import { ForbiddenError } from "@crm/core/errors";
 import { act, cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, expect, test, vi } from "vitest";
 import { render } from "@/test/render";
@@ -165,4 +166,19 @@ test("HTTP errors use the existing error state", async () => {
   render(<InboxClient load={load} />);
   expect((await screen.findByRole("alert")).textContent).toBe("Unable to load emails");
   expect(screen.queryByText("No mailbox connected")).toBeNull();
+});
+
+test("distinguishes permission denial from a failed or empty mailbox and dismisses safely", async () => {
+  render(
+    <InboxClient
+      load={async () => {
+        throw new ForbiddenError();
+      }}
+    />,
+  );
+  const dialog = await screen.findByRole("dialog", { name: "Permission Denied" });
+  expect(within(dialog).getByText(/Contact your administrator/)).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Compose" })).toBeNull();
+  fireEvent.click(within(dialog).getByRole("button", { name: "OK" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
 });

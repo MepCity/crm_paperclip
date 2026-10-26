@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Select, SelectItem } from "@/components/ui/select";
-import { TextArea } from "@/components/ui/text-area";
 import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { useUiLanguage, useUiTranslations } from "@/i18n/client-provider";
@@ -49,38 +48,50 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
           ? { width: "min(600px, 95vw)" }
           : {
               width: "100vw",
-              top: "var(--size-topbar-height, 60px)",
-              height: "calc(100dvh - var(--size-topbar-height, 60px))",
+              top: 0,
+              height: "100dvh",
               overflow: "auto",
             }
       }
     >
       {step === "details" ? (
-        <div className="p-8 space-y-5">
+        <div className="p-8 space-y-5 [&_[data-slot=label]]:min-w-28">
           <h2 id={titleId} className="text-xl font-semibold">
             {t("modules.observedFlows.createRule")}
           </h2>
-          <Select
-            label={t("modules.observedFlows.module")}
-            placeholder={t("modules.observedFlows.selectModule")}
-            items={modules.map((id) => ({ id }))}
-            value={module || null}
-            onChange={(key) => setModule(key as keyof typeof moduleLabels)}
-          >
-            {(item) => <SelectItem id={item.id}>{t(moduleLabels[item.id])}</SelectItem>}
-          </Select>
-          <TextField
-            label={t("modules.observedFlows.ruleName")}
-            value={name}
-            onChange={setName}
-            isRequired
-            validationBehavior="aria"
-          />
-          <TextArea
-            label={t("modules.observedFlows.description")}
-            value={description}
-            onChange={setDescription}
-          />
+          <div className="grid grid-cols-[8rem_1fr] items-center gap-4">
+            <span>{t("modules.observedFlows.module")}</span>{" "}
+            <Select
+              label={t("modules.observedFlows.module")}
+              hideLabel
+              placeholder={t("modules.observedFlows.selectModule")}
+              items={modules.map((id) => ({ id }))}
+              value={module || null}
+              onChange={(key) => setModule(key as keyof typeof moduleLabels)}
+            >
+              {(item) => <SelectItem id={item.id}>{t(moduleLabels[item.id])}</SelectItem>}
+            </Select>
+          </div>
+          <div className="grid grid-cols-[8rem_1fr] items-center gap-4">
+            <span>{t("modules.observedFlows.ruleName")}</span>{" "}
+            <TextField
+              label={t("modules.observedFlows.ruleName")}
+              hideLabel
+              value={name}
+              onChange={setName}
+              isRequired
+              validationBehavior="aria"
+            />
+          </div>
+          <div className="grid grid-cols-[8rem_1fr] items-center gap-4">
+            <span>{t("modules.observedFlows.description")}</span>{" "}
+            <TextField
+              label={t("modules.observedFlows.description")}
+              hideLabel
+              value={description}
+              onChange={setDescription}
+            />
+          </div>
           <div className="flex justify-end gap-3">
             <Button variant="secondary" onPress={onClose}>
               {t("modules.observedFlows.cancel")}

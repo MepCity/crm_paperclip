@@ -49,7 +49,7 @@ export function DashboardCreate({
     { label: t("modules.observedFlows.waterfall"), icon: Icons.barChart },
   ];
 
-  const [name, setName] = useState("Untitled Dashboard");
+  const [name, setName] = useState(() => t("modules.analytics.untitled"));
   const [description, setDescription] = useState("");
   const [sourceOpen, setSourceOpen] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -64,12 +64,12 @@ export function DashboardCreate({
         className="w-64 shrink-0 border-r border-border p-5"
       >
         <h2 className="text-xl font-semibold mb-5">{t("modules.observedFlows.components")}</h2>
-        <div className="space-y-4">
+        <div className="space-y-2">
           {types.map((type) => (
             <Button
               key={type.label}
               variant="secondary"
-              className="w-full justify-start gap-3 py-4"
+              className="w-full justify-start gap-3 py-2"
               laterModule={type.label === t("modules.observedFlows.chart") ? undefined : "M13"}
               onPress={() => setSourceOpen(true)}
             >
@@ -153,7 +153,18 @@ export function DashboardCreate({
             ))}
           </div>
           <div className="relative max-w-lg rounded bg-surface p-12 text-center">
-            <Icons.plus className="mx-auto mb-5 size-12 text-text-muted" aria-hidden />
+            <svg
+              viewBox="0 0 80 80"
+              className="mx-auto mb-5 size-20 text-text-muted"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-hidden="true"
+            >
+              <rect x="12" y="8" width="46" height="54" rx="4" />
+              <path d="M43 40l23 17-12 2-5 12-6-31z" fill="currentColor" />
+              <path d="M35 35l-5-5m12 1v-7m7 12 6-4" />
+            </svg>
             <h2 className="text-xl">{t("modules.observedFlows.selectAComponent")}</h2>
             <p className="mt-3">
               {t("modules.observedFlows.buildYourDashboardByAddingComponents")}
@@ -402,22 +413,36 @@ export function DashboardComponentChooser({ onCancel }: { onCancel: () => void }
         panelStyle={{ width: "min(600px, 95vw)" }}
       >
         <div className="p-8 space-y-6">
-          <h2 id={sourceTitle} className="text-xl font-semibold">
-            {t("modules.observedFlows.chart")}
-          </h2>
-          <Button
-            onPress={() => {
-              setChartOpen(true);
-            }}
-          >
-            {t("modules.observedFlows.quickChart")}
-          </Button>
-          <Button variant="secondary" isDisabled>
-            {t("modules.observedFlows.fromReports")}
-          </Button>
-          <Button variant="secondary" onPress={onCancel}>
-            {t("modules.observedFlows.cancel")}
-          </Button>
+          <header className="flex justify-between items-center">
+            <h2 id={sourceTitle} className="text-xl font-semibold">
+              {t("modules.observedFlows.addChart")}
+            </h2>
+            <Button variant="icon" aria-label={t("common.actions.close")} onPress={onCancel}>
+              <Icons.close className="size-5" />
+            </Button>
+          </header>
+          <div className="grid grid-cols-2 gap-6">
+            <Button
+              aria-label={t("modules.observedFlows.quickChart")}
+              variant="secondary"
+              onPress={() => setChartOpen(true)}
+              className="h-44 flex-col gap-2 whitespace-normal"
+            >
+              <Icons.barChart className="size-10 text-text-muted" aria-hidden />
+              <strong>{t("modules.observedFlows.quickChart")}</strong>
+              <span className="font-normal">{t("modules.analytics.quickDescription")}</span>
+            </Button>
+            <Button
+              aria-label={t("modules.observedFlows.fromReports")}
+              variant="secondary"
+              isDisabled
+              className="h-44 flex-col gap-2 whitespace-normal"
+            >
+              <Icons.file className="size-10 text-text-muted" aria-hidden />
+              <strong>{t("modules.observedFlows.fromReports")}</strong>
+              <span className="font-normal">{t("modules.analytics.reportDescription")}</span>
+            </Button>
+          </div>
         </div>
       </TopAlignedModal>
       {chartOpen && <QuickChart onCancel={onCancel} />}

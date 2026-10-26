@@ -247,3 +247,59 @@ it("translates all nine period choices into Turkish and keeps the observed defau
   expect(screen.getByRole("button", { name: "Etkinlik dönemi: Bugün & Geciken" })).toBeDefined();
   expect(replace).not.toHaveBeenCalled();
 });
+
+it("shows the permission state without exposing queue rows or table actions", () => {
+  sessionStorage.setItem("workqueue-welcome:test:user", "dismissed");
+  render(
+    <Workqueue
+      accessDenied
+      orgSlug="test"
+      user={{ id: "user", name: "Test User", role: "Member" }}
+      queues={queues}
+      page={1}
+    />,
+  );
+  expect(screen.getByRole("alert").textContent).toContain(
+    "You do not have permission to view this queue",
+  );
+  expect(screen.queryByRole("table")).toBeNull();
+  expect(screen.queryByText("Synthetic task")).toBeNull();
+});
+
+it("translates built-in task statuses while preserving custom display labels and stored values", () => {
+  sessionStorage.setItem("workqueue-welcome:test:user", "dismissed");
+  const field = taskField("Status", {
+    label: "Status",
+    dataType: "picklist",
+    picklist: [
+      { storedValue: "In Progress", displayValue: "In Progress" },
+      { storedValue: "Completed", displayValue: "Team approval" },
+    ],
+  });
+  const taskQueue = queues[0] as QueueData;
+  const localized: QueueData = {
+    ...taskQueue,
+    columns: [field],
+    result: {
+      ...taskQueue.result,
+      records: [
+        { id: "a", fields: { Status: "In Progress" } },
+        { id: "b", fields: { Status: "Completed" } },
+      ],
+    },
+  };
+  render(
+    <LanguageProvider language="tr">
+      <Workqueue
+        orgSlug="test"
+        user={{ id: "user", name: "Test User", role: "Member" }}
+        queues={[localized]}
+        page={1}
+      />
+    </LanguageProvider>,
+  );
+  expect(screen.getByRole("columnheader", { name: "Durum" })).toBeTruthy();
+  expect(screen.getByText("Devam Ediyor")).toBeTruthy();
+  expect(screen.getByText("Team approval")).toBeTruthy();
+  expect(field.picklist?.[0]?.storedValue).toBe("In Progress");
+});

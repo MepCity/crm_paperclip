@@ -1,4 +1,5 @@
 import { PageTitle } from "@/components/shell/page-title";
+import { getUiTranslations } from "@/i18n/request";
 import { requireOrgContext } from "@/lib/session";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import { AssignmentRulesScreen } from "@/modules/assignment-rules/assignment-rules-screen";
@@ -22,9 +23,10 @@ export default async function AssignmentRulesPage({
     ...(cursor ? { cursor } : {}),
     limit: 50,
   });
+  const t = await getUiTranslations();
   return (
     <>
-      <PageTitle title={shellPageTitle.settings} />
+      <PageTitle title={t("shell.settings")} />
       <AssignmentRulesScreen result={result} orgSlug={orgSlug} module={module} />
     </>
   );

@@ -1,4 +1,6 @@
+import { isAppError } from "@crm/core/errors";
 import { PageTitle } from "@/components/shell/page-title";
+import { getUiTranslations } from "@/i18n/request";
 import { getRecordService } from "@/lib/records";
 import { requireOrgContext, requireUser } from "@/lib/session";
 import { loadQueues } from "@/modules/workqueue/queues";
@@ -18,10 +20,18 @@ export default async function WorkqueuePage({
   const user = await requireUser();
   const requested = Number((await searchParams).page ?? 1);
   const page = Number.isSafeInteger(requested) && requested > 0 ? requested : 1;
-  const queues = await loadQueues(getRecordService(ctx), page);
+  let queues: Awaited<ReturnType<typeof loadQueues>> = [];
+  let accessDenied = false;
+  try {
+    queues = await loadQueues(getRecordService(ctx), page);
+  } catch (error) {
+    if (isAppError(error) && error.code === "forbidden") accessDenied = true;
+    else throw error;
+  }
+  const t = await getUiTranslations();
   return (
     <>
-      <PageTitle title="Workqueue" />
+      <PageTitle title={t("shell.workqueue")} />
       <Workqueue
         orgSlug={orgSlug}
         user={{
@@ -29,6 +39,7 @@ export default async function WorkqueuePage({
           name: user.name,
           role: ctx.role === "admin" ? "Administrator" : "Member",
         }}
+        accessDenied={accessDenied}
         queues={queues}
         page={page}
       />

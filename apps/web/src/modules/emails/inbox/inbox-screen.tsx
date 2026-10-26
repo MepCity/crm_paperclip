@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Disclosure } from "@/components/ui/disclosure";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Icons } from "@/components/ui/icon";
+import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useFormat } from "@/lib/format-context";
 import { fetchComposeMailboxes } from "../compose/http-port";
@@ -86,13 +87,14 @@ export function InboxScreen({
   loadState,
 }: {
   model: InboxViewModel;
-  loadState?: "loading" | "error";
+  loadState?: "loading" | "error" | "denied";
   folderParam: string | null;
   messageParam: string | null;
   onNavigate: (folder: EmailFolder, messageId?: string) => void;
 }) {
   const t = useUiTranslations();
   const orgFormat = useFormat();
+  const [deniedDismissed, setDeniedDismissed] = useState(false);
   const [composeOpen, setComposeOpen] = useState(false);
   const [mailboxes, setMailboxes] = useState<readonly ComposeMailbox[]>([]);
   const [sent, setSent] = useState(false);
@@ -117,6 +119,30 @@ export function InboxScreen({
     folderParam,
     messageParam,
   );
+  if (loadState === "denied")
+    return (
+      <TopAlignedModal
+        isOpen={!deniedDismissed}
+        aria-labelledby="inbox-denied-title"
+        panelStyle={{ width: "min(780px,95vw)" }}
+        onOpenChange={(open) => {
+          if (!open) setDeniedDismissed(true);
+        }}
+      >
+        <div className="p-8 space-y-6">
+          <h2 id="inbox-denied-title" className="flex items-center gap-3 text-xl font-semibold">
+            <Icons.error className="size-7 text-danger" aria-hidden />
+            {t("modules.emails.permissionDenied")}
+          </h2>
+          <p>{t("modules.emails.permissionDescription")}</p>
+          <div className="flex justify-end">
+            <Button variant="secondary" onPress={() => setDeniedDismissed(true)}>
+              {t("modules.emails.ok")}
+            </Button>
+          </div>
+        </div>
+      </TopAlignedModal>
+    );
   if (!loadState && !model.connected) {
     return (
       <EmptyState

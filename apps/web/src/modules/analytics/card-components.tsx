@@ -115,7 +115,19 @@ export function AccountsKpiContent({ data }: { data: AccountKpiCardData }) {
 export function LeadTargetContent({ data }: { data: LeadTargetCardData }) {
   const t = useUiTranslations();
   if (data.state === "empty") {
-    return <CardEmptyIllustration />;
+    return (
+      <div data-testid="empty-illustration" className="flex flex-col items-center p-4">
+        <svg viewBox="0 0 200 110" className="h-28 w-48" aria-hidden="true">
+          <path
+            d="M 20 95 A 80 80 0 0 1 180 95"
+            fill="none"
+            stroke="var(--color-border)"
+            strokeWidth="18"
+          />
+        </svg>
+        <span className="text-xs text-text-muted">{t("modules.analytics.noDataAvailable")}</span>
+      </div>
+    );
   }
   const current = data.current ?? 0;
   const target = data.target ?? 1000;
@@ -168,7 +180,14 @@ export function LeadTargetContent({ data }: { data: LeadTargetCardData }) {
 export function RevenueTargetContent({ data }: { data: RevenueTargetCardData }) {
   const t = useUiTranslations();
   if (data.state === "empty") {
-    return <CardEmptyIllustration />;
+    return (
+      <div data-testid="empty-illustration" className="px-5 py-8">
+        <div aria-hidden className="h-8 w-full border-l border-b border-border bg-border/40" />
+        <p className="mt-5 text-center text-xs text-text-muted">
+          {t("modules.analytics.noDataAvailable")}
+        </p>
+      </div>
+    );
   }
   const percentage = data.percentage ?? 0;
   return (
@@ -232,6 +251,24 @@ export function PerformanceMonitorContent({ data }: { data: PerformanceMonitorCa
 
 /** A12.02: Leads by source donut chart and legend. */
 export function LeadsBySourceContent({ data }: { data: LeadSourceCardData }) {
+  const t = useUiTranslations();
+  const sourceLabels = {
+    Advertisement: "modules.analyticsSources.advertisement",
+    "Cold Call": "modules.analyticsSources.coldCall",
+    "Employee Referral": "modules.analyticsSources.employeeReferral",
+    "External Referral": "modules.analyticsSources.externalReferral",
+    "Online Store": "modules.analyticsSources.onlineStore",
+    Partner: "modules.analyticsSources.partner",
+    "Public Relations": "modules.analyticsSources.publicRelations",
+    "Sales Email Alias": "modules.analyticsSources.salesEmailAlias",
+    "Seminar Partner": "modules.analyticsSources.seminarPartner",
+    "Seminar-Internal": "modules.analyticsSources.internalSeminar",
+    "Trade Show": "modules.analyticsSources.tradeShow",
+    "Web Download": "modules.analyticsSources.webDownload",
+    "Web Research": "modules.analyticsSources.webResearch",
+    Chat: "modules.analyticsSources.chat",
+    "Not Specified": "modules.analyticsSources.notSpecified",
+  } as const;
   if (data.state === "empty") {
     return <CardEmptyIllustration />;
   }
@@ -280,7 +317,10 @@ export function LeadsBySourceContent({ data }: { data: LeadSourceCardData }) {
               aria-hidden="true"
             />
             <span className="truncate">
-              {s.label} {s.count} ({s.percentage.toFixed(2)} %)
+              {s.label in sourceLabels
+                ? t(sourceLabels[s.label as keyof typeof sourceLabels])
+                : s.label}{" "}
+              {s.count} ({s.percentage.toFixed(2)} %)
             </span>
           </div>
         ))}
