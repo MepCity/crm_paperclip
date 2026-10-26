@@ -21,7 +21,7 @@ test("convert a lead from its record detail and see the conversion on the timeli
   await expect(page).toHaveURL(new RegExp(`/tab/Leads/${leadId}/convert$`));
   await expect(page.getByRole("heading", { name: "Convert Lead" })).toBeVisible();
 
-  await page.getByRole("button", { name: "Convert" }).click();
+  await page.getByRole("button", { name: "Convert", exact: true }).click();
   await expect(page).toHaveURL(/\/tab\/Contacts\/[^/]+$/);
 
   await page.goto(moduleRecordPath(slug, LEADS_MODULE, leadId));
