@@ -9,6 +9,7 @@ test("captures Turkish core modules and their corrected entry controls", async (
   pageErrors,
 }, testInfo) => {
   test.setTimeout(240_000);
+  page.setDefaultTimeout(15_000);
   await page.setViewportSize({ width: 2048, height: 1163 });
   await signUpNewUser(page);
   const org = await createOrganization(page);
@@ -118,10 +119,7 @@ test("captures Turkish core modules and their corrected entry controls", async (
         .getByRole("link", { name: "Satış Fırsatları", exact: true })
         .click();
       await shot("Contacts-related");
-      await page
-        .getByRole("navigation", { name: "İlgili Liste", exact: true })
-        .getByRole("link", { name: "Eklentiler", exact: true })
-        .click();
+      await page.locator('[data-related-card="attachments"]').scrollIntoViewIfNeeded();
       await expect(
         page
           .locator('[data-related-card="attachments"]')
