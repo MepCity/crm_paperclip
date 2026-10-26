@@ -6,6 +6,7 @@ import { Icons } from "@/components/ui/icon";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { TextField } from "@/components/ui/text-field";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
+import { useUiTranslations } from "@/i18n/client-provider";
 
 export interface CategoryOption {
   id: string;
@@ -28,9 +29,33 @@ export const SYNTHETIC_REPORT_FOLDER: CategoryOption = {
 };
 
 export function ReportsCategorySelector() {
+  const t = useUiTranslations();
   const [isOpen, setIsOpen] = useState(false);
   // search semantics unobserved (R3 U3): R09 accepts text but does not filter
   const [searchQuery, setSearchQuery] = useState("");
+
+  const categoryName = (id: string, fallback: string) => {
+    switch (id) {
+      case "all":
+        return t("modules.reports.allReports");
+      case "mine":
+        return t("modules.reports.myReports");
+      case "favorites":
+        return t("modules.reports.favorites");
+      case "recent":
+        return t("modules.reports.recentlyViewed");
+      case "shared":
+        return t("modules.reports.sharedReports");
+      case "scheduled":
+        return t("modules.reports.scheduledReports");
+      case "deleted":
+        return t("modules.reports.recentlyDeleted");
+      case "account-and-contact":
+        return t("modules.reports.accountAndContact");
+      default:
+        return fallback;
+    }
+  };
 
   const handleSelect = (_categoryId: string) => {
     // selection semantics unobserved (R3 U2): clicking R11–R17 closes panel and keeps All Reports
@@ -45,11 +70,15 @@ export function ReportsCategorySelector() {
         setIsOpen(next);
       }}
     >
-      <Button variant="recordSelector" aria-label="All Reports" className="gap-4">
-        All Reports <Icons.chevronDown className="size-4" aria-hidden />
+      <Button
+        variant="recordSelector"
+        aria-label={t("modules.reports.allReports")}
+        className="gap-4"
+      >
+        {t("modules.reports.allReports")} <Icons.chevronDown className="size-4" aria-hidden />
       </Button>
       <Popover
-        title="Reports categories"
+        title={t("modules.reports.reports")}
         hideTitle
         placement="bottom start"
         offset={4}
@@ -59,8 +88,8 @@ export function ReportsCategorySelector() {
         {/* R09: Search Folder textbox */}
         <div className="border-b border-border p-2.5">
           <TextField
-            label="Search Folder"
-            placeholder="Search Folder"
+            label={t("modules.reports.searchFolder")}
+            placeholder={t("modules.reports.searchFolder")}
             hideLabel
             variant="filter-search"
             size="fill"
@@ -70,9 +99,14 @@ export function ReportsCategorySelector() {
         </div>
 
         {/* Categories listbox */}
-        <div role="listbox" aria-label="Report folders" className="max-h-60 overflow-y-auto py-1">
+        <div
+          role="listbox"
+          aria-label={t("modules.reports.reportFolders")}
+          className="max-h-60 overflow-y-auto py-1"
+        >
           {REPORT_CATEGORIES.map((category) => {
             const isSelected = category.id === "all";
+            const name = categoryName(category.id, category.name);
             return (
               <button
                 key={category.id}
@@ -92,7 +126,7 @@ export function ReportsCategorySelector() {
                 ) : (
                   <span className="size-4 shrink-0" aria-hidden />
                 )}
-                <span className="truncate">{category.name}</span>
+                <span className="truncate">{name}</span>
               </button>
             );
           })}
@@ -109,7 +143,9 @@ export function ReportsCategorySelector() {
             className="flex w-full items-center gap-2 px-3 py-2 text-left text-sm font-normal text-text cursor-pointer outline-none transition-colors hover:bg-surface-hover focus-visible:bg-surface-hover"
           >
             <span className="size-4 shrink-0" aria-hidden />
-            <span className="truncate">{SYNTHETIC_REPORT_FOLDER.name}</span>
+            <span className="truncate">
+              {categoryName(SYNTHETIC_REPORT_FOLDER.id, SYNTHETIC_REPORT_FOLDER.name)}
+            </span>
           </button>
         </div>
 
@@ -125,12 +161,12 @@ export function ReportsCategorySelector() {
                 e.stopPropagation();
               }}
               className="flex w-full items-center justify-start gap-2.5 px-3 py-2 text-left text-sm text-text-muted cursor-not-allowed"
-              aria-label="Manage Folders"
+              aria-label={t("modules.reports.manageFolders")}
             >
               <Icons.settings className="size-4 shrink-0" aria-hidden />
-              <span>Manage Folders</span>
+              <span>{t("modules.reports.manageFolders")}</span>
             </Button>
-            <Tooltip>Not available yet</Tooltip>
+            <Tooltip>{t("modules.reports.notAvailableYet")}</Tooltip>
           </TooltipTrigger>
 
           {/* R19: Integration entry (two-line label + icon, neutral text "Advanced analytics"), disabled with tooltip */}
@@ -143,15 +179,19 @@ export function ReportsCategorySelector() {
                 e.stopPropagation();
               }}
               className="flex w-full items-center justify-start gap-2.5 px-3 py-2 text-left text-sm text-text-muted cursor-not-allowed"
-              aria-label="Advanced analytics"
+              aria-label={t("modules.reports.advancedAnalytics")}
             >
               <Icons.barChart className="size-4 shrink-0 text-text-muted" aria-hidden />
               <div className="flex flex-col text-left leading-tight">
-                <span className="text-xs font-semibold text-text">Advanced Analytics</span>
-                <span className="text-[11px] text-text-muted">Advanced analytics</span>
+                <span className="text-xs font-semibold text-text">
+                  {t("modules.reports.advancedAnalytics")}
+                </span>
+                <span className="text-[11px] text-text-muted">
+                  {t("modules.reports.advancedAnalyticsSub")}
+                </span>
               </div>
             </Button>
-            <Tooltip>Not available yet</Tooltip>
+            <Tooltip>{t("modules.reports.notAvailableYet")}</Tooltip>
           </TooltipTrigger>
         </div>
       </Popover>

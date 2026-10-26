@@ -2,6 +2,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { dateOrdinal, slotTime, wallMinute, weekDays } from "./calendar-date";
 import { CalendarEventButton } from "./calendar-event-button";
 import { type CalendarEvent, eventsOnDay, layoutTimedEvents } from "./layout-timed-events";
@@ -28,6 +29,7 @@ export function CalendarTimeGrid({
   onSlotClick,
   onDayClick,
 }: CalendarTimeGridProps) {
+  const t = useUiTranslations();
   dateOrdinal(date);
   const days = view === "day" ? [date] : weekDays(date, weekStartsOn);
   const layouts = days.map((day) => layoutTimedEvents(events, day));
@@ -36,13 +38,16 @@ export function CalendarTimeGrid({
     <table
       role="grid"
       tabIndex={-1}
-      aria-label={`${view} calendar ${date}`}
+      aria-label={t(
+        view === "day" ? "modules.calendar.dayCalendar" : "modules.calendar.weekCalendar",
+        { date },
+      )}
       className="w-full table-fixed border-collapse bg-surface text-text"
     >
       <thead>
         <tr>
           <th scope="col" className="w-16 text-xs text-text-muted">
-            Time
+            {t("modules.calendar.time")}
           </th>
           {days.map((day) => (
             <th scope="col" key={day}>
@@ -50,7 +55,7 @@ export function CalendarTimeGrid({
                 variant="ghost"
                 size="sm"
                 onPress={() => onDayClick?.(day)}
-                aria-label={`Open day ${day}`}
+                aria-label={t("modules.calendar.openDay", { day })}
               >
                 {day}
               </Button>
@@ -61,14 +66,14 @@ export function CalendarTimeGrid({
       <tbody>
         <tr>
           <th scope="row" className="text-xs text-text-muted">
-            All day
+            {t("modules.calendar.allDay")}
           </th>
           {days.map((day) => (
             <td
               role="gridcell"
               tabIndex={-1}
               key={day}
-              aria-label={`All day ${day}`}
+              aria-label={t("modules.calendar.allDayOn", { day })}
               className="border border-border align-top"
             >
               {eventsOnDay(events, day)

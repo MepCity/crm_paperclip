@@ -464,3 +464,60 @@ The existing independent review stage checks gap documentation and evidence
 limits, not enabled-state parity. No ADR/module-gate acceptance is claimed.
 A future supported live observation requires the separate single-flow approval
 path in MEP-1355; external connections remain outside this task's scope.
+
+
+## W4 continuation — 25 October 2026
+
+Fresh `w4-visits-continuation` first caught a centered **Yükleniyor** state.
+It is a transient loading observation, not an empty or permission state.
+`w4-visits-settled` waits twelve seconds and paints the visitor-tracking
+introduction: a promotional carousel, previous/next arrows, six indicator dots,
+explanatory heading/text, and blue Başlarken action below. No visit list,
+configuration field or existing integration is visible. Promotional content is
+not customer data and must not be copied as application assets.
+
+`w4-social-continuation` also waits twelve seconds. It paints the unconnected
+social introduction: centered social-network illustration, explanatory text and
+green Başlayalım action. No social feed, publishing composer, account settings
+or existing connection is visible. The earlier R1 resting-state boundary holds.
+
+| ID | Visible state/control | Observation and boundary |
+| --- | --- | --- |
+| VC01 | Visits loading indicator | Captured before settled introduction; no final error inferred |
+| VC02 | Visits carousel and indicators | Visible introduction; not operated or treated as live visits |
+| VC03 | Başlarken | Setup entry visible; not invoked because no external integration is authorized |
+| SC01 | Social introduction illustration/text | Unconnected account entry state |
+| SC02 | Başlayalım | Setup entry visible; no connection, authorization or publishing performed |
+
+Screenshots were inspected alongside controls.json and aria.yml. The quick
+Visits capture has one blocked legacy background POST; settled Visits has three
+background blocks; Social has two. No requested clicks, inputs, downloads or
+writes were performed in these captures. Settings, profile association and
+publishing behaviour remain unobserved; no network/payload or success/error
+contract is invented. VW01, SW01 and SW02 remain bounded by the unconnected
+state; VSX01 external-account connection remains excluded by the board.
+
+
+## W4 final scope disposition — 26 October 2026
+
+The board's 00:25 Istanbul answer accepts the captured Visits loading/settled
+introduction and disconnected Social introduction as sufficient W4 live
+coverage. It directs closure without another live attempt, tool repair or
+guard relaxation. This supersedes the earlier pending-route disposition.
+
+VW01 and SW01 have live entry-state coverage only. Settings, enabled views,
+profile association, publishing and SW02 denied/expired/service-error states
+remain **not observed, documentation-based** to the extent supported by the
+existing R2 VD/SD sources. Unsupported messages and account-specific behaviour
+remain unknown. VSX01 external authorization/tracking/social connection stays
+excluded; no external account was connected and no message was sent.
+
+No Visits/Social object or setting was created. The historical empty-journal
+statements predate the Analytics experiment: final shared W4 allowedWrites=3,
+with that test dashboard board-deleted and absence-verified. The existing
+`w4-unsaved-exit-audit` has no open W4 object or setting; the separately retained
+W2 Documents item remains outside this claim. No fresh reference action or
+cleanup flag was issued for closure. [W5](/MEP/issues/MEP-1347) owns window-wide
+verification; its board-named 05:00 Istanbul check is not scheduled or certified
+by this document. This bounded W4 delivery is ready for independent review;
+no enabled-state parity, architecture or module-gate acceptance is claimed.

@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { toast } from "@/components/ui/toast";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { integrationState } from "./fixture";
 
 /** Original promotional artwork of two connected network jars with trajectory arc. */
@@ -116,27 +117,27 @@ function ConnectedNetworkJars() {
 }
 
 export function SocialEntryScreen() {
+  const t = useUiTranslations();
   return (
     <section
-      aria-label="Social introduction"
+      aria-label={t("modules.social.socialIntro")}
       data-integration-state={integrationState.status}
       className="flex min-h-full flex-col items-center bg-bg px-6 pt-32 text-center text-text"
     >
       <ConnectedNetworkJars />
       <h2 className="max-w-xl text-2xl font-normal leading-relaxed">
-        Engage customers, gain valuable insights and generate leads through social media by linking
-        your social media accounts with your CRM.
+        {t("modules.social.entryBanner")}
       </h2>
       <Button
         className="mt-6 bg-none! bg-success! text-white! hover:bg-success-hover! font-semibold px-6 py-2 rounded-md shadow-sm"
         onPress={() => {
           toast({
             variant: "info",
-            title: "Contact your administrator to set up social media accounts.",
+            title: t("modules.social.setupSocialAccountsMsg"),
           });
         }}
       >
-        Let's Get Started
+        {t("modules.social.letsGetStarted")}
       </Button>
     </section>
   );
