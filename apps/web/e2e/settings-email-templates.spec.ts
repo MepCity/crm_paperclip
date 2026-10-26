@@ -61,31 +61,3 @@ test("Email templates settings screen opens, displays rows, filters by search, a
   expect(failedResponses).toEqual([]);
   expect(consoleErrors).toEqual([]);
 });
-
-test("email template create opens module, gallery, full-page editor and both save options", async ({
-  page,
-}, testInfo) => {
-  await page.setViewportSize({ width: 1470, height: 835 });
-  await signUpNewUser(page);
-  const org = await createOrganization(page);
-  await page.goto(`/crm/${org.slug}/settings/templates?type=email`);
-  await page.getByRole("button", { name: "New Template" }).click();
-  await expect(page.getByRole("dialog", { name: "Create Email Template" })).toBeVisible();
-  await page.screenshot({ path: testInfo.outputPath("template-module.png") });
-  await page.getByRole("button", { name: "Next", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Template Gallery" })).toBeVisible();
-  await page.screenshot({ path: testInfo.outputPath("template-gallery.png") });
-  await page.getByRole("button", { name: "Add HTML / Plain Text" }).click();
-  await page.getByRole("textbox", { name: "Template name" }).fill("Team welcome");
-  await page.getByRole("textbox", { name: "Template body" }).fill("Hello team");
-  await page.getByRole("button", { name: "Plain text", exact: true }).click();
-  await expect(page.getByRole("textbox", { name: "Template body" })).toHaveValue("Hello team");
-  await page.getByRole("button", { name: "HTML", exact: true }).click();
-  await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.getByRole("menuitem", { name: "Save now", exact: true })).toBeVisible();
-  await expect(page.getByRole("menuitem", { name: "Save as draft" })).toBeVisible();
-  await page.screenshot({ path: testInfo.outputPath("template-editor-save.png") });
-  await page.keyboard.press("Escape");
-  await page.getByRole("button", { name: "Cancel", exact: true }).click();
-  await expect(page.getByRole("heading", { name: "Templates" })).toBeVisible();
-});

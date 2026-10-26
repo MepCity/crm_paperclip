@@ -191,26 +191,3 @@ it("activates queue buttons via keyboard Enter and Space", async () => {
   expect(callsBtn.getAttribute("aria-pressed")).toBe("true");
   expect(meetingsBtn.getAttribute("aria-pressed")).toBe("false");
 });
-
-it("shows all observed period choices with Today & Overdue checked, without changing queue data", async () => {
-  sessionStorage.setItem("workqueue-welcome:test:user", "dismissed");
-  const user = userEvent.setup();
-  mount();
-  await user.click(screen.getByRole("button", { name: "Activity period: Today & Overdue" }));
-  const options = screen.getAllByRole("menuitemradio");
-  expect(options.map((option) => option.textContent)).toEqual([
-    "Today & Overdue",
-    "Today",
-    "Tomorrow",
-    "Overdue",
-    "This Week",
-    "Next Week",
-    "This Month",
-    "Next Month",
-    "On a Specific Date",
-  ]);
-  expect(options[0]?.getAttribute("aria-checked")).toBe("true");
-  await user.keyboard("{Escape}");
-  expect(screen.getByRole("button", { name: "Activity period: Today & Overdue" })).toBeDefined();
-  expect(replace).not.toHaveBeenCalled();
-});

@@ -1,14 +1,11 @@
 "use client";
 
 import type { ReadResult, RulePage, WorkflowRule } from "@crm/core/automation";
-import { useState } from "react";
-import { Button } from "@/components/ui/button";
 import { buttonSizes, buttonStyles } from "@/components/ui/button-styles";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { formatTrigger } from "./formatters";
-import { WorkflowCreate } from "./workflow-create";
 
 export interface WorkflowRulesListScreenProps {
   orgSlug: string;
@@ -27,7 +24,6 @@ export function WorkflowRulesListScreen({
   module,
   cursor,
 }: WorkflowRulesListScreenProps) {
-  const [creating, setCreating] = useState(false);
   const selectedModule = module ?? "all";
   const base = `/crm/${encodeURIComponent(orgSlug)}/settings/workflow-rules`;
   const href = (nextCursor?: string) => {
@@ -42,7 +38,6 @@ export function WorkflowRulesListScreen({
       aria-label="Workflow Rules"
       className="relative min-h-screen rounded-lg border border-border bg-surface shadow-xs p-6"
     >
-      {creating && <WorkflowCreate onClose={() => setCreating(false)} />}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <h2 className="text-xl font-semibold text-text">Workflow Rules</h2>
@@ -51,7 +46,6 @@ export function WorkflowRulesListScreen({
           </p>
         </div>
 
-        {result.ok && <Button onPress={() => setCreating(true)}>Create Rule</Button>}
         {/* Module Filter (WL6) */}
         <div className="flex items-center gap-2">
           <label htmlFor="workflow-module-filter" className="text-sm font-semibold text-text">

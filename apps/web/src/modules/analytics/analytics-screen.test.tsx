@@ -50,7 +50,7 @@ describe("AnalyticsScreen", () => {
     // A07: Create Dashboard
     const createDash = screen.getByRole("button", { name: "Create Dashboard" });
     expect(createDash).toBeTruthy();
-    expect(createDash.getAttribute("aria-disabled")).toBeNull();
+    expect(createDash.getAttribute("aria-disabled")).toBe("true");
 
     // A08: More actions
     const moreActions = screen.getByRole("button", { name: "More actions" });

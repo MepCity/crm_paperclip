@@ -28,7 +28,7 @@ describe("EmailSettingsScreen", () => {
     }
     expect(screen.getByRole("button", { name: "Add New Signature" })).toHaveProperty(
       "disabled",
-      false,
+      true,
     );
     expect(screen.queryByRole("button", { name: "Save" })).toBeNull();
     expect(screen.getByRole("tab", { name: "Email" }).getAttribute("aria-disabled")).toBe("true");

@@ -2,7 +2,7 @@ import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
-test("Email settings routes, tabs and accepted gaps stay read only", async ({ page }, testInfo) => {
+test("Email settings routes, tabs and accepted gaps stay read only", async ({ page }) => {
   await signUpNewUser(page);
   const org = await createOrganization(page);
   const base = `/crm/${org.slug}/settings`;
@@ -11,14 +11,7 @@ test("Email settings routes, tabs and accepted gaps stay read only", async ({ pa
   await expect(page).toHaveURL(`${base}/email-configuration/email-compose-settings`);
   await expect(page.getByRole("heading", { name: "Compose Settings" })).toBeVisible();
   await expect(page.getByRole("button", { name: /Default From Address/ })).toBeDisabled();
-  await page.getByRole("button", { name: "Add New Signature" }).click();
-  await page.getByRole("textbox", { name: "Signature name" }).fill("Team signature");
-  await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(
-    page.getByRole("region", { name: "New email signature" }).getByRole("alert"),
-  ).toHaveText("En az bir Gönderen adresini ilişkilendirin.");
-  await page.screenshot({ path: testInfo.outputPath("signature-validation.png"), fullPage: true });
-  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page.getByRole("button", { name: "Add New Signature" })).toBeDisabled();
 
   const mutations: string[] = [];
   page.on("request", (request) => {

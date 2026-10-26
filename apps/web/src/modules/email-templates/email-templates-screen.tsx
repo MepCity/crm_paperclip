@@ -12,7 +12,6 @@ import {
 } from "@/components/ui/table";
 import { fixtureEmailTemplatesPort } from "./fixture-port";
 import type { EmailTemplateFolder, EmailTemplateItem, EmailTemplatesPort } from "./port";
-import { TemplateCreate } from "./template-create";
 
 export interface EmailTemplatesScreenProps {
   port?: EmailTemplatesPort;
@@ -24,7 +23,6 @@ export function EmailTemplatesScreen({
   port = fixtureEmailTemplatesPort,
   initialType = "email",
 }: EmailTemplatesScreenProps) {
-  const [creating, setCreating] = useState(false);
   const [folders, setFolders] = useState<readonly EmailTemplateFolder[]>([]);
   const [modules, setModules] = useState<readonly string[]>([]);
   const [templates, setTemplates] = useState<readonly EmailTemplateItem[]>([]);
@@ -84,7 +82,6 @@ export function EmailTemplatesScreen({
       className="flex flex-col rounded-lg border border-border bg-surface shadow-xs"
       data-email-templates
     >
-      {creating && <TemplateCreate modules={modules} onClose={() => setCreating(false)} />}
       {/* Templates Header */}
       <div className="flex flex-col gap-4 border-b border-border p-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-wrap items-center gap-6">
@@ -189,7 +186,9 @@ export function EmailTemplatesScreen({
             <button
               type="button"
               aria-label="New Template"
-              onClick={() => setCreating(true)}
+              aria-disabled="true"
+              data-later-module="M10"
+              onClick={(e) => e.preventDefault()}
               className="inline-flex w-full items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-text transition-colors hover:bg-primary-hover"
             >
               New Template

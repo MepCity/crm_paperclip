@@ -17,7 +17,6 @@ import {
   type EmailSettingsPort,
   type EmailSettingsSnapshot,
 } from "./port";
-import { SignatureCreate } from "./signature-create";
 
 const areas = [
   { id: "email-configuration", label: "Email Configuration" },
@@ -179,7 +178,6 @@ function ConfigurationContent({
   tab: EmailConfigurationTab;
   data: EmailSettingsSnapshot;
 }) {
-  const [signatureOpen, setSignatureOpen] = useState(false);
   if (tab === "email-sharing") return <Sharing data={data} />;
   if (tab === "organization-emails")
     return (
@@ -255,22 +253,11 @@ function ConfigurationContent({
         <div className="sm:col-span-3">
           <ClosedSetting label="Default Reply-To Address" value={data.compose.replyToAddress} />
         </div>
-      </div>
-      <div className="mt-6 grid grid-cols-1 gap-5 sm:grid-cols-4">
-        <span className="pt-3 text-md text-text-muted sm:text-right">Email Signature</span>
+        <span className="text-md text-text-muted sm:text-right">Email Signature</span>
         <div className="sm:col-span-3">
-          {signatureOpen ? (
-            <SignatureCreate onCancel={() => setSignatureOpen(false)} />
-          ) : (
-            <Button
-              variant="ghost"
-              size="compact"
-              className="text-primary"
-              onPress={() => setSignatureOpen(true)}
-            >
-              Add New Signature
-            </Button>
-          )}
+          <Button isDisabled variant="ghost" size="compact" className="text-primary">
+            Add New Signature
+          </Button>
         </div>
       </div>
     </>

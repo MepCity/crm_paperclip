@@ -13,27 +13,16 @@ import {
   ProlificRepsContent,
   RevenueTargetContent,
 } from "./card-components";
-import { DashboardComponentChooser, DashboardCreate } from "./dashboard-create";
-import { fixtureAnalyticsPort, fixtureDashboardCreationPort } from "./fixture-port";
-import type {
-  AnalyticsDashboardData,
-  AnalyticsPort,
-  DashboardCreationPort,
-  EmptyDashboard,
-} from "./port";
+import { fixtureAnalyticsPort } from "./fixture-port";
+import type { AnalyticsDashboardData, AnalyticsPort } from "./port";
 
 export function AnalyticsScreen({
   orgSlug: _orgSlug,
   port = fixtureAnalyticsPort,
-  creationPort = fixtureDashboardCreationPort,
 }: {
   orgSlug: string;
   port?: AnalyticsPort;
-  creationPort?: DashboardCreationPort;
 }) {
-  const [creating, setCreating] = useState(false);
-  const [custom, setCustom] = useState<EmptyDashboard | null>(null);
-  const [adding, setAdding] = useState(false);
   const [data, setData] = useState<AnalyticsDashboardData | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
@@ -54,24 +43,8 @@ export function AnalyticsScreen({
     loadDashboard();
   }, [loadDashboard]);
 
-  if (creating)
-    return (
-      <DashboardCreate
-        onCancel={() => {
-          setCreating(false);
-          setAdding(false);
-        }}
-        onSave={async (input) => {
-          setCustom(await creationPort.createEmptyDashboard(input));
-          setCreating(false);
-          setAdding(false);
-        }}
-      />
-    );
-
   return (
     <section aria-label="Analytics" className="min-h-full bg-bg p-4 text-md text-text">
-      {adding && <DashboardComponentChooser onCancel={() => setAdding(false)} />}
       <span id="analytics-unavailable" className="sr-only">
         Not available in this read-only view.
       </span>
@@ -116,7 +89,7 @@ export function AnalyticsScreen({
               tabIndex={0}
               className="flex items-center gap-2 pr-3 pl-1 text-sm font-semibold text-text"
             >
-              <span>{custom?.name ?? data?.overviewTitle ?? "Org Overview"}</span>
+              <span>{data?.overviewTitle ?? "Org Overview"}</span>
               <Icons.chevronDown className="size-3.5 text-text-muted" aria-hidden />
             </div>
           </div>
@@ -124,7 +97,7 @@ export function AnalyticsScreen({
           {/* A04: All Users scope badge */}
           <div
             role="status"
-            aria-label={custom ? "Scope: Only me" : "Scope: All Users"}
+            aria-label="Scope: All Users"
             className="flex items-center gap-1.5 rounded-full border border-border bg-surface px-2.5 py-0.5 text-xs text-text-muted shadow-2xs"
           >
             <svg
@@ -138,7 +111,7 @@ export function AnalyticsScreen({
               <circle cx="12" cy="12" r="10" />
               <path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
             </svg>
-            <span>{custom ? "Only me" : (data?.scopeLabel ?? "All Users")}</span>
+            <span>{data?.scopeLabel ?? "All Users"}</span>
           </div>
         </div>
 
@@ -156,33 +129,27 @@ export function AnalyticsScreen({
           </Button>
 
           {/* A06: Add Component */}
-          {!custom && (
-            <Button
-              variant="recordSecondary"
-              size="toolbar"
-              aria-disabled="true"
-              aria-describedby="analytics-unavailable"
-              className="h-8 text-xs font-semibold"
-            >
-              Add Component
-            </Button>
-          )}
+          <Button
+            variant="recordSecondary"
+            size="toolbar"
+            aria-disabled="true"
+            aria-describedby="analytics-unavailable"
+            className="h-8 text-xs font-semibold"
+          >
+            Add Component
+          </Button>
 
           {/* A07: Create Dashboard */}
           <Button
             variant="recordPrimary"
             size="toolbar"
-            onPress={() => setCreating(true)}
+            aria-disabled="true"
+            aria-describedby="analytics-unavailable"
             className="h-8 text-xs font-semibold"
           >
             Create Dashboard
           </Button>
 
-          {custom && (
-            <Button variant="recordSecondary" isDisabled>
-              Delete Dashboard
-            </Button>
-          )}
           {/* A08: More actions */}
           <Button
             variant="icon"
@@ -221,16 +188,7 @@ export function AnalyticsScreen({
         </div>
       )}
 
-      {custom && (
-        <div className="flex min-h-[70vh] flex-col items-center justify-center text-center text-text-muted">
-          <Icons.barChart className="mx-auto mb-5 size-16 text-text-muted" aria-hidden />
-          <h2 className="text-md">No Components Found</h2>
-          <Button className="mt-5" onPress={() => setAdding(true)}>
-            Add Component
-          </Button>
-        </div>
-      )}
-      {data && !custom && (
+      {data && (
         <div className="grid grid-cols-12 gap-3.5">
           {/* Row 1: Four KPI cards A10.01–A10.04 */}
           <div className="col-span-12 sm:col-span-6 lg:col-span-3">

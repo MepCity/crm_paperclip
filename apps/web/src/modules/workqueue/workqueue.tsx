@@ -7,7 +7,6 @@ import { CellValue } from "@/components/records/list/cell-value";
 import { RecordTableFooter } from "@/components/records/list/record-table-footer";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
-import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { moduleRecordPath } from "@/lib/crm-paths";
 import { useFormat } from "@/lib/format-context";
@@ -86,43 +85,16 @@ export function Workqueue({
           className="workqueue-rail w-72 shrink-0 overflow-auto rounded-md border border-panel-border bg-surface p-4"
         >
           <h2 className="mb-2 font-semibold">My Open Activity</h2>
-          <MenuTrigger>
-            <Button
-              variant="ghost"
-              className="workqueue-period"
-              aria-label="Activity period: Today & Overdue"
-            >
-              <span>Today &amp; Overdue</span>
-              <Icons.chevronDown aria-hidden className="size-3" />
-            </Button>
-            <Menu
-              aria-label="Activity period"
-              selectionMode="single"
-              selectedKeys={["Today & Overdue"]}
-            >
-              {[
-                "Today & Overdue",
-                "Today",
-                "Tomorrow",
-                "Overdue",
-                "This Week",
-                "Next Week",
-                "This Month",
-                "Next Month",
-                "On a Specific Date",
-              ].map((period) => (
-                <MenuItem key={period} id={period} textValue={period}>
-                  <span className="flex items-center gap-2">
-                    {period === "Today & Overdue" && <Icons.check className="size-4" aria-hidden />}
-                    <span>{period}</span>
-                    {period === "On a Specific Date" && (
-                      <Icons.chevronRight className="ml-auto size-3" aria-hidden />
-                    )}
-                  </span>
-                </MenuItem>
-              ))}
-            </Menu>
-          </MenuTrigger>
+          <Button
+            variant="ghost"
+            className="workqueue-period"
+            aria-label="Activity period: Today & Overdue"
+            aria-describedby={unavailableDescId}
+            onPress={() => unavailable("Activity period selection")}
+          >
+            <span>Today &amp; Overdue</span>
+            <Icons.chevronDown aria-hidden className="size-3" />
+          </Button>
           <QueueButtons
             section="My Open Activity"
             queues={queues}

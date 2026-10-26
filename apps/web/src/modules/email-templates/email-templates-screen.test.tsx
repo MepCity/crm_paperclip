@@ -34,8 +34,8 @@ describe("EmailTemplatesScreen", () => {
 
     // Folder pane
     expect(
-      screen.getByRole("button", { name: "New Template" }).getAttribute("aria-disabled"),
-    ).toBeNull();
+      screen.getByRole("button", { name: "New Template" }).getAttribute("data-later-module"),
+    ).toBe("M10");
     expect(screen.getByRole("button", { name: "Favorites" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Associated Templates" })).toBeDefined();
     expect(screen.getByRole("button", { name: "Created by me" })).toBeDefined();

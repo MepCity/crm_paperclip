@@ -90,15 +90,3 @@ export interface AnalyticsDashboardData {
 export interface AnalyticsPort {
   getDashboard(): Promise<AnalyticsDashboardData>;
 }
-
-/** Local fixture storage only; no production mutation endpoint is inferred. */
-export interface EmptyDashboard {
-  name: string;
-  description: string;
-  access: "private";
-  components: readonly never[];
-}
-
-export interface DashboardCreationPort {
-  createEmptyDashboard(input: EmptyDashboard): Promise<EmptyDashboard>;
-}

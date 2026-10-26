@@ -6,9 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
-import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
-import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { fixtureReportsPort } from "./fixture-port";
 import type { ReportDefinition, ReportsPort } from "./port";
 import { ReportsCategorySelector } from "./reports-category-selector";
@@ -27,8 +25,6 @@ export function ReportsScreen({
   port?: ReportsPort;
   initialReports?: readonly ReportDefinition[];
 }) {
-  const [creating, setCreating] = useState(false);
-  const [primaryModule, setPrimaryModule] = useState("");
   const [reports, setReports] = useState<readonly ReportDefinition[]>(initialReports ?? []);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     initialReports ? "ready" : "loading",
@@ -54,43 +50,6 @@ export function ReportsScreen({
 
   return (
     <section aria-label="Reports" className="min-h-full bg-bg p-3 text-md text-text">
-      <TopAlignedModal
-        isOpen={creating}
-        onOpenChange={setCreating}
-        aria-labelledby="report-create-title"
-        panelStyle={{ width: "min(600px, 95vw)" }}
-      >
-        <div className="p-8 space-y-6">
-          <h2 id="report-create-title" className="text-xl font-semibold">
-            Create Report
-          </h2>
-          <Select
-            label="Select Primary Module"
-            placeholder="Select Module"
-            items={["Leads", "Contacts", "Accounts", "Deals", "Tasks", "Meetings", "Calls"].map(
-              (id) => ({ id }),
-            )}
-            value={primaryModule || null}
-            onChange={(key) => setPrimaryModule(String(key))}
-          >
-            {(item) => <SelectItem id={item.id}>{item.id}</SelectItem>}
-          </Select>
-          <div className="flex justify-end gap-3">
-            <Button
-              variant="secondary"
-              onPress={() => {
-                setCreating(false);
-                setPrimaryModule("");
-              }}
-            >
-              Cancel
-            </Button>
-            <Button isDisabled={!primaryModule} laterModule="M13">
-              Continue
-            </Button>
-          </div>
-        </div>
-      </TopAlignedModal>
       <span id="reports-unavailable" className="sr-only">
         Not available in this read-only view.
       </span>
@@ -108,7 +67,11 @@ export function ReportsScreen({
               prefix={<Icons.filterSearch className="size-4" aria-hidden />}
             />
           </div>
-          <Button variant="recordPrimary" onPress={() => setCreating(true)}>
+          <Button
+            variant="recordPrimary"
+            aria-disabled="true"
+            aria-describedby="reports-unavailable"
+          >
             Create Report
           </Button>
           <Button
