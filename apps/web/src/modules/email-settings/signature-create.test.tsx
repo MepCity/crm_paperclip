@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from "@testing-library/react";
+import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
 import { SignatureCreate } from "./signature-create";
@@ -13,7 +13,17 @@ it("opens all signature fields, validates the missing sender with the observed m
   expect(screen.getByRole("button", { name: /Associate sender address/ })).toBeDefined();
   await user.type(screen.getByRole("textbox", { name: "Signature body" }), "Regards");
   await user.click(screen.getByRole("button", { name: "Save" }));
-  expect(screen.getByRole("alert").textContent).toBe("En az bir Gönderen adresini ilişkilendirin.");
+  const alert = screen.getByRole("alert");
+  expect(alert.textContent).toBe("En az bir Gönderen adresini ilişkilendirin.");
+  expect(alert.className).toContain("fixed");
+  expect(
+    screen.getByRole("button", { name: /Associate sender address/ }).getAttribute("data-invalid"),
+  ).toBe("true");
+  await user.click(within(alert).getByRole("button", { name: "Close" }));
+  expect(screen.queryByRole("alert")).toBeNull();
+  expect(screen.getByRole("textbox", { name: "Signature name" })).toBeDefined();
+  await user.click(screen.getByRole("button", { name: "Save" }));
+  expect(screen.getByRole("alert")).toBeDefined();
   await user.click(screen.getByRole("button", { name: "Plain text" }));
   expect(
     (screen.getByRole("textbox", { name: "Signature body" }) as HTMLTextAreaElement).value,

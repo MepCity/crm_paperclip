@@ -77,11 +77,11 @@ export function ReportsScreen({
       >
         <div className="p-8 space-y-6">
           <h2 id="report-create-title" className="text-xl font-semibold">
-            Create Report
+            {t("modules.observedFlows.createReport")}
           </h2>
           <Select
-            label="Select Primary Module"
-            placeholder="Select Module"
+            label={t("modules.observedFlows.selectPrimaryModule")}
+            placeholder={t("modules.observedFlows.selectModule")}
             items={["Leads", "Contacts", "Accounts", "Deals", "Tasks", "Meetings", "Calls"].map(
               (id) => ({ id }),
             )}
@@ -98,10 +98,10 @@ export function ReportsScreen({
                 setPrimaryModule("");
               }}
             >
-              Cancel
+              {t("modules.observedFlows.cancel")}
             </Button>
             <Button isDisabled={!primaryModule} laterModule="M13">
-              Continue
+              {t("modules.observedFlows.continue")}
             </Button>
           </div>
         </div>

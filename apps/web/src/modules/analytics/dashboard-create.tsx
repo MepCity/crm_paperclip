@@ -7,21 +7,9 @@ import { Icons } from "@/components/ui/icon";
 import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
+import { useUiTranslations } from "@/i18n/client-provider";
 import type { EmptyDashboard } from "./port";
 
-const types = [
-  { label: "Chart", icon: Icons.barChart },
-  { label: "KPI", icon: Icons.activity },
-  { label: "Comparator", icon: Icons.users },
-  { label: "Anomaly Detector", icon: Icons.sparkles },
-  { label: "Target Meter", icon: Icons.target },
-  { label: "Funnel", icon: Icons.filter },
-  { label: "Cohort", icon: Icons.calendar },
-  { label: "Quadrant", icon: Icons.columns },
-  { label: "Zone", icon: Icons.target },
-  { label: "Stage", icon: Icons.columns },
-  { label: "Waterfall", icon: Icons.barChart },
-];
 const gridCells = Array.from({ length: 60 }, (_, i) => `cell-${i}`);
 
 const modules = [
@@ -46,22 +34,43 @@ export function DashboardCreate({
   onCancel: () => void;
   onSave: (dashboard: EmptyDashboard) => Promise<void>;
 }) {
+  const t = useUiTranslations();
+  const types = [
+    { label: t("modules.observedFlows.chart"), icon: Icons.barChart },
+    { label: t("modules.observedFlows.kpi"), icon: Icons.activity },
+    { label: t("modules.observedFlows.comparator"), icon: Icons.users },
+    { label: t("modules.observedFlows.anomalyDetector"), icon: Icons.sparkles },
+    { label: t("modules.observedFlows.targetMeter"), icon: Icons.target },
+    { label: t("modules.observedFlows.funnel"), icon: Icons.filter },
+    { label: t("modules.observedFlows.cohort"), icon: Icons.calendar },
+    { label: t("modules.observedFlows.quadrant"), icon: Icons.columns },
+    { label: t("modules.observedFlows.zone"), icon: Icons.target },
+    { label: t("modules.observedFlows.stage"), icon: Icons.columns },
+    { label: t("modules.observedFlows.waterfall"), icon: Icons.barChart },
+  ];
+
   const [name, setName] = useState("Untitled Dashboard");
   const [description, setDescription] = useState("");
   const [sourceOpen, setSourceOpen] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState(false);
   return (
-    <section aria-label="Create dashboard" className="flex min-h-screen bg-bg">
-      <aside aria-label="Components" className="w-64 shrink-0 border-r border-border p-5">
-        <h2 className="text-xl font-semibold mb-5">Components</h2>
+    <section
+      aria-label={t("modules.observedFlows.createDashboard")}
+      className="flex min-h-screen bg-bg"
+    >
+      <aside
+        aria-label={t("modules.observedFlows.components")}
+        className="w-64 shrink-0 border-r border-border p-5"
+      >
+        <h2 className="text-xl font-semibold mb-5">{t("modules.observedFlows.components")}</h2>
         <div className="space-y-4">
           {types.map((type) => (
             <Button
               key={type.label}
               variant="secondary"
               className="w-full justify-start gap-3 py-4"
-              laterModule={type.label === "Chart" ? undefined : "M13"}
+              laterModule={type.label === t("modules.observedFlows.chart") ? undefined : "M13"}
               onPress={() => setSourceOpen(true)}
             >
               <type.icon className="size-5 text-text-muted" aria-hidden />
@@ -73,22 +82,40 @@ export function DashboardCreate({
       <div className="flex-1 min-w-0">
         <header className="flex flex-wrap items-start gap-5 border-b border-border bg-surface p-5">
           <div className="w-96 space-y-3">
-            <TextField label="Dashboard name" hideLabel value={name} onChange={setName} autoFocus />
+            <div className="flex items-center gap-2">
+              <Button variant="icon" aria-label={t("modules.observedFlows.favoriteDashboard")}>
+                <span className="text-xl" aria-hidden>
+                  ☆
+                </span>
+              </Button>
+              <div className="flex-1">
+                <TextField
+                  label={t("modules.observedFlows.dashboardName")}
+                  hideLabel
+                  value={name}
+                  onChange={setName}
+                  autoFocus
+                />
+              </div>
+            </div>
             <TextField
-              label="Dashboard description"
+              label={t("modules.observedFlows.dashboardDescription")}
               hideLabel
-              placeholder="Enter description"
+              placeholder={t("modules.observedFlows.enterDescription")}
               value={description}
               onChange={setDescription}
             />
           </div>
           <span className="inline-flex items-center gap-2 rounded border border-border px-3 py-1">
             <Icons.userRound className="size-4" aria-hidden />
-            Only me
+            {t("modules.observedFlows.onlyMe")}
           </span>
+          <Button variant="icon" aria-label={t("modules.observedFlows.editDashboardAccess")}>
+            <Icons.fieldEdit className="size-4" aria-hidden />
+          </Button>
           <div className="ml-auto flex gap-3">
             <Button variant="secondary" onPress={onCancel} isDisabled={saving}>
-              Cancel
+              {t("modules.observedFlows.cancel")}
             </Button>
             <Button
               isDisabled={!name.trim() || saving}
@@ -110,13 +137,13 @@ export function DashboardCreate({
                 }
               }}
             >
-              Save
+              {t("modules.observedFlows.save")}
             </Button>
           </div>
         </header>
         {error && (
           <p role="alert" className="p-4 text-danger">
-            Dashboard could not be saved.
+            {t("modules.observedFlows.dashboardCouldNotBeSaved")}
           </p>
         )}
         <div className="relative min-h-[70vh] p-12">
@@ -127,8 +154,10 @@ export function DashboardCreate({
           </div>
           <div className="relative max-w-lg rounded bg-surface p-12 text-center">
             <Icons.plus className="mx-auto mb-5 size-12 text-text-muted" aria-hidden />
-            <h2 className="text-xl">Select a Component.</h2>
-            <p className="mt-3">Build your dashboard by adding components.</p>
+            <h2 className="text-xl">{t("modules.observedFlows.selectAComponent")}</h2>
+            <p className="mt-3">
+              {t("modules.observedFlows.buildYourDashboardByAddingComponents")}
+            </p>
           </div>
         </div>
       </div>
@@ -138,6 +167,7 @@ export function DashboardCreate({
 }
 
 function QuickChart({ onCancel }: { onCancel: () => void }) {
+  const t = useUiTranslations();
   const titleId = useId();
   const [module, setModule] = useState("");
   const [criteria, setCriteria] = useState(false);
@@ -154,25 +184,25 @@ function QuickChart({ onCancel }: { onCancel: () => void }) {
       <div className="p-8">
         <div className="mb-6 flex justify-between">
           <h2 id={titleId} className="text-xl font-semibold">
-            Add Chart
+            {t("modules.observedFlows.addChart")}
           </h2>
           <Button variant="ghost" isDisabled>
-            Help
+            {t("modules.observedFlows.help")}
           </Button>
         </div>
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-5">
           <div className="grid grid-cols-[12rem_1fr] items-center gap-x-5 gap-y-4 lg:col-span-3">
             <span aria-hidden className="text-right text-text-muted">
-              Component Name
+              {t("modules.observedFlows.componentName")}
             </span>
-            <TextField label="Component Name" hideLabel autoFocus />
+            <TextField label={t("modules.observedFlows.componentName")} hideLabel autoFocus />
             <span aria-hidden className="text-right text-text-muted">
-              Modules
+              {t("modules.observedFlows.modules")}
             </span>
             <Select
-              label="Modules"
+              label={t("modules.observedFlows.modules")}
               hideLabel
-              placeholder="Select Module"
+              placeholder={t("modules.observedFlows.selectModule")}
               items={modules.map((id) => ({ id }))}
               value={module || null}
               onChange={(key) => {
@@ -186,9 +216,9 @@ function QuickChart({ onCancel }: { onCancel: () => void }) {
               <>
                 <span />
                 <Select
-                  label="Related Module"
+                  label={t("modules.observedFlows.relatedModule")}
                   hideLabel
-                  placeholder="Select Related Module"
+                  placeholder={t("modules.observedFlows.selectRelatedModule")}
                   items={[]}
                   isDisabled
                 >
@@ -197,64 +227,85 @@ function QuickChart({ onCancel }: { onCancel: () => void }) {
               </>
             )}
             <span aria-hidden className="text-right text-text-muted">
-              Measure (y axis)
+              {t("modules.observedFlows.measureYAxis")}
             </span>
-            <Select
-              label="Measure (y axis)"
-              hideLabel
-              placeholder="Select Measure"
-              items={module ? [{ id: `Count of ${module}` }] : []}
-              value={module ? `Count of ${module}` : null}
-              isDisabled
-            >
-              {emptyItem}
-            </Select>
+            <div className="flex items-center gap-3 [&>div]:flex-1">
+              <Select
+                label={t("modules.observedFlows.measureYAxis")}
+                hideLabel
+                placeholder={t("modules.observedFlows.selectMeasure")}
+                items={module ? [{ id: `Count of ${module}` }] : []}
+                value={module ? `Count of ${module}` : null}
+                isDisabled
+              >
+                {emptyItem}
+              </Select>
+              <span aria-hidden className="flex gap-2">
+                <Icons.minus className="size-4 rounded-full border border-current text-danger" />
+                <Icons.plus className="size-4 rounded-full border border-current text-accent-green" />
+              </span>
+            </div>
             <span aria-hidden className="text-right text-text-muted">
-              Grouping
+              {t("modules.observedFlows.grouping")}
             </span>
-            <Select label="Grouping" hideLabel placeholder="Select Grouping" items={[]} isDisabled>
-              {emptyItem}
-            </Select>
+            <div className="flex items-center gap-3 [&>div]:flex-1">
+              <Select
+                label={t("modules.observedFlows.grouping")}
+                hideLabel
+                placeholder={t("modules.observedFlows.selectGrouping")}
+                items={[]}
+                isDisabled
+              >
+                {emptyItem}
+              </Select>
+              <span aria-hidden className="flex gap-2">
+                <Icons.minus className="size-4 rounded-full border border-current text-danger" />
+              </span>
+            </div>
             <div className="col-span-2">
               {criteria ? (
                 <section
-                  aria-label="Criteria filter"
+                  aria-label={t("modules.observedFlows.criteriaFilter")}
                   className="rounded border border-border bg-bg p-5 space-y-4"
                 >
                   <div className="flex items-center gap-4">
-                    <h3 className="font-semibold">Criteria filter</h3>
+                    <h3 className="font-semibold">{t("modules.observedFlows.criteriaFilter")}</h3>
                     <Button
                       variant="ghost"
                       className="text-danger"
                       onPress={() => setCriteria(false)}
                     >
-                      Remove
+                      {t("modules.observedFlows.remove")}
                     </Button>
                   </div>
                   <div className="grid grid-cols-[auto_1fr_1fr_2fr_auto] items-center gap-2">
                     <span className="rounded-full border border-border p-3">1</span>
                     <Select
-                      label="Criterion field"
+                      label={t("modules.observedFlows.criterionField")}
                       hideLabel
-                      placeholder="Select"
+                      placeholder={t("modules.observedFlows.select")}
                       items={[]}
                       isDisabled
                     >
                       {emptyItem}
                     </Select>
                     <Select
-                      label="Criterion operator"
+                      label={t("modules.observedFlows.criterionOperator")}
                       hideLabel
-                      placeholder="Select"
+                      placeholder={t("modules.observedFlows.select")}
                       items={[]}
                       isDisabled
                     >
                       {emptyItem}
                     </Select>
-                    <TextField label="Criterion value" hideLabel isDisabled />
+                    <TextField
+                      label={t("modules.observedFlows.criterionValue")}
+                      hideLabel
+                      isDisabled
+                    />
                     <Button
                       variant="ghost"
-                      aria-label="Add criterion"
+                      aria-label={t("modules.observedFlows.addCriterion")}
                       isDisabled
                       className="text-accent-green data-disabled:opacity-100!"
                     >
@@ -264,26 +315,34 @@ function QuickChart({ onCancel }: { onCancel: () => void }) {
                 </section>
               ) : (
                 <Button variant="ghost" isDisabled={!module} onPress={() => setCriteria(true)}>
-                  + Criteria filter
+                  {t("modules.observedFlows.addCriteriaFilter")}
                 </Button>
               )}
             </div>
             <p className="text-right text-text-muted">
-              Combine related grouping values into categories.
+              {t("modules.observedFlows.combineRelatedGroupingValuesIntoCategories")}
             </p>
             <Button variant="ghost" className="justify-start text-primary" isDisabled>
-              Create Category Field
+              {t("modules.observedFlows.createCategoryField")}
             </Button>
-            <h3 className="col-span-2 pt-3 text-primary">Other options</h3>
-            <Checkbox label="Display Component Filters" isDisabled />
-            <Select label="Filter field" hideLabel placeholder="Select Field" items={[]} isDisabled>
+            <h3 className="col-span-2 pt-3 text-primary">
+              {t("modules.observedFlows.otherOptions")}
+            </h3>
+            <Checkbox label={t("modules.observedFlows.displayComponentFilters")} isDisabled />
+            <Select
+              label={t("modules.observedFlows.filterField")}
+              hideLabel
+              placeholder={t("modules.observedFlows.selectField")}
+              items={[]}
+              isDisabled
+            >
               {emptyItem}
             </Select>
           </div>
           <div className="lg:col-span-2">
             <div className="ml-auto w-48">
               <Select
-                label="Chart type"
+                label={t("modules.observedFlows.chartType")}
                 hideLabel
                 items={[{ id: "Column chart" }]}
                 value="Column chart"
@@ -293,7 +352,7 @@ function QuickChart({ onCancel }: { onCancel: () => void }) {
               </Select>
             </div>
             <section
-              aria-label="Chart preview"
+              aria-label={t("modules.observedFlows.chartPreview")}
               className="mt-4 min-h-56 rounded border border-border p-6"
             >
               {module ? (
@@ -305,11 +364,13 @@ function QuickChart({ onCancel }: { onCancel: () => void }) {
                     <div className="h-16 w-24 bg-accent-orange" />
                     <div className="h-32 w-24 bg-accent-yellow" />
                   </div>
-                  <p className="mt-4 text-center text-text-muted">Record count</p>
+                  <p className="mt-4 text-center text-text-muted">
+                    {t("modules.observedFlows.recordCount")}
+                  </p>
                 </>
               ) : (
                 <p className="py-12 text-center text-text-muted">
-                  Select a module to display a visual preview.
+                  {t("modules.observedFlows.selectAModuleToDisplayAVisualPreview")}
                 </p>
               )}
             </section>
@@ -317,9 +378,9 @@ function QuickChart({ onCancel }: { onCancel: () => void }) {
         </div>
         <footer className="mt-8 flex justify-end gap-3">
           <Button variant="secondary" onPress={onCancel}>
-            Cancel
+            {t("modules.observedFlows.cancel")}
           </Button>
-          <Button isDisabled>Done</Button>
+          <Button isDisabled>{t("modules.observedFlows.done")}</Button>
         </footer>
       </div>
     </TopAlignedModal>
@@ -327,6 +388,7 @@ function QuickChart({ onCancel }: { onCancel: () => void }) {
 }
 
 export function DashboardComponentChooser({ onCancel }: { onCancel: () => void }) {
+  const t = useUiTranslations();
   const sourceTitle = useId();
   const [chartOpen, setChartOpen] = useState(false);
   return (
@@ -341,20 +403,20 @@ export function DashboardComponentChooser({ onCancel }: { onCancel: () => void }
       >
         <div className="p-8 space-y-6">
           <h2 id={sourceTitle} className="text-xl font-semibold">
-            Chart
+            {t("modules.observedFlows.chart")}
           </h2>
           <Button
             onPress={() => {
               setChartOpen(true);
             }}
           >
-            Quick chart
+            {t("modules.observedFlows.quickChart")}
           </Button>
           <Button variant="secondary" isDisabled>
-            From Reports
+            {t("modules.observedFlows.fromReports")}
           </Button>
           <Button variant="secondary" onPress={onCancel}>
-            Cancel
+            {t("modules.observedFlows.cancel")}
           </Button>
         </div>
       </TopAlignedModal>

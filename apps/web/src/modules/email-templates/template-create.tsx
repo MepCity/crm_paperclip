@@ -10,9 +10,9 @@ import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { Select, SelectItem } from "@/components/ui/select";
-import { TextArea } from "@/components/ui/text-area";
 import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
+import { useUiTranslations } from "@/i18n/client-provider";
 
 const categories = [
   "All",
@@ -40,6 +40,7 @@ export function TemplateCreate({
   modules: readonly string[];
   onClose: () => void;
 }) {
+  const t = useUiTranslations();
   const titleId = useId();
   const [step, setStep] = useState<"module" | "gallery" | "editor">("module");
   const [module, setModule] = useState("Leads");
@@ -65,10 +66,10 @@ export function TemplateCreate({
       {step === "module" ? (
         <div className="p-8 space-y-6">
           <h2 id={titleId} className="text-xl font-semibold">
-            Create Email Template
+            {t("modules.observedFlows.createEmailTemplate")}
           </h2>
           <Select
-            label="Select Module"
+            label={t("modules.observedFlows.selectModule")}
             items={modules.filter((m) => m !== "All Modules").map((id) => ({ id }))}
             value={module}
             onChange={(key) => setModule(String(key))}
@@ -77,28 +78,32 @@ export function TemplateCreate({
           </Select>
           <div className="flex justify-end gap-3">
             <Button variant="secondary" onPress={onClose}>
-              Cancel
+              {t("modules.observedFlows.cancel")}
             </Button>
-            <Button onPress={() => setStep("gallery")}>Next</Button>
+            <Button onPress={() => setStep("gallery")}>{t("modules.observedFlows.next")}</Button>
           </div>
         </div>
       ) : step === "gallery" ? (
         <div className="min-h-full bg-surface">
           <header className="flex items-center gap-6 border-b border-border p-6">
-            <Button variant="icon" aria-label="Back" onPress={() => setStep("module")}>
+            <Button
+              variant="icon"
+              aria-label={t("modules.observedFlows.back")}
+              onPress={() => setStep("module")}
+            >
               <Icons.chevronLeft className="size-5" />
             </Button>
             <h2 id={titleId} className="text-xl font-semibold">
-              Template Gallery
+              {t("modules.observedFlows.templateGallery")}
             </h2>
             <span>{module}</span>
             <Button variant="secondary" className="ml-auto" onPress={() => setStep("editor")}>
-              Add HTML / Plain Text
+              {t("modules.observedFlows.addHTMLPlainText")}
             </Button>
           </header>
           <div className="flex min-h-screen">
             <nav
-              aria-label="Gallery categories"
+              aria-label={t("modules.observedFlows.galleryCategories")}
               className="w-64 shrink-0 border-r border-border bg-bg p-8 space-y-2"
             >
               {categories.map((item) => (
@@ -114,7 +119,14 @@ export function TemplateCreate({
               ))}
             </nav>
             <div className="flex-1 p-10">
-              <h3 className="mb-6 font-semibold">{category === "All" ? "Basic" : category}</h3>
+              <h3 className="mb-6 flex items-center gap-2 font-semibold">
+                {category === "All" ? "Basic" : category}{" "}
+                {(category === "All" || category === "Basic") && (
+                  <span className="inline-flex min-w-6 items-center justify-center rounded bg-surface-muted px-2 py-0.5 text-sm font-normal text-text-muted">
+                    6
+                  </span>
+                )}
+              </h3>
               {(category === "All" || category === "Basic") && (
                 <div className="grid grid-cols-2 lg:grid-cols-5 gap-8">
                   {layouts.map((layout, index) => (
@@ -155,6 +167,7 @@ function TemplateEditor({
   module: string;
   onClose: () => void;
 }) {
+  const t = useUiTranslations();
   const [plain, setPlain] = useState(false);
   const [body, setBody] = useState("");
   const editor = useRef<HTMLDivElement>(null);
@@ -162,141 +175,142 @@ function TemplateEditor({
   return (
     <div className="flex min-h-screen flex-col bg-bg">
       <h2 id={titleId} className="sr-only">
-        Email Template Editor
+        {t("modules.observedFlows.emailTemplateEditor")}
       </h2>
       <header className="flex items-center gap-4 bg-rail-surface text-rail-item-active-text p-5">
         <Icons.file className="size-8" aria-hidden />
         <div className="w-96 space-y-1 [&_input]:border-transparent [&_input]:bg-transparent [&_input]:text-rail-item-active-text">
-          <TextField label="Template name" hideLabel placeholder="Enter a template name" />
-          <TextField label="Template subject" hideLabel placeholder="Enter template subject" />
+          <TextField
+            label={t("modules.observedFlows.templateName")}
+            hideLabel
+            placeholder={t("modules.observedFlows.enterATemplateName")}
+          />
+          <TextField
+            label={t("modules.observedFlows.templateSubject")}
+            hideLabel
+            placeholder={t("modules.observedFlows.enterTemplateSubject")}
+          />
         </div>
         <span className="rounded bg-surface/20 px-2">{module}</span>
         <div className="ml-auto flex items-center gap-3">
           <Button variant="ghost" isDisabled>
-            Attachments
+            {t("modules.observedFlows.attachments")}
           </Button>
           <Button variant="secondary" onPress={onClose}>
-            Cancel
+            {t("modules.observedFlows.cancel")}
           </Button>
           <Button variant="secondary" isDisabled>
-            Preview
+            {t("modules.observedFlows.preview")}
           </Button>
           <MenuTrigger>
             <Button>
-              Save <Icons.chevronDown className="ml-2 size-3" />
+              {t("modules.observedFlows.save")}
+              <Icons.chevronDown className="ml-2 size-3" />
             </Button>
-            <Menu aria-label="Save template">
+            <Menu aria-label={t("modules.observedFlows.saveTemplate")}>
               <MenuItem id="save" isDisabled>
-                Save now
+                {t("modules.observedFlows.saveNow")}
               </MenuItem>
               <MenuItem id="draft" isDisabled>
-                Save as draft
+                {t("modules.observedFlows.saveAsDraft")}
               </MenuItem>
             </Menu>
           </MenuTrigger>
         </div>
       </header>
-      <div className="flex justify-end p-3">
-        <Button
-          variant="ghost"
-          onPress={() => {
-            setBody(editor.current?.textContent ?? body);
-            setPlain(!plain);
-          }}
+      <div className="relative mx-auto w-3/5">
+        <div
+          role="toolbar"
+          aria-label={t("modules.observedFlows.templateFormatting")}
+          className="flex flex-wrap items-center gap-2 border border-border bg-surface-muted p-2"
         >
-          {plain ? "HTML" : "Plain text"}
-        </Button>
-      </div>
-      {plain ? (
-        <div className="mx-auto w-3/5 bg-surface p-4">
-          <TextArea label="Template body" rows={25} value={body} onChange={setBody} />
-        </div>
-      ) : (
-        <div className="mx-auto w-3/5">
-          <div
-            role="toolbar"
-            aria-label="Template formatting"
-            className="flex flex-wrap items-center gap-2 border border-border bg-surface-muted p-2"
-          >
-            <span className="px-3">Verdana⌄</span>
-            <span className="px-2">10⌄</span>
-            {(
-              [
-                ["Bold", "B", "bold"],
-                ["Italic", "I", "italic"],
-                ["Underline", "U", "underline"],
-                ["Strikethrough", "S", "strikeThrough"],
-                ["Align left", "≡", "justifyLeft"],
-                ["Center", "≡", "justifyCenter"],
-                ["Numbered list", "1.", "insertOrderedList"],
-                ["Bulleted list", "•", "insertUnorderedList"],
-              ] as const
-            ).map(([label, text, command]) => (
-              <Button
-                key={label}
-                variant="ghost"
-                size="compact"
-                aria-label={label}
-                isDisabled={command.startsWith("justify")}
-                onPress={() => {
-                  if (editor.current)
-                    applyNoteEditorCommand(
-                      editor.current,
-                      command,
-                      undefined,
-                      undefined,
-                      range.current,
-                    );
-                }}
-              >
-                {text}
-              </Button>
-            ))}
-            {[
-              { label: "Link", icon: Link },
-              { label: "Image", icon: Image },
-              { label: "Table", icon: Table },
-              { label: "Source", icon: Code },
-              { label: "Quote", icon: Quote },
-            ].map(({ label, icon: Icon }) => (
-              <Button key={label} aria-label={label} variant="ghost" size="compact" isDisabled>
-                <Icon className="size-4" aria-hidden />
-              </Button>
-            ))}
+          <span className="px-3">{t("modules.observedFlows.verdana")}</span>
+          <span className="px-2">10⌄</span>
+          {(
+            [
+              ["Bold", "B", "bold"],
+              ["Italic", "I", "italic"],
+              ["Underline", "U", "underline"],
+              ["Strikethrough", "S", "strikeThrough"],
+              ["Align left", "≡", "justifyLeft"],
+              ["Center", "≡", "justifyCenter"],
+              ["Numbered list", "1.", "insertOrderedList"],
+              ["Bulleted list", "•", "insertUnorderedList"],
+            ] as const
+          ).map(([label, text, command]) => (
+            <Button
+              key={label}
+              variant="ghost"
+              size="compact"
+              aria-label={label}
+              isDisabled={command.startsWith("justify")}
+              onPress={() => {
+                if (editor.current)
+                  applyNoteEditorCommand(
+                    editor.current,
+                    command,
+                    undefined,
+                    undefined,
+                    range.current,
+                  );
+              }}
+            >
+              {text}
+            </Button>
+          ))}
+          {[
+            { label: t("modules.observedFlows.link"), icon: Link },
+            { label: t("modules.observedFlows.image"), icon: Image },
+            { label: t("modules.observedFlows.table"), icon: Table },
+            { label: t("modules.observedFlows.source"), icon: Code },
+            { label: t("modules.observedFlows.quote"), icon: Quote },
+          ].map(({ label, icon: Icon }) => (
+            <Button key={label} aria-label={label} variant="ghost" size="compact" isDisabled>
+              <Icon className="size-4" aria-hidden />
+            </Button>
+          ))}
+          <div className="absolute left-full top-0 ml-4 flex items-center whitespace-nowrap">
+            <Button variant="ghost" aria-pressed={plain} onPress={() => setPlain(!plain)}>
+              {plain ? "HTML" : "Plain text"}
+            </Button>
+            <span aria-hidden>|</span>
+            <Button variant="ghost" isDisabled className="data-disabled:opacity-100!">
+              {t("modules.observedFlows.showTips")}
+            </Button>
           </div>
-          {/* biome-ignore lint/a11y/useSemanticElements: Rich-text editing requires contenteditable. */}
-          <div
-            role="textbox"
-            aria-label="Template body"
-            aria-multiline="true"
-            contentEditable
-            suppressContentEditableWarning
-            tabIndex={0}
-            onInput={(event) => setBody(event.currentTarget.textContent ?? "")}
-            onBlur={() => {
-              if (editor.current) range.current = saveSelection(editor.current);
-            }}
-            onPaste={(event) => {
-              event.preventDefault();
-              if (editor.current)
-                applyNoteEditorCommand(
-                  editor.current,
-                  "insertText",
-                  undefined,
-                  event.clipboardData.getData("text/plain"),
-                  range.current,
-                );
-            }}
-            className="mt-4 min-h-[65vh] border border-border bg-surface p-5 shadow-sm outline-none focus:ring-2 focus:ring-primary"
-            ref={(node) => {
-              editor.current = node;
-              if (node && !node.hasChildNodes()) node.textContent = body;
-            }}
-          />
         </div>
-      )}
+        {/* biome-ignore lint/a11y/useSemanticElements: Rich-text editing requires contenteditable. */}
+        <div
+          role="textbox"
+          aria-label={t("modules.observedFlows.templateBody")}
+          aria-multiline="true"
+          contentEditable
+          suppressContentEditableWarning
+          tabIndex={0}
+          onInput={(event) => setBody(event.currentTarget.textContent ?? "")}
+          onBlur={() => {
+            if (editor.current) range.current = saveSelection(editor.current);
+          }}
+          onPaste={(event) => {
+            event.preventDefault();
+            if (editor.current)
+              applyNoteEditorCommand(
+                editor.current,
+                "insertText",
+                undefined,
+                event.clipboardData.getData("text/plain"),
+                range.current,
+              );
+          }}
+          className="mt-4 min-h-[65vh] border border-border bg-surface p-5 shadow-sm outline-none focus:ring-2 focus:ring-primary"
+          ref={(node) => {
+            editor.current = node;
+            if (node && !node.hasChildNodes()) node.textContent = body;
+          }}
+        />
+      </div>
       <p className="mt-auto bg-accent-yellow/10 p-3 text-center text-text-muted">
-        Type # to insert a merge field.
+        {t("modules.observedFlows.typeToInsertAMergeField")}
       </p>
     </div>
   );

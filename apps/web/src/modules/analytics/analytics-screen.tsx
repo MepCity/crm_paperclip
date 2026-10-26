@@ -188,7 +188,7 @@ export function AnalyticsScreen({
 
           {custom && (
             <Button variant="recordSecondary" isDisabled>
-              Delete Dashboard
+              {t("modules.observedFlows.deleteDashboard")}
             </Button>
           )}
           {/* A08: More actions */}
@@ -232,9 +232,9 @@ export function AnalyticsScreen({
       {custom && (
         <div className="flex min-h-[70vh] flex-col items-center justify-center text-center text-text-muted">
           <Icons.barChart className="mx-auto mb-5 size-16 text-text-muted" aria-hidden />
-          <h2 className="text-md">No Components Found</h2>
+          <h2 className="text-md">{t("modules.observedFlows.noComponentsFound")}</h2>
           <Button className="mt-5" onPress={() => setAdding(true)}>
-            Add Component
+            {t("modules.observedFlows.addComponent")}
           </Button>
         </div>
       )}

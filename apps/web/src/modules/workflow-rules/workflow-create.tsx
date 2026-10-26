@@ -8,6 +8,7 @@ import { Select, SelectItem } from "@/components/ui/select";
 import { TextArea } from "@/components/ui/text-area";
 import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
+import { useUiTranslations } from "@/i18n/client-provider";
 
 const modules = ["Leads", "Contacts", "Accounts", "Deals"];
 const triggers = ["Record Action", "Date/Time Field", "Record Score", "Record Notes"];
@@ -20,6 +21,7 @@ const dates = [
 ];
 
 export function WorkflowCreate({ onClose }: { onClose: () => void }) {
+  const t = useUiTranslations();
   const titleId = useId();
   const [step, setStep] = useState<"details" | "when" | "criteria">("details");
   const [module, setModule] = useState("");
@@ -48,11 +50,11 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
       {step === "details" ? (
         <div className="p-8 space-y-5">
           <h2 id={titleId} className="text-xl font-semibold">
-            Create Rule
+            {t("modules.observedFlows.createRule")}
           </h2>
           <Select
-            label="Module"
-            placeholder="Select Module"
+            label={t("modules.observedFlows.module")}
+            placeholder={t("modules.observedFlows.selectModule")}
             items={modules.map((id) => ({ id }))}
             value={module || null}
             onChange={(key) => setModule(String(key))}
@@ -60,26 +62,34 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
             {(item) => <SelectItem id={item.id}>{item.id}</SelectItem>}
           </Select>
           <TextField
-            label="Rule Name"
+            label={t("modules.observedFlows.ruleName")}
             value={name}
             onChange={setName}
             isRequired
             validationBehavior="aria"
           />
-          <TextArea label="Description" value={description} onChange={setDescription} />
+          <TextArea
+            label={t("modules.observedFlows.description")}
+            value={description}
+            onChange={setDescription}
+          />
           <div className="flex justify-end gap-3">
             <Button variant="secondary" onPress={onClose}>
-              Cancel
+              {t("modules.observedFlows.cancel")}
             </Button>
             <Button isDisabled={!module || !name.trim()} onPress={() => setStep("when")}>
-              Next
+              {t("modules.observedFlows.next")}
             </Button>
           </div>
         </div>
       ) : (
         <div className="min-h-full bg-bg p-8 pb-28">
           <header className="mb-12 flex gap-3">
-            <Button variant="icon" aria-label="Back" onPress={() => setStep("details")}>
+            <Button
+              variant="icon"
+              aria-label={t("modules.observedFlows.back")}
+              onPress={() => setStep("details")}
+            >
               <Icons.chevronLeft className="size-5" />
             </Button>
             <div>
@@ -100,7 +110,7 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
                 />
               )}
               <span className="absolute -left-40 flex size-24 items-center justify-center rounded-full bg-primary text-primary-text">
-                WHEN
+                {t("modules.observedFlows.when")}
               </span>
               <div
                 className={`relative w-full max-w-lg rounded-xl border border-border bg-surface p-6 ${step === "criteria" ? "space-y-3" : "space-y-5"}`}
@@ -108,15 +118,16 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
                 {step === "criteria" ? (
                   <>
                     <p>
-                      This rule executes on: <strong>{date}</strong>
+                      {t("modules.observedFlows.thisRuleExecutesOn")} <strong>{date}</strong>
                     </p>
                     <p>
-                      Repeat <strong>Once</strong>
+                      {t("modules.observedFlows.repeat")}{" "}
+                      <strong>{t("modules.observedFlows.once")}</strong>
                     </p>
                     <Button
                       variant="ghost"
                       size="compact"
-                      aria-label="Edit"
+                      aria-label={t("modules.observedFlows.edit")}
                       className="absolute top-4 right-4"
                       onPress={() => setStep("when")}
                     >
@@ -126,8 +137,8 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
                 ) : (
                   <>
                     <Select
-                      label="Execute this workflow rule based on"
-                      placeholder="Select"
+                      label={t("modules.observedFlows.executeThisWorkflowRuleBasedOn")}
+                      placeholder={t("modules.observedFlows.select")}
                       items={triggers.map((id) => ({ id }))}
                       value={trigger || null}
                       onChange={(key) => {
@@ -139,8 +150,8 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
                     </Select>
                     {trigger === "Date/Time Field" && (
                       <Select
-                        label="Execution date/time field"
-                        placeholder="Select"
+                        label={t("modules.observedFlows.executionDateTimeField")}
+                        placeholder={t("modules.observedFlows.select")}
                         items={dates.map((id) => ({ id }))}
                         value={date || null}
                         onChange={(key) => setDate(String(key))}
@@ -170,7 +181,7 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
                       </div>
                     )}
                     <Button isDisabled={!date} onPress={() => setStep("criteria")}>
-                      Next
+                      {t("modules.observedFlows.next")}
                     </Button>
                   </>
                 )}
@@ -180,10 +191,12 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
               <div className="relative">
                 <span aria-hidden className="absolute -left-28 top-20 h-0.5 w-28 bg-primary" />
                 <span className="absolute -left-40 top-8 flex size-24 rotate-45 items-center justify-center rounded-lg bg-primary text-primary-text">
-                  <span className="-rotate-45 text-sm">CONDITION 1</span>
+                  <span className="-rotate-45 text-sm">
+                    {t("modules.observedFlows.conditionBadge")}
+                  </span>
                 </span>
                 <section
-                  aria-label="Condition 1"
+                  aria-label={t("modules.observedFlows.condition1")}
                   className="max-w-5xl rounded-xl border-2 border-primary bg-surface p-8 shadow-md space-y-6"
                 >
                   <RadioGroup
@@ -192,33 +205,37 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
                     orientation="horizontal"
                     options={[
                       { value: "specific", label: `${module} matching certain conditions` },
-                      { value: "all", label: `All ${module}`, isDisabled: true },
+                      { value: "all", label: `All ${module}` },
                     ]}
                   />
                   <div className="grid grid-cols-[auto_1fr_1fr_2fr_auto] items-end gap-3">
                     <span className="rounded-full border border-border p-3">1</span>
                     <Select
-                      label="Criterion field"
+                      label={t("modules.observedFlows.criterionField")}
                       hideLabel
-                      placeholder="Select"
+                      placeholder={t("modules.observedFlows.select")}
                       items={[]}
                       isDisabled
                     >
                       {(item: { id: string }) => <SelectItem id={item.id}>{item.id}</SelectItem>}
                     </Select>
                     <Select
-                      label="Criterion operator"
+                      label={t("modules.observedFlows.criterionOperator")}
                       hideLabel
-                      placeholder="Select"
+                      placeholder={t("modules.observedFlows.select")}
                       items={[]}
                       isDisabled
                     >
                       {(item: { id: string }) => <SelectItem id={item.id}>{item.id}</SelectItem>}
                     </Select>
-                    <TextField label="Criterion value" hideLabel isDisabled />
+                    <TextField
+                      label={t("modules.observedFlows.criterionValue")}
+                      hideLabel
+                      isDisabled
+                    />
                     <Button
                       variant="ghost"
-                      aria-label="Add criterion"
+                      aria-label={t("modules.observedFlows.addCriterion")}
                       isDisabled
                       className="text-accent-green data-disabled:opacity-100!"
                     >
@@ -226,16 +243,16 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
                     </Button>
                   </div>
                   <div className="flex justify-end">
-                    <Button isDisabled>Done</Button>
+                    <Button isDisabled>{t("modules.observedFlows.done")}</Button>
                   </div>
                 </section>
               </div>
             )}
           </div>
           <footer className="fixed bottom-0 left-0 right-0 border-t border-border bg-surface p-5 flex gap-3">
-            <Button isDisabled>Save</Button>
+            <Button isDisabled>{t("modules.observedFlows.save")}</Button>
             <Button variant="secondary" onPress={onClose}>
-              Cancel
+              {t("modules.observedFlows.cancel")}
             </Button>
           </footer>
         </div>

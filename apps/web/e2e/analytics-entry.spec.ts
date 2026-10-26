@@ -94,7 +94,7 @@ test("Analytics entry: record-backed overview dashboard, toolbar, empty target s
 test("creates an empty private fixture dashboard and opens the unsaved quick-chart criteria", async ({
   page,
 }, testInfo) => {
-  await page.setViewportSize({ width: 1470, height: 835 });
+  await page.setViewportSize({ width: 2048, height: 1163 });
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(`/crm/${org.slug}/tab/Dashboards`);
@@ -102,6 +102,8 @@ test("creates an empty private fixture dashboard and opens the unsaved quick-cha
   await expect(page.getByRole("textbox", { name: "Dashboard name" })).toHaveValue(
     "Untitled Dashboard",
   );
+  await expect(page.getByRole("button", { name: "Favorite dashboard" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Edit dashboard access" })).toBeVisible();
   await page.getByRole("textbox", { name: "Dashboard name" }).fill("Team overview");
   await page.screenshot({ path: testInfo.outputPath("dashboard-create.png") });
   await page.getByRole("button", { name: "Save", exact: true }).click();

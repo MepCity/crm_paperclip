@@ -51,7 +51,9 @@ export function WorkflowRulesListScreen({
           <p className="text-sm text-text-muted mt-1">{t("modules.workflow.description")}</p>
         </div>
 
-        {result.ok && <Button onPress={() => setCreating(true)}>Create Rule</Button>}
+        {result.ok && (
+          <Button onPress={() => setCreating(true)}>{t("modules.observedFlows.createRule")}</Button>
+        )}
         {/* Module Filter (WL6) */}
         <div className="flex items-center gap-2">
           <label htmlFor="workflow-module-filter" className="text-sm font-semibold text-text">

@@ -5,7 +5,8 @@ import { assertNoPageErrors, expect, test } from "./support/test";
 test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user bar, rail sections, headers, footer and inert/forbidden actions", async ({
   page,
   pageErrors,
-}) => {
+}, testInfo) => {
+  await page.setViewportSize({ width: 2048, height: 1163 });
   const credentials = await signUpNewUser(page, { name: "Queue Admin" });
   const { slug } = await createOrganization(page);
 
@@ -67,6 +68,7 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
   await expect(rail.getByText("Today & Overdue", { exact: true })).toBeVisible();
   await rail.getByRole("button", { name: "Activity period: Today & Overdue" }).click();
   await expect(page.getByRole("menuitemradio")).toHaveCount(9);
+  await page.screenshot({ path: testInfo.outputPath("workqueue-period.png") });
   await expect(
     page.getByRole("menuitemradio", { name: "Today & Overdue", exact: true }),
   ).toHaveAttribute("aria-checked", "true");
@@ -279,7 +281,7 @@ test("Workqueue keeps developer controls hidden and aligns queue labels, icons a
   page,
   pageErrors,
 }) => {
-  await page.setViewportSize({ width: 1470, height: 835 });
+  await page.setViewportSize({ width: 2048, height: 1163 });
   await signUpNewUser(page);
   const { slug } = await createOrganization(page);
   await page.goto(`/crm/${slug}/workqueue`);

@@ -18,6 +18,11 @@ test("Email settings routes, tabs and accepted gaps stay read only", async ({ pa
     page.getByRole("region", { name: "New email signature" }).getByRole("alert"),
   ).toHaveText("En az bir Gönderen adresini ilişkilendirin.");
   await page.screenshot({ path: testInfo.outputPath("signature-validation.png"), fullPage: true });
+  await page.getByRole("alert").getByRole("button", { name: "Close", exact: true }).click();
+  await expect(
+    page.getByRole("region", { name: "New email signature" }).getByRole("alert"),
+  ).toHaveCount(0);
+  await expect(page.getByRole("textbox", { name: "Signature name" })).toHaveValue("Team signature");
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
 
   const mutations: string[] = [];

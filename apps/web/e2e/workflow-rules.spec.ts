@@ -292,7 +292,7 @@ test("ordinary organizations show no workflow rules or foreign detail", async ({
 test("workflow create advances the observed date trigger to initial criteria without saving", async ({
   page,
 }, testInfo) => {
-  await page.setViewportSize({ width: 1470, height: 835 });
+  await page.setViewportSize({ width: 2048, height: 1163 });
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(`/crm/${org.slug}/settings/workflow-rules`);

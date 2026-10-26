@@ -29,6 +29,12 @@ it("requires module and name, advances WHEN date trigger to the observed initial
     (screen.getByRole("radio", { name: "Leads matching certain conditions" }) as HTMLInputElement)
       .checked,
   ).toBe(true);
+  const all = screen.getByRole("radio", { name: "All Leads" }) as HTMLInputElement;
+  expect(all.checked).toBe(false);
+  expect(all.disabled).toBe(false);
+  await user.click(all);
+  expect(all.checked).toBe(false);
+  expect(screen.getByRole("region", { name: "Condition 1" })).toBeDefined();
   expect(screen.getByRole("button", { name: /Criterion field/ }).textContent).toContain("Select");
   expect((screen.getByRole("button", { name: "Save" }) as HTMLButtonElement).disabled).toBe(true);
   await user.click(screen.getByRole("button", { name: "Edit" }));

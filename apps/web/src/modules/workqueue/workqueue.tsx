@@ -106,23 +106,23 @@ export function Workqueue({
               selectedKeys={["Today & Overdue"]}
             >
               {[
-                "Today & Overdue",
-                "Today",
-                "Tomorrow",
-                "Overdue",
-                "This Week",
-                "Next Week",
-                "This Month",
-                "Next Month",
-                "On a Specific Date",
+                { id: "Today & Overdue", label: t("modules.workqueue.todayOverdue") },
+                { id: "Today", label: t("modules.workqueue.periods.today") },
+                { id: "Tomorrow", label: t("modules.workqueue.periods.tomorrow") },
+                { id: "Overdue", label: t("modules.workqueue.periods.overdue") },
+                { id: "This Week", label: t("modules.workqueue.periods.thisWeek") },
+                { id: "Next Week", label: t("modules.workqueue.periods.nextWeek") },
+                { id: "This Month", label: t("modules.workqueue.periods.thisMonth") },
+                { id: "Next Month", label: t("modules.workqueue.periods.nextMonth") },
+                { id: "On a Specific Date", label: t("modules.workqueue.periods.specificDate") },
               ].map((period) => (
-                <MenuItem key={period} id={period} textValue={period}>
+                <MenuItem key={period.id} id={period.id} textValue={period.label}>
                   <span className="flex items-center gap-2">
-                    {period === "Today & Overdue" && <Icons.check className="size-4" aria-hidden />}
-                    <span>
-                      {period === "Today & Overdue" ? t("modules.workqueue.todayOverdue") : period}
-                    </span>
-                    {period === "On a Specific Date" && (
+                    {period.id === "Today & Overdue" && (
+                      <Icons.check className="size-4" aria-hidden />
+                    )}
+                    <span>{period.label}</span>
+                    {period.id === "On a Specific Date" && (
                       <Icons.chevronRight className="ml-auto size-3" aria-hidden />
                     )}
                   </span>

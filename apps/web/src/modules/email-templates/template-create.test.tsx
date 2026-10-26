@@ -14,6 +14,7 @@ it("selects a module, opens the gallery and editor, preserves text across modes 
   await user.click(screen.getByRole("option", { name: "Contacts" }));
   await user.click(screen.getByRole("button", { name: "Next" }));
   expect(screen.getByRole("heading", { name: "Template Gallery" })).toBeDefined();
+  expect(screen.getByRole("heading", { name: "Basic 6" })).toBeDefined();
   expect(screen.getByText("Blank")).toBeDefined();
   for (const category of [
     "All",
@@ -29,9 +30,11 @@ it("selects a module, opens the gallery and editor, preserves text across modes 
   await user.type(screen.getByRole("textbox", { name: "Template name" }), "Welcome");
   await user.type(screen.getByRole("textbox", { name: "Template body" }), "Hello there");
   await user.click(screen.getByRole("button", { name: "Plain text" }));
-  expect(
-    (screen.getByRole("textbox", { name: "Template body" }) as HTMLTextAreaElement).value,
-  ).toBe("Hello there");
+  expect(screen.getByRole("textbox", { name: "Template body" }).textContent).toBe("Hello there");
+  const toolbar = screen.getByRole("toolbar", { name: "Template formatting" });
+  expect(within(toolbar).getByRole("button", { name: "HTML" })).toBeDefined();
+  expect(within(toolbar).getByRole("button", { name: "Show Tips" })).toBeDefined();
+  expect(within(toolbar).getByRole("button", { name: "Bold" })).toBeDefined();
   await user.click(screen.getByRole("button", { name: "HTML" }));
   expect(screen.getByRole("textbox", { name: "Template body" }).textContent).toBe("Hello there");
   await user.click(screen.getByRole("button", { name: "Save" }));

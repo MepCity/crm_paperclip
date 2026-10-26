@@ -47,6 +47,10 @@ it("opens quick chart, enables upstream fields after module selection, opens the
   const cancel = vi.fn();
   const save = vi.fn();
   render(<DashboardCreate onCancel={cancel} onSave={save} />);
+  await user.click(screen.getByRole("button", { name: "Favorite dashboard" }));
+  await user.click(screen.getByRole("button", { name: "Edit dashboard access" }));
+  expect(screen.getByText("Only me")).toBeDefined();
+  expect(save).not.toHaveBeenCalled();
   await user.click(screen.getByRole("button", { name: "Chart" }));
   await user.click(screen.getByRole("button", { name: "Quick chart" }));
   const chart = screen.getByRole("dialog", { name: "Add Chart" });
