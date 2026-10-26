@@ -1,4 +1,4 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
 const ctx = {
   orgId: "org-example",
@@ -29,6 +29,24 @@ const request = (folder = "inbox", headers = { "X-CRM-ORG": "example" }) =>
 afterEach(() => vi.restoreAllMocks());
 
 describe("mail conversation read route", () => {
+  beforeEach(() => {
+    vi.spyOn(mailReadSource, "create").mockImplementation(async () => {
+      const { repository, content } = await createMailSeed(ctx, { includeMessages: true });
+      return {
+        repository,
+        recordAddressLookup: { findByAddress: async () => [] },
+        canReadRecord: async () => true,
+        readContent: async (id) => content.get(id) ?? { body: "", unread: false },
+      };
+    });
+  });
+
+  it("does not populate the production inbox with example messages", async () => {
+    vi.restoreAllMocks();
+    const response = await request();
+    expect(response.status).toBe(200);
+    expect((await response.json()).data).toEqual([]);
+  });
   it.each(["inbox", "sent", "drafts", "scheduled"])("reads %s", async (folder) => {
     const response = await request(folder);
     expect(response.status).toBe(200);
@@ -61,7 +79,7 @@ describe("mail conversation read route", () => {
       messages: [
         {
           id: "message-demo-1",
-          body: "Synthetic message body.",
+          body: "Message content.",
           attachments: [{ sizeLabel: "1.2 KB" }],
         },
         { id: "message-demo-2" },
@@ -72,7 +90,7 @@ describe("mail conversation read route", () => {
   it.each(["disconnected", "error", "missing"])(
     "is disconnected for %s mailbox",
     async (status) => {
-      const seed = await createMailSeed(ctx);
+      const seed = await createMailSeed(ctx, { includeMessages: true });
       const read = seed.repository.read.bind(seed.repository);
       seed.repository.read = async (org) => {
         const data = await read(org);
@@ -94,7 +112,7 @@ describe("mail conversation read route", () => {
     },
   );
   it("enforces core private/shared and current linked-record access even for admin", async () => {
-    const seed = await createMailSeed(ctx);
+    const seed = await createMailSeed(ctx, { includeMessages: true });
     const repository = seed.repository;
     await repository.createMailbox({
       organizationId: ctx.orgId,
@@ -147,8 +165,11 @@ describe("mail conversation read route", () => {
     ]);
   });
   it("rejects foreign-tenant rows even if the repository returns them", async () => {
-    const seed = await createMailSeed(ctx);
-    const foreign = await createMailSeed({ ...ctx, orgId: "foreign-org" });
+    const seed = await createMailSeed(ctx, { includeMessages: true });
+    const foreign = await createMailSeed(
+      { ...ctx, orgId: "foreign-org" },
+      { includeMessages: true },
+    );
     const foreignRows = await foreign.repository.read("foreign-org");
     const read = seed.repository.read.bind(seed.repository);
     seed.repository.read = async (org) => {
@@ -183,7 +204,7 @@ const recordRequest = (query = "module=Leads&recordId=record-example") =>
   );
 
 async function recordSource() {
-  const seed = await createMailSeed(ctx);
+  const seed = await createMailSeed(ctx, { includeMessages: true });
   const canReadRecord = vi.fn(() => true);
   const readContent = vi.fn(async (_id: string) => ({ body: "Example body", unread: false }));
   vi.spyOn(mailReadSource, "create").mockResolvedValue({

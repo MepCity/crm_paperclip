@@ -60,7 +60,7 @@ describe("WorkflowRulesListScreen server projections", () => {
     const props = await readWorkflowRules(createAutomationPort(), { ...ctx, orgName: "Empty" }, {});
     render(<WorkflowRulesListScreen orgSlug={ctx.orgSlug} {...props} />);
     expect(screen.getByText("No workflow rules have been configured yet.")).toBeDefined();
-    expect(screen.queryByRole("table")).toBeNull();
+    expect(screen.getByRole("table")).toBeDefined();
   });
   it("distinguishes filtered empty results", () => {
     render(

@@ -19,10 +19,7 @@ const names = [
 const reports: readonly ReportDefinition[] = names.map((name, index) => ({
   id: `sample-report-${index + 1}`,
   name,
-  description:
-    index === 12
-      ? null
-      : `Review synthetic ${index < 7 ? "outreach" : "meeting"} activity across the demonstration team.`,
+  description: index === 12 ? null : `Review ${index < 7 ? "outreach" : "meeting"} activity.`,
   folder: index < 7 ? "Outreach Reports" : "Meeting Reports",
   lastAccessedDate: index === 2 ? "2026-10-01" : null,
   createdBy: index === 12 ? "Demo Analyst" : null,

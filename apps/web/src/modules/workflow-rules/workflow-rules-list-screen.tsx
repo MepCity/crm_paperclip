@@ -44,6 +44,12 @@ export function WorkflowRulesListScreen({
       aria-label={t("modules.workflow.workflowRules")}
       className="relative min-h-screen rounded-lg border border-border bg-surface shadow-xs p-6"
     >
+      <div className="mb-6 flex gap-8 border-b border-border pb-3">
+        <span className="border-b-2 border-primary font-semibold">
+          {t("modules.workflow.rules")}
+        </span>
+        <span>{t("modules.workflow.usage")}</span>
+      </div>
       {creating && <WorkflowCreate onClose={() => setCreating(false)} />}
       <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
@@ -110,23 +116,8 @@ export function WorkflowRulesListScreen({
         </div>
       ) : null}
 
-      {/* Empty State (WL8) */}
-      {result.ok && result.value.items.length === 0 ? (
-        <div
-          data-testid="workflow-empty-state"
-          className="rounded-md border border-dashed border-border p-12 text-center"
-        >
-          <p className="text-md font-semibold text-text">
-            {selectedModule === "all"
-              ? t("modules.workflow.emptyAll")
-              : t("modules.workflow.emptyModule", { module: selectedModule })}
-          </p>
-          <p className="text-sm text-text-muted mt-1">{t("modules.workflow.emptyDescription")}</p>
-        </div>
-      ) : null}
-
       {/* Populated Table (WL1, WL2, WL3, WL4, WL5) */}
-      {result.ok && result.value.items.length > 0 ? (
+      {result.ok ? (
         <div className="overflow-x-auto">
           <div className="w-full overflow-auto contain-paint">
             <table
@@ -142,6 +133,15 @@ export function WorkflowRulesListScreen({
                 </TableRow>
               </TableHeader>
               <TableBody>
+                {result.value.items.length === 0 && (
+                  <TableRow>
+                    <TableCell>
+                      {selectedModule === "all"
+                        ? t("modules.workflow.emptyAll")
+                        : t("modules.workflow.emptyModule", { module: selectedModule })}
+                    </TableCell>
+                  </TableRow>
+                )}
                 {result.value.items.map((rule) => {
                   const triggerResult = triggerResults[rule.id];
                   const detailHref = `/crm/${encodeURIComponent(orgSlug)}/settings/workflow-rules/${encodeURIComponent(rule.id)}`;

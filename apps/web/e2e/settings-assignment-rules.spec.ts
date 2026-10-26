@@ -54,9 +54,11 @@ test("Assignment Rules opens from settings with the introductory state (A0, AL4)
 
   // RC1: Create button is disabled and inert in unpopulated state
   const create = page.getByRole("button", { name: "Create Assignment Rule" });
-  await expect(create).toHaveAttribute("aria-disabled", "true");
+  await expect(create).toBeEnabled();
   await create.click({ force: true });
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page.getByRole("dialog", { name: "Create Assignment Rule" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next", exact: true })).toBeDisabled();
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(page.getByRole("table")).toHaveCount(0);
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/settings/assignment-rules$`));
 

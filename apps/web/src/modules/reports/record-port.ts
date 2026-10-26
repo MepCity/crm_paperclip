@@ -159,9 +159,7 @@ export const REPORT_CONFIGS: readonly ReportConfig[] = names.map((name, index) =
   const id = `sample-report-${index + 1}`;
   const folder = isOutreach ? "Outreach Reports" : "Meeting Reports";
   const description =
-    index === 12
-      ? null
-      : `Review synthetic ${isOutreach ? "outreach" : "meeting"} activity across the demonstration team.`;
+    index === 12 ? null : `Review ${isOutreach ? "outreach" : "meeting"} activity.`;
   const lastAccessedDate = index === 2 ? "2026-10-01" : null;
   const createdBy = index === 12 ? "Demo Analyst" : null;
   const module = isOutreach ? "Campaigns" : "Events";

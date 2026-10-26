@@ -24,6 +24,7 @@ import { MAX_OUTBOUND_ATTACHMENT_BYTES, MAX_OUTBOUND_RECIPIENTS } from "@crm/cor
 import { DELETE, POST as LINK } from "@/app/crm/v2.2/mail/messages/[id]/links/route";
 import { PATCH } from "@/app/crm/v2.2/mail/messages/[id]/sharing/route";
 import { POST } from "@/app/crm/v2.2/mail/messages/route";
+import { createMailSeed } from "./seed";
 import { mailReadSource } from "./service";
 import { createMailState } from "./state";
 import { mailWriteSource } from "./write";
@@ -72,7 +73,7 @@ beforeEach(async () => {
   vi.stubEnv("APP_SECRET", "x".repeat(40));
   vi.stubEnv("MAIL_TEST_RECIPIENT", "recipient@example.test");
   actor.userId = "user-example";
-  state = await createMailState(actor);
+  state = await createMailState(actor, { includeMessages: true });
   canReadRecord = vi.fn(async () => true);
   vi.spyOn(mailWriteSource, "create").mockImplementation(async () => ({
     ...state,
@@ -290,6 +291,10 @@ describe("mail write HTTP routes", () => {
     const first = await mailWriteSource.create(context);
     const second = await mailWriteSource.create(context);
     expect(first.repository).toBe(second.repository);
+    const seed = await createMailSeed(context, { includeMessages: true });
+    const message = (await seed.repository.read(context.orgId)).messages[0];
+    if (!message) throw new Error("Missing test message");
+    await first.repository.upsertMessage(message);
     await first.repository.setShared(context.orgId, "message-demo-1", true);
     const reader = await mailReadSource.create(context);
     expect((await reader.repository.read(context.orgId)).messages[0]?.sharedByOwner).toBe(true);

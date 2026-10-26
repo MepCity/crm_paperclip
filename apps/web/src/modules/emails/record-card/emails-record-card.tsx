@@ -6,13 +6,14 @@ import { Button } from "@/components/ui/button";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Icons } from "@/components/ui/icon";
 import { resolveLaterModule } from "@/components/ui/later-module";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { useFormat } from "@/lib/format-context";
 import type { RelatedListControlDefinition } from "@/modules/types";
 import { fetchComposeMailboxes } from "../compose/http-port";
 import { MailCompose } from "../compose/mail-compose";
 import type { ComposeMailbox } from "../compose/port";
 import type { EmailConversation } from "../inbox/view-model";
-import { EMAIL_CARD_TABS, EMPTY_STATE_TEXT, loadEmailRecordCardFixture } from "./fixtures";
+import { EMAIL_CARD_TABS, loadEmailRecordCardFixture } from "./fixtures";
 import type {
   EmailParentModule,
   EmailRecordCardLoader,
@@ -70,6 +71,7 @@ export function EmailsRecordCard({
   load,
   loader,
 }: EmailsRecordCardProps) {
+  const t = useUiTranslations();
   const orgFormat = useFormat();
   const [composeOpen, setComposeOpen] = useState(false);
   const [composeMailboxesList, setComposeMailboxesList] = useState<readonly ComposeMailbox[]>([]);
@@ -171,25 +173,27 @@ export function EmailsRecordCard({
   return (
     <section
       id={targetId}
-      aria-label="Emails"
+      aria-label={t("modules.emails.emailsHeading")}
       data-related-card="emails"
       className="detail-card border border-panel-border"
     >
       <div className="flex items-center justify-between min-h-(--size-list-header-height) py-2 border-b border-panel-border">
         <div className="flex items-center gap-3">
-          <h3 className="text-md font-bold text-text-strong">Emails</h3>
+          <h3 className="text-md font-bold text-text-strong">
+            {t("modules.emails.emailsHeading")}
+          </h3>
         </div>
         <div className="flex items-center gap-2">
           <Button
             variant="relatedAction"
             size="relatedAction"
-            aria-label="Compose Email"
+            aria-label={t("modules.emails.composeEmail")}
             onPress={() => {
               setSent(false);
               setComposeOpen(true);
             }}
           >
-            <span data-related-action-label>Compose Email</span>
+            <span data-related-action-label>{t("modules.emails.composeEmail")}</span>
           </Button>
         </div>
       </div>
@@ -202,10 +206,10 @@ export function EmailsRecordCard({
           onSent={() => setSent(true)}
         />
       )}
-      {sent && <p role="status">Message sent (fixture)</p>}
+      {sent && <p role="status">{t("modules.emails.sendSuccess")}</p>}
       <div>
         <div className="flex items-center justify-between gap-4 border-b border-panel-border pt-2">
-          <div role="tablist" aria-label="Email folders" className="flex gap-4">
+          <div role="tablist" aria-label={t("modules.emails.emailFolders")} className="flex gap-4">
             {EMAIL_CARD_TABS.map((tab) => {
               const isSelected = activeTab === tab.id;
               return (
@@ -222,7 +226,13 @@ export function EmailsRecordCard({
                       : "text-text-muted hover:text-text font-normal"
                   }`}
                 >
-                  {tab.label}
+                  {t(
+                    tab.id === "mails"
+                      ? "modules.emails.mails"
+                      : tab.id === "drafts"
+                        ? "modules.emails.folderDrafts"
+                        : "modules.emails.recordScheduled",
+                  )}
                 </button>
               );
             })}
@@ -235,18 +245,21 @@ export function EmailsRecordCard({
         {activeTab === "mails" ? (
           status === "loading" ? (
             <div role="status">
-              <EmptyState title="Loading emails..." />
+              <EmptyState title={t("modules.emails.loadingEmails")} />
             </div>
           ) : status === "error" ? (
             <div role="alert">
-              <EmptyState title="Unable to load emails" />
+              <EmptyState title={t("modules.emails.unableToLoad")} />
             </div>
           ) : conversations.length === 0 ? (
             <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-              {EMPTY_STATE_TEXT}
+              {t("modules.emails.noRecords")}
             </div>
           ) : (
-            <ul aria-label="Emails list" className="divide-y divide-panel-border">
+            <ul
+              aria-label={t("modules.emails.recordList")}
+              className="divide-y divide-panel-border"
+            >
               {conversations.map((conversation) => {
                 const latest = conversation.messages.at(-1);
                 const sender = latest ? latest.from.name || latest.from.address : "";
@@ -290,7 +303,7 @@ export function EmailsRecordCard({
           )
         ) : (
           <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-            {EMPTY_STATE_TEXT}
+            {t("modules.emails.noRecords")}
           </div>
         )}
       </div>

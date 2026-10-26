@@ -10,6 +10,8 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { fixtureEmailTemplatesPort } from "./fixture-port";
 import type { EmailTemplateFolder, EmailTemplateItem, EmailTemplatesPort } from "./port";
 import { TemplateCreate } from "./template-create";
@@ -24,6 +26,8 @@ export function EmailTemplatesScreen({
   port = fixtureEmailTemplatesPort,
   initialType = "email",
 }: EmailTemplatesScreenProps) {
+  const t = useUiTranslations();
+  const display = useMetadataDisplayAdapter();
   const [creating, setCreating] = useState(false);
   const [folders, setFolders] = useState<readonly EmailTemplateFolder[]>([]);
   const [modules, setModules] = useState<readonly string[]>([]);
@@ -46,6 +50,15 @@ export function EmailTemplatesScreen({
       live = false;
     };
   }, [port]);
+
+  const folderLabels = {
+    all: "modules.templates.all",
+    favorites: "modules.templates.favorites",
+    associated: "modules.templates.associated",
+    "created-by-me": "modules.templates.createdByMe",
+    "shared-with-me": "modules.templates.sharedWithMe",
+    public: "modules.templates.public",
+  } as const;
 
   const filteredTemplates = useMemo(() => {
     return templates.filter((item) => {
@@ -88,9 +101,12 @@ export function EmailTemplatesScreen({
       {/* Templates Header */}
       <div className="flex flex-col gap-4 border-b border-border p-4 md:flex-row md:items-center md:justify-between">
         <div className="flex flex-wrap items-center gap-6">
-          <h1 className="text-xl font-bold text-text">Templates</h1>
+          <h1 className="text-xl font-bold text-text">{t("modules.templates.templates")}</h1>
           {/* Type Tabs Strip */}
-          <nav aria-label="Template Types" className="flex items-center gap-4 text-sm">
+          <nav
+            aria-label={t("modules.templates.types")}
+            className="flex items-center gap-4 text-sm"
+          >
             <a
               href="?type=email"
               role="tab"
@@ -102,7 +118,7 @@ export function EmailTemplatesScreen({
                   : "text-text-muted hover:text-text"
               }`}
             >
-              Email
+              {t("modules.templates.email")}
             </a>
             <button
               type="button"
@@ -113,7 +129,7 @@ export function EmailTemplatesScreen({
               onClick={(e) => e.preventDefault()}
               className="cursor-default pb-1 text-text-muted transition-colors hover:text-text"
             >
-              Inventory
+              {t("modules.templates.inventory")}
             </button>
             <button
               type="button"
@@ -124,7 +140,7 @@ export function EmailTemplatesScreen({
               onClick={(e) => e.preventDefault()}
               className="cursor-default pb-1 text-text-muted transition-colors hover:text-text"
             >
-              Mail Merge
+              {t("modules.templates.merge")}
             </button>
           </nav>
         </div>
@@ -134,14 +150,16 @@ export function EmailTemplatesScreen({
           {/* Module Selector */}
           <div className="flex items-center">
             <select
-              aria-label="All Modules"
+              aria-label={t("modules.templates.allModules")}
               value={selectedModule}
               onChange={(e) => setSelectedModule(e.target.value)}
               className="rounded-md border border-border bg-surface px-3 py-1.5 text-sm text-text focus:border-primary focus:outline-hidden"
             >
               {modules.map((m) => (
                 <option key={m} value={m}>
-                  {m}
+                  {m === "All Modules"
+                    ? t("modules.templates.allModules")
+                    : display.getModulePlural(m)}
                 </option>
               ))}
             </select>
@@ -155,8 +173,8 @@ export function EmailTemplatesScreen({
             />
             <input
               type="search"
-              aria-label="Search Template"
-              placeholder="Search Template"
+              aria-label={t("modules.templates.search")}
+              placeholder={t("modules.templates.search")}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-48 rounded-md border border-border bg-surface py-1.5 pl-8 pr-3 text-sm text-text placeholder:text-text-placeholder focus:border-primary focus:outline-hidden md:w-56"
@@ -166,7 +184,7 @@ export function EmailTemplatesScreen({
           {/* Context Help Triangle / Icon */}
           <button
             type="button"
-            aria-label="Help"
+            aria-label={t("modules.templates.help")}
             aria-disabled="true"
             data-later-module="M10"
             onClick={(e) => e.preventDefault()}
@@ -181,18 +199,18 @@ export function EmailTemplatesScreen({
       <div className="flex min-h-[500px] flex-col md:flex-row">
         {/* Template Folders Left Pane */}
         <aside
-          aria-label="Template folders"
+          aria-label={t("modules.templates.folders")}
           className="flex w-full shrink-0 flex-col justify-between border-b border-border p-4 md:w-60 md:border-b-0 md:border-r lg:w-64"
         >
           <div className="flex flex-col gap-3">
             {/* New Template Button */}
             <button
               type="button"
-              aria-label="New Template"
+              aria-label={t("modules.templates.new")}
               onClick={() => setCreating(true)}
               className="inline-flex w-full items-center justify-center rounded-md bg-primary px-3 py-2 text-sm font-semibold text-primary-text transition-colors hover:bg-primary-hover"
             >
-              New Template
+              {t("modules.templates.new")}
             </button>
 
             {/* Folder Links */}
@@ -211,7 +229,9 @@ export function EmailTemplatesScreen({
                           : "text-text-muted hover:bg-surface-hover hover:text-text"
                       }`}
                     >
-                      {folder.name}
+                      {folder.id in folderLabels
+                        ? t(folderLabels[folder.id as keyof typeof folderLabels])
+                        : folder.name}
                     </button>
                   </li>
                 );
@@ -223,7 +243,7 @@ export function EmailTemplatesScreen({
           <div className="mt-4 flex items-center justify-end border-t border-border pt-2 text-text-muted">
             <button
               type="button"
-              aria-label="Reorder folders"
+              aria-label={t("modules.templates.reorder")}
               aria-disabled="true"
               data-later-module="M10"
               onClick={(e) => e.preventDefault()}
@@ -240,11 +260,11 @@ export function EmailTemplatesScreen({
             <TableHeader>
               <TableRow>
                 <TableHead>
-                  <span className="sr-only">Actions and selection</span>
+                  <span className="sr-only">{t("modules.templates.selection")}</span>
                   <div className="flex items-center gap-2">
                     <input
                       type="checkbox"
-                      aria-label="Select all"
+                      aria-label={t("modules.templates.selectAll")}
                       disabled
                       aria-disabled="true"
                       data-later-module="M10"
@@ -252,16 +272,16 @@ export function EmailTemplatesScreen({
                     />
                   </div>
                 </TableHead>
-                <TableHead>Template Name</TableHead>
-                <TableHead>Modified By</TableHead>
-                <TableHead>Last Used</TableHead>
-                <TableHead>Stats</TableHead>
+                <TableHead>{t("modules.templates.name")}</TableHead>
+                <TableHead>{t("modules.templates.modified")}</TableHead>
+                <TableHead>{t("modules.templates.lastUsed")}</TableHead>
+                <TableHead>{t("modules.templates.stats")}</TableHead>
                 <TableHead>
-                  <span className="sr-only">Row actions</span>
+                  <span className="sr-only">{t("modules.templates.rowActions")}</span>
                 </TableHead>
               </TableRow>
             </TableHeader>
-            <TableBody columnCount={6} emptyMessage="No records to display.">
+            <TableBody columnCount={6} emptyMessage={t("modules.templates.empty")}>
               {filteredTemplates.map((item) => (
                 <TableRow key={item.id}>
                   {/* Select + Favorite */}
@@ -297,7 +317,7 @@ export function EmailTemplatesScreen({
                         {item.name}
                       </button>
                       <span className="text-xs text-text-muted">
-                        {item.module}
+                        {display.getModulePlural(item.module)}
                         {item.description ? ` · ${item.description}` : ""}
                       </span>
                     </div>

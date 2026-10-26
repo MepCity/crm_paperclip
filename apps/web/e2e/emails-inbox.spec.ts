@@ -109,14 +109,14 @@ test("a disconnected mailbox uses the existing empty state", async ({ page }) =>
   await expect(page.getByRole("heading", { name: "No mailbox connected" })).toBeVisible();
 });
 
-test("an HTTP failure uses the existing error state", async ({ page, pageErrors }) => {
+test("an HTTP permission failure uses the denied dialog", async ({ page, pageErrors }) => {
   await page.route("**/crm/v2.2/mail/conversations?*", (route) =>
     route.fulfill({ status: 403, json: { code: "FORBIDDEN" } }),
   );
   await signUpNewUser(page);
   const org = await createOrganization(page);
   await page.goto(`/crm/${org.slug}/tab/Emails`);
-  await expect(page.getByRole("alert").filter({ hasText: "Unable to load emails" })).toBeVisible();
+  await expect(page.getByRole("dialog", { name: "Permission Denied" })).toBeVisible();
   ignoreFailedResponses(pageErrors, [403]);
 });
 

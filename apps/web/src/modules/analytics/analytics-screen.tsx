@@ -56,8 +56,16 @@ export function AnalyticsScreen({
     loadDashboard();
   }, [loadDashboard]);
 
-  const overviewTitle = custom?.name ?? data?.overviewTitle ?? t("modules.analytics.orgOverview");
-  const scopeLabel = custom ? "Only me" : (data?.scopeLabel ?? t("modules.analytics.allUsers"));
+  const overviewTitle =
+    custom?.name ??
+    (data?.overviewTitle && data.overviewTitle !== "Org Overview"
+      ? data.overviewTitle
+      : t("modules.analytics.orgOverview"));
+  const scopeLabel = custom
+    ? t("modules.observedFlows.onlyMe")
+    : data?.scopeLabel && data.scopeLabel !== "All Users"
+      ? data.scopeLabel
+      : t("modules.analytics.allUsers");
 
   if (creating)
     return (

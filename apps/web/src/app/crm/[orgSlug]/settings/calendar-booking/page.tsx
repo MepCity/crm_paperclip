@@ -1,4 +1,5 @@
 import { PageTitle } from "@/components/shell/page-title";
+import { getUiTranslations } from "@/i18n/request";
 import { requireOrgContext } from "@/lib/session";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import { CalendarBookingScreen } from "@/modules/calendar-booking";
@@ -13,9 +14,10 @@ export default async function CalendarBookingPage({
   const { orgSlug } = await params;
   await requireOrgContext(orgSlug);
 
+  const t = await getUiTranslations();
   return (
     <>
-      <PageTitle title={shellPageTitle.settings} />
+      <PageTitle title={t("shell.settings")} />
       <CalendarBookingScreen orgSlug={orgSlug} />
     </>
   );
