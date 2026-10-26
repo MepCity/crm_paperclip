@@ -763,7 +763,7 @@
     "ruleName": "Rule Name",
     "description": "Description",
     "when": "WHEN",
-    "thisRuleExecutesOn": "This rule executes on:",
+    "thisRuleExecutesOn": "This rule executes on: {field}.",
     "repeat": "Repeat",
     "once": "Once",
     "edit": "Edit",
@@ -792,6 +792,8 @@
     "plainText": "Plain text",
     "workflowScope": "Which {module} would you like to apply this rule to?",
     "workflowSpecific": "{module} matching certain conditions",
-    "workflowAll": "All {module}"
+    "workflowAll": "All {module}",
+    "addDescription": "Add Description",
+    "createdTime": "Created Time"
   }
 }

@@ -322,3 +322,56 @@ test("workflow create advances the observed date trigger to initial criteria wit
   await page.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(page.getByRole("heading", { name: "Workflow Rules", exact: true })).toBeVisible();
 });
+
+test("Turkish workflow creation shows the observed header, summary and scope", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 2048, height: 1163 });
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  const language = await page.request.put("/api/personal-settings/language", {
+    headers: { Origin: new URL(page.url()).origin },
+    data: { language: "tr" },
+  });
+  expect(language.ok()).toBe(true);
+  await page.goto(`/crm/${org.slug}/settings/workflow-rules`);
+  await page.getByRole("button", { name: "Kural Oluştur", exact: true }).click();
+  await page.getByRole("button", { name: /Modül/ }).click();
+  await page
+    .getByRole("listbox", { name: "Modül", exact: true })
+    .getByRole("option", { name: "Müşteri Adayları", exact: true })
+    .click();
+  await page.getByRole("textbox", { name: "Kural Adı" }).fill("Follow-up rule");
+  await page.getByRole("button", { name: "Sonraki", exact: true }).click();
+  await page.getByRole("button", { name: /Bu iş akışı kuralını/ }).click();
+  await page.getByRole("option", { name: "Date/Time Field", exact: true }).click();
+  await page.getByRole("button", { name: /Yürütme tarih/ }).click();
+  await page.getByRole("option", { name: "Oluşturma Zamanı", exact: true }).click();
+  await page.getByRole("button", { name: "Sonraki", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Koşul 1" })).toBeVisible();
+  await expect(
+    page.getByRole("radiogroup", {
+      name: "Kuralı hangi müşteri adayları öğesine uygulamak istersiniz?",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("radio", { name: "Müşteri Adayları belirli koşullarla eşleşiyor", exact: true }),
+  ).toBeChecked();
+  await expect(
+    page.getByRole("radio", { name: "Tüm Müşteri Adayları", exact: true }),
+  ).not.toBeChecked();
+  await expect(
+    page.getByRole("radio", { name: "Tüm Müşteri Adayları", exact: true }),
+  ).toBeEnabled();
+  await expect(page.getByText("@ Müşteri Adayları", { exact: true })).toBeVisible();
+  await expect(page.getByText("Açıklama Ekle", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Bu kural, yürütülür şunda: Oluşturma Zamanı.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Yinele Bir Kez", { exact: true })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("workflow-criteria-tr.png") });
+  await page.getByRole("button", { name: "İptal", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "İş Akışı Kuralları", exact: true }),
+  ).toBeVisible();
+});

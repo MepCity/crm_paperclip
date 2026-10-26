@@ -62,11 +62,15 @@ it("uses the Turkish shell module label in the observed scope without changing t
   await user.click(screen.getByRole("button", { name: /Bu iş akışı kuralını/ }));
   await user.click(screen.getByRole("option", { name: "Date/Time Field" }));
   await user.click(screen.getByRole("button", { name: /Yürütme tarih/ }));
-  await user.click(screen.getByRole("option", { name: "Created Time" }));
+  await user.click(screen.getByRole("option", { name: "Oluşturma Zamanı" }));
   await user.click(screen.getByRole("button", { name: "Sonraki" }));
+  expect(screen.getByText("@ Müşteri Adayları")).toBeDefined();
+  expect(screen.getByText("Açıklama Ekle")).toBeDefined();
+  expect(screen.getByText("Bu kural, yürütülür şunda: Oluşturma Zamanı.")).toBeDefined();
+  expect(screen.getByText(/Yinele/).textContent).toBe("Yinele Bir Kez");
   expect(
     screen.getByRole("radiogroup", {
-      name: "Kuralı hangi müşteri adayları ögesine uygulamak istersiniz?",
+      name: "Kuralı hangi müşteri adayları öğesine uygulamak istersiniz?",
     }),
   ).toBeDefined();
   expect(

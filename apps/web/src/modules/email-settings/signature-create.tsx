@@ -121,7 +121,7 @@ export function SignatureCreate({ onCancel }: { onCancel: () => void }) {
               setPlain(!plain);
             }}
           >
-            {plain ? "HTML" : "Plain text"}
+            {plain ? t("modules.observedFlows.html") : t("modules.observedFlows.plainText")}
           </Button>
         </div>
         {plain ? (

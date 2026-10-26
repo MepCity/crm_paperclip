@@ -1,7 +1,10 @@
 import { cleanup, render, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, it, vi } from "vitest";
+import { LanguageProvider } from "@/i18n/client-provider";
 import { SignatureCreate } from "./signature-create";
+
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 
 afterEach(cleanup);
 
@@ -30,4 +33,23 @@ it("opens all signature fields, validates the missing sender with the observed m
   ).toBe("Regards");
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   expect(cancel).toHaveBeenCalledOnce();
+});
+
+it("localizes the signature text-mode switch and preserves the draft and validation", async () => {
+  const user = userEvent.setup();
+  render(
+    <LanguageProvider language="tr">
+      <SignatureCreate onCancel={vi.fn()} />
+    </LanguageProvider>,
+  );
+  const body = screen.getByRole("textbox", { name: "İmza içeriği" });
+  await user.type(body, "Regards");
+  await user.click(screen.getByRole("button", { name: "Düz metin" }));
+  expect((screen.getByRole("textbox", { name: "İmza içeriği" }) as HTMLTextAreaElement).value).toBe(
+    "Regards",
+  );
+  await user.click(screen.getByRole("button", { name: "HTML" }));
+  expect(screen.getByRole("textbox", { name: "İmza içeriği" }).textContent).toBe("Regards");
+  await user.click(screen.getByRole("button", { name: "Kaydet" }));
+  expect(screen.getByRole("alert").textContent).toBe("En az bir Gönderen adresini ilişkilendirin.");
 });

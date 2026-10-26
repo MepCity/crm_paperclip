@@ -104,8 +104,10 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
               <h2 id={titleId} className="text-xl font-semibold">
                 {name}
               </h2>
-              <p className="mt-2">@ {module}</p>
-              <p className="mt-2 text-primary">{description || "Add Description"}</p>
+              <p className="mt-2">@ {moduleLabel}</p>
+              <p className="mt-2 text-primary">
+                {description || t("modules.observedFlows.addDescription")}
+              </p>
             </div>
           </header>
           <div className="relative ml-12 pl-28 space-y-24">
@@ -126,7 +128,10 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
                 {step === "criteria" ? (
                   <>
                     <p>
-                      {t("modules.observedFlows.thisRuleExecutesOn")} <strong>{date}</strong>
+                      {t("modules.observedFlows.thisRuleExecutesOn", {
+                        field:
+                          date === "Created Time" ? t("modules.observedFlows.createdTime") : date,
+                      })}
                     </p>
                     <p>
                       {t("modules.observedFlows.repeat")}{" "}
@@ -164,7 +169,13 @@ export function WorkflowCreate({ onClose }: { onClose: () => void }) {
                         value={date || null}
                         onChange={(key) => setDate(String(key))}
                       >
-                        {(item) => <SelectItem id={item.id}>{item.id}</SelectItem>}
+                        {(item) => (
+                          <SelectItem id={item.id}>
+                            {item.id === "Created Time"
+                              ? t("modules.observedFlows.createdTime")
+                              : item.id}
+                          </SelectItem>
+                        )}
                       </Select>
                     )}
                     {date && (

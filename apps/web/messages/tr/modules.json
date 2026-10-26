@@ -763,8 +763,8 @@
     "ruleName": "Kural Adı",
     "description": "Açıklama",
     "when": "NE ZAMAN",
-    "thisRuleExecutesOn": "Bu kuralın yürütüleceği alan:",
-    "repeat": "Tekrar",
+    "thisRuleExecutesOn": "Bu kural, yürütülür şunda: {field}.",
+    "repeat": "Yinele",
     "once": "Bir Kez",
     "edit": "Düzenle",
     "executeThisWorkflowRuleBasedOn": "Bu iş akışı kuralını şu temelde yürüt",
@@ -790,8 +790,10 @@
     },
     "html": "HTML",
     "plainText": "Düz metin",
-    "workflowScope": "Kuralı hangi {module} ögesine uygulamak istersiniz?",
+    "workflowScope": "Kuralı hangi {module} öğesine uygulamak istersiniz?",
     "workflowSpecific": "{module} belirli koşullarla eşleşiyor",
-    "workflowAll": "Tüm {module}"
+    "workflowAll": "Tüm {module}",
+    "addDescription": "Açıklama Ekle",
+    "createdTime": "Oluşturma Zamanı"
   }
 }
