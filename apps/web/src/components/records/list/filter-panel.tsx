@@ -17,6 +17,7 @@ import type { ModuleKey } from "@/components/ui/later-module";
 import type { MultiSelectOption } from "@/components/ui/multi-select";
 import { TextField } from "@/components/ui/text-field";
 import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { DEFAULT_TIME_ZONE } from "@/lib/locale";
 import { activityFilterToCriteria } from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
@@ -131,6 +132,7 @@ export function FilterPanel({
   applyErrorMessage,
 }: FilterPanelProps) {
   const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
   const [systemDrafts, setSystemDrafts] = useState<Record<string, SystemFilterDraft>>(() => ({
     ...initialSystemDrafts,
   }));
@@ -248,7 +250,9 @@ export function FilterPanel({
   const visibleGroups = resolvedGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase())),
+      items: group.items.filter((item) =>
+        adapter.getNamedLabel(item.label).toLocaleLowerCase().includes(query.toLocaleLowerCase()),
+      ),
     }))
     .filter((group) => group.items.length > 0);
 
@@ -313,7 +317,7 @@ export function FilterPanel({
                       <Checkbox
                         align="first-line"
                         variant="filter"
-                        label={item.label}
+                        label={adapter.getNamedLabel(item.label)}
                         labelClassName="w-(--size-list-filter-label-width)"
                         isDisabled={
                           item.disabled ||
@@ -368,7 +372,7 @@ export function FilterPanel({
                       {selectedIds.includes(item.id) && isSystemItem(item) && (
                         <SystemFilterEditor
                           kind={item.systemEditor as SystemEditorKind}
-                          label={item.label}
+                          label={adapter.getNamedLabel(item.label)}
                           value={
                             systemDrafts[item.id] ??
                             initialSystemFilterDraft(item.systemEditor as SystemEditorKind)
@@ -382,7 +386,7 @@ export function FilterPanel({
                       )}
                       {selectedIds.includes(item.id) && item.relatedModule && (
                         <RelatedModuleFilterEditor
-                          label={item.label}
+                          label={adapter.getNamedLabel(item.label)}
                           config={item.relatedModule}
                           draft={relatedDrafts[item.id] ?? initialRelatedModuleDraft()}
                           onChange={(draft) =>
@@ -393,7 +397,7 @@ export function FilterPanel({
                       )}
                       {selectedIds.includes(item.id) && item.editor && (
                         <FilterEditor
-                          label={item.label}
+                          label={adapter.getNamedLabel(item.label)}
                           editor={item.editor}
                           draft={drafts[item.id] ?? initialFilterDraft(item.editor)}
                           onChange={(draft) =>

@@ -28,6 +28,7 @@ import type { ModuleKey } from "@/components/ui/later-module";
 import type { MenuAction } from "@/components/ui/menu";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
+import { builtInViewLabel } from "@/i18n/record-labels";
 import { moduleListPrintPath } from "@/lib/crm-paths";
 import {
   combineCriteriaAnd,
@@ -164,6 +165,7 @@ export interface ModuleListScreenConfig {
    */
   toolbarActions?: readonly Omit<MenuAction, "onAction">[];
   /** Create opens this dialog over the list instead of the create page (Meetings). */
+  renderCreateControl?: (props: { orgSlug: string; currentUserId: string }) => ReactNode;
   quickCreate?: (props: {
     orgSlug: string;
     currentUserId: string;
@@ -241,7 +243,7 @@ function ModuleListScreenLoaded({
   const router = useRouter();
   const refreshModuleListData = useRefreshModuleListData(config.module);
   const searchParams = useSearchParams();
-  const [storedPerPage, setStoredPerPage] = usePreference("list.per-page", LIST_PER_PAGE_DEFAULT);
+  const [storedPerPage, setStoredPerPage] = usePreference("list.per-page", config.module === "Leads" ? 10 : LIST_PER_PAGE_DEFAULT);
   const [wrapText, setWrapText] = usePreference(`list.wrap-text.${viewId}`, true);
   const searchState = useMemo(
     () => parseListSearchParams(searchParams, storedPerPage),
@@ -866,10 +868,13 @@ function ModuleListScreenLoaded({
       data-list-module={config.listVariant ? config.module : undefined}
     >
       <ViewTabStrip
-        viewName={view.name}
-        views={config.inventory ? viewsQuery.data : undefined}
-        pinnedViews={config.pinnedViews}
-        searchable={config.viewMenuSearch}
+        viewName={builtInViewLabel(view, config.pluralLabel, pluralLabel, t)}
+        views={viewsQuery.data?.map((item) => ({ ...item, name: builtInViewLabel(item, config.pluralLabel, pluralLabel, t) }))}
+        pinnedViews={config.pinnedViews?.map((name) => {
+          const item = viewsQuery.data?.find((candidate) => candidate.name === name);
+          return item ? builtInViewLabel(item, config.pluralLabel, pluralLabel, t) : name;
+        })}
+        searchable={config.module === "Leads" || config.viewMenuSearch}
         onViewChange={(id) => {
           const params = new URLSearchParams();
           if (hasBoard && requestedPresentation) params.set("presentation", presentation);
@@ -935,6 +940,7 @@ function ModuleListScreenLoaded({
                 }
               : {}),
           }))}
+          createControl={config.renderCreateControl?.({ orgSlug, currentUserId: currentUserId ?? "" })}
           create={{
             label: createLabel,
             href: config.quickCreate ? undefined : config.paths.create(orgSlug, config.module),

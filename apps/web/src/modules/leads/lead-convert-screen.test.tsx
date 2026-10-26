@@ -46,6 +46,7 @@ describe("LeadConvertScreen", () => {
       screen.getByRole("heading", { name: "Convert Lead" }).parentElement?.textContent,
     ).toContain("Dialog Co");
     expect(screen.queryByLabelText(/Closing Date/)).toBeNull();
+    expect(screen.queryByRole("radio")).toBeNull();
     await waitFor(() =>
       expect((screen.getByLabelText("Owner of the New Records") as HTMLInputElement).value).toBe(
         "Convert User",
@@ -67,6 +68,7 @@ describe("LeadConvertScreen", () => {
   it("requires a chosen record in existing mode", async () => {
     const user = userEvent.setup();
     await renderScreen();
+    await user.click(screen.getByRole("button", { name: "Create New Account: Dialog Co" }));
     await user.click(screen.getAllByRole("radio", { name: "Choose existing" })[0] as HTMLElement);
     await user.click(screen.getByRole("button", { name: "Convert" }));
     expect(await screen.findByText("Choose an account to convert into.")).toBeTruthy();

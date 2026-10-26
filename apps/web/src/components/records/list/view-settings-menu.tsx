@@ -4,7 +4,15 @@ import type { ComponentType, ReactNode, SVGProps } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
-import { Menu, MenuItem, MenuTrigger, Submenu, SubmenuTrigger } from "@/components/ui/menu";
+import {
+  Menu,
+  MenuDivider,
+  MenuItem,
+  MenuTrigger,
+  Submenu,
+  SubmenuTrigger,
+} from "@/components/ui/menu";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { LIST_PER_PAGE_OPTIONS, type ListPerPage } from "@/lib/records/list-search-params";
 
 export interface ViewSettingsMenuProps {
@@ -29,9 +37,6 @@ const submenuIndicatorWidth = `${iconWidth} opacity-60`;
  */
 const rowValueClass = "ml-auto shrink-0 font-bold";
 
-/** View Mode's value as the capture shows it. The off-state label was never observed. */
-const WRAP_TEXT_LABEL = "Wrap Text";
-
 /**
  * View Settings control for the header's trailing cell: the page size submenu and the
  * Wrap Text switch under View Mode. Metadata consumers can supply Manage Columns;
@@ -50,15 +55,19 @@ export function ViewSettingsMenu({
   wrapText,
   onWrapTextChange,
 }: ViewSettingsMenuProps) {
-  const perPageLabel = `Records Per Page ${perPage}`;
-  const viewModeLabel = wrapText ? `View Mode ${WRAP_TEXT_LABEL}` : "View Mode";
+  const t = useUiTranslations();
+  const wrapTextLabel = t("records.chrome.wrapText");
+  const perPageLabel = `${t("records.chrome.recordsPerPage")} ${perPage}`;
+  const viewModeLabel = wrapText
+    ? `${t("records.chrome.viewMode")} ${wrapTextLabel}`
+    : t("records.chrome.viewMode");
   return (
     <MenuTrigger>
       <Button
         laterModule={laterModule}
         variant="ghost"
         size="listIcon"
-        aria-label="View Settings"
+        aria-label={t("records.chrome.viewSettings")}
         className="shrink-0"
       >
         <Icons.settingsSliders aria-hidden="true" className={iconWidth} />
@@ -66,11 +75,29 @@ export function ViewSettingsMenu({
       <Menu
         width="settings"
         appearance="measured"
-        aria-label="View Settings"
+        aria-label={t("records.chrome.viewSettings")}
         shouldCloseOnInteractOutside={(element) =>
           !element.closest('[data-trigger="SubmenuTrigger"]')
         }
       >
+        {onManageColumns ? (
+          <MenuItem
+            id="manage-columns"
+            textValue={t("records.actions.manageColumns")}
+            shouldCloseOnSelect
+            onAction={onManageColumns}
+          >
+            {t("records.actions.manageColumns")}
+          </MenuItem>
+        ) : null}
+        {onManageColumns ? (
+          <>
+            <MenuItem id="reset-column-size" isDisabled>
+              {t("records.chrome.resetColumnSize")}
+            </MenuItem>
+            <MenuDivider />
+          </>
+        ) : null}
         <SubmenuTrigger>
           <MenuItem
             appearance="measured"
@@ -78,9 +105,17 @@ export function ViewSettingsMenu({
             aria-label={perPageLabel}
             textValue={perPageLabel}
           >
-            <RowContent icon={Icons.list} label="Records Per Page" value={String(perPage)} />
+            <RowContent
+              icon={Icons.list}
+              label={t("records.chrome.recordsPerPage")}
+              value={String(perPage)}
+            />
           </MenuItem>
-          <Submenu ariaLabel="Records Per Page" selectionMode="single" selectedKeys={[perPage]}>
+          <Submenu
+            ariaLabel={t("records.chrome.recordsPerPage")}
+            selectionMode="single"
+            selectedKeys={[perPage]}
+          >
             {LIST_PER_PAGE_OPTIONS.map((option) => (
               <MenuItem
                 key={option}
@@ -104,36 +139,26 @@ export function ViewSettingsMenu({
           >
             <RowContent
               icon={Icons.eye}
-              label="View Mode"
-              value={wrapText ? WRAP_TEXT_LABEL : null}
+              label={t("records.chrome.viewMode")}
+              value={wrapText ? wrapTextLabel : null}
             />
           </MenuItem>
           <Submenu
-            ariaLabel="View Mode"
+            ariaLabel={t("records.chrome.viewMode")}
             selectionMode="multiple"
             selectedKeys={wrapText ? ["wrap-text"] : []}
           >
             <MenuItem
               appearance="measured"
               id="wrap-text"
-              textValue={WRAP_TEXT_LABEL}
+              textValue={wrapTextLabel}
               shouldCloseOnSelect
               onAction={() => onWrapTextChange(!wrapText)}
             >
-              {({ isSelected }) => <MarkedRow isMarked={isSelected}>{WRAP_TEXT_LABEL}</MarkedRow>}
+              {({ isSelected }) => <MarkedRow isMarked={isSelected}>{wrapTextLabel}</MarkedRow>}
             </MenuItem>
           </Submenu>
         </SubmenuTrigger>
-        {onManageColumns ? (
-          <MenuItem
-            id="manage-columns"
-            textValue="Manage Columns"
-            shouldCloseOnSelect
-            onAction={onManageColumns}
-          >
-            Manage Columns
-          </MenuItem>
-        ) : null}
       </Menu>
     </MenuTrigger>
   );

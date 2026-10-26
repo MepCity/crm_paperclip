@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { useUiTranslations } from "@/i18n/client-provider";
 
 export interface MeetingsParticipant {
   id: string;
@@ -29,6 +30,7 @@ export function MeetingsParticipantsCard({
   onAdd,
   addDisabled,
 }: MeetingsParticipantsCardProps) {
+  const t = useUiTranslations();
   return (
     <section
       aria-label="Participants card"
@@ -37,7 +39,7 @@ export function MeetingsParticipantsCard({
     >
       {/* Card header — MD-47 */}
       <div className="flex items-center justify-between min-h-(--size-list-header-height) py-2 border-b border-panel-border">
-        <h3 className="text-md font-bold text-text-strong">Participants</h3>
+        <h3 className="text-md font-bold text-text-strong">{t("metadata.fields.Participants")}</h3>
         <Button
           variant="secondary"
           size="compact"
@@ -46,7 +48,7 @@ export function MeetingsParticipantsCard({
           isDisabled={addDisabled}
           onPress={onAdd}
         >
-          Add
+          {t("common.actions.add")}
         </Button>
       </div>
 
@@ -55,7 +57,7 @@ export function MeetingsParticipantsCard({
         <div data-part="opaque" className="py-8" />
       ) : participants.length === 0 ? (
         <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-          No participant found
+          {t("records.chrome.noParticipant")}
         </div>
       ) : (
         <ul data-part="participants" className="py-2">

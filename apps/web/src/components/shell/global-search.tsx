@@ -107,7 +107,7 @@ function SearchControl({ orgSlug, userId }: { orgSlug: string; userId: string })
                 hideLabel
                 variant="search"
                 autoFocus
-                placeholder="Press # for specific search"
+                placeholder={t("records.chrome.specificSearch")}
                 value={query}
                 onChange={setQuery}
                 prefix={
@@ -256,8 +256,9 @@ function ModuleChooser({
 }) {
   const [open, setOpen] = useState(false);
   const [query, setQuery] = useState("");
+  const t = useUiTranslations();
   const entries = [
-    { apiName: "", pluralLabel: "All Modules" },
+    { apiName: "", pluralLabel: t("records.chrome.allModules") },
     ...getModuleScreens(),
     ...DOCUMENTED_MODULE_FILTER_ITEMS.filter((item) => !item.isRegistered).map((item) => ({
       apiName: item.moduleApiName,

@@ -49,17 +49,18 @@ export const leadsScreenDefinition: ModuleScreenDefinition = {
   searchColumns: ["Full_Name", "Company", "Email", "Phone", "Lead_Source"],
   merge: leadsMergeDefinition,
   buildFilterGroups: buildLeadsFilterGroups,
-  form: { rules: leadsFormRules },
+  form: { rules: leadsFormRules, inventoryChrome: true },
   detail: {
     addTags: { label: "Add Tags" },
     buildHeaderCommands: (record, { editHref }) => [
+      { id: "send-email", label: "Send Email", variant: "primary", laterModule: "M10" },
       ...(record.fields.Converted__s === true
         ? []
         : [
             {
               id: "convert",
               label: "Convert",
-              variant: "primary" as const,
+              variant: "secondary" as const,
               href: editHref.replace(/\/edit$/, "/convert"),
             },
           ]),
@@ -71,6 +72,7 @@ export const leadsScreenDefinition: ModuleScreenDefinition = {
     sections: buildLeadsDetailSections,
     inlineEditable: isLeadInlineEditable,
     lastUpdate: formatLeadsLastUpdateLabel,
+    lastUpdatePlacement: "tab-row",
     moreOptions: buildLeadsRecordMoreMenuGroups,
     deleteTitle: LEADS_DELETE_CONFIRM_TITLE,
     deleteMessage: LEADS_DELETE_CONFIRM_MESSAGE,

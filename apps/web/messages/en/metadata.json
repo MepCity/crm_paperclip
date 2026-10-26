@@ -1,17 +1,53 @@
 {
   "modules": {
-    "Leads": { "singular": "Lead", "plural": "Leads" },
-    "Contacts": { "singular": "Contact", "plural": "Contacts" },
-    "Accounts": { "singular": "Account", "plural": "Accounts" },
-    "Deals": { "singular": "Deal", "plural": "Deals" },
-    "Activities": { "singular": "Activity", "plural": "Activities" },
-    "Tasks": { "singular": "Task", "plural": "Tasks" },
-    "Meetings": { "singular": "Meeting", "plural": "Meetings" },
-    "Events": { "singular": "Meeting", "plural": "Meetings" },
-    "Calls": { "singular": "Call", "plural": "Calls" },
-    "Campaigns": { "singular": "Campaign", "plural": "Campaigns" },
-    "Cases": { "singular": "Case", "plural": "Cases" },
-    "Solutions": { "singular": "Solution", "plural": "Solutions" }
+    "Leads": {
+      "singular": "Lead",
+      "plural": "Leads"
+    },
+    "Contacts": {
+      "singular": "Contact",
+      "plural": "Contacts"
+    },
+    "Accounts": {
+      "singular": "Account",
+      "plural": "Accounts"
+    },
+    "Deals": {
+      "singular": "Deal",
+      "plural": "Deals"
+    },
+    "Activities": {
+      "singular": "Activity",
+      "plural": "Activities"
+    },
+    "Tasks": {
+      "singular": "Task",
+      "plural": "Tasks"
+    },
+    "Meetings": {
+      "singular": "Meeting",
+      "plural": "Meetings"
+    },
+    "Events": {
+      "singular": "Meeting",
+      "plural": "Meetings"
+    },
+    "Calls": {
+      "singular": "Call",
+      "plural": "Calls"
+    },
+    "Campaigns": {
+      "singular": "Campaign",
+      "plural": "Campaigns"
+    },
+    "Cases": {
+      "singular": "Case",
+      "plural": "Cases"
+    },
+    "Solutions": {
+      "singular": "Solution",
+      "plural": "Solutions"
+    }
   },
   "fields": {
     "Record_Image": "Lead Image",
@@ -144,7 +180,41 @@
     "Shipping_City": "Shipping City",
     "Shipping_State": "Shipping State",
     "Shipping_Code": "Shipping Code",
-    "Shipping_Country": "Shipping Country"
+    "Shipping_Country": "Shipping Country",
+    "Contact_Image": "Contact Image",
+    "Account_Image": "Account Image",
+    "Vendor_Name": "Vendor Name",
+    "Asst_Phone_Short": "Asst Phone",
+    "Employees": "Employees",
+    "Connected_To": "Connected To",
+    "Campaign_Source": "Campaign Source",
+    "Type": "Type",
+    "Caller_ID": "Caller ID",
+    "All_day_sentence": "All day",
+    "Check_In_Time": "Check-In Time",
+    "Activities": "Activities",
+    "Campaigns": "Campaigns",
+    "Latest_Email_Status": "Latest Email Status",
+    "Locked": "Locked",
+    "Record_Action": "Record Action",
+    "Related_Records_Action": "Related Records Action",
+    "Touched_Records": "Touched Records",
+    "Untouched_Records": "Untouched Records",
+    "Cadences": "Cadences",
+    "Address": "Address",
+    "Address_City": "Address - City",
+    "Address_Country": "Address - Country / Region",
+    "Address_Building": "Address - Flat / House No./ Building / Apartment Name",
+    "Address_State": "Address - State / Province",
+    "Address_Street": "Address - Street Address",
+    "Address_Zip": "Address - Zip / Postal Code",
+    "Meeting_Title": "Title",
+    "Event_Title": "Title",
+    "Meeting_Venue__s": "Meeting Venue",
+    "Host": "Host",
+    "Call_For": "Call For",
+    "Call_From_To": "Call From/To",
+    "Outgoing_Call_Status": "Outgoing Call Status"
   },
   "sections": {
     "Lead Information": "Lead Information",
@@ -160,7 +230,13 @@
     "Address Information": "Address Information",
     "Description Information": "Description Information",
     "Custom Information": "Custom Information",
-    "System Information": "System Information"
+    "System Information": "System Information",
+    "Lead Image": "Lead Image",
+    "Contact Image": "Contact Image",
+    "Account Image": "Account Image",
+    "Purpose Of Outgoing Call": "Purpose Of Outgoing Call",
+    "Outcome Of Outgoing Call": "Outcome Of Outgoing Call",
+    "Meeting Additional Information": "Meeting Additional Information"
   },
   "relatedLists": {
     "overview": "Overview",
@@ -183,6 +259,15 @@
     "memberAccounts": "Member Accounts",
     "contactRoles": "Contact Roles",
     "links": "Links",
-    "addLink": "Add Link"
+    "addLink": "Add Link",
+    "cadences": "Cadences",
+    "products": "Products",
+    "quotes": "Quotes",
+    "salesOrders": "Sales Orders",
+    "purchaseOrders": "Purchase Orders",
+    "invoices": "Invoices",
+    "social": "Social",
+    "emails": "Emails",
+    "competitors": "Competitors"
   }
 }

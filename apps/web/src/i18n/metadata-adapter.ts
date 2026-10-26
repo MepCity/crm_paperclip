@@ -59,8 +59,12 @@ export function createMetadataDisplayAdapter(
   }
 
   function getNamedLabel(label: string): string {
-    const labelKey = label.replace(/\s+/g, "_");
-    const builtIn = (english.metadata.fields as Record<string, string>)[labelKey];
+    const labelKey = Object.entries(english.metadata.fields).find(
+      ([, value]) => value === label,
+    )?.[0];
+    const builtIn = labelKey
+      ? (english.metadata.fields as Record<string, string>)[labelKey]
+      : undefined;
     if (builtIn === label && isTr) {
       return t(`metadata.fields.${labelKey}` as MessageKey);
     }
@@ -74,7 +78,16 @@ export function createMetadataDisplayAdapter(
     if (field.custom) {
       return field.label;
     }
-    const labelKey = field.label.replace(/\s+/g, "_");
+    if (
+      ["Meetings", "Events"].includes(_moduleApiName) &&
+      ["Title", "Event_Title"].includes(field.apiName) &&
+      isTr &&
+      field.label === "Title"
+    )
+      return t("metadata.fields.Meeting_Title");
+    const labelKey =
+      Object.entries(english.metadata.fields).find(([, value]) => value === field.label)?.[0] ??
+      field.label.replace(/\s+/g, "_");
     const builtInByLabel = (english.metadata.fields as Record<string, string>)[labelKey];
     if (builtInByLabel === field.label && isTr) {
       return t(`metadata.fields.${labelKey}` as MessageKey);

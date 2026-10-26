@@ -144,3 +144,21 @@ describe("MetadataDisplayAdapter", () => {
     expect(adapter.getNamedLabel("Custom Field Name")).toBe("Custom Field Name");
   });
 });
+
+it("translates capture vocabulary without altering record values or custom field labels", () => {
+  const adapter = createMetadataDisplayAdapter(translator("tr"), "tr");
+  expect(adapter.getNamedLabel("Asst Phone")).toBe("Asistanın Telefonu");
+  expect(adapter.getNamedLabel("Untouched Records")).toBe("Dokunulmamış Kayıtlar");
+  expect(adapter.getNamedLabel("Address - City")).toBe("Adres - Şehir");
+  expect(
+    adapter.getFieldLabel("Accounts", { apiName: "Account_Site", label: "Account Site" }),
+  ).toBe("Firma Konumu");
+  expect(adapter.getFieldLabel("Events", { apiName: "Event_Title", label: "Title" })).toBe(
+    "Başlık",
+  );
+  expect(
+    adapter.getFieldLabel("Contacts", { apiName: "Asst_Phone", label: "Asst Phone", custom: true }),
+  ).toBe("Asst Phone");
+  expect(adapter.getLayoutSectionLabel("Contacts", "Contact Image")).toBe("Kişi Resim");
+  expect(adapter.getRelatedListTitle("sales-orders", "Sales Orders")).toBe("Satış Siparişleri");
+});

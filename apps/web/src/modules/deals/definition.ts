@@ -44,6 +44,7 @@ export const dealsScreenDefinition: ModuleScreenDefinition = {
     rules: dealsFormRules,
     fallbackColumns: { "Deal Information": DEALS_FORM_INFORMATION_COLUMNS },
     inventoryChrome: true,
+    inventoryFooterPinned: true,
   },
   detail: {
     Screen: DealRecordScreen,

@@ -10,7 +10,7 @@ import { useUiTranslations } from "@/i18n/client-provider";
 // biome-ignore format: preserve line numbers
 export interface ViewTabStripProps {
   viewName: string;
-  views?: readonly Pick<ListView, "id" | "name">[];
+  views?: readonly (Pick<ListView, "id" | "name"> & Partial<Pick<ListView, "systemDefined" | "isDefault">>)[];
   onViewChange?: (id: string) => void;
   pinnedViews?: readonly string[];
   /** Draws a Search box above Public Views that filters the rows by name (Tasks only). */
@@ -20,7 +20,7 @@ export interface ViewTabStripProps {
 
 // biome-ignore format: preserve line numbers
 export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searchable, onNewView, onEditView, onManageViews }: ViewTabStripProps) {
-  const t = useUiTranslations(); const [publicOpen, setPublicOpen] = useState(true), [query, setQuery] = useState("");
+  const t = useUiTranslations(); const [createdOpen, setCreatedOpen] = useState(true); const [publicOpen, setPublicOpen] = useState(true), [query, setQuery] = useState("");
   // biome-ignore format: preserve line numbers
   const itemNewProps = onNewView ? { onAction: onNewView } : { laterModule: "M11" as const };
   // biome-ignore format: preserve line numbers
@@ -83,11 +83,11 @@ export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searc
       )}
       {views ? (
         <MenuTrigger>
-          <Button variant="ghost" size="listIcon" aria-label="Custom views">
+          <Button variant="ghost" size="listIcon" aria-label={t("records.chrome.customViews")}>
             <Icons.ellipsis aria-hidden className="h-4 w-4" />
           </Button>
           <Menu
-            aria-label="Custom views"
+            aria-label={t("records.chrome.customViews")}
             placement="bottom start"
             appearance="measured"
             tall
@@ -95,8 +95,8 @@ export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searc
             header={
               searchable ? (
                 <TextField
-                  label="Search views"
-                  placeholder="Search"
+                  label={t("records.chrome.searchViews")}
+                  placeholder={t("records.chrome.search")}
                   variant="filter-search"
                   value={query}
                   onChange={setQuery}
@@ -104,16 +104,23 @@ export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searc
               ) : undefined
             }
           >
+            <MenuItem id="created" shouldCloseOnSelect={false} onAction={() => setCreatedOpen(!createdOpen)}>
+              <Icons.chevronDown aria-hidden className="h-4 w-4" />
+              {t("records.chrome.createdByMe")}
+            </MenuItem>
+            {createdOpen ? visibleViews?.filter((view) => view.systemDefined === false && view.isDefault === false).map((view) => (
+              <MenuItem key={view.id} id={view.id} onAction={() => onViewChange?.(view.id)}>{view.name}</MenuItem>
+            )) : null}
             <MenuItem
               id="public"
               shouldCloseOnSelect={false}
               onAction={() => setPublicOpen(!publicOpen)}
             >
               <Icons.chevronDown aria-hidden className="h-4 w-4" />
-              Public Views
+              {t("records.chrome.publicViews")}
             </MenuItem>
             {publicOpen
-              ? visibleViews?.map((view) => (
+              ? visibleViews?.filter((view) => view.systemDefined !== false || view.isDefault !== false).map((view) => (
                   <MenuItem key={view.id} id={view.id} onAction={() => onViewChange?.(view.id)}>
                     {view.name === viewName ? (
                       <Icons.check aria-hidden className="h-4 w-4" />
@@ -123,13 +130,13 @@ export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searc
                 ))
               : null}
             <MenuDivider />
-            <MenuItem id="dropdown">Show custom views as Dropdown</MenuItem>
+            <MenuItem id="dropdown">{t("records.chrome.showAsDropdown")}</MenuItem>
             <MenuDivider />
             <MenuItem id="new" {...itemNewProps}>
-              New Custom View
+              {t("records.chrome.newView")}
             </MenuItem>
             <MenuItem id="manage"     {...mgrProps}>
-              Manage Custom View
+              {t("records.chrome.manageViews")}
             </MenuItem>
             {onEditView ? (
               <MenuItem

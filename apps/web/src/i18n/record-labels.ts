@@ -1,0 +1,33 @@
+"use client";
+
+import type { ListView } from "@crm/core/records";
+import { english, type MessageKey, type MessageValues } from "./catalogs";
+import { useUiTranslations } from "./client-provider";
+
+export function useRecordLabel() {
+  const t = useUiTranslations();
+  return (label: string) => {
+    const entry = Object.entries(english.records.chrome).find(([, value]) => value === label);
+    if (entry) return t(`records.chrome.${entry[0]}` as MessageKey);
+    const action = Object.entries(english.records.actions).find(([, value]) => value === label);
+    if (action) return t(`records.actions.${action[0]}` as MessageKey);
+    if (label === "Edit") return t("common.actions.edit");
+    return label;
+  };
+}
+
+export function builtInViewLabel(
+  view: Pick<ListView, "name" | "systemDefined" | "isDefault">,
+  plural: string,
+  translatedPlural: string,
+  t: (key: MessageKey, values?: MessageValues) => string,
+): string {
+  if (!view.systemDefined && !view.isDefault) return view.name;
+  const names = {
+    [`All ${plural}`]: "records.chrome.allRecords",
+    [`My ${plural}`]: "records.chrome.myRecords",
+    [`All Locked ${plural}`]: "records.chrome.allLockedRecords",
+  } as const;
+  const key = names[view.name];
+  return key ? t(key, { module: translatedPlural }) : view.name;
+}

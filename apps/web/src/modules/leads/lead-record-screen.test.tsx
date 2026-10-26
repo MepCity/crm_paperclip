@@ -148,7 +148,7 @@ describe("LeadRecordScreen", () => {
     expect(screen.getAllByText("—").length).toBeGreaterThan(0);
   });
 
-  it("starts the overview with the Last Update label above the status ribbon", async () => {
+  it("places Last Update in the tab row and keeps Send Email primary", async () => {
     const service = createService();
     const views = await service.listViews("Leads");
     const view = views.find((item) => item.isDefault);
@@ -159,8 +159,12 @@ describe("LeadRecordScreen", () => {
     renderScreen(service, record.id);
     await waitFor(() => expect(screen.getByRole("region", { name: "Lead status" })).toBeTruthy());
     const label = screen.getByText(/^Last Update : /);
-    const ribbon = screen.getByRole("region", { name: "Lead status" });
-    expect(label.compareDocumentPosition(ribbon) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(label.classList.contains("detail-last-update--tab-row")).toBe(true);
+    const commands = screen
+      .getByRole("button", { name: "Send Email" })
+      .closest("[data-record-commands]");
+    expect(commands?.firstElementChild?.textContent).toBe("Send Email");
+    expect(screen.getByRole("link", { name: "Convert" }).className).toContain("secondary");
   });
 
   it("shows linked open and closed tasks in the activities cards", async () => {

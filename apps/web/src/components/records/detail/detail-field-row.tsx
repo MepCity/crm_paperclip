@@ -5,6 +5,7 @@ import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { isFieldValueEmpty } from "../field-format";
 import { FieldPencil } from "./field-pencil";
 import { FieldValueView } from "./field-value";
@@ -38,6 +39,7 @@ export function DetailFieldRow({
   valueSuffix,
   onEdit,
 }: DetailFieldRowProps) {
+  const adapter = useMetadataDisplayAdapter();
   const inline = useInlineEdit();
   const openCall = useRecordCall();
   const rowId = useId();
@@ -116,7 +118,7 @@ export function DetailFieldRow({
       data-detail-wrapped={wrappedValue ? "true" : undefined}
       data-detail-wrapped-link={wrappedLink ? "true" : undefined}
     >
-      <div className="detail-field-label">{field.label}</div>
+      <div className="detail-field-label">{adapter.getNamedLabel(field.label)}</div>
       <div className="detail-field-value-wrap" ref={valueWrapRef}>
         {editing && inline ? (
           <InlineFieldEditor

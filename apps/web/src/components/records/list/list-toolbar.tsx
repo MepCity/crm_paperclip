@@ -1,6 +1,7 @@
 "use client";
 
 import type { SortSpec } from "@crm/core/records";
+import type { ReactNode } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import {
@@ -13,6 +14,7 @@ import {
 } from "@/components/ui/menu";
 import { SplitButton, type SplitButtonProps } from "@/components/ui/split-button";
 import { useUiTranslations } from "@/i18n/client-provider";
+import { useRecordLabel } from "@/i18n/record-labels";
 import { SortPopover, type SortPopoverProps } from "./sort-popover";
 import { ViewTypeSwitcher } from "./view-type-switcher";
 
@@ -27,6 +29,7 @@ export interface ListToolbarProps {
   sort: SortSpec | null;
   onSortApply: (sort: SortSpec | null) => void;
   create: SplitButtonProps;
+  createControl?: ReactNode;
   actions?: readonly MenuAction[];
   viewTypeTileIds?: readonly string[];
   /** Measured Actions menu width in px; omitted keeps the shared width. */
@@ -43,11 +46,13 @@ export function ListToolbar({
   sort,
   onSortApply,
   create,
+  createControl,
   actions = [],
   viewTypeTileIds,
   actionsMenuWidth,
 }: ListToolbarProps) {
   const t = useUiTranslations();
+  const label = useRecordLabel();
   return (
     <div
       className="flex h-(--size-list-toolbar-height) items-center justify-between gap-3"
@@ -90,7 +95,7 @@ export function ListToolbar({
         ) : null}
       </div>
       <div className="flex items-center gap-(--size-button-gap)">
-        <SplitButton {...create} />
+        {createControl ?? <SplitButton {...create} />}
         {actions.length > 0 && (
           <MenuTrigger>
             <Button variant="secondary" size="actions" aria-label={t("records.list.actions")}>
@@ -111,7 +116,7 @@ export function ListToolbar({
                   <MenuItem
                     key={item.id}
                     id={item.id}
-                    textValue={item.label}
+                    textValue={label(item.label)}
                     laterModule={item.submenu ? undefined : item.laterModule}
                     isDisabled={item.isDisabled}
                     className={
@@ -119,7 +124,7 @@ export function ListToolbar({
                     }
                   >
                     <span className="flex items-center justify-between gap-3">
-                      {item.label}
+                      {label(item.label)}
                       {item.submenuIndicator || item.submenu ? (
                         <Icons.chevronRight aria-hidden="true" className="h-4 w-4 shrink-0" />
                       ) : null}
@@ -129,17 +134,17 @@ export function ListToolbar({
                 return item.submenu ? (
                   <SubmenuTrigger key={item.id}>
                     {row}
-                    <Submenu ariaLabel={item.label} placement="left top">
+                    <Submenu ariaLabel={label(item.label)} placement="left top">
                       {item.submenu.map((child) => (
                         <MenuItem
                           key={child.id}
                           id={child.id}
-                          textValue={child.label}
+                          textValue={label(child.label)}
                           appearance="measured"
                           laterModule={child.laterModule}
                           onAction={child.onAction}
                         >
-                          {child.label}
+                          {label(child.label)}
                           {child.accent ? (
                             <Icons.sparkles
                               aria-hidden="true"

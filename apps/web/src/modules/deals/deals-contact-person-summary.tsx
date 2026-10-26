@@ -3,6 +3,7 @@
 import type { ModuleRecordReference, RecordData } from "@crm/core/records";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { useRecord } from "@/lib/api/client/hooks";
 
 export interface DealsContactPersonSummaryProps {
@@ -22,6 +23,7 @@ export function DealsContactPersonSummary({
   contactRecordPath,
   accountRecordPath,
 }: DealsContactPersonSummaryProps) {
+  const t = useUiTranslations();
   const contactRef = asLookup(dealRecord.fields.Contact_Name);
   const contactQuery = useRecord("Contacts", contactRef?.id ?? "");
 
@@ -48,7 +50,7 @@ export function DealsContactPersonSummary({
       data-deals-contact-person-summary
       className="mx-3 mb-3 flex flex-col gap-2 rounded-md border border-panel-border bg-surface px-4 py-3"
     >
-      <h3 className="text-md font-semibold text-text">Contact Person</h3>
+      <h3 className="text-md font-semibold text-text">{t("records.chrome.contactPerson")}</h3>
       <div className="flex gap-3">
         <div
           data-contact-portrait

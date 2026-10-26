@@ -62,5 +62,18 @@
   "call": "Call",
   "campaign": "Campaign",
   "solution": "Solution",
-  "case": "Case"
+  "case": "Case",
+  "assistant": "Assistant",
+  "notifications": "Notifications",
+  "applications": "Applications",
+  "extensions": "Extensions",
+  "utilities": "Utilities",
+  "pins": "Pinned items",
+  "chats": "Chats",
+  "people": "Contacts",
+  "announcements": "Announcements",
+  "reminders": "Reminders",
+  "recentItems": "Recent items",
+  "accessibility": "Accessibility",
+  "help": "Help"
 }

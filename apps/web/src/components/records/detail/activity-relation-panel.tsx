@@ -7,6 +7,8 @@ import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Select, SelectItem } from "@/components/ui/select";
 import { Tab, TabList, Tabs } from "@/components/ui/tabs";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 
 export interface ActivityRelationPerson {
   id: string;
@@ -120,6 +122,8 @@ export function ActivityRelationPanel({
   onNewDeal,
   onNewActivity,
 }: ActivityRelationPanelProps) {
+  const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
   const [expanded, setExpanded] = useState<Set<ActivityRelationKind>>(new Set());
   const person = persons.find((p) => p.id === selectedPersonId) ?? null;
 
@@ -155,9 +159,9 @@ export function ActivityRelationPanel({
 
       <Tabs selectedKey="info">
         <TabList aria-label="Panel tabs">
-          <Tab id="info">Info</Tab>
+          <Tab id="info">{t("records.chrome.info")}</Tab>
           <Tab id="conversations" laterModule="M10">
-            Conversations
+            {t("records.chrome.conversations")}
           </Tab>
         </TabList>
       </Tabs>
@@ -187,7 +191,7 @@ export function ActivityRelationPanel({
                   </span>
                 </div>
                 <Button variant="primary" size="sm" laterModule="M10">
-                  Send Email
+                  {t("records.actions.sendEmail")}
                 </Button>
               </div>
             </div>
@@ -236,15 +240,19 @@ export function ActivityRelationPanel({
                 variant="body"
                 className="text-primary hover:underline"
               >
-                More Info
+                {t("records.chrome.info")}
               </Link>
             </div>
           </section>
 
           <section aria-label="Deal Summary" className="flex flex-col gap-2">
-            <SectionHeader title="Deal Summary" actionLabel="New" onAction={onNewDeal} />
+            <SectionHeader
+              title={t("records.chrome.dealSummary")}
+              actionLabel={t("records.chrome.new")}
+              onAction={onNewDeal}
+            />
             {deals.length === 0 ? (
-              <p className="text-md text-text">No Deals found</p>
+              <p className="text-md text-text">{t("records.chrome.noDeals")}</p>
             ) : (
               <ul className="flex flex-col gap-2">
                 {deals.map((deal) => (
@@ -266,7 +274,11 @@ export function ActivityRelationPanel({
       ) : null}
 
       <section aria-label="Open Activities" className="flex flex-col gap-2">
-        <SectionHeader title="Open Activities" actionLabel="New" onAction={onNewActivity} />
+        <SectionHeader
+          title={t("metadata.relatedLists.openActivities")}
+          actionLabel={t("records.chrome.new")}
+          onAction={onNewActivity}
+        />
         <ul className="flex flex-col gap-2">
           {ACTIVITY_ROWS.map(({ kind, label }) => {
             const group = openActivities[kind];
@@ -279,7 +291,12 @@ export function ActivityRelationPanel({
                   onPress={() => toggle(kind)}
                   className="flex items-center gap-2 rounded-md border border-panel-border px-3 py-1.5 text-md text-text outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
                 >
-                  <span>{label}</span>
+                  <span>
+                    {adapter.getModulePlural(
+                      kind === "meetings" ? "Events" : kind === "tasks" ? "Tasks" : "Calls",
+                      label,
+                    )}
+                  </span>
                   <span
                     data-count-badge
                     className="rounded-full bg-bg px-2 text-xs text-text-muted"

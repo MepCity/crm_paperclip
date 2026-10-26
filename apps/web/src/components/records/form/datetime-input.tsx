@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { TextCalendarField } from "@/components/ui/text-calendar-field";
 import { TextField } from "@/components/ui/text-field";
+import { useUiLanguage } from "@/i18n/client-provider";
 import {
   calendarShapeToDisplayDate,
   DATE_MASK_PLACEHOLDER,
@@ -37,10 +38,13 @@ export function DateTimeInput({
   disabled,
   errorMessage,
 }: DateTimeInputProps) {
+  const language = useUiLanguage();
+  const [timeDraft, setTimeDraft] = useState<string | null>(null);
   const [written, setWritten] = useState(value);
   const [parts, setParts] = useState(() => isoToDateTimeParts(value, dateOnly));
   const [writtenDateOnly, setWrittenDateOnly] = useState(dateOnly);
   if (written !== value || writtenDateOnly !== dateOnly) {
+    setTimeDraft(null);
     setWritten(value);
     setWrittenDateOnly(dateOnly);
     setParts(isoToDateTimeParts(value, dateOnly));
@@ -55,7 +59,7 @@ export function DateTimeInput({
     <div className="record-form-datetime" data-record-form-datetime>
       <TextCalendarField
         id={id}
-        label={`${label} date`}
+        label={`${label} ${language === "tr" ? "tarih" : "date"}`}
         hideLabel
         type="text"
         name={`${id}-date`}
@@ -71,18 +75,43 @@ export function DateTimeInput({
       {dateOnly ? null : (
         <TextField
           id={`${id}-time`}
-          label={`${label} time`}
+          label={`${label} ${language === "tr" ? "saat" : "time"}`}
           hideLabel
-          type="time"
+          type={language === "tr" ? "text" : "time"}
           name={`${id}-time`}
-          value={parts.time}
+          value={language === "tr" ? (timeDraft ?? turkishTime(parts.time)) : parts.time}
           isRequired={required}
           isDisabled={disabled}
           isInvalid={Boolean(errorMessage)}
           validationBehavior="aria"
-          onChange={(time) => update({ ...parts, time })}
+          onChange={(time) => {
+            if (language !== "tr") {
+              update({ ...parts, time });
+              return;
+            }
+            setTimeDraft(time);
+            update({ ...parts, time: parseTurkishTime(time) });
+          }}
+          onBlur={() => {
+            if (parts.time) setTimeDraft(null);
+          }}
         />
       )}
     </div>
   );
+}
+
+function turkishTime(time: string): string {
+  if (!time) return "";
+  const [hour, minute] = time.split(":");
+  return `${String(Number(hour) % 12 || 12).padStart(2, "0")}:${minute} ${Number(hour) < 12 ? "ÖÖ" : "ÖS"}`;
+}
+function parseTurkishTime(value: string): string {
+  const match = /^(\d{1,2}):(\d{2})\s*(ÖÖ|ÖS)?$/i.exec(value.trim());
+  if (!match) return "";
+  let hour = Number(match[1]);
+  const minute = Number(match[2]);
+  if (minute > 59 || hour > (match[3] ? 12 : 23) || (match[3] && hour < 1)) return "";
+  if (match[3]) hour = (hour % 12) + (match[3].toLocaleUpperCase("tr") === "ÖS" ? 12 : 0);
+  return `${String(hour).padStart(2, "0")}:${match[2]}`;
 }

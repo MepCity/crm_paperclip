@@ -7,6 +7,7 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { DatePicker } from "@/components/ui/date-picker";
+import { Icons } from "@/components/ui/icon";
 import { NumberField } from "@/components/ui/number-field";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Select, SelectItem } from "@/components/ui/select";
@@ -84,29 +85,42 @@ function TargetChoice({
   existingError?: string;
 }) {
   const t = useUiTranslations();
+  const [expanded, setExpanded] = useState(false);
   const label =
     module === "Accounts"
       ? t("records.convert.createNewAccount")
       : t("records.convert.createNewContact");
   return (
     <div className="flex flex-col gap-2" data-convert-target={module}>
-      <RadioGroup
-        label={module === "Accounts" ? t("records.convert.account") : t("records.convert.contact")}
-        orientation="horizontal"
-        value={mode}
-        onChange={(value) => onMode(value as Mode)}
-        options={[
-          { value: "new", label },
-          { value: "existing", label: t("records.convert.chooseExisting") },
-        ]}
-      />
+      {expanded ? (
+        <RadioGroup
+          label={
+            module === "Accounts" ? t("records.convert.account") : t("records.convert.contact")
+          }
+          orientation="horizontal"
+          value={mode}
+          onChange={(value) => onMode(value as Mode)}
+          options={[
+            { value: "new", label },
+            { value: "existing", label: t("records.convert.chooseExisting") },
+          ]}
+        />
+      ) : null}
       {mode === "new" ? (
-        <span
-          data-convert-chip
-          className="inline-flex h-[22px] w-fit items-center rounded-[3px] bg-(--color-control-border) px-2 text-md text-text"
-        >
-          {name}
-        </span>
+        <div className="flex items-center gap-2 text-md">
+          <span>{label}</span>
+          <Button
+            variant="ghost"
+            size="compact"
+            onPress={() => setExpanded(!expanded)}
+            aria-expanded={expanded}
+            aria-label={`${label}: ${name}`}
+            className="rounded-[3px] bg-(--color-control-border) px-2 font-normal"
+            data-convert-chip
+          >
+            {name}
+          </Button>
+        </div>
       ) : (
         <ExistingRecordSelect
           module={module}
@@ -236,7 +250,7 @@ export function LeadConvertScreen({ orgSlug, recordId }: { orgSlug: string; reco
           </span>
         </header>
         <form
-          className="flex max-w-[845px] flex-col gap-6 px-8 py-8"
+          className="flex max-w-[845px] flex-col gap-3 px-8 py-8"
           noValidate
           onSubmit={(event) => {
             event.preventDefault();
@@ -272,6 +286,7 @@ export function LeadConvertScreen({ orgSlug, recordId }: { orgSlug: string; reco
             existingError={existingErrors.contact}
           />
           <Checkbox
+            className="mt-7 mb-4"
             label={t("records.convert.createDeal")}
             isSelected={withDeal}
             onChange={setWithDeal}
@@ -313,12 +328,15 @@ export function LeadConvertScreen({ orgSlug, recordId }: { orgSlug: string; reco
               </Select>
             </div>
           ) : null}
-          <div className="flex w-[180px] flex-col gap-1">
+          <div className="mb-10 flex w-[220px] items-end gap-2">
             <TextField
               label={t("records.convert.ownerOfNewRecords")}
               value={ownerName}
               isReadOnly
             />
+            <Button variant="icon" aria-label={t("records.list.openOwnerPicker")} isDisabled>
+              <Icons.users aria-hidden className="size-4" />
+            </Button>
           </div>
           <div className="flex items-center gap-3">
             <Button
@@ -335,9 +353,13 @@ export function LeadConvertScreen({ orgSlug, recordId }: { orgSlug: string; reco
           </div>
         </form>
       </div>
-      <aside className="w-[300px] shrink-0 border-l border-panel-border px-4 py-6">
+      <aside className="mt-[52px] w-[300px] shrink-0 border-l border-panel-border px-4 py-2">
         <h2 className="text-md font-semibold">{t("records.convert.quickLinks")}</h2>
         <p className="mt-3 text-md text-primary">{t("records.convert.conversionMapping")}</p>
+        <Button variant="ghost" laterModule="P3" className="mt-2">
+          <Icons.help aria-hidden className="size-4" />
+          {t("shell.help")}
+        </Button>
       </aside>
     </div>
   );

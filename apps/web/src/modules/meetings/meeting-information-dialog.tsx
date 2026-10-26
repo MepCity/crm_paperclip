@@ -17,6 +17,8 @@ import {
 } from "@/components/records/form/form-save-error";
 import { validateRanges, validateRecordForm } from "@/components/records/form/form-validation";
 import { Button } from "@/components/ui/button";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { useCreateRecord, useModule, useUsers } from "@/lib/api/client/hooks";
 import { moduleRecordPath } from "@/lib/crm-paths";
 import {
@@ -60,6 +62,8 @@ export function MeetingInformationDialog({
   onClose,
   now,
 }: MeetingInformationDialogProps) {
+  const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
   const router = useRouter();
   const metadata = useModule(MODULE);
   const users = useUsers();
@@ -188,12 +192,12 @@ export function MeetingInformationDialog({
     >
       <Modal className="flex h-[547px] max-h-screen w-full max-w-[var(--size-meeting-window-width)] flex-col rounded-lg bg-surface shadow-lg outline-none">
         <AriaDialog
-          aria-label="Meeting Information"
+          aria-label={t("metadata.sections.Meeting Information")}
           className="flex h-full min-h-0 flex-col outline-none"
           data-meeting-information-dialog
         >
           <Heading slot="title" className="meeting-window__title">
-            Meeting Information
+            {t("metadata.sections.Meeting Information")}
           </Heading>
           <form
             ref={formRef}
@@ -217,7 +221,7 @@ export function MeetingInformationDialog({
                     }
                   >
                     <FormRow
-                      label={field.label}
+                      label={adapter.getFieldLabel(MODULE, field)}
                       controlId={`meeting-information-${field.apiName}`}
                       column="full"
                       required={field.required}
@@ -226,7 +230,7 @@ export function MeetingInformationDialog({
                         id={`meeting-information-${field.apiName}`}
                         hideLabel
                         variant="activity"
-                        field={field}
+                        field={adapter.adaptField(MODULE, field)}
                         value={values[field.apiName] ?? null}
                         onChange={(next) => change(field.apiName, next)}
                         errorMessage={errors[field.apiName]}
@@ -257,12 +261,12 @@ export function MeetingInformationDialog({
                   onPress={addMoreDetails}
                   isDisabled={!ready}
                 >
-                  Add more details
+                  {t("records.chrome.moreDetails")}
                 </Button>
               )}
               <div className="flex gap-2">
                 <Button type="button" variant="secondary" size="md" onPress={onClose}>
-                  Cancel
+                  {t("common.actions.cancel")}
                 </Button>
                 <Button
                   type="submit"
@@ -270,7 +274,7 @@ export function MeetingInformationDialog({
                   size="md"
                   isDisabled={!ready || create.isPending}
                 >
-                  Save
+                  {t("common.actions.save")}
                 </Button>
               </div>
             </footer>
