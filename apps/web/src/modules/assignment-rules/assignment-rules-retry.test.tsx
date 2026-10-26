@@ -8,7 +8,11 @@ const ctx = { orgId: "o", orgSlug: "synthetic", orgName: "S", userId: "u", role:
 const memory = createMemoryAutomationPort({ fixtures: { o: syntheticAssignmentRules } });
 const list = vi.fn();
 
-vi.mock("@/lib/session", () => ({ requireOrgContext: async () => ctx }));
+vi.mock("@/lib/session", () => ({
+  requireOrgContext: async () => ctx,
+  getSession: async () => ({ user: { id: ctx.userId } }),
+}));
+vi.mock("@/server/personal-settings/language", () => ({ readSavedLanguage: async () => "en" }));
 vi.mock("@/components/shell/page-title", () => ({ PageTitle: () => null }));
 vi.mock("@/modules/automation/port", () => ({ createAutomationPort: () => ({ list }) }));
 
