@@ -85,9 +85,11 @@ test("captures Turkish core modules and their corrected entry controls", async (
       await shot("Calls-create-menu");
       await page.getByRole("menuitem", { name: "Çağrı zamanla", exact: true }).click();
       await expect(page.getByRole("dialog", { name: "Çağrı zamanla" })).toBeVisible();
-      await expect(page.getByLabel("Konu", { exact: true })).toHaveValue(
-        "Arama Bilinmiyor ile zamanlandı",
-      );
+      await expect(
+        page
+          .getByRole("dialog", { name: "Çağrı zamanla" })
+          .getByRole("textbox", { name: "Konu", exact: true }),
+      ).toHaveValue("Arama Bilinmiyor ile zamanlandı");
       await shot("Calls-schedule");
       await page.getByRole("button", { name: "İptal", exact: true }).click();
     }
