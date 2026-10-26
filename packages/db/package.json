@@ -12,7 +12,9 @@
     "./shared-memory": "./src/shared-memory.ts",
     "./signal-shutdown": "./src/signal-shutdown.ts",
     "./ipc-sweep": "./src/ipc-sweep.ts",
-    "./sysv-ipc": "./src/sysv-ipc.ts"
+    "./sysv-ipc": "./src/sysv-ipc.ts",
+    "./runtime-roles": "./src/runtime-roles.ts",
+    "./tenancy": "./src/tenancy.ts"
   },
   "scripts": {
     "db:generate": "drizzle-kit generate"

@@ -127,6 +127,9 @@ describe("ChangeOwnerDialog", () => {
       />,
       { wrapper: wrapper(service) },
     );
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel" })),
+    );
     await user.click(screen.getByRole("button", { name: "Lead Owner" }));
     await user.click(screen.getByRole("option", { name: /User One/ }));
     await user.click(screen.getByRole("button", { name: "Change Owner" }));
@@ -157,6 +160,9 @@ describe("ChangeOwnerDialog", () => {
       />,
       { wrapper: wrapper(service) },
     );
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel" })),
+    );
     await user.click(screen.getByRole("button", { name: "Lead Owner" }));
     await user.click(screen.getByRole("option", { name: /User One/ }));
     await user.click(screen.getByRole("button", { name: "Change Owner" }));
@@ -185,6 +191,9 @@ describe("ChangeOwnerDialog", () => {
         onSuccess={() => {}}
       />,
       { wrapper: wrapper(service) },
+    );
+    await waitFor(() =>
+      expect(document.activeElement).toBe(screen.getByRole("button", { name: "Cancel" })),
     );
     await user.click(screen.getByRole("button", { name: "Lead Owner" }));
     await user.click(screen.getByRole("option", { name: /User One/ }));

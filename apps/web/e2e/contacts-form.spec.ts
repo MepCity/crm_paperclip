@@ -1,4 +1,4 @@
-import type { Page } from "@playwright/test";
+import type { Locator, Page, Request } from "@playwright/test";
 import {
   CONTACTS_FORM_ADDRESS_CHILD_ORDER,
   CONTACTS_FORM_INFORMATION_COLUMNS,
@@ -8,6 +8,7 @@ import {
   moduleCreatePath,
   moduleListDefaultPath,
   moduleRecordClonePath,
+  moduleRecordEditPath,
 } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
@@ -125,6 +126,81 @@ test("edit preserves values and saves changes", async ({ page }) => {
   await expect(page.locator("[data-record-header]")).toContainText("Edited Contact");
 });
 
+const isContactUpdate = (request: Request) =>
+  request.method() === "PUT" &&
+  /\/crm\/v2\.2\/Contacts\/[^/]+$/.test(new URL(request.url()).pathname);
+
+function contactWrites(page: Page): string[] {
+  const writes: string[] = [];
+  page.on("request", (request) => {
+    if (isContactUpdate(request)) writes.push(request.url());
+  });
+  return writes;
+}
+
+async function openEdit(page: Page) {
+  await page.getByRole("link", { name: "Edit", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Edit Contact" })).toBeVisible();
+}
+
+/** Focusing an input in Chromium puts the caret in front of the text, so the mask needs it at the end. */
+async function putCaretAtEnd(date: Locator) {
+  await date.evaluate((element) => {
+    if (!(element instanceof HTMLInputElement)) return;
+    element.focus();
+    element.setSelectionRange(element.value.length, element.value.length);
+  });
+}
+
+/** The stored record the half-entry tests need: an optional date field that already has a day. */
+async function createContactWithDateOfBirth(page: Page, lastName: string) {
+  await page.getByRole("textbox", { name: "Last Name", exact: true }).fill(lastName);
+  await page.getByRole("textbox", { name: "Date of Birth", exact: true }).fill("15.03.1990");
+  const createRequest = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && new URL(request.url()).pathname === "/crm/v2.2/Contacts",
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  expect((await createRequest).postDataJSON().data[0].Date_of_Birth).toBe("1990-03-15");
+  await expect(page.locator("[data-record-header]")).toContainText(lastName);
+}
+
+test("a half-typed date blocks the write and keeps the stored day", async ({ page }) => {
+  await openCreate(page);
+  await createContactWithDateOfBirth(page, "Half Date Contact");
+  await openEdit(page);
+  const date = page.getByRole("textbox", { name: "Date of Birth", exact: true });
+  const writes = contactWrites(page);
+  await expect(date).toHaveValue("15.03.1990");
+  await putCaretAtEnd(date);
+  await page.keyboard.press("Backspace");
+  await expect(date).toHaveValue("15.03.199");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("Please enter a valid Date of Birth.")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Edit Contact" })).toBeVisible();
+  expect(writes).toEqual([]);
+  await expect(date).toHaveValue("15.03.199");
+  // Completing the entry stores the corrected day.
+  await putCaretAtEnd(date);
+  await page.keyboard.press("6");
+  await expect(date).toHaveValue("15.03.1996");
+  const update = page.waitForRequest(isContactUpdate);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  expect((await update).postDataJSON()).toEqual({ data: [{ Date_of_Birth: "1996-03-15" }] });
+  expect(writes).toHaveLength(1);
+});
+
+test("clearing a stored date completely writes null", async ({ page }) => {
+  await openCreate(page);
+  await createContactWithDateOfBirth(page, "Cleared Date Contact");
+  await openEdit(page);
+  await page.getByRole("textbox", { name: "Date of Birth", exact: true }).fill("");
+  const update = page.waitForRequest(isContactUpdate);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  expect((await update).postDataJSON()).toEqual({ data: [{ Date_of_Birth: null }] });
+  await expect(page.locator("[data-record-header]")).toContainText("Cleared Date Contact");
+});
+
 test("clone saves a new record from the source", async ({ page }) => {
   const { org } = await openCreate(page);
   await saveContact(page, "Clone Source");
@@ -143,13 +219,103 @@ test("laterModule controls do not navigate or open dialogs", async ({ page }) =>
   const url = page.url();
   await page.getByRole("button", { name: "Edit Page Layout", exact: true }).click({ force: true });
   await expect(page).toHaveURL(url);
+  // The Vendor Name lookup targets a module that does not ship yet, so it stays inert: no
+  // dialog and no navigation. Account Name ships with Module 3 and opens Choose Account.
   await page
-    .getByRole("button", { name: "Open Account Name lookup", exact: true })
+    .getByRole("button", { name: "Open Vendor Name lookup", exact: true })
     .click({ force: true });
   await expect(page.getByRole("dialog")).toHaveCount(0);
   await page.getByRole("button", { name: "Contact Image", exact: true }).click({ force: true });
   await expect(page).toHaveURL(url);
   await page.goto(moduleCreatePath(org.slug, CONTACTS_TAB));
+});
+
+/** F-05: the title reads on its own and the glyph is clipped inside the portrait control. */
+async function expectContactImagePortrait(page: Page) {
+  const heading = page.getByRole("heading", { name: "Contact Image", exact: true });
+  const button = page.getByRole("button", { name: "Contact Image", exact: true });
+  await expect(button).toHaveAttribute("data-later-module", "M6");
+  const title = await heading.boundingBox();
+  const control = await button.boundingBox();
+  const glyph = await button.locator(".record-profile-silhouette").boundingBox();
+  if (!title || !control || !glyph) {
+    throw new Error("Contact Image title, portrait or silhouette is not laid out");
+  }
+  type Box = { x: number; y: number; width: number; height: number };
+  const boxesIntersect = (a: Box, b: Box) =>
+    a.x < b.x + b.width && a.x + a.width > b.x && a.y < b.y + b.height && a.y + a.height > b.y;
+  expect(boxesIntersect(title, control)).toBe(false);
+  expect(boxesIntersect(title, glyph)).toBe(false);
+  expect(glyph.x).toBeGreaterThanOrEqual(control.x - 1);
+  expect(glyph.y).toBeGreaterThanOrEqual(control.y - 1);
+  expect(glyph.x + glyph.width).toBeLessThanOrEqual(control.x + control.width + 1);
+  expect(glyph.y + glyph.height).toBeLessThanOrEqual(control.y + control.height + 1);
+  expect(glyph.width).toBeGreaterThanOrEqual(control.width * 0.6);
+  expect(glyph.height).toBeGreaterThanOrEqual(control.height * 0.6);
+  const url = page.url();
+  await button.click({ force: true });
+  await expect(page.getByRole("dialog")).toHaveCount(0);
+  await expect(page).toHaveURL(url);
+}
+
+test("Contact Image title and portrait do not overlap in create, edit or clone", async ({
+  page,
+}) => {
+  const { org } = await openCreate(page);
+  await expectContactImagePortrait(page);
+  await saveContact(page, "Portrait Contact");
+  const sourceId = contactRecordIdFromPath(new URL(page.url()).pathname);
+  await page.goto(moduleRecordEditPath(org.slug, CONTACTS_TAB, sourceId));
+  await expect(page.getByRole("heading", { name: "Edit Contact" })).toBeVisible();
+  await expectContactImagePortrait(page);
+  await page.goto(moduleRecordClonePath(org.slug, CONTACTS_TAB, sourceId));
+  await expect(page.getByRole("heading", { name: "Clone Contact" })).toBeVisible();
+  await expectContactImagePortrait(page);
+});
+
+test("creates contact with Account Name chosen via lookup dialog and reflects account on detail", async ({
+  page,
+}) => {
+  await openCreate(page);
+  await page.getByRole("textbox", { name: "Last Name", exact: true }).fill("Account Contact");
+  await page.getByRole("button", { name: "Open Account Name lookup", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Choose Account" });
+  await expect(dialog).toBeVisible();
+  const firstDataRow = dialog.locator("tbody tr").first();
+  await expect(firstDataRow).toBeVisible();
+  const nameLink = firstDataRow.locator("td").nth(1).getByRole("link");
+  await expect(nameLink).toBeVisible();
+  await expect(nameLink).toHaveAttribute("href", /\/tab\/Accounts\//);
+  const chosenName = (await nameLink.innerText()).trim();
+  await firstDataRow.click();
+  await expect(dialog).toHaveCount(0);
+
+  await expect(page.locator('[data-form-field="Account_Name"] input[type="text"]')).toHaveValue(
+    chosenName,
+  );
+
+  const createRequest = page.waitForRequest(
+    (request) =>
+      request.method() === "POST" && new URL(request.url()).pathname === "/crm/v2.2/Contacts",
+  );
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  const request = await createRequest;
+  const body = request.postDataJSON().data[0];
+  expect(body.Last_Name).toBe("Account Contact");
+  expect(body.Account_Name).toMatchObject({
+    name: chosenName,
+  });
+  expect(typeof body.Account_Name.id).toBe("string");
+
+  const header = page.locator("[data-record-header]");
+  await expect(header).toBeVisible();
+  await expect(header).toContainText("Account Contact");
+  await expect(header.getByRole("link", { name: chosenName })).toBeVisible();
+
+  const detailsAccountLink = page
+    .locator('[data-detail-field="Account_Name"]')
+    .getByRole("link", { name: chosenName });
+  await expect(detailsAccountLink).toBeVisible();
 });
 
 test("Contact Information and address groups follow spec field order", async ({ page }) => {
@@ -214,4 +380,31 @@ test("creates with common field types", async ({ page }) => {
   expect(body.Twitter).toBe("mepcity");
   expect(body.Lead_Source).toBe("Advertisement");
   expect(body.Email_Opt_Out).toBe(true);
+});
+
+test("Edit Page Layout shares the title row and the portrait keeps its ring", async ({ page }) => {
+  await openCreate(page);
+  const strip = page.locator("[data-record-form-strip]");
+  const title = await strip.locator("[data-record-form-title]").boundingBox();
+  const layout = await strip
+    .getByRole("button", { name: "Edit Page Layout", exact: true })
+    .boundingBox();
+  if (!title || !layout) throw new Error("Missing title strip row");
+  // F-01: the link sits on the title row, immediately right of "Create Contact".
+  expect(layout.x).toBeGreaterThan(title.x + title.width);
+  expect(layout.y).toBeGreaterThanOrEqual(title.y);
+  expect(layout.y + layout.height).toBeLessThanOrEqual(title.y + title.height + 1);
+
+  // F-05: the placeholder stays the ringed portrait inside the control, below its label.
+  const label = await page
+    .locator("[data-record-form-section-title]")
+    .filter({ hasText: "Contact Image" })
+    .boundingBox();
+  const image = page.getByRole("button", { name: "Contact Image", exact: true });
+  const imageBox = await image.boundingBox();
+  if (!label || !imageBox) throw new Error("Missing Contact Image field");
+  expect(imageBox.y).toBeGreaterThan(label.y + label.height);
+  expect(Math.abs(imageBox.width - 48)).toBeLessThanOrEqual(1);
+  expect(Math.abs(imageBox.height - 48)).toBeLessThanOrEqual(1);
+  await expect(image.locator(".record-profile .record-profile-silhouette")).toHaveCount(1);
 });

@@ -1,8 +1,12 @@
+import { DOTTED_DAY_FIRST_FORMAT, formatOptionsFromOrganization } from "@crm/core/format";
 import type { FieldDataType, FieldDefinition, FieldValue, RecordService } from "@crm/core/records";
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
+import { RecordChoice } from "@/components/ui/record-choice";
+import { FormatProvider } from "@/lib/format-context";
+import { dealsFormRules } from "@/modules/deals/deals-form-rules";
 import { render } from "@/test/render";
 import { FieldInput, type FieldInputProps } from "./field-input";
 import { FormRow } from "./form-row";
@@ -97,6 +101,31 @@ test("integer keeps a typed decimal so Save can report it", async () => {
   expect((input as HTMLInputElement).value).toBe("12.5");
   expect(change).toHaveBeenLastCalledWith(12.5);
 });
+test("number limits stop the entry at the business bounds", async () => {
+  const user = userEvent.setup();
+  render(<Controlled type="integer" initial={99} numberLimits={{ min: 0, max: 100 }} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  input.focus();
+  await user.keyboard("{ArrowUp}");
+  expect(input.value).toBe("100");
+  await user.keyboard("{ArrowUp}");
+  expect(input.value).toBe("100");
+  await user.clear(input);
+  await user.type(input, "1");
+  input.focus();
+  await user.keyboard("{ArrowDown}");
+  expect(input.value).toBe("0");
+  await user.keyboard("{ArrowDown}");
+  expect(input.value).toBe("0");
+});
+test("an entry without limits keeps stepping past the Deals bounds", async () => {
+  const user = userEvent.setup();
+  render(<Controlled type="integer" initial={99} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  input.focus();
+  await user.keyboard("{ArrowUp}{ArrowUp}");
+  expect(input.value).toBe("101");
+});
 test("date entry keeps the DD.MM.YYYY mask and hands YYYY-MM-DD to the form model", async () => {
   const user = userEvent.setup();
   const change = vi.fn();
@@ -111,7 +140,7 @@ test("date entry keeps the DD.MM.YYYY mask and hands YYYY-MM-DD to the form mode
   expect(change).toHaveBeenLastCalledWith(null);
   await user.type(input, "0");
   expect(input.value).toBe("0");
-  expect(change).toHaveBeenLastCalledWith(null);
+  expect(change).toHaveBeenLastCalledWith("0");
   await user.type(input, "4.07.1998");
   expect(input.value).toBe("04.07.1998");
   expect(change).toHaveBeenLastCalledWith("1998-07-04");
@@ -134,7 +163,7 @@ test("date keeps a partial day when deleting from a filled value", async () => {
   input.setSelectionRange(input.value.length, input.value.length);
   await user.type(input, "{Backspace}");
   expect(input.value).toBe("15.02.202");
-  expect(change).toHaveBeenLastCalledWith(null);
+  expect(change).toHaveBeenLastCalledWith("15.02.202");
   await user.type(input, "6");
   expect(input.value).toBe("15.02.2026");
   expect(change).toHaveBeenLastCalledWith("2026-02-15");
@@ -148,10 +177,33 @@ test("date keeps an impossible day while it is being corrected", async () => {
   input.setSelectionRange(input.value.length, input.value.length);
   await user.type(input, "{Backspace}");
   expect(input.value).toBe("30.02.202");
-  expect(change).toHaveBeenLastCalledWith(null);
+  expect(change).toHaveBeenLastCalledWith("30.02.202");
   await user.type(input, "6");
   expect(input.value).toBe("30.02.2026");
   expect(change).toHaveBeenLastCalledWith("2026-02-30");
+});
+test("a half-typed date stays a model value while a cleared one is empty", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="date" initial="2026-02-15" onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  input.setSelectionRange(input.value.length, input.value.length);
+  await user.type(input, "{Backspace}{Backspace}");
+  expect(input.value).toBe("15.02.20");
+  expect(change).toHaveBeenLastCalledWith("15.02.20");
+  await user.clear(input);
+  expect(change).toHaveBeenLastCalledWith(null);
+});
+test("date shows a half-typed entry that is held in the model", () => {
+  const noop = () => {};
+  const { rerender } = render(
+    <FieldInput field={field("date")} value="15.02.202" onChange={noop} />,
+  );
+  expect((screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement).value).toBe(
+    "15.02.202",
+  );
+  rerender(<FieldInput field={field("date")} value={null} onChange={noop} />);
+  expect((screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement).value).toBe("");
 });
 test("date follows a model written from outside the input", () => {
   const noop = () => {};
@@ -250,34 +302,87 @@ test("owner searches name/email, selects opaque id and invokes the adjacent pick
   await user.click(screen.getByRole("button", { name: "Open owner picker" }));
   expect(picker).toHaveBeenCalledOnce();
 });
-test.each(["text", "textarea", "date", "integer", "picklist", "ownerlookup", "boolean"] as const)(
-  "%s disabled rejects interaction and errors are associated",
-  async (type) => {
-    const user = userEvent.setup();
-    const change = vi.fn();
-    render(<Controlled type={type} disabled errorMessage="Invalid example" onChange={change} />);
-    const input = screen.getByLabelText("Example");
-    expect(input.getAttribute("aria-invalid")).toBe("true");
-    const ids = input.getAttribute("aria-describedby")?.split(" ") ?? [];
-    expect(ids.some((id) => document.getElementById(id)?.textContent === "Invalid example")).toBe(
-      true,
-    );
-    await user.click(input);
-    await user.keyboard("changed");
-    expect(change).not.toHaveBeenCalled();
-    expect(screen.queryByRole("listbox")).toBeNull();
-  },
-);
+test.each([
+  "text",
+  "textarea",
+  "date",
+  "integer",
+  "bigint",
+  "picklist",
+  "ownerlookup",
+  "boolean",
+] as const)("%s disabled rejects interaction and errors are associated", async (type) => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type={type} disabled errorMessage="Invalid example" onChange={change} />);
+  const input = screen.getByLabelText("Example");
+  expect(input.getAttribute("aria-invalid")).toBe("true");
+  const ids = input.getAttribute("aria-describedby")?.split(" ") ?? [];
+  expect(ids.some((id) => document.getElementById(id)?.textContent === "Invalid example")).toBe(
+    true,
+  );
+  await user.click(input);
+  await user.keyboard("changed");
+  expect(change).not.toHaveBeenCalled();
+  expect(screen.queryByRole("listbox")).toBeNull();
+});
 test("profile placeholder is noninteractive and unsupported types render nothing", () => {
   render(<Controlled type="profileimage" />);
   expect(screen.getByRole("img", { name: "Example" })).toBeTruthy();
   expect(screen.queryByRole("button")).toBeNull();
   cleanup();
-  for (const type of ["multi_module_lookup", "datetime", "bigint"] as const) {
+  for (const type of ["multi_module_lookup"] as const) {
     const result = render(<Controlled type={type} />);
     expect(result.container.innerHTML).toBe("");
     cleanup();
   }
+});
+
+test("bigint keeps a long integer as digit text instead of a number", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="bigint" initial={null} onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  await user.type(input, "9007199254740993");
+  expect(change).toHaveBeenLastCalledWith("9007199254740993");
+  expect(input.getAttribute("inputmode")).toBe("numeric");
+  await user.clear(input);
+  expect(change).toHaveBeenLastCalledWith(null);
+});
+
+test("bigint shows the digit text stored by the service", () => {
+  render(<FieldInput field={field("bigint")} value="123456789012345678" onChange={() => {}} />);
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  expect(input.value).toBe("123456789012345678");
+});
+
+test("bigint caps the entry at the field's own length limit", () => {
+  render(
+    <FieldInput
+      field={{ ...field("bigint"), maxLength: 18 }}
+      value="123456789012345678"
+      onChange={() => {}}
+    />,
+  );
+  const input = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  expect(input.maxLength).toBe(18);
+});
+
+test("bigint is drawn in the same frame as the numeric entries", () => {
+  const { container: bigintContainer } = render(
+    <FieldInput field={field("bigint")} value="42" onChange={() => {}} />,
+  );
+  const bigintInput = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  const bigintFrame = bigintContainer.querySelector(".record-input-frame")?.className;
+  const bigintAria = bigintInput.getAttribute("aria-invalid");
+  cleanup();
+  const { container: numberContainer } = render(
+    <FieldInput field={field("integer")} value={42} onChange={() => {}} />,
+  );
+  const numberInput = screen.getByRole("textbox", { name: "Example" }) as HTMLInputElement;
+  expect(numberContainer.querySelector(".record-input-frame")?.className).toBe(bigintFrame);
+  expect(numberInput.className).toBe(bigintInput.className);
+  expect(numberInput.getAttribute("aria-invalid")).toBe(bigintAria);
 });
 
 test("lookup input with registered target displays value and opens selector dialog", async () => {
@@ -405,10 +510,10 @@ test("lookup input with unregistered target renders with laterModule and blocks 
   const user = userEvent.setup();
   const change = vi.fn();
   const lookupField: FieldDefinition = {
-    apiName: "Account_Name",
-    label: "Account Name",
+    apiName: "Doc_Ref",
+    label: "Doc Ref",
     dataType: "lookup",
-    lookup: { module: "Accounts" },
+    lookup: { module: "Documents" },
     required: false,
     readOnly: false,
     unique: false,
@@ -420,19 +525,19 @@ test("lookup input with unregistered target renders with laterModule and blocks 
     <Controlled
       type="lookup"
       field={lookupField}
-      initial={{ module: "Accounts", id: "acc-1", name: "Acme Corp" }}
+      initial={{ module: "Documents", id: "doc-1", name: "Big Doc" }}
       onChange={change}
     />,
   );
 
-  const input = screen.getByRole("textbox", { name: "Account Name" }) as HTMLInputElement;
-  expect(input.value).toBe("Acme Corp");
+  const input = screen.getByRole("textbox", { name: "Doc Ref" }) as HTMLInputElement;
+  expect(input.value).toBe("Big Doc");
   expect(input.readOnly).toBe(true);
-  expect(input.getAttribute("data-later-module")).toBe("M3");
+  expect(input.getAttribute("data-later-module")).toBe("M9");
   expect(input.getAttribute("aria-disabled")).toBe("true");
 
-  const btn = screen.getByRole("button", { name: "Open Account Name lookup" });
-  expect(btn.getAttribute("data-later-module")).toBe("M3");
+  const btn = screen.getByRole("button", { name: "Open Doc Ref lookup" });
+  expect(btn.getAttribute("data-later-module")).toBe("M9");
   expect(btn.getAttribute("aria-disabled")).toBe("true");
 
   // Clicking button does not open dialog
@@ -518,4 +623,250 @@ test("checkbox renders inside the form row control slot", () => {
   );
   const slot = document.querySelector("[data-record-form-control-slot]");
   expect(slot?.contains(screen.getByRole("checkbox"))).toBe(true);
+});
+
+test("polymorphic lookup draws a type select and clears the value when the type changes", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  const who: FieldDefinition = {
+    ...field("lookup"),
+    apiName: "Who_Id",
+    label: "Contact Name",
+    lookup: { module: "Contacts", modules: ["Contacts", "Leads"] },
+  };
+  render(
+    <Controlled
+      type="lookup"
+      field={who}
+      initial={{ module: "Contacts", id: "1", name: "Ada" }}
+      onChange={change}
+    />,
+  );
+  const select = screen.getByRole("button", { name: /Contact Name module/ });
+  expect(select.textContent).toContain("Contact");
+  await user.click(select);
+  await user.click(screen.getByRole("option", { name: "Lead" }));
+  expect(change).toHaveBeenLastCalledWith(null);
+});
+
+test.each(["ALARM", "RRULE"] as const)(
+  "%s renders an off switch that stores an object",
+  async (type) => {
+    const user = userEvent.setup();
+    const change = vi.fn();
+    render(<Controlled type={type} onChange={change} />);
+    const toggle = screen.getByRole("switch", { name: "Example" });
+    expect((toggle as HTMLInputElement).checked).toBe(false);
+    await user.click(toggle);
+    expect(change.mock.calls.at(-1)?.[0]).toEqual(expect.any(Object));
+    await user.click(toggle);
+    expect(change).toHaveBeenLastCalledWith(null);
+  },
+);
+
+test.each(["ALARM", "RRULE", "boolean"] as const)(
+  "activity %s keeps an accessible name without duplicate visible text",
+  (type) => {
+    render(<Controlled type={type} variant="activity" hideLabel />);
+    const control = screen.getByRole(type === "boolean" ? "checkbox" : "switch", {
+      name: "Example",
+    });
+    expect(control).toBeTruthy();
+    expect(screen.getByText("Example").classList.contains("sr-only")).toBe(true);
+  },
+);
+
+test("the label-side selector works independently of its named lookup input", async () => {
+  const change = vi.fn();
+  const user = userEvent.setup();
+  render(
+    <FormRow
+      label="Contact"
+      labelControl={
+        <RecordChoice
+          label="Contact type"
+          hideLabel
+          value="Contacts"
+          onChange={change}
+          options={[
+            { value: "Contacts", label: "Contact" },
+            { value: "Leads", label: "Lead" },
+          ]}
+        />
+      }
+      controlId="person"
+      column="full"
+    >
+      <Controlled type="text" id="person" />
+    </FormRow>,
+  );
+  const selector = screen.getByRole("button", { name: "Contact type" });
+  expect(selector.closest("label")).toBeNull();
+  await user.click(selector);
+  await user.click(screen.getByRole("option", { name: "Lead" }));
+  expect(change).toHaveBeenCalledWith("Leads");
+  expect(screen.getByRole("textbox", { name: "Example" }).id).toBe("person");
+});
+
+test("the default toggle retains its visible label", () => {
+  render(<Controlled type="ALARM" />);
+  expect(screen.getByRole("switch", { name: "Example" })).toBeTruthy();
+  expect(screen.getByText("Example").classList.contains("sr-only")).toBe(false);
+});
+
+test("currency help opens on click or keyboard, dismisses and never edits the amount", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <Controlled
+      type="currency"
+      field={{ ...field("currency"), apiName: "Amount", label: "Amount" }}
+      initial={125}
+      onChange={change}
+      currencyPrefix="$"
+      currencyHelp={dealsFormRules.currencyHelp?.Amount}
+    />,
+  );
+  const amount = screen.getByRole("textbox", { name: "Amount" });
+  const trigger = screen.getByRole("button", { name: "Amount information" });
+  await user.hover(trigger);
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await user.click(trigger);
+  expect(screen.getByRole("dialog", { name: "Amount information" })).toBeTruthy();
+  expect(screen.getByText("20 + 20").tagName).toBe("STRONG");
+  expect(screen.getByText("40").tagName).toBe("STRONG");
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await waitFor(() => expect(document.activeElement).toBe(trigger));
+  await user.keyboard("{Enter}");
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  await user.click(amount);
+  expect(screen.queryByRole("dialog")).toBeNull();
+  trigger.focus();
+  await user.keyboard(" ");
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  await user.keyboard("{Escape}");
+  expect((screen.getByRole("textbox", { name: "Amount" }) as HTMLInputElement).value).toBe("125");
+  expect(change).not.toHaveBeenCalled();
+});
+
+test("text suggestions open, filter, select with keyboard, and preserve custom text", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <Controlled
+      type="text"
+      suggestions={["Email", "Call", "Meeting", "Send Letter", "Product Demo"]}
+      onChange={change}
+    />,
+  );
+  const input = screen.getByRole("combobox", { name: "Example" });
+  await user.click(input);
+  expect(screen.getAllByRole("option")).toHaveLength(5);
+  await user.type(input, "mee");
+  expect(screen.getAllByRole("option")).toHaveLength(1);
+  await user.keyboard("{ArrowDown}{Enter}");
+  expect((input as HTMLInputElement).value).toBe("Meeting");
+  expect(change).toHaveBeenLastCalledWith("Meeting");
+  await user.click(input);
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("listbox")).toBeNull();
+  await user.clear(input);
+  await user.type(input, "Custom follow up");
+  await user.tab();
+  expect((input as HTMLInputElement).value).toBe("Custom follow up");
+  expect(change).toHaveBeenLastCalledWith("Custom follow up");
+});
+
+test("calendar chooses a model day, dismisses, and keeps invalid and partial text", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="date" initial="2026-11-10" onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" });
+  await user.click(input);
+  const day = screen.getByRole("button", { name: /November 15, 2026/ });
+  await user.click(day);
+  expect((input as HTMLInputElement).value).toBe("15.11.2026");
+  expect(change).toHaveBeenLastCalledWith("2026-11-15");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await user.click(input);
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await user.clear(input);
+  await user.type(input, "31.02.2026");
+  expect((input as HTMLInputElement).value).toBe("31.02.2026");
+  expect(change).toHaveBeenLastCalledWith("2026-02-31");
+  await user.clear(input);
+  await user.type(input, "12.0");
+  expect((input as HTMLInputElement).value).toBe("12.0");
+  expect(change).toHaveBeenLastCalledWith("12.0");
+});
+
+test("every date field opens a calendar without a module opt-in", async () => {
+  const user = userEvent.setup();
+  render(<Controlled type="date" />);
+  await user.click(screen.getByRole("textbox", { name: "Example" }));
+  const dialog = screen.getByRole("dialog", { name: "Example calendar" });
+  const input = screen.getByRole("textbox", { name: "Example" });
+  expect(input.getAttribute("aria-haspopup")).toBe("dialog");
+  expect(input.getAttribute("aria-details")).toBe(dialog.id);
+  expect(input.hasAttribute("aria-expanded")).toBe(false);
+  expect(input.hasAttribute("aria-controls")).toBe(false);
+  await user.keyboard("{Escape}");
+  expect(input.hasAttribute("aria-details")).toBe(false);
+});
+
+test("calendar supports keyboard opening and a disabled field cannot open it", async () => {
+  const user = userEvent.setup();
+  render(<Controlled type="date" initial="2026-11-10" />);
+  const input = screen.getByRole("textbox", { name: "Example" });
+  input.focus();
+  await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+  expect(screen.getByRole("dialog", { name: "Example calendar" })).toBeTruthy();
+  await user.keyboard("{ArrowRight}{Enter}");
+  expect((input as HTMLInputElement).value).toBe("11.11.2026");
+  cleanup();
+  render(<Controlled type="date" disabled />);
+  await user.click(screen.getByRole("textbox", { name: "Example" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+test("calendar dismisses on an outside click without changing the date", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <>
+      <Controlled type="date" initial="2026-11-10" onChange={change} />
+      <button type="button">Outside</button>
+    </>,
+  );
+  await user.click(screen.getByRole("textbox", { name: "Example" }));
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Outside" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(change).not.toHaveBeenCalled();
+});
+
+test("form accepts organization format: 1.234,56 amount maps to 1234.56 and 30.06.2026 date maps to 2026-06-30", async () => {
+  const user = userEvent.setup();
+  const changeAmount = vi.fn();
+  const changeDate = vi.fn();
+  const orgFormat = formatOptionsFromOrganization(DOTTED_DAY_FIRST_FORMAT);
+  render(
+    <FormatProvider format={orgFormat}>
+      <Controlled type="currency" initial={null} onChange={changeAmount} />
+      <Controlled type="date" initial={null} onChange={changeDate} />
+    </FormatProvider>,
+  );
+  const [amountInput, dateInput] = screen.getAllByRole("textbox", { name: "Example" });
+  expect(amountInput).toBeDefined();
+  expect(dateInput).toBeDefined();
+  if (!amountInput || !dateInput) return;
+
+  await user.type(amountInput, "1.234,56");
+  await user.tab();
+  expect(changeAmount).toHaveBeenLastCalledWith(1234.56);
+
+  await user.type(dateInput, "30.06.2026");
+  expect(changeDate).toHaveBeenLastCalledWith("2026-06-30");
 });

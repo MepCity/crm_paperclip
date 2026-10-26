@@ -1,5 +1,18 @@
+import { execFileSync } from "node:child_process";
+import { mkdtempSync, rmSync } from "node:fs";
+import { tmpdir } from "node:os";
+import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it, vi } from "vitest";
-import { confirmedDead, parseIpcTable, type Segment, selectOrphans } from "./sysv-ipc";
+import {
+  confirmedDead,
+  parseIpcTable,
+  parseSemaphoreProbes,
+  parseSemaphoreTable,
+  type Segment,
+  selectOrphans,
+  selectSemaphoreOrphans,
+} from "./sysv-ipc";
 
 const ipcHeader =
   "T ID KEY MODE OWNER GROUP CREATOR CGROUP NATTCH SEGSZ CPID LPID ATIME DTIME CTIME\nShared Memory:\n";
@@ -78,6 +91,110 @@ describe("creator process probe", () => {
       expect(confirmedDead(765)).toBe(false);
     } finally {
       kill.mockRestore();
+    }
+  });
+});
+
+const semHeader = "T ID KEY MODE OWNER GROUP CREATOR CGROUP NSEMS OTIME CTIME\nSemaphores:\n";
+const semRow =
+  "s 987 0x123 --rw------- test-owner test-group test-owner test-group 17 no-entry 10:00:00\n";
+
+describe("semaphore parsing and selection", () => {
+  const probe = {
+    id: 987,
+    uid: 501,
+    nsems: 17,
+    createdAt: now - 600_000,
+    marker: 537,
+    pid: 765,
+    dead: true,
+    key: 0x123,
+  };
+  const opts = { owner: "test-owner", uid: 501, now };
+  it("selects only a confirmed-dead PostgreSQL set at least five minutes old", () => {
+    const table = parseSemaphoreTable(semHeader + semRow, now);
+    expect(selectSemaphoreOrphans(table, [probe], opts)).toEqual([probe]);
+    expect(
+      selectSemaphoreOrphans(table, [{ ...probe, createdAt: now - 300_000 }], opts),
+    ).toHaveLength(1);
+    expect(parseSemaphoreProbes(`987 501 17 ${probe.createdAt / 1000} 537 765 1 291`)).toEqual([
+      probe,
+    ]);
+  });
+  it.each([
+    { marker: 0 },
+    { pid: 0 },
+    { dead: false },
+    { nsems: 1 },
+    { uid: 502 },
+    { createdAt: now - 299_999 },
+    { createdAt: now + 1 },
+    { key: 0x124 },
+  ])("protects an ineligible probe: %j", (change) => {
+    expect(
+      selectSemaphoreOrphans(
+        parseSemaphoreTable(semHeader + semRow, now),
+        [{ ...probe, ...change }],
+        opts,
+      ),
+    ).toEqual([]);
+  });
+  it.each([
+    semHeader + semRow.replaceAll("test-owner", "other-owner"),
+    semHeader + semRow.replace(" 17 ", " 1 "),
+    semHeader + semRow.replace("10:00:00", "10:09:00"),
+    "",
+    semRow,
+    semHeader.replace("NSEMS", "UNKNOWN") + semRow,
+    `${semHeader}${semRow}s broken`,
+    semHeader + semRow + semRow,
+    semHeader + semRow.replace("10:00:00", "25:00:00"),
+  ])("refuses malformed or ineligible tables", (output) => {
+    expect(selectSemaphoreOrphans(parseSemaphoreTable(output, now), [probe], opts)).toEqual([]);
+  });
+  it.each(["987 501 17", "987 501 17 1 537 765 2 291", "oops 501 17 1 537 765 1 291"])(
+    "rejects malformed helper output",
+    (output) => {
+      expect(() => parseSemaphoreProbes(output)).toThrow();
+    },
+  );
+});
+
+// Exercise the actual native recheck/removal branch with fake syscalls only.
+describe("native semaphore recheck", () => {
+  it("rechecks ownership, marker, PID, age and identifier reuse before removal", () => {
+    const dir = mkdtempSync(join(tmpdir(), "crm-ipc-native-test-"));
+    try {
+      const binary = join(dir, "harness");
+      execFileSync("cc", [
+        "-Wall",
+        "-Wextra",
+        "-Werror",
+        "-o",
+        binary,
+        fileURLToPath(new URL("./sysv-semaphore-harness.c", import.meta.url)),
+      ]);
+      for (const scenario of [
+        "valid",
+        "owner",
+        "size",
+        "marker",
+        "young",
+        "alive",
+        "eperm",
+        "unknown",
+        "read-error",
+        "zero-pid",
+        "key-reuse",
+        "ctime-reuse",
+        "pid-reuse",
+      ]) {
+        expect(execFileSync(binary, [scenario], { encoding: "utf8" }), scenario).toContain(
+          `removals=${scenario === "valid" ? 1 : 0}`,
+        );
+      }
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
     }
   });
 });

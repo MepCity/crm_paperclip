@@ -1038,7 +1038,14 @@ describe("interim fixture policies (not reference parity)", () => {
     const token = (value: unknown): value is CriteriaToken =>
       typeof value === "object" && value !== null && !Array.isArray(value) && "token" in value;
     const same = (left: FieldValue, right: FieldValue) => {
-      if (typeof left === "object" && left && typeof right === "object" && right)
+      if (
+        typeof left === "object" &&
+        left &&
+        typeof right === "object" &&
+        right &&
+        "id" in left &&
+        "id" in right
+      )
         return left.id === right.id && left.module === right.module;
       return left === right;
     };

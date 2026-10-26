@@ -32,6 +32,8 @@ import {
   encodeModule,
   encodeRecord,
   encodeView,
+  MAX_CRITERIA_GROUP_SIZE,
+  MAX_CRITERIA_NODES,
 } from "./codec";
 import { encodeError } from "./errors";
 
@@ -92,7 +94,44 @@ const tokens: { port: CriteriaToken; wire: unknown }[] = [
   { port: { token: "CATEGORY", name: "Junk" }, wire: `\${CATEGORY.Junk}` },
 ];
 
+// Root plus 20 child groups; leaves fill each group up to the sibling limit.
+function criteriaTree(nodes: number) {
+  let leaves = nodes - 21;
+  return {
+    group_operator: "AND",
+    group: Array.from({ length: 20 }, () => {
+      const size = Math.min(leaves, MAX_CRITERIA_GROUP_SIZE);
+      leaves -= size;
+      return {
+        group_operator: "OR",
+        group: Array.from({ length: size }, () => ({
+          field: { api_name: "Converted__s" },
+          comparator: "equal",
+          value: false,
+        })),
+      };
+    }),
+  };
+}
+
 describe("wire codec", () => {
+  it("bounds criteria value arrays without changing accepted values", () => {
+    const value = Array.from({ length: MAX_CRITERIA_GROUP_SIZE }, (_, i) => `Value ${i}`);
+    const leaf = { field: { api_name: "Company" }, comparator: "equal", value };
+    expect(decodeCriteria(leaf)).toEqual({ field: "Company", comparator: "equal", value });
+    expect(() => decodeCriteria({ ...leaf, value: [...value, "extra"] })).toThrow(
+      expect.objectContaining({ fieldErrors: { filters: expect.any(Array) } }),
+    );
+  });
+  it("shares a total node budget across sibling groups and resets it per decode", () => {
+    const boundary = criteriaTree(MAX_CRITERIA_NODES);
+    expect(encodeCriteria(decodeCriteria(boundary))).toEqual(boundary);
+    expect(() => decodeCriteria(criteriaTree(MAX_CRITERIA_NODES + 1))).toThrow(
+      expect.objectContaining({ fieldErrors: { filters: expect.any(Array) } }),
+    );
+    expect(encodeCriteria(decodeCriteria(boundary))).toEqual(boundary);
+  });
+
   it.each(["equal", "contains", "not_contains", "less_equal"] as const)(
     "preserves comparator %s and each token through JSON",
     (comparator) => {
@@ -603,6 +642,8 @@ describe("wire codec", () => {
       columns: [Object.keys(values), []],
     });
     expect(encodeField(module.fields.at(-1) as FieldDefinition)).toEqual({
+      id: "field:Choice",
+      custom_field: false,
       api_name: "Choice",
       field_label: "Choice",
       data_type: "picklist",
@@ -615,6 +656,12 @@ describe("wire codec", () => {
       pick_list_values: [{ display_value: "Shown", actual_value: "Stored" }],
       lookup: { module: { api_name: "Contacts" } },
     });
+  });
+  it("preserves core custom identities and ignores them when decoding domain fields", () => {
+    const definition = field("Custom_Text", "text");
+    const encoded = encodeField({ ...definition, id: "local-custom-id", custom: true });
+    expect(encoded).toMatchObject({ id: "local-custom-id", custom_field: true });
+    expect(decodeField(encoded)).toEqual(definition);
   });
   it("round-trips a selected view, nested groups, arrays, nulls and sort", () => {
     const view: ListView = {
@@ -746,4 +793,149 @@ describe("named reference wire contract", () => {
     expect(encodeField(definition).data_type).toBe("date");
     expect(decodeField(encodeField(definition))).toEqual(definition);
   });
+});
+
+describe("picklist stage metadata", () => {
+  const definition = {
+    ...field("Stage", "picklist"),
+    picklist: [
+      {
+        displayValue: "Qualification",
+        storedValue: "Qualification",
+        stage: { probability: 10, forecastCategory: "Pipeline", category: "Open" as const },
+      },
+      { displayValue: "Plain", storedValue: "Plain" },
+    ],
+  };
+  it("round-trips stages and omits stage keys on plain options", () => {
+    const encoded = json(encodeField(definition));
+    expect(encoded.pick_list_values?.[0]).toEqual({
+      display_value: "Qualification",
+      actual_value: "Qualification",
+      probability: 10,
+      forecast_category: { name: "Pipeline" },
+      deal_category: "Open",
+    });
+    expect(encoded.pick_list_values?.[1]).toEqual({
+      display_value: "Plain",
+      actual_value: "Plain",
+    });
+    expect(decodeField(encoded)).toEqual(definition);
+    expect(decodeField(encoded).picklist?.[1]).not.toHaveProperty("stage");
+  });
+  it.each([
+    { probability: 10 },
+    { forecast_category: { name: "Pipeline" } },
+    { deal_category: "Open" },
+    { probability: 10, forecast_category: { name: "Pipeline" } },
+    { probability: 10, deal_category: "Open" },
+    { forecast_category: { name: "Pipeline" }, deal_category: "Open" },
+    { probability: 10, forecast_category: { name: "Pipeline" }, deal_category: "Other" },
+    { probability: -1, forecast_category: { name: "Pipeline" }, deal_category: "Open" },
+    { probability: 101, forecast_category: { name: "Pipeline" }, deal_category: "Open" },
+    { probability: 1.5, forecast_category: { name: "Pipeline" }, deal_category: "Open" },
+    { probability: 10, forecast_category: null, deal_category: "Open" },
+  ])("rejects partial or invalid stage metadata %j", (stage) => {
+    const encoded = encodeField(definition);
+    expect(() =>
+      decodeField({
+        ...encoded,
+        pick_list_values: [
+          { display_value: "Qualification", actual_value: "Qualification", ...stage },
+        ],
+      } as unknown as Parameters<typeof decodeField>[0]),
+    ).toThrow(ValidationError);
+  });
+});
+
+describe("wire input bounds", () => {
+  it.each([
+    ["ownerlookup", { id: "member-id", name: "Member", email: "member@example.test" }],
+    ["lookup", { id: "account", name: "Account" }],
+    ["multi_module_lookup", { module: "Contacts", id: "contact", name: "Contact" }],
+  ])("rejects unknown keys inside %s without losing valid reference support", (key, ref) => {
+    expect(() => decodeInput({ [key]: ref }, metadata)).not.toThrow();
+    try {
+      decodeInput({ [key]: { ...ref, unexpected: true } }, metadata);
+      throw new Error("Expected rejection");
+    } catch (error) {
+      expect(encodeError(error)).toMatchObject({
+        status: 400,
+        body: {
+          code: "INVALID_DATA",
+          status: "error",
+          details: { fields: { [key]: ["Unknown reference key."] } },
+        },
+      });
+    }
+  });
+  it("accepts 500 siblings and rejects 501 at the root or in a nested group", () => {
+    const leaf = { field: { api_name: "Company" }, comparator: "equal", value: "Example" };
+    const group = (size: number) => ({
+      group_operator: "AND",
+      group: Array.from({ length: size }, () => leaf),
+    });
+    expect(decodeCriteria(group(500))).toMatchObject({
+      group: Array.from({ length: 500 }, () => ({
+        field: "Company",
+        comparator: "equal",
+        value: "Example",
+      })),
+    });
+    for (const criteria of [group(501), { group_operator: "OR", group: [group(501)] }]) {
+      expect(() => decodeCriteria(criteria)).toThrow(ValidationError);
+    }
+  });
+});
+
+describe("activity field codec", () => {
+  const metadata: ModuleMetadata = {
+    apiName: "Tasks",
+    singularLabel: "Task",
+    pluralLabel: "Tasks",
+    businessCardFields: [],
+    layout: [],
+    fields: [
+      field("id", "bigint"),
+      field("Remind_At", "ALARM"),
+      field("Recurring_Activity", "RRULE"),
+      {
+        ...field("Who_Id", "lookup"),
+        lookup: { module: "Contacts", modules: ["Contacts", "Leads"] },
+      },
+    ],
+  };
+  it("keeps JSON objects opaque even with reference-shaped or token-shaped keys", () => {
+    const input = {
+      Remind_At: { module: "opaque", id: "opaque", token: "opaque", nested: [null, 2, true] },
+      Recurring_Activity: { nested: { rules: ["synthetic"] } },
+      Who_Id: { module: "Leads", id: "synthetic-lead", name: "Synthetic Lead" },
+    };
+    expect(decodeInput(json(encodeInput(input, metadata)), metadata)).toEqual(input);
+    const record = { id: "123", fields: { ...input, id: "123" } };
+    expect(decodeRecord(json(encodeRecord(record, metadata)), metadata)).toEqual(record);
+    for (const definition of metadata.fields)
+      expect(decodeField(json(encodeField(definition)))).toEqual(definition);
+  });
+  it("rejects malformed objects and disallowed reference modules", () => {
+    for (const input of [
+      { Remind_At: [] },
+      { Remind_At: "text" },
+      { Recurring_Activity: 1 },
+      { Who_Id: { module: "Accounts", id: "synthetic" } },
+      { Who_Id: { id: "synthetic" } },
+    ]) {
+      expect(() => decodeInput(input, metadata)).toThrow(ValidationError);
+    }
+  });
+  it.each(["NEXT7DAYS", "TODAYANDOVERDUE", "CURRENTTIME"] as const)(
+    "round trips exact %s tokens",
+    (token) => {
+      const criteria: Criteria = { field: "Due_Date", comparator: "less_equal", value: { token } };
+      const wire = encodeCriteria(criteria);
+      if (!wire || "group" in wire) throw new Error("Expected a leaf criterion");
+      expect(wire.value).toBe(`\${${token}}`);
+      expect(decodeCriteria(json(encodeCriteria(criteria)))).toEqual(criteria);
+    },
+  );
 });

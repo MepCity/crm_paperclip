@@ -2,6 +2,7 @@
 
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
+import { useUiTranslations } from "@/i18n/client-provider";
 import "./form.css";
 
 /** Contacts form inventory chrome (F-55–F-57, M11): visible, inert until customization ships. */
@@ -21,9 +22,20 @@ export function RecordFormClientScriptTab() {
   );
 }
 
-export function RecordFormInventoryFooter() {
+export function RecordFormInventoryFooter({
+  alignEnd = false,
+  pinBottom = false,
+}: {
+  alignEnd?: boolean;
+  pinBottom?: boolean;
+}) {
   return (
-    <footer className="record-form-inventory-footer" data-record-form-inventory-footer>
+    <footer
+      className="record-form-inventory-footer"
+      data-align-end={alignEnd || undefined}
+      data-pin-bottom={pinBottom || undefined}
+      data-record-form-inventory-footer
+    >
       <span className="record-form-inventory-footer__label">Create Form Views :</span>
       <Button
         type="button"
@@ -43,6 +55,7 @@ export function RecordFormInventoryFooter() {
 }
 
 export function RecordFormEditPageLayoutLink() {
+  const t = useUiTranslations();
   return (
     <Button
       type="button"
@@ -51,7 +64,7 @@ export function RecordFormEditPageLayoutLink() {
       laterModule="M11"
       className="record-form-edit-page-layout"
     >
-      Edit Page Layout
+      {t("records.actions.editPageLayout")}
     </Button>
   );
 }

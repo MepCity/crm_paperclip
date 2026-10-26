@@ -4,6 +4,8 @@ import {
   formatDate,
   formatDateTime,
   formatNumber,
+  formatNumericDate,
+  formatNumericDateTime,
   formatRecordAuditDateTime,
 } from "@crm/core/format";
 import type { FieldDefinition, FieldValue, ModuleRecordReference } from "@crm/core/records";
@@ -32,7 +34,7 @@ export function isFieldValueEmpty(field: FieldDefinition, value: FieldValue): bo
   if (field.dataType === "picklist" && typeof value === "string" && value === "") return true;
   if (field.dataType === "lookup") {
     if (typeof value !== "object" || value === null || !("id" in value)) return true;
-    if (!value.name || value.name.trim() === "") return true;
+    if (typeof value.name !== "string" || value.name.trim() === "") return true;
     return false;
   }
   return false;
@@ -52,6 +54,10 @@ export function formatFieldValue(
     /** ISO 4217 code; when omitted, currency values use plain number formatting. */
     currencyCode?: string;
     orgSlug?: string;
+    /** Activities list cells: zero-padded `dd.mm.yyyy` dates and 12-hour times. */
+    numericDates?: boolean;
+    /** With `numericDates`, datetime cells show only the date (all-day events). */
+    dateOnly?: boolean;
   },
 ): FieldFormattedValue {
   if (value === null || value === "") return { kind: "empty" };
@@ -118,6 +124,8 @@ function valueText(
   format: FormatOptions,
   options?: {
     currencyCode?: string;
+    numericDates?: boolean;
+    dateOnly?: boolean;
   },
 ): string | null {
   if (value === null || value === "") return null;
@@ -127,10 +135,15 @@ function valueText(
   }
 
   if (field.dataType === "date" && typeof value === "string") {
-    return formatDate(value, format);
+    return options?.numericDates ? formatNumericDate(value, format) : formatDate(value, format);
   }
 
   if (field.dataType === "datetime" && typeof value === "string") {
+    if (options?.numericDates) {
+      return options.dateOnly
+        ? formatNumericDate(value, format)
+        : formatNumericDateTime(value, format);
+    }
     return formatDateTime(value, format);
   }
 
@@ -148,7 +161,12 @@ function valueText(
 
   if (typeof value === "string") return value;
   if (typeof value === "number" || typeof value === "boolean") return String(value);
-  if (typeof value === "object" && value !== null && "id" in value) {
+  if (
+    typeof value === "object" &&
+    value !== null &&
+    "id" in value &&
+    typeof value.id === "string"
+  ) {
     return "name" in value && typeof value.name === "string" && value.name ? value.name : value.id;
   }
   return null;

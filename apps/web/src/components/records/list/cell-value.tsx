@@ -2,6 +2,7 @@
 
 import type { FormatOptions } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
+import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { useOptionalOrgSlug } from "@/lib/api/client/provider";
@@ -16,6 +17,7 @@ export interface CellValueProps {
    * column is itself the link column, in which case the row address wins.
    */
   href?: string;
+  linkWebsite?: boolean;
   /**
    * User id → display name for `ownerlookup` cells. The component does not
    * resolve users; the caller supplies the map. An unknown id is shown as text.
@@ -24,20 +26,52 @@ export interface CellValueProps {
   /** Locale and time zone for date and datetime cells. */
   format: FormatOptions;
   orgSlug?: string;
+  /** ISO 4217 code for currency cells; plain number when omitted. */
+  currencyCode?: string;
+  /** Activities list cells: numeric `dd.mm.yyyy` dates. */
+  numericDates?: boolean;
+  /** Activities all-day rows: datetime cells show only the date. */
+  dateOnly?: boolean;
+  /** Meetings: a module pictogram precedes the Related To record. */
+  relatedToPictogram?: boolean;
 }
 
 /**
  * Read-only cell text for the field types that appear as columns in the list
  * views: text, email, phone, picklist, ownerlookup, date, datetime and lookup.
  */
-export function CellValue({
+export function CellValue(props: CellValueProps) {
+  const content = <CellContent {...props} />;
+  // Meetings list (MEP-590 row 30): a pictogram of the related record's module precedes it.
+  const { value } = props;
+  if (props.relatedToPictogram && typeof value === "object" && value && "module" in value) {
+    const Pictogram = value.module === "Accounts" ? Icons.building : Icons.folder;
+    return (
+      <span className="inline-flex items-center gap-1.5">
+        <Pictogram
+          aria-hidden
+          data-part="related-pictogram"
+          className="h-4 w-4 shrink-0 text-muted"
+        />
+        {content}
+      </span>
+    );
+  }
+  return content;
+}
+
+function CellContent({
   field,
   value,
   href,
+  linkWebsite,
   ownerNames = {},
   format,
   orgSlug,
   laterModule,
+  currencyCode,
+  numericDates,
+  dateOnly,
 }: CellValueProps) {
   const contextOrgSlug = useOptionalOrgSlug();
   const effectiveOrgSlug = orgSlug ?? contextOrgSlug ?? undefined;
@@ -47,13 +81,18 @@ export function CellValue({
     typeof value === "object" &&
     value &&
     "id" in value &&
-    !value.name?.trim()
+    typeof value.id === "string" &&
+    (typeof value.name !== "string" || !value.name.trim())
   ) {
     return value.id;
   }
   const rendered = formatFieldValue(field, value, ownerNames, format, {
     href: field.dataType === "lookup" ? undefined : href,
+    linkWebsite,
     orgSlug: effectiveOrgSlug,
+    currencyCode,
+    numericDates,
+    dateOnly,
   });
   if (rendered.kind === "empty") return null;
   if (rendered.kind === "link") {

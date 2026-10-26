@@ -267,6 +267,10 @@ For each role, Figtree was rendered at 0.5 px size steps across the entire eligi
 | Select User footer button | unspecified | 10.5 / 7.5 | 14.5 | 520 (1.59 → 1.58) | --text-md | detail-create-owner (2; 34, 43.5) |
 | Related-list card heading | unspecified | 11 / 8 | 15 | not measurable: no isolated lowercase `l` or `i` (15.5px at 400, 15px at 600) | new value needed: 15px | detail-notes-card (1; 40.5) |
 | Related-list card action | unspecified | 9.5 / 7 | not measurable: width fit has no minimum inside the height band (13–14 px) | not measurable: no isolated lowercase `l` or `i` (13px at 400/600) | --text-sm | detail-attachments-card (1; 39.5) |
+| Related-list action: Add Campaigns | unspecified | 9.5 / 7 | not established; same height target as Attach | not established; no new font/stem fit | --text-sm (role mapping) | m7-campaign-links-lead-card (1; 97.5) |
+| Related-list selector: Column View | unspecified | 9.5 / 7 | not established; compact selector role | not established; no new font/stem fit | --text-sm (role mapping) | m2d2-card-closed-activities (1; 79) |
+| Bottom page-view selector: Standard View | unspecified | 10.5 / 7.5 | not established | not established; no new font/stem fit | --text-md (role mapping) | detail-voc-card (1; 93) |
+| Bottom page-view secondary action: Create a custom record page | unspecified | 10.5 / 7.5 | not established | not established; no new font/stem fit | --text-md (role mapping) | detail-voc-card (1; 188.5) |
 | Related-list input placeholder | unspecified | 10 / 7.5 | 14 | not measurable: no isolated lowercase `l` or `i` (14px at 400/600) | new value needed: 14px | detail-notes-card (1; 69) |
 | Related-list empty message | unspecified | 10 / 7.5 | not measurable: width fit has no minimum inside the height band (13.5–15 px) | not measurable: no isolated lowercase `l` or `i` (14px at 400/600) | --text-md | detail-notes-card (1; 110.5) |
 | Related-list loading message | unspecified | 10 / 7.5 | not measurable: width fit has no minimum inside the height band (13.5–15 px) | 450 (i) (1.40 → 1.40) | --text-md | detail-notes-card (1; 64.5) |
@@ -334,3 +338,7 @@ The evidence supports six distinct size tiers and three weight groups across the
 ## Capture refs
 
 Existing local `home-main`, `home-leads-navigation`, and `home-more-actions` screenshots provide all measurements. Their `network.json` files plus `home-search/network.json` provide the font-request check. No new capture or live reference CRM access occurred.
+
+### Existing-capture button role limits (MEP-966)
+
+The four additional button/selector rows above use existing 2940 × 1670 screenshots at a 1470 × 835 CSS px viewport (scale 2). They measure ink heights, widths and colors only; they do not extend the earlier Figtree rendering or stem-fit experiment. Suggested tokens distinguish compact card actions/selectors from larger page-view controls. Exact font size, numeric font weight and CSS line-height remain **not established** for these rows. The existing Attach weight/size uncertainty still applies. See `record-detail.md` → Existing-capture button measurements for source slugs, geometry, colors, visible text clearances and the distinction between those clearances and CSS padding/min-width. Scroll To Top has no visible label and therefore no text role.

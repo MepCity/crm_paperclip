@@ -1,5 +1,7 @@
 "use client";
 
+import "./record-input.css";
+
 import type { ReactNode } from "react";
 import {
   Dialog as AriaDialog,
@@ -12,7 +14,8 @@ import {
 
 export { DialogTrigger as PopoverTrigger };
 
-const popoverClass = "rounded-md border border-border bg-surface shadow-lg outline-none";
+const popoverClass =
+  "bounded-popover rounded-md border border-border bg-surface shadow-lg outline-none";
 
 export function Popover({
   title,

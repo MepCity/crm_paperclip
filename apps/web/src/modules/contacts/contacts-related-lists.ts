@@ -1,26 +1,90 @@
+import { createElement } from "react";
+import { campaignsCardBody } from "@/components/records/campaigns/campaigns-card";
+import { RelatedCasesCardBody } from "@/components/records/detail/related-cases-card-body";
+import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
+import { ReportingContactsCardBody } from "@/components/records/detail/reporting-contacts-card-body";
 import { Icons } from "@/components/ui/icon";
-import type { RelatedListDefinition } from "../types";
+import { attachmentsCard } from "../attachments-card";
+import { emailsCard } from "../emails/record-card";
+import { notesCardBody, openNotesComposer } from "../notes-card";
+import { parentActivitiesBody } from "../parent-activity-cards";
+import { SocialRecordCardBody } from "../social/social-record-card";
+import type { RelatedListActivityColumnDefinition, RelatedListDefinition } from "../types";
 
 export interface ContactsRelatedListHandlers {
   onHierarchyView?: () => void;
   onNewReportingContact?: () => void;
   onAddReportingContact?: () => void;
+  onDealsNew?: () => void;
+  onCasesNew?: () => void;
+  onAddCampaigns?: () => void;
+}
+
+export interface ContactsRelatedListBadges {
+  deals?: number;
+  campaigns?: number;
+  openActivities?: number;
+  closedActivities?: number;
+}
+
+/** D-30/D-31: the rail badge is the number of records the card holds; zero draws no badge. */
+function activityBadge(
+  columns: readonly RelatedListActivityColumnDefinition[],
+  supplied?: number,
+): number | undefined {
+  const total = supplied ?? columns.reduce((sum, column) => sum + column.count, 0);
+  return total > 0 ? total : undefined;
 }
 
 export function createContactsRelatedLists(
   handlers: ContactsRelatedListHandlers = {},
+  badges: ContactsRelatedListBadges = {},
 ): readonly RelatedListDefinition[] {
+  const dealsBadge = badges.deals !== undefined && badges.deals > 0 ? badges.deals : undefined;
+  const openActivityColumns: readonly RelatedListActivityColumnDefinition[] = [
+    {
+      id: "open-tasks",
+      title: "Open Tasks",
+      count: 0,
+      emptyText: "No records found",
+      icon: Icons.check,
+    },
+    {
+      id: "open-meetings",
+      title: "Open Meetings",
+      count: 0,
+      emptyText: "No records found",
+      icon: Icons.calendar,
+    },
+  ];
+  const closedActivityColumns: readonly RelatedListActivityColumnDefinition[] = [
+    {
+      id: "closed-tasks",
+      title: "Closed Tasks",
+      count: 0,
+      emptyText: "No records found",
+      icon: Icons.check,
+    },
+    {
+      id: "closed-meetings",
+      title: "Closed Meetings",
+      count: 0,
+      emptyText: "No records found",
+      icon: Icons.calendar,
+    },
+  ];
   return [
     {
       id: "notes",
+      renderBody: notesCardBody("Contacts"),
       title: "Notes",
-      moduleKey: "M6",
+      moduleKey: "M2",
       order: 1,
       targetId: "related-list-notes",
       railAction: {
         id: "notes-add",
         label: "Add",
-        moduleKey: "M6",
+        onAction: openNotesComposer,
       },
       emptyStateText: "No records found",
     },
@@ -34,6 +98,7 @@ export function createContactsRelatedLists(
     },
     {
       id: "attachments",
+      renderCard: attachmentsCard("Contacts"),
       title: "Attachments",
       moduleKey: "M6",
       order: 3,
@@ -66,27 +131,39 @@ export function createContactsRelatedLists(
     },
     {
       id: "deals",
+      renderBody: ({ record, recordPath, definition }) =>
+        record
+          ? createElement(RelatedDealsCardBody, {
+              managerRecord: record,
+              filterField: definition.recordFilterField ?? "Contact_Name",
+              dealRecordPath: (id) => recordPath("Deals", id),
+            })
+          : undefined,
       title: "Deals",
       moduleKey: "M4",
       order: 5,
       targetId: "related-list-deals",
+      countBadge: dealsBadge,
+      recordFilterField: "Contact_Name",
       upperControls: [
         {
           id: "new-deal",
           label: "New Deal",
           type: "button",
           moduleKey: "M4",
+          onAction: handlers.onDealsNew,
         },
       ],
       emptyStateText: "No records found",
     },
     {
       id: "open-activities",
+      renderBody: parentActivitiesBody("Contacts", "open"),
       title: "Open Activities",
       moduleKey: "M5",
       order: 6,
       targetId: "related-list-open-activities",
-      countBadge: 1,
+      countBadge: activityBadge(openActivityColumns, badges.openActivities),
       upperControls: [
         {
           id: "add-new",
@@ -115,30 +192,16 @@ export function createContactsRelatedLists(
           icon: Icons.diagonalExpand,
         },
       ],
-      activityColumns: [
-        {
-          id: "open-tasks",
-          title: "Open Tasks",
-          count: 0,
-          emptyText: "No records found",
-          icon: Icons.check,
-        },
-        {
-          id: "open-meetings",
-          title: "Open Meetings",
-          count: 0,
-          emptyText: "No records found",
-          icon: Icons.calendar,
-        },
-      ],
+      activityColumns: openActivityColumns,
     },
     {
       id: "closed-activities",
+      renderBody: parentActivitiesBody("Contacts", "closed"),
       title: "Closed Activities",
       moduleKey: "M5",
       order: 7,
       targetId: "related-list-closed-activities",
-      countBadge: 1,
+      countBadge: activityBadge(closedActivityColumns, badges.closedActivities),
       upperControls: [
         {
           id: "column-view-closed",
@@ -161,22 +224,7 @@ export function createContactsRelatedLists(
           icon: Icons.diagonalExpand,
         },
       ],
-      activityColumns: [
-        {
-          id: "closed-tasks",
-          title: "Closed Tasks",
-          count: 0,
-          emptyText: "No records found",
-          icon: Icons.check,
-        },
-        {
-          id: "closed-meetings",
-          title: "Closed Meetings",
-          count: 0,
-          emptyText: "No records found",
-          icon: Icons.calendar,
-        },
-      ],
+      activityColumns: closedActivityColumns,
     },
     {
       id: "invited-meetings",
@@ -204,27 +252,37 @@ export function createContactsRelatedLists(
     },
     {
       id: "cases",
+      renderBody: ({ record, recordPath }) =>
+        record
+          ? createElement(RelatedCasesCardBody, {
+              managerRecord: record,
+              filterField: "Related_To",
+              caseRecordPath: (id) => recordPath("Cases", id),
+            })
+          : undefined,
       title: "Cases",
-      moduleKey: "M8",
+      moduleKey: "M2",
       order: 10,
       targetId: "related-list-cases",
       railAction: {
         id: "cases-add",
         label: "Add",
-        moduleKey: "M8",
+        moduleKey: "M2",
+        onAction: handlers.onCasesNew,
       },
       upperControls: [
         {
           id: "assign-cases",
           label: "Assign",
           type: "button",
-          moduleKey: "M8",
+          moduleKey: "M2",
         },
         {
           id: "new-case",
           label: "New",
           type: "button",
-          moduleKey: "M8",
+          moduleKey: "M2",
+          onAction: handlers.onCasesNew,
         },
       ],
       emptyStateText: "No records found",
@@ -297,6 +355,7 @@ export function createContactsRelatedLists(
     },
     {
       id: "emails",
+      renderCard: emailsCard("Contacts"),
       title: "Emails",
       moduleKey: "M10",
       order: 14,
@@ -345,16 +404,28 @@ export function createContactsRelatedLists(
     },
     {
       id: "campaigns",
+      renderBody: ({ record, recordPath }) =>
+        record
+          ? campaignsCardBody("Contacts", record.id, (id) => recordPath("Campaigns", id))
+          : undefined,
       title: "Campaigns",
-      moduleKey: "M7",
+      // The card is live; "M2" keeps the rail entry and controls unlocked.
+      moduleKey: "M2",
+      countBadge:
+        badges.campaigns !== undefined && badges.campaigns > 0 ? badges.campaigns : undefined,
       order: 16,
       targetId: "related-list-campaigns",
+      railAction: {
+        id: "add-campaigns",
+        label: "Add Campaigns",
+        onAction: handlers.onAddCampaigns,
+      },
       upperControls: [
         {
           id: "add-campaigns",
           label: "Add Campaigns",
           type: "button",
-          moduleKey: "M7",
+          onAction: handlers.onAddCampaigns,
         },
       ],
       emptyStateText: "No records found",
@@ -362,18 +433,22 @@ export function createContactsRelatedLists(
     {
       id: "social",
       title: "Social",
-      moduleKey: "M15",
+      // The card is static and local; "M2" keeps the rail entry unlocked.
+      moduleKey: "M2",
       order: 17,
       targetId: "related-list-social",
-      socialLinks: [
-        { id: "assoc-twitter", label: "Associate Twitter", moduleKey: "M15" },
-        { id: "assoc-facebook", label: "Associate Facebook", moduleKey: "M15" },
-      ],
-      socialGuidance:
-        "You cannot search a profile in Facebook. This has to be associated from the Social Tab",
+      renderBody: () => createElement(SocialRecordCardBody),
     },
     {
       id: "reporting-contacts",
+      renderBody: ({ record, module, orgSlug, recordPath }) =>
+        record && module
+          ? createElement(ReportingContactsCardBody, {
+              managerRecord: record,
+              orgSlug,
+              recordPath: (id) => recordPath(module, id),
+            })
+          : undefined,
       title: "Reporting Contacts",
       moduleKey: "M2",
       order: 18,

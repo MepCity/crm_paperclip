@@ -44,7 +44,15 @@ const PERIODS = new Set([
   "PREVIOUS_YEAR",
   "NEXT_YEAR",
 ]);
-const TEXT_TYPES = new Set(["text", "textarea", "email", "phone", "website", "lookup"]);
+const TEXT_TYPES = new Set([
+  "text",
+  "textarea",
+  "email",
+  "phone",
+  "website",
+  "lookup",
+  "autonumber",
+]);
 const CRITERIA_UNITS = new Set(["days", "weeks", "months"]);
 const fieldByName = new Map(leadsMetadata.fields.map((field) => [field.apiName, field]));
 
@@ -172,7 +180,14 @@ function isCriteriaToken(value: CriteriaValue): value is CriteriaToken {
     return false;
   const record = value as unknown as Record<string, unknown>;
   const keys = Object.keys(record);
-  if (record.token === "CURRENTUSER" || record.token === "TODAY") return keys.length === 1;
+  if (
+    record.token === "CURRENTUSER" ||
+    record.token === "CURRENTTIME" ||
+    record.token === "TODAY" ||
+    record.token === "NEXT7DAYS" ||
+    record.token === "TODAYANDOVERDUE"
+  )
+    return keys.length === 1;
   if (record.token === "AGEINDAYS" || record.token === "DUEINDAYS") return validAgeDueToken(record);
   if (record.token === "RELATIVE")
     return (
@@ -195,13 +210,41 @@ function comparatorFits(
   comparator: Comparator,
   value: CriteriaValue,
 ): boolean {
+  if (field.apiName === "Tag" && field.acceptsJsonArray) {
+    if (comparator === "is_empty" || comparator === "is_not_empty") return value === null;
+    return (
+      (comparator === "equal" || comparator === "not_equal") &&
+      (typeof value === "string"
+        ? value.length > 0
+        : isValueList(value) &&
+          value.length > 0 &&
+          value.every((id) => typeof id === "string" && id.length > 0))
+    );
+  }
+  if (field.acceptsJsonArray || field.dataType === "ALARM" || field.dataType === "RRULE")
+    return false;
+  if (isCriteriaToken(value) && value.token === "CURRENTTIME")
+    return (
+      field.dataType === "datetime" &&
+      ["less_than", "less_equal", "greater_than", "greater_equal"].includes(comparator)
+    );
+  if (
+    field.dataType === "lookup" &&
+    (comparator === "equal" || comparator === "not_equal") &&
+    typeof value === "object" &&
+    value !== null
+  )
+    return acceptsFieldValue(field, value as FieldValue);
   if (comparator === "is_empty" || comparator === "is_not_empty") return value === null;
   if (["contains", "not_contains", "starts_with", "ends_with"].includes(comparator))
     return TEXT_TYPES.has(field.dataType) && typeof value === "string";
   if (field.dataType === "multi_module_lookup") return false;
   if (["date", "datetime"].includes(field.dataType)) {
     if (comparator === "less_equal") {
-      return isCriteriaToken(value) && isAgeOrDueToken(value);
+      return (
+        isCriteriaToken(value) &&
+        (isAgeOrDueToken(value) || value.token === "NEXT7DAYS" || value.token === "TODAYANDOVERDUE")
+      );
     }
     if (comparator === "equal") {
       if (isCriteriaToken(value)) {
@@ -225,8 +268,15 @@ function comparatorFits(
     }
     return false;
   }
-  if (NUMBER_TYPES.has(field.dataType)) {
-    const number = (item: FieldValue) => typeof item === "number" && acceptsFieldValue(field, item);
+  // bigint columns store digit strings; the filter panel sends plain numbers for them while
+  // existing string equality keeps working.
+  if (
+    NUMBER_TYPES.has(field.dataType) ||
+    (field.dataType === "bigint" && (typeof value === "number" || isValueList(value)))
+  ) {
+    const number = (item: FieldValue) =>
+      typeof item === "number" &&
+      (field.dataType === "bigint" ? Number.isSafeInteger(item) : acceptsFieldValue(field, item));
     if (comparator === "between" || comparator === "not_between")
       return (
         isValueList(value) &&
@@ -249,7 +299,8 @@ function comparatorFits(
     if (isValueList(value))
       return value.length > 0 && value.every((item) => typeof item === "string");
     // Retain existing scalar equality and saved-view tokens.
-    if (comparator !== "equal") return false;
+    if (comparator !== "equal")
+      return field.dataType === "picklist" && (typeof value === "string" || value === null);
     if (isCriteriaToken(value))
       return field.dataType === "picklist"
         ? value.token === "CATEGORY"
@@ -286,7 +337,14 @@ export function validateCriteria(
 }
 
 function equalValues(left: FieldValue, right: FieldValue): boolean {
-  if (typeof left === "object" && left !== null && typeof right === "object" && right !== null)
+  if (
+    typeof left === "object" &&
+    left !== null &&
+    typeof right === "object" &&
+    right !== null &&
+    "id" in left &&
+    "id" in right
+  )
     return left.id === right.id && left.module === right.module;
   return left === right;
 }
@@ -295,6 +353,8 @@ function periodBounds(expected: CriteriaToken, now: Date): readonly [number, num
   const start = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
   const year = now.getUTCFullYear();
   const month = now.getUTCMonth();
+  if (expected.token === "NEXT7DAYS") return [-Infinity, start + 8 * DAY_MS];
+  if (expected.token === "TODAYANDOVERDUE") return [-Infinity, start + DAY_MS];
   if (expected.token === "TODAY") return [start, start + DAY_MS];
   if (expected.token !== "PERIOD") return null;
   const week = start - ((now.getUTCDay() + 6) % 7) * DAY_MS;
@@ -334,7 +394,12 @@ function matchesEqual(
   if (isValueList(expected)) return expected.some((option) => equalValues(value, option));
   if (isCriteriaToken(expected)) {
     if (expected.token === "CURRENTUSER") return value === runtime.userId;
-    if (expected.token === "TODAY" || expected.token === "PERIOD") {
+    if (
+      expected.token === "TODAY" ||
+      expected.token === "PERIOD" ||
+      expected.token === "NEXT7DAYS" ||
+      expected.token === "TODAYANDOVERDUE"
+    ) {
       const bounds = periodBounds(expected, runtime.now);
       const parsed = typeof value === "string" ? Date.parse(value) : NaN;
       return bounds !== null && parsed >= bounds[0] && parsed < bounds[1];
@@ -374,6 +439,14 @@ function matchesContains(value: FieldValue, expected: CriteriaValue): boolean {
 
 function matchesAge(value: FieldValue, expected: CriteriaValue, runtime: CriteriaRuntime): boolean {
   if (
+    isCriteriaToken(expected) &&
+    (expected.token === "NEXT7DAYS" || expected.token === "TODAYANDOVERDUE")
+  ) {
+    const bounds = periodBounds(expected, runtime.now);
+    const parsed = typeof value === "string" ? Date.parse(value) : NaN;
+    return bounds !== null && parsed >= bounds[0] && parsed < bounds[1];
+  }
+  if (
     !isCriteriaToken(expected) ||
     (expected.token !== "AGEINDAYS" && expected.token !== "DUEINDAYS") ||
     typeof value !== "string"
@@ -394,6 +467,14 @@ function matchesAge(value: FieldValue, expected: CriteriaValue, runtime: Criteri
   return parsed >= subtractCalendarMonths(runtime.now, expected.offset);
 }
 
+// Criteria carry safe integers, so a stored value beyond the safe range is further out than any
+// criteria value: map it to +/-Infinity instead of losing precision in Number().
+function bigintDigitsToNumber(digits: string): number {
+  const asNumber = Number(digits);
+  if (Number.isSafeInteger(asNumber)) return asNumber;
+  return digits.startsWith("-") ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+}
+
 export function matches(
   record: RecordData,
   criteria: Criteria,
@@ -408,10 +489,68 @@ export function matches(
   // A leaf on a field absent from module metadata is published but does not constrain.
   if (!fields.has(criteria.field)) return true;
   const raw = record.fields[criteria.field] ?? null;
+  if (criteria.field === "Tag" && fields.get("Tag")?.acceptsJsonArray) {
+    const tags = Array.isArray(raw) ? raw : [];
+    if (criteria.comparator === "is_empty") return tags.length === 0;
+    if (criteria.comparator === "is_not_empty") return tags.length > 0;
+    const ids = Array.isArray(criteria.value) ? criteria.value : [criteria.value];
+    const any = tags.some(
+      (tag) => tag && typeof tag === "object" && "id" in tag && ids.includes(tag.id),
+    );
+    return criteria.comparator === "equal" ? any : criteria.comparator === "not_equal" && !any;
+  }
+  if (isCriteriaToken(criteria.value) && criteria.value.token === "CURRENTTIME") {
+    const parsed = typeof raw === "string" ? Date.parse(raw) : NaN;
+    if (!Number.isFinite(parsed)) return false;
+    const instant = runtime.now.getTime();
+    switch (criteria.comparator) {
+      case "less_than":
+        return parsed < instant;
+      case "less_equal":
+        return parsed <= instant;
+      case "greater_than":
+        return parsed > instant;
+      case "greater_equal":
+        return parsed >= instant;
+      default:
+        return false;
+    }
+  }
+  // Equality by opaque ID serves related lists; other text values still match names.
+  if (
+    fields.get(criteria.field)?.dataType === "lookup" &&
+    (criteria.comparator === "equal" || criteria.comparator === "not_equal") &&
+    typeof criteria.value === "string" &&
+    typeof raw === "object" &&
+    raw !== null &&
+    "id" in raw &&
+    raw.id === criteria.value
+  )
+    return criteria.comparator === "equal";
+  if (
+    fields.get(criteria.field)?.dataType === "lookup" &&
+    typeof criteria.value === "object" &&
+    criteria.value !== null &&
+    !Array.isArray(criteria.value) &&
+    (criteria.comparator === "equal" || criteria.comparator === "not_equal")
+  ) {
+    const equal = equalValues(raw, criteria.value as FieldValue);
+    return criteria.comparator === "equal" ? equal : !equal;
+  }
   const value =
-    fields.get(criteria.field)?.dataType === "lookup" && typeof raw === "object" && raw !== null
-      ? (raw.name ?? null)
-      : raw;
+    fields.get(criteria.field)?.dataType === "lookup" &&
+    typeof raw === "object" &&
+    raw !== null &&
+    "id" in raw
+      ? typeof raw.name === "string"
+        ? raw.name
+        : null
+      : fields.get(criteria.field)?.dataType === "bigint" &&
+          typeof raw === "string" &&
+          typeof criteria.value !== "string" &&
+          /^-?\d+$/.test(raw)
+        ? bigintDigitsToNumber(raw)
+        : raw;
   const dayRuntime =
     fields.get(criteria.field)?.dataType === "date"
       ? {
@@ -537,15 +676,22 @@ export function sortRecords(
     return copy;
   }
   const field = fields.get(sort.field);
-  if (!field) throw new ValidationError({ sort: ["Unknown sort field or order."] });
+  if (!field || field.acceptsJsonArray || field.dataType === "ALARM" || field.dataType === "RRULE")
+    throw new ValidationError({ sort: ["Unknown sort field or order."] });
   // Ties keep the default id-descending order. Array.sort is stable.
   copy.sort((a, b) => compareDecimal(b.id, a.id));
   const normalize = (value: FieldValue): string | number | boolean | null => {
     if (value === null || value === "") return null;
-    if (typeof value === "object")
+    if (typeof value === "object") {
+      if (!("id" in value)) return null;
       return field.dataType === "lookup"
-        ? value.name?.toLowerCase() || null
-        : value.id.toLowerCase();
+        ? typeof value.name === "string"
+          ? value.name.toLowerCase() || null
+          : null
+        : typeof value.id === "string"
+          ? value.id.toLowerCase()
+          : null;
+    }
     if (["date", "datetime"].includes(field.dataType) && typeof value === "string")
       return Date.parse(value);
     return typeof value === "string" ? value.toLowerCase() : value;

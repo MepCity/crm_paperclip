@@ -1,9 +1,12 @@
 import type { ModuleApiName } from "@crm/core/records";
+import type { ModuleListScreenConfig } from "@/components/records/list/module-list-screen";
 import {
   moduleCreatePath,
+  moduleDraftsPath,
   moduleListCustomPath,
   moduleListDefaultPath,
   moduleRecordPath,
+  moduleTagsPath,
 } from "@/lib/crm-paths";
 import { leadsFilterGroups } from "./list-filters";
 
@@ -55,8 +58,9 @@ export const LEADS_SORT_FIELD_LABELS = [
   "Website",
 ] as const;
 
-export const leadsListPageConfig = {
+export const leadsListPageConfig: ModuleListScreenConfig = {
   module: LEADS_MODULE,
+  activityRibbon: true,
   linkField: "Full_Name",
   // The reference names the record title field "Lead Name" in Sort By.
   linkFieldLabel: "Lead Name",
@@ -66,10 +70,41 @@ export const leadsListPageConfig = {
   filterTitle: "Filter Leads by",
   filterGroups: leadsFilterGroups,
   sortFieldLabels: LEADS_SORT_FIELD_LABELS,
+  /**
+   * Actions menu rows in the order the reference list screen shows them; rows of later modules
+   * stay inert, and the rows Module 1 delivered without a handler keep that boundary.
+   */
+  toolbarActions: [
+    { id: "mass-transfer", label: "Mass Transfer" },
+    { id: "mass-delete", label: "Mass Delete" },
+    { id: "mass-update", label: "Mass Update" },
+    { id: "mass-convert", label: "Mass Convert" },
+    { id: "tags", label: "Manage Tags" },
+    { id: "assignment-rules", label: "Assignment Rules", laterModule: "M12" },
+    { id: "drafts", label: "Drafts" },
+    { id: "mass-email", label: "Mass Email", laterModule: "M10" },
+    { id: "approve", label: "Approve Leads", laterModule: "P3" },
+    { id: "deduplicate", label: "Deduplicate Leads" },
+    { id: "campaigns", label: "Add to Campaigns" },
+    { id: "client-script", label: "Create Client Script", laterModule: "M11" },
+    { id: "export", label: "Export Leads" },
+    { id: "sheet", label: "Sheet view", laterModule: "P3" },
+    {
+      id: "print",
+      label: "Print View",
+      submenuIndicator: true,
+      submenu: [
+        { id: "print-default", label: "Print Default view", laterModule: "M6" },
+        { id: "print-canvas", label: "Print Using Canvas", laterModule: "M6", accent: true },
+      ],
+    },
+  ],
   paths: {
     defaultList: moduleListDefaultPath,
     customList: moduleListCustomPath,
     record: moduleRecordPath,
     create: moduleCreatePath,
+    tags: moduleTagsPath,
+    drafts: moduleDraftsPath,
   },
 };

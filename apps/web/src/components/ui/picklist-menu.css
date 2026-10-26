@@ -1,5 +1,6 @@
 /* record-detail.md › Stage menu and terminal popover. */
 .picklist-popover {
+  max-width: calc(100dvw - 2 * var(--size-choice-viewport-inset));
   background: var(--color-surface);
   color: var(--color-text);
   box-shadow: var(--shadow-lg);

@@ -2,7 +2,13 @@ import type { FieldValue, RecordServiceFactory } from "@crm/core/records";
 import { describe, expect, expectTypeOf, it } from "vitest";
 import type { OrgContext } from "../tenancy/types";
 
-type JsonValue = string | number | boolean | null | { [key: string]: JsonValue } | JsonValue[];
+type JsonValue =
+  | string
+  | number
+  | boolean
+  | null
+  | { [key: string]: JsonValue }
+  | readonly JsonValue[];
 
 // Compile-time assertions: Date, bigint and undefined never become field values.
 type IsFieldValue<T> = T extends FieldValue ? true : false;
@@ -12,12 +18,20 @@ const invalidValues: [IsFieldValue<Date>, IsFieldValue<bigint>, IsFieldValue<und
   false,
 ];
 
-// A client-facing import must have no runtime exports or service dependencies.
+// Client-facing helpers must not load a runtime service.
 import * as records from "@crm/core/records";
 
 describe("record port type boundary", () => {
   it("exports types without loading a runtime service", () => {
-    expect(Object.keys(records)).toEqual([]);
+    expect(Object.keys(records).sort()).toEqual([
+      "KANBAN_HEADER_STYLES",
+      "baselineFieldId",
+      "baselineLayoutId",
+      "campaignMemberStatuses",
+      "isJsonArray",
+      "isJsonObject",
+      "lookupTargetModules",
+    ]);
   });
 
   it("uses an explicit organization context and JSON-compatible field values", () => {

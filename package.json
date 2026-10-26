@@ -8,7 +8,7 @@
   },
   "scripts": {
     "dev": "tsx scripts/dev.ts",
-    "test": "vitest run && tsx scripts/e2e.ts",
+    "test": "MEP_FULL_SUITE=1 vitest run && tsx scripts/e2e.ts",
     "test:unit": "vitest run --project unit",
     "test:component": "vitest run --project component",
     "test:int": "vitest run --project integration",
@@ -16,12 +16,14 @@
     "check": "biome check . && node scripts/typecheck.mjs",
     "typecheck": "node scripts/typecheck.mjs",
     "bench:storage": "tsx scripts/bench/record-storage.ts",
-    "verify": "biome check . && node scripts/typecheck.mjs && vitest run && tsx scripts/e2e.ts",
+    "verify": "biome check . && node scripts/typecheck.mjs && MEP_FULL_SUITE=1 vitest run && tsx scripts/e2e.ts",
     "ipc:sweep": "tsx scripts/ipc-sweep.ts"
   },
   "devDependencies": {
+    "@babel/parser": "8.0.8",
     "@biomejs/biome": "^2.5.15",
     "@crm/db": "workspace:*",
+    "@formatjs/icu-messageformat-parser": "3.5.22",
     "@types/node": "^26.6.4",
     "@types/pg": "^8.23.1",
     "pg": "^8.23.1",

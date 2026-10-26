@@ -3,12 +3,13 @@ import type { FilterEditorDefinition } from "@/components/records/list/filter-ed
 import type { FilterGroup } from "@/components/records/list/filter-panel";
 import type { ModuleKey } from "@/components/ui/later-module";
 import { type FilterFieldType, filterOperators } from "@/lib/records/filter-operators";
+import { systemFilterProps } from "../system-filter-props";
 import type { ModuleScreenDefinition } from "../types";
 
 type Input = Parameters<ModuleScreenDefinition["buildFilterGroups"]>[0];
 const systemRows: readonly [string, ModuleKey?][] = [
-  ["Activities", "M5"],
-  ["Campaigns", "M7"],
+  ["Activities"],
+  ["Campaigns"],
   ["Latest Email Status", "M10"],
   ["Locked"],
   ["Record Action"],
@@ -38,6 +39,7 @@ function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | 
   const fieldType = special ?? (field.dataType as FilterFieldType);
   return {
     fieldType,
+    ...(fieldType === "tag" ? { tagModule: "Contacts" as const } : {}),
     ...(fieldType === "picklist"
       ? {
           options: field.picklist?.map((option) => ({
@@ -72,19 +74,35 @@ export function buildContactsFilterGroups(input: Input): readonly FilterGroup[] 
     {
       id: "system",
       label: "System Defined Filters",
-      items: systemRows.map(([label, laterModule], index) => ({
-        id: `system-${index}`,
-        label,
-        ...(laterModule ? { laterModule } : { disabled: true }),
-      })),
+      items: systemRows.map(([label, laterModule], index) => {
+        if (label === "Activities") {
+          return {
+            id: "Activities",
+            label,
+            systemEditor: "activities" as const,
+          };
+        }
+        if (label === "Campaigns") {
+          return {
+            id: "Campaigns",
+            label,
+            systemEditor: "campaigns" as const,
+          };
+        }
+        return {
+          id: `system-${index}`,
+          label,
+          ...(laterModule
+            ? { laterModule }
+            : (systemFilterProps(label, "Contacts") ?? { disabled: true })),
+        };
+      }),
     },
     {
       id: "fields",
       label: "Filter By Fields",
       items: [...initialFieldLabels, ...remaining].map((label, index) => {
         const field = labels.get(label);
-        if (label === "Account Name")
-          return { id: field?.apiName ?? `field-${index}`, label, laterModule: "M3" as const };
         const definition = field ? editor(field, input) : undefined;
         return {
           id: field?.apiName ?? `field-${index}`,

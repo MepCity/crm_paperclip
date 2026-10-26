@@ -27,3 +27,13 @@ No customer data, no copied text blocks, no screenshots in the repo.
 - [accounts.md](accounts.md) — Accounts list inventory and exported configuration (image inventory and metadata; MEP-21).
 - accounts-record-detail.md — Accounts record detail (planned; MEP-327).
 - accounts-form.md — Accounts create/edit forms (planned; MEP-329).
+
+- [deals.md](deals.md) — Deals list / stage-board opening inventory and exported configuration (MEP-22).
+- deals-record-detail.md — Deals record detail (planned; MEP-346).
+- deals-form.md — Deals create/edit forms (planned; MEP-350).
+- deals-pipeline.md — Deals pipeline and stage transitions (planned; MEP-353).
+
+- [activities.md](activities.md) — Tasks list inventory and Tasks / Meetings / Calls metadata (MEP-23).
+- activities-flows.md — Activity flows (planned; MEP-423).
+- activities-record-detail.md — Activity record details (planned; MEP-425, MEP-426).
+- activities-form.md — Activity forms (planned; MEP-427, MEP-428, MEP-429).

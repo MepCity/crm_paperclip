@@ -71,4 +71,40 @@ describe("buildLeadsFilterGroups", () => {
       "compound_address",
     );
   });
+
+  it("enables Activities system filter with systemEditor: 'activities'", async () => {
+    const service = createFixtureRecordService(ctx);
+    const module = await service.getModule("Leads");
+    const groups = buildLeadsFilterGroups({
+      fields: module.fields,
+      users: [],
+      linkField: "Full_Name",
+      currencyCode: "TRY",
+    });
+    const systemGroup = groups.find((group) => group.id === "system");
+    const activitiesItem = systemGroup?.items.find((item) => item.label === "Activities");
+    expect(activitiesItem).toEqual({
+      id: "Activities",
+      label: "Activities",
+      systemEditor: "activities",
+    });
+  });
+
+  it("enables Campaigns system filter with systemEditor: 'campaigns'", async () => {
+    const service = createFixtureRecordService(ctx);
+    const module = await service.getModule("Leads");
+    const groups = buildLeadsFilterGroups({
+      fields: module.fields,
+      users: [],
+      linkField: "Full_Name",
+      currencyCode: "TRY",
+    });
+    const systemGroup = groups.find((group) => group.id === "system");
+    const campaignsItem = systemGroup?.items.find((item) => item.label === "Campaigns");
+    expect(campaignsItem).toEqual({
+      id: "Campaigns",
+      label: "Campaigns",
+      systemEditor: "campaigns",
+    });
+  });
 });

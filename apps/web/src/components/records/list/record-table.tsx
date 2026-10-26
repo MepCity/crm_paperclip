@@ -1,18 +1,26 @@
 "use client";
 
-import type { FormatOptions } from "@crm/core/format";
-import type { FieldDefinition, RecordData, SortSpec } from "@crm/core/records";
+import { type FormatOptions, formatDate } from "@crm/core/format";
+import type { FieldDefinition, ListResult, RecordData, SortSpec } from "@crm/core/records";
 import { type ReactNode, useState } from "react";
 import { AlphabetFilter } from "@/components/ui/alphabet-filter";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
+import type { ModuleKey } from "@/components/ui/later-module";
+import { Link } from "@/components/ui/link";
 import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { ActivityRibbon } from "./activity-ribbon";
 import { CellValue } from "./cell-value";
 import { RecordTableFooter, type RecordTableFooterProps } from "./record-table-footer";
 
 export interface RecordTableProps {
   laterInventory?: boolean;
+  badgeColumn?: boolean;
+  activitySummaries?: ListResult["activitySummaries"];
+  phoneLaterModule?: ModuleKey;
+  linkWebsite?: boolean;
   /** Columns in screen order. Labels come from the field, not from a module. */
   columns: readonly FieldDefinition[];
   records: readonly RecordData[];
@@ -44,6 +52,18 @@ export interface RecordTableProps {
   /** User id → display name. See `CellValue`. */
   ownerNames?: Readonly<Record<string, string>>;
   format: FormatOptions;
+  /** ISO 4217 code for currency cells; plain number when omitted. */
+  currencyCode?: string;
+  /** Activities lists: numeric dates (MEP-590 rows 26, 28, 29). */
+  numericDates?: boolean;
+  /** Activities list: draw the Related To module pictogram (Meetings). */
+  relatedToPictogram?: boolean;
+  /** Activities list: boolean field marking all-day rows, whose datetime cells show only the date. */
+  allDayField?: string;
+  /** Edit page of a row; the `edit` hover tool links there. */
+  rowEditHref?: (record: RecordData) => string;
+  /** Hover tool sequence before the checkbox; default ellipsis + note. */
+  rowTools?: readonly ("edit" | "ellipsis" | "note")[];
   footer: RecordTableFooterProps;
 }
 
@@ -59,7 +79,7 @@ const dataColumn = [
   "max-w-(--size-list-column-width) bg-surface p-0",
 ].join(" ");
 
-const badgeColumn = [
+const badgeColumnClass = [
   "box-border w-(--size-list-badge-width) min-w-(--size-list-badge-width)",
   "max-w-(--size-list-badge-width) bg-surface p-0",
 ].join(" ");
@@ -85,6 +105,10 @@ const cellLine = [
  */
 export function RecordTable({
   laterInventory = false,
+  badgeColumn = true,
+  activitySummaries,
+  phoneLaterModule,
+  linkWebsite = false,
   columns,
   records,
   linkField,
@@ -100,9 +124,17 @@ export function RecordTable({
   settings,
   ownerNames,
   format,
+  currencyCode,
+  numericDates,
+  relatedToPictogram,
+  allDayField,
+  rowEditHref,
+  rowTools = ["ellipsis", "note"],
   footer,
 }: RecordTableProps) {
+  const t = useUiTranslations();
   const empty = records.length === 0;
+
   const selected = new Set(selectedIds);
   const pageIds = records.map((record) => record.id);
   const allSelected = pageIds.length > 0 && pageIds.every((id) => selected.has(id));
@@ -165,11 +197,11 @@ export function RecordTable({
                   </div>
                 </th>
               )}
-              {empty ? null : (
+              {empty || !badgeColumn ? null : (
                 <th
                   scope="col"
                   data-part="badge"
-                  className={`${badgeColumn} ${headerBox} sticky left-(--size-list-leading-pair-width) z-10`}
+                  className={`${badgeColumnClass} ${headerBox} sticky left-(--size-list-leading-pair-width) z-10`}
                 >
                   <span className="sr-only">Badges</span>
                 </th>
@@ -191,7 +223,7 @@ export function RecordTable({
                       </span>
                       {isLinkField && alphabet ? (
                         <AlphabetFilter
-                          label="Filter by first letter"
+                          label={t("records.list.filterByFirstLetter")}
                           value={alphabet.value}
                           onChange={alphabet.onChange}
                           className="shrink-0"
@@ -230,12 +262,44 @@ export function RecordTable({
                   >
                     {laterInventory ? (
                       <div className="flex pt-(--size-list-checkbox-offset) opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100">
-                        <Button variant="ghost" size="compact" aria-label="Record actions">
-                          <Icons.ellipsis aria-hidden className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="compact" aria-label="Notes" laterModule="M6">
-                          <Icons.messageSquare aria-hidden className="h-4 w-4" />
-                        </Button>
+                        {rowTools.map((tool) =>
+                          tool === "note" ? (
+                            <Button
+                              key={tool}
+                              variant="ghost"
+                              size="compact"
+                              aria-label="Notes"
+                              laterModule="M6"
+                            >
+                              <Icons.messageSquare aria-hidden className="h-4 w-4" />
+                            </Button>
+                          ) : tool === "edit" && rowEditHref ? (
+                            <Link
+                              key={tool}
+                              variant="ghost"
+                              size="compact"
+                              aria-label="Edit record"
+                              href={rowEditHref(record)}
+                              prefetch={false}
+                            >
+                              <Icons.boardEdit aria-hidden className="h-4 w-4" />
+                            </Link>
+                          ) : (
+                            <Button
+                              key={tool}
+                              variant="ghost"
+                              size="compact"
+                              aria-label={tool === "edit" ? "Edit record" : "Record actions"}
+                              laterModule={tool === "edit" ? "M6" : undefined}
+                            >
+                              {tool === "edit" ? (
+                                <Icons.boardEdit aria-hidden className="h-4 w-4" />
+                              ) : (
+                                <Icons.ellipsis aria-hidden className="h-4 w-4" />
+                              )}
+                            </Button>
+                          ),
+                        )}
                       </div>
                     ) : null}
                   </td>
@@ -251,22 +315,25 @@ export function RecordTable({
                       />
                     </div>
                   </td>
-                  <td
-                    data-part="badge"
-                    className={`${badgeColumn} ${bodyBox} sticky left-(--size-list-leading-pair-width) z-10`}
-                  >
-                    {laterInventory ? (
-                      <Button
-                        variant="ghost"
-                        size="compact"
-                        aria-label="Record activity"
-                        laterModule="P3"
-                        className="mt-2 opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100"
-                      >
-                        <Icons.activity aria-hidden className="h-4 w-4" />
-                      </Button>
-                    ) : null}
-                  </td>
+                  {badgeColumn ? (
+                    <td
+                      data-part="badge"
+                      className={`${badgeColumnClass} ${bodyBox} sticky left-(--size-list-leading-pair-width) z-10`}
+                    >
+                      <SummaryRibbon summary={activitySummaries?.[record.id]} format={format} />
+                      {laterInventory ? (
+                        <Button
+                          variant="ghost"
+                          size="compact"
+                          aria-label="Record activity"
+                          laterModule="P3"
+                          className="mt-2 opacity-0 group-hover/row:opacity-100 group-focus-within/row:opacity-100"
+                        >
+                          <Icons.activity aria-hidden className="h-4 w-4" />
+                        </Button>
+                      ) : null}
+                    </td>
+                  ) : null}
                   {columns.map((field) => (
                     <td
                       key={field.apiName}
@@ -289,10 +356,28 @@ export function RecordTable({
                             field={field}
                             value={record.fields[field.apiName] ?? null}
                             href={field.apiName === linkField ? rowHref(record) : undefined}
+                            linkWebsite={linkWebsite}
                             ownerNames={ownerNames}
                             format={format}
+                            currencyCode={currencyCode}
+                            numericDates={numericDates}
+                            dateOnly={allDayField ? record.fields[allDayField] === true : false}
+                            relatedToPictogram={relatedToPictogram && field.apiName === "What_Id"}
                           />
                         </div>
+                        {phoneLaterModule &&
+                        field.dataType === "phone" &&
+                        record.fields[field.apiName] ? (
+                          <Button
+                            variant="ghost"
+                            size="compact"
+                            aria-label="Call"
+                            laterModule={phoneLaterModule}
+                            className="ms-1 inline-flex shrink-0 h-4 w-4 p-0 text-muted hover:text-text"
+                          >
+                            <Icons.phone aria-hidden className="h-3.5 w-3.5" />
+                          </Button>
+                        ) : null}
                       </div>
                     </td>
                   ))}
@@ -410,6 +495,25 @@ function SelectionBox({
   return (
     <div data-part="checkbox" className="w-fit">
       <Checkbox hideLabel label={label} isSelected={isSelected} onChange={onChange} />
+    </div>
+  );
+}
+
+function SummaryRibbon({
+  summary,
+  format,
+}: {
+  summary: NonNullable<ListResult["activitySummaries"]>[string] | undefined;
+  format: FormatOptions;
+}) {
+  if (!summary) return null;
+  const date = summary.date;
+  return (
+    <div className="py-(--size-list-row-pad) pe-2">
+      <ActivityRibbon
+        kind={summary.kind}
+        dateText={formatDate(date && date.length !== 10 ? new Date(date) : date, format) || null}
+      />
     </div>
   );
 }

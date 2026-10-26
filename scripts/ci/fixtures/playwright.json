@@ -1,0 +1,25 @@
+{
+  "suites": [
+    {
+      "file": "slow.spec.ts",
+      "specs": [
+        {
+          "file": "slow.spec.ts",
+          "tests": [
+            { "results": [{ "duration": 1000 }, { "duration": 2500 }] },
+            { "results": [{ "duration": 0, "status": "skipped" }] }
+          ]
+        }
+      ],
+      "suites": [
+        {
+          "specs": [{ "file": "slow.spec.ts", "tests": [{ "results": [{ "duration": 500 }] }] }]
+        }
+      ]
+    },
+    {
+      "file": "fast.spec.ts",
+      "specs": [{ "tests": [{ "results": [{ "duration": 100 }] }] }]
+    }
+  ]
+}

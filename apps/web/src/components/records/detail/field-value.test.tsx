@@ -6,8 +6,11 @@ import { DEFAULT_FORMAT } from "@/lib/locale";
 import { render } from "@/test/render";
 import { EMPTY_FIELD_DISPLAY } from "../field-format";
 import { FieldValueView } from "./field-value";
+import { NumericDatesProvider } from "./numeric-dates-context";
 
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+});
 
 function field(
   apiName: string,
@@ -151,17 +154,61 @@ test("lookup field links to registered target module detail page", () => {
   expect(link.getAttribute("data-later-module")).toBeNull();
 });
 
-test("lookup field attaches laterModule to unregistered target link", () => {
+test("lookup field links to registered Accounts detail page", () => {
   show(field("Account_Name", "lookup", { lookup: { module: "Accounts" } }), {
     module: "Accounts",
     id: "acc-123",
     name: "Acme Corp",
   });
   const link = screen.getByRole("link", { name: "Acme Corp" });
+  expect(link.getAttribute("href")).toBe("/tab/Accounts/acc-123");
+  expect(link.getAttribute("data-later-module")).toBeNull();
+});
+
+test("lookup field links to registered Deals detail page", () => {
+  show(field("Deal_Name", "lookup", { lookup: { module: "Deals" } }), {
+    module: "Deals",
+    id: "deal-123",
+    name: "Big Deal",
+  });
+  const link = screen.getByRole("link", { name: "Big Deal" });
+  expect(link.getAttribute("href")).toBe("/tab/Deals/deal-123");
+  expect(link.getAttribute("data-later-module")).toBeNull();
+});
+
+test("lookup field links to registered Campaigns detail page", () => {
+  show(field("Campaign_Source", "lookup", { lookup: { module: "Campaigns" } }), {
+    module: "Campaigns",
+    id: "camp-123",
+    name: "Acme Campaign",
+  });
+  const link = screen.getByRole("link", { name: "Acme Campaign" });
+  expect(link.getAttribute("href")).toBe("/tab/Campaigns/camp-123");
+  expect(link.getAttribute("data-later-module")).toBeNull();
+});
+
+test("lookup field links to registered Cases detail page", () => {
+  show(field("Case_Ref", "lookup", { lookup: { module: "Cases" } }), {
+    module: "Cases",
+    id: "case-123",
+    name: "Acme Case",
+  });
+  const link = screen.getByRole("link", { name: "Acme Case" });
+  expect(link.getAttribute("href")).toBe("/tab/Cases/case-123");
+  expect(link.getAttribute("data-later-module")).toBeNull();
+});
+
+test("lookup field attaches laterModule to unregistered target link", () => {
+  show(field("Doc_Ref", "lookup", { lookup: { module: "Documents" } }), {
+    module: "Documents",
+    id: "doc-123",
+    name: "Acme Doc",
+  });
+  const link = screen.getByRole("link", { name: "Acme Doc" });
   expect(link.tagName).toBe("SPAN");
   expect(link.hasAttribute("href")).toBe(false);
   expect(link.getAttribute("aria-disabled")).toBe("true");
-  expect(link.getAttribute("data-later-module")).toBe("M3");
+  expect(link.getAttribute("data-later-module")).toBe("M9");
 });
 
 test("empty lookup field renders an em dash", () => {
@@ -175,4 +222,33 @@ test("empty lookup field renders an em dash", () => {
     name: "   ",
   });
   expect(screen.getByText(EMPTY_FIELD_DISPLAY)).toBeTruthy();
+});
+
+for (const module of ["Cases", "Solutions"]) {
+  test(`${module} lookup links to its registered detail page`, () => {
+    show(field("Support_Ref", "lookup", { lookup: { module } }), {
+      module,
+      id: "record-1",
+      name: "Support record",
+    });
+    const link = screen.getByRole("link", { name: "Support record" });
+    expect(link.tagName).toBe("A");
+    expect(link.getAttribute("href")).toBe(`/tab/${module}/record-1`);
+    expect(link.hasAttribute("data-later-module")).toBe(false);
+  });
+}
+
+test("numeric dates context renders list-style dd.mm.yyyy values", () => {
+  render(
+    <NumericDatesProvider value>
+      <FieldValueView
+        field={field("Start", "datetime")}
+        value="2026-10-19T08:20:00.000Z"
+        format={DEFAULT_FORMAT}
+      />
+      <FieldValueView field={field("Day", "date")} value="2026-07-05" format={DEFAULT_FORMAT} />
+    </NumericDatesProvider>,
+  );
+  expect(screen.getByText("19.10.2026 11:20 AM")).toBeTruthy();
+  expect(screen.getByText("05.07.2026")).toBeTruthy();
 });

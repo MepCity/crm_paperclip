@@ -43,7 +43,7 @@ const styles = {
     "data-disabled:opacity-50 data-focus-visible:ring-2 data-focus-visible:ring-focus-ring " +
     "data-hovered:bg-surface-hover data-pressed:bg-surface-pressed",
   popover:
-    "max-h-60 overflow-auto rounded-md border border-border bg-surface shadow-lg outline-none",
+    "selection-panel max-h-60 overflow-auto rounded-md border border-border bg-surface shadow-lg outline-none",
   status: "flex items-center gap-2 px-3 py-2 text-sm text-text-muted",
   listbox: "p-1 outline-none",
   description: "text-sm text-text-muted",
@@ -70,6 +70,11 @@ export interface ComboBoxProps<T extends object>
   children: (item: T) => ReactNode;
 }
 
+/**
+ * A failed lookup search is its own state: the list shows a failure row instead of "No results",
+ * and the next search text retries. "Unable to load results. Please try again." is our interim
+ * wording — the reference CRM was never observed failing a lookup search, so it has no row to copy.
+ */
 export function ComboBox<T extends object>({
   label,
   description,
@@ -113,6 +118,7 @@ export function ComboBox<T extends object>({
   const [loaded, setLoaded] = useState<T[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSearched, setHasSearched] = useState(false);
+  const [loadFailed, setLoadFailed] = useState(false);
   // Invalidated immediately on edits/close, including requests already in flight.
   const searchId = useRef(0);
   const selectionHandler = useRef<((key: Key | null) => void) | null>(null);
@@ -131,6 +137,7 @@ export function ComboBox<T extends object>({
     searchId.current++;
     setLoaded([]);
     setHasSearched(false);
+    setLoadFailed(false);
     setIsLoading(true);
     setSearch({ query });
   }
@@ -163,13 +170,16 @@ export function ComboBox<T extends object>({
       const load = loader.current;
       if (!load) return;
       let result: T[];
+      let failed = false;
       try {
         result = await load(search.query);
       } catch {
+        failed = true;
         result = [];
       }
       if (!active || current !== searchId.current) return;
       setLoaded(result);
+      setLoadFailed(failed);
       setHasSearched(true);
       setIsLoading(false);
     }, LOAD_DEBOUNCE_MS);
@@ -179,7 +189,8 @@ export function ComboBox<T extends object>({
     };
   }, [isAsync, search]);
 
-  const showNoResults = isAsync && !isLoading && hasSearched && loaded.length === 0;
+  const showLoadError = isAsync && !isLoading && loadFailed;
+  const showNoResults = isAsync && !isLoading && !loadFailed && hasSearched && loaded.length === 0;
   const asyncProps: Partial<AriaComboBoxProps<T>> = isAsync
     ? {
         items: loaded,
@@ -255,6 +266,11 @@ export function ComboBox<T extends object>({
               <div role="status" className={styles.status}>
                 <Spinner className="h-4 w-4" aria-hidden />
                 Loading
+              </div>
+            )}
+            {showLoadError && (
+              <div role="status" className={styles.status}>
+                Unable to load results. Please try again.
               </div>
             )}
             {showNoResults && (

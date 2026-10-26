@@ -11,6 +11,9 @@ export type DetailFieldEntry = {
   value: FieldValue;
   auditTimestamp?: string | null;
   column: "left" | "right" | "full";
+  callAction?: boolean;
+  suffix?: string;
+  valueSuffix?: string;
 };
 
 export type DetailSection = {
@@ -26,6 +29,8 @@ export interface DetailsCardProps {
   onEdit?: (apiName: string) => void;
   /** Rail-hidden canvas uses a wider card and alternate pencil geometry. */
   railLayout?: "shown" | "hidden";
+  /** Activities layout: label/value columns match the summary card. */
+  activity?: boolean;
 }
 
 export function DetailsCard({
@@ -35,13 +40,14 @@ export function DetailsCard({
   defaultDetailsHidden = false,
   onEdit,
   railLayout = "shown",
+  activity = false,
 }: DetailsCardProps) {
   const [expanded, setExpanded] = useState(!defaultDetailsHidden);
   const toggleLabel = expanded ? "Hide Details" : "Show Details";
 
   return (
     <section
-      className={`detail-card detail-details-card${railLayout === "hidden" ? " detail-details-card--rail-hidden" : ""}`}
+      className={`detail-card detail-details-card${railLayout === "hidden" ? " detail-details-card--rail-hidden" : ""}${activity ? " detail-details-card--activity" : ""}`}
       aria-label="Details card"
       data-detail-rail={railLayout}
     >
@@ -57,7 +63,11 @@ export function DetailsCard({
       {expanded ? (
         <div className="detail-details-sections" data-detail-sections>
           {sections.map((section) => (
-            <div key={section.title} className="detail-details-section-block">
+            <div
+              key={section.title}
+              className="detail-details-section-block"
+              data-detail-section={section.title}
+            >
               <h3 className="detail-section-title">{section.title}</h3>
               <SectionFields
                 fields={section.fields}
@@ -151,6 +161,8 @@ function FieldEntry({
       field={entry.field}
       value={entry.value}
       auditTimestamp={entry.auditTimestamp}
+      callAction={entry.callAction}
+      suffix={entry.suffix ?? entry.valueSuffix}
       ownerNames={ownerNames}
       format={format}
       layout={layout}

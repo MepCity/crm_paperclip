@@ -1,0 +1,545 @@
+import { signUpNewUser } from "./support/auth";
+import { createCaseFromCardAndOpenIt, expectEmptyCasesCard } from "./support/cases-card";
+import {
+  moduleCreatePath,
+  moduleListDefaultPath,
+  moduleRecordClonePath,
+  moduleRecordPath,
+} from "./support/crm-paths";
+import { createOrganization } from "./support/org";
+import { expect, ignoreFailedResponses, test } from "./support/test";
+
+const ACCOUNTS_TAB = "Accounts";
+const DEALS_TAB = "Deals";
+const PRIMARY_ACCOUNT_ID = "500000000000000000";
+const CHILD_ACCOUNT_ID = "500000000000000006";
+const PARENT_ACCOUNT_ID = "500000000000000005";
+const DELETE_ACCOUNT_ID = "500000000000000001";
+const EMPTY_RELATED_ACCOUNT_ID = "500000000000000249";
+const DEAL_RECORD_ID = "700000000000000000";
+
+function waitForModuleBulkList(
+  page: import("@playwright/test").Page,
+  module: "Contacts" | "Accounts" | "Deals",
+) {
+  return page.waitForResponse((response) => {
+    const url = new URL(response.url());
+    return response.request().method() === "POST" && url.pathname.endsWith(`/${module}/bulk`);
+  });
+}
+
+async function openAccountDetail(
+  page: import("@playwright/test").Page,
+  orgSlug: string,
+  recordId: string,
+  listQuery = "",
+) {
+  const listUrl = `${moduleListDefaultPath(orgSlug, ACCOUNTS_TAB)}${listQuery}`;
+  await page.goto(listUrl);
+  await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
+  await page.goto(moduleRecordPath(orgSlug, ACCOUNTS_TAB, recordId));
+  await expect(page.locator("[data-record-frame]")).toBeVisible();
+}
+
+test.describe("Accounts record detail", () => {
+  test.beforeEach(async ({ page }) => {
+    await page.setViewportSize({ width: 1470, height: 835 });
+  });
+
+  test("Accounts activities cards render live task, meeting and call columns", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const open = page.locator("#related-list-open-activities");
+    await expect(open.getByRole("region", { name: /^Open Tasks \(\d+\)$/ })).toBeVisible();
+    await expect(open.getByRole("region", { name: /^Open Meetings \(\d+\)$/ })).toBeVisible();
+    const closed = page.locator("#related-list-closed-activities");
+    await expect(closed.getByRole("region", { name: /^Closed Tasks \(\d+\)$/ })).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("rail Notes link and Add open the note composer", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const rail = page.locator("[data-record-rail]");
+    const notesLink = rail.getByRole("link", { name: "Notes" });
+    await expect(notesLink).not.toHaveAttribute("data-later-module");
+    await notesLink.click();
+    const addNote = rail.getByRole("button", { name: "Add" });
+    await expect(addNote).not.toHaveAttribute("data-later-module");
+    await addNote.click();
+    await expect(page.locator("#related-list-notes").getByTestId("note-composer")).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("opens from list context with header inventory and related rail", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const header = page.locator("[data-record-header]");
+    await expect(header.getByRole("link", { name: "Back" })).toBeVisible();
+    await expect(header.getByRole("button", { name: "Add Tags" })).toBeVisible();
+    await expect(header.getByRole("button", { name: "Send Email" })).toBeVisible();
+    await expect(header.getByRole("link", { name: "Edit" })).toBeVisible();
+    await expect(header.getByRole("button", { name: "More Options" })).toBeVisible();
+    await expect(page.getByRole("tab", { name: "Overview" })).toBeVisible();
+    await expect(page.getByRole("region", { name: "Business card" })).toBeVisible();
+    await expect(page.getByRole("link", { name: "Add Link" })).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("previous and next respect list page boundaries", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const listUrl = `${moduleListDefaultPath(org.slug, ACCOUNTS_TAB)}?per_page=10&page=1`;
+    await page.goto(listUrl);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    await page.locator("table tbody tr").first().getByRole("link").first().click();
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    await expect(page.getByRole("button", { name: "Previous Record" })).toBeDisabled();
+    const next = page.getByRole("link", { name: "Next Record" });
+    await expect(next).toBeVisible();
+    const title = headerTitle(page);
+    const firstTitle = await title.innerText();
+    await next.click();
+    await expect(title).not.toHaveText(firstTitle);
+    await page.getByRole("link", { name: "Previous Record" }).click();
+    await expect(title).toHaveText(firstTitle);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("inline-edits a detail text field", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const siteRow = page.locator('[data-detail-field="Account_Site"]');
+    await siteRow.hover();
+    await siteRow.getByRole("button", { name: "Edit Account Site value" }).click();
+    const input = siteRow.getByRole("textbox");
+    await input.fill("HQ Site");
+    await input.press("Enter");
+    await expect(siteRow).toContainText("HQ Site");
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("More Options clone and delete", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, DELETE_ACCOUNT_ID);
+    const recordId = DELETE_ACCOUNT_ID;
+    const header = page.locator("[data-record-header]");
+    await header.getByRole("button", { name: "More Options" }).click();
+    await page.getByRole("menuitem", { name: "Find and Merge Duplicates" }).click();
+    await expect(page.getByRole("heading", { name: "Find and Merge Duplicates" })).toBeVisible();
+    await page.getByRole("button", { name: "Cancel" }).click();
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    await header.getByRole("button", { name: "More Options" }).click();
+    await page.getByRole("menuitem", { name: "Clone" }).click();
+    await expect(page).toHaveURL(moduleRecordClonePath(org.slug, ACCOUNTS_TAB, recordId));
+    await page.goBack();
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    await header.getByRole("button", { name: "More Options" }).click();
+    const deleteDone = page.waitForResponse(
+      (response) =>
+        response.request().method() === "DELETE" &&
+        response.url().includes(`/crm/v2.2/Accounts/${recordId}`) &&
+        response.ok(),
+    );
+    await page.getByRole("menuitem", { name: "Delete" }).click();
+    await page.getByRole("alertdialog").getByRole("button", { name: "Delete" }).click();
+    await deleteDone;
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    await page.goto(moduleRecordPath(org.slug, ACCOUNTS_TAB, recordId));
+    await expect(page.getByText(/could not be found/i)).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400, 404]);
+  });
+
+  test("Timeline tab and history filter panel", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    await expect(frame.locator("[data-timeline-history]")).toBeVisible();
+    await expect(
+      frame.getByRole("button", { name: "Show Upcoming Automated Actions" }),
+    ).toBeVisible();
+    const filterButton = frame.getByRole("button", { name: "History filter" });
+    await filterButton.click();
+    await expect(frame.locator("[data-timeline-filter-panel]")).toBeVisible();
+    await filterButton.click();
+    await expect(frame.locator("[data-timeline-filter-panel]")).toHaveCount(0);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Timeline History shows a row after an inline edit (AD-159 – AD-162)", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const siteRow = page.locator('[data-detail-field="Account_Site"]');
+    await siteRow.hover();
+    await siteRow.getByRole("button", { name: "Edit Account Site value" }).click();
+    const input = siteRow.getByRole("textbox");
+    await input.fill("History Site");
+    await input.press("Enter");
+    await expect(siteRow).toContainText("History Site");
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    const history = frame.locator("[data-timeline-history]");
+    await expect(history).toBeVisible();
+    await expect(history.getByText("No logs found")).toHaveCount(0);
+    await expect(history.getByText(/Account Site changed from .* to History Site/)).toBeVisible();
+    await page.reload();
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    await expect(history.getByText(/Account Site changed from .* to History Site/)).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Contacts card lists related contacts and supports New", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const contacts = page.getByRole("region", { name: "Contacts" });
+    await expect(contacts.getByRole("table")).toBeVisible();
+    await expect(contacts.getByRole("link").first()).toBeVisible();
+    await contacts.getByRole("button", { name: "New" }).click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, "Contacts"));
+    await expect(page.getByRole("button", { name: "Open Account Name lookup" })).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Contacts card empty state", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const listUrl = moduleListDefaultPath(org.slug, ACCOUNTS_TAB);
+    await page.goto(listUrl);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
+    const contactsListDone = waitForModuleBulkList(page, "Contacts");
+    await page.goto(moduleRecordPath(org.slug, ACCOUNTS_TAB, EMPTY_RELATED_ACCOUNT_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    const contactsList = await contactsListDone;
+    expect(contactsList.ok()).toBe(true);
+    const contacts = page.getByRole("region", { name: "Contacts" });
+    await expect(contacts.getByText("No records found")).toBeVisible();
+  });
+
+  test("Member Accounts card lists children and supports New", async ({ page, pageErrors }) => {
+    const credentials = await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const members = page.getByRole("region", { name: "Member Accounts" });
+    await expect(members.getByRole("table")).toBeVisible();
+    await expect(members.getByRole("link").first()).toBeVisible();
+    await expect(members.getByRole("cell", { name: credentials.name }).first()).toBeVisible();
+    const membersTableText = await members.getByRole("table").innerText();
+    expect(membersTableText).not.toMatch(/usr_[a-zA-Z0-9]+/);
+    await members.getByRole("button", { name: "New" }).click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, ACCOUNTS_TAB));
+    await expect(page.getByRole("button", { name: "Open Parent Account lookup" })).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Member Accounts rail link and Add action are active", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const rail = page.locator("[data-record-rail]");
+    const memberAccountsLink = rail.getByRole("link", { name: "Member Accounts" });
+    await expect(memberAccountsLink).toBeVisible();
+    await expect(memberAccountsLink).not.toHaveAttribute("data-later-module");
+    await memberAccountsLink.click();
+    const addButton = rail.getByRole("button", { name: "Add" });
+    await expect(addButton).toBeVisible();
+    await expect(addButton).not.toHaveAttribute("data-later-module");
+    await addButton.click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, ACCOUNTS_TAB));
+    await expect(page.getByRole("button", { name: "Open Parent Account lookup" })).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Member Accounts card empty state", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const listUrl = moduleListDefaultPath(org.slug, ACCOUNTS_TAB);
+    await page.goto(listUrl);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
+    const memberListDone = waitForModuleBulkList(page, "Accounts");
+    await page.goto(moduleRecordPath(org.slug, ACCOUNTS_TAB, EMPTY_RELATED_ACCOUNT_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    const memberList = await memberListDone;
+    expect(memberList.ok()).toBe(true);
+    const members = page.getByRole("region", { name: "Member Accounts" });
+    await expect(members.getByText("No records found")).toBeVisible();
+  });
+
+  test("Parent Account link opens parent record", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, CHILD_ACCOUNT_ID);
+    const parentLink = page
+      .locator('[data-detail-field="Parent_Account"]')
+      .getByRole("link")
+      .first();
+    await expect(parentLink).toBeVisible();
+    await parentLink.click();
+    await expect(page).toHaveURL(moduleRecordPath(org.slug, ACCOUNTS_TAB, PARENT_ACCOUNT_ID));
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("later-module header control stays inert", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const before = page.url();
+    const sendEmail = page
+      .locator("[data-record-header]")
+      .getByRole("button", { name: "Send Email" });
+    await expect(sendEmail).toHaveAttribute("data-later-module", "M10");
+    await sendEmail.click({ force: true });
+    expect(page.url()).toBe(before);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("primary command, tab-row update indicator and empty activity badges", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+
+    // AD-05: Send Email draws the filled primary command; Edit keeps the secondary one.
+    const sendEmail = page
+      .locator("[data-record-header]")
+      .getByRole("button", { name: "Send Email" });
+    await expect(sendEmail).toHaveCSS(
+      "background-image",
+      /rgb\(87, 103, 246\).*rgb\(19, 77, 196\)/,
+    );
+    await expect(sendEmail).toHaveCSS("color", "rgb(255, 255, 255)");
+    const edit = page.locator("[data-record-header]").getByRole("link", { name: "Edit" });
+    await expect(edit).toHaveCSS("background-image", /rgb\(253, 253, 254\).*rgb\(241, 240, 247\)/);
+
+    // AD-35: the indicator shares the Overview/Timeline row at its right end, clock first.
+    const tabRow = page.locator("[data-record-tab-row]");
+    const lastUpdate = tabRow.locator(".detail-last-update");
+    await expect(lastUpdate).toBeVisible();
+    await expect(lastUpdate.locator("svg")).toHaveCount(1);
+    const row = requireBox(await tabRow.boundingBox(), "tab row");
+    const label = requireBox(await lastUpdate.boundingBox(), "Last Update indicator");
+    expect(label.y).toBeGreaterThanOrEqual(row.y);
+    expect(label.y + label.height).toBeLessThanOrEqual(row.y + row.height);
+    expect(row.x + row.width - (label.x + label.width)).toBeLessThanOrEqual(16);
+    await expect(page.locator("[data-record-scroller] .detail-last-update")).toHaveCount(0);
+
+    // AD-30/AD-31: the card holds no tasks, meetings or calls, so the rail draws no badge.
+    const badgeRows = await page.evaluate(() => {
+      const rail = document.querySelector("#record-related-rail");
+      return Array.from(rail?.querySelectorAll("div[class*='justify-between']") ?? []).map(
+        (entry) => ({
+          label: entry.querySelector("a")?.textContent?.trim() ?? "",
+          badge: entry.querySelector("span[class*='rounded-full']")?.textContent?.trim() ?? null,
+        }),
+      );
+    });
+    for (const title of ["Open Activities", "Closed Activities"]) {
+      expect(badgeRows.filter((entry) => entry.label === title)).toEqual([]);
+    }
+    if (process.env.PAPERCLIP_RUN_SCRATCH_DIR) {
+      await page.screenshot({
+        path: `${process.env.PAPERCLIP_RUN_SCRATCH_DIR}/mep394-account-detail.png`,
+      });
+    }
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Hierarchy View opens Contact Hierarchy modal, shows tree, closes, and navigates on contact link (AD-115, AD-163, AD-164)", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const contactsSection = page.getByRole("region", { name: "Contacts" });
+    const hierarchyBtn = contactsSection.getByRole("button", { name: "Hierarchy View" });
+    await expect(hierarchyBtn).toBeVisible();
+
+    // 1. Click Hierarchy View -> opens modal
+    await hierarchyBtn.click();
+    const modal = page.getByRole("dialog");
+    await expect(modal).toBeVisible();
+    await expect(modal.getByRole("heading", { name: "Contact Hierarchy" })).toBeVisible();
+    const closeBtn = modal.getByRole("button", { name: "Close Modal" });
+    await expect(closeBtn).toBeVisible();
+
+    // 2. Tree renders root account and contacts
+    const accountRoot = modal.locator("[data-part='account-root']");
+    await expect(accountRoot).toBeVisible();
+    await expect(modal.getByRole("link").first()).toBeVisible();
+
+    // Take screenshot of opened modal for Accounts entry
+    const scratchDir = process.env.PAPERCLIP_RUN_SCRATCH_DIR || process.env.PAPERCLIP_SCRATCH_DIR;
+    if (scratchDir) {
+      await page.screenshot({ path: `${scratchDir}/accounts-contact-hierarchy-open.png` });
+    }
+
+    // 3. Test closing via Close Modal button
+    await closeBtn.click();
+    await expect(modal).not.toBeVisible();
+
+    // 4. Reopen and close via Escape
+    await hierarchyBtn.click();
+    await expect(modal).toBeVisible();
+    await page.keyboard.press("Escape");
+    await expect(modal).not.toBeVisible();
+
+    // 5. Reopen and navigate via contact link
+    await hierarchyBtn.click();
+    await expect(modal).toBeVisible();
+    const contactLink = modal.getByRole("link").first();
+    const contactHref = await contactLink.getAttribute("href");
+    expect(contactHref).toBeTruthy();
+    await contactLink.click();
+    await expect(modal).not.toBeVisible();
+    if (contactHref) {
+      await expect(page).toHaveURL(contactHref);
+    }
+
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Deals card lists the account deals and Deal Name opens Deal detail", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const deals = page.getByRole("region", { name: "Deals" });
+    await expect(deals.getByRole("table")).toBeVisible();
+    const dealLink = deals.getByRole("link", { name: "Deal 001" });
+    await expect(dealLink).toHaveAttribute("href", /\/tab\/Deals\/700000000000000000$/);
+    await dealLink.click();
+    await expect(page).toHaveURL(moduleRecordPath(org.slug, DEALS_TAB, DEAL_RECORD_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Deals card New Deal opens the create form with Account Name filled", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const deals = page.getByRole("region", { name: "Deals" });
+    await expect(deals.getByRole("table")).toBeVisible();
+    await expect(deals.getByRole("button", { name: "Assign" })).toBeVisible();
+    await deals.getByRole("button", { name: "New Deal" }).click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, DEALS_TAB));
+    await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+      "Account 001",
+    );
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Deals rail plus opens the create form with Account Name filled", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const rail = page.locator("[data-record-rail]");
+    const dealsRailLink = rail.getByRole("link", { name: "Deals" });
+    await expect(dealsRailLink).not.toHaveAttribute("data-later-module");
+    await dealsRailLink.click();
+    const addButton = rail.getByRole("button", { name: "Add" });
+    await expect(addButton).not.toHaveAttribute("data-later-module");
+    await addButton.click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, DEALS_TAB));
+    await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+      "Account 001",
+    );
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Deals card empty state", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const listUrl = moduleListDefaultPath(org.slug, ACCOUNTS_TAB);
+    await page.goto(listUrl);
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible({ timeout: 15_000 });
+    const dealsListDone = waitForModuleBulkList(page, "Deals");
+    await page.goto(moduleRecordPath(org.slug, ACCOUNTS_TAB, EMPTY_RELATED_ACCOUNT_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+    const dealsList = await dealsListDone;
+    expect(dealsList.ok()).toBe(true);
+    const deals = page.getByRole("region", { name: "Deals" });
+    await expect(deals.getByText("No records found")).toBeVisible();
+    await expect(deals.getByRole("table")).toHaveCount(0);
+  });
+  test("Cases card is live: lists linked cases, New opens the Cases form prefilled", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const cases = page.getByRole("region", { name: "Cases" });
+    await cases.scrollIntoViewIfNeeded();
+    await expect(cases.getByRole("link").first()).toHaveAttribute("href", /\/tab\/Cases\/\d+$/);
+    await expect(cases.getByRole("button", { name: "Assign" })).toBeVisible();
+    await expect(cases.locator("[data-later-module]")).toHaveCount(0);
+    await cases.getByRole("button", { name: "New" }).click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, "Cases"));
+    await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+      "Account 001",
+    );
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+  test("Cases card empty state", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, EMPTY_RELATED_ACCOUNT_ID);
+    await expectEmptyCasesCard(page);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+  test("Cases card: New, Save, row on the card, Subject opens the Case", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, EMPTY_RELATED_ACCOUNT_ID);
+    await expectEmptyCasesCard(page);
+    await createCaseFromCardAndOpenIt(
+      page,
+      org.slug,
+      moduleRecordPath(org.slug, "Accounts", EMPTY_RELATED_ACCOUNT_ID),
+      "E2E linked case",
+    );
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+});
+
+type Box = { x: number; y: number; width: number; height: number };
+
+function requireBox(box: Box | null, label: string): Box {
+  if (!box) throw new Error(`Missing ${label}`);
+  return box;
+}
+
+function headerTitle(page: import("@playwright/test").Page) {
+  return page.locator("[data-record-header]").getByRole("heading", { level: 1 });
+}

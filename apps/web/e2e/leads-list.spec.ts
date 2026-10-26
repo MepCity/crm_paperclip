@@ -1,9 +1,16 @@
 import type { Locator } from "@playwright/test";
 import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
-import { LEADS_MODULE, moduleListCustomPath, moduleListDefaultPath } from "./support/crm-paths";
+import {
+  LEADS_MODULE,
+  moduleDraftsPath,
+  moduleListCustomPath,
+  moduleListDefaultPath,
+  moduleTagsPath,
+} from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, ignoreFailedResponses, test } from "./support/test";
+import { exerciseTouchedFilter } from "./support/touched-filter";
 import { expectType } from "./support/typography";
 
 /** Decorative owner avatar in RecordChoice rows (aria-hidden); known open question on img-alt. */
@@ -609,8 +616,22 @@ test.describe("Leads list page", () => {
       "data-selected",
       "true",
     );
-    await page.keyboard.press("Escape");
-    await page.getByRole("button", { name: "Cancel" }).click();
+    await page.getByRole("option", { name: "None", exact: true }).click();
+    const resetBulk = page.waitForResponse((response) => {
+      const url = new URL(response.url());
+      return (
+        url.pathname === "/crm/v2.2/Leads/bulk" &&
+        !url.searchParams.has("sort_by") &&
+        !url.searchParams.has("sort_order")
+      );
+    });
+    await page.getByRole("button", { name: "Apply" }).click();
+    expect((await resetBulk).ok()).toBe(true);
+    await expect.poll(() => new URL(page.url()).searchParams.has("sort_by")).toBe(false);
+    await expect.poll(() => new URL(page.url()).searchParams.has("sort_order")).toBe(false);
+    await expect
+      .poll(() => companyColumnTexts(page), { timeout: RENDER_TIMEOUT_MS })
+      .toEqual(beforeSort);
     await expectNoA11yViolations(page);
   });
 
@@ -790,10 +811,10 @@ test.describe("Leads list page", () => {
     await search.fill("nothing");
     await expect(options).toHaveCount(0);
 
-    // None keeps Apply disabled.
+    // Explicitly choosing None enables clearing the sort.
     await search.fill("");
     await options.first().click();
-    await expect(page.getByRole("button", { name: "Apply" })).toBeDisabled();
+    await expect(page.getByRole("button", { name: "Apply" })).toBeEnabled();
     await expectNoA11yViolations(page);
   });
 
@@ -1145,6 +1166,30 @@ test.describe("Leads list page", () => {
     await expectNoA11yViolations(page);
   });
 
+  test("reopens the filter panel with the applied operator and value", async ({ page }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const panel = page.getByRole("region", { name: "Filter Leads by" });
+    await openFilterRow(page, panel, "Company");
+    await panel.getByRole("button", { name: /Company operator$/ }).click();
+    await page.getByRole("option", { name: "is", exact: true }).click();
+    await panel.getByRole("textbox", { name: "Company value" }).fill("Example");
+    const responses = waitForFilteredListResponses(page);
+    await panel.getByRole("button", { name: "Apply Filter" }).click();
+    const [bulk, count] = await responses;
+    expect(bulk.ok()).toBe(true);
+    expect(count.ok()).toBe(true);
+    await page.getByRole("button", { name: "Filter", exact: true }).click();
+    await expect(panel).toBeHidden();
+    await page.getByRole("button", { name: "Filter", exact: true }).click();
+    await expect(panel.getByRole("checkbox", { name: "Company", exact: true })).toBeChecked();
+    await expect(panel.getByRole("button", { name: /Company operator$/ })).toHaveText("is");
+    await expect(panel.getByRole("textbox", { name: "Company value" })).toHaveValue("Example");
+    await expect(panel.getByRole("button", { name: "Apply Filter" })).toBeEnabled();
+  });
+
   test("applies field filters to list data and count requests", async ({ page }) => {
     test.setTimeout(180_000);
     await signUpNewUser(page);
@@ -1209,7 +1254,10 @@ test.describe("Leads list page", () => {
         },
       }),
     );
-    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
 
     await panel.getByRole("button", { name: "Clear" }).click();
     await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
@@ -1244,7 +1292,10 @@ test.describe("Leads list page", () => {
         },
       }),
     );
-    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
 
     await panel.getByRole("button", { name: "Clear" }).click();
     await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
@@ -1268,13 +1319,17 @@ test.describe("Leads list page", () => {
     expect(todayCount.ok()).toBe(true);
     await expectFilterResultsInDom(page, todayExpectations);
     expect(lastBulkBody).toEqual({
+      include_activity_summary: true,
       filters: {
         field: { api_name: "Created_Time" },
         comparator: "equal",
         value: `\${TODAY}`,
       },
     });
-    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
 
     await panel.getByRole("button", { name: "Clear" }).click();
     await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
@@ -1299,6 +1354,166 @@ test.describe("Leads list page", () => {
     await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
     await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
     await expectNoA11yViolations(page);
+  });
+
+  test("applies activities system filter to list data and count requests and resets on clear", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const bulkSearchParamsPromise = captureNextBulkSearchParams(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await bulkSearchParamsPromise;
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const baselineIds = await recordIdsInTable(page);
+    const initialRows = await page.locator("table tbody tr").count();
+    const initialTotal = await page.locator("[data-part=total-value]").innerText();
+
+    const panel = page.getByRole("region", { name: "Filter Leads by" });
+    const activitiesRow = panel.getByRole("checkbox", { name: "Activities", exact: true });
+    await activitiesRow.scrollIntoViewIfNeeded();
+    await expect(activitiesRow).toBeEnabled({ timeout: 30_000 });
+    await activitiesRow.focus();
+    await page.keyboard.press("Space");
+    await expect(activitiesRow).toBeChecked();
+
+    const withoutOpenActivityOption = panel.getByRole("radio", {
+      name: "Without Open Activity",
+    });
+    await expect(withoutOpenActivityOption).toBeVisible();
+    await withoutOpenActivityOption.focus();
+    await page.keyboard.press("Space");
+    await expect(withoutOpenActivityOption).toBeChecked();
+
+    let lastBulkBody: Record<string, unknown> | undefined;
+    let lastCountBody: Record<string, unknown> | undefined;
+    page.on("request", (request) => {
+      const parsed = parseCrmRequest(request.url(), request.method());
+      if (parsed?.method !== "POST") return;
+      if (parsed.pathname.endsWith("/Leads/bulk")) {
+        lastBulkBody = request.postDataJSON() as Record<string, unknown>;
+      }
+      if (parsed.pathname.endsWith("/Leads/actions/count")) {
+        lastCountBody = request.postDataJSON() as Record<string, unknown>;
+      }
+    });
+
+    const filterResponses = waitForFilteredListResponses(page);
+    await panel.getByRole("button", { name: "Apply Filter" }).click();
+    const [bulkResponse, countResponse] = await filterResponses;
+    expect(bulkResponse.ok()).toBe(true);
+    expect(countResponse.ok()).toBe(true);
+
+    expect(lastBulkBody).toEqual(
+      expect.objectContaining({
+        activity_filter: {
+          choice: "without_open_activity",
+        },
+        include_activity_summary: true,
+      }),
+    );
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
+
+    const clearResponses = waitForFilteredListResponses(page);
+    await panel.getByRole("button", { name: "Clear" }).click();
+    const [clearBulk, clearCount] = await clearResponses;
+    expect(clearBulk.ok()).toBe(true);
+    expect(clearCount.ok()).toBe(true);
+
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
+    await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
+    await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
+    expect(lastBulkBody?.activity_filter).toBeUndefined();
+    expect(lastCountBody?.activity_filter).toBeUndefined();
+  });
+
+  test("applies campaigns system filter to list data and count requests and resets on clear", async ({
+    page,
+  }) => {
+    test.setTimeout(180_000);
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const bulkSearchParamsPromise = captureNextBulkSearchParams(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await bulkSearchParamsPromise;
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+    const baselineIds = await recordIdsInTable(page);
+    const initialRows = await page.locator("table tbody tr").count();
+    const initialTotal = await page.locator("[data-part=total-value]").innerText();
+
+    const panel = page.getByRole("region", { name: "Filter Leads by" });
+    const campaignsRow = panel.getByRole("checkbox", { name: "Campaigns", exact: true });
+    await campaignsRow.scrollIntoViewIfNeeded();
+    await expect(campaignsRow).toBeEnabled({ timeout: 30_000 });
+    await campaignsRow.focus();
+    await page.keyboard.press("Space");
+    await expect(campaignsRow).toBeChecked();
+
+    const campaignTrigger = panel.getByRole("button", { name: "Campaign Name" });
+    await expect(campaignTrigger).toBeVisible();
+    await campaignTrigger.click();
+
+    const campaignOption = page.getByRole("option", { name: "Campaign 001" });
+    await expect(campaignOption).toBeVisible();
+    await campaignOption.click();
+    await page.keyboard.press("Escape");
+
+    let lastBulkBody: Record<string, unknown> | undefined;
+    let lastCountBody: Record<string, unknown> | undefined;
+    page.on("request", (request) => {
+      const parsed = parseCrmRequest(request.url(), request.method());
+      if (parsed?.method !== "POST") return;
+      if (parsed.pathname.endsWith("/Leads/bulk")) {
+        lastBulkBody = request.postDataJSON() as Record<string, unknown>;
+      }
+      if (parsed.pathname.endsWith("/Leads/actions/count")) {
+        lastCountBody = request.postDataJSON() as Record<string, unknown>;
+      }
+    });
+
+    const filterResponses = waitForFilteredListResponses(page);
+    await panel.getByRole("button", { name: "Apply Filter" }).click();
+    const [bulkResponse, countResponse] = await filterResponses;
+    expect(bulkResponse.ok()).toBe(true);
+    expect(countResponse.ok()).toBe(true);
+
+    // CX-18: Apply must not leave the filter panel scrolled sideways.
+    const panelScroll = await panel
+      .locator(".filter-panel-content")
+      .evaluate((node) => node.scrollLeft);
+    expect(panelScroll).toBe(0);
+
+    expect(lastBulkBody).toEqual(
+      expect.objectContaining({
+        campaign_filter: {
+          campaign_ids: ["210000000000000000"],
+        },
+      }),
+    );
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
+
+    const memberLeadIds = ["100000000000000006", "100000000000000000"];
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(memberLeadIds);
+    await expect(page.locator("[data-part=total-value]")).toHaveText("2");
+
+    const clearResponses = waitForFilteredListResponses(page);
+    await panel.getByRole("button", { name: "Clear" }).click();
+    const [clearBulk, clearCount] = await clearResponses;
+    expect(clearBulk.ok()).toBe(true);
+    expect(clearCount.ok()).toBe(true);
+
+    await expect.poll(async () => recordIdsInTable(page)).toEqual(baselineIds);
+    await expect.poll(() => page.locator("table tbody tr").count()).toBe(initialRows);
+    await expect(page.locator("[data-part=total-value]")).toHaveText(initialTotal);
+    expect(lastBulkBody?.campaign_filter).toBeUndefined();
+    expect(lastCountBody?.campaign_filter).toBeUndefined();
   });
 
   test("alphabetical filter keeps the rows that start with the chosen letter", async ({ page }) => {
@@ -1345,7 +1560,10 @@ test.describe("Leads list page", () => {
         },
       }),
     );
-    expect(lastCountBody).toEqual(lastBulkBody);
+    expect(lastBulkBody).toEqual({
+      ...(lastCountBody as Record<string, unknown>),
+      include_activity_summary: true,
+    });
     expect(await alphabetControl(page).innerText()).toBe("L");
     const names = await leadNameColumnTexts(page);
     expect(names.length).toBeGreaterThan(0);
@@ -1886,7 +2104,7 @@ test.describe("Leads list page", () => {
     const funnel = requireBox(await filter.locator("svg").boundingBox(), "funnel ink");
     expect(Math.abs(funnel.width - 15)).toBeLessThanOrEqual(0.5);
     expect(Math.abs(funnel.height - 16)).toBeLessThanOrEqual(0.5);
-    await expect(filter.locator("svg")).toHaveCSS("color", "rgb(0, 0, 0)");
+    await expect(filter.locator("svg")).toHaveCSS("color", "rgb(97, 110, 136)");
 
     // View type switcher: seven controls on a 6 px gap, the first tile on the measured edge,
     // the unimplemented presentations aria-disabled (Interim).
@@ -1975,4 +2193,98 @@ test.describe("Leads list page", () => {
     );
     expect(Math.abs(firstItem.height - 32)).toBeLessThanOrEqual(0.5);
   });
+
+  test("TAG-02, PS-05: navigates to Manage Tags and Drafts from Actions menu and back to list", async ({
+    page,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+
+    // Open Actions menu and navigate to Manage Tags
+    await page.getByRole("button", { name: "Actions" }).click();
+    await page.getByRole("menuitem", { name: "Manage Tags" }).click();
+
+    await expect(page).toHaveURL(moduleTagsPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("heading", { name: "Manage Tags" })).toBeVisible();
+    await expect(page.locator("#main-content").getByText("Leads", { exact: true })).toBeVisible();
+
+    // Click back to return to the list
+    await page.getByRole("button", { name: "Back" }).click();
+    await expect(page).toHaveURL(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+
+    // Open Actions menu and navigate to Drafts
+    await page.getByRole("button", { name: "Actions" }).click();
+    await page.getByRole("menuitem", { name: "Drafts" }).click();
+
+    await expect(page).toHaveURL(moduleDraftsPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("heading", { name: "Drafts" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Criteria" })).toBeVisible();
+
+    // Click back to return to the list
+    await page.getByRole("button", { name: "Back" }).click();
+    await expect(page).toHaveURL(moduleListDefaultPath(org.slug, LEADS_MODULE));
+    await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
+  });
+});
+
+test("Print View exposes a left flyout without printing or navigating", async ({ page }) => {
+  await page.setViewportSize({ width: 1470, height: 835 });
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
+  const initialUrl = page.url();
+  await page.evaluate(() => {
+    Object.assign(window, { printCalls: 0, openCalls: 0 });
+    window.print = () => {
+      Object.assign(window, { printCalls: Reflect.get(window, "printCalls") + 1 });
+    };
+    window.open = () => {
+      Object.assign(window, { openCalls: Reflect.get(window, "openCalls") + 1 });
+      return null;
+    };
+  });
+  await page.getByRole("button", { name: "Actions", exact: true }).click();
+  const printView = page.getByRole("menuitem", { name: "Print View", exact: true });
+  await printView.hover();
+  const defaultItem = page.getByRole("menuitem", { name: "Print Default view" });
+  const canvasItem = page.getByRole("menuitem", { name: "Print Using Canvas" });
+  await expect(defaultItem).toBeVisible();
+  await expect(canvasItem).toBeVisible();
+  const parentBox = requireBox(await printView.boundingBox());
+  const childBox = requireBox(await defaultItem.boundingBox());
+  expect(childBox.x + childBox.width).toBeLessThanOrEqual(parentBox.x);
+  await page.screenshot({ path: test.info().outputPath("print-view-submenu.png") });
+  await expect(defaultItem).not.toHaveAttribute("data-later-module", "M6");
+  for (const item of [canvasItem]) {
+    await expect(item).toHaveAttribute("data-later-module", "M6");
+    // Placeholder rows are aria-disabled; dispatch a pointer click to verify their event guard.
+    await item.click({ force: true });
+    await expect(defaultItem).toBeVisible();
+  }
+  expect(page.url()).toBe(initialUrl);
+  expect(
+    await page.evaluate(() => [
+      Reflect.get(window, "printCalls"),
+      Reflect.get(window, "openCalls"),
+    ]),
+  ).toEqual([0, 0]);
+  await defaultItem.focus();
+  await page.keyboard.press("ArrowLeft");
+  await expect(defaultItem).toHaveCount(0);
+  await expect(printView).toBeFocused();
+  await page.keyboard.press("ArrowRight");
+  await expect(defaultItem).toBeVisible();
+  await page.keyboard.press("Escape");
+  await expect(defaultItem).toHaveCount(0);
+  await page.keyboard.press("Escape");
+  await expect(page.getByRole("menu")).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Actions", exact: true })).toBeFocused();
+});
+
+test("Leads applies the Touched Records system filter and restores on Clear", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseTouchedFilter(page, org.slug, "Leads");
 });

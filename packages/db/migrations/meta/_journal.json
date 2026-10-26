@@ -15,6 +15,34 @@
       "when": 1791063498607,
       "tag": "0001_military_patriot",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791898377790,
+      "tag": "0002_complex_exodus",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791901587832,
+      "tag": "0003_lying_union_jack",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1792785600000,
+      "tag": "0004_tenant_context_foundation",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1792868606322,
+      "tag": "0005_user_interface_language",
+      "breakpoints": true
     }
   ]
 }

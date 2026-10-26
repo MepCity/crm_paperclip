@@ -10,6 +10,8 @@ import {
   type SelectUserRecord,
 } from "@/components/records/form/select-user-dialog";
 import { Button } from "@/components/ui/button";
+import { claimOpeningFocus } from "@/components/ui/opening-focus";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { useChangeOwner } from "@/lib/api/client/hooks";
 import "./change-owner-dialog.css";
 
@@ -40,6 +42,7 @@ export function ChangeOwnerDialog({
   users,
   onSuccess,
 }: ChangeOwnerDialogProps) {
+  const t = useUiTranslations();
   const titleId = useId();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [ownerId, setOwnerId] = useState<string | null>(null);
@@ -54,7 +57,7 @@ export function ChangeOwnerDialog({
     setPickerOpen(false);
     setFieldError(null);
     setGeneralError(null);
-    const frame = requestAnimationFrame(() => cancelRef.current?.focus());
+    const frame = requestAnimationFrame(() => claimOpeningFocus(cancelRef.current));
     return () => cancelAnimationFrame(frame);
   }, [isOpen]);
 
@@ -120,7 +123,7 @@ export function ChangeOwnerDialog({
               id={titleId}
               className="mb-(--size-confirm-dialog-title-gap) text-2xl font-bold text-text-strong"
             >
-              Change Owner
+              {t("records.actions.changeOwner")}
             </Heading>
             <div className="mb-(--size-confirm-dialog-message-actions-gap)">
               <FieldInput
@@ -135,8 +138,8 @@ export function ChangeOwnerDialog({
                 hideLabel={false}
                 disabled={busy}
                 onOpenPicker={() => setPickerOpen(true)}
-                pickerLabel="Open owner picker"
-                searchLabel="Search Users"
+                pickerLabel={t("records.list.openOwnerPicker")}
+                searchLabel={t("records.list.searchUsers")}
               />
             </div>
             {generalError ? (
@@ -153,7 +156,7 @@ export function ChangeOwnerDialog({
                 isDisabled={busy}
                 onPress={close}
               >
-                Cancel
+                {t("common.actions.cancel")}
               </Button>
               <Button
                 variant="primary"
@@ -163,7 +166,7 @@ export function ChangeOwnerDialog({
                 isPending={busy}
                 onPress={() => void submit()}
               >
-                Change Owner
+                {t("records.actions.changeOwner")}
               </Button>
             </div>
           </AriaDialog>
@@ -171,9 +174,9 @@ export function ChangeOwnerDialog({
       </ModalOverlay>
       {pickerOpen ? (
         <SelectUserDialog
-          title="Select User"
-          searchLabel="Search Users"
-          searchPlaceholder="Search Users"
+          title={t("records.dialogs.selectUser")}
+          searchLabel={t("records.list.searchUsers")}
+          searchPlaceholder={t("records.list.searchUsers")}
           selectedUserLabel="Selected User:"
           selectColumnLabel="Select"
           columnUserName="User Name"
@@ -181,7 +184,7 @@ export function ChangeOwnerDialog({
           columnRole="Role"
           columnEmail="Email"
           columnProfile="Profile"
-          cancelLabel="Cancel"
+          cancelLabel={t("common.actions.cancel")}
           doneLabel="Done"
           users={toSelectUserRecords(users)}
           selectedId={ownerId ?? users[0]?.id ?? ""}

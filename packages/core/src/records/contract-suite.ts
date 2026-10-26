@@ -15,6 +15,7 @@ import type {
   RecordService,
 } from "./contract";
 import type { RecordServiceContractModuleDefinition } from "./contract-suite-module";
+import { roundMoneyTwoDecimals } from "./rounding";
 
 type ContractFactory = (
   ctx: OrgContext,
@@ -70,6 +71,10 @@ export function describeRecordServiceContract(
       optional: moduleOptional,
     } = moduleDef;
     const markerField = filterMarker.field;
+    const massInput = (fallback: string): RecordInput =>
+      moduleOptional?.massUpdateScenario
+        ? { [moduleOptional.massUpdateScenario.field]: moduleOptional.massUpdateScenario.value }
+        : { [markerField]: fallback };
     const markerSample = filterMarker.sample;
     const markerUpdated = filterMarker.updated;
     const markerTenantOther = filterMarker.tenantOther;
@@ -111,6 +116,85 @@ export function describeRecordServiceContract(
       await expect(promise).rejects.toBeInstanceOf(ValidationError);
       await expect(promise).rejects.toMatchObject({ fieldErrors: { [field]: expect.any(Array) } });
     };
+    it("summarizes ordered picklist options with view and filter count parity", async () => {
+      const field = metadata.fields.find(
+        (candidate) => candidate.dataType === "picklist" && candidate.picklist?.length,
+      );
+      if (!field) throw new Error("Contract module needs a picklist");
+      const sumField = metadata.fields.find((candidate) => candidate.dataType === "currency");
+      const view =
+        views.find((candidate) => candidate.name === `My ${modulePluralLabel}`) ?? defaultView;
+      const filters: Criteria = { field: markerField, comparator: "equal", value: markerSample };
+      await service.create(moduleApiName, forView(view, { [markerField]: markerSample }));
+      const query = {
+        viewId: view.id,
+        filters,
+        groupBy: field.apiName,
+        ...(sumField ? { sum: sumField.apiName } : {}),
+      };
+      const groups = await service.summarize(moduleApiName, query);
+      expect(groups.slice(0, field.picklist?.length).map((group) => group.value)).toEqual(
+        field.picklist?.map((option) => option.storedValue),
+      );
+      const all = await service.list(moduleApiName, { ...query, page: 1, perPage: 100 });
+      expect(all.records).toHaveLength(1);
+      expect(groups.reduce((total, group) => total + group.count, 0)).toBe(all.records.length);
+      for (const group of groups) {
+        const combined: Criteria = {
+          groupOperator: "and",
+          group: [
+            filters,
+            {
+              field: field.apiName,
+              comparator: group.value === null ? "is_empty" : "equal",
+              value: group.value,
+            },
+          ],
+        };
+        expect(group.count).toBe(
+          await service.count(moduleApiName, { viewId: view.id, filters: combined }),
+        );
+        expect(group.sum).toBe(
+          sumField
+            ? roundMoneyTwoDecimals(
+                all.records
+                  .filter((row) => (row.fields[field.apiName] ?? null) === group.value)
+                  .reduce((total, row) => total + Number(row.fields[sumField.apiName] ?? 0), 0),
+              )
+            : null,
+        );
+      }
+      expect(groups.some((group) => group.count === 0)).toBe(true);
+      expect(
+        (
+          await service.summarize(moduleApiName, { viewId: defaultView.id, groupBy: field.apiName })
+        ).every((group) => group.sum === null),
+      ).toBe(true);
+      await validation(
+        service.summarize(moduleApiName, { viewId: defaultView.id, groupBy: "Unknown" }),
+        "groupBy",
+      );
+      await validation(
+        service.summarize(moduleApiName, { viewId: defaultView.id, groupBy: markerField }),
+        "groupBy",
+      );
+      await validation(
+        service.summarize(moduleApiName, {
+          viewId: defaultView.id,
+          groupBy: field.apiName,
+          sum: "Unknown",
+        }),
+        "sum",
+      );
+      await validation(
+        service.summarize(moduleApiName, {
+          viewId: defaultView.id,
+          groupBy: field.apiName,
+          sum: markerField,
+        }),
+        "sum",
+      );
+    });
     if (moduleOptional?.date) {
       const dateField = moduleOptional.date.field;
       it("validates, reads, sorts and filters a calendar date", async () => {
@@ -552,17 +636,23 @@ export function describeRecordServiceContract(
         await validation(service.update(moduleApiName, created.id, { [name]: ctx.userId }), name);
     });
     it("mass updates one eligible field and applies ordinary update validation", async () => {
+      const massField = moduleOptional?.massUpdateScenario?.field ?? markerField;
+      const massValue = moduleOptional?.massUpdateScenario?.value ?? "Mass Updated";
       const first = await service.create(moduleApiName, input());
       const second = await service.create(moduleApiName, input());
       const ids = [second.id, first.id];
-      await service.massUpdate(moduleApiName, ids, { [markerField]: "Mass Updated" });
+      await service.massUpdate(moduleApiName, ids, { [massField]: massValue });
       for (const id of ids)
-        expect((await service.get(moduleApiName, id)).fields[markerField]).toBe("Mass Updated");
+        expect((await service.get(moduleApiName, id)).fields[massField]).toBe(massValue);
       await validation(service.massUpdate(moduleApiName, ids, {}), "data");
-      const massUpdateSecondFieldKey = massUpdateClearablePhone ?? "Second_Mass_Update_Field";
+      const massUpdateSecondFieldKey =
+        massUpdateClearablePhone ??
+        metadata.fields.find((field) => field.massUpdate && field.apiName !== massField)?.apiName ??
+        metadata.fields.find((field) => field.apiName !== massField)?.apiName ??
+        "Second_Mass_Update_Field";
       await validation(
         service.massUpdate(moduleApiName, ids, {
-          [markerField]: "Example",
+          [massField]: "Example",
           [massUpdateSecondFieldKey]: "123",
         }),
         "data",
@@ -576,17 +666,14 @@ export function describeRecordServiceContract(
         service.massUpdate(moduleApiName, ids, { Unknown_Field: "Example" }),
         "Unknown_Field",
       );
-      const markerFieldMeta = metadata.fields.find((field) => field.apiName === markerField);
+      const markerFieldMeta = metadata.fields.find((field) => field.apiName === massField);
       const massUpdateInvalidValues: FieldValue[] = markerFieldMeta?.required
         ? [null, "", " ", 42]
         : [42];
       if (markerFieldMeta?.maxLength != null)
         massUpdateInvalidValues.push("x".repeat(markerFieldMeta.maxLength + 1));
       for (const value of massUpdateInvalidValues)
-        await validation(
-          service.massUpdate(moduleApiName, ids, { [markerField]: value }),
-          markerField,
-        );
+        await validation(service.massUpdate(moduleApiName, ids, { [massField]: value }), massField);
       if (massUpdateInvalidPicklist)
         await validation(
           service.massUpdate(moduleApiName, ids, {
@@ -606,7 +693,7 @@ export function describeRecordServiceContract(
             (await service.get(moduleApiName, id)).fields[massUpdateClearablePhone],
           ).toBeNull();
       }
-      expect((await service.get(moduleApiName, first.id)).fields[markerField]).toBe("Mass Updated");
+      expect((await service.get(moduleApiName, first.id)).fields[massField]).toBe(massValue);
     });
 
     it("changes ownership only to an active organization member", async () => {
@@ -649,7 +736,7 @@ export function describeRecordServiceContract(
               case "update":
                 return service.update(moduleApiName, locked.id, { [markerField]: markerUpdated });
               case "massUpdate":
-                return service.massUpdate(moduleApiName, ids, { [markerField]: markerUpdated });
+                return service.massUpdate(moduleApiName, ids, massInput(markerUpdated));
               case "changeOwner":
                 return service.changeOwner(moduleApiName, ids, "lock-test-owner");
               case "delete":
@@ -677,7 +764,7 @@ export function describeRecordServiceContract(
       for (const missing of ["missing", foreignRecord.id]) {
         const ids = [first.id, missing];
         for (const run of [
-          () => service.massUpdate(moduleApiName, ids, { [markerField]: "Must Not Persist" }),
+          () => service.massUpdate(moduleApiName, ids, massInput("Must Not Persist")),
           () => service.changeOwner(moduleApiName, ids, ctx.userId),
           () => service.delete(moduleApiName, ids),
         ]) {
@@ -691,10 +778,7 @@ export function describeRecordServiceContract(
     it("enforces 1–500 IDs for every batch operation, including deletion", async () => {
       const record = await service.create(moduleApiName, input());
       for (const ids of [[], Array.from({ length: 501 }, () => record.id)]) {
-        await validation(
-          service.massUpdate(moduleApiName, ids, { [markerField]: "Rejected" }),
-          "ids",
-        );
+        await validation(service.massUpdate(moduleApiName, ids, massInput("Rejected")), "ids");
         await validation(service.changeOwner(moduleApiName, ids, ctx.userId), "ids");
         await validation(service.delete(moduleApiName, ids), "ids");
         expect(await service.get(moduleApiName, record.id)).toEqual(record);
@@ -703,11 +787,13 @@ export function describeRecordServiceContract(
         Array.from({ length: 500 }, () => service.create(moduleApiName, input())),
       );
       const ids = records.map((row) => row.id);
-      await service.massUpdate(moduleApiName, ids, { [markerField]: "Boundary" });
+      await service.massUpdate(moduleApiName, ids, massInput("Boundary"));
       await service.changeOwner(moduleApiName, ids, ctx.userId);
-      expect((await service.get(moduleApiName, ids[499] as string)).fields[markerField]).toBe(
-        "Boundary",
-      );
+      expect(
+        (await service.get(moduleApiName, ids[499] as string)).fields[
+          moduleOptional?.massUpdateScenario?.field ?? markerField
+        ],
+      ).toBe(moduleOptional?.massUpdateScenario?.value ?? "Boundary");
       await service.delete(moduleApiName, ids);
       await expect(service.get(moduleApiName, ids[0] as string)).rejects.toBeInstanceOf(
         NotFoundError,
@@ -1905,3 +1991,302 @@ export function describeRecordServiceContract(
     );
   });
 }
+
+/** Additive activity read contract, shared by adapters supporting parent modules. */
+export function describeActivityReadContract(name: string, makeService: ContractFactory): void {
+  describe(`${name}: activity read contract`, () => {
+    const required = <T>(value: T | undefined): T => {
+      if (value === undefined) throw new Error("Missing activity test data");
+      return value;
+    };
+    const parentInputs: Record<string, RecordInput> = {
+      Leads: { Last_Name: "Activity Example", Company: "Synthetic Company" },
+      Contacts: { Last_Name: "Activity Example" },
+      Accounts: { Account_Name: "Activity Example" },
+      Deals: { Deal_Name: "Activity Example", Stage: "Qualification", Closing_Date: "2026-10-30" },
+    };
+    for (const [module, input] of Object.entries(parentInputs)) {
+      it(`${module}: includes registered meetings in filters and summary selection`, async () => {
+        const service = await makeService(context(), {
+          now: () => new Date("2026-10-14T12:00:00Z"),
+        });
+        const view = required((await service.listViews(module)).find((item) => item.isDefault));
+        const parentInput =
+          module === "Deals"
+            ? {
+                ...input,
+                Account_Name: {
+                  module: "Accounts",
+                  id: (await service.create("Accounts", { Account_Name: "Meeting Account" })).id,
+                },
+              }
+            : input;
+        const parents: RecordData[] = [];
+        for (let i = 0; i < 7; i++) parents.push(await service.create(module, parentInput));
+        const link = module === "Leads" || module === "Contacts" ? "Who_Id" : "What_Id";
+        const dates = [
+          "2026-10-13",
+          "2026-10-14",
+          "2026-10-15",
+          "2026-10-21",
+          "2026-10-22",
+          "2026-10-13",
+        ];
+        const meetings: RecordData[] = [];
+        for (const [i, date] of dates.entries()) {
+          meetings.push(
+            await service.create("Events", {
+              Event_Title: "Synthetic meeting",
+              Meeting_Venue__s: "In-office",
+              Start_DateTime: `${date}T00:00:00Z`,
+              End_DateTime: i === 5 ? "2026-10-14T12:00:00Z" : "2026-10-23T12:00:00Z",
+              [link]: { module, id: required(parents[i]).id },
+            }),
+          );
+        }
+        const filters: import("./contract").Criteria = {
+          group: parents.map((parent) => ({ field: "id", comparator: "equal", value: parent.id })),
+          groupOperator: "or",
+        };
+        const scenarios: [import("./contract").ActivityFilterValue, number[]][] = [
+          [{ choice: "without_open_activity" }, [5, 6]],
+          [{ choice: "overdue" }, [0]],
+          [{ choice: "without_any_activity" }, [6]],
+          [{ choice: "activity_done" }, [5]],
+          [{ choice: "activity_due", range: "today" }, [1]],
+          [{ choice: "activity_due", range: "tomorrow" }, [2]],
+          [{ choice: "activity_due", range: "next_7_days" }, [2, 3]],
+          [{ choice: "activity_due", range: "today_overdue" }, [0, 1]],
+        ];
+        const groupBy = required(
+          (await service.getModule(module)).fields.find((field) => field.dataType === "picklist"),
+        ).apiName;
+        for (const [activityFilter, indexes] of scenarios) {
+          const query = { viewId: view.id, filters, activityFilter };
+          const list = await service.list(module, { ...query, page: 1, perPage: 100 });
+          expect(list.records.map((record) => record.id).sort()).toEqual(
+            indexes.map((i) => required(parents[i]).id).sort(),
+          );
+          expect(await service.count(module, query)).toBe(indexes.length);
+          expect(
+            (await service.summarize(module, { ...query, groupBy })).reduce(
+              (total, group) => total + group.count,
+              0,
+            ),
+          ).toBe(indexes.length);
+        }
+        const read = () =>
+          service.list(module, {
+            viewId: view.id,
+            filters,
+            page: 1,
+            perPage: 100,
+            includeActivitySummary: true,
+          });
+        const initial = await read();
+        for (let i = 0; i < 5; i++)
+          expect(initial.activitySummaries?.[required(parents[i]).id]).toEqual({
+            kind: "meeting",
+            activityId: required(meetings[i]).id,
+            date: `${dates[i]}T00:00:00Z`,
+          });
+        expect(initial.activitySummaries).not.toHaveProperty(required(parents[5]).id);
+        expect(initial.activitySummaries).not.toHaveProperty(required(parents[6]).id);
+        const task = await service.create("Tasks", {
+          Subject: "Same day task",
+          Due_Date: required(dates[0]),
+          [link]: { module, id: required(parents[0]).id },
+        });
+        expect((await read()).activitySummaries?.[required(parents[0]).id]?.activityId).toBe(
+          task.id,
+        );
+        await service.update("Tasks", task.id, { Due_Date: "2026-10-15" });
+        expect((await read()).activitySummaries?.[required(parents[0]).id]?.activityId).toBe(
+          required(meetings[0]).id,
+        );
+      });
+      it(`${module}: filters boundary days consistently across list/count/summary`, async () => {
+        const service = await makeService(context(), {
+          now: () => new Date("2026-10-14T12:00:00Z"),
+        });
+        const metadata = await service.getModule(module);
+        const view = (await service.listViews(module)).find((item) => item.isDefault);
+        if (!view) throw new Error("Missing default view");
+        const parentInput =
+          module === "Deals"
+            ? {
+                ...input,
+                Account_Name: {
+                  module: "Accounts",
+                  id: (await service.create("Accounts", { Account_Name: "Activity Account" })).id,
+                },
+              }
+            : input;
+        const parents: RecordData[] = [];
+        for (let i = 0; i < 8; i++) parents.push(await service.create(module, parentInput));
+        const dates = ["2026-10-13", "2026-10-14", "2026-10-15", "2026-10-21", "2026-10-22", null];
+        const link = module === "Leads" || module === "Contacts" ? "Who_Id" : "What_Id";
+        const tasks: RecordData[] = [];
+        for (const [i, Due_Date] of dates.entries()) {
+          tasks.push(
+            await service.create("Tasks", {
+              Subject: "Synthetic activity",
+              Due_Date,
+              Status: "Not Started",
+              [link]: { module, id: required(parents[i]).id },
+            }),
+          );
+        }
+        await service.create("Tasks", {
+          Subject: "Closed activity",
+          Status: "Completed",
+          Due_Date: "2026-10-13",
+          [link]: { module, id: required(parents[6]).id },
+        });
+        const ids = new Set(parents.map((record) => record.id));
+        const scenarios: [import("./contract").ActivityFilterValue, number[]][] = [
+          [{ choice: "without_open_activity" }, [6, 7]],
+          [{ choice: "overdue" }, [0]],
+          [{ choice: "without_any_activity" }, [7]],
+          [{ choice: "activity_done" }, [6]],
+          [{ choice: "activity_due", range: "today" }, [1]],
+          [{ choice: "activity_due", range: "tomorrow" }, [2]],
+          [{ choice: "activity_due", range: "next_7_days" }, [2, 3]],
+          [{ choice: "activity_due", range: "today_overdue" }, [0, 1]],
+        ];
+        const groupBy = required(
+          metadata.fields.find((field) => field.dataType === "picklist"),
+        ).apiName;
+        for (const [activityFilter, indexes] of scenarios) {
+          const query = { viewId: view.id, activityFilter };
+          const list = await service.list(module, {
+            ...query,
+            page: 1,
+            perPage: 100,
+            sort: { field: "id", order: "desc" },
+          });
+          expect(
+            list.records
+              .filter((record) => ids.has(record.id))
+              .map((record) => record.id)
+              .sort(),
+          ).toEqual(indexes.map((i) => required(parents[i]).id).sort());
+          const count = await service.count(module, query);
+          const groups = await service.summarize(module, { ...query, groupBy });
+          expect(groups.reduce((total, group) => total + group.count, 0)).toBe(count);
+          const pages: RecordData[] = [];
+          for (let page = 1; ; page++) {
+            const result = await service.list(module, { ...query, page, perPage: 100 });
+            pages.push(...result.records);
+            if (!result.moreRecords) break;
+          }
+          expect(pages).toHaveLength(count);
+        }
+        const summary = await service.list(module, {
+          viewId: view.id,
+          page: 1,
+          perPage: 100,
+          sort: { field: "id", order: "desc" },
+          fields: [],
+          includeActivitySummary: true,
+        });
+        expect(summary.activitySummaries?.[required(parents[0]).id]).toEqual({
+          kind: "task",
+          activityId: required(tasks[0]).id,
+          date: dates[0],
+        });
+        expect(summary.activitySummaries?.[required(parents[5]).id]?.date).toBeNull();
+        expect(summary.activitySummaries).not.toHaveProperty(required(parents[6]).id);
+        expect(summary.activitySummaries).not.toHaveProperty(required(parents[7]).id);
+        expect(
+          Object.keys(summary.activitySummaries ?? {}).every((id) =>
+            summary.records.some((record) => record.id === id),
+          ),
+        ).toBe(true);
+        expect(
+          (await service.list(module, { viewId: view.id, page: 1, perPage: 10 })).activitySummaries,
+        ).toBeUndefined();
+        const second = await service.create("Tasks", {
+          Subject: "Earlier activity",
+          Due_Date: "2026-10-12",
+          [link]: { module, id: required(parents[0]).id },
+        });
+        const updated = await service.list(module, {
+          viewId: view.id,
+          page: 1,
+          perPage: 100,
+          sort: { field: "id", order: "desc" },
+          includeActivitySummary: true,
+        });
+        expect(updated.activitySummaries?.[required(parents[0]).id]?.activityId).toBe(second.id);
+      });
+    }
+    it("keeps links and activity reads isolated by organization and parent module", async () => {
+      const first = await makeService(context());
+      const other = await makeService(context());
+      const lead = await first.create("Leads", parentInputs.Leads ?? {});
+      const foreign = await other.create("Leads", parentInputs.Leads ?? {});
+      const contact = await first.create("Contacts", parentInputs.Contacts ?? {});
+      const account = await first.create("Accounts", parentInputs.Accounts ?? {});
+      const task = await first.create("Tasks", {
+        Subject: "Two parent activity",
+        Who_Id: { module: "Contacts", id: contact.id },
+        What_Id: { module: "Accounts", id: account.id },
+      });
+      const read = async (service: RecordService, module: string, id: string) => {
+        const view = required((await service.listViews(module)).find((item) => item.isDefault));
+        return service.list(module, {
+          viewId: view.id,
+          page: 1,
+          perPage: 10,
+          filters: { field: "id", comparator: "equal", value: id },
+          includeActivitySummary: true,
+        });
+      };
+      expect(
+        (await read(first, "Contacts", contact.id)).activitySummaries?.[contact.id]?.activityId,
+      ).toBe(task.id);
+      expect(
+        (await read(first, "Accounts", account.id)).activitySummaries?.[account.id]?.activityId,
+      ).toBe(task.id);
+      expect((await read(first, "Leads", lead.id)).activitySummaries).toEqual({});
+      await first.create("Tasks", {
+        Subject: "Local activity",
+        Who_Id: { module: "Leads", id: lead.id },
+      });
+      expect((await read(other, "Leads", foreign.id)).activitySummaries).toEqual({});
+      const original = await read(first, "Contacts", contact.id);
+      const summary = required(original.activitySummaries?.[contact.id]);
+      summary.date = "2099-01-01";
+      expect(
+        (await read(first, "Contacts", contact.id)).activitySummaries?.[contact.id]?.date,
+      ).toBeNull();
+    });
+    it("rejects activity filters outside parent modules on every read path", async () => {
+      const service = await makeService(context());
+      const viewId = required((await service.listViews("Tasks"))[0]).id;
+      const query = { viewId, activityFilter: { choice: "overdue" } as const };
+      await expect(
+        service.list("Tasks", { ...query, page: 1, perPage: 10 }),
+      ).rejects.toBeInstanceOf(ValidationError);
+      await expect(service.count("Tasks", query)).rejects.toBeInstanceOf(ValidationError);
+      await expect(
+        service.summarize("Tasks", { ...query, groupBy: "Status" }),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(
+        (
+          await service.list("Tasks", {
+            viewId,
+            page: 1,
+            perPage: 10,
+            includeActivitySummary: true,
+          })
+        ).activitySummaries,
+      ).toEqual({});
+    });
+  });
+}
+
+export { describeRecordHistoryContract } from "./history-contract-suite";
+
+export { describeNotesContract } from "./notes-contract-suite";

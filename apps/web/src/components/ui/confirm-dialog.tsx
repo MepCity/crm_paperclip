@@ -2,6 +2,7 @@
 
 import { useEffect, useId, useRef, useState } from "react";
 import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-components";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { Button, type buttonStyles } from "./button";
 
 export interface ConfirmDialogProps {
@@ -23,6 +24,19 @@ export interface ConfirmDialogProps {
 
 function isPromise(value: void | Promise<void>): value is Promise<void> {
   return typeof (value as Promise<void> | undefined)?.then === "function";
+}
+
+/**
+ * Reports an error the confirm handler threw on the spot. React Aria marks its trigger pressed
+ * before calling `onPress` and clears that only once the call returns, so an error that escapes
+ * the press dispatch leaves the button pressed and its next click does nothing — the symptom the
+ * lock release below is here to clear. Reporting to the window keeps the error visible to the
+ * global error handlers (where an uncaught handler error ends up anyway; an error boundary never
+ * sees it) and lets the press finish.
+ */
+function reportPressError(error: unknown) {
+  const message = error instanceof Error ? error.message : String(error);
+  window.dispatchEvent(new ErrorEvent("error", { message, error, cancelable: true }));
 }
 
 function ConfirmDialogBody({
@@ -48,6 +62,7 @@ function ConfirmDialogBody({
   descriptionId: string;
   onPendingChange: (pending: boolean) => void;
 }) {
+  const t = useUiTranslations();
   const cancelRef = useRef<HTMLButtonElement>(null);
   const [pending, setPending] = useState(false);
   const started = useRef(false);
@@ -97,7 +112,7 @@ function ConfirmDialogBody({
           onPress={close}
           isDisabled={disabled}
         >
-          {cancelLabel}
+          {cancelLabel === "Cancel" ? t("common.actions.cancel") : cancelLabel}
         </Button>
         <Button
           variant={resolvedConfirmVariant}
@@ -108,7 +123,17 @@ function ConfirmDialogBody({
           onPress={() => {
             if (started.current || disabled) return;
             started.current = true;
-            const result = onConfirm();
+            let result: void | Promise<void>;
+            try {
+              result = onConfirm();
+            } catch (error) {
+              // Nothing started, so unlock and drop the wait state: the dialog stays open and can
+              // be confirmed again. The error is reported, never swallowed; see the helper above.
+              started.current = false;
+              setPendingState(false);
+              reportPressError(error);
+              return;
+            }
             if (!isPromise(result)) {
               close();
               return;
@@ -125,7 +150,11 @@ function ConfirmDialogBody({
             );
           }}
         >
-          {confirmLabel}
+          {confirmLabel === "Delete"
+            ? t("common.actions.delete")
+            : confirmLabel === "Save"
+              ? t("common.actions.save")
+              : confirmLabel}
         </Button>
       </div>
     </>

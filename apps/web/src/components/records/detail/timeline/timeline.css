@@ -373,3 +373,34 @@
   line-height: var(--size-detail-timeline-event-line-height);
   color: var(--color-text-muted);
 }
+
+.timeline-event-note-body {
+  font-size: var(--text-md);
+  line-height: var(--size-detail-timeline-event-line-height);
+  color: var(--color-text);
+  overflow-wrap: anywhere;
+}
+
+.timeline-event-note-body[data-clamped="true"] {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+
+.timeline-event-show-more {
+  border: 0;
+  background: none;
+  padding: 0;
+  font-size: var(--text-sm);
+  color: var(--color-primary);
+  cursor: pointer;
+}
+
+.timeline-event-add-note {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}

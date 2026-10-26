@@ -17,7 +17,14 @@ it("applies tenancy after auth and skips both on a second run", async () => {
   const url = withDatabase(adminUrl, name);
   try {
     const first = await runMigrations(url);
-    expect(first.applied).toEqual(["0000_cultured_doorman.sql", "0001_military_patriot.sql"]);
+    expect(first.applied).toEqual([
+      "0000_cultured_doorman.sql",
+      "0001_military_patriot.sql",
+      "0002_complex_exodus.sql",
+      "0003_lying_union_jack.sql",
+      "0004_tenant_context_foundation.sql",
+      "0005_user_interface_language.sql",
+    ]);
     expect(await runMigrations(url)).toEqual({ applied: [], skipped: first.applied });
     const client = new pg.Client({ connectionString: url });
     await client.connect();

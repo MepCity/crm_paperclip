@@ -20,12 +20,26 @@ test.each([null, undefined, "sample-id", 12, true, { id: "sample-id" }, { name: 
     expect(contactLookupName(value)).toBe("");
   },
 );
-test("reads a future lookup name without requiring a service type migration", () => {
+test("reads a lookup name and produces active account subtitle link", () => {
   const reference = { module: "Accounts", id: "sample-account", name: "Sample Account" };
   expect(contactLookupName(reference)).toBe("Sample Account");
   expect(
     contactsRecordHeaderIdentity(
       contactRecord({ Full_Name: "Sample Person", Account_Name: reference }),
     ),
-  ).toEqual({ title: "Sample Person", subtitle: "Sample Account", subtitleLaterModule: "M3" });
+  ).toEqual({
+    title: "Sample Person",
+    subtitle: "Sample Account",
+    subtitleHref: "/tab/Accounts/sample-account",
+  });
+  expect(
+    contactsRecordHeaderIdentity(
+      contactRecord({ Full_Name: "Sample Person", Account_Name: reference }),
+      { orgSlug: "test-org" },
+    ),
+  ).toEqual({
+    title: "Sample Person",
+    subtitle: "Sample Account",
+    subtitleHref: "/crm/test-org/tab/Accounts/sample-account",
+  });
 });

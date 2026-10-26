@@ -1,24 +1,38 @@
 "use client";
 
 import { NotFoundError } from "@crm/core/errors";
-import type { ListQuery, ModuleApiName, RecordId } from "@crm/core/records";
+import type {
+  ListQuery,
+  ModuleApiName,
+  ModuleMetadata,
+  RecordData,
+  RecordId,
+  RecordInput,
+} from "@crm/core/records";
 import { useRouter } from "next/navigation";
-import { useMemo, useState, useSyncExternalStore } from "react";
+import { type ReactNode, useMemo, useState, useSyncExternalStore } from "react";
 import { BusinessCard } from "@/components/records/detail/business-card";
 import { DetailsCard } from "@/components/records/detail/details-card";
 import { LastUpdateLabel } from "@/components/records/detail/last-update-label";
+import { NumericDatesProvider } from "@/components/records/detail/numeric-dates-context";
 import { RECORD_DETAIL_RAIL_VISIBLE_KEY } from "@/components/records/detail/record-detail-rail";
 import { RecordHeader } from "@/components/records/detail/record-header";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
-import { TimelineHistory, TimelineSurface } from "@/components/records/detail/timeline";
+import { TimelineSurface } from "@/components/records/detail/timeline";
+import { supportsRecordPrint } from "@/components/records/print/print-modules";
+import { RecordTags } from "@/components/records/tags/record-tags";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Icons } from "@/components/ui/icon";
+import { resolveLaterModule } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import {
   useDeleteRecords,
+  useHomeCurrency,
   useModule,
   useRecord,
   useRecordList,
@@ -26,7 +40,8 @@ import {
   useUsers,
   useViews,
 } from "@/lib/api/client/hooks";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { moduleRecordPrintPath } from "@/lib/crm-paths";
+import { useFormat } from "@/lib/format-context";
 import { usePreference } from "@/lib/preferences";
 import {
   type RecordListContext,
@@ -35,17 +50,43 @@ import {
   subscribeRecordListContext,
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
-import type { ModuleScreenDefinition } from "@/modules/types";
+import { openActivityCreate } from "@/modules/activity-add-new";
+import { resolveModuleLaterKey, resolveModuleScreenByApiName } from "@/modules/registry";
+import type {
+  HeaderConfirmRequest,
+  ModuleScreenDefinition,
+  RelatedListDefinition,
+} from "@/modules/types";
+import { AccountsLinkedContactSummary } from "./accounts-linked-contact-summary";
 import { InlineEditProvider } from "./inline-edit-context";
+import { ACTIVITY_PARENT_MODULES, RecordCallProvider } from "./record-call-context";
 import { RelatedCardsContainer } from "./related-cards-container";
+import { RecordTimelineHistory } from "./timeline/record-timeline-history";
 
 const FALLBACK_LIST_PAGE_SIZE = 30;
+
+// Activity modules whose lists show numeric dates; their details match.
+const NUMERIC_DATE_MODULES = new Set(["Events", "Calls", "Tasks"]);
 
 export type RecordDetailPaths = {
   defaultList: (orgSlug: string, module: ModuleApiName) => string;
   record: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
   edit: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
   clone: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
+  merge: (orgSlug: string, module: ModuleApiName, recordId: RecordId) => string;
+};
+
+export type RecordDetailSlotsContext = {
+  module: ModuleMetadata;
+  record: RecordData;
+  orgSlug: string;
+  saveRecord: (input: RecordInput) => Promise<void>;
+};
+
+export type RecordDetailSlots = {
+  overviewPrefix?: ReactNode;
+  contactSummary?: ReactNode;
+  relatedRailAfterFooter?: ReactNode;
 };
 
 export type RecordDetailScreenProps = {
@@ -54,6 +95,10 @@ export type RecordDetailScreenProps = {
   paths: RecordDetailPaths;
   definition: ModuleScreenDefinition;
   now?: Date;
+  buildRelatedLists?: (record: RecordData) => readonly RelatedListDefinition[];
+  linkedContactSummaryPath?: (recordId: RecordId) => string;
+  buildDetailSlots?: (context: RecordDetailSlotsContext) => RecordDetailSlots;
+  saveRecord?: (input: RecordInput) => Promise<void>;
 };
 
 function useModuleListContext(
@@ -91,18 +136,30 @@ export function RecordDetailScreen({
   paths,
   definition,
   now = new Date(),
+  buildRelatedLists,
+  linkedContactSummaryPath,
+  buildDetailSlots,
+  saveRecord: saveRecordOverride,
 }: RecordDetailScreenProps) {
+  const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
+  const orgFormat = useFormat();
   const moduleApiName = definition.apiName;
   const rules = definition.detail;
   const StatusSection = rules.statusRibbon?.component;
   const router = useRouter();
   const [selectedTabId, setSelectedTabId] = useState("overview");
   const [statusOverride, setStatusOverride] = useState<string | null | undefined>(undefined);
-  const [railVisible, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
+  const [railPreference, setRailVisible] = usePreference(RECORD_DETAIL_RAIL_VISIBLE_KEY, true);
+  const activityLayout = rules.layout === "activity";
+  const railVisible = activityLayout ? false : railPreference;
   const [selectedRelatedId, setSelectedRelatedId] = useState<string | undefined>(
     rules.relatedLists?.[0]?.id,
   );
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [headerConfirm, setHeaderConfirm] = useState<HeaderConfirmRequest | null>(null);
+  const [headerConfirmBusy, setHeaderConfirmBusy] = useState(false);
+  const [headerConfirmError, setHeaderConfirmError] = useState<string | null>(null);
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const updateRecord = useUpdateRecord(moduleApiName);
   const deleteRecords = useDeleteRecords(moduleApiName);
@@ -111,6 +168,7 @@ export function RecordDetailScreen({
   const moduleQuery = useModule(moduleApiName);
   const recordQuery = useRecord(moduleApiName, recordId);
   const usersQuery = useUsers();
+  const homeCurrencyQuery = useHomeCurrency({ enabled: Boolean(rules.headerCurrency) });
   const viewsQuery = useViews(moduleApiName, { enabled: viewsQueryEnabled });
 
   const fallbackViewId = useMemo(() => {
@@ -148,27 +206,57 @@ export function RecordDetailScreen({
     [usersQuery.data],
   );
 
-  const relatedLists = rules.relatedLists ?? [];
+  const adaptedModule = useMemo(
+    () => (moduleQuery.data ? adapter.adaptModule(moduleQuery.data) : null),
+    [adapter, moduleQuery.data],
+  );
+
+  const rawRelatedLists = useMemo(() => {
+    if (recordQuery.data && buildRelatedLists) return buildRelatedLists(recordQuery.data);
+    return rules.relatedLists ?? [];
+  }, [buildRelatedLists, recordQuery.data, rules.relatedLists]);
+  const relatedLists = useMemo(() => {
+    return rawRelatedLists.map((item) => ({
+      ...item,
+      title: adapter.getRelatedListTitle(item.id, item.title),
+    }));
+  }, [adapter, rawRelatedLists]);
   const hasRelatedLists = relatedLists.length > 0;
   const relatedEntries = useMemo(() => {
+    const selfModuleKey = resolveModuleLaterKey(moduleApiName);
+    const railLaterModule = (key?: (typeof relatedLists)[number]["moduleKey"]) =>
+      key === selfModuleKey ? undefined : resolveLaterModule(key);
     return relatedLists.map((item) => ({
       id: item.id,
       label: item.title,
       targetId: item.targetId,
       countBadge: item.countBadge,
       moduleKey: item.moduleKey,
-      laterModule: item.moduleKey === "M2" ? undefined : item.moduleKey,
+      laterModule: railLaterModule(item.moduleKey),
       railAction: item.railAction
         ? {
             id: item.railAction.id,
             label: item.railAction.label,
             moduleKey: item.railAction.moduleKey,
-            laterModule: item.railAction.moduleKey === "M2" ? undefined : item.railAction.moduleKey,
+            laterModule: railLaterModule(item.railAction.moduleKey),
             onAction: item.railAction.onAction,
           }
         : undefined,
     }));
-  }, [relatedLists]);
+  }, [moduleApiName, relatedLists]);
+
+  const singularLabel = adaptedModule?.singularLabel ?? definition.singularLabel;
+  const isStandardDeleteTitle =
+    !rules.deleteTitle || rules.deleteTitle === `Delete ${definition.singularLabel}`;
+  const deleteTitle = isStandardDeleteTitle
+    ? t("records.detail.deleteTitle", { module: singularLabel })
+    : rules.deleteTitle;
+  const isStandardDeleteMessage =
+    !rules.deleteMessage ||
+    rules.deleteMessage === `Are you sure you want to delete this ${definition.singularLabel}?`;
+  const deleteMessage = isStandardDeleteMessage
+    ? t("records.detail.deleteMessage", { module: singularLabel })
+    : rules.deleteMessage;
 
   const loading =
     moduleQuery.isLoading ||
@@ -205,10 +293,39 @@ export function RecordDetailScreen({
   const displayRecord = rules.statusRibbon
     ? { ...record, fields: { ...record.fields, [rules.statusRibbon.field]: displayStatus } }
     : record;
-  const { title, subtitle, subtitleLaterModule } = rules.header(record);
-  const lastUpdate = rules.lastUpdate(record, now, DEFAULT_FORMAT);
-  const businessFields = rules.businessCard(module, displayRecord);
-  const detailSections = rules.sections(module, displayRecord);
+  const {
+    title,
+    subtitle,
+    subtitleLaterModule,
+    subtitleHref,
+    portraitIcon,
+    hasPortrait,
+    recordNavigation,
+    titleSuffix,
+  } = rules.header(record, {
+    orgSlug,
+    currency: homeCurrencyQuery.data,
+    currencySymbol: homeCurrencyQuery.data?.symbol,
+  });
+  const lastUpdate = rules.lastUpdate(record, now, orgFormat);
+  const businessFields = rules.businessCard(adaptedModule ?? module, displayRecord);
+  const detailSections = rules.sections(adaptedModule ?? module, displayRecord);
+
+  async function persistRecord(input: RecordInput) {
+    if (saveRecordOverride) {
+      await saveRecordOverride(input);
+      return;
+    }
+    await updateRecord.mutateAsync({ id: recordId, input });
+    await recordQuery.refetch();
+  }
+
+  const detailSlots = buildDetailSlots?.({
+    module,
+    record: displayRecord,
+    orgSlug,
+    saveRecord: persistRecord,
+  });
 
   function openDeleteDialog() {
     setDeleteError(null);
@@ -223,67 +340,116 @@ export function RecordDetailScreen({
       setDeleteOpen(false);
       router.push(backHref);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Delete failed.";
+      const message = error instanceof Error ? error.message : t("records.detail.deleteFailed");
       setDeleteError(message);
       throw error;
     }
   }
 
   const moreMenuGroups = rules.moreOptions({
+    onEdit: () => router.push(paths.edit(orgSlug, definition.tab, recordId)),
     onClone: () => router.push(paths.clone(orgSlug, definition.tab, recordId)),
     onDelete: openDeleteDialog,
+    ...(definition.merge
+      ? {
+          onFindMergeDuplicates: () => router.push(paths.merge(orgSlug, definition.tab, recordId)),
+        }
+      : {}),
+    ...(supportsRecordPrint(moduleApiName)
+      ? {
+          onPrintPreview: () =>
+            router.push(moduleRecordPrintPath(orgSlug, definition.tab, recordId)),
+        }
+      : {}),
   });
 
   // Module rules supply the optional status ribbon after the update label.
+  // Accounts and Contacts draw the update label in the tab row instead (AD-35 / D-35).
+  const lastUpdateInTabRow = rules.lastUpdatePlacement === "tab-row";
   const overview = (
-    <>
-      {lastUpdate ? <LastUpdateLabel text={lastUpdate} /> : null}
-      {statusField && StatusSection ? (
-        <StatusSection
-          module={moduleApiName}
-          recordId={recordId}
-          field={statusField}
-          value={displayStatus}
-          onValueChange={setStatusOverride}
-        />
-      ) : null}
-      <InlineEditProvider
-        key={recordId}
-        eligible={rules.inlineEditable}
-        users={(usersQuery.data ?? []).map((user) => ({
-          id: user.userId,
-          name: user.name,
-          email: user.email,
-        }))}
-        save={async (input) => {
-          await updateRecord.mutateAsync({ id: recordId, input });
-          await recordQuery.refetch();
-        }}
+    <NumericDatesProvider value={NUMERIC_DATE_MODULES.has(moduleApiName)}>
+      <RecordCallProvider
+        value={
+          ACTIVITY_PARENT_MODULES.includes(moduleApiName)
+            ? () =>
+                openActivityCreate(
+                  orgSlug,
+                  "Calls",
+                  moduleApiName,
+                  record,
+                  (path) => router.push(path),
+                  paths.record(orgSlug, definition.tab, recordId),
+                )
+            : null
+        }
       >
-        <BusinessCard fields={businessFields} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
-        <DetailsCard
-          sections={detailSections}
-          ownerNames={ownerNames}
-          format={DEFAULT_FORMAT}
-          railLayout={railVisible ? "shown" : "hidden"}
-        />
-        {rules.relatedLists && rules.relatedLists.length > 0 ? (
-          <RelatedCardsContainer relatedLists={rules.relatedLists} />
+        {lastUpdate && !lastUpdateInTabRow ? <LastUpdateLabel text={lastUpdate} /> : null}
+        {statusField && StatusSection ? (
+          <StatusSection
+            module={moduleApiName}
+            recordId={recordId}
+            field={statusField}
+            value={displayStatus}
+            onValueChange={setStatusOverride}
+          />
         ) : null}
-      </InlineEditProvider>
-    </>
+        <InlineEditProvider
+          key={recordId}
+          eligible={rules.inlineEditable}
+          users={(usersQuery.data ?? []).map((user) => ({
+            id: user.userId,
+            name: user.name,
+            email: user.email,
+          }))}
+          ownerNames={ownerNames}
+          recordPath={(targetModule, id) => {
+            const targetDef = resolveModuleScreenByApiName(targetModule);
+            return paths.record(orgSlug, (targetDef?.tab ?? targetModule) as ModuleApiName, id);
+          }}
+          save={persistRecord}
+        >
+          {detailSlots?.overviewPrefix}
+          <BusinessCard fields={businessFields} ownerNames={ownerNames} format={orgFormat} />
+          {rules.BetweenCards ? <rules.BetweenCards record={displayRecord} /> : null}
+          {detailSlots?.contactSummary ??
+            (rules.linkedContactSummary && linkedContactSummaryPath ? (
+              <AccountsLinkedContactSummary
+                accountRecord={displayRecord}
+                contactRecordPath={linkedContactSummaryPath}
+              />
+            ) : null)}
+          <DetailsCard
+            sections={detailSections}
+            ownerNames={ownerNames}
+            format={orgFormat}
+            railLayout={railVisible ? "shown" : "hidden"}
+            activity={activityLayout}
+          />
+          {relatedLists.length > 0 ? (
+            <RelatedCardsContainer
+              relatedLists={relatedLists}
+              context={{
+                orgSlug,
+                record,
+                module: moduleApiName,
+                recordPath: (targetModule, id) => paths.record(orgSlug, targetModule, id),
+              }}
+            />
+          ) : null}
+        </InlineEditProvider>
+      </RecordCallProvider>
+    </NumericDatesProvider>
   );
 
   const timeline = (
     <TimelineSurface subtabs={rules.timeline.subtabs} activeSubtabId="history">
-      <TimelineHistory
+      <RecordTimelineHistory
+        key={`${moduleApiName}:${recordId}`}
+        module={moduleApiName}
+        recordId={recordId}
         heading="Timeline History"
         filterButtonLabel="History filter"
-        events={rules.timeline.events.map((event) => ({
-          ...event,
-          kind: rules.timeline.normalizeEventKind(event.kind),
-        }))}
-        format={DEFAULT_FORMAT}
+        format={orgFormat}
         initialFilterExpanded={false}
         modulesLabel="Modules"
         modulesAllLabel="All Modules"
@@ -297,15 +463,17 @@ export function RecordDetailScreen({
         sourceOptions={rules.timeline.sources}
         applyLabel="Apply Filter"
         onApply={() => {}}
+        upcomingAutomatedActions={rules.timeline.upcomingAutomatedActions}
       />
     </TimelineSurface>
   );
 
+  const railChrome = rules.relatedListRail;
   const relatedRailHeaderAction = hasRelatedLists ? (
     <Button
       variant="icon"
       size="compact"
-      aria-label="Organize Contacts Details"
+      aria-label={railChrome?.organizeAriaLabel ?? "Organize Contacts Details"}
       laterModule="M11"
       className="size-6 text-text-muted hover:text-text"
     >
@@ -314,30 +482,74 @@ export function RecordDetailScreen({
   ) : undefined;
 
   const relatedRailFooter = hasRelatedLists ? (
-    <div className="pt-2 border-t border-border mt-2">
+    <div className="pt-2 border-t border-border mt-2 flex flex-col gap-1">
       <Link
         href="#add-related-list"
         variant="body"
         laterModule="M11"
         className="flex items-center h-(--size-menu-item-height) px-(--size-record-rail-text-inset) text-md font-normal text-primary hover:underline"
       >
-        Add Related List
+        {t("records.detail.addRelatedList")}
       </Link>
+      {detailSlots?.relatedRailAfterFooter}
+      {railChrome?.linksGroup ? (
+        <>
+          <h3 className="px-(--size-record-rail-text-inset) pt-2 text-sm font-semibold text-text-muted">
+            {railChrome.linksGroup.title}
+          </h3>
+          <Link
+            href={`#${railChrome.linksGroup.addLink.id}`}
+            variant="body"
+            laterModule={railChrome.linksGroup.addLink.moduleKey}
+            className="flex items-center h-(--size-menu-item-height) px-(--size-record-rail-text-inset) text-md font-normal text-primary hover:underline"
+          >
+            {railChrome.linksGroup.addLink.label}
+          </Link>
+        </>
+      ) : null}
     </div>
   ) : undefined;
 
   return (
     <>
+      {headerConfirm ? (
+        <ConfirmDialog
+          isOpen
+          onOpenChange={(open) => {
+            if (!open && !headerConfirmBusy) setHeaderConfirm(null);
+          }}
+          title={headerConfirm.title}
+          message={headerConfirm.message}
+          confirmLabel={headerConfirm.confirmLabel}
+          cancelLabel={t("common.actions.close")}
+          busy={headerConfirmBusy}
+          errorMessage={headerConfirmError}
+          onConfirm={async () => {
+            setHeaderConfirmBusy(true);
+            setHeaderConfirmError(null);
+            try {
+              await headerConfirm.onConfirm();
+              setHeaderConfirm(null);
+            } catch (error) {
+              setHeaderConfirmError(
+                error instanceof Error ? error.message : t("common.errorShort"),
+              );
+            } finally {
+              setHeaderConfirmBusy(false);
+            }
+          }}
+        />
+      ) : null}
       {deleteOpen ? (
         <ConfirmDialog
           isOpen
           onOpenChange={(open) => {
             if (!open && !deleteRecords.isPending) setDeleteOpen(false);
           }}
-          title={rules.deleteTitle}
-          message={rules.deleteMessage}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
+          title={deleteTitle}
+          message={deleteMessage}
+          confirmLabel={t("common.actions.delete")}
+          cancelLabel={t("common.actions.cancel")}
           tone="danger"
           busy={deleteRecords.isPending}
           errorMessage={deleteError}
@@ -350,43 +562,85 @@ export function RecordDetailScreen({
             title={title}
             subtitle={subtitle}
             subtitleLaterModule={subtitleLaterModule}
-            back={{ label: "Back", href: backHref }}
-            commands={[
-              {
-                id: "edit",
-                label: "Edit",
-                variant: "secondary",
-                href: paths.edit(orgSlug, definition.tab, recordId),
-              },
-            ]}
+            subtitleHref={subtitleHref}
+            portraitIcon={portraitIcon ?? rules.portraitIcon}
+            showPortrait={hasPortrait ?? rules.hasPortrait ?? true}
+            portraitAppearance={rules.portraitAppearance}
+            showRecordNavigation={recordNavigation ?? rules.recordNavigation ?? true}
+            addTags={rules.addTags}
+            tagsContent={
+              rules.addTags && !rules.addTags.laterModule ? (
+                <RecordTags
+                  key={`${orgSlug}:${definition.apiName}:${recordId}`}
+                  orgSlug={orgSlug}
+                  module={definition.apiName}
+                  recordId={recordId}
+                  label={rules.addTags.label}
+                />
+              ) : undefined
+            }
+            back={{ label: t("common.actions.back"), href: backHref }}
+            titleGlyph={rules.titleGlyph}
+            titleSuffix={titleSuffix}
+            commands={
+              rules.buildHeaderCommands
+                ? rules.buildHeaderCommands(displayRecord, {
+                    editHref: paths.edit(orgSlug, definition.tab, recordId),
+                    save: persistRecord,
+                    navigate: (href) => router.push(href),
+                    confirm: (request) => {
+                      setHeaderConfirmError(null);
+                      setHeaderConfirm(request);
+                    },
+                  })
+                : [
+                    ...(rules.headerCommands ?? []),
+                    {
+                      id: "edit",
+                      label: t("common.actions.edit"),
+                      variant: "secondary",
+                      href: paths.edit(orgSlug, definition.tab, recordId),
+                    },
+                  ]
+            }
             menuGroups={moreMenuGroups}
-            moreLabel="More Options"
-            previousLabel="Previous Record"
-            nextLabel="Next Record"
+            moreLabel={t("records.actions.moreOptions")}
+            previousLabel={t("records.detail.previousRecord")}
+            nextLabel={t("records.detail.nextRecord")}
             previousHref={
               previousId ? paths.record(orgSlug, definition.tab, previousId) : undefined
             }
             nextHref={nextId ? paths.record(orgSlug, definition.tab, nextId) : undefined}
           />
         }
-        relatedListLabel="Related List"
+        relatedListLabel={t("records.detail.relatedList")}
         relatedEntries={relatedEntries}
         selectedRelatedId={selectedRelatedId}
         onRelatedSelectionChange={setSelectedRelatedId}
         relatedRailHeaderAction={relatedRailHeaderAction}
         relatedRailFooter={relatedRailFooter}
-        tabsLabel="Record detail"
+        tabRowEnd={
+          lastUpdateInTabRow && lastUpdate ? (
+            <LastUpdateLabel text={lastUpdate} inTabRow />
+          ) : undefined
+        }
+        tabsLabel={t("records.detail.recordDetail")}
         selectedTabId={selectedTabId}
         onTabChange={setSelectedTabId}
         tabs={[
-          { id: "overview", label: "Overview", content: overview },
-          { id: "timeline", label: "Timeline", content: timeline },
+          { id: "overview", label: t("records.detail.overview"), content: overview },
+          { id: "timeline", label: t("records.detail.timeline"), content: timeline },
         ]}
-        relatedRailVisible={railVisible}
+        relatedRailVisible={railVisible && !activityLayout}
         railControl={
-          <RecordRailToggle railVisible={railVisible} onRailVisibleChange={setRailVisible} />
+          activityLayout ? undefined : (
+            <RecordRailToggle railVisible={railVisible} onRailVisibleChange={setRailVisible} />
+          )
         }
-        scrollTopLabel="Scroll To Top"
+        sidePanel={
+          rules.SidePanel ? <rules.SidePanel record={displayRecord} orgSlug={orgSlug} /> : undefined
+        }
+        scrollTopLabel={t("records.detail.scrollToTop")}
       />
     </>
   );

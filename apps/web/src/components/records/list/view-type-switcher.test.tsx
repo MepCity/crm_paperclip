@@ -43,3 +43,17 @@ test("activating an unimplemented tile changes nothing (Interim)", async () => {
     screen.getByRole("button", { name: "List presentation" }).getAttribute("aria-pressed"),
   ).toBe("true");
 });
+
+test("tileIds draws only the given tiles in order; omitted draws all six", () => {
+  render(<ViewTypeSwitcher tileIds={["list", "split", "chart"]} />);
+  const names = screen.getAllByRole("button").map((b) => b.getAttribute("aria-label"));
+  expect(names).toEqual([
+    "List presentation",
+    "Split presentation",
+    "Chart presentation",
+    "More presentations",
+  ]);
+  cleanup();
+  render(<ViewTypeSwitcher />);
+  expect(screen.getAllByRole("button")).toHaveLength(7);
+});

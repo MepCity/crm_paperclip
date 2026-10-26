@@ -1,13 +1,18 @@
-import type { FieldDefinition, ModuleMetadata } from "@crm/core/records";
+import type { FieldDefinition, ModuleMetadata, StageCategory } from "@crm/core/records";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { describe, expect, it } from "vitest";
 import { leadsFormRules, leadsFormFields as names } from "@/modules/leads/leads-form-rules";
 import {
+  applySectionColumnOverrides,
   buildFormModel,
+  type FormRules,
   formFields,
   formPayload,
   initialFormValues,
+  normalizeFormValue,
   numberValue,
+  resolveFormRules,
+  stageProbabilityWrite,
   textValue,
 } from "./form-model";
 
@@ -121,6 +126,57 @@ describe("metadata form model", () => {
     });
   });
 
+  it("keeps a long integer as the exact digit text it was given", () => {
+    const longNumber = field("Account_Number", { dataType: "bigint" });
+    const fields = [longNumber, field("Employees", { dataType: "integer" })];
+    expect(formPayload(fields, { Account_Number: "9007199254740993", Employees: 42 })).toEqual({
+      Account_Number: "9007199254740993",
+      Employees: 42,
+    });
+    for (const value of ["", "   "])
+      expect(formPayload([longNumber], { Account_Number: value })).toEqual({
+        Account_Number: null,
+      });
+    // Digits are held as text, so a value beyond the safe integer range is never rounded and a
+    // stored value typed again with stray spaces stays "unchanged" for the edit form's compare.
+    expect(normalizeFormValue(longNumber, " 9007199254740993 ")).toBe("9007199254740993");
+    const baseline = { Account_Number: "9007199254740993", Employees: 42 };
+    expect(
+      formPayload(fields, { Account_Number: "9007199254740993", Employees: 43 }, baseline),
+    ).toEqual({ Employees: 43 });
+    expect(initialFormValues(fields, baseline)).toEqual(baseline);
+  });
+
+  it("builds an Accounts payload the record service type rule accepts", async () => {
+    const ctx = {
+      orgId: "form-model-accounts",
+      orgSlug: "form-model-accounts",
+      orgName: "Form Model Accounts",
+      userId: "form-user",
+      role: "admin" as const,
+    };
+    const service = createFixtureRecordService(ctx, {
+      listMemberIds: async () => [ctx.userId],
+    });
+    const { accountsFormRules } = await import("@/modules/accounts/accounts-form-rules");
+    const module = await service.getModule("Accounts");
+    const fields = formFields(
+      module,
+      buildFormModel(module, "create"),
+      "create",
+      accountsFormRules,
+    );
+    const record = await service.create(
+      "Accounts",
+      formPayload(fields, {
+        Account_Name: "Payload Account",
+        Account_Number: "9007199254740993",
+        Owner: ctx.userId,
+      }),
+    );
+    expect(record.fields.Account_Number).toBe("9007199254740993");
+  });
+
   it("includes coordinate members for each Contacts address group", async () => {
     const service = createFixtureRecordService({
       orgId: "form-model-contacts",
@@ -162,4 +218,143 @@ describe("metadata form model", () => {
     for (const f of module.fields.filter((f) => !f.views.create))
       expect(payload).not.toHaveProperty(f.apiName);
   });
+
+  it("readOnlyFields retains edit:false field in edit mode as read-only and fallbackColumns overrides section columns", () => {
+    const rawSections = buildFormModel(metadata, "edit", undefined, ["CreateOnly"]);
+    const overridden = applySectionColumnOverrides(
+      rawSections,
+      {
+        "First section": [["CreateOnly"], ["Required"]],
+      },
+      metadata,
+      "edit",
+      undefined,
+      ["CreateOnly"],
+    );
+    expect(overridden[0]?.columns[0]?.map((f) => f.apiName)).toEqual(["CreateOnly", "ReadOnly"]);
+    expect(overridden[0]?.columns[0]?.[0]?.readOnly).toBe(true);
+    expect(overridden[0]?.columns[1]?.map((f) => f.apiName)).toEqual(["Required"]);
+
+    const fields = formFields(metadata, overridden, "edit", {
+      owner: "Required",
+      readOnlyFields: ["CreateOnly"],
+    });
+    expect(fields.some((f) => f.apiName === "CreateOnly")).toBe(true);
+
+    const payload = formPayload(
+      fields,
+      { CreateOnly: "12345", Required: "new title" },
+      { CreateOnly: "12345", Required: "old title" },
+    );
+    expect(payload).toEqual({ Required: "new title" });
+    expect(payload).not.toHaveProperty("CreateOnly");
+  });
+});
+
+const stageRules: FormRules = {
+  owner: "Owner",
+  omitted: ["Connected_To__s"],
+  stageProbability: { stage: "Stage", probability: "Probability" },
+  stageConditionalFields: [
+    { field: "Reason_For_Loss", stage: "Stage", categories: ["Closed Lost"] },
+  ],
+};
+
+function stageMetadata(stages: readonly [string, number, StageCategory][]): ModuleMetadata {
+  return {
+    apiName: "StageModule",
+    singularLabel: "Stage module",
+    pluralLabel: "Stage modules",
+    businessCardFields: [],
+    fields: [
+      field("Owner"),
+      field("Probability", { dataType: "integer" }),
+      field("Reason_For_Loss", { dataType: "picklist" }),
+      field("Stage", {
+        dataType: "picklist",
+        picklist: stages.map(([storedValue, probability, category]) => ({
+          storedValue,
+          displayValue: storedValue,
+          stage: { probability, forecastCategory: "Pipeline", category },
+        })),
+      }),
+    ],
+    layout: [
+      {
+        label: "Stage section",
+        columnCount: 2,
+        columns: [["Stage", "Reason_For_Loss"], ["Probability"]],
+        fields: [],
+      },
+    ],
+  };
+}
+
+describe("stage-driven form rules", () => {
+  const metadata = stageMetadata([
+    ["Qualification", 10, "Open"],
+    ["Closed Lost", 0, "Closed Lost"],
+  ]);
+
+  it("refills the paired number field with the stage option's metadata probability", () => {
+    expect(stageProbabilityWrite(stageRules, metadata, "Stage", "Closed Lost")).toEqual({
+      field: "Probability",
+      value: 0,
+    });
+    // Any other write, an unlisted option or a non-text value moves nothing.
+    expect(stageProbabilityWrite(stageRules, metadata, "Probability", 55)).toBeUndefined();
+    expect(stageProbabilityWrite(stageRules, metadata, "Stage", "Not A Stage")).toBeUndefined();
+    expect(stageProbabilityWrite(stageRules, metadata, "Stage", null)).toBeUndefined();
+  });
+
+  it("drops the conditional field from create and from an edit whose stage is not lost", () => {
+    expect(resolveFormRules(stageRules, { mode: "create", metadata }).omitted).toContain(
+      "Reason_For_Loss",
+    );
+    expect(
+      resolveFormRules(stageRules, {
+        mode: "edit",
+        metadata,
+        record: { id: "r1", fields: { Stage: "Qualification" } },
+      }).omitted,
+    ).toContain("Reason_For_Loss");
+  });
+
+  it("keeps the conditional field while the edited record's stage is lost", () => {
+    const rules = resolveFormRules(stageRules, {
+      mode: "edit",
+      metadata,
+      record: { id: "r1", fields: { Stage: "Closed Lost" } },
+    });
+    expect(rules.omitted).not.toContain("Reason_For_Loss");
+    const fields = formFields(metadata, buildFormModel(metadata, "edit"), "edit", rules);
+    expect(fields.some((f) => f.apiName === "Reason_For_Loss")).toBe(true);
+    expect(fields.some((f) => f.apiName === "Connected_To__s")).toBe(false);
+  });
+});
+
+it("retains newly placed fields when applying a specialized form override", () => {
+  const custom = field("Custom_Text");
+  const effective = {
+    ...metadata,
+    fields: [...metadata.fields, custom],
+    layout: [
+      {
+        label: "Information",
+        columnCount: 2,
+        fields: ["Required", "Custom_Text"],
+        columns: [["Required"], ["Custom_Text"]],
+      },
+    ],
+  };
+  for (const mode of ["create", "edit"] as const) {
+    const sections = buildFormModel(effective, mode);
+    const result = applySectionColumnOverrides(
+      sections,
+      { Information: [["Required"], []] },
+      effective,
+      mode,
+    );
+    expect(result[0]?.columns[1]?.map((field) => field.apiName)).toEqual(["Custom_Text"]);
+  }
 });

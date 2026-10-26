@@ -7,17 +7,36 @@ import {
   isAppError,
   NotFoundError,
   RecordLockedError,
+  SchemaStaleError,
   UnauthenticatedError,
   ValidationError,
 } from "@crm/core/errors";
 
 const STATUS_BY_CODE = {
+  schema_stale: 409,
   validation: 400,
   unauthenticated: 401,
   forbidden: 403,
   not_found: 404,
   conflict: 400,
   record_locked: 400,
+  file_too_large: 400,
+  too_many_columns: 400,
+  too_many_rows: 400,
+  malformed_csv: 400,
+  empty_file: 400,
+  no_header: 400,
+  duplicate_header: 400,
+  bad_encoding: 400,
+  upload_expired: 400,
+  mapping_duplicate_field: 400,
+  mapping_missing_required: 400,
+  mapping_system_field: 400,
+  match_field_required: 400,
+  invalid_match_field: 400,
+  export_too_large: 400,
+  field_not_allowed: 400,
+  not_undoable: 400,
 } as const satisfies Record<ErrorCode, number>;
 
 /** Wire-only code. It is not a member of `ErrorCode`. */
@@ -30,12 +49,30 @@ export const UNEXPECTED_API_MESSAGE = "The response could not be read.";
 const BODY_KEYS = ["code", "details", "message", "status"] as const;
 
 const WIRE_CODES = {
+  schema_stale: "SCHEMA_REVISION_MISMATCH",
   unauthenticated: "AUTHENTICATION_FAILURE",
   forbidden: "NO_PERMISSION",
   not_found: "not_found",
   conflict: "DUPLICATE_DATA",
   record_locked: "RECORD_LOCKED",
   validation: "INVALID_DATA",
+  file_too_large: "file_too_large",
+  too_many_columns: "too_many_columns",
+  too_many_rows: "too_many_rows",
+  malformed_csv: "malformed_csv",
+  empty_file: "empty_file",
+  no_header: "no_header",
+  duplicate_header: "duplicate_header",
+  bad_encoding: "bad_encoding",
+  upload_expired: "upload_expired",
+  mapping_duplicate_field: "mapping_duplicate_field",
+  mapping_missing_required: "mapping_missing_required",
+  mapping_system_field: "mapping_system_field",
+  match_field_required: "match_field_required",
+  invalid_match_field: "invalid_match_field",
+  export_too_large: "export_too_large",
+  field_not_allowed: "field_not_allowed",
+  not_undoable: "not_undoable",
 } as const;
 export type WireErrorCode =
   | (typeof WIRE_CODES)[ErrorCode]
@@ -45,7 +82,7 @@ export type WireErrorCode =
 
 export type WireErrorBody = {
   code: WireErrorCode;
-  details: { fields?: FieldErrors };
+  details: { fields?: FieldErrors; revision?: string };
   message: string;
   status: "error";
 };
@@ -61,6 +98,16 @@ export class UnexpectedApiError extends Error {
   constructor(status: number) {
     super(UNEXPECTED_API_MESSAGE);
     this.status = status;
+  }
+}
+
+/** Client refresh handling preserves the core stale-schema error contract. */
+export class SchemaRevisionMismatchError extends SchemaStaleError {
+  override name = "SchemaRevisionMismatchError";
+  constructor(revision: string) {
+    super(revision);
+    this.message =
+      "The module fields have changed. Refresh the form before saving. Your draft has been kept.";
   }
 }
 
@@ -132,6 +179,11 @@ function appCode(code: string): ErrorCode | undefined {
 
 function restore(parsed: ParsedBody, status: number): AppError | UnexpectedApiError {
   switch (appCode(parsed.code)) {
+    case "schema_stale":
+      return typeof parsed.details.revision === "string" &&
+        /^[A-Za-z0-9._:-]{1,64}$/.test(parsed.details.revision)
+        ? new SchemaStaleError(parsed.details.revision)
+        : new UnexpectedApiError(status);
     case "unauthenticated":
       return new UnauthenticatedError(parsed.message);
     case "forbidden":
@@ -165,9 +217,11 @@ export function encodeError(error: unknown): { status: number; body: WireErrorBo
   if (isAppError(error)) {
     const status = STATUS_BY_CODE[error.code];
     const details =
-      error.code === "validation"
-        ? { fields: copyFieldErrors((error as ValidationError).fieldErrors) }
-        : {};
+      error.code === "schema_stale"
+        ? { revision: (error as SchemaStaleError).revision }
+        : error.code === "validation"
+          ? { fields: copyFieldErrors((error as ValidationError).fieldErrors) }
+          : {};
     return {
       status,
       body: {
@@ -202,6 +256,14 @@ export function encodeError(error: unknown): { status: number; body: WireErrorBo
  */
 export function decodeError(status: number, body: unknown): AppError | UnexpectedApiError {
   const parsed = parseBody(body);
+  if (
+    status === 409 &&
+    parsed?.code === "SCHEMA_REVISION_MISMATCH" &&
+    typeof parsed.details.revision === "string" &&
+    /^[A-Za-z0-9._:-]{1,64}$/.test(parsed.details.revision)
+  ) {
+    return new SchemaRevisionMismatchError(parsed.details.revision);
+  }
   const code = parsed ? appCode(parsed.code) : undefined;
   if (!parsed || !code || status !== STATUS_BY_CODE[code]) return new UnexpectedApiError(status);
   return restore(parsed, status);

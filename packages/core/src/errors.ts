@@ -4,9 +4,27 @@ export type ErrorCode =
   | "unauthenticated"
   | "forbidden"
   | "not_found"
+  | "schema_stale"
   | "conflict"
   | "validation"
-  | "record_locked";
+  | "record_locked"
+  | "file_too_large"
+  | "too_many_columns"
+  | "too_many_rows"
+  | "malformed_csv"
+  | "empty_file"
+  | "no_header"
+  | "duplicate_header"
+  | "bad_encoding"
+  | "upload_expired"
+  | "mapping_duplicate_field"
+  | "mapping_missing_required"
+  | "mapping_system_field"
+  | "match_field_required"
+  | "invalid_match_field"
+  | "export_too_large"
+  | "field_not_allowed"
+  | "not_undoable";
 
 /** Messages per input field, keyed by the field's name in the service input. */
 export type FieldErrors = Record<string, string[]>;
@@ -114,4 +132,12 @@ export function parseInput<Schema extends z.ZodType>(
     }
   }
   throw new ValidationError(fieldErrors, formMessage);
+}
+
+/** A stale schema is distinct from a duplicate record or ordinary conflict. */
+export class SchemaStaleError extends AppError {
+  override name = "SchemaStaleError";
+  constructor(readonly revision: string) {
+    super("schema_stale", "The schema changed. Refresh metadata before retrying.");
+  }
 }

@@ -1,10 +1,31 @@
 import { expect, test } from "vitest";
+import { accountsScreenDefinition } from "./accounts/definition";
+import { callsScreenDefinition } from "./calls/definition";
+import { dealsScreenDefinition } from "./deals/definition";
 import { leadsScreenDefinition } from "./leads/definition";
-import { moduleScreens, resolveModuleScreen } from "./registry";
+import { meetingsScreenDefinition } from "./meetings/definition";
+import { getModuleScreens, resolveModuleScreen } from "./registry";
+import { tasksScreenDefinition } from "./tasks/definition";
 
 test("the shipped modules is registered", () => {
-  expect(moduleScreens.map((definition) => definition.tab)).toEqual(["Leads", "Contacts"]);
+  expect(getModuleScreens().map((definition) => definition.tab)).toEqual([
+    "Leads",
+    "Contacts",
+    "Accounts",
+    "Deals",
+    "Tasks",
+    "Meetings",
+    "Calls",
+    "Campaigns",
+    "Cases",
+    "Solutions",
+  ]);
   expect(resolveModuleScreen("Leads")).toBe(leadsScreenDefinition);
+  expect(resolveModuleScreen("Accounts")).toBe(accountsScreenDefinition);
+  expect(resolveModuleScreen("Deals")).toBe(dealsScreenDefinition);
+  expect(resolveModuleScreen("Tasks")).toBe(tasksScreenDefinition);
+  expect(resolveModuleScreen("Meetings")).toBe(meetingsScreenDefinition);
+  expect(resolveModuleScreen("Calls")).toBe(callsScreenDefinition);
   expect(resolveModuleScreen("Unknown")).toBeUndefined();
 });
 

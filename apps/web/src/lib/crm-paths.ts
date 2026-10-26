@@ -48,11 +48,75 @@ export function moduleRecordClonePath(
   return moduleTabPath(orgSlug, moduleApiName, recordId, "clone");
 }
 
+export function moduleRecordConvertPath(
+  orgSlug: string,
+  moduleApiName: string,
+  recordId: string,
+): string {
+  return moduleTabPath(orgSlug, moduleApiName, recordId, "convert");
+}
+
+export function moduleRecordMergePath(
+  orgSlug: string,
+  moduleApiName: string,
+  recordId: string,
+): string {
+  return moduleTabPath(orgSlug, moduleApiName, recordId, "merge");
+}
+
+export function moduleRecordPrintPath(
+  orgSlug: string,
+  moduleApiName: string,
+  recordId: string,
+): string {
+  return moduleTabPath(orgSlug, moduleApiName, recordId, "print");
+}
+
+export function moduleListPrintPath(
+  orgSlug: string,
+  moduleApiName: string,
+  viewId?: string,
+): string {
+  const path = moduleTabPath(orgSlug, moduleApiName, "print");
+  return viewId ? `${path}?viewId=${encodeURIComponent(viewId)}` : path;
+}
+
+/** Conflict groups of a module-wide cleanup, carrying the match fields it ran on. */
+export function moduleDeduplicatePath(
+  orgSlug: string,
+  moduleApiName: string,
+  fields: readonly string[] = [],
+): string {
+  const params = new URLSearchParams();
+  if (fields.length > 0) params.set("fields", fields.join(","));
+  return withSearchParams(moduleTabPath(orgSlug, moduleApiName, "deduplicate"), params);
+}
+
 export function moduleCreatePath(orgSlug: string, moduleApiName: string): string {
   return moduleTabPath(orgSlug, moduleApiName, "create");
+}
+
+export function moduleTagsPath(orgSlug: string, moduleApiName: string): string {
+  return moduleTabPath(orgSlug, moduleApiName, "tags");
+}
+
+export function moduleDraftsPath(orgSlug: string, moduleApiName: string): string {
+  return moduleTabPath(orgSlug, moduleApiName, "drafts");
 }
 
 export function withSearchParams(path: string, params: URLSearchParams): string {
   const query = params.toString();
   return query.length > 0 ? `${path}?${query}` : path;
+}
+
+export function moduleImportPath(orgSlug: string, moduleApiName: string): string {
+  return moduleTabPath(orgSlug, moduleApiName === "Events" ? "Meetings" : moduleApiName, "import");
+}
+
+export function importHistoryPath(orgSlug: string): string {
+  return `${orgBasePath(orgSlug)}/settings/import-history`;
+}
+
+export function exportHistoryPath(orgSlug: string): string {
+  return `${orgBasePath(orgSlug)}/settings/export-history`;
 }

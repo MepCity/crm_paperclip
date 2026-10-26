@@ -101,3 +101,154 @@ test("renders separate address composites without duplicating component fields",
     ["right", "Sample Country"],
   ]);
 });
+
+const testCtx = {
+  orgId: "test-org",
+  orgSlug: "test-org",
+  orgName: "Test Org",
+  userId: "user-1",
+  role: "admin" as const,
+};
+
+test("Contact Information balances two columns matching reference CRM with phone call icon", async () => {
+  const { createFixtureRecordService } = await import("@crm/core/records/fixture");
+  const metadata = await createFixtureRecordService(testCtx).getModule("Contacts");
+  const record = contactRecord({
+    ...Object.fromEntries(metadata.fields.map((f) => [f.apiName, null])),
+    Owner: "user-1",
+    First_Name: "Sample",
+    Last_Name: "Person",
+    Full_Name: "Sample Person",
+    Account_Name: { module: "Accounts", id: "acc-1", name: "Account One" },
+    Email: "person@example.com",
+    Phone: "555-1234",
+    Other_Phone: "555-5678",
+    Mobile: "555-9012",
+    Assistant: "Assistant Name",
+    Lead_Source: "Web",
+    Vendor_Name: "Vendor One",
+    Title: "Manager",
+    Department: "Sales",
+    Home_Phone: "555-3456",
+    Fax: "555-7890",
+    Date_of_Birth: "1990-01-01",
+    Asst_Phone: "555-2345",
+    Email_Opt_Out: false,
+    Skype_ID: "skype-sample",
+    Secondary_Email: "sec@example.com",
+    Twitter: "@sample",
+    Reporting_To: null,
+    Created_Time: "2026-01-01T00:00:00.000Z",
+    Modified_Time: "2026-01-02T00:00:00.000Z",
+  });
+
+  const sections = buildContactsDetailSections(metadata, record);
+  const infoSection = sections.find((s) => s.title === "Contact Information");
+  expect(infoSection).toBeDefined();
+
+  const leftFields = infoSection?.fields.filter((f) => f.column === "left") ?? [];
+  const rightFields = infoSection?.fields.filter((f) => f.column === "right") ?? [];
+
+  // Left column order and labels:
+  // Contact Owner, Account Name, Email, Phone, Other Phone, Mobile, Assistant
+  expect(leftFields.map((f) => f.field.label)).toEqual([
+    "Contact Owner",
+    "Account Name",
+    "Email",
+    "Phone",
+    "Other Phone",
+    "Mobile",
+    "Assistant",
+  ]);
+  expect(leftFields.map((f) => f.field.apiName)).toEqual([
+    "Owner",
+    "Account_Name",
+    "Email",
+    "Phone",
+    "Other_Phone",
+    "Mobile",
+    "Assistant",
+  ]);
+
+  // Right column order and labels across full section:
+  expect(rightFields.map((f) => f.field.label)).toEqual([
+    "Lead Source",
+    "Contact Name",
+    "Vendor Name",
+    "Title",
+    "Department",
+    "Home Phone",
+    "Fax",
+    "Date of Birth",
+    "Asst Phone",
+    "Email Opt Out",
+    "Skype ID",
+    "Secondary Email",
+    "Twitter",
+    "Reporting To",
+    "Tag",
+    "Created By",
+    "Modified By",
+    "Created Time",
+    "Modified Time",
+    "Last Activity Time",
+    "Unsubscribed Mode",
+    "Unsubscribed Time",
+    "Record Id",
+    "Connected To",
+  ]);
+  expect(rightFields.map((f) => f.field.apiName)).toEqual([
+    "Lead_Source",
+    "Full_Name",
+    "Vendor_Name",
+    "Title",
+    "Department",
+    "Home_Phone",
+    "Fax",
+    "Date_of_Birth",
+    "Asst_Phone",
+    "Email_Opt_Out",
+    "Skype_ID",
+    "Secondary_Email",
+    "Twitter",
+    "Reporting_To",
+    "Tag",
+    "Created_By",
+    "Modified_By",
+    "Created_Time",
+    "Modified_Time",
+    "Last_Activity_Time",
+    "Unsubscribed_Mode",
+    "Unsubscribed_Time",
+    "id",
+    "Connected_To__s",
+  ]);
+
+  // Phone on left column has callAction when Phone is populated
+  const phoneLeft = leftFields.find((f) => f.field.apiName === "Phone");
+  expect(phoneLeft?.callAction).toBe(true);
+
+  // Business card Phone also has callAction
+  const cardFields = buildContactsBusinessCardFields(metadata, record);
+  const phoneCard = cardFields.find((f) => f.field.apiName === "Phone");
+  expect(phoneCard?.callAction).toBe(true);
+});
+
+test("omits callAction when Phone value is empty in summary card and details", async () => {
+  const { createFixtureRecordService } = await import("@crm/core/records/fixture");
+  const metadata = await createFixtureRecordService(testCtx).getModule("Contacts");
+  const record = contactRecord({
+    Phone: null,
+    Mobile: "555-9012",
+  });
+
+  const sections = buildContactsDetailSections(metadata, record);
+  const infoSection = sections.find((s) => s.title === "Contact Information");
+  const leftFields = infoSection?.fields.filter((f) => f.column === "left") ?? [];
+  const phoneLeft = leftFields.find((f) => f.field.apiName === "Phone");
+  expect(phoneLeft?.callAction).toBeUndefined();
+
+  const cardFields = buildContactsBusinessCardFields(metadata, record);
+  const phoneCard = cardFields.find((f) => f.field.apiName === "Phone");
+  expect(phoneCard?.callAction).toBeUndefined();
+});

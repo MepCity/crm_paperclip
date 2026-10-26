@@ -89,7 +89,7 @@ Interim boundaries and empty-value behavior:
 - Null or unparseable datetimes never match date tokens. TODAY retains its existing
   UTC-day boundary. Runtime clocks resolve tokens on each query.
 - Role/group membership, blocked email, fiscal periods, system filters and
-  related-module filters are not introduced. `multi_module_lookup` keeps only
+  related-module filters are not introduced except for the interim Campaign system filter. `multi_module_lookup` keeps only
   empty / not-empty panel predicates.
 
 
@@ -295,9 +295,10 @@ not evidence of reference CRM behavior and must not determine screen parity.
 
 ## Deferred
 
-- Country/State option inventories and their dependency. Both are picklists with
-  maxLength 120 and no picklist property; seed values are null. MEP-18 tracks these
-  questions and placeholder storage.
+- Leads Country/State inventories remain deferred; those fields have maxLength
+  120 and no picklist property. Contacts and Accounts share the exported 248-country
+  and 3,954-state catalogs. Country-to-state dependency behavior remains unobserved;
+  no dependency constraint is inferred. Seed address values remain null.
 - Unsubscribed Mode deliberately publishes 3 of 4 options, in spec order. The
   fourth contains a forbidden product name and cannot enter this repository.
   Unsubscribed_Mode/Unsubscribed_Time are system-managed and seeded null.
@@ -356,9 +357,497 @@ organization on create, update and mass update, and derives the read name from t
 ignoring caller names. On get, list and count, a registered-module reference whose target no longer
 exists is returned as `null` instead of raising an error. Each fixture module bundle declares `displayNameField` (Leads and Contacts:
 `Full_Name`); public `ModuleMetadata` does not change.
-Accounts and Vendors are not registered yet: references are stored and returned as supplied, including
-their optional name; target existence is not validated (completed in Module 3). Single-module lookup sorting
+Accounts is registered with `Account_Name` as its display name. Contacts Account Name and
+Accounts Parent Account validate targets within the bound organization. Vendors remains
+unregistered: references are stored and returned as supplied, without target validation.
+Lookup equality accepts an opaque target ID for related Contacts and Member Accounts queries;
+existing name filters remain available.
+Open question: Parent Account self-reference and cycle validation are unobserved and not enforced.
+Accounts reuses Contacts country/state catalogs and exposes read-only Billing/Shipping address
+and coordinate composites with independently writable child fields, following the Contacts pattern.
+Accounts business-card fields and the eight writable information rows follow
+`research/specs/accounts-record-detail.md` and `research/specs/accounts-form.md`.
+Offscreen system-field column assignment, search fields and id-descending default
+for null-sort views remain interim. Owner retains the existing membership-validated
+write behavior despite the export's secondary field-read-only flag. Single-module lookup sorting
 and text filters use `name`; a missing name behaves as empty. The wire codec
 represents single-module lookups as `{ id, name? }` and restores the module from
 field metadata. Dates remain strings; metadata publishes `data_type: "date"`.
 The three Leads conversion lookups remain read-only.
+
+Deals validates and resolves Account_Name and Contact_Name against registered fixture modules; lookups into unregistered modules, including Campaign_Source, remain unchanged. The metadata export contains no separate pipeline definition or selected business-card fields.
+
+## Search and duplicates
+
+`search` searches every registered module unless `modules` restricts it, using
+trimmed, case-insensitive substring matching (three characters minimum). Name
+scope searches only the computed record name. Paging defaults to page 1 and 30
+rows per module; positive integer page sizes are accepted. Totals precede paging,
+and a matching module remains present when the requested page is empty. Filters,
+sort and projection apply independently. Discovery and list use the same
+organization-scoped read path; discovery does not apply saved-view criteria.
+The current fixture metadata has no multi-selection, automatic-number or formula
+fields; the search helper recognizes the former two and skips absent fields.
+`fields`, `sort` and `filters` are validated against every module the call visits.
+Without `modules` that is all registered modules, so a name only one module knows
+raises `ValidationError` for the whole call (keyed `fields`, `sort` or `filters`).
+Callers that use a module-specific field select that single module with `modules`.
+
+`findDuplicateGroups` requires one to three distinct known fields, with nonempty,
+case-insensitive equality on every selected field. Conflicts compare nonempty
+business values, read-only fields included: the merge cannot select those either,
+but a differing read-only value still tells the records apart. System attribution,
+the computed record name, `id` and the `Locked__s` write-lock flag stay out of the
+comparison — the lock is an access flag, never a value a caller chooses. Blank
+business values are filled from the group, except a lookup whose value names a
+record of that same group: the automatic fill never hands the master a pointer at
+itself or at a duplicate about to disappear. Lookup identity is the referenced module
+and ID, independent of name.
+
+`merge` accepts a master and one or two distinct duplicates in its bound module
+and organization. It applies update validation and the existing update/delete
+lock checks to every participant. The fixture currently has no finer record ACL;
+these checks are the same as existing update/delete, not a new permission model.
+All lookup redirections and unique-field checks are prepared before any write.
+The duplicates disappear permanently; selected values overwrite the master,
+other values remain. Every lookup that pointed at a removed duplicate is
+redirected to the master, except on the master itself: that field is not turned
+into a self-pointer, it becomes `null`. A value given explicitly in `values`
+still wins whenever it targets a record that survives — and a self-pointer the
+caller names explicitly is kept, because `merge` validates references by the same
+rule as `update`, which allows it. Only the automatic path guarantees that a master
+never ends up pointing into its own group. Creation attribution comes
+from the oldest participant; modification attribution uses the caller and the
+merge clock.
+
+`deduplicate` requires the existing `admin` role and holds an organization/module
+lock shared by all service instances until success or failure. Groups with no
+business conflicts and at most three records merge automatically. Latest
+activity chooses the master, then latest modification breaks missing/tied
+activity. Other groups return unchanged as `conflicts`. So does a group whose
+automatic merge is rejected by a record lock or a unique-value collision: the
+run moves on to the next group and `mergedGroups`/`removedRecords` count only
+the groups that really merged, so one rejected group never aborts the call or
+leaves earlier merges unreported. Any other merge failure is a bug and still
+rejects the call. Notes, attachments, activities, automation and queued large
+merges remain outside this adapter.
+
+## Deals stage rules — interim
+
+The single pipeline uses Stage picklist order and its exported stage probabilities
+and categories. Create without Probability, or a changed Stage without Probability
+in the same input, applies the stage probability. An explicit Probability wins and
+must be an integer from 0 through 100. Expected_Revenue is read-only: supplying it
+raises the existing field ValidationError. Every Deals write derives it as
+Amount × Probability / 100, rounded to two decimals; empty Amount yields null.
+Reason_For_Loss__s can only be supplied for a target stage in the Closed Lost
+category (including Closed Lost to Competition). It is optional and cleared when
+leaving that category. Closed deals can be reopened without extra validation.
+
+Interim rules fixed for this implementation, because writes in the reference CRM
+are forbidden and these outcomes have not been observed:
+
+- When automatic stage probability is applied; explicit probability preservation.
+- `Probability: null` in the input means not provided: stage default on create or
+  stage change, otherwise the existing probability is kept.
+- Probability integer range 0–100 applies only to non-null provided values.
+- Expected revenue formula and two-decimal rounding; `summarize` sums use the same
+  two-decimal rounding for currency and numeric amount fields.
+- Reopening a closed deal without additional validation.
+- Initial history creation and appending only when the stage actually changes.
+- History calendar-day differences use UTC dates, independent of elapsed hours.
+
+DealHistory is a read-only module with the twelve exported fields. All public
+mutation methods reject it with ForbiddenError. Creating a deal adds its first
+snapshot; changing Stage adds a snapshot of Stage, Amount, Probability,
+Expected_Revenue, Closing_Date, Modified_By and Modified_Time, updates
+Stage_Modified_Time, and closes the previous snapshot with Moved_To__s and
+Stage_Duration_Calendar_Days. The active snapshot has null duration/moved-to.
+Other writes derive revenue without appending history. Deleting a deal removes
+its history. Synthetic seeds include several two-stage histories.
+Read with list/count, view `all-deal-history`, and a Potential_Name equality
+criterion containing the deal ID string; the default sort is
+Modified_Time descending. Global search defaults retain the writable CRM modules;
+DealHistory can be searched explicitly.
+
+## Group summaries
+
+`RecordService.summarize(module, query)` accepts `viewId`, optional `filters` and
+`search`, required `groupBy` (picklist API name), and optional `sum` (currency,
+integer or double API name). It uses the same matching rules as list/count and
+has no sorting or pagination. It returns `readonly GroupSummary[]`, one
+`{ value, count, sum }` per stored picklist option in metadata order, including
+empty groups. A null-value group is appended only when matching rows have an
+empty grouping field. Without sum, sum is null; with sum, an empty group sums to
+zero. Unknown or incompatible fields raise ValidationError.
+
+HTTP: `POST /crm/v2.2/{module}/actions/grouped_counts?cvid=<view>&group_by=<field>&sum=<field>`.
+The optional JSON body carries the same `filters` and `search` as actions/count;
+the response is `{ groups: GroupSummary[] }`. Sum may be omitted. This local DTO
+and query shape are interim; no reference write or saved preference is required.
+The HTTP adapter implements the same port, and the shared module contract suite
+checks summary/list/count parity for Leads, Contacts, Accounts and Deals.
+
+## Tasks and the shared activity foundation
+
+Tasks is registered with all 20 exported fields, layout columns, Status/Priority
+options and 17 saved views. Subject remains free text; its exported suggestions
+are preserved in `tasksPicklists` without making the text field a picklist.
+Seeds contain 250 deterministic synthetic tasks linked directly to existing
+Leads, Contacts, Accounts and Deals, including multiple tasks on one record,
+records without tasks, one-sided references, and every Status/Priority value.
+Existing module seeds are unchanged. All null view sorts use the shared
+id-descending default.
+
+### Multi-target references
+
+`lookup.module` remains the default target. Optional `lookup.modules` lists
+allowed targets and contains that default. `lookupTargetModules(field)` is the
+shared accessor used by validation and resolution. Single-target wire values
+retain `{id,name?}`; multi-target values carry `{module,id,name?}` so the target
+survives HTTP round trips. Metadata returns both the default and target list.
+
+The sanitized `fixture/tasks/related-targets.json` source table retains only
+module names and structural hrefs from the export. A row qualifies when its
+related module is Tasks and href is `<source module>/{ENTITYID}/Tasks`.
+What_Id targets are derived from qualifying source rows except Leads/Contacts;
+its default is Accounts. Who_Id defaults to Contacts and temporarily permits
+Contacts/Leads, in one constant (`tasksWhoTargets`). The shared resolver rejects
+unlisted modules and missing records in registered modules on create/update;
+it derives names from target display fields. Deleted targets read as null in
+get/list. Allowed unregistered modules retain their supplied references,
+including names, without an existence check. No Tasks-specific resolver exists.
+
+Direct related reads use existing list/count criteria:
+
+```ts
+const filters = {
+  field: "Who_Id", // Leads/Contacts; use What_Id for Accounts/Deals
+  comparator: "equal",
+  value: { module: "Contacts", id: recordId },
+} as const;
+await records.count("Tasks", { viewId: "open-tasks", filters });
+```
+
+Reference equality compares both module and opaque id, ignoring supplied name.
+Open/closed reads add Status not_equal/equal Completed, or use open-tasks and
+closed-tasks. Completed is supported by the exported Closed Tasks view; this
+query boundary does not implement a completion transition. Contact tasks are
+not additionally inferred onto their Account.
+
+### Opaque object fields and view boundaries
+
+ALARM (`Remind_At`) and RRULE (`Recurring_Activity`) accept null or plain JSON
+objects with finite numbers, strings, booleans, nulls, nested objects/arrays.
+Objects are cloned on writes/reads and retained by deep value equality. Field
+dataType determines whether a value is an object or reference. Arrays/scalars,
+cycles and non-JSON members are invalid top-level values. Other field types
+retain their existing validation. These fields cannot be filtered or sorted.
+No reminder delivery, email notification or recurrence generation is performed.
+
+Saved-view tokens convert exactly: CURRENTUSER/TODAY are existing tokens;
+TOMORROW maps to PERIOD TOMORROW; YESTERDAYMINUS to PERIOD TILL_YESTERDAY.
+New NEXT7DAYS means overdue through UTC calendar day +7 inclusive;
+TODAYANDOVERDUE means through today inclusive. Both use less_equal and exclude
+null dates. NEXT7DAYS deliberately differs from DUEINDAYS, which excludes
+past/today dates. Boundary tests include overdue, today, tomorrow, +7 and +8.
+Source views preserve BEST_TIME; published columns omit only this undefined
+column through the explicit `tasksDroppedColumns` exception, in seven views.
+All remaining column order is preserved, and no 21st field is synthesized.
+
+### Open questions and temporary decisions
+
+- MEP-427 form research must confirm Leads on Who_Id; this is the CTO's temporary
+  routing decision because related lists do not identify the linking field.
+- The export supplies no inner key names/types for ALARM/RRULE. Keys remain
+  opaque; MEP-427 research will inform a separate schema-tightening issue.
+  Test JSON payloads are synthetic examples, not proposed reminder/repeat schemas.
+- MEP-425 detail research must explain BEST_TIME. Its projection exception stays
+  visible in source and tests until a separate decision supplies its meaning.
+- Completed defines closure for these queries; actual completion, reminder and
+  recurrence flows await their own research/implementation.
+
+### Adding Events and Calls with this pattern
+
+1. Read the module's exported fields, layout, picklists and detailed saved views;
+   retain structure only and replace source identifiers with local fixture IDs.
+2. Extract a sanitized related-target table using that activity's module name and
+   href suffix. Derive What_Id targets from it, and use approved Who_Id targets.
+   Keep `lookup.module` for existing consumers and use `modules` for multiple
+   allowed targets. Reuse shared validation/resolution without module branches.
+3. Add deterministic synthetic seeds referencing existing fixture records and
+   register a bundle with display field, managed fields, defaults and id range.
+4. Convert criteria with exact calendar boundaries; record undefined projection
+   columns explicitly. Reuse list/count criteria for direct related reads.
+5. Define a module contract-suite configuration, including a separate mass-update
+   scenario when the filter marker is ineligible (Tasks uses Priority).
+   Add exported field/picklist tables, lookup lifecycle, related reads and generic
+   CRUD handler/HTTP round-trip tests.
+6. Opt into opaque array values with `acceptsJsonArray` only on approved fields.
+   Events uses the contract below; preserve the exported dataType independently.
+   Neither activity executes reminder or recurrence rules in its fixture.
+
+
+## Events (Meetings)
+
+Events publishes all 34 exported fields, two one-column layout sections, and 11
+saved views with unchanged criteria and column order. API name is Events; labels
+are Meeting / Meetings. Meeting_Venue__s keeps In-office, Client location, Online
+in export order. Meeting_Provider__s has no exported options and publishes an empty
+picklist. Required fields are Event_Title, Meeting_Venue__s, Start_DateTime and
+End_DateTime. Venue is the only exported mass-update field.
+
+`acceptsJsonArray` on FieldDefinition is an acceptance policy, not a copy of
+`json_type`. It returns in metadata (wire `accepts_json_array`) and permits null or
+opaque readonly JSON arrays on Remind_At and Remind_Participants (multireminder).
+Participants keeps its exported bigint dataType and acceptsJsonArray metadata,
+but its write contract has changed **opaque → typed**. Each item is
+`{ type: "user" | "lead" | "contact" | "email", id: string | null,
+name: string, email: string | null }`. At most 50 items are accepted. User,
+lead and contact items require a nonempty id; email items require a nonempty
+email. Lead/contact IDs must exist in the bound organization. Unknown keys
+are discarded on write; invalid items return ValidationError on Participants.
+A null field and an empty array remain valid. Reminder items remain arbitrary
+plain JSON. Arrays are detached on writes and reads; equality ignores object
+key order and preserves array order. These fields cannot be filtered or sorted.
+
+Tasks set Closed_Time at the write instant when entering Completed and clear
+it when leaving Completed. Writes while already Completed preserve it.
+Closed_Time is system managed. Meetings require Start_DateTime and End_DateTime;
+end before start returns ValidationError on End_DateTime. Provisionally,
+All_day normalizes the respective UTC dates to 00:00:00 and 23:59:59.
+
+Scheduled Calls with a past Call_Start_Time read as Overdue without changing
+storage; list/count filters see the same derived status. Completed calls
+require Call_Duration in mm:ss format (two or more minute digits, seconds
+00–59); Call_Duration_in_seconds is derived on write. Cancelled remains a
+status and retains the record.
+
+CURRENTTIME maps exactly from `${CURRENTTIME}`. The runtime adapter clock resolves
+it anew for each query, using the exact instant without day rounding. Only datetime
+fields and less_than, less_equal, greater_than, greater_equal accept it. Null or
+unparseable dates never match. Four exported completed/upcoming views use it.
+`${THISWEEK}` maps to PERIOD THIS_WEEK; TODAY and CURRENTUSER retain their mapping.
+
+The 250 deterministic synthetic meetings include all-day/timed, past/future,
+empty/populated arrays and direct references to seeded Leads, Contacts, Accounts
+and Deals. Participants use the typed shape above; reminder JSON is invented test data. Existing module seeds remain unchanged. Null view sorts use id descending.
+Who_Id temporarily allows Contacts/Leads, in eventsWhoTargets. What_Id targets
+come from qualifying `<source module>/{ENTITYID}/Events` rows in the sanitized
+related-target table, excluding Who_Id targets; its default is Accounts. The
+common resolver handles allowed unregistered targets and deleted target reads.
+Read related meetings with list/count on all-meetings and Who_Id or What_Id
+reference equality, including both module and id. No separate open/closed related
+list rule is introduced.
+
+Open questions and temporary decisions:
+
+- The export has four jsonarray fields. Tag is the explicit exception: it keeps
+  text, create/edit disabled, and rejects arrays, as the existing five modules do.
+  A separate common tag decision must reconcile that representation for all modules.
+- Host_or_Participant is absent from the field dictionary. Its source criterion
+  remains published on My Meetings and the existing missing-field evaluation rule
+  matches every record. The fixture view therefore returns all meetings; this is
+  not evidence of reference behavior and does not establish screen parity. No
+  Participants schema or Owner substitution is inferred.
+- Cancelled Meetings exports null criteria; My Cancelled Meetings exports only
+  Owner equality. No cancellation state or transition is invented.
+- End-time saved views do not establish the rule for open/closed related lists;
+  that boundary still requires research. Who_Id Leads routing awaits form research.
+- Reminder delivery, participant invitations/notifications, recurrence generation,
+  check-in transitions, database adapter and screens remain outside this definition.
+
+## Calls
+
+Calls follows the Tasks pattern (`fixture/calls/`): sanitized export metadata,
+picklists, views, deterministic seed and a derived related-target table.
+
+- **Fields / views:** 26 fields (Call_Type, Call_Start_Time and Call_Duration are
+  required), 4 layout sections, 6 picklists (`Call_Type`, `Call_Purpose`,
+  `Call_Result`, `Reminder`, `Outgoing_Call_Status`, `Scheduled_In_CRM`) and 23
+  system views with a null sort (shared default order applies).
+- **Targets:** `Who_Id` = Contacts, Leads (temporary rule, same constant as Tasks,
+  kept in `callsWhoTargets`). `What_Id` = the `Calls` rows of
+  `related-targets.json` minus the Who targets: Accounts, Campaigns, Cases, Deals,
+  Invoices, Products, Purchase_Orders, Quotes, Sales_Orders, Vendors. Resolution
+  reuses the shared multi-target reference code; no Calls-specific resolver.
+- **Related reads:** "calls of this record" is `list`/`count` with a `Who_Id` or
+  `What_Id` equality filter; unit tests cover Leads, Contacts, Accounts, Deals.
+- **Seed:** 250 synthetic calls (ids from 150000000000000000; next id range
+  160000000000000000), every picklist value used, linked to seeded Leads,
+  Contacts, Accounts and Deals; other modules' seeds are unchanged.
+- **Interim rules:** the source `${EMPTY}` token is projected to `is_empty`; the
+  integer criterion value `"0"` becomes a number; a source column listed
+  twice (Completed Calls: Call_Start_Time) appears once. `Owner` is exported with
+  `read_only: true` but `field_read_only: false`; it stays writable here because
+  the shared ownership change writes it.
+- **Not covered:** call logging/scheduling rules, duration calculation, reminders,
+  CTI. Reminder is a plain picklist. There is no HTTP layer in the repository yet;
+  generic CRUD is verified through the module-independent contract suite and the
+  service-level tests.
+- **Open questions:** (1) whether an open/closed call split exists beyond the
+  exported view criteria (Scheduled / Overdue / Completed on
+  `Outgoing_Call_Status`); none is encoded. (2) Whether `Who_Id` should allow more
+  than Contacts and Leads (export lists only Contacts; Leads kept as for Tasks).
+
+## Activity summaries and system filters (interim)
+
+Parent modules Leads, Contacts, Accounts and Deals accept optional `activityFilter`
+on list/count/summarize. `ActivityFilterValue` uses the five choices
+`without_open_activity`, `overdue`, `without_any_activity`, `activity_done`, and
+`activity_due` with `today`, `tomorrow`, `next_7_days` or `today_overdue`.
+All restrictions combine with saved-view criteria, field filters and search.
+Other modules reject an activity filter with `ValidationError.activityFilter`.
+
+`ListQuery.includeActivitySummary` adds `ListResult.activitySummaries`, keyed only
+by returned-page parent IDs with open activities, independently of field projection.
+Without the flag this field is absent; non-parent modules return an empty map.
+The earliest dated open activity wins; null dates come last; equal timestamps
+(including all-null dates) prefer task, meeting, call. Returned summaries contain
+`kind`, `activityId`, `date` and are detached from storage.
+
+The pure `activityState(module, record, now)` and `activityDate(module, record)`
+helpers are exported from `@crm/core/records/activities`, preserving the existing
+root entry point's runtime export boundary and its unchanged assertions.
+Tasks are open unless Status is Completed. Events are open only when End_DateTime
+is strictly after now. Calls are open only for Outgoing_Call_Status Scheduled or
+Overdue; missing/other values are closed. Dates come from Due_Date,
+Start_DateTime and Call_Start_Time respectively. Unknown modules are closed and
+have no activity date. These are CTO-approved temporary rules; reminders and
+recurrence remain opaque and never execute.
+
+Activities are read from registered Tasks/Events/Calls stores in the bound
+organization. Unregistered modules are ignored. Parent links match both module
+and opaque ID: either Who_Id or What_Id, using the shared activityParentIds helper.
+Without Open Activity means no open activity; Without Any Activity means none
+of either state; Activity Done means at least one closed activity. Overdue means
+an open date before today's UTC midnight. Today and Tomorrow use half-open UTC
+day intervals. Next 7 days includes tomorrow through today+7, excluding today+8.
+Today + Overdue includes all open dates before tomorrow's midnight. Null dates
+never match date predicates, but still count as activities and may be summarized.
+This uses the same UTC day boundary as existing service date tokens.
+
+Wire requests add `activity_filter` and `include_activity_summary` to the existing
+POST restriction body. Bulk responses add `activity_summaries` with per-ID
+`{kind, activity_id, date}`; requesting summaries preserves an empty 200 envelope
+so its empty map survives transport. Existing requests and empty 204 responses
+are unchanged. These additive wire fields are interim, pending observed evidence.
+
+Open questions: the reference CRM's applied-filter timezone/day boundary and
+multi-activity badge precedence/date selection remain unobserved. The UTC boundary
+and task/meeting/call tie order require confirmation at the module board gate.
+
+Deleting Leads, Contacts, Accounts or Deals cascades to all registered Tasks, Events and Calls linked by either Who_Id or What_Id (matching module and ID), after validating every parent; child locks are ignored temporarily, merge and conversion do not cascade, and restore is out of scope.
+
+## Campaigns
+
+`Campaigns` publishes the 21 exported fields, two layout sections, Type/Status
+picklists and four saved views. Null view sorting uses the common default sort.
+The source table contains only sanitized field/layout/view structure. Tag keeps
+the common text policy; Connected_To__s keeps the common multi-module lookup
+shape. Expected_Response and Num_sent are stored bigint strings, not computed
+statistics. Parent_Campaign is a self lookup; list/count with Parent_Campaign
+equal to a campaign ID returns its immediate children. Interim cycle protection
+rejects self-parenting and descendant-parenting with ValidationError.
+
+`Campaign_Members` is a hidden child module, like Contact_Roles, available through
+the existing generic CRUD, list and count paths. Campaign is required and exactly
+one of Lead or Contact must be populated. Composite uniqueness uses the same
+lifecycle validation mechanism as Contact_Roles: a campaign/member pair cannot
+repeat, including on update. Campaign, Lead and Contact deletion removes its
+membership rows atomically. Filter Campaign plus nonempty Lead/Contact for the
+campaign's members, or filter Lead/Contact for the member's campaigns; each row
+contains Campaign, the member reference and Member_Status. Deals.Campaign_Source
+resolves Campaigns; filtering it returns campaign deals. Deleting a campaign
+uses the common dangling-reference read policy (null) for Deals and child
+campaigns, without deleting those records.
+
+Interim/open questions:
+
+- Member_Status has no default. Its single provisional constant lists Planned,
+  Invited, Sent, Received, Opened, Responded, Bounced and Opted Out; replace it
+  when membership research confirms the real options (MEP-755).
+- Confirm the provisional campaign ancestor-cycle validation against research.
+- Lead conversion is not implemented in this service. Transferring memberships
+  to the resulting Contact remains open; no conversion code is added here.
+- Unread Campaigns retains the exported Common_Status criterion although that
+  field is absent from public metadata, following existing saved-view policy.
+
+## Recycle Bin search queries
+
+`RecycleBinQuery.deletedByContains` matches a case-insensitive substring of the
+stored deletion actor. Existing `deletedBy` retains exact, case-sensitive equality;
+when both are supplied, both must match. An empty substring matches every visible
+actor. Search predicates combine with module/name filters before pagination and
+`total`; tenant and role visibility remain authoritative.
+
+`deletedOn: { date: "YYYY-MM-DD", time?: "HH:mm" }` matches an entire calendar day
+or, with a 24-hour time, one minute. Intervals include their start and exclude the
+next day/minute. Invalid calendar dates, malformed times and malformed query
+values raise the existing `ValidationError`, even for an empty bin.
+
+Open questions: `OrgContext` currently has no user/organization timezone, so this
+query uses UTC (including when a deletion instant originated in another offset).
+The timezone source and reference CRM day boundaries need confirmation. RB-17 and
+RB-19 establish only `contains` and `is`; other operators remain unobserved and
+are not added. Deletion actor display-name resolution is outside this query port.
+
+## Campaign system filter (interim)
+
+Leads and Contacts accept `campaignFilter: { campaignIds, memberStatuses? }` on
+list/count/summarize. Choose one to five distinct non-empty campaign IDs and,
+optionally, a non-empty subset of the shared interim `campaignMemberStatuses`
+export from `@crm/core/records/campaigns`. A record matches membership in any
+selected campaign, narrowed by the status of that same membership. This combines
+with saved-view criteria, field filters, search and activity filters using AND.
+Membership and campaign reads use the caller's tenant and ordinary visibility;
+unknown or inaccessible IDs produce no matches. Other modules and malformed
+filters raise `ValidationError.campaignFilter`. The existing wire bodies carry
+`campaign_filter: { campaign_ids, member_statuses? }`; no new endpoint is added.
+
+## Cases
+
+`Cases` publishes all 30 exported fields, layout sections/columns, five picklists
+and eight saved views. Null sorting uses the common default. Subject, Status and
+Case_Origin are required. The seed contains 60 synthetic cases (IDs from
+250000000000000000; create range 260000000000000000), covers all picklist values,
+locked/open/closed/escalated cases and today's view, and links seeded Accounts,
+Contacts and Deals. List/count filters on Account_Name, Related_To and Deal_Name
+provide related reads. Deleting a registered target uses the existing dangling
+lookup read policy (null); it does not delete the case. Solution is text: there
+is no Cases–Solutions relation. Comment fields retain their exported scalar types;
+no comment, closure or escalation workflow is added.
+
+## Solutions
+
+`Solutions` publishes all 20 exported fields, layout sections/columns, Status
+picklist and four saved views. Solution_Title is required. The seed contains 25
+synthetic solutions (IDs from 270000000000000000; create range
+280000000000000000), every status and both Published states. Published remains
+a stored boolean; no publishing workflow is added. Existing module seed counts
+are unchanged. Tasks, Events, Calls, Notes and Attachments accept both new modules
+as parents through their existing lookup/parent mechanisms.
+
+### Auto-number (interim)
+
+CTO's interim fixture decision enables a generic helper through the bundle's
+`autoNumberField`. Case_Number and Solution_Number remain read-only autonumber
+fields (length 25) and are managed. Each module has an independent nextAutoNumber
+counter alongside nextId. Seed records receive unprefixed decimal strings 1..N
+in Created_Time ascending order (ID breaks ties); create continues at N+1 inside
+the common atomic write. Rollback restores the counter. Deletion never reuses a
+number. Update/mass update/merge retain the master's number. Client numbers are
+rejected like other managed fields. Clone/import use the same create path and
+must omit managed fields. No separate clone/convert service exists here.
+
+Interim/open questions:
+
+- Confirm actual auto-number prefix/suffix/start when research supplies evidence;
+  the export has null for each, so the approved fallback starts at 1.
+- Product_Name points to unregistered Products (Phase 2). The existing shared
+  reference policy preserves its reference unchanged; existence/name validation
+  starts when that module is registered. No synthetic Products module is added.
+- Unread views preserve Common_Status although it is absent from exported fields,
+  following the existing shared saved-view policy.
+- Layout-required Question/Answer do not change Solutions' module-level required
+  fields; the record contract follows the exported system_mandatory flags.

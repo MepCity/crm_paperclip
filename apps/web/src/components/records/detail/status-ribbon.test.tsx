@@ -20,15 +20,17 @@ afterEach(() => {
   vi.unstubAllGlobals();
 });
 
-function setup() {
+function setup(options: { value?: string | null; isDisabled?: boolean } = {}) {
+  const { value = "stage-4", isDisabled = false } = options;
   const onSelect = vi.fn();
   render(
     <>
       <StatusRibbon
         stages={demoStages}
-        value="stage-4"
+        value={value}
         terminalGroups={demoGroups}
         labels={demoLabels}
+        isDisabled={isDisabled}
         onSelect={onSelect}
       />
       <p>Outside panel</p>
@@ -159,4 +161,56 @@ test("mouse selection delivers current or changed stored values once", async () 
   await user.click(trigger);
   await user.click(screen.getByRole("menuitemradio", { name: /^Contacted$/ }));
   expect(onSelect).toHaveBeenCalledExactlyOnceWith("stage-2");
+});
+
+const terminalValues = demoGroups.flatMap((group) => group.options.map((option) => option.value));
+
+function stageButtons() {
+  return screen
+    .getAllByRole("listitem")
+    .flatMap((item) => Array.from(item.querySelectorAll("button")));
+}
+
+test("with an empty value every open stage label becomes a button", () => {
+  setup({ value: null });
+  const open = demoStages.slice(1).filter((stage) => !terminalValues.includes(stage.value));
+  expect(stageButtons()).toHaveLength(open.length);
+  for (const stage of open) expect(screen.getByRole("button", { name: stage.label })).toBeTruthy();
+  expect(
+    screen.getAllByRole("listitem").filter((item) => item.hasAttribute("aria-current")),
+  ).toHaveLength(0);
+});
+
+test("with an empty value terminal stage labels stay plain text", () => {
+  setup({ value: null });
+  for (const stage of demoStages.slice(1)) {
+    if (terminalValues.includes(stage.value))
+      expect(screen.queryByRole("button", { name: stage.label })).toBeNull();
+  }
+  const items = screen.getAllByRole("listitem");
+  for (const index of [3, 7]) {
+    expect(items[index]?.querySelector("span.status-label")).toBeTruthy();
+    expect(items[index]?.querySelector("button")).toBeNull();
+  }
+});
+
+test("pressing an open stage button selects its stored value once", async () => {
+  const { onSelect, user } = setup({ value: null });
+  await user.click(screen.getByRole("button", { name: "Contacted" }));
+  expect(onSelect).toHaveBeenCalledExactlyOnceWith("stage-2");
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+test("stage buttons cannot be pressed while the ribbon is disabled", async () => {
+  const { onSelect, user } = setup({ value: null, isDisabled: true });
+  const button = screen.getByRole("button", { name: "Contacted" }) as HTMLButtonElement;
+  expect(button.disabled).toBe(true);
+  await user.click(button);
+  expect(onSelect).not.toHaveBeenCalled();
+});
+
+test("with a stored value the other stage labels stay plain text", () => {
+  setup({ value: "stage-2" });
+  expect(stageButtons()).toHaveLength(1);
+  expect(screen.queryByRole("button", { name: "Attempted to Contact" })).toBeNull();
 });

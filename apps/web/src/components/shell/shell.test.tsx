@@ -85,16 +85,25 @@ afterEach(() => {
 });
 
 test("Pinned links without an icon accent token keep the previous icon class rules", () => {
-  const link = config.links[0]!;
+  const link = config.links[0];
+  const section = config.sections[0];
+  const group = section?.groups[0];
+  const leads = group?.links[0];
+  const shellHome = shellNav.links[0];
+  expect(link).toBeDefined();
+  expect(leads).toBeDefined();
+  expect(shellHome).toBeDefined();
+  if (!link || !leads || !shellHome) {
+    return;
+  }
   expect(navLinkIconClassName(link, { nested: false, active: true })).toBe(
     "size-(--size-rail-icon) shrink-0",
   );
-  const leads = config.sections[0]!.groups[0]!.links[0]!;
   expect(navLinkIconClassName(leads, { nested: true, active: false })).toContain("text-rail-icon");
   expect(navLinkIconClassName(leads, { nested: true, active: true })).toBe(
     "size-(--size-rail-icon) shrink-0",
   );
-  expect(navLinkIconClassName(shellNav.links[0]!, { nested: false, active: true })).toContain(
+  expect(navLinkIconClassName(shellHome, { nested: false, active: true })).toContain(
     "text-accent-blue",
   );
 });
@@ -127,16 +136,52 @@ test("Navigation groups collapse and expand with mouse and keyboard", async () =
   expect(screen.queryByRole("link", { name: "Leads" })).toBeNull();
 });
 
-test("Default navigation renders Leads and Contacts under Sales and omits empty groups", () => {
+test("Default navigation renders Leads, Contacts, Accounts, Deals, Tasks, Meetings and Calls (under Activities) and omits empty groups", () => {
   render(<Navigation orgSlug="example" />);
-  expect(screen.getAllByRole("link")).toHaveLength(3);
+  expect(screen.getAllByRole("link")).toHaveLength(17);
+  expect(screen.getByRole("link", { name: "Workqueue" }).getAttribute("href")).toBe(
+    "/crm/example/workqueue",
+  );
+  expect(screen.getByRole("link", { name: "Reports" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Reports",
+  );
+  expect(screen.getByRole("link", { name: "Analytics" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Dashboards",
+  );
   expect(screen.getByRole("link", { name: "Leads" }).getAttribute("href")).toBe(
     "/crm/example/tab/Leads/list",
   );
   expect(screen.getByRole("link", { name: "Contacts" }).getAttribute("href")).toBe(
     "/crm/example/tab/Contacts/list",
   );
+  expect(screen.getByRole("link", { name: "Accounts" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Accounts/list",
+  );
+  expect(screen.getByRole("link", { name: "Deals" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Deals/list",
+  );
+  expect(screen.getByRole("link", { name: "Tasks" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Tasks/list",
+  );
+  expect(screen.getByRole("link", { name: "Meetings" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Meetings/list",
+  );
+  expect(screen.getByRole("link", { name: "Calls" }).getAttribute("href")).toBe(
+    "/crm/example/tab/Calls/list",
+  );
   expect(screen.getByRole("button", { name: "Sales" })).toBeTruthy();
+  const activities = screen.getByRole("button", { name: "Activities" });
+  const sales = screen.getByRole("button", { name: "Sales" });
+  const tasks = screen.getByRole("link", { name: "Tasks" });
+  const meetings = screen.getByRole("link", { name: "Meetings" });
+  const calls = screen.getByRole("link", { name: "Calls" });
+  expect(activities.compareDocumentPosition(tasks) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(tasks.compareDocumentPosition(meetings) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(meetings.compareDocumentPosition(calls) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  expect(tasks.compareDocumentPosition(sales) & Node.DOCUMENT_POSITION_PRECEDING).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Deals" }).compareDocumentPosition(activities)).toBe(
+    Node.DOCUMENT_POSITION_FOLLOWING,
+  );
 });
 
 test("Organization switcher exposes the current organization in its accessible name", () => {

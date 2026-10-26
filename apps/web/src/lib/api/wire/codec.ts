@@ -3,6 +3,7 @@ import type {
   Comparator,
   Criteria,
   CriteriaPeriod,
+  CriteriaToken,
   CriteriaValue,
   CurrencyDefinition,
   FieldDefinition,
@@ -13,6 +14,21 @@ import type {
   RecordData,
   RecordInput,
 } from "@crm/core/records";
+import {
+  baselineFieldId,
+  baselineLayoutId,
+  isJsonArray,
+  isJsonObject,
+  lookupTargetModules,
+} from "@crm/core/records";
+import { validateActivityFilter } from "@crm/core/records/activities";
+import { validateCampaignFilter } from "@crm/core/records/campaigns";
+import {
+  MAX_RELATED_MODULE_CRITERIA,
+  MAX_RELATED_MODULE_FILTERS,
+  validateRelatedModules,
+} from "@crm/core/records/related-module-filters";
+import { validateSystemFilters } from "@crm/core/records/system-filters";
 import type {
   WireCriteria,
   WireCriteriaValue,
@@ -34,10 +50,14 @@ export function object(value: unknown, key: string): Record<string, unknown> {
   if (typeof value !== "object" || value === null || Array.isArray(value)) invalid(key);
   return value as Record<string, unknown>;
 }
+export function referenceKeys(ref: Record<string, unknown>, keys: readonly string[], key: string) {
+  if (Object.keys(ref).some((name) => !keys.includes(name))) invalid(key, "Unknown reference key.");
+}
 function readFieldValue(value: unknown, key: string): FieldValue {
   if (value === null || typeof value === "string" || typeof value === "boolean") return value;
   if (typeof value === "number" && Number.isFinite(value)) return value;
   const ref = object(value, key);
+  referenceKeys(ref, ["module", "id", "name"], key);
   if (typeof ref.module === "string" && typeof ref.id === "string")
     return { module: ref.module, id: ref.id, ...referenceName(ref, key) };
   return invalid(key);
@@ -59,8 +79,24 @@ function encodeValue(
   }
   if (field.dataType === "lookup") {
     const ref = object(value, field.apiName);
-    if (typeof ref.id !== "string" || ref.module !== field.lookup?.module) invalid(field.apiName);
-    return { id: ref.id, ...referenceName(ref, field.apiName) };
+    if (
+      typeof ref.id !== "string" ||
+      typeof ref.module !== "string" ||
+      !lookupTargetModules(field).includes(ref.module)
+    )
+      invalid(field.apiName);
+    return {
+      id: ref.id,
+      ...(field.lookup?.modules ? { module: ref.module as string } : {}),
+      ...referenceName(ref, field.apiName),
+    };
+  }
+  if (field.acceptsJsonArray) {
+    if (!isJsonArray(value)) invalid(field.apiName);
+    return structuredClone(value);
+  }
+  if (field.dataType === "ALARM" || field.dataType === "RRULE") {
+    if (!isJsonObject(value)) invalid(field.apiName);
   }
   return structuredClone(value);
 }
@@ -68,12 +104,29 @@ function decodeValue(field: FieldDefinition, value: unknown): FieldValue {
   if (value === null) return null;
   if (field.dataType === "ownerlookup") {
     const ref = object(value, field.apiName);
+    referenceKeys(ref, ["id", "name", "email"], field.apiName);
     return typeof ref.id === "string" ? ref.id : invalid(field.apiName);
   }
   if (field.dataType === "lookup") {
     const ref = object(value, field.apiName);
+    referenceKeys(
+      ref,
+      field.lookup?.modules ? ["module", "id", "name"] : ["id", "name"],
+      field.apiName,
+    );
     if (typeof ref.id !== "string" || !field.lookup) invalid(field.apiName);
-    return { module: field.lookup.module, id: ref.id, ...referenceName(ref, field.apiName) };
+    const module = field.lookup.modules ? ref.module : field.lookup.module;
+    if (typeof module !== "string" || !lookupTargetModules(field).includes(module))
+      invalid(field.apiName);
+    return { module, id: ref.id, ...referenceName(ref, field.apiName) };
+  }
+  if (field.acceptsJsonArray) {
+    if (!isJsonArray(value)) invalid(field.apiName);
+    return structuredClone(value);
+  }
+  if (field.dataType === "ALARM" || field.dataType === "RRULE") {
+    if (!isJsonObject(value)) invalid(field.apiName);
+    return structuredClone(value);
   }
   return readFieldValue(value, field.apiName);
 }
@@ -111,7 +164,17 @@ export function encodeInput(
   return result;
 }
 export function decodeInput(row: unknown, metadata: ModuleMetadata): RecordInput {
-  const source = object(row, "data");
+  let source = object(row, "data");
+  if (metadata.apiName === "Notes" && Object.hasOwn(source, "$se_module")) {
+    const module = source.$se_module;
+    const parent = object(source.Parent_Id, "Parent_Id");
+    const field = metadata.fields.find((candidate) => candidate.apiName === "Parent_Id");
+    if (typeof module !== "string" || !field || !lookupTargetModules(field).includes(module))
+      invalid("$se_module");
+    if (parent.module !== undefined && parent.module !== module) invalid("Parent_Id");
+    source = { ...source, Parent_Id: { ...parent, module } };
+    delete source.$se_module;
+  }
   const result: Record<string, FieldValue> = Object.create(null);
   for (const [name, value] of Object.entries(source)) {
     const field = metadata.fields.find((candidate) => candidate.apiName === name);
@@ -125,11 +188,16 @@ export function decodeRecord(row: WireRecord, metadata: ModuleMetadata): RecordD
   return { id: row.id, fields: decodeInput(row, metadata) };
 }
 
-export function encodeField(field: FieldDefinition): WireField {
+export function encodeField(
+  field: FieldDefinition & Partial<{ id: string; custom: boolean }>,
+): WireField {
   return {
+    id: field.id ?? baselineFieldId(field.apiName),
+    custom_field: field.custom ?? false,
     api_name: field.apiName,
     field_label: field.label,
     data_type: field.dataType,
+    ...(field.acceptsJsonArray === undefined ? {} : { accepts_json_array: field.acceptsJsonArray }),
     system_mandatory: field.required,
     read_only: field.readOnly,
     mass_update: field.massUpdate,
@@ -147,18 +215,64 @@ export function encodeField(field: FieldDefinition): WireField {
           pick_list_values: field.picklist.map((option) => ({
             display_value: option.displayValue,
             actual_value: option.storedValue,
+            ...(option.stage === undefined
+              ? {}
+              : {
+                  probability: option.stage.probability,
+                  forecast_category: { name: option.stage.forecastCategory },
+                  deal_category: option.stage.category,
+                }),
           })),
         }),
     ...(field.lookup === undefined
       ? {}
-      : { lookup: { module: { api_name: field.lookup.module } } }),
+      : {
+          lookup: {
+            module: { api_name: field.lookup.module },
+            ...(field.lookup.modules
+              ? { modules: field.lookup.modules.map((api_name) => ({ api_name })) }
+              : {}),
+          },
+        }),
   };
 }
+function decodeStage(option: NonNullable<WireField["pick_list_values"]>[number]): {
+  stage?: import("@crm/core/records").PicklistStageMeta;
+} {
+  const keys = ["probability", "forecast_category", "deal_category"];
+  if (!keys.some((key) => Object.hasOwn(option, key))) return {};
+  if (
+    !Number.isInteger(option.probability) ||
+    typeof option.probability !== "number" ||
+    option.probability < 0 ||
+    option.probability > 100
+  )
+    invalid("pick_list_values");
+  const forecast = object(option.forecast_category, "pick_list_values");
+  if (typeof forecast.name !== "string") invalid("pick_list_values");
+  if (
+    option.deal_category !== "Open" &&
+    option.deal_category !== "Closed Won" &&
+    option.deal_category !== "Closed Lost"
+  )
+    invalid("pick_list_values");
+  return {
+    stage: {
+      probability: option.probability,
+      forecastCategory: forecast.name,
+      category: option.deal_category,
+    },
+  };
+}
+
 export function decodeField(field: WireField): FieldDefinition {
   return {
     apiName: field.api_name,
     label: field.field_label,
     dataType: field.data_type,
+    ...(field.accepts_json_array === undefined
+      ? {}
+      : { acceptsJsonArray: field.accepts_json_array }),
     required: field.system_mandatory,
     readOnly: field.read_only,
     massUpdate: field.mass_update,
@@ -176,9 +290,19 @@ export function decodeField(field: WireField): FieldDefinition {
           picklist: field.pick_list_values.map((option) => ({
             displayValue: option.display_value,
             storedValue: option.actual_value,
+            ...decodeStage(option),
           })),
         }),
-    ...(field.lookup === undefined ? {} : { lookup: { module: field.lookup.module.api_name } }),
+    ...(field.lookup === undefined
+      ? {}
+      : {
+          lookup: {
+            module: field.lookup.module.api_name,
+            ...(field.lookup.modules
+              ? { modules: field.lookup.modules.map((module) => module.api_name) }
+              : {}),
+          },
+        }),
   };
 }
 export function encodeModule(metadata: ModuleMetadata): WireModule {
@@ -189,8 +313,10 @@ export function encodeModule(metadata: ModuleMetadata): WireModule {
     business_card_fields: metadata.businessCardFields.map((api_name) => ({ api_name })),
   };
 }
-export function encodeLayout(metadata: ModuleMetadata): WireLayout {
+export function encodeLayout(metadata: ModuleMetadata & { layoutId?: string }): WireLayout {
   return {
+    id: metadata.layoutId ?? baselineLayoutId(metadata.apiName),
+    default: true,
     sections: metadata.layout.map((section) => ({
       display_label: section.label,
       column_count: section.columnCount,
@@ -212,13 +338,19 @@ export function decodeModule(
     apiName: module.api_name,
     singularLabel: module.singular_label,
     pluralLabel: module.plural_label,
-    businessCardFields: module.business_card_fields.map((field) => field.api_name),
+    businessCardFields: module.business_card_fields
+      .map((field) => field.api_name)
+      .filter((name) => fields.some((field) => field.api_name === name)),
     fields: fields.map(decodeField),
     layout: layout.sections.map((section) => ({
       label: section.display_label,
       columnCount: section.column_count,
-      columns: section.columns.map((column) => [...column]),
-      fields: section.fields.map((field) => field.api_name),
+      columns: section.columns.map((column) =>
+        column.filter((name) => fields.some((field) => field.api_name === name)),
+      ),
+      fields: section.fields
+        .map((field) => field.api_name)
+        .filter((name) => fields.some((field) => field.api_name === name)),
     })),
   };
 }
@@ -249,44 +381,50 @@ function ageDueWirePrefix(token: "AGEINDAYS" | "DUEINDAYS", unit: string): strin
 
 function encodeCriteriaValue(value: CriteriaValue): WireCriteriaValue {
   if (typeof value === "object" && value !== null && "token" in value) {
-    switch (value.token) {
+    const token = value as CriteriaToken;
+    switch (token.token) {
       case "CURRENTUSER":
         if (Object.keys(value).length !== 1) return invalid("filters", "Invalid token shape.");
         return { name: `\${CURRENTUSER}` };
+      case "NEXT7DAYS":
+      case "TODAYANDOVERDUE":
+        if (Object.keys(value).length !== 1) return invalid("filters", "Invalid token shape.");
+        return `\${${token.token}}`;
+      case "CURRENTTIME":
       case "TODAY":
         if (Object.keys(value).length !== 1) return invalid("filters", "Invalid token shape.");
-        return `\${TODAY}`;
+        return `\${${token.token}}`;
       case "AGEINDAYS":
       case "DUEINDAYS": {
         const keys = Object.keys(value);
         if (keys.length < 2 || keys.length > 3) return invalid("filters", "Invalid token shape.");
-        if (!Number.isInteger(value.offset) || value.offset < 0)
+        if (!Number.isInteger(token.offset) || token.offset < 0)
           return invalid("filters", "Invalid day offset.");
-        const unit = value.unit ?? "days";
-        if (value.unit !== undefined && !criteriaUnits.has(value.unit))
+        const unit = token.unit ?? "days";
+        if (token.unit !== undefined && !criteriaUnits.has(token.unit))
           return invalid("filters", "Unknown unit.");
-        return `\${${ageDueWirePrefix(value.token, unit)}}+${value.offset}`;
+        return `\${${ageDueWirePrefix(token.token, unit)}}+${token.offset}`;
       }
       case "CATEGORY":
         if (Object.keys(value).length !== 2) return invalid("filters", "Invalid token shape.");
-        if (typeof value.name !== "string") return invalid("filters", "Invalid category token.");
-        return `\${CATEGORY.${value.name}}`;
+        if (typeof token.name !== "string") return invalid("filters", "Invalid category token.");
+        return `\${CATEGORY.${token.name}}`;
       case "RELATIVE": {
         if (Object.keys(value).length !== 4) return invalid("filters", "Invalid token shape.");
-        if (value.direction !== "previous" && value.direction !== "next")
+        if (token.direction !== "previous" && token.direction !== "next")
           return invalid("filters", "Unknown direction.");
-        if (!Number.isInteger(value.count) || value.count < 1)
+        if (!Number.isInteger(token.count) || token.count < 1)
           return invalid("filters", "Invalid relative count.");
-        if (!criteriaUnits.has(value.unit)) return invalid("filters", "Unknown unit.");
-        const segment = value.direction === "previous" ? "PREVIOUS" : "NEXT";
+        if (!criteriaUnits.has(token.unit)) return invalid("filters", "Unknown unit.");
+        const segment = token.direction === "previous" ? "PREVIOUS" : "NEXT";
         const unitWire =
-          value.unit === "days" ? "DAYS" : value.unit === "weeks" ? "WEEKS" : "MONTHS";
-        return `\${${segment}.${unitWire}}+${value.count}`;
+          token.unit === "days" ? "DAYS" : token.unit === "weeks" ? "WEEKS" : "MONTHS";
+        return `\${${segment}.${unitWire}}+${token.count}`;
       }
       case "PERIOD":
         if (Object.keys(value).length !== 2) return invalid("filters", "Invalid token shape.");
-        if (!criteriaPeriods.has(value.name)) return invalid("filters", "Unknown period.");
-        return `\${PERIOD.${value.name}}`;
+        if (!criteriaPeriods.has(token.name)) return invalid("filters", "Unknown period.");
+        return `\${PERIOD.${token.name}}`;
       default:
         return invalid("filters", "Unknown token.");
     }
@@ -295,6 +433,9 @@ function encodeCriteriaValue(value: CriteriaValue): WireCriteriaValue {
 }
 function decodeCriteriaValue(value: unknown): CriteriaValue {
   if (typeof value === "string") {
+    if (value === `\${NEXT7DAYS}`) return { token: "NEXT7DAYS" };
+    if (value === `\${TODAYANDOVERDUE}`) return { token: "TODAYANDOVERDUE" };
+    if (value === `\${CURRENTTIME}`) return { token: "CURRENTTIME" };
     if (value === `\${TODAY}`) return { token: "TODAY" };
     const age = /^\$\{AGEINDAYS\}([+-]\d+(?:\.\d+)?(?:e[+-]?\d+)?)$/.exec(value);
     if (age?.[0] === value && Number.isFinite(Number(age[1])))
@@ -363,7 +504,11 @@ function decodeCriteriaValue(value: unknown): CriteriaValue {
       return invalid("filters", "Unknown token.");
     return value;
   }
-  if (Array.isArray(value)) return value.map((entry) => readFieldValue(entry, "filters"));
+  if (Array.isArray(value)) {
+    if (value.length > MAX_CRITERIA_GROUP_SIZE)
+      invalid("filters", "Send at most 500 criteria values.");
+    return value.map((entry) => readFieldValue(entry, "filters"));
+  }
   if (
     typeof value === "object" &&
     value !== null &&
@@ -408,16 +553,30 @@ export function encodeCriteria(criteria: Criteria): WireCriteria {
     value: encodeCriteriaValue(criteria.value),
   };
 }
+// Match the existing 500-item bulk operation limit.
+export const MAX_CRITERIA_GROUP_SIZE = 500;
+// Allow many full groups while bounding work across the entire tree.
+export const MAX_CRITERIA_NODES = 10_000;
 export function decodeCriteria(value: unknown, depth = 0): Criteria {
+  return decodeCriteriaNode(value, depth, { remaining: MAX_CRITERIA_NODES });
+}
+function decodeCriteriaNode(
+  value: unknown,
+  depth: number,
+  budget: { remaining: number },
+): Criteria {
+  if (budget.remaining-- <= 0) invalid("filters", "Send at most 10000 criteria nodes.");
   if (depth > 32) invalid("filters", "Criteria are too deeply nested.");
   const criteria = object(value, "filters");
   if ("group" in criteria) {
     const operator = criteria.group_operator;
     if (!Array.isArray(criteria.group) || (operator !== "AND" && operator !== "OR"))
       invalid("filters");
+    if (criteria.group.length > MAX_CRITERIA_GROUP_SIZE)
+      invalid("filters", "Send at most 500 criteria per group.");
     return {
       groupOperator: operator === "AND" ? "and" : "or",
-      group: criteria.group.map((child) => decodeCriteria(child, depth + 1)),
+      group: criteria.group.map((child) => decodeCriteriaNode(child, depth + 1, budget)),
     };
   }
   const field = object(criteria.field, "filters");
@@ -533,4 +692,148 @@ export function decodeCurrency(value: unknown): CurrencyDefinition {
     name: currency.name,
     prefixSymbol: currency.prefix_symbol,
   };
+}
+
+/** Interim additive activity wire fields, pending observed request evidence. */
+export function decodeActivityFilter(
+  value: unknown,
+): import("@crm/core/records").ActivityFilterValue {
+  validateActivityFilter(value);
+  return structuredClone(value);
+}
+export const encodeActivityFilter = decodeActivityFilter;
+export function encodeActivitySummaries(value: NonNullable<ListResult["activitySummaries"]>) {
+  return Object.fromEntries(
+    Object.entries(value).map(([id, summary]) => [
+      id,
+      {
+        kind: summary.kind,
+        activity_id: summary.activityId,
+        date: summary.date,
+      },
+    ]),
+  );
+}
+export function decodeActivitySummaries(
+  value: import("./types").WireActivitySummaries,
+): NonNullable<ListResult["activitySummaries"]> {
+  return Object.fromEntries(
+    Object.entries(value).map(([id, summary]) => [
+      id,
+      {
+        kind: summary.kind,
+        activityId: summary.activity_id,
+        date: summary.date,
+      },
+    ]),
+  );
+}
+
+export function decodeCampaignFilter(
+  value: unknown,
+): import("@crm/core/records").CampaignFilterValue {
+  const wire = object(value, "campaignFilter");
+  if (Object.keys(wire).some((key) => !["campaign_ids", "member_statuses"].includes(key)))
+    invalid("campaignFilter");
+  const filter = {
+    campaignIds: wire.campaign_ids,
+    ...(wire.member_statuses === undefined ? {} : { memberStatuses: wire.member_statuses }),
+  };
+  validateCampaignFilter(filter);
+  return filter;
+}
+export function encodeCampaignFilter(value: import("@crm/core/records").CampaignFilterValue) {
+  validateCampaignFilter(value);
+  return {
+    campaign_ids: [...value.campaignIds],
+    ...(value.memberStatuses === undefined ? {} : { member_statuses: [...value.memberStatuses] }),
+  };
+}
+
+const systemFilterNames = {
+  locked: "locked",
+  record_action: "recordAction",
+  related_records_action: "relatedRecordsAction",
+  touched: "touched",
+  untouched: "untouched",
+} as const;
+export function decodeSystemFilters(
+  value: unknown,
+): import("@crm/core/records").SystemFiltersValue {
+  const body = object(value, "systemFilters.filters");
+  const decoded: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(body)) {
+    if (!Object.hasOwn(systemFilterNames, key)) invalid(`systemFilters.${key}`);
+    const name = systemFilterNames[key as keyof typeof systemFilterNames];
+    const entry = object(item, `systemFilters.${name}`);
+    const result: Record<string, unknown> = {};
+    for (const [field, content] of Object.entries(entry)) {
+      if (!["locked", "action", "module", "actor_ids", "period"].includes(field))
+        invalid(`systemFilters.${name}`);
+      result[field === "actor_ids" ? "actorIds" : field] = content;
+    }
+    decoded[name] = result;
+  }
+  validateSystemFilters(decoded);
+  return decoded;
+}
+export function encodeSystemFilters(
+  value: import("@crm/core/records").SystemFiltersValue,
+): import("./types").WireSystemFilters {
+  validateSystemFilters(value);
+  return Object.fromEntries(
+    Object.entries(systemFilterNames).flatMap(([wire, domain]) => {
+      const entry = value[domain];
+      return entry === undefined
+        ? []
+        : [
+            [
+              wire,
+              Object.fromEntries(
+                Object.entries(entry).map(([key, content]) => [
+                  key === "actorIds" ? "actor_ids" : key,
+                  content,
+                ]),
+              ),
+            ],
+          ];
+    }),
+  ) as import("./types").WireSystemFilters;
+}
+
+export function decodeRelatedModules(
+  value: unknown,
+): import("@crm/core/records").RelatedModuleFilter[] {
+  if (!Array.isArray(value)) invalid("relatedModules");
+  const rows = value as unknown[];
+  if (rows.length > MAX_RELATED_MODULE_FILTERS)
+    invalid("relatedModules", "Send at most 3 related-module conditions.");
+  const decoded = rows.map((row): import("@crm/core/records").RelatedModuleFilter => {
+    const wire = object(row, "relatedModules");
+    if (Object.keys(wire).some((key) => !["module", "presence", "criteria"].includes(key)))
+      invalid("relatedModules");
+    const criteria = wire.criteria === undefined ? [] : wire.criteria;
+    if (!Array.isArray(criteria)) invalid("relatedModules");
+    if ((criteria as unknown[]).length > MAX_RELATED_MODULE_CRITERIA)
+      invalid("relatedModules", "Send at most 5 criteria per related-module condition.");
+    return {
+      module: wire.module as import("@crm/core/records").RelatedFilterModule,
+      presence: wire.presence as "with" | "without",
+      criteria: (criteria as unknown[]).map(
+        (item) => decodeCriteria(item) as import("@crm/core/records").FieldCriterion,
+      ),
+    };
+  });
+  validateRelatedModules(decoded);
+  return decoded;
+}
+export function encodeRelatedModules(
+  value: readonly import("@crm/core/records").RelatedModuleFilter[],
+): import("./types").WireRelatedModule[] {
+  validateRelatedModules(value);
+  return value.map((row) => ({
+    module: row.module,
+    presence: row.presence,
+    criteria: row.criteria.map(encodeCriteria),
+  }));
 }

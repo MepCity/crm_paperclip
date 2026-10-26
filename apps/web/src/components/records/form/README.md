@@ -146,14 +146,15 @@ All copy/data may be supplied through props; fallback copy is generic English.
 | --- | --- |
 | text, email, phone, website | TextField (text, email, tel, url) |
 | textarea | TextArea with lower-corner resize handle |
-| integer, double | NumberField without grouping; integer uses integer precision |
+| integer, bigint, double | NumberField without grouping; integer and bigint use integer precision |
 | currency | NumberField with optional prefix/information annotation |
 | boolean | Checkbox |
 | picklist | RecordChoice without search; ordered list and null first option |
 | picklist + searchable | RecordChoice with focused search and scrolling list |
 | ownerlookup | RecordChoice with name/email/avatar and selected checkmark |
 | profileimage | 48px noninteractive original portrait placeholder |
-| lookup, multi_module_lookup, datetime, bigint | Nothing; absent from the observed Leads form |
+| lookup | TextField with the record-picker action; the picker follows the target module's observed chrome |
+| multi_module_lookup, datetime | Nothing; absent from the observed Leads form |
 
 ### Composite inputs
 
@@ -222,8 +223,10 @@ surrounding trigger.
 - Measured validation appearance and unsaved-changes dialog: MEP-146 (row 22).
 - Image upload: M6 image/attachment module (row 18); placeholder only.
 - Country/State inventories and dependency: ADR 0002. Props supply inventories.
-- Unsupported lookup/multi-module/date-time/long-integer controls: absent from
-  Leads form; their corresponding later modules must supply primitives.
+- Unsupported multi-module/date-time controls: absent from the Leads form; their
+  corresponding later modules must supply primitives. `bigint` renders the integer
+  entry (Accounts `Account Number`, `m3f-create`); the entry is numeric, but the form
+  model hands the service decimal text because a long integer accepts no other shape.
 - Currency prefix/information content is supplied by callers; the organization
   currency comes from `useHomeCurrency` (MEP-225, decision MEP-221), never a fixed
   symbol, an ISO code or a locale guess. Company stays a text field (suggestions unseen).
@@ -344,3 +347,27 @@ insets, coordinate widths, Description width/height and bottom separator.
 Interim: Clear All resets all writable members of the Address group locally;
 read-only fields and identity fields are preserved. Its measured low-contrast
 ink is reported under ADR 0003 §8; no reference write was performed to study it.
+
+## Activity variant
+
+Set `ModuleScreenDefinition.form.variant` to `"activity"` to opt into the
+measured Activities shell. The route forwards it to `RecordFormConfig`, the
+shell and field renderer. Omission retains the existing record form layout.
+The activity shell has a full-width pale title band and an unframed white body;
+rows share a label-to-control underline and required rows have a short red
+segment at their left edge. Inventory footer and Client Script are omitted.
+
+`FormRow.labelControl` is the slot for an interactive label-side type selector.
+Supply the selector's own accessible name and keep the lookup input named by its
+field label. Module-specific type inventories and field bindings belong to the
+module form rules; this shell does not infer them. `FieldInput.variant` uses a
+search glyph for lookups and hides duplicate boolean/toggle text while retaining
+accessible names. New geometry tokens derive from `activities-form.md` →
+Visual layout — Task form (measured); typography continues to use shared tokens
+because CSS font properties were not observed in that capture.
+
+Task rules opt `Who_Id` and `What_Id` into `lookupLabelFields`. Their selector
+uses metadata targets and the loaded record's module; changing a target clears
+the previous reference. `FieldInput.lookupModule` routes the existing picker
+and omits the in-input type prefix. `subduedToggles` only changes the off-state
+track colour; it does not disable Repeat or change its payload.

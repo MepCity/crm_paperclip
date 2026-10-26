@@ -1,8 +1,13 @@
+import KanbanSettingsDialogDemo from "@/components/records/board/kanban-settings-dialog.demo";
+import RecordBoardDemo from "@/components/records/board/record-board.demo";
+import AddToCampaignsDialogDemo from "@/components/records/campaigns/add-to-campaigns-dialog.demo";
 import InlineFieldEditorDemo from "@/components/records/detail/inline-field-editor.demo";
 import RecordDetailDemo from "@/components/records/detail/record-detail.demo";
 import RecordDetailCardsDemo from "@/components/records/detail/record-detail-cards.demo";
+import StageBarDemo from "@/components/records/detail/stage-bar/stage-bar.demo";
 import StatusRibbonDemo from "@/components/records/detail/status-ribbon.demo";
 import TimelineHistoryDemo from "@/components/records/detail/timeline/timeline.demo";
+import DraftsPageDemo from "@/components/records/drafts/drafts-page.demo";
 import FieldInputDemo from "@/components/records/form/field-input.demo";
 import FormErrorBannerDemo from "@/components/records/form/form-error-banner.demo";
 import RecordFormAddressDemo from "@/components/records/form/record-form-address.demo";
@@ -16,6 +21,8 @@ import ListChromeDemo from "@/components/records/list/list-chrome.demo";
 import MassUpdateDialogDemo from "@/components/records/list/mass-update-dialog.demo";
 import RecordTableDemo from "@/components/records/list/record-table.demo";
 import SelectionBarDemo from "@/components/records/list/selection-bar.demo";
+import RecycleBinDemo from "@/components/records/recycle-bin/recycle-bin.demo";
+import ManageTagsPageDemo from "@/components/records/tags/manage-tags-page.demo";
 import AlertDemo from "@/components/ui/alert.demo";
 import BadgeDemo from "@/components/ui/badge.demo";
 import BreadcrumbsDemo from "@/components/ui/breadcrumbs.demo";
@@ -44,6 +51,7 @@ import SplitButtonDemo from "@/components/ui/split-button.demo";
 import SwitchDemo from "@/components/ui/switch.demo";
 import TableDemo from "@/components/ui/table.demo";
 import TabsDemo from "@/components/ui/tabs.demo";
+import TagEntryDemo from "@/components/ui/tag-entry.demo";
 import TextAreaDemo from "@/components/ui/text-area.demo";
 import TextFieldDemo from "@/components/ui/text-field.demo";
 import ToastDemo from "@/components/ui/toast.demo";
@@ -51,6 +59,10 @@ import TokensDemo from "@/components/ui/tokens.demo";
 import TooltipDemo from "@/components/ui/tooltip.demo";
 
 export const demos: Record<string, React.ComponentType> = {
+  "add-to-campaigns": AddToCampaignsDialogDemo,
+  "recycle-bin": RecycleBinDemo,
+  "record-board": RecordBoardDemo,
+  "kanban-settings": KanbanSettingsDialogDemo,
   "inline-field-editor": InlineFieldEditorDemo,
   "field-input": FieldInputDemo,
   "form-error-banner": FormErrorBannerDemo,
@@ -85,6 +97,7 @@ export const demos: Record<string, React.ComponentType> = {
   table: TableDemo,
   "record-table": RecordTableDemo,
   "record-detail-cards": RecordDetailCardsDemo,
+  "stage-bar": StageBarDemo,
   spinner: SpinnerDemo,
   tabs: TabsDemo,
   tooltip: TooltipDemo,
@@ -102,4 +115,7 @@ export const demos: Record<string, React.ComponentType> = {
   "record-form-address": RecordFormAddressDemo,
   "split-button": SplitButtonDemo,
   "timeline-history": TimelineHistoryDemo,
+  drafts: DraftsPageDemo,
+  "manage-tags": ManageTagsPageDemo,
+  "tag-entry": TagEntryDemo,
 };

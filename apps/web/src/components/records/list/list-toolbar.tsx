@@ -3,23 +3,39 @@
 import type { SortSpec } from "@crm/core/records";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
-import { Menu, type MenuAction, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import {
+  Menu,
+  type MenuAction,
+  MenuItem,
+  MenuTrigger,
+  Submenu,
+  SubmenuTrigger,
+} from "@/components/ui/menu";
 import { SplitButton, type SplitButtonProps } from "@/components/ui/split-button";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { SortPopover, type SortPopoverProps } from "./sort-popover";
 import { ViewTypeSwitcher } from "./view-type-switcher";
 
 export interface ListToolbarProps {
+  presentation?: "table" | "board";
+  onPresentationChange?: (presentation: "table" | "board") => void;
   filterOpen: boolean;
   onFilterChange: (open: boolean) => void;
-  onRefresh: () => void;
+  /** Omitted: the refresh button is not drawn (stage board presentation). */
+  onRefresh?: () => void;
   fields: SortPopoverProps["fields"];
   sort: SortSpec | null;
-  onSortApply: (sort: SortSpec) => void;
+  onSortApply: (sort: SortSpec | null) => void;
   create: SplitButtonProps;
   actions?: readonly MenuAction[];
+  viewTypeTileIds?: readonly string[];
+  /** Measured Actions menu width in px; omitted keeps the shared width. */
+  actionsMenuWidth?: number;
 }
 
 export function ListToolbar({
+  presentation,
+  onPresentationChange,
   filterOpen,
   onFilterChange,
   onRefresh,
@@ -28,7 +44,10 @@ export function ListToolbar({
   onSortApply,
   create,
   actions = [],
+  viewTypeTileIds,
+  actionsMenuWidth,
 }: ListToolbarProps) {
+  const t = useUiTranslations();
   return (
     <div
       className="flex h-(--size-list-toolbar-height) items-center justify-between gap-3"
@@ -46,45 +65,95 @@ export function ListToolbar({
             aria-hidden="true"
             className="h-(--size-list-filter-toggle-icon-height) w-(--size-list-filter-toggle-icon-width) shrink-0 text-(--color-list-filter-toggle-icon)"
           />
-          Filter
+          {t("records.list.filter")}
         </Button>
         <SortPopover fields={fields} sort={sort} onApply={onSortApply} />
         <span className="ml-(--size-list-view-switcher-offset)">
-          <ViewTypeSwitcher />
+          <ViewTypeSwitcher
+            presentation={presentation}
+            onPresentationChange={onPresentationChange}
+            tileIds={viewTypeTileIds}
+          />
         </span>
-        <Button
-          variant="ghost"
-          size="listIcon"
-          aria-label="Refresh Custom View"
-          onPress={onRefresh}
-        >
-          <Icons.refresh aria-hidden="true" className="h-4 w-4 shrink-0" />
-        </Button>
+        {onRefresh ? (
+          <Button
+            variant="ghost"
+            size="listIcon"
+            aria-label={t("records.list.refresh")}
+            onPress={onRefresh}
+          >
+            <Icons.refresh
+              aria-hidden="true"
+              className="h-4 w-4 shrink-0 text-(--color-text-muted)"
+            />
+          </Button>
+        ) : null}
       </div>
       <div className="flex items-center gap-(--size-button-gap)">
         <SplitButton {...create} />
         {actions.length > 0 && (
           <MenuTrigger>
-            <Button variant="secondary" size="actions" aria-label="Actions">
+            <Button variant="secondary" size="actions" aria-label={t("records.list.actions")}>
               <Icons.ellipsis aria-hidden="true" className="h-4 w-4 shrink-0" />
             </Button>
             <Menu
               width="actions"
-              items={actions}
+              widthPx={actionsMenuWidth}
+              shouldCloseOnInteractOutside={(element) =>
+                !element.closest('[data-trigger="SubmenuTrigger"]')
+              }
               onAction={(key) =>
                 actions.find((item) => item.id === key && !item.laterModule)?.onAction()
               }
             >
-              {(item) => (
-                <MenuItem id={item.id} laterModule={item.laterModule} isDisabled={item.isDisabled}>
-                  <span className="flex items-center justify-between gap-3">
-                    {item.label}
-                    {item.submenuIndicator ? (
-                      <Icons.chevronRight aria-hidden="true" className="h-4 w-4 shrink-0" />
-                    ) : null}
-                  </span>
-                </MenuItem>
-              )}
+              {actions.map((item) => {
+                const row = (
+                  <MenuItem
+                    key={item.id}
+                    id={item.id}
+                    textValue={item.label}
+                    laterModule={item.submenu ? undefined : item.laterModule}
+                    isDisabled={item.isDisabled}
+                    className={
+                      item.separatorBefore ? "mt-1 border-t border-border pt-1" : undefined
+                    }
+                  >
+                    <span className="flex items-center justify-between gap-3">
+                      {item.label}
+                      {item.submenuIndicator || item.submenu ? (
+                        <Icons.chevronRight aria-hidden="true" className="h-4 w-4 shrink-0" />
+                      ) : null}
+                    </span>
+                  </MenuItem>
+                );
+                return item.submenu ? (
+                  <SubmenuTrigger key={item.id}>
+                    {row}
+                    <Submenu ariaLabel={item.label} placement="left top">
+                      {item.submenu.map((child) => (
+                        <MenuItem
+                          key={child.id}
+                          id={child.id}
+                          textValue={child.label}
+                          appearance="measured"
+                          laterModule={child.laterModule}
+                          onAction={child.onAction}
+                        >
+                          {child.label}
+                          {child.accent ? (
+                            <Icons.sparkles
+                              aria-hidden="true"
+                              className="h-4 w-4 shrink-0 text-accent-amber"
+                            />
+                          ) : null}
+                        </MenuItem>
+                      ))}
+                    </Submenu>
+                  </SubmenuTrigger>
+                ) : (
+                  row
+                );
+              })}
             </Menu>
           </MenuTrigger>
         )}

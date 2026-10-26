@@ -124,6 +124,7 @@ test("field filter editors match measured rows, keyboard, sticky actions and acc
   // ADR 0003 §8: measured placeholder ink #8C91AB on white is 3.11:1.
   // Exclude only empty text spans (including the two multi-select placeholders)
   // and the other measured gallery placeholders; their triggers stay scanned.
+  // ADR 0003 §8: measured related-action label ink is 4.18:1; controls remain scanned.
   await expectNoA11yViolations(page, { exclude: DEV_UI_A11Y_EXCLUDE });
   const screenshotPath = testInfo.outputPath("field-filter-editors.png");
   await page.screenshot({ path: screenshotPath });
@@ -133,6 +134,10 @@ test("field filter editors match measured rows, keyboard, sticky actions and acc
   });
   await page.keyboard.press("Home");
   await page.keyboard.press("Enter");
+  // Enter only lands the choice: focus comes back to the trigger when the popover unmounts, so
+  // the Tab below has to wait for that or it walks from a control that is still going away.
+  await expect(list).toBeHidden();
+  await expect(operator).toBeFocused();
   const equality = await operator.boundingBox();
   if (!equality) throw new Error("Missing equality selector");
   nearOperatorWidth(equality.width, 36);
@@ -164,6 +169,7 @@ test("field filter editors match measured rows, keyboard, sticky actions and acc
   // #8B9AB9 and empty-selection #8C91AB inks on white retain the measured
   // contrast exceptions from ADR 0003 §8, as in the gallery smoke test.
   // Only those text elements are excluded; filter triggers and selected values remain included.
+  // ADR 0003 §8: measured related-action label ink is 4.18:1; controls remain scanned.
   await expectNoA11yViolations(page, {
     exclude: DEV_UI_A11Y_EXCLUDE,
   });
@@ -373,6 +379,13 @@ test("observed operator value editors cover date, range, days unit, role search 
   );
   await panel.getByText("Sample tag", { exact: true }).click();
   await expect(panel.getByRole("button", { name: "Sample tag value", exact: true })).toBeVisible();
+  await panel.getByRole("button", { name: "Sample tag value", exact: true }).click();
+  await page.getByRole("textbox", { name: "Search Sample tag value", exact: true }).fill("follow");
+  await page.getByRole("option", { name: "Follow up", exact: true }).click();
+  await page.keyboard.press("Escape");
+  await expect(panel.getByRole("button", { name: "Sample tag value", exact: true })).toContainText(
+    "Follow up",
+  );
   await expect(panel.getByRole("button", { name: "Apply Filter" })).toBeDisabled();
 });
 
@@ -402,7 +415,7 @@ test("datetime filter value editors emit expected list request bodies", async ({
     }
   });
 
-  const cases: { operator: string; fill: () => Promise<void>; body: unknown }[] = [
+  const cases: { operator: string; fill: () => Promise<void>; body: Record<string, unknown> }[] = [
     {
       operator: "On",
       fill: async () => {
@@ -495,7 +508,7 @@ test("datetime filter value editors emit expected list request bodies", async ({
     );
     await apply.click();
     await bulkResponse;
-    expect(lastBulkBody).toEqual(body);
+    expect(lastBulkBody).toEqual({ ...body, include_activity_summary: true });
     void operator;
   }
 });

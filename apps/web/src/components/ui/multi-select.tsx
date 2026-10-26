@@ -12,6 +12,7 @@ export interface MultiSelectOption {
   id: string;
   label: string;
   detail?: string;
+  color?: string | null;
   currentUser?: boolean;
 }
 export interface MultiSelectProps {
@@ -21,6 +22,7 @@ export interface MultiSelectProps {
   options: readonly MultiSelectOption[];
   value: readonly string[];
   onChange: (value: string[]) => void;
+  statusMessage?: string;
 }
 /** A locally searchable multiple choice list; it never loads options. */
 export function MultiSelect({
@@ -30,6 +32,7 @@ export function MultiSelect({
   options,
   value,
   onChange,
+  statusMessage,
 }: MultiSelectProps) {
   const [query, setQuery] = useState("");
   const visible = options.filter((option) =>
@@ -82,6 +85,11 @@ export function MultiSelect({
             <TextField label={`Search ${label}`} hideLabel value={query} onChange={setQuery} />
           </div>
         )}
+        {statusMessage && (
+          <p role="status" className="px-3 py-2 text-sm text-text-muted">
+            {statusMessage}
+          </p>
+        )}
         <ListBox
           aria-label={label}
           items={visible}
@@ -106,6 +114,13 @@ export function MultiSelect({
                     <span aria-hidden className="filter-user-avatar">
                       {option.label.slice(0, 1)}
                     </span>
+                  )}
+                  {option.color && (
+                    <span
+                      aria-hidden
+                      className="h-2 w-2 shrink-0 rounded-full"
+                      style={{ backgroundColor: option.color }}
+                    />
                   )}
                   <span>
                     {option.label}

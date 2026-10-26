@@ -1,0 +1,137 @@
+[
+  {
+    "sourceModule": "Accounts",
+    "module": "Events",
+    "href": "Accounts/{ENTITYID}/Events"
+  },
+  {
+    "sourceModule": "Accounts",
+    "module": "Events",
+    "href": "Accounts/{ENTITYID}/Events_History"
+  },
+  {
+    "sourceModule": "Campaigns",
+    "module": "Events",
+    "href": "Campaigns/{ENTITYID}/Events"
+  },
+  {
+    "sourceModule": "Campaigns",
+    "module": "Events",
+    "href": "Campaigns/{ENTITYID}/Events_History"
+  },
+  {
+    "sourceModule": "Cases",
+    "module": "Events",
+    "href": "Cases/{ENTITYID}/Events"
+  },
+  {
+    "sourceModule": "Cases",
+    "module": "Events",
+    "href": "Cases/{ENTITYID}/Events_History"
+  },
+  {
+    "sourceModule": "Contacts",
+    "module": "Events",
+    "href": "Contacts/{ENTITYID}/Events"
+  },
+  {
+    "sourceModule": "Contacts",
+    "module": "Events",
+    "href": "Contacts/{ENTITYID}/Events_History"
+  },
+  {
+    "sourceModule": "Contacts",
+    "module": "Events",
+    "href": "Contacts/{ENTITYID}/Invited_Events"
+  },
+  {
+    "sourceModule": "Deals",
+    "module": "Events",
+    "href": "Deals/{ENTITYID}/Events"
+  },
+  {
+    "sourceModule": "Deals",
+    "module": "Events",
+    "href": "Deals/{ENTITYID}/Events_History"
+  },
+  {
+    "sourceModule": "Invoices",
+    "module": "Events",
+    "href": "Invoices/{ENTITYID}/Events"
+  },
+  {
+    "sourceModule": "Invoices",
+    "module": "Events",
+    "href": "Invoices/{ENTITYID}/Events_History"
+  },
+  {
+    "sourceModule": "Leads",
+    "module": "Events",
+    "href": "Leads/{ENTITYID}/Events"
+  },
+  {
+    "sourceModule": "Leads",
+    "module": "Events",
+    "href": "Leads/{ENTITYID}/Events_History"
+  },
+  {
+    "sourceModule": "Leads",
+    "module": "Events",
+    "href": "Leads/{ENTITYID}/Invited_Events"
+  },
+  {
+    "sourceModule": "Products",
+    "module": "Events",
+    "href": "Products/{ENTITYID}/Events"
+  },
+  {
+    "sourceModule": "Products",
+    "module": "Events",
+    "href": "Products/{ENTITYID}/Events_History"
+  },
+  {
+    "sourceModule": "Purchase_Orders",
+    "module": "Events",
+    "href": "Purchase_Orders/{ENTITYID}/Events"
+  },
+  {
+    "sourceModule": "Purchase_Orders",
+    "module": "Events",
+    "href": "Purchase_Orders/{ENTITYID}/Events_History"
+  },
+  {
+    "sourceModule": "Quotes",
+    "module": "Events",
+    "href": "Quotes/{ENTITYID}/Events"
+  },
+  {
+    "sourceModule": "Quotes",
+    "module": "Events",
+    "href": "Quotes/{ENTITYID}/Events_History"
+  },
+  {
+    "sourceModule": "Sales_Orders",
+    "module": "Events",
+    "href": "Sales_Orders/{ENTITYID}/Events"
+  },
+  {
+    "sourceModule": "Sales_Orders",
+    "module": "Events",
+    "href": "Sales_Orders/{ENTITYID}/Events_History"
+  },
+  {
+    "sourceModule": "Vendors",
+    "module": "Events",
+    "href": "Vendors/{ENTITYID}/Events"
+  },
+  {
+    "sourceModule": "Vendors",
+    "module": "Events",
+    "href": "Vendors/{ENTITYID}/Events_History"
+  },
+  {
+    "sourceModule": "Solutions",
+    "module": "Events",
+    "href": "Solutions/{ENTITYID}/Events"
+  }
+]

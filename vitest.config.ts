@@ -1,5 +1,8 @@
 import path from "node:path";
 import { defineConfig } from "vitest/config";
+import { enforceVitestGuard } from "./scripts/vitest-guard";
+
+enforceVitestGuard();
 
 const exclude = ["**/node_modules/**", "**/.next/**", "**/e2e/**"];
 
@@ -25,9 +28,9 @@ export default defineConfig({
           include: ["apps/web/**/*.test.tsx"],
           exclude,
           environment: "jsdom",
-          // Keyboard flows in jsdom sit just over the 5s default when the full
-          // suite runs in parallel. A short overrun was failing verify.
-          testTimeout: 15_000,
+          // Filter-panel flows in jsdom take about 10s per test on this shared
+          // machine and were measured at 18s under load, so 15s failed verify.
+          testTimeout: 45_000,
           alias: {
             "@": path.resolve(__dirname, "./apps/web/src"),
           },

@@ -1,0 +1,233 @@
+# Checks on every agent branch and main push.
+# Merge-bot policy is managed separately by the board.
+name: CI
+
+on:
+  push:
+    branches: ["mep/**", "main"]
+  pull_request:
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  unit:
+    name: unit (${{ matrix.shard }}/2)
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      # Integration tests run in their own job. The native SysV IPC test stays local.
+      - name: Unit and component tests
+        run: |
+          files=$(git ls-files '*.test.ts' '*.test.tsx' | grep -v '\.int\.test\.ts$' | grep -v 'packages/db/src/sysv-ipc.test.ts')
+          pnpm exec vitest run --project unit --project component --shard=${{ matrix.shard }}/2 --reporter=default --reporter=json --outputFile=test-results/vitest.json $files
+        env:
+          CI: "1"
+
+      - name: Summarize test durations
+        if: always()
+        continue-on-error: true
+        run: node scripts/ci/duration-summary.mjs vitest test-results/vitest.json
+      - name: Upload unit and component report
+        if: always() && !cancelled()
+        uses: actions/upload-artifact@v7
+        with:
+          name: fast-results-${{ matrix.shard }}
+          path: test-results/vitest.json
+          retention-days: 7
+          if-no-files-found: ignore
+
+  fast:
+    name: fast
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    needs: [unit]
+    if: "!cancelled()"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Lint (biome)
+        run: pnpm exec biome check .
+      - name: Guard new UI messages
+        run: |
+          git fetch origin main --depth=1
+          node scripts/check-ui-messages.mjs
+      - name: Typecheck
+        run: node scripts/typecheck.mjs
+      - name: Verify unit test shards
+        if: always() && !cancelled()
+        run: |
+          echo "Unit test shards status: ${{ needs.unit.result }}"
+          if [ "${{ needs.unit.result }}" != "success" ]; then
+            echo "::error::Unit test shard(s) failed with status: ${{ needs.unit.result }}"
+            exit 1
+          fi
+          echo "All unit test shards and fast checks passed."
+
+  integration:
+    name: integration
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      CI: "1"
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      # This project selects only *.int.test.ts; the native SysV IPC test is excluded.
+      - name: Integration tests
+        run: pnpm exec vitest run --project integration --reporter=default --reporter=json --outputFile=integration-results.json
+      - name: Record integration test counts
+        if: always() && !cancelled()
+        run: |
+          pnpm exec tsx scripts/integration-summary.ts integration-results.json
+          sed 's/^/::notice title=Integration counts::/' "$GITHUB_STEP_SUMMARY"
+
+  e2e:
+    name: e2e (${{ matrix.shard }}/4)
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4]
+    env:
+      CI: "1"
+      # Each hosted job owns its VM; the shared-Mac lock is unnecessary here.
+      MEP_E2E_LOCK: "0"
+      MEP_E2E_CI_GROUP: ubuntu
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Read Playwright version
+        id: playwright
+        working-directory: apps/web
+        run: echo "version=$(node -p 'require("@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
+      - name: Cache Chromium
+        id: browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-chromium-${{ steps.playwright.outputs.version }}
+      - name: Install Chromium and system dependencies
+        if: steps.browsers.outputs.cache-hit != 'true'
+        run: pnpm --dir apps/web exec playwright install --with-deps chromium
+      - name: Install cached Chromium system dependencies
+        if: steps.browsers.outputs.cache-hit == 'true'
+        run: pnpm --dir apps/web exec playwright install-deps chromium
+      - name: Install process cleanup tool
+        run: sudo apt-get update && sudo apt-get install -y lsof
+      - name: Browser tests
+        run: pnpm test:e2e --shard=${{ matrix.shard }}/4
+        env:
+          PLAYWRIGHT_HTML_OPEN: never
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
+      - name: Record cache result
+        if: always()
+        run: |
+          echo 'Chromium cache hit = ${{ steps.browsers.outputs.cache-hit }}' >> "$GITHUB_STEP_SUMMARY"
+          sed 's/^/::notice title=E2E measurements::/' "$GITHUB_STEP_SUMMARY"
+      - name: Summarize test durations
+        if: always()
+        continue-on-error: true
+        run: node scripts/ci/duration-summary.mjs playwright apps/web/test-results/results.json
+      - name: Upload browser report and traces
+        if: always() && !cancelled()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-${{ matrix.shard }}
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          retention-days: 7
+          if-no-files-found: ignore
+
+  e2e-macos:
+    name: e2e (macOS geometry)
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      CI: "1"
+      # Each hosted job owns its VM; the shared-Mac lock is unnecessary here.
+      MEP_E2E_LOCK: "0"
+      MEP_E2E_CI_GROUP: macos
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      - name: Install
+        run: pnpm install --frozen-lockfile
+      - name: Read Playwright version
+        id: playwright
+        working-directory: apps/web
+        run: echo "version=$(node -p 'require("@playwright/test/package.json").version')" >> "$GITHUB_OUTPUT"
+      - name: Cache Chromium
+        id: browsers
+        uses: actions/cache@v6
+        with:
+          path: ~/Library/Caches/ms-playwright
+          key: ${{ runner.os }}-chromium-${{ steps.playwright.outputs.version }}
+      - name: Install Chromium and system dependencies
+        if: steps.browsers.outputs.cache-hit != 'true'
+        run: pnpm --dir apps/web exec playwright install --with-deps chromium
+      - name: Browser tests
+        run: pnpm test:e2e
+        env:
+          PLAYWRIGHT_HTML_OPEN: never
+          PLAYWRIGHT_JSON_OUTPUT_NAME: test-results/results.json
+      - name: Record cache result
+        if: always()
+        run: |
+          echo 'Chromium cache hit = ${{ steps.browsers.outputs.cache-hit }}' >> "$GITHUB_STEP_SUMMARY"
+          sed 's/^/::notice title=E2E measurements::/' "$GITHUB_STEP_SUMMARY"
+      - name: Summarize test durations
+        if: always()
+        continue-on-error: true
+        run: node scripts/ci/duration-summary.mjs playwright apps/web/test-results/results.json
+      - name: Upload browser report and traces
+        if: always() && !cancelled()
+        uses: actions/upload-artifact@v7
+        with:
+          name: e2e-macos
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+          retention-days: 7
+          if-no-files-found: ignore

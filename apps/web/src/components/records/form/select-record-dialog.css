@@ -47,3 +47,87 @@
   color: var(--color-text-muted);
   flex-shrink: 0;
 }
+
+/* Observed picker chrome (accounts-form.md › Parent Account lookup, AF-11.1–AF-11.18). */
+
+/* The reference paints no footer actions, so the pagination row takes the footer band. */
+.select-record-modal-panel--observed .select-record-pagination {
+  bottom: var(--size-select-user-dialog-bottom-padding);
+}
+
+.select-record-modal-panel--observed .select-record-table-wrap {
+  bottom: calc(var(--size-select-user-dialog-bottom-padding) + 38px);
+}
+
+.select-record-close {
+  position: absolute;
+  top: var(--size-select-user-title-cap-top);
+  right: var(--size-select-user-dialog-inset);
+}
+
+.select-record-new {
+  margin-left: auto;
+  align-self: flex-start;
+}
+
+.select-record-th-label {
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+}
+
+.select-record-th-filter {
+  width: var(--size-select-user-table-radio-column);
+}
+
+.select-record-col-filter {
+  width: var(--size-select-user-table-radio-column);
+}
+
+.select-record-phone-action {
+  margin-left: var(--space-2);
+  vertical-align: middle;
+}
+
+.select-record-pagination-icons {
+  display: flex;
+  margin-left: auto;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.select-record-module-choice {
+  padding: 0 var(--size-select-user-padding-x, 24px) 8px;
+}
+
+/* Optional controls use normal flow so errors and wrapped labels cannot overlap the table. */
+.select-record-modal-panel--with-options {
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.select-record-modal-panel--with-options .top-aligned-modal-dialog {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  padding: var(--space-6);
+}
+
+.select-record-modal-panel--with-options .select-user-title,
+.select-record-modal-panel--with-options .select-user-search-row,
+.select-record-modal-panel--with-options .select-user-table-wrap,
+.select-record-modal-panel--with-options .select-record-pagination,
+.select-record-modal-panel--with-options .select-user-footer {
+  position: static;
+}
+
+.select-record-modal-panel--with-options .select-user-table-wrap {
+  max-height: 40vh;
+  flex-shrink: 0;
+}
+
+.select-record-modal-panel--with-options .select-user-footer {
+  justify-content: flex-end;
+}

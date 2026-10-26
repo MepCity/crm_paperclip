@@ -165,3 +165,258 @@ test("later-module filter rows cannot change selection or open an editor", async
   expect(checkbox.checked).toBe(false);
   expect(onSelectionChange).not.toHaveBeenCalled();
 });
+
+test("renders ActivityFilterEditor and passes activity filter criteria on apply", async () => {
+  const user = userEvent.setup();
+  const onApply = vi.fn();
+  const onClear = vi.fn();
+
+  function ControlledActivitiesPanel() {
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    return (
+      <FilterPanel
+        {...props}
+        groups={[
+          {
+            id: "system",
+            label: "System Defined Filters",
+            items: [
+              { id: "Activities", label: "Activities", systemEditor: "activities" },
+              { id: "recent", label: "Recent samples" },
+            ],
+          },
+        ]}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        onApply={onApply}
+        onClear={onClear}
+      />
+    );
+  }
+
+  render(<ControlledActivitiesPanel />);
+
+  // Ticking Activities shows the editor and action buttons
+  const activitiesCheckbox = screen.getByRole("checkbox", { name: "Activities" });
+  await user.click(activitiesCheckbox);
+
+  // Editor options are visible
+  expect(screen.getByRole("radio", { name: "Without Open Activity" })).toBeTruthy();
+  expect(screen.getByRole("radio", { name: "Overdue" })).toBeTruthy();
+  const activityDue = screen.getByRole("radio", { name: "Activity Due" }) as HTMLInputElement;
+  expect(activityDue).toBeTruthy();
+  expect(activityDue.checked).toBe(true);
+  expect(screen.getByRole("radio", { name: "Without Any Activity" })).toBeTruthy();
+  expect(screen.getByRole("radio", { name: "Activity Done" })).toBeTruthy();
+
+  // Apply default selection (activity_due / today_overdue)
+  const applyButton = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
+  expect(applyButton.disabled).toBe(false);
+  await user.click(applyButton);
+  expect(onApply).toHaveBeenCalledWith([], {
+    choice: "activity_due",
+    range: "today_overdue",
+  });
+
+  // Switch to another option
+  const withoutAny = screen.getByRole("radio", { name: "Without Any Activity" });
+  await user.click(withoutAny);
+  await user.click(applyButton);
+  expect(onApply).toHaveBeenCalledWith([], {
+    choice: "without_any_activity",
+  });
+
+  // Clear button resets selection and calls onClear
+  const clearButton = screen.getByRole("button", { name: "Clear" });
+  await user.click(clearButton);
+  expect(onClear).toHaveBeenCalled();
+  expect(screen.queryByRole("radio", { name: "Activity Due" })).toBeNull();
+});
+
+test("seeds ActivityFilterEditor from initialActivityFilter", async () => {
+  const onApply = vi.fn();
+  render(
+    <FilterPanel
+      {...props}
+      groups={[
+        {
+          id: "system",
+          label: "System Defined Filters",
+          items: [{ id: "Activities", label: "Activities", systemEditor: "activities" }],
+        },
+      ]}
+      selectedIds={["Activities"]}
+      initialActivityFilter={{ choice: "overdue" }}
+      onApply={onApply}
+    />,
+  );
+
+  const overdue = screen.getByRole("radio", { name: "Overdue" }) as HTMLInputElement;
+  expect(overdue.checked).toBe(true);
+  const user = userEvent.setup();
+  await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+  expect(onApply).toHaveBeenCalledWith([], { choice: "overdue" });
+});
+
+test("renders CampaignFilterEditor, validates selection limit and emits campaign filter on apply", async () => {
+  const user = userEvent.setup();
+  const onApply = vi.fn();
+  const onClear = vi.fn();
+
+  function ControlledPanel() {
+    const [selectedIds, setSelectedIds] = useState<string[]>([]);
+    return (
+      <FilterPanel
+        {...props}
+        groups={[
+          {
+            id: "system",
+            label: "System Defined Filters",
+            items: [{ id: "Campaigns", label: "Campaigns", systemEditor: "campaigns" }],
+          },
+        ]}
+        selectedIds={selectedIds}
+        onSelectionChange={setSelectedIds}
+        campaignOptions={[
+          { id: "c-1", label: "Campaign Alpha" },
+          { id: "c-2", label: "Campaign Beta" },
+        ]}
+        onApply={onApply}
+        onClear={onClear}
+      />
+    );
+  }
+
+  render(<ControlledPanel />);
+
+  const campaignsCheckbox = screen.getByRole("checkbox", { name: "Campaigns" });
+  await user.click(campaignsCheckbox);
+
+  // Apply button should be disabled when 0 campaigns are selected
+  const applyButton = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
+  expect(applyButton.disabled).toBe(true);
+
+  // Select Campaign Alpha
+  const campaignTrigger = screen.getByRole("button", { name: "Campaign Name" });
+  await user.click(campaignTrigger);
+  const optionAlpha = screen.getByRole("option", { name: "Campaign Alpha" });
+  await user.click(optionAlpha);
+  await user.keyboard("{Escape}");
+
+  // Now Apply should be enabled
+  expect(applyButton.disabled).toBe(false);
+
+  // Select Member Status Planned
+  const statusTrigger = screen.getByRole("button", { name: "Member Status" });
+  await user.click(statusTrigger);
+  const optionPlanned = screen.getByRole("option", { name: "Planned" });
+  await user.click(optionPlanned);
+  await user.keyboard("{Escape}");
+
+  await user.click(applyButton);
+  expect(onApply).toHaveBeenCalledWith([], undefined, {
+    campaignIds: ["c-1"],
+    memberStatuses: ["Planned"],
+  });
+
+  // Clear button resets selection and calls onClear
+  const clearButton = screen.getByRole("button", { name: "Clear" });
+  await user.click(clearButton);
+  expect(onClear).toHaveBeenCalled();
+  expect(screen.queryByRole("button", { name: "Campaign Name" })).toBeNull();
+});
+
+test("seeds CampaignFilterEditor from initialCampaignFilter", async () => {
+  const onApply = vi.fn();
+  render(
+    <FilterPanel
+      {...props}
+      groups={[
+        {
+          id: "system",
+          label: "System Defined Filters",
+          items: [{ id: "Campaigns", label: "Campaigns", systemEditor: "campaigns" }],
+        },
+      ]}
+      selectedIds={["Campaigns"]}
+      campaignOptions={[{ id: "c-1", label: "Campaign Alpha" }]}
+      initialCampaignFilter={{ campaignIds: ["c-1"], memberStatuses: ["Sent"] }}
+      onApply={onApply}
+    />,
+  );
+
+  const applyButton = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
+  expect(applyButton.disabled).toBe(false);
+
+  const user = userEvent.setup();
+  await user.click(applyButton);
+  expect(onApply).toHaveBeenCalledWith([], undefined, {
+    campaignIds: ["c-1"],
+    memberStatuses: ["Sent"],
+  });
+});
+
+test("all five system editors gate Apply, emit one combined payload and discard drafts on Clear", async () => {
+  const user = userEvent.setup();
+  const onApply = vi.fn();
+  const onClear = vi.fn();
+  const kinds = [
+    "locked",
+    "record_action",
+    "related_records_action",
+    "touched",
+    "untouched",
+  ] as const;
+  function Harness() {
+    const [selectedIds, onSelectionChange] = useState<string[]>([]);
+    return (
+      <FilterPanel
+        {...props}
+        groups={[
+          {
+            id: "system",
+            label: "System Defined Filters",
+            items: kinds.map((kind) => ({
+              id: kind,
+              label: kind,
+              systemEditor: kind,
+              systemOptions: { relatedModules: [{ id: "Notes", label: "Notes" }] },
+            })),
+          },
+        ]}
+        selectedIds={selectedIds}
+        onSelectionChange={onSelectionChange}
+        onApply={onApply}
+        onClear={onClear}
+      />
+    );
+  }
+  render(<Harness />);
+  for (const kind of kinds) await user.click(screen.getByRole("checkbox", { name: kind }));
+  expect((screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement).disabled).toBe(
+    true,
+  );
+  await user.click(screen.getByRole("button", { name: /related_records_action module/ }));
+  await user.click(screen.getByRole("option", { name: "Notes" }));
+  await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+  const filters = onApply.mock.calls[0]?.[3];
+  expect(Object.keys(filters)).toEqual([
+    "locked",
+    "recordAction",
+    "relatedRecordsAction",
+    "touched",
+    "untouched",
+  ]);
+  expect(filters.locked).toEqual({ locked: true });
+  expect(filters.recordAction.action).toBe("created");
+  expect(filters.relatedRecordsAction).toMatchObject({ action: "added", module: "Notes" });
+  expect(filters.touched.period).toEqual(filters.untouched.period);
+  expect(filters.touched.period).toEqual(filters.recordAction.period);
+  await user.click(screen.getByRole("button", { name: "Clear" }));
+  expect(onClear).toHaveBeenCalledOnce();
+  expect(screen.queryByRole("button", { name: "Apply Filter" })).toBeNull();
+  await user.click(screen.getByRole("checkbox", { name: "related_records_action" }));
+  expect((screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement).disabled).toBe(
+    true,
+  );
+});
