@@ -8263,349 +8263,349 @@
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 22,
+    "line": 23,
     "column": 39,
     "hash": "6f38aa51d57ed1cc"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 23,
+    "line": 24,
     "column": 32,
     "hash": "8cd3c97b05acb58a"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 24,
+    "line": 25,
     "column": 31,
     "hash": "bb21c5663b01ff44"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 25,
+    "line": 26,
     "column": 40,
     "hash": "0c17d22a1e1a86b7"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 26,
+    "line": 27,
     "column": 38,
     "hash": "5befb20cd57b2493"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 27,
+    "line": 28,
     "column": 36,
     "hash": "dd189a989c882140"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 82,
+    "line": 83,
     "column": 18,
     "hash": "dd121554df671308"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 85,
+    "line": 86,
     "column": 29,
     "hash": "7560f40a798060cb"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 100,
+    "line": 101,
     "column": 26,
     "hash": "277ae7560292291a"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 119,
+    "line": 120,
     "column": 37,
     "hash": "e2cb3c0fc41c4781"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 121,
+    "line": 122,
     "column": 38,
     "hash": "dea46ee63c533873"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 130,
+    "line": 131,
     "column": 26,
     "hash": "8cd3c97b05acb58a"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 131,
+    "line": 132,
     "column": 55,
     "hash": "3049ba407e80584e"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 136,
+    "line": 137,
     "column": 26,
     "hash": "bb21c5663b01ff44"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 137,
+    "line": 138,
     "column": 55,
     "hash": "d87452ed83b5c1e9"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 151,
+    "line": 152,
     "column": 23,
     "hash": "eca63a7b268fad6d"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 153,
+    "line": 154,
     "column": 76,
     "hash": "b79cac926e0b2e34"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 185,
+    "line": 187,
     "column": 24,
     "hash": "112dfd0ab185ca2c"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 186,
+    "line": 188,
     "column": 63,
     "hash": "e0e91f3890b18fdf"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 190,
+    "line": 192,
     "column": 45,
     "hash": "675bdf85c6314495"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 198,
+    "line": 200,
     "column": 24,
     "hash": "d9b1b13352f04397"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 199,
+    "line": 201,
     "column": 47,
     "hash": "b104e9fc94ff8bfa"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 203,
+    "line": 205,
     "column": 51,
     "hash": "558fe3beb34c946e"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 207,
+    "line": 209,
     "column": 15,
     "hash": "bff6bce17a6e7be3"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 210,
+    "line": 212,
     "column": 15,
     "hash": "253052b7a2ca13c1"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 213,
+    "line": 215,
     "column": 15,
     "hash": "058388c855fd742e"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 214,
+    "line": 216,
     "column": 15,
     "hash": "ea322b3a83147a52"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 216,
+    "line": 218,
     "column": 103,
     "hash": "690d8ad074169aea"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 224,
+    "line": 226,
     "column": 22,
     "hash": "b11f5857be3d5214"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 225,
+    "line": 227,
     "column": 35,
     "hash": "ebae1e1f1389de20"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 229,
+    "line": 231,
     "column": 65,
     "hash": "f6e0bef56031e63c"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 232,
+    "line": 234,
     "column": 34,
     "hash": "f6e0bef56031e63c"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 237,
+    "line": 239,
     "column": 24,
     "hash": "be1549e7d13b52a5"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 240,
+    "line": 242,
     "column": 65,
     "hash": "67bea04ca538cf5b"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 242,
+    "line": 244,
     "column": 32,
     "hash": "67bea04ca538cf5b"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 245,
+    "line": 247,
     "column": 62,
     "hash": "324b134f57c70c72"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 246,
+    "line": 248,
     "column": 51,
     "hash": "91a497dde3eb4d0b"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 248,
-    "column": 65,
-    "hash": "b9b3e4ec9a5c5f67"
-  },
-  {
-    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
     "line": 250,
-    "column": 32,
+    "column": 65,
     "hash": "b9b3e4ec9a5c5f67"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
     "line": 252,
-    "column": 65,
-    "hash": "7eeea66e373db96a"
+    "column": 32,
+    "hash": "b9b3e4ec9a5c5f67"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
     "line": 254,
-    "column": 32,
+    "column": 65,
     "hash": "7eeea66e373db96a"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
     "line": 256,
-    "column": 65,
+    "column": 32,
+    "hash": "7eeea66e373db96a"
+  },
+  {
+    "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
+    "line": 260,
+    "column": 70,
     "hash": "1b54c52818057f31"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 258,
-    "column": 86,
+    "line": 270,
+    "column": 14,
     "hash": "bacbb92f65a1e163"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 274,
+    "line": 287,
     "column": 22,
     "hash": "e855d74822dc411b"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 275,
+    "line": 288,
     "column": 35,
     "hash": "f1e7cbdf8fc09e22"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 281,
+    "line": 294,
     "column": 19,
     "hash": "ee7578275cbfc201"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 283,
+    "line": 296,
     "column": 25,
     "hash": "ee7578275cbfc201"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 290,
+    "line": 303,
     "column": 30,
     "hash": "5a264945a25df60f"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 291,
+    "line": 304,
     "column": 71,
     "hash": "61ec3ab1415a93b9"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 301,
+    "line": 314,
     "column": 33,
     "hash": "5236895593a9448c"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 303,
+    "line": 316,
     "column": 49,
     "hash": "6b0cc904d081a8c1"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 304,
+    "line": 317,
     "column": 49,
     "hash": "36a142da010bb39c"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 305,
+    "line": 318,
     "column": 49,
     "hash": "bbedc70e985fe0b6"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 306,
+    "line": 319,
     "column": 49,
     "hash": "1326ededd5a13051"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 308,
+    "line": 321,
     "column": 59,
     "hash": "6d7fe92b62ce19de"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 310,
+    "line": 323,
     "column": 72,
     "hash": "9d50090d6a710492"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 314,
+    "line": 327,
     "column": 77,
     "hash": "748854763bc847c7"
   },
   {
     "file": "apps/web/src/modules/email-settings/email-settings-screen.tsx",
-    "line": 323,
+    "line": 336,
     "column": 77,
     "hash": "ce0171e51b07c9d6"
   },
@@ -8641,139 +8641,139 @@
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 88,
+    "line": 91,
     "column": 55,
     "hash": "56b564b75c7fdb48"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 90,
+    "line": 93,
     "column": 27,
     "hash": "c3259b7da0a8d982"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 101,
+    "line": 104,
     "column": 14,
     "hash": "969ccbd3cf6300ec"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 112,
+    "line": 115,
     "column": 14,
     "hash": "758f487fe8e9fcc5"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 123,
+    "line": 126,
     "column": 14,
     "hash": "07c60b2f79382eb1"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 134,
+    "line": 137,
     "column": 26,
     "hash": "7bd30494297e0f94"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 155,
+    "line": 158,
     "column": 26,
     "hash": "5e58df6ba297d3ff"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 156,
+    "line": 159,
     "column": 27,
     "hash": "5e58df6ba297d3ff"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 166,
+    "line": 169,
     "column": 24,
     "hash": "b79cac926e0b2e34"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 181,
+    "line": 184,
     "column": 22,
     "hash": "c301789205f14eee"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 188,
+    "line": 191,
     "column": 26,
     "hash": "22fc5d8c2951548b"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 193,
+    "line": 194,
     "column": 14,
     "hash": "22fc5d8c2951548b"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 225,
+    "line": 226,
     "column": 26,
     "hash": "bf69e4e8d84236fb"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 242,
+    "line": 243,
     "column": 45,
     "hash": "fae92fccf2bfd298"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 246,
+    "line": 247,
     "column": 34,
     "hash": "1fc9a387654d410f"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 254,
+    "line": 255,
     "column": 28,
     "hash": "f95e97c2f7677db8"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 255,
+    "line": 256,
     "column": 28,
     "hash": "6015680f13679068"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 256,
+    "line": 257,
     "column": 28,
     "hash": "9f1b40730a2cbcab"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 257,
+    "line": 258,
     "column": 28,
     "hash": "b4a7365740ef880b"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 259,
+    "line": 260,
     "column": 45,
     "hash": "67a1892f792aa89b"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 263,
+    "line": 264,
     "column": 53,
     "hash": "1093f6bc33aa652e"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 271,
+    "line": 272,
     "column": 36,
     "hash": "ea713ecd8537f77e"
   },
   {
     "file": "apps/web/src/modules/email-templates/email-templates-screen.tsx",
-    "line": 336,
+    "line": 337,
     "column": 36,
     "hash": "c465e186dd7b0fd9"
   },

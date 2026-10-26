@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
+import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useFormat } from "@/lib/format-context";
 import { fixtureReportsPort } from "./fixture-port";
@@ -29,6 +31,8 @@ export function ReportsScreen({
 }) {
   const t = useUiTranslations();
   const orgFormat = useFormat();
+  const [creating, setCreating] = useState(false);
+  const [primaryModule, setPrimaryModule] = useState("");
   const [reports, setReports] = useState<readonly ReportDefinition[]>(initialReports ?? []);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
     initialReports ? "ready" : "loading",
@@ -65,6 +69,43 @@ export function ReportsScreen({
       aria-label={t("modules.reports.reports")}
       className="min-h-full bg-bg p-3 text-md text-text"
     >
+      <TopAlignedModal
+        isOpen={creating}
+        onOpenChange={setCreating}
+        aria-labelledby="report-create-title"
+        panelStyle={{ width: "min(600px, 95vw)" }}
+      >
+        <div className="p-8 space-y-6">
+          <h2 id="report-create-title" className="text-xl font-semibold">
+            {t("modules.observedFlows.createReport")}
+          </h2>
+          <Select
+            label={t("modules.observedFlows.selectPrimaryModule")}
+            placeholder={t("modules.observedFlows.selectModule")}
+            items={["Leads", "Contacts", "Accounts", "Deals", "Tasks", "Meetings", "Calls"].map(
+              (id) => ({ id }),
+            )}
+            value={primaryModule || null}
+            onChange={(key) => setPrimaryModule(String(key))}
+          >
+            {(item) => <SelectItem id={item.id}>{item.id}</SelectItem>}
+          </Select>
+          <div className="flex justify-end gap-3">
+            <Button
+              variant="secondary"
+              onPress={() => {
+                setCreating(false);
+                setPrimaryModule("");
+              }}
+            >
+              {t("modules.observedFlows.cancel")}
+            </Button>
+            <Button isDisabled={!primaryModule} laterModule="M13">
+              {t("modules.observedFlows.continue")}
+            </Button>
+          </div>
+        </div>
+      </TopAlignedModal>
       <span id="reports-unavailable" className="sr-only">
         {t("modules.reports.notAvailableYet")}
       </span>
@@ -82,11 +123,7 @@ export function ReportsScreen({
               prefix={<Icons.filterSearch className="size-4" aria-hidden />}
             />
           </div>
-          <Button
-            variant="recordPrimary"
-            aria-disabled="true"
-            aria-describedby="reports-unavailable"
-          >
+          <Button variant="recordPrimary" onPress={() => setCreating(true)}>
             {t("modules.reports.createReport")}
           </Button>
           <Button

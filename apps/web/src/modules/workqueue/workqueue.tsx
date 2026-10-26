@@ -7,6 +7,7 @@ import { CellValue } from "@/components/records/list/cell-value";
 import { RecordTableFooter } from "@/components/records/list/record-table-footer";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
+import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import type { MessageKey, MessageValues } from "@/i18n/catalogs";
 import { useUiTranslations } from "@/i18n/client-provider";
@@ -88,18 +89,47 @@ export function Workqueue({
           className="workqueue-rail w-72 shrink-0 overflow-auto rounded-md border border-panel-border bg-surface p-4"
         >
           <h2 className="mb-2 font-semibold">{t("modules.workqueue.myOpenActivity")}</h2>
-          <Button
-            variant="ghost"
-            className="workqueue-period"
-            aria-label={t("modules.workqueue.activityPeriodLabel", {
-              period: t("modules.workqueue.todayOverdue"),
-            })}
-            aria-describedby={unavailableDescId}
-            onPress={() => unavailable(t("modules.workqueue.activityPeriodSelection"))}
-          >
-            <span>{t("modules.workqueue.todayOverdue")}</span>
-            <Icons.chevronDown aria-hidden className="size-3" />
-          </Button>
+          <MenuTrigger>
+            <Button
+              variant="ghost"
+              className="workqueue-period"
+              aria-label={t("modules.workqueue.activityPeriodLabel", {
+                period: t("modules.workqueue.todayOverdue"),
+              })}
+            >
+              <span>{t("modules.workqueue.todayOverdue")}</span>
+              <Icons.chevronDown aria-hidden className="size-3" />
+            </Button>
+            <Menu
+              aria-label={t("modules.home.activityPeriod")}
+              selectionMode="single"
+              selectedKeys={["Today & Overdue"]}
+            >
+              {[
+                { id: "Today & Overdue", label: t("modules.workqueue.todayOverdue") },
+                { id: "Today", label: t("modules.workqueue.periods.today") },
+                { id: "Tomorrow", label: t("modules.workqueue.periods.tomorrow") },
+                { id: "Overdue", label: t("modules.workqueue.periods.overdue") },
+                { id: "This Week", label: t("modules.workqueue.periods.thisWeek") },
+                { id: "Next Week", label: t("modules.workqueue.periods.nextWeek") },
+                { id: "This Month", label: t("modules.workqueue.periods.thisMonth") },
+                { id: "Next Month", label: t("modules.workqueue.periods.nextMonth") },
+                { id: "On a Specific Date", label: t("modules.workqueue.periods.specificDate") },
+              ].map((period) => (
+                <MenuItem key={period.id} id={period.id} textValue={period.label}>
+                  <span className="flex items-center gap-2">
+                    {period.id === "Today & Overdue" && (
+                      <Icons.check className="size-4" aria-hidden />
+                    )}
+                    <span>{period.label}</span>
+                    {period.id === "On a Specific Date" && (
+                      <Icons.chevronRight className="ml-auto size-3" aria-hidden />
+                    )}
+                  </span>
+                </MenuItem>
+              ))}
+            </Menu>
+          </MenuTrigger>
           <QueueButtons
             section="My Open Activity"
             queues={queues}

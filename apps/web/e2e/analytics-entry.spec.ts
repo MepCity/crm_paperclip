@@ -39,10 +39,7 @@ test("Analytics entry: record-backed overview dashboard, toolbar, empty target s
     "aria-disabled",
     "true",
   );
-  await expect(page.getByRole("button", { name: "Create Dashboard" })).toHaveAttribute(
-    "aria-disabled",
-    "true",
-  );
+  await expect(page.getByRole("button", { name: "Create Dashboard" })).toBeEnabled();
   await expect(page.getByRole("button", { name: "More actions" })).toHaveAttribute(
     "aria-disabled",
     "true",
@@ -92,4 +89,41 @@ test("Analytics entry: record-backed overview dashboard, toolbar, empty target s
   await expect(pipelineCard.locator(".text-3xl")).toHaveText(/^\d+$/);
 
   await page.screenshot({ path: testInfo.outputPath("analytics-entry.png"), fullPage: true });
+});
+
+test("creates an empty private fixture dashboard and opens the unsaved quick-chart criteria", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 2048, height: 1163 });
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(`/crm/${org.slug}/tab/Dashboards`);
+  await page.getByRole("button", { name: "Create Dashboard" }).click();
+  await expect(page.getByRole("textbox", { name: "Dashboard name" })).toHaveValue(
+    "Untitled Dashboard",
+  );
+  await expect(page.getByRole("button", { name: "Favorite dashboard" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Edit dashboard access" })).toBeVisible();
+  await page.getByRole("textbox", { name: "Dashboard name" }).fill("Team overview");
+  await page.screenshot({ path: testInfo.outputPath("dashboard-create.png") });
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "No Components Found" })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("dashboard-empty.png") });
+  await page.getByRole("button", { name: "Add Component", exact: true }).click();
+  await page.getByRole("button", { name: "Quick chart" }).click();
+  const chart = page.getByRole("dialog", { name: "Add Chart" });
+  await expect(chart.getByText("Select a module to display a visual preview.")).toBeVisible();
+  await chart.getByRole("button", { name: /Modules/ }).click();
+  await page.getByRole("option", { name: "Leads", exact: true }).click();
+  await chart.getByRole("button", { name: "+ Criteria filter", exact: true }).click();
+  await expect(chart.getByRole("region", { name: "Criteria filter" })).toBeVisible();
+  const rings = chart.locator("span.rounded-full.border-current");
+  await expect(rings).toHaveCount(3);
+  await expect(chart.locator("svg.size-4.rounded-full.border-current")).toHaveCount(0);
+  await expect(
+    chart.getByRole("region", { name: "Criteria filter" }).locator("svg.text-accent-green"),
+  ).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("chart-criteria.png") });
+  await chart.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "No Components Found" })).toBeVisible();
 });

@@ -1,6 +1,7 @@
 import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
+import { LanguageProvider } from "@/i18n/client-provider";
 import { taskField } from "@/modules/tasks/test-metadata";
 import { describedBy } from "@/test/dom";
 import { render } from "@/test/render";
@@ -190,4 +191,59 @@ it("activates queue buttons via keyboard Enter and Space", async () => {
   expect(screen.getByRole("region", { name: "Calls queue" })).toBeTruthy();
   expect(callsBtn.getAttribute("aria-pressed")).toBe("true");
   expect(meetingsBtn.getAttribute("aria-pressed")).toBe("false");
+});
+
+it("shows all observed period choices with Today & Overdue checked, without changing queue data", async () => {
+  sessionStorage.setItem("workqueue-welcome:test:user", "dismissed");
+  const user = userEvent.setup();
+  mount();
+  await user.click(screen.getByRole("button", { name: "Activity period: Today & Overdue" }));
+  const options = screen.getAllByRole("menuitemradio");
+  expect(options.map((option) => option.textContent)).toEqual([
+    "Today & Overdue",
+    "Today",
+    "Tomorrow",
+    "Overdue",
+    "This Week",
+    "Next Week",
+    "This Month",
+    "Next Month",
+    "On a Specific Date",
+  ]);
+  expect(options[0]?.getAttribute("aria-checked")).toBe("true");
+  await user.keyboard("{Escape}");
+  expect(screen.getByRole("button", { name: "Activity period: Today & Overdue" })).toBeDefined();
+  expect(replace).not.toHaveBeenCalled();
+});
+
+it("translates all nine period choices into Turkish and keeps the observed default", async () => {
+  sessionStorage.setItem("workqueue-welcome:test:user", "dismissed");
+  const user = userEvent.setup();
+  render(
+    <LanguageProvider language="tr">
+      <Workqueue
+        orgSlug="test"
+        user={{ id: "user", name: "Test User", role: "Member" }}
+        queues={queues}
+        page={1}
+      />
+    </LanguageProvider>,
+  );
+  await user.click(screen.getByRole("button", { name: "Etkinlik dönemi: Bugün & Geciken" }));
+  const options = screen.getAllByRole("menuitemradio");
+  expect(options.map((option) => option.textContent)).toEqual([
+    "Bugün & Geciken",
+    "Bugün",
+    "Yarın",
+    "Geciken",
+    "Bu Hafta",
+    "Gelecek Hafta",
+    "Bu Ay",
+    "Önümüzdeki Ay",
+    "Belirli Bir Tarihte",
+  ]);
+  expect(options[0]?.getAttribute("aria-checked")).toBe("true");
+  await user.click(screen.getByRole("menuitemradio", { name: "Yarın" }));
+  expect(screen.getByRole("button", { name: "Etkinlik dönemi: Bugün & Geciken" })).toBeDefined();
+  expect(replace).not.toHaveBeenCalled();
 });

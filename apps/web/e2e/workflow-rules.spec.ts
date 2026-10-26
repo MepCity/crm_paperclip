@@ -107,9 +107,11 @@ test("Workflow Rules list WL1–WL11 and detail WD1–WD6 read-only inventory", 
   await expect(page.getByRole("switch")).toHaveCount(0);
   await expect(table.getByRole("checkbox")).toHaveCount(0);
 
-  // RC1–RC5: No write controls in workflow rules region
+  // Unsaved create is available; existing rule mutations remain unavailable.
   const workflowRegion = page.getByRole("region", { name: "Workflow Rules" });
-  await expect(workflowRegion.getByRole("button", { name: /create|new rule/i })).toHaveCount(0);
+  await expect(
+    workflowRegion.getByRole("button", { name: "Create Rule", exact: true }),
+  ).toBeVisible();
   await expect(workflowRegion.getByRole("button", { name: /edit/i })).toHaveCount(0);
   await expect(workflowRegion.getByRole("button", { name: /delete/i })).toHaveCount(0);
   await expect(workflowRegion.getByRole("button", { name: /clone/i })).toHaveCount(0);
@@ -285,4 +287,91 @@ test("ordinary organizations show no workflow rules or foreign detail", async ({
   await page.goto(`/crm/${org.slug}/settings/workflow-rules/wf-rule-lead-welcome`);
   await expect(page.getByText("Workflow rule not found.")).toBeVisible();
   assertNoPageErrors(pageErrors);
+});
+
+test("workflow create advances the observed date trigger to initial criteria without saving", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 2048, height: 1163 });
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(`/crm/${org.slug}/settings/workflow-rules`);
+  await page.getByRole("button", { name: "Create Rule", exact: true }).click();
+  await page.getByRole("button", { name: /Module/ }).click();
+  await page
+    .getByRole("listbox", { name: "Module", exact: true })
+    .getByRole("option", { name: "Leads", exact: true })
+    .click();
+  await page.getByRole("textbox", { name: "Rule Name" }).fill("Follow-up rule");
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await page.getByRole("button", { name: /Execute this workflow rule/ }).click();
+  await page.getByRole("option", { name: "Date/Time Field", exact: true }).click();
+  await page.getByRole("button", { name: /Execution date\/time field/ }).click();
+  await page.getByRole("option", { name: "Created Time", exact: true }).click();
+  await page.getByRole("button", { name: "Next", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Condition 1" })).toBeVisible();
+  await expect(
+    page.getByRole("radiogroup", { name: "Which Leads would you like to apply this rule to?" }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("radio", { name: "Leads matching certain conditions", exact: true }),
+  ).toBeChecked();
+  await expect(page.getByRole("radio", { name: "All Leads", exact: true })).not.toBeChecked();
+  await expect(page.getByRole("radio", { name: "All Leads", exact: true })).toBeEnabled();
+  await page.screenshot({ path: testInfo.outputPath("workflow-criteria.png") });
+  await page.getByRole("button", { name: "Cancel", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Workflow Rules", exact: true })).toBeVisible();
+});
+
+test("Turkish workflow creation shows the observed header, summary and scope", async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 2048, height: 1163 });
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  const language = await page.request.put("/api/personal-settings/language", {
+    headers: { Origin: new URL(page.url()).origin },
+    data: { language: "tr" },
+  });
+  expect(language.ok()).toBe(true);
+  await page.goto(`/crm/${org.slug}/settings/workflow-rules`);
+  await page.getByRole("button", { name: "Kural Oluştur", exact: true }).click();
+  await page.getByRole("button", { name: /Modül/ }).click();
+  await page
+    .getByRole("listbox", { name: "Modül", exact: true })
+    .getByRole("option", { name: "Müşteri Adayları", exact: true })
+    .click();
+  await page.getByRole("textbox", { name: "Kural Adı" }).fill("Follow-up rule");
+  await page.getByRole("button", { name: "Sonraki", exact: true }).click();
+  await page.getByRole("button", { name: /Bu iş akışı kuralını/ }).click();
+  await page.getByRole("option", { name: "Date/Time Field", exact: true }).click();
+  await page.getByRole("button", { name: /Yürütme tarih/ }).click();
+  await page.getByRole("option", { name: "Oluşturma Zamanı", exact: true }).click();
+  await page.getByRole("button", { name: "Sonraki", exact: true }).click();
+  await expect(page.getByRole("region", { name: "Koşul 1" })).toBeVisible();
+  await expect(
+    page.getByRole("radiogroup", {
+      name: "Kuralı hangi müşteri adayları öğesine uygulamak istersiniz?",
+    }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("radio", { name: "Müşteri Adayları belirli koşullarla eşleşiyor", exact: true }),
+  ).toBeChecked();
+  await expect(
+    page.getByRole("radio", { name: "Tüm Müşteri Adayları", exact: true }),
+  ).not.toBeChecked();
+  await expect(
+    page.getByRole("radio", { name: "Tüm Müşteri Adayları", exact: true }),
+  ).toBeEnabled();
+  await expect(page.getByText("@ Müşteri Adayları", { exact: true })).toBeVisible();
+  await expect(page.getByText("Açıklama Ekle", { exact: true })).toBeVisible();
+  await expect(
+    page.getByText("Bu kural, yürütülür şunda: Oluşturma Zamanı.", { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText("Yinele Bir Kez", { exact: true })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("workflow-criteria-tr.png") });
+  await page.getByRole("button", { name: "İptal", exact: true }).click();
+  await expect(
+    page.getByRole("heading", { name: "İş Akışı Kuralları", exact: true }),
+  ).toBeVisible();
 });

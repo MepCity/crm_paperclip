@@ -246,17 +246,11 @@ test("Who and What types pick a lead and a deal, save, and survive an edit", asy
   const org = await openCreate(page);
   await page.getByRole("combobox", { name: "Subject", exact: true }).fill("Follow up");
 
-  await page
-    .getByRole("button", { name: /module$/ })
-    .first()
-    .click();
+  await page.getByRole("button", { name: /Contact Name module/ }).click();
   await page.getByRole("option", { name: "Lead", exact: true }).click();
   const lead = await pickRecord(page, "Open Contact Name lookup");
 
-  await page
-    .getByRole("button", { name: /module$/ })
-    .nth(1)
-    .click();
+  await page.getByRole("button", { name: /Related To module/ }).click();
   await page.getByRole("option", { name: "Deal", exact: true }).click();
   const deal = await pickRecord(page, "Open Related To lookup");
 
@@ -270,8 +264,8 @@ test("Who and What types pick a lead and a deal, save, and survive an edit", asy
 
   await page.goto(moduleRecordEditPath(org.slug, TASKS_TAB, id));
   await expect(page.getByRole("heading", { name: "Edit Task" })).toBeVisible();
-  await expect(page.getByRole("button", { name: /module$/ }).first()).toContainText("Lead");
-  await expect(page.getByRole("button", { name: /module$/ }).nth(1)).toContainText("Deal");
+  await expect(page.getByRole("button", { name: /Contact Name module/ })).toContainText("Lead");
+  await expect(page.getByRole("button", { name: /Related To module/ })).toContainText("Deal");
   await expect(page.locator("[data-form-field=Who_Id] input")).toHaveValue(lead);
   await expect(page.locator("[data-form-field=What_Id] input")).toHaveValue(deal);
 });

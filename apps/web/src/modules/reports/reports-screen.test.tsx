@@ -53,7 +53,6 @@ describe("Reports landing", () => {
     await user.type(search, "anything");
     expect((search as HTMLInputElement).value).toBe("");
     for (const name of [
-      "Create Report",
       "Reports help",
       "Favorite Weekly outreach overview",
       "Report actions: Weekly outreach overview",
@@ -264,9 +263,27 @@ describe("Reports a11y semantics", () => {
     render(<ReportsScreen orgSlug="demo" />);
     const table = await screen.findByRole("table");
     expect(table.getAttribute("aria-label")).toBeNull();
-    const create = screen.getByRole("button", { name: "Create Report" });
-    expect(create.getAttribute("aria-disabled")).toBe("true");
-    const note = document.getElementById(create.getAttribute("aria-describedby") ?? "");
+    const help = screen.getByRole("button", { name: "Reports help" });
+    expect(help.getAttribute("aria-disabled")).toBe("true");
+    const note = document.getElementById(help.getAttribute("aria-describedby") ?? "");
     expect(note?.textContent).toContain("Not available");
   });
+});
+
+it("opens the observed primary-module entry and cancels without a report write", async () => {
+  const user = userEvent.setup();
+  render(<ReportsScreen orgSlug="demo" />);
+  await screen.findByRole("table");
+  await user.click(screen.getByRole("button", { name: "Create Report" }));
+  const dialog = screen.getByRole("dialog", { name: "Create Report" });
+  expect(
+    (within(dialog).getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled,
+  ).toBe(true);
+  await user.click(within(dialog).getByRole("button", { name: /Select Primary Module/ }));
+  await user.click(screen.getByRole("option", { name: "Leads" }));
+  expect(
+    (within(dialog).getByRole("button", { name: "Continue" }) as HTMLButtonElement).disabled,
+  ).toBe(false);
+  await user.click(within(dialog).getByRole("button", { name: "Cancel" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
 });

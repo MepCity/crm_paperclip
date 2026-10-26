@@ -14,17 +14,28 @@ import {
   ProlificRepsContent,
   RevenueTargetContent,
 } from "./card-components";
-import { fixtureAnalyticsPort } from "./fixture-port";
-import type { AnalyticsDashboardData, AnalyticsPort } from "./port";
+import { DashboardComponentChooser, DashboardCreate } from "./dashboard-create";
+import { fixtureAnalyticsPort, fixtureDashboardCreationPort } from "./fixture-port";
+import type {
+  AnalyticsDashboardData,
+  AnalyticsPort,
+  DashboardCreationPort,
+  EmptyDashboard,
+} from "./port";
 
 export function AnalyticsScreen({
   orgSlug: _orgSlug,
   port = fixtureAnalyticsPort,
+  creationPort = fixtureDashboardCreationPort,
 }: {
   orgSlug: string;
   port?: AnalyticsPort;
+  creationPort?: DashboardCreationPort;
 }) {
   const t = useUiTranslations();
+  const [creating, setCreating] = useState(false);
+  const [custom, setCustom] = useState<EmptyDashboard | null>(null);
+  const [adding, setAdding] = useState(false);
   const [data, setData] = useState<AnalyticsDashboardData | null>(null);
   const [status, setStatus] = useState<"loading" | "ready" | "error">("loading");
 
@@ -45,14 +56,30 @@ export function AnalyticsScreen({
     loadDashboard();
   }, [loadDashboard]);
 
-  const overviewTitle = data?.overviewTitle ?? t("modules.analytics.orgOverview");
-  const scopeLabel = data?.scopeLabel ?? t("modules.analytics.allUsers");
+  const overviewTitle = custom?.name ?? data?.overviewTitle ?? t("modules.analytics.orgOverview");
+  const scopeLabel = custom ? "Only me" : (data?.scopeLabel ?? t("modules.analytics.allUsers"));
+
+  if (creating)
+    return (
+      <DashboardCreate
+        onCancel={() => {
+          setCreating(false);
+          setAdding(false);
+        }}
+        onSave={async (input) => {
+          setCustom(await creationPort.createEmptyDashboard(input));
+          setCreating(false);
+          setAdding(false);
+        }}
+      />
+    );
 
   return (
     <section
       aria-label={t("modules.analytics.analytics")}
       className="min-h-full bg-bg p-4 text-md text-text"
     >
+      {adding && <DashboardComponentChooser onCancel={() => setAdding(false)} />}
       <span id="analytics-unavailable" className="sr-only">
         {t("modules.reports.notAvailableYet")}
       </span>
@@ -137,27 +164,33 @@ export function AnalyticsScreen({
           </Button>
 
           {/* A06: Add Component */}
-          <Button
-            variant="recordSecondary"
-            size="toolbar"
-            aria-disabled="true"
-            aria-describedby="analytics-unavailable"
-            className="h-8 text-xs font-semibold"
-          >
-            {t("modules.analytics.addComponent")}
-          </Button>
+          {!custom && (
+            <Button
+              variant="recordSecondary"
+              size="toolbar"
+              aria-disabled="true"
+              aria-describedby="analytics-unavailable"
+              className="h-8 text-xs font-semibold"
+            >
+              {t("modules.analytics.addComponent")}
+            </Button>
+          )}
 
           {/* A07: Create Dashboard */}
           <Button
             variant="recordPrimary"
             size="toolbar"
-            aria-disabled="true"
-            aria-describedby="analytics-unavailable"
+            onPress={() => setCreating(true)}
             className="h-8 text-xs font-semibold"
           >
             {t("modules.analytics.createDashboard")}
           </Button>
 
+          {custom && (
+            <Button variant="recordSecondary" isDisabled>
+              {t("modules.observedFlows.deleteDashboard")}
+            </Button>
+          )}
           {/* A08: More actions */}
           <Button
             variant="icon"
@@ -196,7 +229,16 @@ export function AnalyticsScreen({
         </div>
       )}
 
-      {data && (
+      {custom && (
+        <div className="flex min-h-[70vh] flex-col items-center justify-center text-center text-text-muted">
+          <Icons.barChart className="mx-auto mb-5 size-16 text-text-muted" aria-hidden />
+          <h2 className="text-md">{t("modules.observedFlows.noComponentsFound")}</h2>
+          <Button className="mt-5" onPress={() => setAdding(true)}>
+            {t("modules.observedFlows.addComponent")}
+          </Button>
+        </div>
+      )}
+      {data && !custom && (
         <div className="grid grid-cols-12 gap-3.5">
           {/* Row 1: Four KPI cards A10.01–A10.04 */}
           <div className="col-span-12 sm:col-span-6 lg:col-span-3">
