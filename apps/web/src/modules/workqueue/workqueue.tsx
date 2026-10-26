@@ -76,9 +76,12 @@ export function Workqueue({
           picklist: field.picklist?.map((option) => ({
             ...option,
             displayValue:
-              option.displayValue === option.storedValue && option.storedValue in valueKeys
-                ? t(valueKeys[option.storedValue as keyof typeof valueKeys])
-                : option.displayValue,
+              option.storedValue === "Waiting on someone else" &&
+              option.displayValue === "Waiting for input"
+                ? t("modules.workqueue.values.waitingForInput")
+                : option.displayValue === option.storedValue && option.storedValue in valueKeys
+                  ? t(valueKeys[option.storedValue as keyof typeof valueKeys])
+                  : option.displayValue,
           })),
         };
       })

@@ -119,6 +119,7 @@ test("check-round fixes keep Turkish screens and draft entry flows usable", asyn
   await expect(
     page.getByRole("heading", { level: 1, name: "İş Kuyruğu", exact: true }),
   ).toBeVisible();
+  await expect(page.getByRole("table")).not.toContainText("Waiting for input");
   await shot("18-workqueue");
   for (const [path, name, heading] of [
     ["email-configuration/email-sharing", "20-email-sharing", "E-posta Paylaşımı İzinleri"],

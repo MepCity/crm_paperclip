@@ -274,6 +274,7 @@ it("translates built-in task statuses while preserving custom display labels and
     picklist: [
       { storedValue: "In Progress", displayValue: "In Progress" },
       { storedValue: "Completed", displayValue: "Team approval" },
+      { storedValue: "Waiting on someone else", displayValue: "Waiting for input" },
     ],
   });
   const taskQueue = queues[0] as QueueData;
@@ -285,6 +286,7 @@ it("translates built-in task statuses while preserving custom display labels and
       records: [
         { id: "a", fields: { Status: "In Progress" } },
         { id: "b", fields: { Status: "Completed" } },
+        { id: "c", fields: { Status: "Waiting on someone else" } },
       ],
     },
   };
@@ -301,5 +303,6 @@ it("translates built-in task statuses while preserving custom display labels and
   expect(screen.getByRole("columnheader", { name: "Durum" })).toBeTruthy();
   expect(screen.getByText("Devam Ediyor")).toBeTruthy();
   expect(screen.getByText("Team approval")).toBeTruthy();
+  expect(screen.getByText("Girdi Bekleniyor")).toBeTruthy();
   expect(field.picklist?.[0]?.storedValue).toBe("In Progress");
 });

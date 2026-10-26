@@ -310,6 +310,9 @@ test("Home icon accent and product selector caret match app-shell pinned-link an
   await expect(unselectedHome).toHaveCSS("color", "rgb(194, 203, 222)");
   await expect(unselectedHome.locator("svg")).toHaveCSS("color", "rgb(90, 120, 255)");
 
+  // The organization selector belongs to the full Home rail, not the compact calendar rail.
+  await unselectedHome.click();
+  await expect(page.getByRole("heading", { level: 1, name: "Home" })).toBeVisible();
   const selector = page.getByRole("button", { name: /Organization switcher:/ });
   const caret = selector.locator("svg").last();
   const caretBox = await caret.boundingBox();
