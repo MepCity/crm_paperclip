@@ -1,4 +1,3 @@
-import type { Request } from "@playwright/test";
 import { inboxFixture } from "../src/modules/emails/inbox/fixture";
 import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
@@ -130,12 +129,15 @@ test("emails inbox control inventory (E-01..E-38) matches what Module 10 renders
   const org = await createOrganization(page);
 
   const nonGetRequests: string[] = [];
-  const captureNonGetRequest = (request: Request) => {
-    if (!["GET", "HEAD", "OPTIONS"].includes(request.method())) {
+  page.on("request", (request) => {
+    // Calendar event loading uses a read-only bulk POST; all other writes stay guarded.
+    if (
+      !["GET", "HEAD", "OPTIONS"].includes(request.method()) &&
+      !(request.method() === "POST" && new URL(request.url()).pathname === "/crm/v2.2/Events/bulk")
+    ) {
       nonGetRequests.push(`${request.method()} ${request.url()}`);
     }
-  };
-  page.on("request", captureNonGetRequest);
+  });
 
   await page.goto(`/crm/${org.slug}/tab/Emails`);
 
@@ -229,16 +231,14 @@ test("emails inbox control inventory (E-01..E-38) matches what Module 10 renders
   await composeDialog.getByRole("button", { name: "Cancel", exact: true }).click();
   await expect(composeDialog).not.toBeVisible();
 
-  // Inbox interactions must not write. Calendar loads events through a read-only POST
-  // bulk query, so finish the inbox guard before checking cross-module navigation.
-  expect(nonGetRequests).toEqual([]);
-  page.off("request", captureNonGetRequest);
-
   // Safe navigation on E-31 (Calendar link in top bar)
   await calendarLink.click();
   await expect(page).toHaveURL(`/crm/${org.slug}/calendar`);
   await page.goBack();
   await expect(page).toHaveURL(/folder=inbox&message=conversation-1$/);
+
+  // Keep the write guard active through the complete calendar round trip.
+  expect(nonGetRequests).toEqual([]);
 
   // Clean page errors
   assertNoPageErrors(pageErrors);
