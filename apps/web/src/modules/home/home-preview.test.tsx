@@ -20,14 +20,16 @@ describe("resolveHomeView", () => {
 });
 
 describe("HomeContent", () => {
-  it("shows the observed empty canvas by default", () => {
+  it("shows onboarding by default", () => {
     render(<HomeContent orgSlug="acme" userName="Ada" initialView="onboarding" />);
     expect(screen.getByTestId("home-canvas")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Set up your CRM" })).toBeTruthy();
   });
 
   it("does not expose fixture previews through the home route", () => {
     render(<HomeContent orgSlug="acme" userName="Ada" initialView="preview" />);
     expect(screen.getByTestId("home-canvas")).toBeTruthy();
+    expect(screen.getByRole("heading", { name: "Set up your CRM" })).toBeTruthy();
     expect(screen.queryByTestId("home-preview")).toBeNull();
   });
 });

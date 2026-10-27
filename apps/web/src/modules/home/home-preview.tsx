@@ -23,6 +23,7 @@ import {
   taskCardFields,
   taskRows,
 } from "./fixture";
+import { HomeOnboarding } from "./home-onboarding";
 
 const fieldKeys: Record<string, MessageKey> = {
   Subject: "modules.home.columns.subject",
@@ -265,13 +266,17 @@ export function HomePreviewCards({ empty, orgSlug }: { empty: boolean; orgSlug: 
 }
 
 export function HomeContent({
-  orgSlug: _orgSlug,
-  userName: _userName,
+  orgSlug,
+  userName,
   initialView: _initialView,
 }: {
   orgSlug: string;
   userName: string;
   initialView: HomeView;
 }) {
-  return <div className="min-h-full bg-surface" data-testid="home-canvas" />;
+  return (
+    <div className="min-h-full bg-surface" data-testid="home-canvas">
+      <HomeOnboarding orgSlug={orgSlug} userName={userName} />
+    </div>
+  );
 }
