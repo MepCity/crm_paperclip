@@ -328,7 +328,12 @@
     "PT1H": "1 hour before",
     "PT2H": "2 hours before",
     "P1D": "1 day before",
-    "P2D": "2 days before"
+    "P2D": "2 days before",
+    "none": "None",
+    "channel": "Delivery channel",
+    "channels": {
+      "EMAIL": "Email"
+    }
   },
   "utilities": {
     "addANote": "Add a note",

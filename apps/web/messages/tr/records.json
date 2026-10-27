@@ -328,7 +328,12 @@
     "PT1H": "1 saat önce",
     "PT2H": "2 saat önce",
     "P1D": "1 gün önce",
-    "P2D": "2 gün önce"
+    "P2D": "2 gün önce",
+    "none": "Hiçbiri",
+    "channel": "Bildirim kanalı",
+    "channels": {
+      "EMAIL": "E-posta"
+    }
   },
   "utilities": {
     "addANote": "Bir not ekleyin",

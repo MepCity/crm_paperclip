@@ -1363,39 +1363,33 @@
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 128,
+    "line": 134,
     "column": 27,
     "hash": "6e11774990b553e6"
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 298,
+    "line": 304,
     "column": 72,
     "hash": "a424e33d90931d1e"
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 371,
+    "line": 377,
     "column": 72,
     "hash": "a424e33d90931d1e"
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 396,
+    "line": 402,
     "column": 22,
     "hash": "74d2d951a827ab7f"
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 397,
+    "line": 403,
     "column": 76,
     "hash": "64ea62de2928a9ac"
-  },
-  {
-    "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 617,
-    "column": 35,
-    "hash": "6e11774990b553e6"
   },
   {
     "file": "apps/web/src/components/records/form/select-record-dialog.tsx",
