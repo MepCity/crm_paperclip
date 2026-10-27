@@ -3,6 +3,7 @@ import { cleanup, render, screen, waitFor, within } from "@testing-library/react
 import userEvent from "@testing-library/user-event";
 import type { ReactNode } from "react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LanguageProvider } from "@/i18n/client-provider";
 import { createClientRecordService } from "@/lib/api/client/client-record-service";
 import type { ClientRecordService } from "@/lib/api/client/http-record-service";
 import { ApiProvider } from "@/lib/api/client/provider";
@@ -71,12 +72,18 @@ function expectLeadStatusEverywhere(label: string) {
   expectLeadStatusOnDetailsCard(label);
 }
 
-function renderScreen(service: ClientRecordService, recordId: string) {
+function renderScreen(
+  service: ClientRecordService,
+  recordId: string,
+  language: "en" | "tr" = "en",
+) {
   function Wrapper({ children }: { children: ReactNode }) {
     return (
-      <ApiProvider orgSlug={ctx.orgSlug} service={service}>
-        {children}
-      </ApiProvider>
+      <LanguageProvider language={language}>
+        <ApiProvider orgSlug={ctx.orgSlug} service={service}>
+          {children}
+        </ApiProvider>
+      </LanguageProvider>
     );
   }
   return render(
@@ -148,7 +155,7 @@ describe("LeadRecordScreen", () => {
     expect(screen.getAllByText("—").length).toBeGreaterThan(0);
   });
 
-  it("starts the overview with the Last Update label above the status ribbon", async () => {
+  it("places Last Update in the tab row and keeps Send Email primary", async () => {
     const service = createService();
     const views = await service.listViews("Leads");
     const view = views.find((item) => item.isDefault);
@@ -159,8 +166,12 @@ describe("LeadRecordScreen", () => {
     renderScreen(service, record.id);
     await waitFor(() => expect(screen.getByRole("region", { name: "Lead status" })).toBeTruthy());
     const label = screen.getByText(/^Last Update : /);
-    const ribbon = screen.getByRole("region", { name: "Lead status" });
-    expect(label.compareDocumentPosition(ribbon) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(label.classList.contains("detail-last-update--tab-row")).toBe(true);
+    const commands = screen
+      .getByRole("button", { name: "Send Email" })
+      .closest("[data-record-commands]");
+    expect(commands?.firstElementChild?.textContent).toBe("Send Email");
+    expect(screen.getByRole("link", { name: "Convert" }).className).toContain("secondary");
   });
 
   it("shows linked open and closed tasks in the activities cards", async () => {
@@ -622,4 +633,18 @@ it("inline server field error keeps draft and leaves the record unchanged", asyn
   expect(within(details).getByRole("button", { name: "Edit Company value" }).textContent).toBe(
     record.fields.Company,
   );
+});
+
+it("keeps raw layout decisions when rendering translated detail sections", async () => {
+  const service = createService();
+  const views = await service.listViews("Leads");
+  const view = views.find((item) => item.isDefault);
+  if (!view) throw new Error("Missing default view");
+  const list = await service.list("Leads", { viewId: view.id, page: 1, perPage: 10 });
+  const record = list.records[0];
+  if (!record) throw new Error("Missing lead");
+  const { container } = renderScreen(service, record.id, "tr");
+  await screen.findByRole("button", { name: "Detayları sakla" });
+  expect(container.querySelector('[data-detail-section="Müşteri Adayı Resim"]')).toBeNull();
+  expect(container.querySelector('[data-detail-section="Adres Bilgisi"]')).toBeTruthy();
 });

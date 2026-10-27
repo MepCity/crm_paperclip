@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Icons } from "@/components/ui/icon";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { safeAttachmentUrl } from "@/lib/attachments/safe-url";
 import { type AttachSource, AttachSourceMenu } from "./attach-source-menu";
 
@@ -58,6 +59,7 @@ export function AttachmentsCard({
   canEdit = true,
   targetId = "attachments",
 }: AttachmentsCardProps) {
+  const t = useUiTranslations();
   const inputRef = useRef<HTMLInputElement>(null);
   const [pendingDelete, setPendingDelete] = useState<AttachmentRow | null>(null);
 
@@ -71,13 +73,15 @@ export function AttachmentsCard({
   return (
     <section
       id={targetId}
-      aria-label="Attachments"
+      aria-label={t("metadata.relatedLists.attachments")}
       data-related-card="attachments"
       className="detail-card border border-panel-border"
     >
       <div className="flex items-center justify-between min-h-(--size-list-header-height) py-2 border-b border-panel-border">
         <div className="flex items-center gap-3">
-          <h3 className="text-md font-bold text-text-strong">Attachments</h3>
+          <h3 className="text-md font-bold text-text-strong">
+            {t("metadata.relatedLists.attachments")}
+          </h3>
           {rows.length > 0 ? (
             <span
               data-part="count"
@@ -113,7 +117,7 @@ export function AttachmentsCard({
         </div>
       ) : isEmpty ? (
         <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-          No Attachment
+          {t("records.chrome.noAttachment")}
         </div>
       ) : (
         <div className="overflow-x-auto py-2">

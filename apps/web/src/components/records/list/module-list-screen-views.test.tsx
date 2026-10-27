@@ -8,6 +8,7 @@ import { createClientRecordService } from "@/lib/api/client/client-record-servic
 import { ApiProvider } from "@/lib/api/client/provider";
 import { resetPreferenceStoreForTests } from "@/lib/preferences";
 import { contactsListPageConfig } from "@/modules/contacts/list-config";
+import { leadsListPageConfig } from "@/modules/leads/list-config";
 import { ModuleListScreen } from "./module-list-screen";
 
 const ctx = {
@@ -53,6 +54,24 @@ describe("ModuleListScreen Custom View Dialog Integration", () => {
   afterEach(() => {
     cleanup();
     vi.clearAllMocks();
+  });
+
+  it("opens the Leads view selector without a later-module inventory", async () => {
+    const user = userEvent.setup();
+    const records = createFixtureRecordService(ctx);
+    const service = createClientRecordService(records, {
+      listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+    });
+    render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} isAdmin />, {
+      wrapper: wrapper(service),
+    });
+    await screen.findByRole("table", { name: "Records" });
+    await user.click(screen.getByRole("button", { name: "Custom views" }));
+    expect(screen.getByRole("textbox", { name: "Search views" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "Created By Me" })).toBeTruthy();
+    expect(screen.getByRole("menuitem", { name: "All Leads" })).toBeTruthy();
+    await user.click(screen.getByRole("menuitem", { name: "New Custom View" }));
+    expect(await screen.findByRole("dialog", { name: "New Custom View" })).toBeTruthy();
   });
 
   it("opens New Custom View dialog from ViewTabStrip custom views menu", async () => {

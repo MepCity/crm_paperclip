@@ -62,5 +62,18 @@
   "call": "Arama",
   "campaign": "Kampanya",
   "solution": "Çözüm",
-  "case": "Servis Dosyası"
+  "case": "Servis Dosyası",
+  "assistant": "Asistan",
+  "notifications": "Bildirimler",
+  "applications": "Uygulamalar",
+  "extensions": "Uzantılar",
+  "utilities": "Yardımcı Araçlar",
+  "pins": "İşaretlemelerim",
+  "chats": "Sohbetler",
+  "people": "Kişiler",
+  "announcements": "Duyurular",
+  "reminders": "Anımsatıcılar",
+  "recentItems": "Son öğeler",
+  "accessibility": "Erişilebilirlik",
+  "help": "Yardım"
 }

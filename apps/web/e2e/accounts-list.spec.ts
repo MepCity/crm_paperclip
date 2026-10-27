@@ -42,7 +42,7 @@ test("Accounts shell, pinned tabs, views and sorting", async ({ page }) => {
 
   // Ellipsis menu (AL-02)
   await list.getByRole("button", { name: "Custom views" }).click();
-  await expect(page.getByRole("menuitem")).toHaveCount(12);
+  await expect(page.getByRole("menuitem")).toHaveCount(13);
 
   // Switch to "My Accounts" (AL-02.4)
   await page.getByRole("menuitem", { name: "My Accounts", exact: true }).click();

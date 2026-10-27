@@ -2,10 +2,10 @@
 
 import { type ReactNode, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import type { ModuleKey } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useUiTranslations } from "@/i18n/client-provider";
 import "./record-board.css";
 
 export interface BoardCard {
@@ -56,6 +56,7 @@ export function RecordBoard({
   headerStyle,
   children,
 }: RecordBoardProps) {
+  const t = useUiTranslations();
   const [moves, setMoves] = useState<Record<string, { from: string; to: string; card: BoardCard }>>(
     {},
   );
@@ -171,9 +172,6 @@ export function RecordBoard({
                 {column.totalText !== undefined ? (
                   <div className="font-semibold record-board-total">{column.totalText}</div>
                 ) : null}
-                <div className="record-board-checkbox">
-                  <Checkbox label={`Select ${column.label}`} hideLabel />
-                </div>
               </header>
               <div className="record-board-cards">
                 {loading ? (
@@ -242,7 +240,9 @@ export function RecordBoard({
                   onPress={() => onCreate(column.key)}
                   className="text-primary flex-1 justify-start"
                 >
-                  {createLabel}
+                  {createLabel === "Create Deal"
+                    ? t("records.actions.create", { module: t("metadata.modules.Deals.singular") })
+                    : createLabel}
                 </Button>
                 <span className="record-board-footer-arrows" aria-hidden>
                   <svg

@@ -205,7 +205,10 @@ function LoadedRecordForm({
 }) {
   const t = useUiTranslations();
   const adapter = useMetadataDisplayAdapter();
-  const metadata = useMemo(() => adapter.adaptModule(rawMetadata), [adapter, rawMetadata]);
+  const metadata = useMemo(
+    () => ({ ...adapter.adaptModule(rawMetadata), layout: rawMetadata.layout }),
+    [adapter, rawMetadata],
+  );
   const mode: FormMode = intent === "edit" ? "edit" : "create";
   const rules = useMemo(
     () => resolveFormRules(config.rules, { mode, metadata, record: sourceRecord }),
@@ -542,8 +545,9 @@ function LoadedRecordForm({
       isHidden(field.apiName)
     )
       return null;
-    const label =
-      rules.labelOverrides?.[field.apiName] ?? (parent ? addressLabel(field, parent) : field.label);
+    const label = adapter.getNamedLabel(
+      rules.labelOverrides?.[field.apiName] ?? (parent ? addressLabel(field, parent) : field.label),
+    );
     const id = `record-form-${field.apiName}`;
     if (field.dataType === "profileimage") {
       if (!config.profileImageLaterModule) {
@@ -882,7 +886,7 @@ function LoadedRecordForm({
             return (
               <FormSection
                 key={section.label}
-                title={section.label}
+                title={adapter.getLayoutSectionLabel(metadata.apiName, section.label)}
                 layout="single"
                 headerEnd={
                   groupsInSection.length === 2 ? (
@@ -946,7 +950,7 @@ function LoadedRecordForm({
           return (
             <FormSection
               key={section.label}
-              title={section.label}
+              title={adapter.getLayoutSectionLabel(metadata.apiName, section.label)}
               layout={columns.length === 1 ? "single" : "two-column"}
             >
               {columns.length === 1 ? (

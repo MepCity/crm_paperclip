@@ -66,7 +66,7 @@ test("Deals shell, pinned tab, views, switcher and sorting", async ({ page }) =>
 
   // Ellipsis menu DL-02 (11 stock views + 4 menu controls = 15 items)
   await list.getByRole("button", { name: "Custom views" }).click();
-  await expect(page.getByRole("menuitem")).toHaveCount(15);
+  await expect(page.getByRole("menuitem")).toHaveCount(16);
 
   // Switch to "My Deals" (DL-02.5: Owner column is omitted)
   await page.getByRole("menuitem", { name: "My Deals", exact: true }).click();

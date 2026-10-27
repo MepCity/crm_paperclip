@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useRecordLabel } from "@/i18n/record-labels";
 import type { TimelineSubtab } from "./types";
 import "./timeline.css";
 
@@ -17,6 +18,7 @@ export function TimelineSurface({
   onSubtabChange,
   children,
 }: TimelineSurfaceProps) {
+  const label = useRecordLabel();
   return (
     <section className="timeline-surface" data-timeline-surface aria-label="Timeline">
       <div className="timeline-subtab-list" role="tablist" aria-label="Timeline sections">
@@ -33,7 +35,7 @@ export function TimelineSurface({
               tabIndex={active ? 0 : -1}
               onClick={() => onSubtabChange?.(subtab.id)}
             >
-              {subtab.label}
+              {label(subtab.label)}
             </button>
           );
         })}

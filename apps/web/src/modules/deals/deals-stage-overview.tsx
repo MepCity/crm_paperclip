@@ -8,6 +8,7 @@ import {
   type StageBarLabels,
   StageChangeDialog,
 } from "@/components/records/detail/stage-bar";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { useHomeCurrency } from "@/lib/api/client/hooks";
 import { useFormat } from "@/lib/format-context";
 import {
@@ -48,6 +49,7 @@ export function DealsStageOverview({
   saveRecord,
   isSaving = false,
 }: DealsStageOverviewProps) {
+  const t = useUiTranslations();
   const orgFormat = useFormat();
   const stages = useMemo(() => buildStageBarStages(module), [module]);
   const currentStage = readStageValue(record);
@@ -110,7 +112,11 @@ export function DealsStageOverview({
         currentStageValue={currentStage}
         startDate={startDate}
         closingDate={closingDate}
-        labels={STAGE_BAR_LABELS}
+        labels={{
+          ...STAGE_BAR_LABELS,
+          startPrefix: t("records.chrome.start"),
+          closingPrefix: t("records.chrome.closing"),
+        }}
         onSelectStage={(value) => void applyStage(value)}
         isDisabled={isSaving}
       />

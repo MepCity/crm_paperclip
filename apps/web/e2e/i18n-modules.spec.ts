@@ -5,7 +5,8 @@ import { expect, test } from "./support/test";
 test.describe("CRM modules Turkish localization", () => {
   test("renders Leads list, create form, detail, and module empty states in Turkish", async ({
     page,
-  }) => {
+  }, testInfo) => {
+    await page.setViewportSize({ width: 2048, height: 1163 });
     await signUpNewUser(page);
     const org = await createOrganization(page);
 
@@ -26,6 +27,17 @@ test.describe("CRM modules Turkish localization", () => {
     await expect(page.getByText("Alanlara Göre Filtrele")).toBeVisible();
     await expect(page.getByText(/Toplam Kayıtlar/)).toBeVisible();
 
+    await expect(
+      page.getByRole("heading", { name: "Müşteri Adayları", exact: true }),
+    ).toBeVisible();
+    await expect(page.locator("[data-view-pill]")).toHaveText("Tüm Müşteri Adayları");
+    await page.getByRole("button", { name: "Özel görünümler", exact: true }).click();
+    await expect(page.getByRole("textbox", { name: "Görünümleri ara" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Tarafımdan Oluşturuldu" })).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: "Ortak Görünümler" })).toBeVisible();
+    await page.screenshot({ path: testInfo.outputPath("leads-views-tr.png") });
+    await page.keyboard.press("Escape");
+
     // 2. Leads create form view
     await page.goto(`/crm/${org.slug}/tab/Leads/create`);
     await expect(page.locator("html")).toHaveAttribute("lang", "tr");
@@ -37,6 +49,10 @@ test.describe("CRM modules Turkish localization", () => {
     await expect(saveButton).toBeVisible();
     await saveButton.click();
     await expect(page.getByText(/boş bırakılamaz|zorunludur/i).first()).toBeVisible();
+
+    await expect(page.getByRole("button", { name: "Sayfa Tasarımını Düzenle" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Müşteri Adayı Resim" })).toBeVisible();
+    await page.screenshot({ path: testInfo.outputPath("leads-form-tr.png") });
 
     // 3. Leads detail view
     await page.goto(`/crm/${org.slug}/tab/Leads/list`);
@@ -51,6 +67,16 @@ test.describe("CRM modules Turkish localization", () => {
     await expect(page.getByRole("link", { name: "Eklentiler", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Açık Aktiviteler", exact: true })).toBeVisible();
     await expect(page.getByRole("link", { name: "Kapalı Aktiviteler", exact: true })).toBeVisible();
+
+    await expect(
+      page.getByRole("button", { name: "E-posta Gönder", exact: true }).first(),
+    ).toBeVisible();
+    await expect(page.locator(".detail-last-update--tab-row")).toContainText("Son Güncelleme");
+    await page.screenshot({ path: testInfo.outputPath("leads-detail-tr.png") });
+    await page.getByRole("tab", { name: "Zaman Çizelgesi", exact: true }).click();
+    await expect(page.getByRole("tab", { name: "Geçmiş", exact: true })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Zaman Çizelgesi Geçmişi" })).toBeVisible();
+    await page.screenshot({ path: testInfo.outputPath("leads-timeline-tr.png") });
 
     // 4. Empty states and localized module controls for later modules
     await page.goto(`/crm/${org.slug}/tab/Campaigns/list`);
@@ -109,7 +135,9 @@ test.describe("CRM modules Turkish localization", () => {
 
     // 3. Setup (Customization)
     await page.goto(`/crm/${org.slug}/settings`);
-    await expect(page.getByRole("heading", { name: "Ayarlar", level: 1 })).toBeVisible();
+    await expect(
+      page.getByRole("main").getByRole("heading", { name: "Ayarlar", level: 1 }),
+    ).toBeVisible();
     await expect(page.getByRole("link", { name: "Modüller ve Alanlar" })).toBeVisible();
 
     // 4. Automation (Workflow Rules)

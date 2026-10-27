@@ -3,6 +3,7 @@
 import type { ModuleApiName } from "@crm/core/records";
 import { type LinkedActivity, selectActivitySummary } from "@crm/core/records/activities";
 import { Link } from "@/components/ui/link";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { useParentActivities } from "@/lib/records/use-parent-activities";
 
 export interface DealsNextActionSummaryProps {
@@ -23,6 +24,7 @@ function dateStrip(iso: string | null): { month: string; day: string } | null {
 
 /** DD-69: Next Action summary – the nearest open activity of the deal (same rule as the list ribbon). */
 export function DealsNextActionSummary({ dealId, recordPath }: DealsNextActionSummaryProps) {
+  const t = useUiTranslations();
   const activities = useParentActivities("Deals", dealId, recordPath);
   if (activities.isLoading) return null;
 
@@ -53,7 +55,7 @@ export function DealsNextActionSummary({ dealId, recordPath }: DealsNextActionSu
       data-deals-next-action-summary
       className="mx-3 mb-3 flex flex-col gap-2 rounded-md border border-panel-border bg-surface px-4 py-3"
     >
-      <h3 className="text-md font-semibold text-text">Next Action</h3>
+      <h3 className="text-md font-semibold text-text">{t("records.chrome.nextAction")}</h3>
       <div className="flex items-center gap-3">
         <div
           data-next-action-date

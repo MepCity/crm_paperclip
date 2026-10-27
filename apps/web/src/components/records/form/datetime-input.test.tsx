@@ -2,9 +2,11 @@ import { cleanup, fireEvent, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { LanguageProvider } from "@/i18n/client-provider";
 import { render } from "@/test/render";
 import { DateTimeInput } from "./datetime-input";
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 afterEach(cleanup);
 
 describe("DateTimeInput", () => {
@@ -79,3 +81,23 @@ for (const dateOnly of [false, true]) {
     if (!dateOnly) expect(screen.getByLabelText("From time")).toHaveProperty("value", "09:30");
   });
 }
+
+it("shows and edits Turkish day periods without changing ISO storage", () => {
+  const onChange = vi.fn();
+  render(
+    <LanguageProvider language="tr">
+      <DateTimeInput
+        id="tr-from"
+        label="Başlangıç"
+        value={new Date(2026, 4, 12, 15, 30).toISOString()}
+        onChange={onChange}
+      />
+    </LanguageProvider>,
+  );
+  const time = screen.getByLabelText("Başlangıç saat");
+  expect(time).toHaveProperty("value", "03:30 ÖS");
+  fireEvent.change(time, { target: { value: "12:15 ÖÖ" } });
+  expect(onChange).toHaveBeenLastCalledWith(new Date(2026, 4, 12, 0, 15).toISOString());
+  fireEvent.change(time, { target: { value: "12:15 ÖS" } });
+  expect(onChange).toHaveBeenLastCalledWith(new Date(2026, 4, 12, 12, 15).toISOString());
+});

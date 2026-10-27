@@ -67,7 +67,7 @@ test.describe("Leads list View Settings", () => {
   }) => {
     const org = await openList(page);
     const rows = page.locator("[data-part=row]");
-    await expect(rows).toHaveCount(30);
+    await expect(rows).toHaveCount(10);
 
     // Start away from page 1 so the reset is visible.
     await page.getByLabel("Next").click();
@@ -76,23 +76,23 @@ test.describe("Leads list View Settings", () => {
     const submenu = await openSubmenu(page, "Records Per Page");
     await expect(submenu.getByRole("menuitemradio")).toHaveCount(6);
     await expect(
-      submenu.getByRole("menuitemradio", { name: "30", exact: true }).locator("svg"),
+      submenu.getByRole("menuitemradio", { name: "10", exact: true }).locator("svg"),
     ).toHaveCount(1);
     await expect(
-      submenu.getByRole("menuitemradio", { name: "10", exact: true }).locator("svg"),
+      submenu.getByRole("menuitemradio", { name: "20", exact: true }).locator("svg"),
     ).toHaveCount(0);
-    await submenu.getByRole("menuitemradio", { name: "10", exact: true }).click();
+    await submenu.getByRole("menuitemradio", { name: "20", exact: true }).click();
     await expect(page.getByRole("menu", { name: "View Settings" })).toHaveCount(0);
 
     // router.push settles asynchronously, so the address is polled, not read once.
-    await expect.poll(() => new URL(page.url()).searchParams.get("per_page")).toBe("10");
+    await expect.poll(() => new URL(page.url()).searchParams.get("per_page")).toBe("20");
     await expect.poll(() => new URL(page.url()).searchParams.get("page")).toBeNull();
-    await expect(rows).toHaveCount(10);
-    expect(await rangeEnds(page)).toEqual(["1", "10"]);
+    await expect(rows).toHaveCount(20);
+    expect(await rangeEnds(page)).toEqual(["1", "20"]);
 
     // Reopening marks the stored size.
     const again = await openSubmenu(page, "Records Per Page");
-    await expect(again.getByRole("menuitemradio", { name: "10", exact: true })).toHaveAttribute(
+    await expect(again.getByRole("menuitemradio", { name: "20", exact: true })).toHaveAttribute(
       "aria-checked",
       "true",
     );
@@ -102,12 +102,12 @@ test.describe("Leads list View Settings", () => {
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();
     expect(new URL(page.url()).searchParams.get("per_page")).toBeNull();
-    await expect(rows).toHaveCount(10);
-    expect(await rangeEnds(page)).toEqual(["1", "10"]);
+    await expect(rows).toHaveCount(20);
+    expect(await rangeEnds(page)).toEqual(["1", "20"]);
 
     // A reload keeps it too.
     await page.reload();
-    await expect(rows).toHaveCount(10);
+    await expect(rows).toHaveCount(20);
   });
 
   test("Wrap Text off keeps one line and stays off after a reload", async ({ page }) => {
@@ -312,6 +312,7 @@ test.describe("Leads list View Settings", () => {
     await expect(highlighted).toHaveCSS("background-color", "rgb(240, 244, 252)");
     await expect(highlighted).toHaveCSS("height", "30px");
 
+    await perPage.focus();
     await page.keyboard.press("ArrowRight");
     const submenu = page.getByRole("menu", { name: "Records Per Page" });
     await expect(submenu).toBeVisible();

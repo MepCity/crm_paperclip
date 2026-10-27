@@ -30,7 +30,7 @@ test("Campaigns shell entry, views, columns and sorting", async ({ page }) => {
 
   // CL-02 menu
   await list.getByRole("button", { name: "Custom views" }).click();
-  await expect(page.getByRole("menuitem")).toHaveCount(8);
+  await expect(page.getByRole("menuitem")).toHaveCount(9);
   await page.getByRole("menuitem", { name: "All Active Campaigns", exact: true }).click();
   await expect(list.locator("[data-view-pill]")).toHaveText("All Active Campaigns");
 

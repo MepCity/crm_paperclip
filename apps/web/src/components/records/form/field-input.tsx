@@ -22,6 +22,8 @@ import { Switch } from "@/components/ui/switch";
 import { TextArea } from "@/components/ui/text-area";
 import { TextCalendarField } from "@/components/ui/text-calendar-field";
 import { TextField, type TextFieldProps } from "@/components/ui/text-field";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import type { ClientRecordService } from "@/lib/api/client/provider";
 import { useFormat } from "@/lib/format-context";
 import { numberInputLocale } from "@/lib/locale";
@@ -214,6 +216,8 @@ export function FieldInput({
   participantModules,
   laterModule,
 }: FieldInputProps) {
+  const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
   const orgFormat = useFormat();
   const controlId = id ?? field.apiName;
   const common = {
@@ -506,7 +510,7 @@ export function FieldInput({
                     }}
                     options={lookupTargets.map((module) => ({
                       value: module,
-                      label: moduleSingularLabel(module),
+                      label: adapter.getModuleSingular(module, moduleSingularLabel(module)),
                     }))}
                     disabled={common.isDisabled}
                   />
@@ -611,7 +615,10 @@ export function FieldInput({
           onChange={(next) => onChange(reminderValue(next))}
           options={[
             { value: null, label: "-None-" },
-            ...REMINDER_OFFSETS.map((offset) => ({ value: offset.id, label: offset.label })),
+            ...REMINDER_OFFSETS.map((offset) => ({
+              value: offset.id,
+              label: t(`records.reminders.${offset.id}`),
+            })),
           ]}
           disabled={common.isDisabled}
           inline={inline}

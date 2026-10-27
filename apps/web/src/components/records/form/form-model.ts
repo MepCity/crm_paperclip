@@ -289,7 +289,7 @@ export interface FormRules {
   /** Field column order overrides when service layout columns do not match the reference form. */
   fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
   /** Initial field to focus when opening create form (defaults to owner). */
-  initialFocus?: string;
+  initialFocus?: string | false;
   defaultValues?:
     | Readonly<Record<string, FieldValue>>
     | ((metadata?: ModuleMetadata) => Readonly<Record<string, FieldValue>>);

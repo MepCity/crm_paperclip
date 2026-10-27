@@ -8,6 +8,8 @@ import { Icons } from "@/components/ui/icon";
 import { laterModuleProps, resolveLaterModule } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { SplitButton } from "@/components/ui/split-button";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
+import { useRecordLabel } from "@/i18n/record-labels";
 import {
   ACTIVITY_ADD_NEW_ENTRIES,
   type ActivityModule,
@@ -54,6 +56,8 @@ function ActivityAddNew({
 }
 
 export function RelatedListCard({ definition, context }: RelatedListCardProps) {
+  const recordLabel = useRecordLabel();
+  const adapter = useMetadataDisplayAdapter();
   const {
     id,
     title,
@@ -106,7 +110,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
       return (
         <ActivityAddNew
           key={ctrl.id}
-          label={ctrl.label}
+          label={recordLabel(ctrl.label)}
           orgSlug={context.orgSlug}
           module={context.module}
           record={context.record}
@@ -118,7 +122,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
       return (
         <SplitButton
           key={ctrl.id}
-          label={ctrl.label}
+          label={recordLabel(ctrl.label)}
           laterModule={laterMod}
           moreLaterModule={moreLaterMod}
           items={
@@ -150,7 +154,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
           laterModule={laterMod}
           onPress={ctrl.onAction}
         >
-          <span>{ctrl.label}</span>
+          <span>{recordLabel(ctrl.label)}</span>
           <Icons.chevronDown aria-hidden className="size-3 text-(--color-form-caret)" />
         </Button>
       );
@@ -166,7 +170,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
           key={ctrl.id}
           variant="icon"
           size="compact"
-          aria-label={ctrl.label}
+          aria-label={recordLabel(ctrl.label)}
           laterModule={laterMod}
           onPress={ctrl.onAction}
         >
@@ -183,7 +187,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
         laterModule={laterMod}
         onPress={ctrl.onAction}
       >
-        <span data-related-action-label>{ctrl.label}</span>
+        <span data-related-action-label>{recordLabel(ctrl.label)}</span>
       </Button>
     );
   }
@@ -224,7 +228,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
                 </th>
                 {tableColumns.map((col) => (
                   <th key={col.id} className="px-2 py-2 font-semibold text-text-strong">
-                    {col.label}
+                    {adapter.getNamedLabel(col.label)}
                   </th>
                 ))}
               </tr>
@@ -348,7 +352,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
             ) : null}
           </div>
           <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-            {emptyStateText}
+            {emptyStateText ? recordLabel(emptyStateText) : emptyStateText}
           </div>
         </div>
       ) : socialLinks && socialLinks.length > 0 ? (
@@ -396,19 +400,19 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
                 </th>
                 {tableColumns.map((col) => (
                   <th key={col.id} className="px-2 py-2 font-semibold text-text-strong">
-                    {col.label}
+                    {adapter.getNamedLabel(col.label)}
                   </th>
                 ))}
               </tr>
             </thead>
           </table>
           <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-            {emptyStateText}
+            {emptyStateText ? recordLabel(emptyStateText) : emptyStateText}
           </div>
         </div>
       ) : (
         <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-          {emptyStateText}
+          {emptyStateText ? recordLabel(emptyStateText) : emptyStateText}
         </div>
       )}
     </section>

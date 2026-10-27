@@ -173,3 +173,13 @@ test("the applied field is marked in the list and picking one keeps the Sort dia
   await user.click(screen.getByRole("button", { name: "Apply" }));
   expect(apply.mock.calls).toEqual([[{ field: "Full_Name", order: "asc" }]]);
 });
+
+test("shows an active criterion count and direction, clearing them for None", () => {
+  const { container, rerender } = render(
+    <SortPopover fields={fields} sort={{ field: "Company", order: "desc" }} onApply={vi.fn()} />,
+  );
+  expect(container.querySelector("[data-sort-count]")?.textContent).toBe("1");
+  expect(container.querySelector("[data-sort-direction]")?.textContent).toBe("↓");
+  rerender(<SortPopover fields={fields} sort={null} onApply={vi.fn()} />);
+  expect(container.querySelector("[data-sort-count]")).toBeNull();
+});

@@ -29,6 +29,7 @@ export function RecordFormInventoryFooter({
   alignEnd?: boolean;
   pinBottom?: boolean;
 }) {
+  const t = useUiTranslations();
   return (
     <footer
       className="record-form-inventory-footer"
@@ -36,7 +37,9 @@ export function RecordFormInventoryFooter({
       data-pin-bottom={pinBottom || undefined}
       data-record-form-inventory-footer
     >
-      <span className="record-form-inventory-footer__label">Create Form Views :</span>
+      <span className="record-form-inventory-footer__label">
+        {t("records.chrome.createFormViews")}
+      </span>
       <Button
         type="button"
         variant="ghost"
@@ -44,11 +47,11 @@ export function RecordFormInventoryFooter({
         laterModule="M11"
         className="record-form-standard-view"
       >
-        Standard View
+        {t("records.chrome.standardView")}
         <Icons.chevronDown className="record-form-standard-view__icon" aria-hidden />
       </Button>
       <Button type="button" variant="ghost" size="md" laterModule="M11">
-        Create a custom form page
+        {t("records.chrome.customForm")}
       </Button>
     </footer>
   );

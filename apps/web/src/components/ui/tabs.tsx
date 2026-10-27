@@ -148,7 +148,7 @@ export function TabList<T extends object>({
       className={composeRenderProps(
         className,
         (extra) =>
-          `${appearance === "record" ? "flex shrink-0 items-center w-(--size-record-tab-width) h-(--size-record-tab-height) p-(--size-record-tab-inset) rounded-full border border-panel-border bg-surface" : tabListClass} ${extra ?? ""}`,
+          `${appearance === "record" ? "flex shrink-0 items-center min-w-(--size-record-tab-width) w-max h-(--size-record-tab-height) p-(--size-record-tab-inset) rounded-full border border-panel-border bg-surface" : tabListClass} ${extra ?? ""}`,
       )}
     />
   );
@@ -175,7 +175,7 @@ export function Tab({
       className={composeRenderProps(
         className,
         (extra) =>
-          `${appearance === "record" ? "flex flex-1 items-center justify-center h-(--size-record-tab-slice-height) text-lg font-normal text-text rounded-full border border-transparent outline-none data-selected:flex-none data-selected:w-(--size-record-tab-slice-width) data-selected:bg-(--color-record-tab-selected) data-selected:border-(--color-record-tab-border) data-selected:text-text-strong data-selected:font-semibold data-focus-visible:ring-2 data-focus-visible:ring-focus-ring" : tabClass} ${extra ?? ""}`,
+          `${appearance === "record" ? "flex flex-1 whitespace-nowrap px-2 items-center justify-center h-(--size-record-tab-slice-height) text-lg font-normal text-text rounded-full border border-transparent outline-none data-selected:flex-none data-selected:w-(--size-record-tab-slice-width) data-selected:bg-(--color-record-tab-selected) data-selected:border-(--color-record-tab-border) data-selected:text-text-strong data-selected:font-semibold data-focus-visible:ring-2 data-focus-visible:ring-focus-ring" : tabClass} ${extra ?? ""}`,
       )}
     />
   );

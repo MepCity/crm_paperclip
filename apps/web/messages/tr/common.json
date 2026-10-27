@@ -9,7 +9,8 @@
     "search": "Ara",
     "retry": "Yeniden dene",
     "confirm": "Onayla",
-    "saveAndNew": "Kaydet ve Yeni"
+    "saveAndNew": "Kaydet ve Yeni",
+    "add": "Ekle"
   },
   "loading": "Yükleniyor",
   "error": "Bir hata oluştu. Lütfen yeniden deneyin.",

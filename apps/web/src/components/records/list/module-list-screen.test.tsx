@@ -1430,23 +1430,23 @@ describe("ModuleListScreen", () => {
     const { perPageSizesRequested } = screenWithFixture();
     await waitFor(() => expect(screen.getByRole("table", { name: "Records" })).toBeTruthy());
 
-    await openViewSubmenu(user, "Records Per Page 30");
-    await user.click(screen.getByRole("menuitemradio", { name: "10" }));
+    await openViewSubmenu(user, "Records Per Page 10");
+    await user.click(screen.getByRole("menuitemradio", { name: "20" }));
 
     const href = navigation.push.mock.calls.at(-1)?.[0] ?? "";
     const params = new URLSearchParams(String(href).split("?")[1] ?? "");
-    expect(params.get("per_page")).toBe("10");
+    expect(params.get("per_page")).toBe("20");
     expect(params.get("page")).toBeNull();
     expect(params.get("sort_by")).toBe("Company");
     await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
-    expect(perPageSizesRequested()).toContain(10);
+    expect(perPageSizesRequested()).toContain(20);
   });
 
   it("uses the stored page size when the address carries no per_page", async () => {
     const user = userEvent.setup();
     screenWithFixture();
     await waitFor(() => expect(screen.getByRole("table", { name: "Records" })).toBeTruthy());
-    await openViewSubmenu(user, "Records Per Page 30");
+    await openViewSubmenu(user, "Records Per Page 10");
     await user.click(screen.getByRole("menuitemradio", { name: "20" }));
 
     cleanup();

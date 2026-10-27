@@ -40,10 +40,10 @@ test("Calls shell entry, single tab, view menu with search, columns and sorting"
   for (const name of ["Subject", "Call Type", "Call Start Time", "Call Duration"]) {
     await expect(list.getByRole("columnheader", { name, exact: true })).toBeVisible();
   }
-  await expect(list.getByRole("link", { name: "Create Call" })).toHaveAttribute(
-    "href",
-    /\/tab\/Calls\/create$/,
-  );
+  await list.getByRole("button", { name: "Create Call", exact: true }).click();
+  await expect(page.getByRole("menuitem", { name: "Schedule a call", exact: true })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Log a call", exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
 
   // CL-02: view menu
   await list.getByRole("button", { name: "Custom views" }).click();

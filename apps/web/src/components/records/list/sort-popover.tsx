@@ -54,9 +54,25 @@ export function SortPopover({ fields, sort, onApply }: SortPopoverProps) {
   };
   return (
     <PopoverTrigger isOpen={open} onOpenChange={changeOpen}>
-      <Button variant="ghost" size="listToolbar" className="gap-1" data-part="sort">
+      <Button
+        variant="ghost"
+        size="listToolbar"
+        className="gap-1"
+        data-part="sort"
+        aria-label={t("records.list.sort")}
+      >
         <Icons.sort aria-hidden="true" className="h-4 w-4" />
         {t("records.list.sort")}
+        {sort ? (
+          <>
+            <span data-sort-count className="rounded bg-surface-selected px-1 text-xs">
+              1
+            </span>
+            <span aria-hidden data-sort-direction>
+              {sort.order === "asc" ? "↑" : "↓"}
+            </span>
+          </>
+        ) : null}
       </Button>
       <Popover
         title="Sort"

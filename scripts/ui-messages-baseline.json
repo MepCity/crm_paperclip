@@ -529,37 +529,31 @@
   },
   {
     "file": "apps/web/src/components/records/attachments/attach-source-menu.tsx",
-    "line": 15,
+    "line": 17,
     "column": 26,
     "hash": "264653366da056f6"
   },
   {
     "file": "apps/web/src/components/records/attachments/attach-source-menu.tsx",
-    "line": 16,
+    "line": 18,
     "column": 29,
     "hash": "b4e929d8bcfe0418"
   },
   {
     "file": "apps/web/src/components/records/attachments/attach-source-menu.tsx",
-    "line": 17,
+    "line": 19,
     "column": 25,
     "hash": "2efbfc2ca7460f93"
   },
   {
     "file": "apps/web/src/components/records/attachments/attach-source-menu.tsx",
-    "line": 18,
+    "line": 20,
     "column": 24,
     "hash": "7eb7564aa28a812e"
   },
   {
     "file": "apps/web/src/components/records/attachments/attach-source-menu.tsx",
-    "line": 31,
-    "column": 41,
-    "hash": "d406ade2958cb5b6"
-  },
-  {
-    "file": "apps/web/src/components/records/attachments/attach-source-menu.tsx",
-    "line": 35,
+    "line": 39,
     "column": 20,
     "hash": "26ba866a6f0c245a"
   },
@@ -571,85 +565,67 @@
   },
   {
     "file": "apps/web/src/components/records/attachments/attachments-card.tsx",
-    "line": 74,
-    "column": 18,
-    "hash": "634de114775082f0"
-  },
-  {
-    "file": "apps/web/src/components/records/attachments/attachments-card.tsx",
-    "line": 80,
-    "column": 62,
-    "hash": "634de114775082f0"
-  },
-  {
-    "file": "apps/web/src/components/records/attachments/attachments-card.tsx",
-    "line": 97,
+    "line": 101,
     "column": 22,
     "hash": "4118deee6e13aa90"
   },
   {
     "file": "apps/web/src/components/records/attachments/attachments-card.tsx",
-    "line": 107,
+    "line": 111,
     "column": 85,
     "hash": "ba3bbbe10d8bef66"
   },
   {
     "file": "apps/web/src/components/records/attachments/attachments-card.tsx",
-    "line": 115,
-    "column": 85,
-    "hash": "850b21ebcba0e110"
-  },
-  {
-    "file": "apps/web/src/components/records/attachments/attachments-card.tsx",
-    "line": 123,
+    "line": 127,
     "column": 86,
     "hash": "ca4c37cb4476ae2b"
   },
   {
     "file": "apps/web/src/components/records/attachments/attachments-card.tsx",
-    "line": 126,
+    "line": 130,
     "column": 86,
     "hash": "6cc5d49debffaee0"
   },
   {
     "file": "apps/web/src/components/records/attachments/attachments-card.tsx",
-    "line": 129,
+    "line": 133,
     "column": 86,
     "hash": "55ad74b6781d9ccb"
   },
   {
     "file": "apps/web/src/components/records/attachments/attachments-card.tsx",
-    "line": 132,
+    "line": 136,
     "column": 86,
     "hash": "1af851907331c0ed"
   },
   {
     "file": "apps/web/src/components/records/attachments/attachments-card.tsx",
-    "line": 136,
+    "line": 140,
     "column": 45,
     "hash": "ff8059dc6752afdd"
   },
   {
     "file": "apps/web/src/components/records/attachments/attachments-card.tsx",
-    "line": 244,
+    "line": 248,
     "column": 15,
     "hash": "015affc8336c7222"
   },
   {
     "file": "apps/web/src/components/records/attachments/attachments-card.tsx",
-    "line": 245,
+    "line": 249,
     "column": 17,
     "hash": "f03274c6cb78f508"
   },
   {
     "file": "apps/web/src/components/records/attachments/attachments-card.tsx",
-    "line": 246,
+    "line": 250,
     "column": 22,
     "hash": "e2d0a54968ead24e"
   },
   {
     "file": "apps/web/src/components/records/attachments/attachments-card.tsx",
-    "line": 247,
+    "line": 251,
     "column": 21,
     "hash": "19766ed6ccb2f4a3"
   },
@@ -736,216 +712,6 @@
     "line": 176,
     "column": 43,
     "hash": "9cbae3a2135e184e"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-manage-dialog.tsx",
-    "line": 47,
-    "column": 62,
-    "hash": "e8a4b8e7f1bc407e"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-manage-dialog.tsx",
-    "line": 51,
-    "column": 60,
-    "hash": "955bc5b3ae89c13b"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-manage-dialog.tsx",
-    "line": 54,
-    "column": 48,
-    "hash": "85ad1cc78cea6e9a"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-manage-dialog.tsx",
-    "line": 63,
-    "column": 32,
-    "hash": "14ac200e93f72412"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-manage-dialog.tsx",
-    "line": 64,
-    "column": 28,
-    "hash": "da7a321c73c90d88"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-manage-dialog.tsx",
-    "line": 65,
-    "column": 28,
-    "hash": "42ead8b9b8f33a61"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-manage-dialog.tsx",
-    "line": 66,
-    "column": 28,
-    "hash": "85f29c798f50bbb8"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-manage-dialog.tsx",
-    "line": 67,
-    "column": 28,
-    "hash": "c6ea0b218d18f322"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-manage-dialog.tsx",
-    "line": 68,
-    "column": 28,
-    "hash": "dfd60b9aa5ca29f4"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 96,
-    "column": 20,
-    "hash": "3fc938c950bf72a4"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 115,
-    "column": 14,
-    "hash": "767284bd775a59f3"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 122,
-    "column": 14,
-    "hash": "dac16aea0be7bc53"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 123,
-    "column": 37,
-    "hash": "197fb365f3bb4263"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 127,
-    "column": 34,
-    "hash": "07e3bddf698b961b"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 140,
-    "column": 62,
-    "hash": "0126e9450e5c8692"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 143,
-    "column": 48,
-    "hash": "c5b416c2b3efec25"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 143,
-    "column": 83,
-    "hash": "b79cac926e0b2e34"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 149,
-    "column": 58,
-    "hash": "f60e85a8d8f1fe79"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 151,
-    "column": 21,
-    "hash": "f60e85a8d8f1fe79"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 180,
-    "column": 29,
-    "hash": "c4a9f2cd40748a02"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 200,
-    "column": 60,
-    "hash": "02ade3581f6e74f2"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 202,
-    "column": 23,
-    "hash": "02ade3581f6e74f2"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 208,
-    "column": 46,
-    "hash": "bdc0857b99a9bdc9"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 209,
-    "column": 47,
-    "hash": "da2e5dc515b188dc"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 211,
-    "column": 53,
-    "hash": "682e39d68f55e7fd"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 216,
-    "column": 51,
-    "hash": "5b8ef4ed397a459c"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 218,
-    "column": 33,
-    "hash": "86856b227bd26dce"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 219,
-    "column": 52,
-    "hash": "e674447337e83c13"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 222,
-    "column": 25,
-    "hash": "3fe51f4951917d60"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 229,
-    "column": 32,
-    "hash": "e674447337e83c13"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 246,
-    "column": 33,
-    "hash": "062d07852344a07b"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 247,
-    "column": 52,
-    "hash": "57fd7a0cf33f2666"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 249,
-    "column": 32,
-    "hash": "57fd7a0cf33f2666"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 285,
-    "column": 58,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/components/records/board/kanban-settings-dialog.tsx",
-    "line": 288,
-    "column": 75,
-    "hash": "1509f561f2416598"
   },
   {
     "file": "apps/web/src/components/records/campaigns/add-to-campaigns-dialog.tsx",
@@ -1381,110 +1147,68 @@
   },
   {
     "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 58,
+    "line": 60,
     "column": 27,
     "hash": "b3a60e61a5233d05"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 59,
+    "line": 61,
     "column": 30,
     "hash": "bca705b63a3cf585"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 60,
+    "line": 62,
     "column": 27,
     "hash": "b73a5e2ca6458665"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 136,
+    "line": 140,
     "column": 18,
     "hash": "f2d6f282280807c8"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 141,
+    "line": 145,
     "column": 15,
     "hash": "295792b505b5a691"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 157,
+    "line": 161,
     "column": 29,
     "hash": "0d06623e0f35ddd1"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 158,
-    "column": 26,
-    "hash": "170322a32f3c35b2"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 159,
-    "column": 53,
-    "hash": "1d432f58690c2b4a"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 167,
+    "line": 171,
     "column": 31,
     "hash": "5cdade423526da32"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 189,
-    "column": 71,
-    "hash": "5908bccf22118371"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 223,
+    "line": 227,
     "column": 56,
     "hash": "ccbc71b9028c6abd"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 230,
+    "line": 234,
     "column": 57,
     "hash": "c510f3fa8c8a90a0"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 238,
-    "column": 16,
-    "hash": "d0407f5d1f831612"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 244,
+    "line": 248,
     "column": 31,
     "hash": "c0cf0be0d5422316"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 245,
-    "column": 34,
-    "hash": "c0cf0be0d5422316"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 247,
-    "column": 48,
-    "hash": "617d8e0c9d069ad6"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 268,
+    "line": 276,
     "column": 27,
-    "hash": "c7634afcce2a39ab"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
-    "line": 269,
-    "column": 30,
     "hash": "c7634afcce2a39ab"
   },
   {
@@ -1543,27 +1267,15 @@
   },
   {
     "file": "apps/web/src/components/records/detail/contact-hierarchy-modal.tsx",
-    "line": 255,
-    "column": 95,
-    "hash": "efe3517a5d17ed69"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/contact-hierarchy-modal.tsx",
-    "line": 262,
+    "line": 264,
     "column": 26,
     "hash": "85ad1cc78cea6e9a"
   },
   {
     "file": "apps/web/src/components/records/detail/contact-hierarchy-modal.tsx",
-    "line": 271,
+    "line": 273,
     "column": 89,
     "hash": "47d2a515ef2f05b8"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/contact-hierarchy-modal.tsx",
-    "line": 277,
-    "column": 41,
-    "hash": "efe3517a5d17ed69"
   },
   {
     "file": "apps/web/src/components/records/detail/contact-roles-card-body.tsx",
@@ -1591,13 +1303,13 @@
   },
   {
     "file": "apps/web/src/components/records/detail/detail-field-row.tsx",
-    "line": 176,
+    "line": 178,
     "column": 28,
     "hash": "d6e645b7d2b2da64"
   },
   {
     "file": "apps/web/src/components/records/detail/details-card.tsx",
-    "line": 51,
+    "line": 53,
     "column": 18,
     "hash": "7819dbc001fb1015"
   },
@@ -1675,31 +1387,25 @@
   },
   {
     "file": "apps/web/src/components/records/detail/related-deals-card-body.tsx",
-    "line": 69,
+    "line": 73,
     "column": 83,
     "hash": "47d2a515ef2f05b8"
   },
   {
-    "file": "apps/web/src/components/records/detail/related-deals-card-body.tsx",
-    "line": 87,
-    "column": 83,
-    "hash": "6e2ea637b30eadce"
-  },
-  {
     "file": "apps/web/src/components/records/detail/related-list-card.tsx",
-    "line": 223,
+    "line": 227,
     "column": 45,
     "hash": "ca4067071fcf6185"
   },
   {
     "file": "apps/web/src/components/records/detail/related-list-card.tsx",
-    "line": 273,
+    "line": 277,
     "column": 42,
     "hash": "d6e645b7d2b2da64"
   },
   {
     "file": "apps/web/src/components/records/detail/related-list-card.tsx",
-    "line": 395,
+    "line": 399,
     "column": 45,
     "hash": "ca4067071fcf6185"
   },
@@ -1783,37 +1489,31 @@
   },
   {
     "file": "apps/web/src/components/records/detail/timeline/timeline-history.tsx",
-    "line": 128,
+    "line": 132,
     "column": 35,
     "hash": "a960c435c77f666c"
   },
   {
     "file": "apps/web/src/components/records/detail/timeline/timeline-history.tsx",
-    "line": 130,
+    "line": 134,
     "column": 27,
     "hash": "b99f2969347b9565"
   },
   {
     "file": "apps/web/src/components/records/detail/timeline/timeline-history.tsx",
-    "line": 132,
+    "line": 136,
     "column": 51,
     "hash": "942087cc2d41e013"
   },
   {
-    "file": "apps/web/src/components/records/detail/timeline/timeline-history.tsx",
-    "line": 138,
-    "column": 81,
-    "hash": "2bb5f8a9c05c36fc"
-  },
-  {
     "file": "apps/web/src/components/records/detail/timeline/timeline-surface.tsx",
-    "line": 21,
+    "line": 23,
     "column": 76,
     "hash": "9dcff98e275f0cb9"
   },
   {
     "file": "apps/web/src/components/records/detail/timeline/timeline-surface.tsx",
-    "line": 22,
+    "line": 24,
     "column": 71,
     "hash": "b02ea1cc7c92d8e9"
   },
@@ -1927,57 +1627,39 @@
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 126,
+    "line": 128,
     "column": 27,
     "hash": "6e11774990b553e6"
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 294,
+    "line": 298,
     "column": 72,
     "hash": "a424e33d90931d1e"
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 367,
+    "line": 371,
     "column": 72,
     "hash": "a424e33d90931d1e"
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 392,
+    "line": 396,
     "column": 22,
     "hash": "74d2d951a827ab7f"
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 393,
+    "line": 397,
     "column": 76,
     "hash": "64ea62de2928a9ac"
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 613,
+    "line": 617,
     "column": 35,
     "hash": "6e11774990b553e6"
-  },
-  {
-    "file": "apps/web/src/components/records/form/participants-input.tsx",
-    "line": 50,
-    "column": 22,
-    "hash": "9fd728c66c9a256b"
-  },
-  {
-    "file": "apps/web/src/components/records/form/participants-input.tsx",
-    "line": 52,
-    "column": 10,
-    "hash": "c007258c23b0c011"
-  },
-  {
-    "file": "apps/web/src/components/records/form/participants-input.tsx",
-    "line": 74,
-    "column": 16,
-    "hash": "c3812fc4acb861d5"
   },
   {
     "file": "apps/web/src/components/records/form/record-form-inventory-chrome.tsx",
@@ -1990,24 +1672,6 @@
     "line": 20,
     "column": 62,
     "hash": "1fb688efabcc7ac4"
-  },
-  {
-    "file": "apps/web/src/components/records/form/record-form-inventory-chrome.tsx",
-    "line": 39,
-    "column": 61,
-    "hash": "f44df12c1827cd75"
-  },
-  {
-    "file": "apps/web/src/components/records/form/record-form-inventory-chrome.tsx",
-    "line": 46,
-    "column": 8,
-    "hash": "b1391a0d58199773"
-  },
-  {
-    "file": "apps/web/src/components/records/form/record-form-inventory-chrome.tsx",
-    "line": 50,
-    "column": 73,
-    "hash": "387ba9ef94205512"
   },
   {
     "file": "apps/web/src/components/records/form/select-record-dialog.tsx",
@@ -2323,49 +1987,49 @@
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 830,
+    "line": 836,
     "column": 31,
     "hash": "2836cfca8acae68d"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 831,
+    "line": 837,
     "column": 33,
     "hash": "5a9133cebfab7531"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 837,
+    "line": 843,
     "column": 30,
     "hash": "75c4d64dd295ea85"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 840,
+    "line": 846,
     "column": 14,
     "hash": "fee59ce0ce197df2"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 843,
+    "line": 849,
     "column": 42,
     "hash": "d22a513c3f7305ec"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 844,
+    "line": 850,
     "column": 40,
     "hash": "97330d2cf2b46bb8"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 845,
+    "line": 851,
     "column": 32,
     "hash": "07c60b2f79382eb1"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 846,
+    "line": 852,
     "column": 34,
     "hash": "86a94a959b984925"
   },
@@ -2521,49 +2185,49 @@
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 62,
+    "line": 78,
     "column": 15,
     "hash": "bec69036aa27e7fa"
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 84,
+    "line": 100,
     "column": 19,
     "hash": "6be090825c997103"
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 87,
+    "line": 103,
     "column": 35,
     "hash": "77184595bde3befc"
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 88,
+    "line": 104,
     "column": 36,
     "hash": "79479a6c76d8416a"
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 101,
+    "line": 117,
     "column": 85,
     "hash": "19766ed6ccb2f4a3"
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 111,
+    "line": 127,
     "column": 12,
     "hash": "31e392d1c0378bec"
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 131,
+    "line": 147,
     "column": 29,
     "hash": "dc937b59892604f5"
   },
   {
     "file": "apps/web/src/components/records/list/sort-popover.tsx",
-    "line": 139,
+    "line": 155,
     "column": 13,
     "hash": "6d2227555fccff99"
   },
@@ -2608,90 +2272,6 @@
     "line": 162,
     "column": 25,
     "hash": "9535de6ad7fd85fb"
-  },
-  {
-    "file": "apps/web/src/components/records/list/view-settings-menu.tsx",
-    "line": 61,
-    "column": 20,
-    "hash": "0f649a138b92b97f"
-  },
-  {
-    "file": "apps/web/src/components/records/list/view-settings-menu.tsx",
-    "line": 69,
-    "column": 20,
-    "hash": "0f649a138b92b97f"
-  },
-  {
-    "file": "apps/web/src/components/records/list/view-settings-menu.tsx",
-    "line": 81,
-    "column": 49,
-    "hash": "c909fac0234804ae"
-  },
-  {
-    "file": "apps/web/src/components/records/list/view-settings-menu.tsx",
-    "line": 107,
-    "column": 21,
-    "hash": "955303856d4b689f"
-  },
-  {
-    "file": "apps/web/src/components/records/list/view-settings-menu.tsx",
-    "line": 130,
-    "column": 23,
-    "hash": "78f5748d35c323c6"
-  },
-  {
-    "file": "apps/web/src/components/records/list/view-settings-menu.tsx",
-    "line": 133,
-    "column": 12,
-    "hash": "78f5748d35c323c6"
-  },
-  {
-    "file": "apps/web/src/components/records/list/view-tab-strip.tsx",
-    "line": 86,
-    "column": 62,
-    "hash": "2a5a4106cc5fadac"
-  },
-  {
-    "file": "apps/web/src/components/records/list/view-tab-strip.tsx",
-    "line": 90,
-    "column": 24,
-    "hash": "2a5a4106cc5fadac"
-  },
-  {
-    "file": "apps/web/src/components/records/list/view-tab-strip.tsx",
-    "line": 98,
-    "column": 25,
-    "hash": "43211114262d5e86"
-  },
-  {
-    "file": "apps/web/src/components/records/list/view-tab-strip.tsx",
-    "line": 99,
-    "column": 31,
-    "hash": "49c266baaaa70981"
-  },
-  {
-    "file": "apps/web/src/components/records/list/view-tab-strip.tsx",
-    "line": 112,
-    "column": 68,
-    "hash": "a008360d11a452e4"
-  },
-  {
-    "file": "apps/web/src/components/records/list/view-tab-strip.tsx",
-    "line": 126,
-    "column": 37,
-    "hash": "9c19efd1b19782a0"
-  },
-  {
-    "file": "apps/web/src/components/records/list/view-tab-strip.tsx",
-    "line": 128,
-    "column": 50,
-    "hash": "0970934781eb4503"
-  },
-  {
-    "file": "apps/web/src/components/records/list/view-tab-strip.tsx",
-    "line": 131,
-    "column": 53,
-    "hash": "1eb0dc976de43637"
   },
   {
     "file": "apps/web/src/components/records/list/view-type-switcher.tsx",
@@ -4567,12 +4147,6 @@
   },
   {
     "file": "apps/web/src/components/shell/global-search.tsx",
-    "line": 110,
-    "column": 29,
-    "hash": "8c3920ddef7c87df"
-  },
-  {
-    "file": "apps/web/src/components/shell/global-search.tsx",
     "line": 115,
     "column": 86,
     "hash": "486ccb299d1b31e2"
@@ -4621,25 +4195,25 @@
   },
   {
     "file": "apps/web/src/components/shell/global-search.tsx",
-    "line": 278,
+    "line": 279,
     "column": 20,
     "hash": "4a64aa74a3ec92ca"
   },
   {
     "file": "apps/web/src/components/shell/global-search.tsx",
-    "line": 284,
+    "line": 285,
     "column": 15,
     "hash": "291842b9a7592311"
   },
   {
     "file": "apps/web/src/components/shell/global-search.tsx",
-    "line": 291,
+    "line": 292,
     "column": 17,
     "hash": "291842b9a7592311"
   },
   {
     "file": "apps/web/src/components/shell/global-search.tsx",
-    "line": 296,
+    "line": 297,
     "column": 23,
     "hash": "291842b9a7592311"
   },
@@ -6175,37 +5749,37 @@
   },
   {
     "file": "apps/web/src/modules/calls/list-config.ts",
-    "line": 68,
+    "line": 70,
     "column": 37,
     "hash": "631916d1e0e8561f"
   },
   {
     "file": "apps/web/src/modules/calls/list-config.ts",
-    "line": 69,
+    "line": 71,
     "column": 35,
     "hash": "530a52df6978414f"
   },
   {
     "file": "apps/web/src/modules/calls/list-config.ts",
-    "line": 70,
+    "line": 72,
     "column": 35,
     "hash": "5a264945a25df60f"
   },
   {
     "file": "apps/web/src/modules/calls/list-config.ts",
-    "line": 71,
+    "line": 73,
     "column": 28,
     "hash": "7a3cc33f849676fc"
   },
   {
     "file": "apps/web/src/modules/calls/list-config.ts",
-    "line": 72,
+    "line": 74,
     "column": 30,
     "hash": "171e90a1a565a89b"
   },
   {
     "file": "apps/web/src/modules/calls/list-config.ts",
-    "line": 73,
+    "line": 75,
     "column": 29,
     "hash": "1029a1a7a81b987e"
   },
@@ -7435,69 +7009,21 @@
   },
   {
     "file": "apps/web/src/modules/deals/deals-contact-person-summary.tsx",
-    "line": 47,
+    "line": 49,
     "column": 18,
     "hash": "da2de47217da08a7"
   },
   {
     "file": "apps/web/src/modules/deals/deals-contact-person-summary.tsx",
-    "line": 51,
-    "column": 55,
-    "hash": "2eff260fe579c133"
-  },
-  {
-    "file": "apps/web/src/modules/deals/deals-contact-person-summary.tsx",
-    "line": 70,
+    "line": 72,
     "column": 49,
     "hash": "b1d6b91b67c2afa5"
   },
   {
-    "file": "apps/web/src/modules/deals/deals-kanban-toolbar.tsx",
-    "line": 56,
-    "column": 40,
-    "hash": "164a42c877d4430e"
-  },
-  {
-    "file": "apps/web/src/modules/deals/deals-kanban-toolbar.tsx",
-    "line": 69,
-    "column": 22,
-    "hash": "7d7324eaaba8bf3b"
-  },
-  {
-    "file": "apps/web/src/modules/deals/deals-kanban-toolbar.tsx",
-    "line": 89,
-    "column": 40,
-    "hash": "955bc5b3ae89c13b"
-  },
-  {
-    "file": "apps/web/src/modules/deals/deals-kanban-toolbar.tsx",
-    "line": 90,
-    "column": 40,
-    "hash": "e8a4b8e7f1bc407e"
-  },
-  {
-    "file": "apps/web/src/modules/deals/deals-kanban-toolbar.tsx",
-    "line": 99,
-    "column": 20,
-    "hash": "f6275e06a1d77eb7"
-  },
-  {
-    "file": "apps/web/src/modules/deals/deals-kanban-toolbar.tsx",
-    "line": 121,
-    "column": 62,
-    "hash": "4eb8f0d6fe39c8b2"
-  },
-  {
     "file": "apps/web/src/modules/deals/deals-next-action-summary.tsx",
-    "line": 52,
+    "line": 54,
     "column": 18,
     "hash": "f0b6eeef42685c07"
-  },
-  {
-    "file": "apps/web/src/modules/deals/deals-next-action-summary.tsx",
-    "line": 56,
-    "column": 55,
-    "hash": "7a63c30ec7598b7f"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
@@ -7963,19 +7489,13 @@
   },
   {
     "file": "apps/web/src/modules/deals/deals-sales-summary.tsx",
-    "line": 26,
-    "column": 61,
-    "hash": "81205a9486995a26"
-  },
-  {
-    "file": "apps/web/src/modules/deals/deals-sales-summary.tsx",
-    "line": 28,
+    "line": 30,
     "column": 12,
     "hash": "9d4c040ce62c6674"
   },
   {
     "file": "apps/web/src/modules/deals/deals-sales-summary.tsx",
-    "line": 29,
+    "line": 31,
     "column": 12,
     "hash": "e5b03e9ee502c168"
   },
@@ -7987,19 +7507,19 @@
   },
   {
     "file": "apps/web/src/modules/deals/definition.ts",
-    "line": 54,
+    "line": 55,
     "column": 23,
     "hash": "50b0cb6154712db2"
   },
   {
     "file": "apps/web/src/modules/deals/definition.ts",
-    "line": 56,
+    "line": 57,
     "column": 34,
     "hash": "5908bccf22118371"
   },
   {
     "file": "apps/web/src/modules/deals/definition.ts",
-    "line": 74,
+    "line": 75,
     "column": 16,
     "hash": "b4b0d6b86e455ef3"
   },
@@ -8179,49 +7699,49 @@
   },
   {
     "file": "apps/web/src/modules/leads/definition.ts",
-    "line": 54,
+    "line": 55,
     "column": 23,
     "hash": "50b0cb6154712db2"
   },
   {
     "file": "apps/web/src/modules/leads/definition.ts",
-    "line": 61,
+    "line": 68,
     "column": 22,
     "hash": "5cd425f518c2e59a"
   },
   {
     "file": "apps/web/src/modules/leads/definition.ts",
-    "line": 66,
+    "line": 73,
     "column": 28,
     "hash": "464c4ffd019e1e96"
   },
   {
     "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 162,
+    "line": 176,
     "column": 61,
     "hash": "19397c3e2c2edd7d"
   },
   {
     "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 166,
+    "line": 180,
     "column": 68,
     "hash": "ba3bbbe10d8bef66"
   },
   {
     "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 211,
+    "line": 225,
     "column": 42,
     "hash": "1cf75721dd8e9616"
   },
   {
     "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 224,
+    "line": 238,
     "column": 41,
     "hash": "7e3dcd1a7c66cf9a"
   },
   {
     "file": "apps/web/src/modules/leads/lead-convert-screen.tsx",
-    "line": 247,
+    "line": 261,
     "column": 61,
     "hash": "2f72431466f219b6"
   },
@@ -8761,39 +8281,9 @@
   },
   {
     "file": "apps/web/src/modules/meetings/meeting-information-dialog.tsx",
-    "line": 191,
-    "column": 22,
-    "hash": "02c8a4b5dc80f19d"
-  },
-  {
-    "file": "apps/web/src/modules/meetings/meeting-information-dialog.tsx",
-    "line": 195,
-    "column": 67,
-    "hash": "02c8a4b5dc80f19d"
-  },
-  {
-    "file": "apps/web/src/modules/meetings/meeting-information-dialog.tsx",
-    "line": 245,
+    "line": 260,
     "column": 34,
     "hash": "47d2a515ef2f05b8"
-  },
-  {
-    "file": "apps/web/src/modules/meetings/meeting-information-dialog.tsx",
-    "line": 259,
-    "column": 18,
-    "hash": "29ecd36d72ec5d61"
-  },
-  {
-    "file": "apps/web/src/modules/meetings/meeting-information-dialog.tsx",
-    "line": 264,
-    "column": 87,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/modules/meetings/meeting-information-dialog.tsx",
-    "line": 272,
-    "column": 18,
-    "hash": "1509f561f2416598"
   },
   {
     "file": "apps/web/src/modules/meetings/meeting-participants-slot.tsx",
@@ -8821,27 +8311,9 @@
   },
   {
     "file": "apps/web/src/modules/meetings/meetings-participants-card.tsx",
-    "line": 34,
+    "line": 36,
     "column": 18,
     "hash": "b765643e85000de0"
-  },
-  {
-    "file": "apps/web/src/modules/meetings/meetings-participants-card.tsx",
-    "line": 40,
-    "column": 60,
-    "hash": "0e27279b3302db04"
-  },
-  {
-    "file": "apps/web/src/modules/meetings/meetings-participants-card.tsx",
-    "line": 48,
-    "column": 10,
-    "hash": "9fd728c66c9a256b"
-  },
-  {
-    "file": "apps/web/src/modules/meetings/meetings-participants-card.tsx",
-    "line": 57,
-    "column": 85,
-    "hash": "8310cc8e750e6f42"
   },
   {
     "file": "apps/web/src/modules/meetings/meetings-record-more-options.ts",

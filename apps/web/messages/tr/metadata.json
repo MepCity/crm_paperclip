@@ -1,21 +1,57 @@
 {
   "modules": {
-    "Leads": { "singular": "Müşteri Adayı", "plural": "Müşteri Adayları" },
-    "Contacts": { "singular": "Kişi", "plural": "Kişiler" },
-    "Accounts": { "singular": "Firma", "plural": "Firmalar" },
-    "Deals": { "singular": "Satış Fırsatı", "plural": "Satış Fırsatları" },
-    "Activities": { "singular": "Aktivite", "plural": "Aktiviteler" },
-    "Tasks": { "singular": "Görev", "plural": "Görevler" },
-    "Meetings": { "singular": "Toplantı", "plural": "Toplantılar" },
-    "Events": { "singular": "Toplantı", "plural": "Toplantılar" },
-    "Calls": { "singular": "Arama", "plural": "Aramalar" },
-    "Campaigns": { "singular": "Kampanya", "plural": "Kampanyalar" },
-    "Cases": { "singular": "Servis Dosyası", "plural": "Servis Dosyaları" },
-    "Solutions": { "singular": "Çözüm", "plural": "Çözümler" }
+    "Leads": {
+      "singular": "Müşteri Adayı",
+      "plural": "Müşteri Adayları"
+    },
+    "Contacts": {
+      "singular": "Kişi",
+      "plural": "Kişiler"
+    },
+    "Accounts": {
+      "singular": "Firma",
+      "plural": "Firmalar"
+    },
+    "Deals": {
+      "singular": "Satış Fırsatı",
+      "plural": "Satış Fırsatları"
+    },
+    "Activities": {
+      "singular": "Aktivite",
+      "plural": "Aktiviteler"
+    },
+    "Tasks": {
+      "singular": "Görev",
+      "plural": "Görevler"
+    },
+    "Meetings": {
+      "singular": "Toplantı",
+      "plural": "Toplantılar"
+    },
+    "Events": {
+      "singular": "Toplantı",
+      "plural": "Toplantılar"
+    },
+    "Calls": {
+      "singular": "Arama",
+      "plural": "Aramalar"
+    },
+    "Campaigns": {
+      "singular": "Kampanya",
+      "plural": "Kampanyalar"
+    },
+    "Cases": {
+      "singular": "Servis Dosyası",
+      "plural": "Servis Dosyaları"
+    },
+    "Solutions": {
+      "singular": "Çözüm",
+      "plural": "Çözümler"
+    }
   },
   "fields": {
-    "Record_Image": "Müşteri Adayı Resmi",
-    "Lead_Image": "Müşteri Adayı Resmi",
+    "Record_Image": "Müşteri Adayı Resim",
+    "Lead_Image": "Müşteri Adayı Resim",
     "Owner": "Kayıt Sahibi",
     "Lead_Owner": "Müşteri Adayı Kayıt Sahibi",
     "Contact_Owner": "Kişi Kayıt Sahibi",
@@ -62,7 +98,7 @@
     "Other_Phone": "Diğer Telefon",
     "Home_Phone": "Ev Telefonu",
     "Assistant": "Asistanı",
-    "Asst_Phone": "Asistan Telefonu",
+    "Asst_Phone": "Asistanın Telefonu",
     "Stage": "Aşama",
     "Amount": "Tutar",
     "Probability": "Olasılık (%)",
@@ -80,14 +116,14 @@
     "Call_Duration_in_seconds": "Arama Süresi (saniye)",
     "Billable": "Faturalanabilir",
     "Call_Result": "Arama Sonucu",
-    "Call_Purpose": "Arama Amacı",
+    "Call_Purpose": "Arama Nedeni",
     "Call_Agenda": "Arama Gündemi",
     "Start_DateTime": "Başlangıç",
     "End_DateTime": "Bitiş",
     "Venue": "Konum",
-    "All_day": "Tüm Gün",
-    "Reminder": "Hatırlatıcı",
-    "Repeat": "Tekrar",
+    "All_day": "Tüm gün",
+    "Reminder": "Anımsatıcı",
+    "Repeat": "Tekrarla",
     "Participants": "Katılımcılar",
     "Check_In_Status": "Giriş Durumu",
     "Campaign_Name": "Kampanya Adı",
@@ -112,10 +148,10 @@
     "Add_Comment": "Yorum Ekle",
     "Published": "Yayınlandı",
     "No_of_comments": "Yorum Sayısı",
-    "Parent_Account": "Üst Firma",
+    "Parent_Account": "Ana Firma",
     "Account_Number": "Firma Numarası",
     "Account_Type": "Firma Türü",
-    "Account_Site": "Firma Web Sitesi",
+    "Account_Site": "Firma Konumu",
     "Ticker_Symbol": "Borsa Sembolü",
     "Ownership": "Sahiplik",
     "SIC_Code": "SIC Kodu",
@@ -144,7 +180,55 @@
     "Shipping_City": "Sevkiyat Adresi Şehir",
     "Shipping_State": "Sevkiyat Adresi Eyalet/İl",
     "Shipping_Code": "Sevkiyat Adresi Posta Kodu",
-    "Shipping_Country": "Sevkiyat Adresi Ülke"
+    "Shipping_Country": "Sevkiyat Adresi Ülke",
+    "Contact_Image": "Kişi Resim",
+    "Account_Image": "Firma Resim",
+    "Vendor_Name": "Tedarikçi Adı",
+    "Asst_Phone_Short": "Asistanın Telefonu",
+    "Employees": "Çalışanlar",
+    "Connected_To": "Bağlı Olduğu",
+    "Campaign_Source": "Kampanya Kaynağı",
+    "Type": "Tip",
+    "Caller_ID": "Arayan Kimliği",
+    "All_day_sentence": "Tüm gün",
+    "Check_In_Time": "Giriş Zamanı",
+    "Activities": "Aktiviteler",
+    "Campaigns": "Kampanyalar",
+    "Latest_Email_Status": "En Son E-posta Durumu",
+    "Locked": "Kilitli",
+    "Record_Action": "Kayıt Eylemi",
+    "Related_Records_Action": "İlgili Kayıtlar Eylemi",
+    "Touched_Records": "Dokunulmuş Kayıtlar",
+    "Untouched_Records": "Dokunulmamış Kayıtlar",
+    "Cadences": "Cadence’ler",
+    "Address": "Adres",
+    "Address_City": "Adres - Şehir",
+    "Address_Country": "Adres - Ülke / Bölge",
+    "Address_Building": "Adres - Daire / Bina Numarası / Apartman Adı",
+    "Address_State": "Adres - Eyalet / İl",
+    "Address_Street": "Adres - Sokak Adresi",
+    "Address_Zip": "Adres - Posta Kodu",
+    "Meeting_Title": "Başlık",
+    "Event_Title": "Başlık",
+    "Meeting_Venue__s": "Toplantı Yeri",
+    "Host": "Düzenleyen",
+    "Call_For": "Çağrı Hedefi",
+    "Call_From_To": "Çağrı Hedefi",
+    "Outgoing_Call_Status": "Giden Arama Durumu",
+    "Remind_Participants": "Katılımcı Hatırlatması",
+    "Check_In_Address": "Giriş Adresi",
+    "Check_In_By": "Giriş Yapan",
+    "Check_In_City": "Giriş Şehri",
+    "Check_In_Comment": "Giriş Yorumu",
+    "Check_In_Country": "Giriş Ülkesi",
+    "Check_In_State": "Giriş Eyaleti",
+    "Check_In_Sub_Locality": "Giriş Alt Mahalli",
+    "Checked_In_Status": "Giriş Durumu",
+    "Last_Activity_Time": "Son Aktivite Zamanı",
+    "Latitude": "Enlem",
+    "Longitude": "Boylam",
+    "Provider": "Sağlayıcı",
+    "Record_Id": "Kayıt Kimliği"
   },
   "sections": {
     "Lead Information": "Müşteri Adayı Bilgisi",
@@ -152,7 +236,7 @@
     "Account Information": "Firma Bilgisi",
     "Deal Information": "Satış Fırsatı Bilgisi",
     "Task Information": "Görev Bilgisi",
-    "Meeting Information": "Toplantı Bilgisi",
+    "Meeting Information": "Toplantı Bilgileri",
     "Call Information": "Arama Bilgisi",
     "Campaign Information": "Kampanya Bilgisi",
     "Case Information": "Servis Dosyası Bilgisi",
@@ -160,7 +244,13 @@
     "Address Information": "Adres Bilgisi",
     "Description Information": "Açıklama Bilgisi",
     "Custom Information": "Özel Bilgiler",
-    "System Information": "Sistem Bilgisi"
+    "System Information": "Sistem Bilgisi",
+    "Lead Image": "Müşteri Adayı Resim",
+    "Contact Image": "Kişi Resim",
+    "Account Image": "Firma Resim",
+    "Purpose Of Outgoing Call": "Giden Aramanın Amacı",
+    "Outcome Of Outgoing Call": "Giden Aramanın Sonucu",
+    "Meeting Additional Information": "Toplantı Ek Bilgileri"
   },
   "relatedLists": {
     "overview": "Genel Bakış",
@@ -183,6 +273,15 @@
     "memberAccounts": "Üye Firmalar",
     "contactRoles": "Kişi Rolleri",
     "links": "Bağlantılar",
-    "addLink": "Bağlantı Ekle"
+    "addLink": "Bağlantı Ekle",
+    "cadences": "Cadence’ler",
+    "products": "Ürünler",
+    "quotes": "Teklifler",
+    "salesOrders": "Satış Siparişleri",
+    "purchaseOrders": "Satın Alma Siparişleri",
+    "invoices": "Faturalar",
+    "social": "Sosyal",
+    "emails": "E-postalar",
+    "competitors": "Rakipler"
   }
 }

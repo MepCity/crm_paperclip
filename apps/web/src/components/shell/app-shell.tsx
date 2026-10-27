@@ -150,6 +150,24 @@ export function AppShell({
             <div className="flex shrink-0 items-center gap-(--size-topbar-control-gap)">
               <GlobalSearch key={`${orgSlug}:${user.id}`} orgSlug={orgSlug} userId={user.id} />
               <CreateRecordsMenu orgSlug={orgSlug} />
+              <Button
+                variant="icon"
+                size="compact"
+                aria-label={t("shell.assistant")}
+                laterModule="P3"
+                className="size-(--size-topbar-control-pitch)"
+              >
+                <Icons.sparkles className="size-(--size-topbar-icon)" aria-hidden />
+              </Button>
+              <Button
+                variant="icon"
+                size="compact"
+                aria-label={t("shell.notifications")}
+                laterModule="P3"
+                className="size-(--size-topbar-control-pitch)"
+              >
+                <Icons.bell className="size-(--size-topbar-icon)" aria-hidden />
+              </Button>
               <Link
                 variant="icon"
                 aria-label={t("shell.calendar")}
@@ -158,6 +176,15 @@ export function AppShell({
               >
                 <Icons.calendar className="size-(--size-topbar-icon)" aria-hidden />
               </Link>
+              <Button
+                variant="icon"
+                size="compact"
+                aria-label={t("shell.extensions")}
+                laterModule="P3"
+                className="size-(--size-topbar-control-pitch)"
+              >
+                <Icons.store className="size-(--size-topbar-icon)" aria-hidden />
+              </Button>
               <Link
                 variant="icon"
                 aria-label={t("shell.settings")}
@@ -167,6 +194,15 @@ export function AppShell({
                 <Icons.settings className="size-(--size-topbar-icon)" aria-hidden />
               </Link>
               <UserMenu user={user} />
+              <Button
+                variant="icon"
+                size="compact"
+                aria-label={t("shell.applications")}
+                laterModule="P3"
+                className="size-(--size-topbar-control-pitch)"
+              >
+                <Icons.applications className="size-(--size-topbar-icon)" aria-hidden />
+              </Button>
             </div>
           </header>
           <main
@@ -180,6 +216,65 @@ export function AppShell({
             </PreferenceProvider>
           </main>
         </div>
+        <footer
+          role="contentinfo"
+          aria-label={t("shell.utilities")}
+          className="fixed inset-x-0 bottom-0 z-40 flex h-(--size-utility-strip-height) items-center justify-between border-t border-border bg-surface px-3 text-text-muted shadow-sm"
+          data-shell-utilities
+        >
+          <div className="flex h-full items-center gap-6">
+            <Button variant="ghost" size="compact" laterModule="P3">
+              <Icons.pin aria-hidden className="size-4" />
+              {t("shell.pins")}
+            </Button>
+            <Button variant="ghost" size="compact" laterModule="P3">
+              <Icons.messageSquare aria-hidden className="size-4" />
+              {t("shell.chats")}
+            </Button>
+            <Button variant="ghost" size="compact" laterModule="P3">
+              <Icons.users aria-hidden className="size-4" />
+              {t("shell.people")}
+            </Button>
+          </div>
+          <div className="flex h-full items-center gap-3">
+            <Button
+              variant="icon"
+              size="compact"
+              laterModule="P3"
+              aria-label={t("shell.announcements")}
+            >
+              <Icons.megaphone aria-hidden className="size-4" />
+            </Button>
+            <Button
+              variant="icon"
+              size="compact"
+              laterModule="P3"
+              aria-label={t("shell.reminders")}
+            >
+              <Icons.clock aria-hidden className="size-4" />
+            </Button>
+            <Button
+              variant="icon"
+              size="compact"
+              laterModule="P3"
+              aria-label={t("shell.recentItems")}
+            >
+              <Icons.history aria-hidden className="size-4" />
+            </Button>
+            <Button
+              variant="icon"
+              size="compact"
+              laterModule="P3"
+              aria-label={t("shell.accessibility")}
+            >
+              <Icons.accessibility aria-hidden className="size-4" />
+            </Button>
+            <Button variant="primary" size="compact" laterModule="P3">
+              <Icons.help aria-hidden className="size-4" />
+              {t("shell.help")}
+            </Button>
+          </div>
+        </footer>
       </div>
     </PageTitleContext.Provider>
   );

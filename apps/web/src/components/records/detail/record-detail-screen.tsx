@@ -30,6 +30,7 @@ import { resolveLaterModule } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
+import { useRecordLabel } from "@/i18n/record-labels";
 import {
   useDeleteRecords,
   useHomeCurrency,
@@ -142,6 +143,7 @@ export function RecordDetailScreen({
   saveRecord: saveRecordOverride,
 }: RecordDetailScreenProps) {
   const t = useUiTranslations();
+  const recordLabel = useRecordLabel();
   const adapter = useMetadataDisplayAdapter();
   const orgFormat = useFormat();
   const moduleApiName = definition.apiName;
@@ -309,7 +311,12 @@ export function RecordDetailScreen({
   });
   const lastUpdate = rules.lastUpdate(record, now, orgFormat);
   const businessFields = rules.businessCard(adaptedModule ?? module, displayRecord);
-  const detailSections = rules.sections(adaptedModule ?? module, displayRecord);
+  const detailSections = rules
+    .sections({ ...(adaptedModule ?? module), layout: module.layout }, displayRecord)
+    .map((section) => ({
+      ...section,
+      title: adapter.getLayoutSectionLabel(moduleApiName, section.title),
+    }));
 
   async function persistRecord(input: RecordInput) {
     if (saveRecordOverride) {
@@ -495,7 +502,7 @@ export function RecordDetailScreen({
       {railChrome?.linksGroup ? (
         <>
           <h3 className="px-(--size-record-rail-text-inset) pt-2 text-sm font-semibold text-text-muted">
-            {railChrome.linksGroup.title}
+            {adapter.getRelatedListTitle("links", railChrome.linksGroup.title)}
           </h3>
           <Link
             href={`#${railChrome.linksGroup.addLink.id}`}
@@ -503,7 +510,7 @@ export function RecordDetailScreen({
             laterModule={railChrome.linksGroup.addLink.moduleKey}
             className="flex items-center h-(--size-menu-item-height) px-(--size-record-rail-text-inset) text-md font-normal text-primary hover:underline"
           >
-            {railChrome.linksGroup.addLink.label}
+            {adapter.getRelatedListTitle("addLink", railChrome.linksGroup.addLink.label)}
           </Link>
         </>
       ) : null}
@@ -567,7 +574,11 @@ export function RecordDetailScreen({
             showPortrait={hasPortrait ?? rules.hasPortrait ?? true}
             portraitAppearance={rules.portraitAppearance}
             showRecordNavigation={recordNavigation ?? rules.recordNavigation ?? true}
-            addTags={rules.addTags}
+            addTags={
+              rules.addTags
+                ? { ...rules.addTags, label: recordLabel(rules.addTags.label) }
+                : undefined
+            }
             tagsContent={
               rules.addTags && !rules.addTags.laterModule ? (
                 <RecordTags
@@ -575,35 +586,37 @@ export function RecordDetailScreen({
                   orgSlug={orgSlug}
                   module={definition.apiName}
                   recordId={recordId}
-                  label={rules.addTags.label}
+                  label={recordLabel(rules.addTags.label)}
                 />
               ) : undefined
             }
             back={{ label: t("common.actions.back"), href: backHref }}
             titleGlyph={rules.titleGlyph}
             titleSuffix={titleSuffix}
-            commands={
-              rules.buildHeaderCommands
-                ? rules.buildHeaderCommands(displayRecord, {
-                    editHref: paths.edit(orgSlug, definition.tab, recordId),
-                    save: persistRecord,
-                    navigate: (href) => router.push(href),
-                    confirm: (request) => {
-                      setHeaderConfirmError(null);
-                      setHeaderConfirm(request);
-                    },
-                  })
-                : [
-                    ...(rules.headerCommands ?? []),
-                    {
-                      id: "edit",
-                      label: t("common.actions.edit"),
-                      variant: "secondary",
-                      href: paths.edit(orgSlug, definition.tab, recordId),
-                    },
-                  ]
-            }
-            menuGroups={moreMenuGroups}
+            commands={(rules.buildHeaderCommands
+              ? rules.buildHeaderCommands(displayRecord, {
+                  editHref: paths.edit(orgSlug, definition.tab, recordId),
+                  save: persistRecord,
+                  navigate: (href) => router.push(href),
+                  confirm: (request) => {
+                    setHeaderConfirmError(null);
+                    setHeaderConfirm(request);
+                  },
+                })
+              : [
+                  ...(rules.headerCommands ?? []),
+                  {
+                    id: "edit",
+                    label: t("common.actions.edit"),
+                    variant: "secondary" as const,
+                    href: paths.edit(orgSlug, definition.tab, recordId),
+                  },
+                ]
+            ).map((command) => ({ ...command, label: recordLabel(command.label) }))}
+            menuGroups={moreMenuGroups.map((group) => ({
+              ...group,
+              items: group.items.map((item) => ({ ...item, label: recordLabel(item.label) })),
+            }))}
             moreLabel={t("records.actions.moreOptions")}
             previousLabel={t("records.detail.previousRecord")}
             nextLabel={t("records.detail.nextRecord")}

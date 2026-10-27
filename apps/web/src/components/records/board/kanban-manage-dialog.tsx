@@ -13,6 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import "./kanban-settings-dialog.css";
 
 export interface KanbanManageDialogProps {
@@ -24,14 +26,14 @@ export interface KanbanManageDialogProps {
   onClose(): void;
 }
 
-const SHARED_LABELS: Record<string, string> = { only_me: "Only me", everyone: "Everyone" };
-
 /** Lists the saved Kanban views; reordering and deleting are not available yet. */
 export function KanbanManageDialog(props: KanbanManageDialogProps) {
   return props.open ? <ManageContent {...props} /> : null;
 }
 
 function ManageContent({ views, fieldLabel, onCreate, onClose }: KanbanManageDialogProps) {
+  const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
   const titleId = useId();
   return (
     <TopAlignedModal
@@ -45,13 +47,17 @@ function ManageContent({ views, fieldLabel, onCreate, onClose }: KanbanManageDia
       <div className="kanban-settings-content">
         <header className="flex items-center justify-between gap-4 px-6 py-6">
           <h2 id={titleId} className="text-xl font-semibold">
-            Manage Kanban Views
+            {t("records.kanban.manage")}
           </h2>
           <div className="flex items-center gap-2">
             <Button variant="secondary" onPress={onCreate}>
-              Create Kanban View
+              {t("records.kanban.create")}
             </Button>
-            <Button variant="ghost" aria-label="Close Modal" onPress={onClose}>
+            <Button
+              variant="ghost"
+              aria-label={t("common.customViews.closeModal")}
+              onPress={onClose}
+            >
               <Icons.close aria-hidden className="h-4 w-4" />
             </Button>
           </div>
@@ -60,12 +66,12 @@ function ManageContent({ views, fieldLabel, onCreate, onClose }: KanbanManageDia
           <Table>
             <TableHeader>
               <tr>
-                <th aria-label="Reorder" className="w-8" />
-                <TableHead>View Name</TableHead>
-                <TableHead>Used Field</TableHead>
-                <TableHead>Shared To</TableHead>
-                <TableHead>Last Modified By</TableHead>
-                <TableHead>Created By</TableHead>
+                <th aria-label={t("records.kanban.reorder")} className="w-8" />
+                <TableHead>{t("records.kanban.name")}</TableHead>
+                <TableHead>{t("records.kanban.usedField")}</TableHead>
+                <TableHead>{t("records.kanban.sharedTo")}</TableHead>
+                <TableHead>{t("records.kanban.modifiedBy")}</TableHead>
+                <TableHead>{t("records.kanban.createdBy")}</TableHead>
               </tr>
             </TableHeader>
             <TableBody columnCount={6}>
@@ -73,8 +79,14 @@ function ManageContent({ views, fieldLabel, onCreate, onClose }: KanbanManageDia
                 <TableRow key={view.id}>
                   <td />
                   <TableCell>{view.name}</TableCell>
-                  <TableCell>{fieldLabel(view.categorizeBy)}</TableCell>
-                  <TableCell>{SHARED_LABELS[view.sharedTo] ?? view.sharedTo}</TableCell>
+                  <TableCell>{adapter.getNamedLabel(fieldLabel(view.categorizeBy))}</TableCell>
+                  <TableCell>
+                    {view.sharedTo === "only_me"
+                      ? t("records.kanban.onlyMe")
+                      : view.sharedTo === "everyone"
+                        ? t("records.kanban.everyone")
+                        : view.sharedTo}
+                  </TableCell>
                   <TableCell>{view.modifiedBy.name}</TableCell>
                   <TableCell>{view.createdBy.name}</TableCell>
                 </TableRow>

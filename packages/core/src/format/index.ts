@@ -82,8 +82,8 @@ function patternParts(value: Date, timeZone: string) {
 }
 
 /** The time of day as `h:mm AM` or `HH:mm`. */
-function clockTime(value: Date, timeZone: string, clock: 12 | 24): string {
-  const parts = new Intl.DateTimeFormat("en-GB", {
+function clockTime(value: Date, timeZone: string, clock: 12 | 24, language?: string): string {
+  const parts = new Intl.DateTimeFormat(language === "tr" ? "tr-TR" : "en-GB", {
     timeZone,
     hour: clock === 12 ? "numeric" : "2-digit",
     minute: "2-digit",
@@ -156,7 +156,7 @@ export function formatDateTime(
       options.datePattern === undefined
         ? render(options.locale, options.timeZone, { dateStyle: "medium" }, date)
         : renderDatePattern(options.datePattern, patternParts(date, options.timeZone));
-    return `${day} ${clockTime(date, options.timeZone, options.clock ?? 12)}`;
+    return `${day} ${clockTime(date, options.timeZone, options.clock ?? 12, options.language)}`;
   }
   return render(
     options.locale,
@@ -167,7 +167,7 @@ export function formatDateTime(
 }
 
 function numericParts(options: FormatOptions, withTime: boolean, value: Date) {
-  const formatter = new Intl.DateTimeFormat("en-GB", {
+  const formatter = new Intl.DateTimeFormat(options.language === "tr" ? "tr-TR" : "en-GB", {
     timeZone: options.timeZone,
     day: "2-digit",
     month: "2-digit",
@@ -214,7 +214,7 @@ export function formatNumericDateTime(
       options.datePattern ?? "dd.MM.yyyy",
       patternParts(date, options.timeZone),
     );
-    return `${day} ${clockTime(date, options.timeZone, options.clock ?? 12)}`;
+    return `${day} ${clockTime(date, options.timeZone, options.clock ?? 12, options.language)}`;
   }
   const part = numericParts(options, true, instant(value));
   return `${part("day")}.${part("month")}.${part("year")} ${part("hour")}:${part("minute")} ${part("dayPeriod").toUpperCase()}`;
@@ -227,7 +227,7 @@ export function formatTime(
 ): string {
   if (value === null || value === undefined) return "";
   if (options.clock !== undefined)
-    return clockTime(instant(value), options.timeZone, options.clock);
+    return clockTime(instant(value), options.timeZone, options.clock, options.language);
   return render(options.locale, options.timeZone, { timeStyle: "short" }, instant(value));
 }
 

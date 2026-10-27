@@ -9,7 +9,8 @@
     "search": "Search",
     "retry": "Try again",
     "confirm": "Confirm",
-    "saveAndNew": "Save and New"
+    "saveAndNew": "Save and New",
+    "add": "Add"
   },
   "loading": "Loading",
   "error": "Something went wrong. Please try again.",

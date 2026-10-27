@@ -112,3 +112,27 @@ test("renders Edit Current View and calls onEditView with active view id", async
   await user.click(editItem);
   expect(onEditView).toHaveBeenCalledWith("mine");
 });
+
+test("keeps created and public view groups independently collapsible", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <ViewTabStrip
+      viewName="All Contacts"
+      views={[
+        { id: "all", name: "All Contacts", systemDefined: true },
+        { id: "custom", name: "Custom Contacts", systemDefined: false, isDefault: false },
+      ]}
+      onViewChange={change}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Custom views" }));
+  await user.click(screen.getByRole("menuitem", { name: "Created By Me" }));
+  expect(screen.queryByRole("menuitem", { name: "Custom Contacts" })).toBeNull();
+  expect(screen.getByRole("menuitem", { name: "All Contacts" })).toBeTruthy();
+  await user.click(screen.getByRole("menuitem", { name: "Public Views" }));
+  expect(screen.queryByRole("menuitem", { name: "All Contacts" })).toBeNull();
+  await user.click(screen.getByRole("menuitem", { name: "Created By Me" }));
+  await user.click(screen.getByRole("menuitem", { name: "Custom Contacts" }));
+  expect(change).toHaveBeenCalledWith("custom");
+});
