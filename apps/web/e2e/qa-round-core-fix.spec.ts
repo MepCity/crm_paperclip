@@ -58,7 +58,7 @@ test("captures Turkish core modules and their corrected entry controls", async (
       await page.keyboard.press("Escape");
       await page.getByRole("button", { name: "Eylemler", exact: true }).click();
       await expect(
-        page.getByRole("menuitem", { name: "Toplu Güncelle", exact: true }),
+        page.getByRole("menuitem", { name: "Toplu Güncelleştir", exact: true }),
       ).toBeVisible();
       await shot("Leads-actions");
       await page.keyboard.press("Escape");
@@ -125,7 +125,7 @@ test("captures Turkish core modules and their corrected entry controls", async (
       await expect(
         page
           .locator('[data-related-card="attachments"]')
-          .getByText("Ek bulunamadı", { exact: true }),
+          .getByText("Eklentisi Yok", { exact: true }),
       ).toBeVisible();
       await shot("Contacts-attachments");
     }

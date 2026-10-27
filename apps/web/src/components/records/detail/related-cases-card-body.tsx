@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { FieldValueView } from "@/components/records/detail/field-value";
 import { RelatedRecordsListError } from "@/components/records/detail/related-records-list-error";
 import { Link } from "@/components/ui/link";
+import { useRecordLabel } from "@/i18n/record-labels";
 import { useModule, useRecordList, useUsers, useView, useViews } from "@/lib/api/client/hooks";
 import { useFormat } from "@/lib/format-context";
 
@@ -29,6 +30,7 @@ export function RelatedCasesCardBody({
   filterField,
   caseRecordPath,
 }: RelatedCasesCardBodyProps) {
+  const recordLabel = useRecordLabel();
   const orgFormat = useFormat();
   const [page, setPage] = useState(1);
   const moduleQuery = useModule("Cases");
@@ -89,7 +91,7 @@ export function RelatedCasesCardBody({
   if (rows.length === 0 && page === 1) {
     return (
       <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-        No records found
+        {recordLabel("No records found")}
       </div>
     );
   }

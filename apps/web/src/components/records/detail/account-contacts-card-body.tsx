@@ -7,6 +7,7 @@ import { RelatedRecordsListError } from "@/components/records/detail/related-rec
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { useRecordLabel } from "@/i18n/record-labels";
 import { useModule, useRecordList, useViews } from "@/lib/api/client/hooks";
 import { useFormat } from "@/lib/format-context";
 
@@ -28,6 +29,7 @@ export function AccountContactsCardBody({
   accountRecord,
   contactRecordPath,
 }: AccountContactsCardBodyProps) {
+  const recordLabel = useRecordLabel();
   const orgFormat = useFormat();
   const moduleQuery = useModule("Contacts");
   const viewsQuery = useViews("Contacts");
@@ -65,7 +67,7 @@ export function AccountContactsCardBody({
   if (rows.length === 0) {
     return (
       <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-        No records found
+        {recordLabel("No records found")}
       </div>
     );
   }

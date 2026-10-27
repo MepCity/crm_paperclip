@@ -2,8 +2,10 @@
 
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
+import { useUiTranslations } from "@/i18n/client-provider";
 
 export function RecordPageFooter() {
+  const t = useUiTranslations();
   return (
     <footer
       role="contentinfo"
@@ -18,20 +20,20 @@ export function RecordPageFooter() {
     >
       <div className="flex items-center">
         <Button variant="secondary" size="compact" laterModule="M11">
-          Add Related List
+          {t("records.chrome.addRelatedList")}
         </Button>
       </div>
 
       <div className="flex flex-wrap items-center gap-(--size-record-page-action-gap)">
         <div className="flex items-center gap-2 text-md text-text">
-          <span>Record detail page views :</span>
+          <span>{t("records.chrome.recordViews")}</span>
           <Button
             variant="recordSelector"
             size="pageSelector"
             laterModule="M11"
             className="flex items-center gap-1.5"
           >
-            <span>Standard View</span>
+            <span>{t("records.chrome.standardView")}</span>
             <Icons.chevronDown aria-hidden className="size-3 text-(--color-form-caret)" />
           </Button>
         </div>
@@ -41,7 +43,7 @@ export function RecordPageFooter() {
           laterModule="M11"
           className="from-surface!"
         >
-          Create a custom record page
+          {t("records.chrome.customRecordPage")}
         </Button>
       </div>
     </footer>

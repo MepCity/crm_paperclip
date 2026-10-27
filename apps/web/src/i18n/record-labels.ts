@@ -11,6 +11,10 @@ export function useRecordLabel() {
     if (entry) return t(`records.chrome.${entry[0]}` as MessageKey);
     const action = Object.entries(english.records.actions).find(([, value]) => value === label);
     if (action) return t(`records.actions.${action[0]}` as MessageKey);
+    for (const module of ["Campaigns", "Cases", "Solutions"] as const) {
+      if (label === `Export ${module}`)
+        return t("records.chrome.exportModule", { module: t(`metadata.modules.${module}.plural`) });
+    }
     if (label === "Edit") return t("common.actions.edit");
     return label;
   };
@@ -27,6 +31,14 @@ export function builtInViewLabel(
     [`All ${plural}`]: "records.chrome.allRecords",
     [`My ${plural}`]: "records.chrome.myRecords",
     [`All Locked ${plural}`]: "records.chrome.allLockedRecords",
+    [`Unread ${plural}`]: "records.chrome.unreadRecords",
+    [`All Active ${plural}`]: "records.chrome.allActiveRecords",
+    [`My Active ${plural}`]: "records.chrome.myActiveRecords",
+    [`Open ${plural}`]: "records.chrome.openRecords",
+    [`Closed ${plural}`]: "records.chrome.closedRecords",
+    [`Escalated ${plural}`]: "records.chrome.escalatedRecords",
+    [`Today’s ${plural}`]: "records.chrome.todayRecords",
+    [`Today's ${plural}`]: "records.chrome.todayRecords",
   } as const;
   const key = names[view.name];
   return key ? t(key, { module: translatedPlural }) : view.name;

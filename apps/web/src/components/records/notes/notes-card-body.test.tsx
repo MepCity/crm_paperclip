@@ -70,9 +70,10 @@ afterEach(() => {
 });
 
 describe("NotesCardBody", () => {
-  it("shows the empty state and the collapsed composer", () => {
+  it("shows the sort control above the collapsed composer without an empty-message row", () => {
     render(<NotesCardBody {...props} />);
-    expect(screen.getByText("No records found")).toBeTruthy();
+    expect(screen.queryByText("No records found")).toBeNull();
+    expect(screen.getByRole("button", { name: /Sort notes/ })).toBeTruthy();
     expect(screen.getByTestId("note-composer-collapsed")).toBeTruthy();
   });
 

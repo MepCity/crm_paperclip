@@ -14,7 +14,7 @@
     "lastModified": "Son Değiştirilme Tarihi",
     "columns": "Sütunlar",
     "loadError": "Belgeler yüklenemedi.",
-    "empty": "Öğe yok.",
+    "empty": "Kullanılabilir öğe yok.",
     "uploadedBy": "{user} tarafından yüklendi",
     "modifiedBy": "{date}, {user} tarafından",
     "moreActions": "Diğer işlemler",

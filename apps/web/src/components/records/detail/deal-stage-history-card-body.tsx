@@ -4,6 +4,7 @@ import type { Criteria, RecordId } from "@crm/core/records";
 import { useMemo } from "react";
 import { FieldValueView } from "@/components/records/detail/field-value";
 import { RelatedRecordsListError } from "@/components/records/detail/related-records-list-error";
+import { useRecordLabel } from "@/i18n/record-labels";
 import { useModule, useRecordList, useUsers, useViews } from "@/lib/api/client/hooks";
 import { useFormat } from "@/lib/format-context";
 
@@ -29,6 +30,7 @@ function dealHistoryFilter(dealId: RecordId): Criteria {
 }
 
 export function DealStageHistoryCardBody({ dealId }: DealStageHistoryCardBodyProps) {
+  const recordLabel = useRecordLabel();
   const orgFormat = useFormat();
   const moduleQuery = useModule("DealHistory");
   const viewsQuery = useViews("DealHistory");
@@ -79,7 +81,7 @@ export function DealStageHistoryCardBody({ dealId }: DealStageHistoryCardBodyPro
   if (rows.length === 0) {
     return (
       <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-        No records found
+        {recordLabel("No records found")}
       </div>
     );
   }

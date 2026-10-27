@@ -15,11 +15,12 @@ export interface ViewTabStripProps {
   pinnedViews?: readonly string[];
   /** Draws a Search box above Public Views that filters the rows by name (Tasks only). */
   searchable?: boolean;
+  hideEmptyCreatedGroup?: boolean;
   onNewView?: () => void; onEditView?: (id: string) => void; onManageViews?: () => void;
 }
 
 // biome-ignore format: preserve line numbers
-export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searchable, onNewView, onEditView, onManageViews }: ViewTabStripProps) {
+export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searchable, hideEmptyCreatedGroup, onNewView, onEditView, onManageViews }: ViewTabStripProps) {
   const t = useUiTranslations(); const [createdOpen, setCreatedOpen] = useState(true); const [publicOpen, setPublicOpen] = useState(true), [query, setQuery] = useState("");
   // biome-ignore format: preserve line numbers
   const itemNewProps = onNewView ? { onAction: onNewView } : { laterModule: "M11" as const };
@@ -29,6 +30,7 @@ export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searc
   const visibleViews = needle
     ? views?.filter((view) => view.name.toLowerCase().includes(needle))
     : views;
+  const showCreatedGroup = !hideEmptyCreatedGroup || visibleViews?.some((view) => view.systemDefined === false && view.isDefault === false);
   return (
     <div
       className="flex h-(--size-list-tab-height) items-center gap-3 border-b border-(--color-panel-border)"
@@ -104,10 +106,10 @@ export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searc
               ) : undefined
             }
           >
-            <MenuItem id="created" shouldCloseOnSelect={false} onAction={() => setCreatedOpen(!createdOpen)}>
+            {showCreatedGroup ? <MenuItem id="created" shouldCloseOnSelect={false} onAction={() => setCreatedOpen(!createdOpen)}>
               <Icons.chevronDown aria-hidden className="h-4 w-4" />
               {t("records.chrome.createdByMe")}
-            </MenuItem>
+            </MenuItem> : null}
             {createdOpen ? visibleViews?.filter((view) => view.systemDefined === false && view.isDefault === false).map((view) => (
               <MenuItem key={view.id} id={view.id} onAction={() => onViewChange?.(view.id)}>{view.name}</MenuItem>
             )) : null}

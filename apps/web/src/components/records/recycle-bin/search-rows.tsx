@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
+import { useUtilityLabel } from "@/i18n/utility-labels";
 import { type BinSearch, initialBinSearch } from "./contracts";
 
 function Operator({
@@ -19,6 +20,7 @@ function Operator({
   onChange?: (value: string) => void;
   busy?: boolean;
 }) {
+  const copy = useUtilityLabel();
   return (
     <Select
       label={label}
@@ -28,7 +30,7 @@ function Operator({
       onChange={(key) => onChange?.(String(key))}
       items={options.map((id) => ({ id }))}
     >
-      {(item) => <SelectItem id={item.id}>{item.id}</SelectItem>}
+      {(item) => <SelectItem id={item.id}>{copy(item.id)}</SelectItem>}
     </Select>
   );
 }
@@ -42,46 +44,47 @@ export function SearchRows({
   busy?: boolean;
   initialSearch?: BinSearch;
 }) {
+  const copy = useUtilityLabel();
   const [draft, setDraft] = useState(initialSearch);
   const change = <K extends keyof BinSearch>(key: K, value: BinSearch[K]) =>
     setDraft((old) => ({ ...old, [key]: value }));
   return (
     <>
-      <tr>
+      <tr className="bg-(--color-surface-selected)">
         <td />
         <td className="px-3 py-2">
           <Operator
-            label="Name operator"
+            label={copy("Name operator")}
             value={draft.nameOperator}
             options={["contains"]}
             busy={busy}
           />
         </td>
         <td className="px-3 py-2">
-          <Operator label="Type operator" value="is" options={["is"]} busy={busy} />
+          <Operator label={copy("Type operator")} value="is" options={["is"]} busy={busy} />
         </td>
         <td className="px-3 py-2">
           <Operator
-            label="Deleted By operator"
+            label={copy("Deleted By operator")}
             value={draft.deletedByOperator}
             options={["contains"]}
             busy={busy}
           />
         </td>
         <td className="px-3 py-2">
-          <Operator label="Deleted Time operator" value="is" options={["is"]} busy={busy} />
+          <Operator label={copy("Deleted Time operator")} value="is" options={["is"]} busy={busy} />
         </td>
         <td>
           <Button size="sm" isDisabled={busy} onPress={() => onSearch?.(draft)}>
-            Search
+            {copy("Search")}
           </Button>
         </td>
       </tr>
-      <tr className="border-b border-panel-border">
+      <tr className="border-b border-panel-border bg-(--color-surface-selected)">
         <td />
         <td className="px-3 pb-2">
           <TextField
-            label="Name search"
+            label={copy("Name search")}
             hideLabel
             isDisabled={busy}
             value={draft.name}
@@ -90,9 +93,9 @@ export function SearchRows({
         </td>
         <td className="px-3 pb-2">
           <Select
-            label="Type search"
+            label={copy("Type search")}
             hideLabel
-            placeholder="Select"
+            placeholder={copy("Select")}
             isDisabled={busy}
             value={draft.module || null}
             onChange={(key) => change("module", key === "all" ? "" : String(key ?? ""))}
@@ -106,7 +109,7 @@ export function SearchRows({
         </td>
         <td className="px-3 pb-2">
           <TextField
-            label="Deleted By search"
+            label={copy("Deleted By search")}
             hideLabel
             isDisabled={busy}
             value={draft.deletedBy}
@@ -116,7 +119,7 @@ export function SearchRows({
         <td className="px-3 pb-2">
           <div className="flex items-center gap-2">
             <TextField
-              label="Deleted Time date"
+              label={copy("Deleted Time date")}
               hideLabel
               isDisabled={busy}
               placeholder="DD.MM.YYYY"
@@ -124,13 +127,13 @@ export function SearchRows({
               onChange={(value) => change("date", value)}
             />
             <TextField
-              label="Deleted Time time"
+              label={copy("Deleted Time time")}
               hideLabel
               isDisabled={busy}
               value={draft.time}
               onChange={(value) => change("time", value)}
             />
-            <span>AM</span>
+            <span>{copy("AM")}</span>
           </div>
         </td>
         <td />

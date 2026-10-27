@@ -53,10 +53,14 @@ function renderImports(
   );
 }
 
-test("import history empty state and note", () => {
+test("import history empty state uses the tabbed panel without a retention note", () => {
   renderImports([]);
-  expect(screen.getByText("No imports in the last 7 days.")).toBeTruthy();
-  expect(screen.getByText("Import history is kept for 7 days.")).toBeTruthy();
+  expect(screen.getByRole("tab", { name: "Import History" }).getAttribute("aria-selected")).toBe(
+    "true",
+  );
+  expect(within(screen.getByRole("tabpanel")).getByText("No recent imports")).toBeTruthy();
+  expect(screen.queryByRole("table")).toBeNull();
+  expect(screen.queryByText("Import history is kept for 7 days.")).toBeNull();
 });
 
 test("status labels", () => {

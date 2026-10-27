@@ -10,6 +10,7 @@ export type {
 } from "@crm/core";
 
 export interface ImportHistoryProps {
+  importHref?: (module: TransferModule) => string;
   jobs: ImportJob[];
   loading?: boolean;
   onUndo(job: ImportJob): Promise<void>;

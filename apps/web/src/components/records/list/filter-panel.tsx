@@ -245,6 +245,11 @@ export function FilterPanel({
     ) &&
     (!selectedCampaignItem ||
       (campaignDraft.campaignIds.length >= 1 && campaignDraft.campaignIds.length <= 5));
+  const emptyTagOnly =
+    selectedIds.length === 1 &&
+    selectedFieldItems.length === 1 &&
+    selectedFieldItems[0]?.editor?.fieldType === "tag" &&
+    tags.status === "ready";
   const [query, setQuery] = useState("");
   const [collapsedIds, setCollapsedIds] = useState<ReadonlySet<string>>(new Set());
   const visibleGroups = resolvedGroups
@@ -435,11 +440,13 @@ export function FilterPanel({
               {applyErrorMessage}
             </p>
           ) : null}
-          <div className="flex items-center gap-2">
+          <div
+            className={tagModule ? "flex flex-col items-start gap-2" : "flex items-center gap-2"}
+          >
             {onApply && (
               <Button
                 size="sm"
-                isDisabled={!completed}
+                isDisabled={!completed && !emptyTagOnly}
                 onPress={() => {
                   if (!completed) return;
                   const applied = selectedFieldItems.flatMap((item) => {

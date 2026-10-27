@@ -129,7 +129,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
             ctrl.options
               ? ctrl.options.map((opt) => ({
                   id: opt.id,
-                  label: opt.label,
+                  label: recordLabel(opt.label),
                   laterModule: laterMod,
                   onAction: opt.onAction ?? (() => {}),
                 }))
@@ -309,13 +309,15 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
                   {ColumnIcon && (
                     <ColumnIcon aria-hidden className="size-3.5 text-text-muted shrink-0" />
                   )}
-                  <span className="text-md font-semibold text-text-strong">{col.title}</span>
+                  <span className="text-md font-semibold text-text-strong">
+                    {recordLabel(col.title)}
+                  </span>
                   <span className="inline-flex items-center justify-center min-w-5 h-4 px-1 rounded-full bg-surface-active text-2xs font-semibold text-text-muted">
                     {col.count}
                   </span>
                 </div>
                 <div data-part="empty" className="py-4 text-center text-md text-text-empty">
-                  {col.emptyText}
+                  {recordLabel(col.emptyText)}
                 </div>
               </div>
             );
@@ -342,7 +344,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
                         : "text-text-muted hover:text-text font-normal"
                     }`}
                   >
-                    {tab.label}
+                    {recordLabel(tab.label)}
                   </button>
                 );
               })}

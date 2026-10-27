@@ -3,6 +3,7 @@
 import type { ActivityKind } from "@crm/core/records";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { useRecordLabel } from "@/i18n/record-labels";
 import "./activity-categories-card-body.css";
 
 export interface ParentActivityRow {
@@ -35,6 +36,7 @@ export function ActivityCategoriesCardBody({
   variant,
   categories,
 }: ActivityCategoriesCardBodyProps) {
+  const recordLabel = useRecordLabel();
   const prefix = variant === "open" ? "Open" : "Closed";
 
   return (
@@ -44,7 +46,7 @@ export function ActivityCategoriesCardBody({
         const category = categories.find((item) => item.kind === kind);
         const count = category?.count ?? 0;
         const rows = category?.rows ?? [];
-        const title = `${prefix} ${label}`;
+        const title = recordLabel(`${prefix} ${label}`);
 
         return (
           <section
@@ -59,7 +61,9 @@ export function ActivityCategoriesCardBody({
             </h3>
             <ul className="activity-categories-rows">
               {rows.length === 0 ? (
-                <li className="activity-categories-row text-text-empty">No records found</li>
+                <li className="activity-categories-row text-text-empty">
+                  {recordLabel("No records found")}
+                </li>
               ) : (
                 rows.map((row) => (
                   <li key={row.id} className="activity-categories-row">
