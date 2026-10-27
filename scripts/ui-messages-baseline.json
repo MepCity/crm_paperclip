@@ -66,12 +66,6 @@
     "hash": "61a1b222f12f0fd7"
   },
   {
-    "file": "apps/web/src/app/crm/[orgSlug]/settings/import-history/page.tsx",
-    "line": 20,
-    "column": 31,
-    "hash": "60fc5786b7743425"
-  },
-  {
     "file": "apps/web/src/app/crm/[orgSlug]/settings/members/page.tsx",
     "line": 38,
     "column": 21,
@@ -79,7 +73,7 @@
   },
   {
     "file": "apps/web/src/app/crm/[orgSlug]/settings/recycle-bin/page.tsx",
-    "line": 5,
+    "line": 7,
     "column": 34,
     "hash": "fa56abc468388b10"
   },
@@ -739,93 +733,21 @@
   },
   {
     "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 25,
+    "line": 28,
     "column": 47,
     "hash": "4c52faad5dc6e248"
   },
   {
     "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 26,
+    "line": 29,
     "column": 43,
     "hash": "e970951cfb6b60b1"
   },
   {
     "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 97,
-    "column": 99,
-    "hash": "ce6fe3db6b0c938d"
-  },
-  {
-    "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 101,
-    "column": 19,
-    "hash": "1b887a472c2da168"
-  },
-  {
-    "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 106,
+    "line": 110,
     "column": 37,
     "hash": "6e11774990b553e6"
-  },
-  {
-    "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 116,
-    "column": 77,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 119,
-    "column": 88,
-    "hash": "1509f561f2416598"
-  },
-  {
-    "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 183,
-    "column": 24,
-    "hash": "47d2a515ef2f05b8"
-  },
-  {
-    "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 188,
-    "column": 45,
-    "hash": "6e2ea637b30eadce"
-  },
-  {
-    "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 266,
-    "column": 20,
-    "hash": "464c4ffd019e1e96"
-  },
-  {
-    "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 277,
-    "column": 20,
-    "hash": "c3812fc4acb861d5"
-  },
-  {
-    "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 301,
-    "column": 17,
-    "hash": "0831031bbde33a15"
-  },
-  {
-    "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 302,
-    "column": 19,
-    "hash": "1603e119ace2afb4"
-  },
-  {
-    "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 303,
-    "column": 24,
-    "hash": "c3812fc4acb861d5"
-  },
-  {
-    "file": "apps/web/src/components/records/campaigns/campaign-memberships-card-body.tsx",
-    "line": 304,
-    "column": 23,
-    "hash": "19766ed6ccb2f4a3"
   },
   {
     "file": "apps/web/src/components/records/deduplicate/dedup-conflict-route.tsx",
@@ -1518,102 +1440,6 @@
     "hash": "b02ea1cc7c92d8e9"
   },
   {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 35,
-    "column": 24,
-    "hash": "76900f1bfd16c8d4"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 41,
-    "column": 75,
-    "hash": "f592e6a4db3c6638"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 47,
-    "column": 24,
-    "hash": "1cb0ba125f84c982"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 58,
-    "column": 22,
-    "hash": "b79cac926e0b2e34"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 62,
-    "column": 17,
-    "hash": "b79cac926e0b2e34"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 69,
-    "column": 59,
-    "hash": "71708699acf8f3b3"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 94,
-    "column": 28,
-    "hash": "c679779c2df69be0"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 101,
-    "column": 28,
-    "hash": "0cd329b0232f5741"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 104,
-    "column": 23,
-    "hash": "dc937b59892604f5"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 113,
-    "column": 28,
-    "hash": "288e8f22a2cf08e4"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 116,
-    "column": 23,
-    "hash": "dc937b59892604f5"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 125,
-    "column": 28,
-    "hash": "0988e90ed1399a97"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 133,
-    "column": 28,
-    "hash": "1efb7935d7995b36"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 143,
-    "column": 63,
-    "hash": "49c266baaaa70981"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 143,
-    "column": 72,
-    "hash": "49c266baaaa70981"
-  },
-  {
-    "file": "apps/web/src/components/records/drafts/drafts-page.tsx",
-    "line": 153,
-    "column": 48,
-    "hash": "292e60699dea7a7a"
-  },
-  {
     "file": "apps/web/src/components/records/form/duration-input.tsx",
     "line": 61,
     "column": 21,
@@ -1891,97 +1717,91 @@
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 23,
+    "line": 24,
     "column": 28,
     "hash": "b450645debe2cf0a"
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 24,
+    "line": 25,
     "column": 28,
     "hash": "8a7c8b67fe8bde8b"
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 25,
+    "line": 26,
     "column": 25,
     "hash": "145603eb8a0bfa98"
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 27,
+    "line": 28,
     "column": 55,
     "hash": "2e9eeab315138cba"
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 175,
-    "column": 27,
-    "hash": "ebaf58a7c1edff86"
-  },
-  {
-    "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 209,
+    "line": 211,
     "column": 29,
     "hash": "dc937b59892604f5"
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 249,
+    "line": 251,
     "column": 29,
     "hash": "ebaf58a7c1edff86"
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 274,
+    "line": 276,
     "column": 29,
     "hash": "43c902b9cd0784b2"
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 300,
+    "line": 302,
     "column": 42,
     "hash": "57fd7a0cf33f2666"
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 301,
+    "line": 303,
     "column": 46,
     "hash": "89f9c1aae4740915"
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 328,
+    "line": 330,
     "column": 40,
     "hash": "ab51004e9d71a485"
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 329,
+    "line": 331,
     "column": 41,
     "hash": "eb0d2375b51859a3"
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 330,
+    "line": 332,
     "column": 42,
     "hash": "16837433443196b5"
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 347,
+    "line": 349,
     "column": 27,
     "hash": "50601b4b95ce418d"
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 358,
+    "line": 360,
     "column": 31,
     "hash": "61288e82a1ba695d"
   },
   {
     "file": "apps/web/src/components/records/list/filter-editor.tsx",
-    "line": 374,
+    "line": 376,
     "column": 29,
     "hash": "8f44d1ea3ccaa10c"
   },
@@ -2550,18 +2370,6 @@
     "hash": "f676dcfebe73cf3e"
   },
   {
-    "file": "apps/web/src/components/records/notes/note-composer.tsx",
-    "line": 116,
-    "column": 8,
-    "hash": "322c0e13ef4fa485"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-composer.tsx",
-    "line": 191,
-    "column": 22,
-    "hash": "29d4198e41d8221a"
-  },
-  {
     "file": "apps/web/src/components/records/notes/note-format-toolbar.tsx",
     "line": 106,
     "column": 14,
@@ -2664,76 +2472,10 @@
     "hash": "8aa318eb7eaa233a"
   },
   {
-    "file": "apps/web/src/components/records/notes/note-list.tsx",
-    "line": 51,
-    "column": 17,
-    "hash": "ea06e19beadc1bba"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-row.tsx",
-    "line": 53,
-    "column": 17,
-    "hash": "e30f00b3a3fd2d00"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-row.tsx",
-    "line": 61,
-    "column": 57,
-    "hash": "299e604ccff332f5"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-row.tsx",
-    "line": 69,
-    "column": 26,
-    "hash": "b80e4f44233ee2d0"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-row.tsx",
-    "line": 81,
-    "column": 17,
-    "hash": "59cd5b46e7891798"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-row.tsx",
-    "line": 82,
-    "column": 19,
-    "hash": "00783962c5f3d9b6"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-row.tsx",
-    "line": 83,
-    "column": 24,
-    "hash": "e2d0a54968ead24e"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/note-row.tsx",
-    "line": 84,
-    "column": 23,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
     "file": "apps/web/src/components/records/notes/notes-card-body.tsx",
-    "line": 290,
+    "line": 293,
     "column": 16,
     "hash": "2059fd54613f0414"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/notes-card-body.tsx",
-    "line": 296,
-    "column": 83,
-    "hash": "47d2a515ef2f05b8"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/notes-card-body.tsx",
-    "line": 333,
-    "column": 85,
-    "hash": "6e2ea637b30eadce"
-  },
-  {
-    "file": "apps/web/src/components/records/notes/notes-card-body.tsx",
-    "line": 350,
-    "column": 98,
-    "hash": "267e5558ef021727"
   },
   {
     "file": "apps/web/src/components/records/print/print-toolbar.tsx",
@@ -2790,226 +2532,16 @@
     "hash": "19766ed6ccb2f4a3"
   },
   {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 72,
-    "column": 73,
-    "hash": "fa56abc468388b10"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 75,
-    "column": 59,
-    "hash": "b79cac926e0b2e34"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 79,
-    "column": 27,
-    "hash": "b6164b535fded313"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 81,
-    "column": 13,
-    "hash": "dcbf1bfbb0e66f34"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 82,
-    "column": 13,
-    "hash": "a0ff8bea2e709674"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 83,
-    "column": 13,
-    "hash": "9b01dc1d809644fd"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 87,
-    "column": 13,
-    "hash": "e48745f67165010b"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 92,
-    "column": 28,
-    "hash": "855abbdcff80eaf6"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 99,
-    "column": 10,
-    "hash": "a76e13b9839270eb"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 108,
-    "column": 10,
-    "hash": "e2d0a54968ead24e"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 117,
-    "column": 10,
-    "hash": "f9a4ed0dcb06b2f8"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 121,
-    "column": 59,
-    "hash": "7314a4ea66bfa59a"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 122,
-    "column": 64,
-    "hash": "663ea1bfffe5038f"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 123,
-    "column": 63,
-    "hash": "28391d3bc64ec15c"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 126,
-    "column": 20,
-    "hash": "ad131a4d277832b1"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 131,
-    "column": 27,
-    "hash": "9c8acdaf8cd9b908"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 136,
-    "column": 25,
-    "hash": "89a14feb2190a533"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 155,
-    "column": 30,
-    "hash": "49c266baaaa70981"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 195,
-    "column": 77,
-    "hash": "4659374e273ff9b4"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 204,
-    "column": 30,
-    "hash": "e177f389c1954d4d"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 210,
-    "column": 12,
-    "hash": "a57b08a480b822a0"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 213,
-    "column": 41,
-    "hash": "0a30a815d67d7dd2"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/recycle-bin.tsx",
-    "line": 219,
-    "column": 12,
-    "hash": "1ff57a29d7c9d11b"
-  },
-  {
     "file": "apps/web/src/components/records/recycle-bin/search-rows.tsx",
-    "line": 54,
-    "column": 19,
-    "hash": "f4319a500002ca96"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/search-rows.tsx",
-    "line": 61,
-    "column": 27,
-    "hash": "43132cec38fee373"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/search-rows.tsx",
-    "line": 65,
-    "column": 19,
-    "hash": "b211fdfd44a491f0"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/search-rows.tsx",
-    "line": 72,
-    "column": 27,
-    "hash": "1d50c61397b69d96"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/search-rows.tsx",
-    "line": 75,
-    "column": 81,
-    "hash": "49c266baaaa70981"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/search-rows.tsx",
-    "line": 84,
-    "column": 19,
-    "hash": "66c1e5545378d252"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/search-rows.tsx",
-    "line": 93,
-    "column": 19,
-    "hash": "c59bba6ef76d9533"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/search-rows.tsx",
-    "line": 95,
-    "column": 25,
-    "hash": "2a78025de6aae5e7"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/search-rows.tsx",
-    "line": 100,
+    "line": 103,
     "column": 35,
     "hash": "2a78025de6aae5e7"
   },
   {
     "file": "apps/web/src/components/records/recycle-bin/search-rows.tsx",
-    "line": 109,
-    "column": 19,
-    "hash": "f5aa807692e02467"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/search-rows.tsx",
-    "line": 119,
-    "column": 21,
-    "hash": "17b10d42348a0c9a"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/search-rows.tsx",
-    "line": 122,
+    "line": 125,
     "column": 27,
     "hash": "50601b4b95ce418d"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/search-rows.tsx",
-    "line": 127,
-    "column": 21,
-    "hash": "284265bca610690d"
-  },
-  {
-    "file": "apps/web/src/components/records/recycle-bin/search-rows.tsx",
-    "line": 133,
-    "column": 19,
-    "hash": "c8f48a68649d1cae"
   },
   {
     "file": "apps/web/src/components/records/search/advanced-search-card.tsx",
@@ -3301,181 +2833,37 @@
   },
   {
     "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 80,
-    "column": 24,
-    "hash": "76900f1bfd16c8d4"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 86,
-    "column": 75,
-    "hash": "7a3cc33f849676fc"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 96,
-    "column": 22,
-    "hash": "b79cac926e0b2e34"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 100,
-    "column": 17,
-    "hash": "b79cac926e0b2e34"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 105,
-    "column": 51,
-    "hash": "65f0f56fe31a30c7"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 111,
-    "column": 58,
-    "hash": "a1fdf60a5ac17e68"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 122,
-    "column": 99,
-    "hash": "82148b3da229440c"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 129,
-    "column": 27,
-    "hash": "286ec1c39cfbabac"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 132,
-    "column": 77,
-    "hash": "2e290d1dab51cfb6"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 135,
-    "column": 77,
-    "hash": "077b1b77d3100997"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 138,
-    "column": 77,
-    "hash": "593879218a5a79c5"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 167,
-    "column": 24,
-    "hash": "3064d79a295cefe4"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 178,
-    "column": 24,
-    "hash": "e2d0a54968ead24e"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 200,
-    "column": 86,
-    "hash": "82148b3da229440c"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 200,
-    "column": 96,
-    "hash": "82148b3da229440c"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 224,
-    "column": 21,
-    "hash": "077b1b77d3100997"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 225,
+    "line": 237,
     "column": 27,
     "hash": "4077f41d5b84df64"
   },
   {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 237,
-    "column": 94,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 243,
-    "column": 16,
-    "hash": "1509f561f2416598"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 251,
-    "column": 15,
-    "hash": "01595e8f253bee9c"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 253,
-    "column": 22,
-    "hash": "e2d0a54968ead24e"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/manage-tags-page.tsx",
-    "line": 254,
-    "column": 21,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
     "file": "apps/web/src/components/records/tags/record-tags.tsx",
-    "line": 57,
+    "line": 59,
     "column": 20,
     "hash": "b1b97ca2fe74391b"
   },
   {
     "file": "apps/web/src/components/records/tags/record-tags.tsx",
-    "line": 76,
+    "line": 78,
     "column": 57,
     "hash": "b1b97ca2fe74391b"
   },
   {
     "file": "apps/web/src/components/records/tags/record-tags.tsx",
-    "line": 97,
+    "line": 99,
     "column": 16,
     "hash": "37f3c62614cbc998"
   },
   {
     "file": "apps/web/src/components/records/tags/record-tags.tsx",
-    "line": 110,
-    "column": 17,
-    "hash": "50b0cb6154712db2"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/record-tags.tsx",
-    "line": 135,
+    "line": 137,
     "column": 24,
     "hash": "8db71ed28b0f2f14"
   },
   {
     "file": "apps/web/src/components/records/tags/record-tags.tsx",
-    "line": 162,
-    "column": 14,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/record-tags.tsx",
-    "line": 178,
-    "column": 14,
-    "hash": "1509f561f2416598"
-  },
-  {
-    "file": "apps/web/src/components/records/tags/record-tags.tsx",
-    "line": 200,
+    "line": 202,
     "column": 14,
     "hash": "8db71ed28b0f2f14"
   },
@@ -3742,84 +3130,6 @@
     "line": 60,
     "column": 73,
     "hash": "7d9eb7acb13e2462"
-  },
-  {
-    "file": "apps/web/src/components/records/transfer/history/import-history.tsx",
-    "line": 41,
-    "column": 24,
-    "hash": "f148224ae44fb843"
-  },
-  {
-    "file": "apps/web/src/components/records/transfer/history/import-history.tsx",
-    "line": 42,
-    "column": 24,
-    "hash": "ca4c37cb4476ae2b"
-  },
-  {
-    "file": "apps/web/src/components/records/transfer/history/import-history.tsx",
-    "line": 43,
-    "column": 24,
-    "hash": "492b50e5b6029061"
-  },
-  {
-    "file": "apps/web/src/components/records/transfer/history/import-history.tsx",
-    "line": 44,
-    "column": 24,
-    "hash": "4d82f5dd3a2f859e"
-  },
-  {
-    "file": "apps/web/src/components/records/transfer/history/import-history.tsx",
-    "line": 45,
-    "column": 24,
-    "hash": "6b02e0d363a4af1c"
-  },
-  {
-    "file": "apps/web/src/components/records/transfer/history/import-history.tsx",
-    "line": 46,
-    "column": 24,
-    "hash": "3a5ecca188c0579c"
-  },
-  {
-    "file": "apps/web/src/components/records/transfer/history/import-history.tsx",
-    "line": 47,
-    "column": 24,
-    "hash": "12698ce1ea5cd4ab"
-  },
-  {
-    "file": "apps/web/src/components/records/transfer/history/import-history.tsx",
-    "line": 48,
-    "column": 24,
-    "hash": "920e413c7d411b61"
-  },
-  {
-    "file": "apps/web/src/components/records/transfer/history/import-history.tsx",
-    "line": 49,
-    "column": 24,
-    "hash": "ff8059dc6752afdd"
-  },
-  {
-    "file": "apps/web/src/components/records/transfer/history/import-history.tsx",
-    "line": 52,
-    "column": 49,
-    "hash": "278cd3d905e627ff"
-  },
-  {
-    "file": "apps/web/src/components/records/transfer/history/import-history.tsx",
-    "line": 67,
-    "column": 96,
-    "hash": "90789c12d0731b44"
-  },
-  {
-    "file": "apps/web/src/components/records/transfer/history/import-history.tsx",
-    "line": 71,
-    "column": 95,
-    "hash": "d94bcc43b0f7e502"
-  },
-  {
-    "file": "apps/web/src/components/records/transfer/history/import-history.tsx",
-    "line": 81,
-    "column": 46,
-    "hash": "5310f4278064e8d0"
   },
   {
     "file": "apps/web/src/components/records/transfer/history/undo-import-dialog.tsx",
@@ -4135,7 +3445,7 @@
   },
   {
     "file": "apps/web/src/components/records/transfer/transfer-screens.tsx",
-    "line": 85,
+    "line": 86,
     "column": 28,
     "hash": "58aa0d2c80072a0d"
   },
@@ -4516,18 +3826,6 @@
     "line": 32,
     "column": 16,
     "hash": "f52d11daf237a0d2"
-  },
-  {
-    "file": "apps/web/src/components/ui/tag-entry.tsx",
-    "line": 24,
-    "column": 18,
-    "hash": "7ecedeead3cf73be"
-  },
-  {
-    "file": "apps/web/src/components/ui/tag-entry.tsx",
-    "line": 39,
-    "column": 21,
-    "hash": "7ecedeead3cf73be"
   },
   {
     "file": "apps/web/src/components/ui/text-area.tsx",
@@ -8371,177 +7669,9 @@
   },
   {
     "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 71,
-    "column": 20,
-    "hash": "68a8ae2751ffa29c"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 92,
-    "column": 41,
-    "hash": "1f9deb71c41f1a17"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 96,
-    "column": 42,
-    "hash": "9a98f46b3a5419ba"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 101,
-    "column": 31,
-    "hash": "4f644c74f1e8ff0e"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 111,
-    "column": 35,
-    "hash": "d9521b20ff0b85d4"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 113,
+    "line": 115,
     "column": 51,
     "hash": "d2b897cd82610db6"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 133,
-    "column": 59,
-    "hash": "d83b9ff3c07a8390"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 142,
-    "column": 73,
-    "hash": "27c86782bc87422a"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 145,
-    "column": 33,
-    "hash": "752afb59fd8740bd"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 149,
-    "column": 49,
-    "hash": "e7a241debad56609"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 152,
-    "column": 53,
-    "hash": "399dee64e1667a43"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 163,
-    "column": 76,
-    "hash": "da39c9e5b0490327"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 168,
-    "column": 49,
-    "hash": "2545516e175b818b"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 174,
-    "column": 37,
-    "hash": "6175b1e6432d60e7"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 180,
-    "column": 72,
-    "hash": "0bab8677c46646ba"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 184,
-    "column": 46,
-    "hash": "93c89a9c239603b2"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 187,
-    "column": 50,
-    "hash": "8d8cd546b58d91c3"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 191,
-    "column": 24,
-    "hash": "088d0b4e72138fcd"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 192,
-    "column": 75,
-    "hash": "7893d510b10f0747"
-  },
-  {
-    "file": "apps/web/src/modules/settings-currencies/settings-currencies-screen.tsx",
-    "line": 66,
-    "column": 59,
-    "hash": "d079ee92c1cb3559"
-  },
-  {
-    "file": "apps/web/src/modules/settings-currencies/settings-currencies-screen.tsx",
-    "line": 70,
-    "column": 24,
-    "hash": "a98e07bcc7894db3"
-  },
-  {
-    "file": "apps/web/src/modules/settings-currencies/settings-currencies-screen.tsx",
-    "line": 75,
-    "column": 19,
-    "hash": "b79cac926e0b2e34"
-  },
-  {
-    "file": "apps/web/src/modules/settings-currencies/settings-currencies-screen.tsx",
-    "line": 83,
-    "column": 10,
-    "hash": "d3ab05d30e36312a"
-  },
-  {
-    "file": "apps/web/src/modules/settings-currencies/settings-currencies-screen.tsx",
-    "line": 93,
-    "column": 12,
-    "hash": "552ac57fea630558"
-  },
-  {
-    "file": "apps/web/src/modules/settings-currencies/settings-currencies-screen.tsx",
-    "line": 100,
-    "column": 12,
-    "hash": "9d4a590986d953a1"
-  },
-  {
-    "file": "apps/web/src/modules/settings-currencies/settings-currencies-screen.tsx",
-    "line": 108,
-    "column": 80,
-    "hash": "1d852fbfe836c3e5"
-  },
-  {
-    "file": "apps/web/src/modules/settings-currencies/settings-currencies-screen.tsx",
-    "line": 110,
-    "column": 90,
-    "hash": "839a57482f9d6603"
-  },
-  {
-    "file": "apps/web/src/modules/settings-currencies/settings-currencies-screen.tsx",
-    "line": 119,
-    "column": 16,
-    "hash": "d0464602f1f6b843"
-  },
-  {
-    "file": "apps/web/src/modules/settings-currencies/settings-currencies-screen.tsx",
-    "line": 127,
-    "column": 16,
-    "hash": "9201197a1994ab60"
   },
   {
     "file": "apps/web/src/modules/settings-modules/fields-api.ts",
@@ -8638,72 +7768,6 @@
     "line": 287,
     "column": 12,
     "hash": "1509f561f2416598"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/fields-screen.tsx",
-    "line": 64,
-    "column": 64,
-    "hash": "725b07b2d96ba729"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/fields-screen.tsx",
-    "line": 69,
-    "column": 24,
-    "hash": "a67f6147d43922ec"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/fields-screen.tsx",
-    "line": 79,
-    "column": 24,
-    "hash": "dace6600cc9d767b"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/fields-screen.tsx",
-    "line": 85,
-    "column": 25,
-    "hash": "76c86c4c32432be3"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/fields-screen.tsx",
-    "line": 115,
-    "column": 22,
-    "hash": "b4cf4e1795068df3"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/fields-screen.tsx",
-    "line": 160,
-    "column": 24,
-    "hash": "7ff434dc31a905f2"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/fields-screen.tsx",
-    "line": 170,
-    "column": 24,
-    "hash": "c44f7bb660e94103"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/fields-screen.tsx",
-    "line": 198,
-    "column": 28,
-    "hash": "06a4f4f54f7a3064"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/fields-screen.tsx",
-    "line": 199,
-    "column": 29,
-    "hash": "06a4f4f54f7a3064"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/fields-screen.tsx",
-    "line": 212,
-    "column": 16,
-    "hash": "64e945a913597205"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/fields-screen.tsx",
-    "line": 235,
-    "column": 100,
-    "hash": "06b05d1636030e56"
   },
   {
     "file": "apps/web/src/modules/settings-modules/layout-editor.tsx",
@@ -8868,108 +7932,6 @@
     "hash": "7cc9232e4405d1ad"
   },
   {
-    "file": "apps/web/src/modules/settings-modules/layouts-screen.tsx",
-    "line": 39,
-    "column": 64,
-    "hash": "725b07b2d96ba729"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/layouts-screen.tsx",
-    "line": 44,
-    "column": 24,
-    "hash": "a67f6147d43922ec"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/layouts-screen.tsx",
-    "line": 54,
-    "column": 24,
-    "hash": "dace6600cc9d767b"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/layouts-screen.tsx",
-    "line": 60,
-    "column": 25,
-    "hash": "76c86c4c32432be3"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/layouts-screen.tsx",
-    "line": 90,
-    "column": 22,
-    "hash": "b4cf4e1795068df3"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/layouts-screen.tsx",
-    "line": 135,
-    "column": 24,
-    "hash": "b6123837954ad673"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/layouts-screen.tsx",
-    "line": 159,
-    "column": 56,
-    "hash": "6ca493b5d77478e1"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/layouts-screen.tsx",
-    "line": 168,
-    "column": 20,
-    "hash": "ae4dc56200456ae6"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/layouts-screen.tsx",
-    "line": 176,
-    "column": 20,
-    "hash": "d92ee31d69323161"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/layouts-screen.tsx",
-    "line": 212,
-    "column": 44,
-    "hash": "d47d7cb0e4f8fd2b"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/settings-modules-screen.tsx",
-    "line": 114,
-    "column": 26,
-    "hash": "a67f6147d43922ec"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/settings-modules-screen.tsx",
-    "line": 115,
-    "column": 27,
-    "hash": "49c266baaaa70981"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/settings-modules-screen.tsx",
-    "line": 125,
-    "column": 20,
-    "hash": "ed69b5dd9cc7df6c"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/settings-modules-screen.tsx",
-    "line": 129,
-    "column": 101,
-    "hash": "5eb24462b0c53356"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/settings-modules-screen.tsx",
-    "line": 138,
-    "column": 82,
-    "hash": "6f3002fa783f77a7"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/settings-modules-screen.tsx",
-    "line": 145,
-    "column": 14,
-    "hash": "b3bb0f0a57ba3d79"
-  },
-  {
-    "file": "apps/web/src/modules/settings-modules/settings-modules-screen.tsx",
-    "line": 191,
-    "column": 82,
-    "hash": "c5105d7e864f3c81"
-  },
-  {
     "file": "apps/web/src/modules/settings-personal/language-editor.tsx",
     "line": 44,
     "column": 28,
@@ -8980,84 +7942,6 @@
     "line": 45,
     "column": 28,
     "hash": "0f8b5cb2e84b210d"
-  },
-  {
-    "file": "apps/web/src/modules/settings-personal/settings-personal-screen.tsx",
-    "line": 107,
-    "column": 10,
-    "hash": "d3368cbffe23c98d"
-  },
-  {
-    "file": "apps/web/src/modules/settings-personal/settings-personal-screen.tsx",
-    "line": 122,
-    "column": 55,
-    "hash": "15c4aa13037eaf52"
-  },
-  {
-    "file": "apps/web/src/modules/settings-personal/settings-personal-screen.tsx",
-    "line": 140,
-    "column": 15,
-    "hash": "a525be98c4abc148"
-  },
-  {
-    "file": "apps/web/src/modules/settings-personal/settings-personal-screen.tsx",
-    "line": 145,
-    "column": 15,
-    "hash": "39159679e60c3502"
-  },
-  {
-    "file": "apps/web/src/modules/settings-personal/settings-personal-screen.tsx",
-    "line": 154,
-    "column": 26,
-    "hash": "d9d17b8264af6ed3"
-  },
-  {
-    "file": "apps/web/src/modules/settings-personal/settings-personal-screen.tsx",
-    "line": 157,
-    "column": 26,
-    "hash": "fb82e2f02e7fce77"
-  },
-  {
-    "file": "apps/web/src/modules/settings-personal/settings-personal-screen.tsx",
-    "line": 160,
-    "column": 26,
-    "hash": "95015bf4fedba16e"
-  },
-  {
-    "file": "apps/web/src/modules/settings-personal/settings-personal-screen.tsx",
-    "line": 163,
-    "column": 26,
-    "hash": "9070f44099c7cbd9"
-  },
-  {
-    "file": "apps/web/src/modules/settings-personal/settings-personal-screen.tsx",
-    "line": 204,
-    "column": 19,
-    "hash": "39bbb719fa2b9d22"
-  },
-  {
-    "file": "apps/web/src/modules/settings-personal/settings-personal-screen.tsx",
-    "line": 206,
-    "column": 57,
-    "hash": "94901258ed029f18"
-  },
-  {
-    "file": "apps/web/src/modules/settings-personal/settings-personal-screen.tsx",
-    "line": 215,
-    "column": 26,
-    "hash": "513b6082540aa6fb"
-  },
-  {
-    "file": "apps/web/src/modules/settings-personal/settings-personal-screen.tsx",
-    "line": 217,
-    "column": 89,
-    "hash": "76f360dd71d2099d"
-  },
-  {
-    "file": "apps/web/src/modules/settings-personal/settings-personal-screen.tsx",
-    "line": 223,
-    "column": 88,
-    "hash": "3c9b30285f90cf05"
   },
   {
     "file": "apps/web/src/modules/setup/setup-data.ts",

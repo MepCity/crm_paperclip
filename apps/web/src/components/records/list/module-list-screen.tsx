@@ -873,7 +873,8 @@ function ModuleListScreenLoaded({
     >
       <ViewTabStrip
         viewName={builtInViewLabel(view, config.pluralLabel, pluralLabel, t)}
-        views={viewsQuery.data?.map((item) => ({ ...item, name: builtInViewLabel(item, config.pluralLabel, pluralLabel, t) }))}
+        views={viewsQuery.data?.map((item) => ({ ...item, name: builtInViewLabel(item, config.pluralLabel, pluralLabel, t) })).sort((a,b) => ["Campaigns","Cases","Solutions"].includes(config.module) ? a.name.localeCompare(b.name, adapter.language) : 0)}
+        hideEmptyCreatedGroup={["Campaigns","Cases","Solutions"].includes(config.module)}
         pinnedViews={config.pinnedViews?.map((name) => {
           const item = viewsQuery.data?.find((candidate) => candidate.name === name);
           return item ? builtInViewLabel(item, config.pluralLabel, pluralLabel, t) : name;

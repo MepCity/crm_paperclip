@@ -48,3 +48,14 @@
 .note-row:focus-within .note-row-actions {
   display: flex;
 }
+
+/* The note sorter belongs to the card heading, above both rows and composer. */
+[data-related-card="notes"] {
+  position: relative;
+}
+
+[data-related-card="notes"] .note-list-sort {
+  position: absolute;
+  inset-block-start: 8px;
+  inset-inline-end: var(--size-detail-card-padding);
+}

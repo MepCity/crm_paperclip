@@ -3,6 +3,7 @@
 import { ArrowLeft, HelpCircle, MoreHorizontal, Search } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useSettingsLabel } from "@/i18n/settings-labels";
 import { MODULE_TABS, SIDEBAR_MODULES } from "./fields-model";
 import { LayoutEditor } from "./layout-editor";
 import { defaultLayoutRow, type LayoutEditorData, type LayoutRow } from "./layouts-model";
@@ -18,6 +19,7 @@ export function LayoutsScreen({
   rows?: LayoutRow[];
   editor?: LayoutEditorData;
 }) {
+  const copy = useSettingsLabel();
   const [editing, setEditing] = useState(false);
   const [moduleQuery, setModuleQuery] = useState("");
   const [searching, setSearching] = useState(false);
@@ -37,11 +39,11 @@ export function LayoutsScreen({
             className="flex items-center gap-1 text-sm font-semibold text-text"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
-            Back to Modules
+            {copy("Back to Modules")}
           </Link>
           <button
             type="button"
-            aria-label="Search modules"
+            aria-label={copy("Search modules")}
             onClick={() => setSearching((s) => !s)}
             className="text-text-muted"
           >
@@ -51,13 +53,13 @@ export function LayoutsScreen({
         {searching ? (
           <input
             type="search"
-            aria-label="Filter modules"
+            aria-label={copy("Filter modules")}
             value={moduleQuery}
             onChange={(e) => setModuleQuery(e.target.value)}
             className="mb-2 w-full rounded-md border border-border px-2 py-1 text-sm"
           />
         ) : null}
-        <nav aria-label="Modules">
+        <nav aria-label={copy("Modules")}>
           <ul>
             {modules.map((m) => (
               <li key={m}>
@@ -66,14 +68,14 @@ export function LayoutsScreen({
                     aria-current="page"
                     className="block rounded-md bg-surface-muted px-2 py-2 text-sm font-semibold text-text"
                   >
-                    {m}
+                    {copy(m)}
                   </span>
                 ) : (
                   <Link
                     href={`/crm/${orgSlug}/settings/modules/${encodeURIComponent(m)}/layouts`}
                     className="block px-2 py-2 text-sm text-text-muted hover:text-text"
                   >
-                    {m}
+                    {copy(m)}
                   </Link>
                 )}
               </li>
@@ -83,11 +85,11 @@ export function LayoutsScreen({
       </aside>
       <div className="min-w-0 flex-1">
         <div className="border-b border-border px-6 pt-5 pb-3">
-          <h1 className="text-xl font-semibold text-text">{module}</h1>
+          <h1 className="text-xl font-semibold text-text">{copy(module)}</h1>
         </div>
         <div
           role="tablist"
-          aria-label="Module configuration"
+          aria-label={copy("Module configuration")}
           className="flex items-center gap-6 border-b border-border px-6"
         >
           {MODULE_TABS.map((t) => {
@@ -100,7 +102,7 @@ export function LayoutsScreen({
                   aria-selected="true"
                   className="border-b-2 border-primary py-4 text-sm font-semibold text-text"
                 >
-                  {t}
+                  {copy(t)}
                 </button>
               );
             }
@@ -113,7 +115,7 @@ export function LayoutsScreen({
                   aria-selected="false"
                   className="py-4 text-sm text-text-muted hover:text-text"
                 >
-                  {t}
+                  {copy(t)}
                 </Link>
               );
             }
@@ -126,13 +128,13 @@ export function LayoutsScreen({
                 disabled
                 className="py-4 text-sm text-text-muted opacity-60 cursor-not-allowed"
               >
-                {t}
+                {copy(t)}
               </button>
             );
           })}
           <button
             type="button"
-            aria-label="Layouts help"
+            aria-label={copy("Layouts help")}
             disabled
             className="ml-auto text-text-muted"
           >
@@ -157,8 +159,9 @@ export function LayoutsScreen({
             <>
               <div className="mb-4 flex flex-wrap items-center justify-between gap-4">
                 <p className="text-sm text-text-muted">
-                  Design your own layouts to fit your business processes, then assign them to your
-                  user accounts based on permission profiles.
+                  {copy(
+                    "Design your own layouts to fit your business processes, then assign them to your user accounts based on permission profiles.",
+                  )}
                 </p>
                 {editor ? (
                   <button
@@ -166,7 +169,7 @@ export function LayoutsScreen({
                     onClick={() => setEditing(true)}
                     className="shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-text hover:bg-primary/90"
                   >
-                    Customize Layout
+                    {copy("Customize Layout")}
                   </button>
                 ) : (
                   <button
@@ -174,7 +177,7 @@ export function LayoutsScreen({
                     disabled
                     className="shrink-0 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-text opacity-60 cursor-not-allowed"
                   >
-                    Create New Layout
+                    {copy("Create New Layout")}
                   </button>
                 )}
               </div>
@@ -184,7 +187,7 @@ export function LayoutsScreen({
                     <tr>
                       {["Name", "Shared To", "Last Modified", "Status"].map((h) => (
                         <th key={h} scope="col" className="px-4 py-3 font-semibold text-text">
-                          {h}
+                          {copy(h)}
                         </th>
                       ))}
                     </tr>
@@ -198,18 +201,20 @@ export function LayoutsScreen({
                               <button
                                 type="button"
                                 onClick={() => setEditing(true)}
-                                aria-label={`Edit ${row.name} layout`}
+                                aria-label={`Edit ${row.id === "standard" ? copy(row.name) : row.name} layout`}
                                 className="font-semibold text-accent-blue hover:underline text-left cursor-pointer"
                               >
-                                {row.name}
+                                {row.id === "standard" ? copy(row.name) : row.name}
                               </button>
                             ) : (
-                              <span className="font-semibold text-accent-blue">{row.name}</span>
+                              <span className="font-semibold text-accent-blue">
+                                {row.id === "standard" ? copy(row.name) : row.name}
+                              </span>
                             )}
                             {module === "Leads" ? (
                               <button
                                 type="button"
-                                aria-label="More"
+                                aria-label={copy("More")}
                                 disabled
                                 className="text-text-muted opacity-60 cursor-not-allowed"
                               >
@@ -218,14 +223,14 @@ export function LayoutsScreen({
                             ) : null}
                           </span>
                         </td>
-                        <td className="px-4 py-4 text-text-muted">{row.sharedTo}</td>
+                        <td className="px-4 py-4 text-text-muted">{copy(row.sharedTo)}</td>
                         <td className="px-4 py-4 text-text-muted">{row.lastModifiedAt ?? ""}</td>
                         <td className="px-4 py-4">
                           <button
                             type="button"
                             role="switch"
                             aria-checked={row.status}
-                            aria-label={`${row.name} layout status`}
+                            aria-label={`${row.id === "standard" ? copy(row.name) : row.name} layout status`}
                             disabled
                             className={`relative inline-flex h-5 w-9 rounded-full opacity-60 cursor-not-allowed ${row.status ? "bg-success" : "bg-border"}`}
                           >

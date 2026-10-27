@@ -299,7 +299,9 @@ export function RecordHeader({
                         isDisabled={item.isDisabled}
                         laterModule={item.laterModule}
                       >
-                        {item.label}
+                        <span className="block min-w-0 truncate" title={item.label}>
+                          {item.label}
+                        </span>
                       </MenuItem>
                     ))}
                   </MenuGroup>

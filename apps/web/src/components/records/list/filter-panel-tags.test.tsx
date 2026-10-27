@@ -56,7 +56,7 @@ for (const module of Object.keys(builders) as TagModule[]) {
       if (label !== "is") {
         await user.click(screen.getByRole("button", { name: /Tag operator$/ }));
         await user.click(screen.getByRole("option", { name: label }));
-        expect((apply as HTMLButtonElement).disabled).toBe(true);
+        expect((apply as HTMLButtonElement).disabled).toBe(false);
       }
       await user.click(screen.getByRole("button", { name: "Tag value" }));
       await user.type(screen.getByRole("textbox", { name: "Search Tag value" }), "follow");
@@ -97,7 +97,7 @@ const groups: FilterGroup[] = [
   },
 ];
 for (const state of ["loading", "empty", "error"] as const) {
-  test(`tag catalog ${state} explains the state and blocks Apply`, async () => {
+  test(`tag catalog ${state} explains the state and preserves a safe Apply action`, async () => {
     const client =
       state === "empty"
         ? createFixtureTagCatalog({})
@@ -126,6 +126,6 @@ for (const state of ["loading", "empty", "error"] as const) {
     await user.keyboard("{Escape}");
     expect(
       (screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement).disabled,
-    ).toBe(true);
+    ).toBe(state !== "empty");
   });
 }

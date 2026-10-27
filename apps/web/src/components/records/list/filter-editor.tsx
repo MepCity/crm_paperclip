@@ -4,6 +4,7 @@ import { MultiSelect, type MultiSelectOption } from "@/components/ui/multi-selec
 import { NumberField } from "@/components/ui/number-field";
 import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
+import { useRecordLabel } from "@/i18n/record-labels";
 import { displayDateToIso, isValidDisplayDateRange } from "@/lib/records/filter-date-input";
 import {
   type AppliedFilterValue,
@@ -122,6 +123,7 @@ export function FilterEditor({
   draft: FilterDraft;
   onChange: (draft: FilterDraft) => void;
 }) {
+  const copy = useRecordLabel();
   const operators: readonly FilterOperator[] = filterOperators[editor.fieldType].operators;
   const control = draftOperator(editor, draft)?.control;
   const value = draft.value;
@@ -162,7 +164,7 @@ export function FilterEditor({
       >
         {(operator) => (
           <SelectItem variant="filter" id={operator.id}>
-            {operator.label}
+            {copy(operator.label)}
           </SelectItem>
         )}
       </Select>
@@ -172,7 +174,7 @@ export function FilterEditor({
             <TextField
               label={`${label} value`}
               hideLabel
-              placeholder="Type here"
+              placeholder={copy("Type here")}
               value={typeof value === "string" ? value : ""}
               onChange={setValue}
             />
@@ -220,7 +222,7 @@ export function FilterEditor({
                 control === "users"
                   ? "Click to Select Users."
                   : control === "tag"
-                    ? "Type here"
+                    ? copy("Type here")
                     : "None"
               }
               options={editor.options ?? []}

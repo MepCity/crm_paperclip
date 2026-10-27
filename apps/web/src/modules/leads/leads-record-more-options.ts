@@ -50,21 +50,21 @@ export const LEADS_RECORD_MORE_OPTIONS_SPEC_GROUPS: readonly {
         label: "Find and Merge Duplicates",
         handlerKey: "onFindMergeDuplicates",
       },
-      { id: "mail-merge", label: "Mail Merge" },
+      { id: "mail-merge", label: "Mail Merge", laterModule: "M10" },
     ],
   },
   {
     id: "leads-more-automation",
     items: [
-      { id: "run-macro", label: "Run Macro" },
-      { id: "customize-business-card", label: "Customize Business Card" },
-      { id: "organize-lead-details", label: "Organize Lead Details" },
-      { id: "add-related-list", label: "Add Related List" },
-      { id: "review-history", label: "Review History" },
-      { id: "enroll-cadence", label: "Enroll to Cadence" },
-      { id: "add-kiosk", label: "Add Kiosk" },
-      { id: "create-button", label: "Create Button" },
-      { id: "create-client-script", label: "Create Client Script" },
+      { id: "run-macro", label: "Run Macro", laterModule: "M12" },
+      { id: "customize-business-card", label: "Customize Business Card", laterModule: "M11" },
+      { id: "organize-lead-details", label: "Organize Lead Details", laterModule: "M11" },
+      { id: "add-related-list", label: "Add Related List", laterModule: "M11" },
+      { id: "review-history", label: "Review History", laterModule: "M11" },
+      { id: "enroll-cadence", label: "Enroll to Cadence", laterModule: "P3" },
+      { id: "add-kiosk", label: "Add Kiosk", laterModule: "P3" },
+      { id: "create-button", label: "Create Button", laterModule: "M11" },
+      { id: "create-client-script", label: "Create Client Script", laterModule: "P3" },
     ],
   },
 ];
@@ -86,7 +86,7 @@ export const LEADS_RECORD_MORE_OPTIONS_DEVIATIONS: readonly LeadsMoreOptionsDevi
 ];
 
 /**
- * Renders only items whose handler is supplied; empty spec groups are omitted.
+ * Keeps the observed menu inventory visible; unavailable actions retain their feature boundary.
  */
 export function buildLeadsRecordMoreMenuGroups(
   handlers: LeadsRecordMoreOptionsHandlers,

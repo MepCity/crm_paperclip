@@ -435,11 +435,13 @@ export function FilterPanel({
               {applyErrorMessage}
             </p>
           ) : null}
-          <div className="flex items-center gap-2">
+          <div
+            className={tagModule ? "flex flex-col items-start gap-2" : "flex items-center gap-2"}
+          >
             {onApply && (
               <Button
                 size="sm"
-                isDisabled={!completed}
+                isDisabled={!completed && (!tagModule || tags.status !== "ready")}
                 onPress={() => {
                   if (!completed) return;
                   const applied = selectedFieldItems.flatMap((item) => {

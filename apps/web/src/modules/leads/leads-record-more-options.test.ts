@@ -38,7 +38,7 @@ describe("leads-record-more-options", () => {
     expect(deleteItem?.handlerKey).toBe("onDelete");
   });
 
-  it("renders only handler-backed items and preserves spec group boundaries", () => {
+  it("renders the full inventory with inert feature boundaries and working record handlers", () => {
     const onClone = vi.fn();
     const onDelete = vi.fn();
     const onFindMergeDuplicates = vi.fn();
@@ -47,7 +47,7 @@ describe("leads-record-more-options", () => {
       onDelete,
       onFindMergeDuplicates,
     });
-    expect(groups).toHaveLength(2);
+    expect(groups).toHaveLength(3);
     expect(groups[0]?.items).toEqual([
       { id: "clone", label: "Clone", onAction: onClone },
       { id: "share", label: "Share", laterModule: "M11" },
@@ -60,7 +60,13 @@ describe("leads-record-more-options", () => {
         label: "Find and Merge Duplicates",
         onAction: onFindMergeDuplicates,
       },
+      { id: "mail-merge", label: "Mail Merge", laterModule: "M10" },
     ]);
+    expect(groups[2]?.items).toHaveLength(9);
+    for (const item of groups[2]?.items ?? []) {
+      expect(item.laterModule).toBeTruthy();
+      expect(item.onAction).toBeUndefined();
+    }
   });
 
   it("omits Find and Merge Duplicates when onFindMergeDuplicates is not provided", () => {

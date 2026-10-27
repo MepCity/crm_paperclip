@@ -14,6 +14,7 @@ import {
 import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Link } from "@/components/ui/link";
+import { useSettingsLabel } from "@/i18n/settings-labels";
 import { fixtureCompanyDetailsPort } from "./fixture-port";
 import type { CompanyDetails, CompanyDetailsPort } from "./port";
 
@@ -34,6 +35,7 @@ export function CompanyDetailsScreen({
   orgSlug: string;
   port?: CompanyDetailsPort;
 }) {
+  const copy = useSettingsLabel();
   const [details, setDetails] = useState<CompanyDetails | null>(null);
   const [error, setError] = useState(false);
   const [copyStatus, setCopyStatus] = useState("");
@@ -59,16 +61,16 @@ export function CompanyDetailsScreen({
     if (!details) return;
     try {
       await navigator.clipboard.writeText(details.accessUrl);
-      setCopyStatus("Access URL copied.");
+      setCopyStatus(copy("Access URL copied."));
     } catch {
-      setCopyStatus("Access URL could not be copied.");
+      setCopyStatus(copy("Access URL could not be copied."));
     }
   }
 
   return (
     <div className="rounded-lg border border-border bg-surface shadow-xs">
       <nav
-        aria-label="Company settings"
+        aria-label={copy("Company settings")}
         className="flex flex-wrap gap-4 border-b border-border px-6"
       >
         {tabs.map((tab) =>
@@ -79,26 +81,26 @@ export function CompanyDetailsScreen({
               aria-current={tab === "Company Details" ? "page" : undefined}
               className={`py-4 text-md ${tab === "Company Details" ? "border-b-2 border-primary font-semibold text-text" : "text-text-muted"}`}
             >
-              {tab}
+              {copy(tab)}
             </Link>
           ) : (
             <Button key={tab} variant="ghost" isDisabled className="my-2">
-              {tab}
+              {copy(tab)}
             </Button>
           ),
         )}
       </nav>
       {error ? (
         <p role="alert" className="p-8">
-          Company details could not be loaded.
+          {copy("Company details could not be loaded.")}
         </p>
       ) : !details ? (
         <p role="status" className="p-8">
-          Loading company details…
+          {copy("Loading company details…")}
         </p>
       ) : (
         <div className="space-y-10 p-8 text-md">
-          <section aria-label="Organization identity" className="flex gap-8">
+          <section aria-label={copy("Organization identity")} className="flex gap-8">
             <div
               aria-hidden="true"
               className="flex size-24 shrink-0 items-center justify-center rounded-lg bg-surface-muted text-text-muted"
@@ -108,7 +110,7 @@ export function CompanyDetailsScreen({
             <div className="min-w-0">
               <div className="flex items-center gap-3">
                 <h2 className="break-words text-lg font-semibold">{details.name}</h2>
-                <EditButton label="Edit organization details" />
+                <EditButton label={copy("Edit organization details")} />
               </div>
               <p className="mt-1 text-text-muted">
                 Org ID: <span className="text-text">{details.displayId}</span>
@@ -126,11 +128,11 @@ export function CompanyDetailsScreen({
                 ).map(([label, Icon, value]) => (
                   <div key={label} className="flex min-h-5 items-center gap-3">
                     <dt>
-                      <span className="sr-only">{label}</span>
+                      <span className="sr-only">{copy(label)}</span>
                       <Icon aria-hidden="true" className="size-4 text-text-muted" />
                     </dt>
                     <dd className="break-words">
-                      {value ?? <span className="sr-only">Not provided</span>}
+                      {value ?? <span className="sr-only">{copy("Not provided")}</span>}
                     </dd>
                   </div>
                 ))}
@@ -140,16 +142,20 @@ export function CompanyDetailsScreen({
           <section aria-labelledby="company-access-heading">
             <div className="mb-5 flex items-center gap-3">
               <h2 id="company-access-heading" className="font-semibold">
-                Access URL
+                {copy("Access URL")}
               </h2>
-              <EditButton label="Edit access URL" />
+              <EditButton label={copy("Edit access URL")} />
             </div>
             <dl>
               <div className="flex flex-wrap items-center gap-4 md:pl-24">
-                <dt className="text-text-muted">URL</dt>
+                <dt className="text-text-muted">{copy("URL")}</dt>
                 <dd className="flex min-w-0 items-center gap-3">
                   <span className="break-all">{details.accessUrl}</span>
-                  <Button variant="icon" aria-label="Copy access URL" onPress={copyAccessUrl}>
+                  <Button
+                    variant="icon"
+                    aria-label={copy("Copy access URL")}
+                    onPress={copyAccessUrl}
+                  >
                     <Copy aria-hidden="true" className="size-4" />
                   </Button>
                 </dd>
@@ -161,36 +167,38 @@ export function CompanyDetailsScreen({
           </section>
           <section aria-labelledby="company-locale-heading">
             <h2 id="company-locale-heading" className="mb-5 font-semibold">
-              Locale Information
+              {copy("Locale Information")}
             </h2>
             <dl>
               <div className="flex flex-wrap items-center gap-4 md:pl-24">
-                <dt className="text-text-muted">Time Zone</dt>
+                <dt className="text-text-muted">{copy("Time Zone")}</dt>
                 <dd className="flex items-center gap-3">
                   <span>
                     ({details.timeZone.offset}) {details.timeZone.name} (
                     {details.timeZone.identifier})
                   </span>
-                  <EditButton label="Edit time zone" />
+                  <EditButton label={copy("Edit time zone")} />
                 </dd>
               </div>
             </dl>
           </section>
           <section aria-labelledby="company-license-heading">
             <h2 id="company-license-heading" className="font-semibold">
-              Team Licenses
+              {copy("Team Licenses")}
             </h2>
             <div className="mt-1 flex flex-wrap items-center gap-2">
               <p className="text-text-muted">
-                Team users can access team modules with limited access to organization modules.
+                {copy(
+                  "Team users can access team modules with limited access to organization modules.",
+                )}
               </p>
               <Button variant="ghost" isDisabled>
-                Learn More
+                {copy("Learn More")}
               </Button>
             </div>
-            <div title="Team licensing management is not available in this edition.">
+            <div title={copy("Team licensing management is not available in this edition.")}>
               <Button variant="relatedAction" isDisabled className="mt-5">
-                Get Team User License
+                {copy("Get Team User License")}
               </Button>
             </div>
           </section>

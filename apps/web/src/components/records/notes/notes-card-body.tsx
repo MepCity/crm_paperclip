@@ -4,6 +4,8 @@ import type { Criteria, FieldValue, ModuleApiName, RecordData } from "@crm/core/
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { RelatedRecordsListError } from "@/components/records/detail/related-records-list-error";
 import { Button } from "@/components/ui/button";
+import { UserAvatarPlaceholder } from "@/components/ui/user-avatar-placeholder";
+import { useUtilityLabel } from "@/i18n/utility-labels";
 import {
   useCreateRecord,
   useDeleteRecords,
@@ -120,6 +122,7 @@ function NotesPageLoader({
 }
 
 export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesCardBodyProps) {
+  const copy = useUtilityLabel();
   const views = useViews("Notes");
   const users = useUsers();
   const viewId = useMemo(
@@ -294,7 +297,7 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
   if (views.isLoading || (viewId !== null && list.isLoading)) {
     return (
       <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-        Loading...
+        {copy("Loading...")}
       </div>
     );
   }
@@ -303,22 +306,6 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
   const editing = editingId ? records.find((r) => r.id === editingId) : undefined;
   return (
     <div className="flex flex-col gap-3 py-4" data-testid="notes-card-body">
-      <NoteComposer
-        mode="create"
-        expanded={composing}
-        onExpand={() => {
-          setError(null);
-          setComposing(true);
-        }}
-        onCancel={() => {
-          setError(null);
-          setComposing(false);
-        }}
-        onSave={saveNew}
-        saving={create.isPending}
-        error={composing ? error : null}
-        renderToolbar={toolbar}
-      />
       {viewId !== null &&
         Array.from({ length: Math.max(0, pageCount - 1) }, (_, i) => i + 2).map((page) => (
           <NotesPageLoader
@@ -329,52 +316,67 @@ export function NotesCardBody({ parentModule, parentRecord, recordPath }: NotesC
             onLoaded={handlePageLoaded}
           />
         ))}
-      {items.length === 0 ? (
-        <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-          No records found
+      <NoteList
+        items={items}
+        sort={sort}
+        onSortChange={setSort}
+        onEdit={(id) => {
+          setError(null);
+          setEditingId(id);
+        }}
+        onDelete={onDelete}
+        editingId={editingId}
+        footer={
+          hasMore ? (
+            <div className="flex justify-center pt-2">
+              <Button variant="secondary" size="sm" onPress={() => setPageCount((p) => p + 1)}>
+                {copy("View more")}
+              </Button>
+            </div>
+          ) : null
+        }
+        renderEditor={(id) => (
+          <EditComposerWithBudget
+            noteId={id}
+            mode="edit"
+            expanded
+            initial={{
+              title: text(editing?.fields.Note_Title) ?? "",
+              content: text(editing?.fields.Note_Content) ?? "",
+            }}
+            onExpand={() => {}}
+            onCancel={() => {
+              setError(null);
+              setEditingId(null);
+            }}
+            onSave={saveEdit(id)}
+            saving={update.isPending}
+            error={error}
+            renderToolbar={toolbar}
+          />
+        )}
+      />
+      <div className="flex items-start gap-3">
+        <UserAvatarPlaceholder size="32px" />
+        <div className="min-w-0 flex-1">
+          <NoteComposer
+            mode="create"
+            expanded={composing}
+            onExpand={() => {
+              setError(null);
+              setComposing(true);
+            }}
+            onCancel={() => {
+              setError(null);
+              setComposing(false);
+            }}
+            onSave={saveNew}
+            saving={create.isPending}
+            error={composing ? error : null}
+            renderToolbar={toolbar}
+          />
         </div>
-      ) : (
-        <NoteList
-          items={items}
-          sort={sort}
-          onSortChange={setSort}
-          onEdit={(id) => {
-            setError(null);
-            setEditingId(id);
-          }}
-          onDelete={onDelete}
-          editingId={editingId}
-          footer={
-            hasMore ? (
-              <div className="flex justify-center pt-2">
-                <Button variant="secondary" size="sm" onPress={() => setPageCount((p) => p + 1)}>
-                  View more
-                </Button>
-              </div>
-            ) : null
-          }
-          renderEditor={(id) => (
-            <EditComposerWithBudget
-              noteId={id}
-              mode="edit"
-              expanded
-              initial={{
-                title: text(editing?.fields.Note_Title) ?? "",
-                content: text(editing?.fields.Note_Content) ?? "",
-              }}
-              onExpand={() => {}}
-              onCancel={() => {
-                setError(null);
-                setEditingId(null);
-              }}
-              onSave={saveEdit(id)}
-              saving={update.isPending}
-              error={error}
-              renderToolbar={toolbar}
-            />
-          )}
-        />
-      )}
+      </div>
       {error && !composing && !editingId ? (
         <p role="alert" className="text-sm text-danger">
           {error}
