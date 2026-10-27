@@ -7,6 +7,8 @@ import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { useUiTranslations } from "@/i18n/client-provider";
 
+const transportErrorCode = "unavailable";
+
 export interface OrganizationAddressActions {
   list?(): Promise<DefinitionResult<readonly OrganizationAddress[]>>;
   add(
@@ -53,7 +55,7 @@ export function OrganizationAddresses({
         } else setError(result.error.code);
       })
       .catch(() => {
-        if (active) setError("unavailable");
+        if (active) setError(transportErrorCode);
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -75,7 +77,7 @@ export function OrganizationAddresses({
         setOpen(false);
       } else setError(result.error.code);
     } catch {
-      setError("unavailable");
+      setError(transportErrorCode);
     } finally {
       setBusy(false);
     }

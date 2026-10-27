@@ -10,6 +10,8 @@ import { useUiTranslations } from "@/i18n/client-provider";
 import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import type { ReportDetail } from "./port";
 
+const transportErrorCode = "unavailable";
+
 export interface ReportBuilderActions {
   fields(module: string): Promise<DefinitionResult<readonly FieldDefinition[]>>;
   save(
@@ -115,7 +117,7 @@ export function ReportBuilder({
         } else setError(result.error.code);
       })
       .catch(() => {
-        if (active) setError("unavailable");
+        if (active) setError(transportErrorCode);
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -183,7 +185,7 @@ export function ReportBuilder({
         else setError(result.error.code);
       }
     } catch {
-      setError("unavailable");
+      setError(transportErrorCode);
     } finally {
       setBusy(false);
     }

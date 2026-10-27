@@ -11,6 +11,8 @@ import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 
+const transportErrorCode = "unavailable";
+
 const MODULE_OPTIONS = ["Leads", "Contacts", "Accounts", "Deals"] as const;
 
 // AL5/AD7 (U12): loading comes from the shell boundary app/crm/[orgSlug]/loading.tsx;
@@ -50,7 +52,7 @@ export function AssignmentRulesScreen({
       if (response.ok) setSaved(response.value);
       else setError(response.error.code);
     } catch {
-      setError("unavailable");
+      setError(transportErrorCode);
     } finally {
       setSaving(false);
     }
@@ -108,7 +110,8 @@ export function AssignmentRulesScreen({
                       setRequestKey(null);
                     }}
                     disabled={saving}
-                    className="rounded border border-border p-2"
+                    required
+                    className="rounded border border-control-border border-l-2 border-l-danger bg-surface p-2"
                   >
                     <option value="">{t("modules.observedFlows.selectModule")}</option>
                     {MODULE_OPTIONS.map((m) => (
