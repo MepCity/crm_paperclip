@@ -43,9 +43,9 @@ test("Tasks shell entry, single tab, view menu with search, columns and sorting"
     /\/tab\/Tasks\/create$/,
   );
 
-  // TL-02, TL-02.1 – TL-02.20: view menu (17 stock views + 3 menu controls)
+  // TL-02, TL-02.1 – TL-02.20: view menu (17 stock views + 5 menu controls)
   await list.getByRole("button", { name: "Custom views" }).click();
-  await expect(page.getByRole("menuitem")).toHaveCount(21);
+  await expect(page.getByRole("menuitem")).toHaveCount(22);
   const search = page.getByRole("textbox", { name: "Search views" });
   await expect(search).toBeVisible();
   await search.fill("overdue");

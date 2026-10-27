@@ -71,6 +71,26 @@ test("does not draw the controls that belong to the customization module", async
   expect(screen.queryByRole("menuitem", { name: "Reset Column Size" })).toBeNull();
 });
 
+test("keeps column controls before page settings and disables reset", async () => {
+  const user = userEvent.setup();
+  const onManageColumns = vi.fn();
+  setup({ onManageColumns });
+  const menu = await openMenu(user);
+  const rows = within(menu).getAllByRole("menuitem");
+  expect(rows.map((row) => row.textContent)).toEqual([
+    "Manage Columns",
+    "Reset Column Size",
+    "Records Per Page30",
+    "View ModeWrap Text",
+  ]);
+  expect(document.activeElement).toBe(rows[0]);
+  expect(rows[1]?.getAttribute("aria-disabled")).toBe("true");
+  await user.keyboard("{ArrowDown}");
+  expect(document.activeElement).toBe(rows[2]);
+  await user.keyboard("{ArrowRight}");
+  expect(screen.getByRole("menu", { name: "Records Per Page 30" })).toBeTruthy();
+});
+
 test("names each parent row by its label and the value in effect", async () => {
   const user = userEvent.setup();
   setup({ perPage: 10, wrapText: true });

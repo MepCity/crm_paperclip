@@ -23,7 +23,7 @@ test("Cases shell entry, views, columns and sorting", async ({ page }) => {
 
   // KL-02 menu
   await list.getByRole("button", { name: "Custom views" }).click();
-  await expect(page.getByRole("menuitem")).toHaveCount(12);
+  await expect(page.getByRole("menuitem")).toHaveCount(13);
   await page.getByRole("menuitem", { name: "Escalated Cases", exact: true }).click();
   await expect(list.locator("[data-view-pill]")).toHaveText("Escalated Cases");
   await expect(list.getByRole("columnheader", { name: "Case Origin" })).toBeVisible();

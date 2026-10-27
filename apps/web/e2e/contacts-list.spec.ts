@@ -21,7 +21,7 @@ test("Contacts shell, views, sorting, filters, alphabet, paging and record route
   await expect(list.getByRole("columnheader", { name: "Account Name", exact: true })).toBeVisible();
   await expect(list.getByRole("columnheader", { name: "Email", exact: true })).toBeVisible();
   await list.getByRole("button", { name: "Custom views" }).click();
-  await expect(page.getByRole("menuitem")).toHaveCount(14);
+  await expect(page.getByRole("menuitem")).toHaveCount(15);
   await page.getByRole("menuitem", { name: "My Contacts", exact: true }).click();
   await expect(list.locator("[data-view-pill]")).toHaveText("My Contacts");
   await list.getByRole("button", { name: "Custom views" }).click();

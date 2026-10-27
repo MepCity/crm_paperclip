@@ -40,7 +40,7 @@ const rowValueClass = "ml-auto shrink-0 font-bold";
 /**
  * View Settings control for the header's trailing cell: the page size submenu and the
  * Wrap Text switch under View Mode. Metadata consumers can supply Manage Columns;
- * Reset Column Size remains outside this control.
+ * Reset Column Size is shown disabled until column resizing is supported.
  *
  * `list-settings` names each parent row by its label plus the value in effect
  * ("Records Per Page 30", "View Mode Wrap Text") and puts one glyph at the row's start,
@@ -82,6 +82,7 @@ export function ViewSettingsMenu({
       >
         {onManageColumns ? (
           <MenuItem
+            appearance="measured"
             id="manage-columns"
             textValue={t("records.actions.manageColumns")}
             shouldCloseOnSelect
@@ -92,7 +93,7 @@ export function ViewSettingsMenu({
         ) : null}
         {onManageColumns ? (
           <>
-            <MenuItem id="reset-column-size" isDisabled>
+            <MenuItem appearance="measured" id="reset-column-size" isDisabled>
               {t("records.chrome.resetColumnSize")}
             </MenuItem>
             <MenuDivider />

@@ -23,7 +23,7 @@ test("Solutions shell entry, views, columns and sorting", async ({ page }) => {
 
   // SL-02 menu
   await list.getByRole("button", { name: "Custom views" }).click();
-  await expect(page.getByRole("menuitem")).toHaveCount(8);
+  await expect(page.getByRole("menuitem")).toHaveCount(9);
   await page.getByRole("menuitem", { name: "My Solutions", exact: true }).click();
   await expect(list.locator("[data-view-pill]")).toHaveText("My Solutions");
   await expect(list.getByRole("columnheader", { name: "Solution Owner" })).toHaveCount(0);
