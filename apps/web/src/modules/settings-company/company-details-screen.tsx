@@ -113,7 +113,7 @@ export function CompanyDetailsScreen({
                 <EditButton label={copy("Edit organization details")} />
               </div>
               <p className="mt-1 text-text-muted">
-                Org ID: <span className="text-text">{details.displayId}</span>
+                {copy("Org ID")}: <span className="text-text">{details.displayId}</span>
               </p>
               <dl className="mt-6 space-y-4">
                 {(

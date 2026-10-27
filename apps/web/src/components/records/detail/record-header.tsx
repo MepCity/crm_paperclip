@@ -13,6 +13,7 @@ import {
   MenuItem,
   MenuTrigger,
 } from "@/components/ui/menu";
+import { useUiLanguage } from "@/i18n/client-provider";
 
 export type RecordCommand = {
   id: string;
@@ -81,6 +82,7 @@ export function RecordHeader({
   titleHref,
   titleSuffix,
 }: RecordHeaderProps) {
+  const language = useUiLanguage();
   const inlinePortrait = showPortrait && portraitAppearance === "inline";
   const groups = menuGroups.filter((group) => group.items.length > 0);
   const backIcon = <Icons.arrowLeft aria-hidden className="w-4 h-auto" />;
@@ -285,7 +287,11 @@ export function RecordHeader({
             <Button variant="recordSecondary" size="actions" aria-label={moreLabel}>
               <Icons.ellipsis aria-hidden className="h-4 w-4" />
             </Button>
-            <Menu appearance="record" aria-label={moreLabel}>
+            <Menu
+              appearance="record"
+              widthPx={language === "tr" ? 360 : undefined}
+              aria-label={moreLabel}
+            >
               {groups.map((group, index) => (
                 <Fragment key={group.id}>
                   {index > 0 && <MenuDivider />}
@@ -299,7 +305,7 @@ export function RecordHeader({
                         isDisabled={item.isDisabled}
                         laterModule={item.laterModule}
                       >
-                        <span className="block min-w-0 truncate" title={item.label}>
+                        <span className="block whitespace-nowrap" title={item.label}>
                           {item.label}
                         </span>
                       </MenuItem>

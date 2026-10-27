@@ -3,9 +3,16 @@ import { cleanup, screen, within } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
 import { AttachmentsCard } from "@/components/records/attachments/attachments-card";
+import { ActivityCategoriesCardBody } from "@/components/records/detail/activity-categories-card-body";
+import { RecordHeader } from "@/components/records/detail/record-header";
+import { RecordPageFooter } from "@/components/records/detail/record-page-footer";
+import { RelatedListCard } from "@/components/records/detail/related-list-card";
+import { TimelineHistory } from "@/components/records/detail/timeline/timeline-history";
+import { RecordFormClientScriptTab } from "@/components/records/form/record-form-inventory-chrome";
 import { NoteComposer } from "@/components/records/notes/note-composer";
 import { RecycleBin } from "@/components/records/recycle-bin/recycle-bin";
 import { ImportHistory } from "@/components/records/transfer/history/import-history";
+import { CompanyDetailsScreen } from "@/modules/settings-company/company-details-screen";
 import { SettingsCurrenciesScreen } from "@/modules/settings-currencies/settings-currencies-screen";
 import { groupAddressRows } from "@/modules/settings-modules/fields-model";
 import { FieldsScreen } from "@/modules/settings-modules/fields-screen";
@@ -154,4 +161,104 @@ test("import history has tabs and an empty panel instead of an empty history tab
   expect(screen.queryByRole("table")).toBeNull();
   await userEvent.click(screen.getByRole("tab", { name: "İçeri aktar" }));
   expect(screen.getByRole("link", { name: "Leads" }).getAttribute("href")).toBe("/imports/Leads");
+});
+
+test("shared record chrome uses Turkish labels for activities, footer and client scripts", () => {
+  tr(
+    <>
+      <ActivityCategoriesCardBody variant="closed" categories={[]} />
+      <RecordPageFooter />
+      <RecordFormClientScriptTab />
+    </>,
+  );
+  expect(screen.getByRole("heading", { name: "Kapalı Görevler (0)" })).toBeTruthy();
+  expect(screen.getAllByText("Kayıt bulunamadı")).toHaveLength(3);
+  expect(screen.getByRole("button", { name: "İlgili Listeyi Ekle" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "Standart Görünüm" })).toBeTruthy();
+  expect(screen.getByRole("button", { name: "İstemci Komut Dosyası" })).toBeTruthy();
+});
+
+test("module dates and company identity labels use the selected language", async () => {
+  const result = tr(<SettingsModulesScreen />);
+  expect((await screen.findAllByText("14 Eki 2026")).length).toBeGreaterThan(0);
+  expect(screen.queryByText(/Oct 14/)).toBeNull();
+  result.unmount();
+  tr(<CompanyDetailsScreen orgSlug="test-org" />);
+  expect(await screen.findByText(/Kuruluş Kimliği:/)).toBeTruthy();
+});
+
+test("timeline loading, retry and pagination labels stay Turkish across states", async () => {
+  const retry = vi.fn();
+  const props = {
+    heading: "Timeline History",
+    filterButtonLabel: "History filter",
+    events: [],
+    format: { locale: "tr-TR", timeZone: "UTC" },
+    modulesLabel: "Modules",
+    modulesAllLabel: "All Modules",
+    moduleOptions: [],
+    usersLabel: "Users",
+    usersAllLabel: "All Users",
+    userOptions: [],
+    timeLabel: "Time",
+    sourcesLabel: "Sources",
+    sourcesAllLabel: "All Sources",
+    sourceOptions: [],
+    applyLabel: "Apply Filter",
+    onApply: vi.fn(),
+    onRetry: retry,
+  };
+  const result = tr(<TimelineHistory {...props} loading />);
+  expect(screen.getByRole("status").textContent).toBe("Geçmiş yükleniyor…");
+  result.unmount();
+  tr(<TimelineHistory {...props} error hasMore />);
+  expect(screen.getByRole("alert").textContent).toContain("Geçmiş yüklenemedi.");
+  await userEvent.click(screen.getByRole("button", { name: "Yeniden Dene" }));
+  expect(retry).toHaveBeenCalledOnce();
+  expect(screen.getByRole("button", { name: "Daha Fazla Göster" })).toBeTruthy();
+});
+
+test("related card actions and column headings use the same Turkish record vocabulary", () => {
+  tr(
+    <RelatedListCard
+      definition={{
+        id: "open-activities",
+        title: "Open Activities",
+        moduleKey: "M5",
+        order: 1,
+        targetId: "activities",
+        upperControls: [
+          { id: "assign", label: "Assign", type: "button" },
+          { id: "add-new", label: "Add New", type: "split-button" },
+          { id: "column", label: "Column View", type: "select" },
+        ],
+        activityColumns: [
+          { id: "meetings", title: "Open Meetings", count: 0, emptyText: "No records found" },
+        ],
+      }}
+    />,
+  );
+  for (const name of ["Ata", "Yeni Ekle", "Sütun Görünümü"])
+    expect(screen.getByRole("button", { name })).toBeTruthy();
+  expect(screen.getByText("Açık Toplantılar")).toBeTruthy();
+  expect(screen.getByText("Kayıt bulunamadı")).toBeTruthy();
+});
+
+test("Turkish record menu leaves enough space for complete labels", async () => {
+  tr(
+    <RecordHeader
+      title="Test record"
+      back={{ label: "Geri", href: "/" }}
+      moreLabel="Diğer Seçenekler"
+      previousLabel="Önceki"
+      nextLabel="Sonraki"
+      menuGroups={[
+        { id: "tools", items: [{ id: "script", label: "İstemci Komut Dosyası Oluştur" }] },
+      ]}
+    />,
+  );
+  await userEvent.click(screen.getByRole("button", { name: "Diğer Seçenekler" }));
+  const item = screen.getByRole("menuitem", { name: "İstemci Komut Dosyası Oluştur" });
+  expect(item.querySelector(".truncate")).toBeNull();
+  expect(screen.getByRole("dialog").style.width).toBe("360px");
 });

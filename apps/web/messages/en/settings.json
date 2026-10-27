@@ -177,7 +177,8 @@
     "channels": "Channels",
     "dataAdministration": "Data Administration",
     "customization": "Customization",
-    "automation": "Automation"
+    "automation": "Automation",
+    "orgId": "Org ID"
   },
   "homeCurrencyQuestion": "Do you want to set {currency} as your home currency? Once you confirm your home currency, you cannot change it later.",
   "teamspaces": "{count} Teamspaces",

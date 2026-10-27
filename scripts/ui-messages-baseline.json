@@ -1009,33 +1009,21 @@
   },
   {
     "file": "apps/web/src/components/records/detail/account-contacts-card-body.tsx",
-    "line": 55,
+    "line": 57,
     "column": 83,
     "hash": "47d2a515ef2f05b8"
   },
   {
     "file": "apps/web/src/components/records/detail/account-contacts-card-body.tsx",
-    "line": 67,
-    "column": 83,
-    "hash": "6e2ea637b30eadce"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/account-contacts-card-body.tsx",
-    "line": 126,
+    "line": 128,
     "column": 91,
     "hash": "d6e645b7d2b2da64"
   },
   {
     "file": "apps/web/src/components/records/detail/account-member-accounts-card-body.tsx",
-    "line": 55,
+    "line": 57,
     "column": 83,
     "hash": "47d2a515ef2f05b8"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/account-member-accounts-card-body.tsx",
-    "line": 67,
-    "column": 83,
-    "hash": "6e2ea637b30eadce"
   },
   {
     "file": "apps/web/src/components/records/detail/accounts-linked-contact-summary.tsx",
@@ -1045,27 +1033,21 @@
   },
   {
     "file": "apps/web/src/components/records/detail/activity-categories-card-body.tsx",
-    "line": 29,
+    "line": 30,
     "column": 26,
     "hash": "b3a60e61a5233d05"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-categories-card-body.tsx",
-    "line": 30,
+    "line": 31,
     "column": 29,
     "hash": "bca705b63a3cf585"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-categories-card-body.tsx",
-    "line": 31,
+    "line": 32,
     "column": 26,
     "hash": "b73a5e2ca6458665"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/activity-categories-card-body.tsx",
-    "line": 62,
-    "column": 73,
-    "hash": "6e2ea637b30eadce"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-relation-panel.tsx",
@@ -1141,49 +1123,37 @@
   },
   {
     "file": "apps/web/src/components/records/detail/campaign-child-campaigns-card-body.tsx",
-    "line": 61,
-    "column": 83,
-    "hash": "47d2a515ef2f05b8"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/campaign-child-campaigns-card-body.tsx",
-    "line": 73,
-    "column": 83,
-    "hash": "6e2ea637b30eadce"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/campaign-members-card-body.tsx",
-    "line": 114,
+    "line": 63,
     "column": 83,
     "hash": "47d2a515ef2f05b8"
   },
   {
     "file": "apps/web/src/components/records/detail/campaign-members-card-body.tsx",
-    "line": 126,
+    "line": 116,
     "column": 83,
-    "hash": "6e2ea637b30eadce"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/campaign-members-card-body.tsx",
-    "line": 140,
-    "column": 53,
-    "hash": "1b887a472c2da168"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/campaign-members-card-body.tsx",
-    "line": 141,
-    "column": 53,
-    "hash": "969ccbd3cf6300ec"
+    "hash": "47d2a515ef2f05b8"
   },
   {
     "file": "apps/web/src/components/records/detail/campaign-members-card-body.tsx",
     "line": 142,
     "column": 53,
+    "hash": "1b887a472c2da168"
+  },
+  {
+    "file": "apps/web/src/components/records/detail/campaign-members-card-body.tsx",
+    "line": 143,
+    "column": 53,
+    "hash": "969ccbd3cf6300ec"
+  },
+  {
+    "file": "apps/web/src/components/records/detail/campaign-members-card-body.tsx",
+    "line": 144,
+    "column": 53,
     "hash": "63dceb8800b2dd4a"
   },
   {
     "file": "apps/web/src/components/records/detail/campaign-members-card-body.tsx",
-    "line": 196,
+    "line": 198,
     "column": 36,
     "hash": "d6e645b7d2b2da64"
   },
@@ -1213,15 +1183,9 @@
   },
   {
     "file": "apps/web/src/components/records/detail/deal-stage-history-card-body.tsx",
-    "line": 69,
+    "line": 71,
     "column": 83,
     "hash": "47d2a515ef2f05b8"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/deal-stage-history-card-body.tsx",
-    "line": 81,
-    "column": 83,
-    "hash": "6e2ea637b30eadce"
   },
   {
     "file": "apps/web/src/components/records/detail/detail-field-row.tsx",
@@ -1255,55 +1219,25 @@
   },
   {
     "file": "apps/web/src/components/records/detail/record-page-footer.tsx",
-    "line": 10,
+    "line": 12,
     "column": 18,
     "hash": "acbb94ad0fa90d32"
   },
   {
-    "file": "apps/web/src/components/records/detail/record-page-footer.tsx",
-    "line": 20,
-    "column": 70,
-    "hash": "d2314997346772c4"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/record-page-footer.tsx",
-    "line": 27,
-    "column": 17,
-    "hash": "7b83181858dc36d7"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/record-page-footer.tsx",
-    "line": 34,
-    "column": 19,
-    "hash": "b1391a0d58199773"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/record-page-footer.tsx",
-    "line": 43,
-    "column": 10,
-    "hash": "3b7c36b550659040"
-  },
-  {
     "file": "apps/web/src/components/records/detail/related-cases-card-body.tsx",
-    "line": 73,
+    "line": 75,
     "column": 83,
     "hash": "47d2a515ef2f05b8"
   },
   {
     "file": "apps/web/src/components/records/detail/related-cases-card-body.tsx",
-    "line": 91,
-    "column": 83,
-    "hash": "6e2ea637b30eadce"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/related-cases-card-body.tsx",
-    "line": 153,
+    "line": 155,
     "column": 12,
     "hash": "a57b08a480b822a0"
   },
   {
     "file": "apps/web/src/components/records/detail/related-cases-card-body.tsx",
-    "line": 161,
+    "line": 163,
     "column": 12,
     "hash": "1ff57a29d7c9d11b"
   },
@@ -1327,7 +1261,7 @@
   },
   {
     "file": "apps/web/src/components/records/detail/related-list-card.tsx",
-    "line": 399,
+    "line": 401,
     "column": 45,
     "hash": "ca4067071fcf6185"
   },
@@ -1339,15 +1273,9 @@
   },
   {
     "file": "apps/web/src/components/records/detail/reporting-contacts-card-body.tsx",
-    "line": 64,
+    "line": 66,
     "column": 83,
     "hash": "47d2a515ef2f05b8"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/reporting-contacts-card-body.tsx",
-    "line": 72,
-    "column": 83,
-    "hash": "6e2ea637b30eadce"
   },
   {
     "file": "apps/web/src/components/records/detail/stage-bar/stage-change-dialog.tsx",
@@ -1410,24 +1338,6 @@
     "hash": "f8f03fb441b8b4ae"
   },
   {
-    "file": "apps/web/src/components/records/detail/timeline/timeline-history.tsx",
-    "line": 132,
-    "column": 35,
-    "hash": "a960c435c77f666c"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/timeline/timeline-history.tsx",
-    "line": 134,
-    "column": 27,
-    "hash": "b99f2969347b9565"
-  },
-  {
-    "file": "apps/web/src/components/records/detail/timeline/timeline-history.tsx",
-    "line": 136,
-    "column": 51,
-    "hash": "942087cc2d41e013"
-  },
-  {
     "file": "apps/web/src/components/records/detail/timeline/timeline-surface.tsx",
     "line": 23,
     "column": 76,
@@ -1486,18 +1396,6 @@
     "line": 617,
     "column": 35,
     "hash": "6e11774990b553e6"
-  },
-  {
-    "file": "apps/web/src/components/records/form/record-form-inventory-chrome.tsx",
-    "line": 17,
-    "column": 18,
-    "hash": "1fb688efabcc7ac4"
-  },
-  {
-    "file": "apps/web/src/components/records/form/record-form-inventory-chrome.tsx",
-    "line": 20,
-    "column": 62,
-    "hash": "1fb688efabcc7ac4"
   },
   {
     "file": "apps/web/src/components/records/form/select-record-dialog.tsx",
@@ -7666,12 +7564,6 @@
     "line": 133,
     "column": 27,
     "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/modules/settings-company/company-details-screen.tsx",
-    "line": 115,
-    "column": 51,
-    "hash": "d2b897cd82610db6"
   },
   {
     "file": "apps/web/src/modules/settings-modules/fields-api.ts",

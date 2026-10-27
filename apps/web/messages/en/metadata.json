@@ -245,7 +245,8 @@
     "Lead_Status_Modified_Time": "Lead Status Modified Time",
     "id": "Record Id",
     "nearby_distance__s": "Distance",
-    "Member_Status": "Member Status"
+    "Member_Status": "Member Status",
+    "Solution": "Solution"
   },
   "sections": {
     "Lead Information": "Lead Information",

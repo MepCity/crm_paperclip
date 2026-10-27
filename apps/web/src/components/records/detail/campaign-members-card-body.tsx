@@ -13,6 +13,7 @@ import { RelatedRecordsListError } from "@/components/records/detail/related-rec
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { useRecordLabel } from "@/i18n/record-labels";
 import { useRecordList, useViews } from "@/lib/api/client/hooks";
 import { openActivityCreate } from "@/modules/activity-add-new";
 
@@ -41,6 +42,7 @@ export function CampaignMembersCardBody({
   recordPath,
   orgSlug = "",
 }: CampaignMembersCardBodyProps) {
+  const recordLabel = useRecordLabel();
   const router = useRouter();
   const filter = useMemo<Criteria>(
     () => ({ field: "Campaign", comparator: "equal", value: campaignRecord.id }),
@@ -124,7 +126,7 @@ export function CampaignMembersCardBody({
   if (matchingMemberRows.length === 0) {
     return (
       <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-        No records found
+        {recordLabel("No records found")}
       </div>
     );
   }

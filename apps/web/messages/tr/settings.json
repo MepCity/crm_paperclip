@@ -58,7 +58,7 @@
     "layoutsHelp": "Düzenler yardımı",
     "customizeLayout": "Düzeni Özelleştir",
     "createNewLayout": "Yeni Düzen Oluştur",
-    "name": "Adı",
+    "name": "Ad",
     "more": "Diğer",
     "companyDetails": "Şirket Detayları",
     "fiscalYear": "Mali Yıl",
@@ -177,7 +177,8 @@
     "channels": "Kanallar",
     "dataAdministration": "Veri Yönetimi",
     "customization": "Özelleştirme",
-    "automation": "Otomasyon"
+    "automation": "Otomasyon",
+    "orgId": "Kuruluş Kimliği"
   },
   "homeCurrencyQuestion": "Yerel para biriminizi {currency} olarak ayarlamak istiyor musunuz? Yerel para biriminizi onayladıktan sonra değiştiremezsiniz.",
   "teamspaces": "{count} Teamspace’ler",

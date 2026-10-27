@@ -62,7 +62,7 @@ test("captures corrected Turkish utility, support and customization screens", as
     }
     if (tab === "Cases") {
       const number = page.getByText("Servis Dosyası Numarası", { exact: true }).first();
-      const owner = page.getByText("Servis Dosyası Sahibi", { exact: true }).first();
+      const owner = page.getByText("Servis Dosyası Kayıt Sahibi", { exact: true }).first();
       await expect(number).toBeVisible();
       await expect(owner).toBeVisible();
       const a = await number.boundingBox(),
@@ -70,6 +70,10 @@ test("captures corrected Turkish utility, support and customization screens", as
       expect(a?.x).toBeLessThan(b?.x ?? 0);
       await expect(page.getByText("İç Yorumlar", { exact: true }).first()).toBeVisible();
     }
+    await expect(page.getByText("İstemci Komut Dosyası", { exact: true })).toBeVisible();
+    if (tab === "Campaigns")
+      await expect(page.getByText("Kampanya Kayıt Sahibi", { exact: true }).first()).toBeVisible();
+    if (tab === "Cases") await expect(page.getByText("Solution", { exact: true })).toHaveCount(0);
     await shot(`${tab}-form`);
   }
   for (const [path, heading, name] of [
@@ -112,6 +116,12 @@ test("captures corrected Turkish utility, support and customization screens", as
     page.getByRole("heading", { name: "Geri Dönüşüm Kutusu", exact: true }).last(),
   ).toBeVisible();
   await expect(page.locator("header").first()).not.toContainText("Loading");
+  await expect(
+    page.getByRole("columnheader", { name: "Silinme Tarihi", exact: true }),
+  ).toBeVisible();
+  await expect(
+    page.getByRole("button", { name: "Geridönüşüm Kutusunu Boşalt", exact: true }),
+  ).toBeVisible();
   await shot("recycle-list");
   await page.getByRole("button", { name: "Ara", exact: true }).click();
   await expect(page.getByText("ÖÖ", { exact: true })).toBeVisible();
@@ -143,6 +153,9 @@ test("captures corrected Turkish utility, support and customization screens", as
       .locator(".filter-panel-actions")
       .getByRole("button", { name: "Filtre Uygula", exact: true }),
   ).toBeEnabled();
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await expect(tagRow).toBeInViewport();
+  await expect(page.locator(".filter-panel-actions")).toBeInViewport();
   await shot("lead-tag-filter");
   for (const tab of ["Accounts", "Leads"] as const) {
     await page.goto(`${root}/tab/${tab}/list`);
@@ -159,6 +172,12 @@ test("captures corrected Turkish utility, support and customization screens", as
     await expect(
       page.getByRole("heading", { name: "Zaman Çizelgesi Geçmişi", exact: true }),
     ).toBeVisible();
+    await expect(page.locator("[data-timeline-history]").getByRole("status")).toHaveCount(0);
+    await expect(page.locator("[data-timeline-history]").getByRole("alert")).toHaveCount(0);
+    if (tab === "Accounts")
+      await expect(
+        page.getByText("Göster Yaklaşan Otomatik Eylemler", { exact: true }),
+      ).toBeVisible();
     await shot(`${tab}-timeline`);
     await page.goto(details);
     await page

@@ -4,6 +4,7 @@ import type { Criteria, RecordData, RecordId } from "@crm/core/records";
 import { useMemo } from "react";
 import { FieldValueView } from "@/components/records/detail/field-value";
 import { Link } from "@/components/ui/link";
+import { useRecordLabel } from "@/i18n/record-labels";
 import { useModule, useRecordList, useViews } from "@/lib/api/client/hooks";
 import { useFormat } from "@/lib/format-context";
 
@@ -24,6 +25,7 @@ export function ReportingContactsCardBody({
   managerRecord,
   recordPath,
 }: ReportingContactsCardBodyProps) {
+  const recordLabel = useRecordLabel();
   const orgFormat = useFormat();
   const moduleQuery = useModule("Contacts");
   const viewsQuery = useViews("Contacts");
@@ -70,7 +72,7 @@ export function ReportingContactsCardBody({
   if (rows.length === 0) {
     return (
       <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-        No records found
+        {recordLabel("No records found")}
       </div>
     );
   }

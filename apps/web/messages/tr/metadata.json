@@ -59,9 +59,9 @@
     "Deal_Owner": "Satış Fırsatı Kayıt Sahibi",
     "Task_Owner": "Görev Sahibi",
     "Call_Owner": "Arama Sahibi",
-    "Case_Owner": "Servis Dosyası Sahibi",
+    "Case_Owner": "Servis Dosyası Kayıt Sahibi",
     "Solution_Owner": "Çözüm Sahibi",
-    "Campaign_Owner": "Kampanya Sahibi",
+    "Campaign_Owner": "Kampanya Kayıt Sahibi",
     "Company": "Şirket",
     "First_Name": "Adı",
     "Last_Name": "Soyadı",
@@ -245,7 +245,8 @@
     "Lead_Status_Modified_Time": "Müşteri Adayı Durumu Değiştirilme Zamanı",
     "id": "Kayıt Kimliği",
     "nearby_distance__s": "Mesafe",
-    "Member_Status": "Üye Durumu"
+    "Member_Status": "Üye Durumu",
+    "Solution": "Çözüm"
   },
   "sections": {
     "Lead Information": "Müşteri Adayı Bilgisi",

@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDate } from "@crm/core/format";
 import {
   BarChart3,
   Briefcase,
@@ -21,6 +22,7 @@ import {
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
 import { useSettingsLabel } from "@/i18n/settings-labels";
+import { useFormat } from "@/lib/format-context";
 import { fixtureModuleListPort } from "./fixture-port";
 import type { ModuleListPort, ModuleSummary } from "./port";
 
@@ -55,6 +57,7 @@ export function SettingsModulesScreen({
   orgSlug?: string;
 }) {
   const copy = useSettingsLabel();
+  const format = useFormat();
   const [rows, setRows] = useState<ModuleSummary[] | null>(null);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState("");
@@ -203,7 +206,13 @@ export function SettingsModulesScreen({
                           >
                             <User className="size-3.5" />
                           </span>
-                          {r.lastModifiedAt}
+                          {/^\d{4}-\d{2}-\d{2}$/.test(r.lastModifiedAt)
+                            ? formatDate(r.lastModifiedAt, {
+                                ...format,
+                                locale: format.language === "tr" ? "tr-TR" : "en-US",
+                                datePattern: undefined,
+                              })
+                            : r.lastModifiedAt}
                         </span>
                       ) : null}
                     </td>

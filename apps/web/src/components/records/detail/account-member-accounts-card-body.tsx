@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { FieldValueView } from "@/components/records/detail/field-value";
 import { RelatedRecordsListError } from "@/components/records/detail/related-records-list-error";
 import { Link } from "@/components/ui/link";
+import { useRecordLabel } from "@/i18n/record-labels";
 import { useModule, useRecordList, useUsers, useViews } from "@/lib/api/client/hooks";
 import { useFormat } from "@/lib/format-context";
 
@@ -25,6 +26,7 @@ export function AccountMemberAccountsCardBody({
   parentRecord,
   accountRecordPath,
 }: AccountMemberAccountsCardBodyProps) {
+  const recordLabel = useRecordLabel();
   const orgFormat = useFormat();
   const moduleQuery = useModule("Accounts");
   const viewsQuery = useViews("Accounts");
@@ -65,7 +67,7 @@ export function AccountMemberAccountsCardBody({
   if (rows.length === 0) {
     return (
       <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-        No records found
+        {recordLabel("No records found")}
       </div>
     );
   }
