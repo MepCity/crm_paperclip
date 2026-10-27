@@ -145,33 +145,6 @@ function criteria(value: unknown, fields: ReadonlyMap<string, FieldDefinition>, 
   } else reject("validation");
 }
 
-/** Shared draft validation; preview never persists a report or bypasses record reads. */
-export async function validateReportDefinition(
-  customization: DefinitionDependencies["customization"],
-  ctx: OrgContext,
-  raw: unknown,
-) {
-  const input = parse(report, raw);
-  let metadata: Awaited<ReturnType<typeof customization.readEffective>>;
-  try {
-    metadata = await customization.readEffective(ctx.orgId, input.module);
-  } catch (error) {
-    if (error && typeof error === "object" && "code" in error && error.code === "not_found")
-      reject("validation");
-    throw error;
-  }
-  const fields = new Map(
-    metadata.fields.filter((f) => f.lifecycle === "active").map((f) => [f.apiName, f]),
-  );
-  if (
-    new Set(input.columns).size !== input.columns.length ||
-    input.columns.some((c) => !fields.has(c))
-  )
-    reject("validation");
-  if (input.criteria !== null) criteria(input.criteria, fields);
-  return input as Parameters<ReportDefinitionPort["create"]>[1];
-}
-
 export function createDefinitionPorts(deps: DefinitionDependencies): {
   reports: ReportDefinitionPort;
   automation: AssignmentDefinitionPort;
@@ -193,8 +166,20 @@ export function createDefinitionPorts(deps: DefinitionDependencies): {
       throw error;
     }
   };
-  const validateReport = (ctx: OrgContext, raw: unknown) =>
-    validateReportDefinition(deps.customization, ctx, raw);
+  const validateReport = async (ctx: OrgContext, raw: unknown) => {
+    const input = parse(report, raw);
+    const metadata = await validateModule(ctx, input.module);
+    const fields = new Map(
+      metadata.fields.filter((f) => f.lifecycle === "active").map((f) => [f.apiName, f]),
+    );
+    if (
+      new Set(input.columns).size !== input.columns.length ||
+      input.columns.some((c) => !fields.has(c))
+    )
+      reject("validation");
+    if (input.criteria !== null) criteria(input.criteria, fields);
+    return input as Parameters<ReportDefinitionPort["create"]>[1];
+  };
   const reports: ReportDefinitionPort = {
     list: (ctx) =>
       safe(async () => {

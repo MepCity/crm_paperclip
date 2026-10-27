@@ -272,16 +272,7 @@ describe("Reports a11y semantics", () => {
 
 it("opens the observed primary-module entry and cancels without a report write", async () => {
   const user = userEvent.setup();
-  render(
-    <ReportsScreen
-      orgSlug="demo"
-      builderActions={{
-        fields: async () => ({ ok: true, value: [] }),
-        run: async () => ({ ok: false, error: { code: "unavailable" } }),
-        save: async () => ({ ok: false, error: { code: "unavailable" } }),
-      }}
-    />,
-  );
+  render(<ReportsScreen orgSlug="demo" />);
   await screen.findByRole("table");
   await user.click(screen.getByRole("button", { name: "Create Report" }));
   const dialog = screen.getByRole("dialog", { name: "Create Report" });

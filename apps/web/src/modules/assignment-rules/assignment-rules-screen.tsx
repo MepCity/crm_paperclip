@@ -1,17 +1,15 @@
 "use client";
 
-import type { AssignmentRule, ReadResult, RulePage } from "@crm/core/automation";
-import type { DefinitionResult } from "@crm/core/definitions";
+import type { ReadResult, RulePage } from "@crm/core/automation";
 import Link from "next/link";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/ui/tabs";
+import { TextField } from "@/components/ui/text-field";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
-
-const transportErrorCode = "unavailable";
 
 const MODULE_OPTIONS = ["Leads", "Contacts", "Accounts", "Deals"] as const;
 
@@ -22,13 +20,8 @@ export function AssignmentRulesScreen({
   result,
   orgSlug = "",
   module,
-  onCreate,
 }: {
   result: ReadResult<RulePage>;
-  onCreate?: (
-    input: { module: string; name: string; description: string },
-    key: string,
-  ) => Promise<DefinitionResult<AssignmentRule>>;
   orgSlug?: string;
   /** Active module filter (AL3); undefined when unfiltered. */
   module?: string;
@@ -36,27 +29,6 @@ export function AssignmentRulesScreen({
   const t = useUiTranslations();
   const display = useMetadataDisplayAdapter();
   const [creating, setCreating] = useState(false);
-  const [draft, setDraft] = useState({ module: "", name: "", description: "" });
-  const [saving, setSaving] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-  const [saved, setSaved] = useState<AssignmentRule | null>(null);
-  const [requestKey, setRequestKey] = useState<string | null>(null);
-  async function save() {
-    if (saving || !onCreate) return;
-    const key = requestKey ?? crypto.randomUUID();
-    setRequestKey(key);
-    setSaving(true);
-    setError(null);
-    try {
-      const response = await onCreate(draft, key);
-      if (response.ok) setSaved(response.value);
-      else setError(response.error.code);
-    } catch {
-      setError(transportErrorCode);
-    } finally {
-      setSaving(false);
-    }
-  }
   const base = `/crm/${orgSlug}/settings/assignment-rules`;
   const filterQuery = module ? `module=${encodeURIComponent(module)}&` : "";
   return (
@@ -69,7 +41,7 @@ export function AssignmentRulesScreen({
           isOpen
           aria-labelledby="assignment-create-title"
           onOpenChange={(open) => {
-            if (!open && !saving) setCreating(false);
+            if (!open) setCreating(false);
           }}
           panelStyle={{ width: "min(600px, 95vw)" }}
         >
@@ -77,108 +49,31 @@ export function AssignmentRulesScreen({
             <h2 id="assignment-create-title" className="text-xl font-semibold">
               {t("modules.assignment.create")}
             </h2>
-            {saved ? (
-              <div className="space-y-4">
-                <h3 className="font-semibold">{saved.name}</h3>
-                <p role="status">{t("modules.definitionWrites.assignmentPending")}</p>
-                <Link
-                  href={`${base}/${encodeURIComponent(saved.id)}`}
-                  className="text-link hover:underline"
-                >
-                  {t("modules.definitionWrites.openRule")}
-                </Link>
-                <div>
-                  <Button
-                    onPress={() => {
-                      setCreating(false);
-                      window.location.assign(base);
-                    }}
-                  >
-                    {t("common.actions.close")}
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <>
-                <label className="grid grid-cols-[8rem_1fr] items-center gap-4">
-                  <span>{t("modules.assignment.module")}</span>
-                  <select
-                    aria-label={t("modules.assignment.module")}
-                    value={draft.module}
-                    onChange={(event) => {
-                      setDraft({ ...draft, module: event.target.value });
-                      setRequestKey(null);
-                    }}
-                    disabled={saving}
-                    required
-                    className="rounded border border-control-border border-l-2 border-l-danger bg-surface p-2"
-                  >
-                    <option value="">{t("modules.observedFlows.selectModule")}</option>
-                    {MODULE_OPTIONS.map((m) => (
-                      <option key={m} value={m}>
-                        {display.getModulePlural(m)}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label className="grid grid-cols-[8rem_1fr] items-center gap-4">
-                  <span>{t("modules.observedFlows.ruleName")}</span>
-                  <input
-                    className="rounded border border-control-border border-l-2 border-l-danger bg-surface p-2"
-                    required
-                    maxLength={255}
-                    value={draft.name}
-                    disabled={saving}
-                    onChange={(event) => {
-                      setDraft({ ...draft, name: event.target.value });
-                      setRequestKey(null);
-                    }}
-                  />
-                </label>
-                <label className="grid grid-cols-[8rem_1fr] items-start gap-4">
-                  <span className="pt-2">{t("modules.observedFlows.description")}</span>
-                  <textarea
-                    className="rounded border border-control-border bg-surface p-2"
-                    rows={2}
-                    maxLength={4000}
-                    value={draft.description}
-                    disabled={saving}
-                    onChange={(event) => {
-                      setDraft({ ...draft, description: event.target.value });
-                      setRequestKey(null);
-                    }}
-                  />
-                </label>
-                {error && (
-                  <p role="alert">
-                    {t(
-                      error === "conflict"
-                        ? "modules.definitionWrites.conflict"
-                        : error === "forbidden"
-                          ? "modules.definitionWrites.forbidden"
-                          : error === "validation"
-                            ? "modules.definitionWrites.validation"
-                            : "modules.definitionWrites.error",
-                    )}
-                  </p>
-                )}
-                <div className="flex justify-end gap-3">
-                  <Button
-                    variant="secondary"
-                    isDisabled={saving}
-                    onPress={() => setCreating(false)}
-                  >
-                    {t("common.actions.cancel")}
-                  </Button>
-                  <Button
-                    isDisabled={saving || !draft.module || !draft.name.trim() || !onCreate}
-                    onPress={() => void save()}
-                  >
-                    {t("modules.observedFlows.next")}
-                  </Button>
-                </div>
-              </>
-            )}
+            <label className="grid grid-cols-[8rem_1fr] items-center gap-4">
+              <span>{t("modules.assignment.module")}</span>
+              <select
+                aria-label={t("modules.assignment.module")}
+                className="rounded border border-border p-2"
+              >
+                <option value="">{t("modules.observedFlows.selectModule")}</option>
+                {MODULE_OPTIONS.map((m) => (
+                  <option key={m} value={m}>
+                    {display.getModulePlural(m)}
+                  </option>
+                ))}
+              </select>
+            </label>
+            <TextField label={t("modules.observedFlows.ruleName")} />
+            <TextField label={t("modules.observedFlows.description")} />
+            <p role="status" className="text-sm text-text-muted">
+              {t("modules.assignment.createUnavailable")}
+            </p>
+            <div className="flex justify-end gap-3">
+              <Button variant="secondary" onPress={() => setCreating(false)}>
+                {t("common.actions.cancel")}
+              </Button>
+              <Button isDisabled>{t("modules.observedFlows.next")}</Button>
+            </div>
           </div>
         </TopAlignedModal>
       )}
@@ -238,34 +133,13 @@ export function AssignmentRulesScreen({
           ) : result.value.items.length === 0 && !module ? (
             <div data-testid="assignment-introduction">
               <p className="mb-6 text-md text-text-muted">{t("modules.assignment.description")}</p>
-              <Button
-                onPress={() => {
-                  setDraft({ module: "", name: "", description: "" });
-                  setSaved(null);
-                  setRequestKey(null);
-                  setError(null);
-                  setCreating(true);
-                }}
-              >
+              <Button onPress={() => setCreating(true)}>
                 <Icons.plus className="mr-1 size-4" aria-hidden="true" />
                 {t("modules.assignment.create")}
               </Button>
             </div>
           ) : (
             <div data-testid="assignment-rule-list">
-              {onCreate && (
-                <Button
-                  onPress={() => {
-                    setSaved(null);
-                    setDraft({ module: "", name: "", description: "" });
-                    setRequestKey(null);
-                    setError(null);
-                    setCreating(true);
-                  }}
-                >
-                  {t("modules.assignment.create")}
-                </Button>
-              )}
               <form method="get" action={base} className="mb-4 flex items-center gap-2">
                 <label htmlFor="assignment-module-filter" className="text-md text-text-muted">
                   {t("modules.assignment.module")}

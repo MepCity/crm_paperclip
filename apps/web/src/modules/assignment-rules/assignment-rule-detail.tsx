@@ -1,5 +1,3 @@
-"use client";
-
 import type {
   AssignmentEntry,
   AssignmentRule,
@@ -9,8 +7,6 @@ import type {
   RecipientSet,
 } from "@crm/core/automation";
 import Link from "next/link";
-import { useUiTranslations } from "@/i18n/client-provider";
-import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { ConditionView } from "./criteria-view";
 
 const distributionLabel: Record<AssignmentEntry["distribution"], string> = {
@@ -89,8 +85,6 @@ export function AssignmentRuleDetail({
     );
   }
   const rule: AssignmentRule = result.value;
-  if (!rule.id.startsWith("synthetic-") && !rule.enabled && !rule.entries.length)
-    return <AssignmentShellDetail rule={rule} listHref={listHref} />;
   const entries = [...rule.entries].sort((a, b) => a.position - b.position);
   return (
     <section
@@ -162,34 +156,6 @@ export function AssignmentRuleDetail({
           <p className="text-md text-text-muted">No default recipient is configured.</p>
         )}
       </div>
-    </section>
-  );
-}
-
-function AssignmentShellDetail({ rule, listHref }: { rule: AssignmentRule; listHref: string }) {
-  const t = useUiTranslations();
-  const display = useMetadataDisplayAdapter();
-  return (
-    <section
-      className="space-y-6 rounded-lg border border-border bg-surface p-6 shadow-xs"
-      aria-label={t("modules.assignment.title")}
-    >
-      <Link href={listHref} className="text-link hover:underline">
-        {t("modules.definitionWrites.backToRules")}
-      </Link>
-      <h1 className="text-xl font-semibold">{rule.name}</h1>
-      <dl className="grid grid-cols-[max-content_1fr] gap-x-6 gap-y-2">
-        <dt>{t("modules.assignment.module")}</dt>
-        <dd>{display.getModulePlural(rule.module)}</dd>
-        <dt>{t("modules.assignment.status")}</dt>
-        <dd data-testid="assignment-detail-status">{t("modules.assignment.inactive")}</dd>
-        <dt>{t("modules.observedFlows.description")}</dt>
-        <dd>{rule.description || "-"}</dd>
-      </dl>
-      <p data-testid="assignment-detail-no-entries">
-        {t("modules.definitionWrites.assignmentPending")}
-      </p>
-      <p data-testid="assignment-detail-fallback">{t("modules.definitionWrites.noFallback")}</p>
     </section>
   );
 }

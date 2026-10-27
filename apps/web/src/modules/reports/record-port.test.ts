@@ -207,36 +207,3 @@ describe("record-backed ReportsPort", () => {
     expect(accountReport?.rows[0]?.[0]).toBe("Account Meeting");
   });
 });
-
-it("executes persisted definitions through the scoped record service with column order and filters", async () => {
-  const { service, scoped, create } = setup();
-  await create("Leads", { Last_Name: "Visible", Company: "Test" });
-  await create("Leads", { Last_Name: "Hidden", Company: "Test" }, undefined, false);
-  await create("Leads", { Last_Name: "Excluded", Company: "Other" });
-  const definition = {
-    id: "stored",
-    revision: 1,
-    name: "Stored report",
-    description: "",
-    module: "Leads",
-    columns: ["Company", "Last_Name"],
-    criteria: { field: "Company", comparator: "equal" as const, value: "Test" },
-    grouping: null,
-    createdBy: "admin",
-    updatedBy: "admin",
-    createdAt: "2026-10-27",
-    updatedAt: "2026-10-27",
-  };
-  const port = createRecordReportsPort(scoped, {
-    definitions: {
-      list: async () => [definition],
-      get: async (id) => (id === "stored" ? definition : null),
-    },
-  });
-  expect((await port.listReports())[0]?.id).toBe("stored");
-  expect((await port.getReport("stored"))?.rows).toEqual([["Test", "Visible"]]);
-  expect((await port.getReport("stored"))?.headings).toEqual(["Company", "Last Name"]);
-  expect(await port.getReport("foreign-id")).toBeNull();
-  // A definition is configuration only; reads never mutate the record engine.
-  expect((await service.listViews("Leads")).length).toBeGreaterThan(0);
-});

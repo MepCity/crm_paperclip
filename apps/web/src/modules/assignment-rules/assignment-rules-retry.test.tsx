@@ -14,7 +14,7 @@ vi.mock("@/lib/session", () => ({
 }));
 vi.mock("@/server/personal-settings/language", () => ({ readSavedLanguage: async () => "en" }));
 vi.mock("@/components/shell/page-title", () => ({ PageTitle: () => null }));
-vi.mock("@/lib/definitions/automation", () => ({ assignmentReadPort: () => ({ list }) }));
+vi.mock("@/modules/automation/port", () => ({ createAutomationPort: () => ({ list }) }));
 
 afterEach(() => {
   cleanup();
