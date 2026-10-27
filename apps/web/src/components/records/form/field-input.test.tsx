@@ -870,3 +870,56 @@ test("form accepts organization format: 1.234,56 amount maps to 1234.56 and 30.0
   await user.type(dateInput, "30.06.2026");
   expect(changeDate).toHaveBeenLastCalledWith("2026-06-30");
 });
+
+test("multireminder changes offset and delivery channel without losing legacy data", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <Controlled
+      type="multireminder"
+      field={{ ...field("multireminder"), apiName: "Remind_At" }}
+      initial={[{ ALARM: "FREQ=NONE;ACTION=LEGACY;TRIGGER=-PT99M;REPEAT=2" }]}
+      onChange={change}
+    />,
+  );
+  expect(screen.getByRole("button", { name: "Delivery channel" }).textContent).toContain("LEGACY");
+  await user.click(screen.getByRole("button", { name: "Example" }));
+  await user.click(screen.getByRole("option", { name: "10 minutes before" }));
+  expect(change).toHaveBeenLastCalledWith([
+    { ALARM: "FREQ=NONE;ACTION=LEGACY;TRIGGER=-PT10M;REPEAT=2" },
+  ]);
+  await user.click(screen.getByRole("button", { name: "Delivery channel" }));
+  await user.click(screen.getByRole("option", { name: "Email" }));
+  expect(change).toHaveBeenLastCalledWith([
+    { ALARM: "FREQ=NONE;ACTION=EMAIL;TRIGGER=-PT10M;REPEAT=2" },
+  ]);
+  await user.click(screen.getByRole("button", { name: "Delivery channel" }));
+  await user.click(screen.getByRole("option", { name: "None" }));
+  expect(change).toHaveBeenLastCalledWith(null);
+});
+
+test("multireminder keeps EMAIL records and disables both controls when read-only", () => {
+  render(
+    <Controlled
+      type="multireminder"
+      field={{ ...field("multireminder"), apiName: "Remind_At" }}
+      initial={[{ ALARM: "FREQ=NONE;ACTION=EMAIL;TRIGGER=-PT15M" }]}
+      disabled
+    />,
+  );
+  expect(screen.getByRole("button", { name: "Example" }).hasAttribute("disabled")).toBe(true);
+  const channel = screen.getByRole("button", { name: "Delivery channel" });
+  expect(channel.textContent).toContain("Email");
+  expect(channel.hasAttribute("disabled")).toBe(true);
+});
+
+test("participants reminder keeps the single offset control observed in the reference", () => {
+  render(
+    <Controlled
+      type="multireminder"
+      field={{ ...field("multireminder"), apiName: "Remind_Participants" }}
+    />,
+  );
+  expect(screen.getByRole("button", { name: "Example" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Delivery channel" })).toBeNull();
+});
