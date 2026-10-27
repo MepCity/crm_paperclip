@@ -129,12 +129,12 @@ export function TimelineHistory({
           }}
         />
       )}
-      {loading ? <p role="status">Loading history…</p> : null}
+      {loading ? <p role="status">{t("records.chrome.loadingHistory")}</p> : null}
       {error ? (
         <div role="alert">
-          Could not load history.{" "}
+          {t("records.chrome.historyError")}{" "}
           <button type="button" onClick={onRetry}>
-            Retry
+            {t("records.chrome.retryHistory")}
           </button>
         </div>
       ) : null}
@@ -152,7 +152,7 @@ export function TimelineHistory({
           disabled={loadingMore}
           onClick={onShowMore}
         >
-          {loadingMore ? "Loading…" : "Show More"}
+          {loadingMore ? t("records.chrome.loadingMore") : t("records.chrome.showMore")}
         </button>
       ) : null}
     </div>

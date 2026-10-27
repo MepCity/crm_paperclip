@@ -12,6 +12,7 @@ import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { TagEntry } from "@/components/ui/tag-entry";
+import { useUtilityLabel } from "@/i18n/utility-labels";
 
 export function RecordTags({
   orgSlug,
@@ -24,6 +25,7 @@ export function RecordTags({
   recordId: string;
   label: string;
 }) {
+  const copy = useUtilityLabel();
   const readVersion = useRef(0);
   const [tags, setTags] = useState<readonly Tag[]>([]);
   const [catalogue, setCatalogue] = useState<readonly Tag[]>([]);
@@ -107,7 +109,7 @@ export function RecordTags({
           {label}
         </Button>
         <Popover
-          title="Add Tags"
+          title={copy("Add Tags")}
           hideTitle
           placement="bottom start"
           offset={-16}
@@ -160,7 +162,7 @@ export function RecordTags({
               isDisabled={busy}
               onPress={() => changeOpen(false)}
             >
-              Cancel
+              {copy("Cancel")}
             </Button>
             <Button
               size="sm"
@@ -176,7 +178,7 @@ export function RecordTags({
                 )
               }
             >
-              Save
+              {copy("Save")}
             </Button>
           </div>
         </Popover>

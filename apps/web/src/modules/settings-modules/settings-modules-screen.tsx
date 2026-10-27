@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDate } from "@crm/core/format";
 import {
   BarChart3,
   Briefcase,
@@ -14,13 +15,14 @@ import {
   Phone,
   Search,
   Settings,
-  Sparkles,
   User,
   UserPlus,
   Users,
 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useMemo, useState } from "react";
+import { useSettingsLabel } from "@/i18n/settings-labels";
+import { useFormat } from "@/lib/format-context";
 import { fixtureModuleListPort } from "./fixture-port";
 import type { ModuleListPort, ModuleSummary } from "./port";
 
@@ -54,6 +56,8 @@ export function SettingsModulesScreen({
   port?: ModuleListPort;
   orgSlug?: string;
 }) {
+  const copy = useSettingsLabel();
+  const format = useFormat();
   const [rows, setRows] = useState<ModuleSummary[] | null>(null);
   const [error, setError] = useState(false);
   const [query, setQuery] = useState("");
@@ -78,11 +82,11 @@ export function SettingsModulesScreen({
   }, [rows, query]);
 
   const message = error
-    ? "Modules could not be loaded."
+    ? copy("Modules could not be loaded.")
     : rows === null
-      ? "Loading modules…"
+      ? copy("Loading modules…")
       : shown.length === 0
-        ? "No modules found"
+        ? copy("No modules found")
         : null;
 
   return (
@@ -98,7 +102,7 @@ export function SettingsModulesScreen({
             disabled={i !== 0}
             className={`py-4 text-md ${i === 0 ? "border-b-2 border-primary font-semibold text-text" : "text-text-muted"}`}
           >
-            {t}
+            {copy(t)}
           </button>
         ))}
       </div>
@@ -111,8 +115,8 @@ export function SettingsModulesScreen({
             />
             <input
               type="search"
-              aria-label="Search modules"
-              placeholder="Search"
+              aria-label={copy("Search modules")}
+              placeholder={copy("Search")}
               value={query}
               onChange={(e) => setQuery(e.target.value)}
               className="w-72 rounded-md border border-border bg-surface py-2 pl-8 pr-3 text-sm focus:border-primary focus:outline-hidden"
@@ -123,27 +127,19 @@ export function SettingsModulesScreen({
               <LayoutGrid className="size-4 text-text-muted" />
               <Settings className="absolute -bottom-1 -right-1 size-2 text-text-muted" />
             </span>
-            Custom Module
+            {copy("Custom Module")}
           </span>
           <span className="flex items-center gap-1.5 text-sm text-text-muted">
             <Network aria-hidden="true" data-testid="legend-team" className="size-4 text-success" />
-            Team Module
+            {copy("Team Module")}
           </span>
           <div className="ml-auto flex items-center gap-4">
             <button
               type="button"
               disabled
-              className="inline-flex items-center gap-1.5 rounded-md border border-border bg-surface px-3 py-2 text-sm font-semibold text-text opacity-60"
-            >
-              <Sparkles className="size-4 text-accent-blue" aria-hidden="true" />
-              Create module using assistant
-            </button>
-            <button
-              type="button"
-              disabled
               className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-text opacity-60"
             >
-              Create New Module
+              {copy("Create New Module")}
             </button>
           </div>
         </div>
@@ -153,7 +149,7 @@ export function SettingsModulesScreen({
               <tr>
                 {heads.map((h) => (
                   <th key={h} scope="col" className="px-4 py-3 font-semibold text-text">
-                    {h}
+                    {copy(h)}
                   </th>
                 ))}
               </tr>
@@ -180,16 +176,26 @@ export function SettingsModulesScreen({
                             href={`/crm/${orgSlug}/settings/modules/Leads/fields`}
                             className="text-accent-blue"
                           >
-                            {r.displayLabel}
+                            {r.kind === "system" ? copy(r.displayLabel) : r.displayLabel}
                           </Link>
+                        ) : r.kind === "system" ? (
+                          r.kind === "system" ? (
+                            copy(r.displayLabel)
+                          ) : (
+                            r.displayLabel
+                          )
                         ) : (
                           r.displayLabel
                         )}
                       </span>
                     </td>
-                    <td className="px-4 py-4">{r.moduleName}</td>
-                    <td className="px-4 py-4 text-accent-blue">{r.teamspaceCount} Teamspaces</td>
-                    <td className="px-4 py-4">{r.sharedTo}</td>
+                    <td className="px-4 py-4">
+                      {r.kind === "system" ? copy(r.moduleName) : r.moduleName}
+                    </td>
+                    <td className="px-4 py-4 text-accent-blue">
+                      {r.teamspaceCount} {copy("Teamspace")}
+                    </td>
+                    <td className="px-4 py-4">{copy(r.sharedTo)}</td>
                     <td className="px-4 py-4">
                       {r.lastModifiedAt ? (
                         <span className="flex items-center gap-2">
@@ -200,7 +206,13 @@ export function SettingsModulesScreen({
                           >
                             <User className="size-3.5" />
                           </span>
-                          {r.lastModifiedAt}
+                          {/^\d{4}-\d{2}-\d{2}$/.test(r.lastModifiedAt)
+                            ? formatDate(r.lastModifiedAt, {
+                                ...format,
+                                locale: format.language === "tr" ? "tr-TR" : "en-US",
+                                datePattern: undefined,
+                              })
+                            : r.lastModifiedAt}
                         </span>
                       ) : null}
                     </td>
@@ -210,7 +222,7 @@ export function SettingsModulesScreen({
                           type="button"
                           role="switch"
                           aria-checked={r.enabled}
-                          aria-label={`${r.displayLabel} status`}
+                          aria-label={`${r.kind === "system" ? copy(r.displayLabel) : r.displayLabel} status`}
                           disabled
                           className={`relative inline-flex h-5 w-9 rounded-full opacity-60 ${r.enabled ? "bg-success" : "bg-border"}`}
                         >
@@ -223,7 +235,7 @@ export function SettingsModulesScreen({
                           <Info
                             data-testid="status-info-icon"
                             className="size-3.5 text-text-muted"
-                            aria-label={`${r.displayLabel} is a system module`}
+                            aria-label={`${r.kind === "system" ? copy(r.displayLabel) : r.displayLabel} is a system module`}
                           />
                         )}
                       </div>

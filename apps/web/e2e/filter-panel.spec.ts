@@ -2,12 +2,14 @@ import { expect, type Locator, test } from "@playwright/test";
 import { DEV_UI_A11Y_EXCLUDE, expectNoA11yViolations } from "./support/a11y";
 import { expectType, tokenValue } from "./support/typography";
 
+// Compare document coordinates: gallery focus/scroll anchoring can move the viewport
+// between independent measurements without changing the panel geometry.
 const baselineY = (target: Locator) =>
   target.evaluate((element) => {
     const probe = document.createElement("span");
     probe.style.cssText = "display:inline-block;width:0;height:0";
     element.append(probe);
-    const y = probe.getBoundingClientRect().bottom;
+    const y = probe.getBoundingClientRect().bottom + window.scrollY;
     probe.remove();
     return y;
   });
@@ -16,7 +18,7 @@ const panelInnerTop = (panel: Locator) =>
   panel.evaluate((element) => {
     const rect = element.getBoundingClientRect();
     const style = getComputedStyle(element);
-    return rect.top + Number.parseFloat(style.borderTopWidth);
+    return rect.top + window.scrollY + Number.parseFloat(style.borderTopWidth);
   });
 
 const expectWithinOnePx = (actual: number, expected: number) => {
@@ -32,6 +34,8 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   const demo = page.getByRole("region", { name: "filter panel", exact: true });
   const panel = demo.getByRole("region", { name: "Filter Leads by" });
   await expect(panel).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  await panel.scrollIntoViewIfNeeded();
   // list-views.md > Visual layout > Filter panel: 202 px including 1 px borders,
   // white surface, 6 px corners, 18 px horizontal inner padding.
   await expect(panel).toHaveCSS("width", "202px");
@@ -80,11 +84,17 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   const titleOffset = titleBaseline - innerTop;
   expectWithinOnePx(titleOffset, 32);
 
-  const searchTop = await search.evaluate((element) => element.getBoundingClientRect().top);
+  // Exercise a viewport change between samples; spacing must remain invariant.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  const searchTop = await search.evaluate(
+    (element) => element.getBoundingClientRect().top + window.scrollY,
+  );
   expectWithinOnePx(searchTop - titleBaseline, 21);
   expectWithinOnePx(searchTop - innerTop, 53);
 
-  const searchBottom = await search.evaluate((element) => element.getBoundingClientRect().bottom);
+  const searchBottom = await search.evaluate(
+    (element) => element.getBoundingClientRect().bottom + window.scrollY,
+  );
 
   const groupLabels = [
     "System Defined Filters",
@@ -100,7 +110,10 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   expectWithinOnePx(firstGroupBaseline - searchBottom, 33);
 
   const firstGroupChevron = firstGroupTrigger.locator("svg");
-  const chevronEdges = await firstGroupChevron.evaluate((svg) => svg.getBoundingClientRect());
+  const chevronEdges = await firstGroupChevron.evaluate((svg) => {
+    const rect = svg.getBoundingClientRect();
+    return { top: rect.top + window.scrollY, bottom: rect.bottom + window.scrollY };
+  });
   expectWithinOnePx(firstGroupBaseline - chevronEdges.top, 6);
   expectWithinOnePx(firstGroupBaseline - chevronEdges.bottom, 1.5);
 
@@ -127,7 +140,7 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
     const rowTop = await trigger.evaluate((button) => {
       const disclosureRoot = button.parentElement?.parentElement;
       const row = disclosureRoot?.querySelector("ul li");
-      return row?.getBoundingClientRect().top ?? Number.NaN;
+      return row ? row.getBoundingClientRect().top + window.scrollY : Number.NaN;
     });
     expectWithinOnePx(rowTop - baseline, 12);
   }
@@ -136,7 +149,9 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   const fieldsBaseline = await groupBaseline("Filter By Fields");
   expectWithinOnePx(
     fieldsBaseline -
-      (await lastSystemRow.evaluate((element) => element.getBoundingClientRect().bottom)),
+      (await lastSystemRow.evaluate(
+        (element) => element.getBoundingClientRect().bottom + window.scrollY,
+      )),
     31,
   );
 
@@ -144,7 +159,9 @@ test("filter panel matches the scoped Visual layout measurements", async ({ page
   const relatedBaseline = await groupBaseline("Filter By Related Modules");
   expectWithinOnePx(
     relatedBaseline -
-      (await lastFieldsRow.evaluate((element) => element.getBoundingClientRect().bottom)),
+      (await lastFieldsRow.evaluate(
+        (element) => element.getBoundingClientRect().bottom + window.scrollY,
+      )),
     31,
   );
 

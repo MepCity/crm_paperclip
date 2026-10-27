@@ -7,6 +7,7 @@ import "./form.css";
 
 /** Contacts form inventory chrome (F-55–F-57, M11): visible, inert until customization ships. */
 export function RecordFormClientScriptTab() {
+  const t = useUiTranslations();
   return (
     <Button
       type="button"
@@ -14,10 +15,12 @@ export function RecordFormClientScriptTab() {
       size="md"
       laterModule="M11"
       className="record-form-client-script-tab"
-      aria-label="Client Script"
+      aria-label={t("modules.setup.items.client-script")}
     >
       <Icons.chevronLeft className="record-form-client-script-tab__icon" aria-hidden />
-      <span className="record-form-client-script-tab__label">Client Script</span>
+      <span className="record-form-client-script-tab__label">
+        {t("modules.setup.items.client-script")}
+      </span>
     </Button>
   );
 }

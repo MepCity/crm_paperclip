@@ -136,3 +136,30 @@ test("keeps created and public view groups independently collapsible", async () 
   await user.click(screen.getByRole("menuitem", { name: "Custom Contacts" }));
   expect(change).toHaveBeenCalledWith("custom");
 });
+
+test("support module menus omit an empty created group and retain custom views when present", async () => {
+  const user = userEvent.setup();
+  const { rerender } = render(
+    <ViewTabStrip
+      viewName="All Cases"
+      views={[{ id: "all", name: "All Cases", systemDefined: true }]}
+      hideEmptyCreatedGroup
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Custom views" }));
+  expect(screen.queryByRole("menuitem", { name: "Created By Me" })).toBeNull();
+  await user.keyboard("{Escape}");
+  rerender(
+    <ViewTabStrip
+      viewName="All Cases"
+      views={[
+        { id: "all", name: "All Cases", systemDefined: true },
+        { id: "custom", name: "My custom view", systemDefined: false, isDefault: false },
+      ]}
+      hideEmptyCreatedGroup
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Custom views" }));
+  expect(screen.getByRole("menuitem", { name: "Created By Me" })).toBeTruthy();
+  expect(screen.getByRole("menuitem", { name: "My custom view" })).toBeTruthy();
+});

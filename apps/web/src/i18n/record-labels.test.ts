@@ -37,3 +37,22 @@ test("translates built-in view names and preserves user-created names", () => {
     ),
   ).toBe("Bana Ait Kişiler");
 });
+
+test.each([
+  ["Campaigns", "Kampanyalar", "My Active Campaigns", "Bana Ait Aktif Kampanyalar"],
+  ["Campaigns", "Kampanyalar", "Unread Campaigns", "Görüntülenmemiş Kampanyalar"],
+  ["Cases", "Servis Dosyaları", "Open Cases", "Açık Servis Dosyaları"],
+  ["Cases", "Servis Dosyaları", "Escalated Cases", "Eskale Edilmiş Servis Dosyaları"],
+  ["Cases", "Servis Dosyaları", "Today's Cases", "Bugünün Servis Dosyaları"],
+  ["Solutions", "Çözümler", "Unread Solutions", "Görüntülenmemiş Çözümler"],
+])(
+  "translates the system view %s / %s / %s and preserves identical custom names",
+  (module, plural, name, expected) => {
+    const view = { name, systemDefined: true, isDefault: false };
+    expect(builtInViewLabel(view, module, plural, translator("tr"))).toBe(expected);
+    expect(builtInViewLabel(view, module, module, translator("en"))).toBe(name);
+    expect(
+      builtInViewLabel({ ...view, systemDefined: false }, module, plural, translator("tr")),
+    ).toBe(name);
+  },
+);

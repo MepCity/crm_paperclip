@@ -7,7 +7,7 @@ import { useMemo } from "react";
 import { useExportHistory, useImportHistory, useTransferClient } from "@/lib/api/client/hooks";
 import { useOrgSlug } from "@/lib/api/client/provider";
 import { apiKeys } from "@/lib/api/client/query-keys";
-import { importHistoryPath, moduleListDefaultPath } from "@/lib/crm-paths";
+import { importHistoryPath, moduleImportPath, moduleListDefaultPath } from "@/lib/crm-paths";
 import { resolveModuleScreenByApiName } from "@/modules/registry";
 import { ExportHistory } from "./history/export-history";
 import { ImportHistory } from "./history/import-history";
@@ -66,6 +66,7 @@ export function ImportHistoryScreen() {
       jobs={history.data ?? []}
       loading={history.isLoading}
       moduleLabel={moduleLabel}
+      importHref={(module) => moduleImportPath(orgSlug, module)}
       canUndo={(job: ImportJob) => job.status !== "undone"}
       onUndo={async (job) => {
         await client.undoImport(job.id);

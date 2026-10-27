@@ -23,10 +23,7 @@ describe("SettingsModulesScreen", () => {
       "disabled",
       true,
     );
-    expect(screen.getByRole("button", { name: "Create module using assistant" })).toHaveProperty(
-      "disabled",
-      true,
-    );
+    expect(screen.queryByRole("button", { name: "Create module using assistant" })).toBeNull();
     expect(screen.getByRole("switch", { name: "Leads status" })).toHaveProperty("disabled", true);
   });
 

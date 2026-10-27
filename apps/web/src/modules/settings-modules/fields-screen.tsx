@@ -3,8 +3,19 @@
 import { ArrowLeft, HelpCircle, Search } from "lucide-react";
 import Link from "next/link";
 import { useMemo, useState } from "react";
+import { english, type MessageKey } from "@/i18n/catalogs";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
+import { useSettingsLabel } from "@/i18n/settings-labels";
 import { type FieldEditorData, useFieldEditor } from "./fields-editor";
-import { type FieldRow, filterFieldRows, MODULE_TABS, SIDEBAR_MODULES } from "./fields-model";
+import {
+  type FieldRow,
+  filterFieldRows,
+  groupAddressRows,
+  LEAD_FIELD_LIST_ORDER,
+  MODULE_TABS,
+  SIDEBAR_MODULES,
+} from "./fields-model";
 
 const SUBTABS = ["Field Listing", "Field Permissions", "AI Governance"];
 
@@ -40,13 +51,44 @@ function FieldsScreenBody({
   rows: FieldRow[];
   editor?: FieldEditorData;
 }) {
+  const copy = useSettingsLabel();
+  const t = useUiTranslations();
+  const display = useMetadataDisplayAdapter();
   const edit = useFieldEditor(orgSlug, module, editor ?? NO_EDITOR);
   const [query, setQuery] = useState("");
   const [moduleQuery, setModuleQuery] = useState("");
   const [searching, setSearching] = useState(false);
   const sortedRows = useMemo(
-    () => [...rows].sort((a, b) => a.label.localeCompare(b.label, "en", { sensitivity: "base" })),
-    [rows],
+    () =>
+      groupAddressRows(rows, module)
+        .map((row) => {
+          const isSystemLead = module === "Leads" && !row.custom && display.language === "tr";
+          const labelKey = row.apiName as keyof typeof english.settings.leadFieldLabels;
+          const typeKey = row.apiName as keyof typeof english.settings.leadFieldTypes;
+          return {
+            ...row,
+            label:
+              isSystemLead && english.settings.leadFieldLabels[labelKey] === row.label
+                ? t(`settings.leadFieldLabels.${labelKey}` as MessageKey)
+                : row.custom
+                  ? row.label
+                  : copy(display.getFieldLabel(module, row)),
+            dataType:
+              isSystemLead && english.settings.leadFieldTypes[typeKey]
+                ? t(`settings.leadFieldTypes.${typeKey}` as MessageKey)
+                : copy(row.dataType),
+          };
+        })
+        .sort((a, b) => {
+          if (module === "Leads" && display.language === "tr") {
+            const rank = (row: FieldRow) =>
+              row.custom ? 999 : LEAD_FIELD_LIST_ORDER.indexOf(row.apiName);
+            const difference = (rank(a) < 0 ? 999 : rank(a)) - (rank(b) < 0 ? 999 : rank(b));
+            if (difference) return difference;
+          }
+          return a.label.localeCompare(b.label, display.language, { sensitivity: "base" });
+        }),
+    [rows, module, display, copy, t],
   );
   const shown = useMemo(() => filterFieldRows(sortedRows, query), [sortedRows, query]);
   const modules = SIDEBAR_MODULES.filter(
@@ -62,11 +104,11 @@ function FieldsScreenBody({
             className="flex items-center gap-1 text-sm font-semibold text-text"
           >
             <ArrowLeft className="size-4" aria-hidden="true" />
-            Back to Modules
+            {copy("Back to Modules")}
           </Link>
           <button
             type="button"
-            aria-label="Search modules"
+            aria-label={copy("Search modules")}
             onClick={() => setSearching((s) => !s)}
             className="text-text-muted"
           >
@@ -76,13 +118,13 @@ function FieldsScreenBody({
         {searching ? (
           <input
             type="search"
-            aria-label="Filter modules"
+            aria-label={copy("Filter modules")}
             value={moduleQuery}
             onChange={(e) => setModuleQuery(e.target.value)}
             className="mb-2 w-full rounded-md border border-border px-2 py-1 text-sm"
           />
         ) : null}
-        <nav aria-label="Modules">
+        <nav aria-label={copy("Modules")}>
           <ul>
             {modules.map((m) => (
               <li key={m}>
@@ -91,14 +133,14 @@ function FieldsScreenBody({
                     aria-current="page"
                     className="block rounded-md bg-surface-muted px-2 py-2 text-sm font-semibold text-text"
                   >
-                    {m}
+                    {copy(m)}
                   </span>
                 ) : (
                   <Link
                     href={`/crm/${orgSlug}/settings/modules/${encodeURIComponent(m)}/fields`}
                     className="block px-2 py-2 text-sm text-text-muted hover:text-text"
                   >
-                    {m}
+                    {copy(m)}
                   </Link>
                 )}
               </li>
@@ -108,11 +150,11 @@ function FieldsScreenBody({
       </aside>
       <div className="min-w-0 flex-1">
         <div className="border-b border-border px-6 pt-5 pb-3">
-          <h1 className="text-xl font-semibold text-text">{module}</h1>
+          <h1 className="text-xl font-semibold text-text">{copy(module)}</h1>
         </div>
         <div
           role="tablist"
-          aria-label="Module configuration"
+          aria-label={copy("Module configuration")}
           className="flex items-center gap-6 border-b border-border px-6"
         >
           {MODULE_TABS.map((t) => {
@@ -125,7 +167,7 @@ function FieldsScreenBody({
                   aria-selected="true"
                   className="border-b-2 border-primary py-4 text-sm font-semibold text-text"
                 >
-                  {t}
+                  {copy(t)}
                 </button>
               );
             }
@@ -138,7 +180,7 @@ function FieldsScreenBody({
                   aria-selected="false"
                   className="py-4 text-sm text-text-muted hover:text-text"
                 >
-                  {t}
+                  {copy(t)}
                 </Link>
               );
             }
@@ -151,13 +193,13 @@ function FieldsScreenBody({
                 disabled
                 className="py-4 text-sm text-text-muted opacity-60 cursor-not-allowed"
               >
-                {t}
+                {copy(t)}
               </button>
             );
           })}
           <button
             type="button"
-            aria-label="Fields help"
+            aria-label={copy("Fields help")}
             disabled
             className="ml-auto text-text-muted"
           >
@@ -167,7 +209,7 @@ function FieldsScreenBody({
         <div className="p-6">
           <div
             role="tablist"
-            aria-label="Field views"
+            aria-label={copy("Field views")}
             className="mb-4 inline-flex rounded-full border border-border bg-surface-muted p-1"
           >
             {SUBTABS.map((t, i) => (
@@ -183,7 +225,7 @@ function FieldsScreenBody({
                     : "text-text-muted opacity-60 cursor-not-allowed"
                 }`}
               >
-                {t}
+                {copy(t)}
               </button>
             ))}
           </div>
@@ -195,8 +237,8 @@ function FieldsScreenBody({
               />
               <input
                 type="search"
-                aria-label="Search Fields or Data Types"
-                placeholder="Search Fields or Data Types"
+                aria-label={copy("Search Fields or Data Types")}
+                placeholder={copy("Search Fields or Data Types")}
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
                 className="w-72 rounded-md border border-border bg-surface py-2 pl-8 pr-3 text-sm focus:border-primary focus:outline-hidden"
@@ -210,7 +252,7 @@ function FieldsScreenBody({
                 disabled
                 className="rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-text opacity-60 cursor-not-allowed"
               >
-                Create and Edit Fields
+                {copy("Create and Edit Fields")}
               </button>
             )}
           </div>
@@ -224,7 +266,7 @@ function FieldsScreenBody({
                     : ["Fields", "Data Type", "Custom Field"]
                   ).map((h) => (
                     <th key={h} scope="col" className="px-4 py-3 font-semibold text-text">
-                      {h}
+                      {copy(h)}
                     </th>
                   ))}
                 </tr>
@@ -233,16 +275,20 @@ function FieldsScreenBody({
                 {shown.length === 0 ? (
                   <tr>
                     <td colSpan={editor ? 4 : 3} className="px-4 py-8 text-center text-text-muted">
-                      No fields found
+                      {copy("No fields found")}
                     </td>
                   </tr>
                 ) : (
                   shown.map((r) => (
                     <tr key={r.apiName} className="border-b border-border last:border-0">
                       <td className="px-4 py-3">{r.label}</td>
-                      <td className="px-4 py-3">{r.dataType}</td>
+                      <td className="px-4 py-3">{copy(r.dataType)}</td>
                       <td className="px-4 py-3">{r.custom ? "Custom" : ""}</td>
-                      {editor ? <td className="px-4 py-3">{edit.actions(r)}</td> : null}
+                      {editor ? (
+                        <td className="px-4 py-3">
+                          {r.apiName === "Address" ? null : edit.actions(r)}
+                        </td>
+                      ) : null}
                     </tr>
                   ))
                 )}

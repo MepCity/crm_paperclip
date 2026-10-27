@@ -53,15 +53,16 @@ export function DocumentsHttpScreen({ orgSlug }: { orgSlug: string }) {
 function EmptyIllustration() {
   return (
     <svg width="112" height="96" viewBox="0 0 112 96" fill="none" aria-hidden="true">
-      <g transform="rotate(-8 56 48)">
-        <path
-          d="M10 24a6 6 0 0 1 6-6h24l8 9h48a6 6 0 0 1 6 6v40a6 6 0 0 1-6 6H16a6 6 0 0 1-6-6V24Z"
-          className="fill-accent-blue opacity-60"
-        />
-        <path
-          d="M10 38a6 6 0 0 1 6-6h80a6 6 0 0 1 6 6v36a6 6 0 0 1-6 6H16a6 6 0 0 1-6-6V38Z"
-          className="fill-accent-blue"
-        />
+      <g
+        transform="rotate(-20 56 48)"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinejoin="round"
+        className="text-accent-blue"
+      >
+        <path d="M20 39h22l39-20v58L42 58H20z" fill="var(--color-surface)" />
+        <path d="M42 39v19l39 19V19z" fill="#ffa9bc" />
+        <path d="M33 58v20h12l5-16M87 33q18 15 0 30M14 68l-5 6M23 75l-2 9" />
       </g>
     </svg>
   );
@@ -368,6 +369,7 @@ function FolderRow({
   onSelect: (id: string) => void;
   lockedLabel?: string;
 }) {
+  const t = useUiTranslations();
   return (
     <button
       type="button"
@@ -378,7 +380,11 @@ function FolderRow({
       }`}
     >
       <Icons.folder className="size-4" aria-hidden="true" />
-      <span className="flex-1">{folder.name}</span>
+      <span className="flex-1">
+        {folder.section === "my" && folder.name === "My Folders"
+          ? t("modules.documents.myFolders")
+          : folder.name}
+      </span>
       {folder.locked ? <Icons.lock className="size-3.5" aria-label={lockedLabel} /> : null}
     </button>
   );
