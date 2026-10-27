@@ -88,7 +88,7 @@ export function AnalyticsScreen({
       className="min-h-full bg-bg p-4 text-md text-text"
     >
       {adding && <DashboardComponentChooser onCancel={() => setAdding(false)} />}
-      <span id="analytics-unavailable" className="sr-only">
+      <span id="analytics-unavailable" hidden>
         {t("modules.reports.notAvailableYet")}
       </span>
       {/* A01–A09: Toolbar */}

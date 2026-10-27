@@ -123,7 +123,7 @@ export function ReportsScreen({
           </div>
         </div>
       </TopAlignedModal>
-      <span id="reports-unavailable" className="sr-only">
+      <span id="reports-unavailable" hidden>
         {t("modules.reports.notAvailableYet")}
       </span>
       <div className="flex flex-wrap items-center justify-between gap-4 pb-3">

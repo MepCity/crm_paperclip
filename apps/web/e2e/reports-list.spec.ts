@@ -13,6 +13,7 @@ test("Reports landing: columns, inert controls and report placeholder navigation
     .getByRole("link", { name: "Reports", exact: true })
     .click();
   await expect(page).toHaveURL(`/crm/${org.slug}/tab/Reports`);
+  await expect(page.locator("#reports-unavailable")).toBeHidden();
   await expect(page.getByRole("heading", { name: "Reports", exact: true })).toBeVisible();
   const table = page.getByRole("table");
   await expect(table.getByRole("row")).toHaveCount(14);
@@ -92,6 +93,7 @@ test("Reports category selector: open, inventory R09-R19 in order, close on Esca
     .getByRole("link", { name: "Reports", exact: true })
     .click();
   await expect(page).toHaveURL(`/crm/${org.slug}/tab/Reports`);
+  await expect(page.locator("#reports-unavailable")).toBeHidden();
 
   const nonGetRequests: string[] = [];
   page.on("request", (request) => {

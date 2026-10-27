@@ -16,6 +16,11 @@ test("Documents screen over HTTP: roots, team folder, navigation, empty state", 
   await expect(page.getByRole("navigation", { name: "Breadcrumb" })).toContainText("Apps");
   await expect(page.getByText("No items available.")).toHaveCount(0);
 
+  await page.getByRole("button", { name: "Workspace Files", exact: true }).click();
+  await expect(docs.getByRole("listitem")).toHaveCount(1);
+  await expect(page.getByText("No items available.")).toHaveCount(0);
+  await expect(page.getByText("Getting started.pdf", { exact: true })).toBeVisible();
+
   await page.getByRole("button", { name: /Team Folder/ }).click();
   await expect(page.getByText("Last Modified")).toBeVisible();
   await expect(page.getByLabel("Locked")).toBeVisible();

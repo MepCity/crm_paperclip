@@ -55,6 +55,16 @@ describe("documents read routes", () => {
     expect(body.data.map((f) => f.id).sort()).toEqual(["folder-my", "folder-team"]);
   });
 
+  it("opens the personal application folder and its file detail", async () => {
+    const response = await itemsOf("folder-app");
+    const body = await response.json();
+    expect(body.data).toEqual([expect.objectContaining({ id: "file-guide", kind: "file" })]);
+    const detail = await item(get("items/file-guide"), {
+      params: Promise.resolve({ itemId: "file-guide" }),
+    });
+    expect(detail.status).toBe(200);
+  });
+
   it("returns 200 and an empty list for an empty folder", async () => {
     const response = await itemsOf("folder-empty");
     expect(response.status).toBe(200);
