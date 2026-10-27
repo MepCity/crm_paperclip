@@ -157,3 +157,45 @@ test("adds a participant in the window and edits the meeting from the record", a
     page.locator("[data-record-header]").getByRole("heading", { level: 1 }),
   ).toContainText("Customer call (moved)");
 });
+
+test("expanded reminder saves its offset and delivery channel", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1470, height: 835 });
+  const { org, dialog } = await openDialog(page);
+  await dialog.getByRole("button", { name: "Add more details" }).click();
+  const reminder = dialog.locator('[data-form-field="Remind_At"]');
+  await reminder.getByRole("button", { name: "Reminder", exact: true }).click();
+  await page.getByRole("option", { name: "10 minutes before", exact: true }).click();
+  await expect(
+    reminder.getByRole("button", { name: "Delivery channel", exact: true }),
+  ).toContainText("Email");
+  await reminder.getByRole("button", { name: "Delivery channel", exact: true }).click();
+  await page.getByRole("option", { name: "None", exact: true }).click();
+  await expect(reminder.getByRole("button", { name: "Reminder", exact: true })).toContainText(
+    "None",
+  );
+  await reminder.getByRole("button", { name: "Delivery channel", exact: true }).click();
+  await page.getByRole("option", { name: "Email", exact: true }).click();
+  await reminder.getByRole("button", { name: "Reminder", exact: true }).click();
+  await page.getByRole("option", { name: "10 minutes before", exact: true }).click();
+  await reminder.scrollIntoViewIfNeeded();
+  const screenshotPath = testInfo.outputPath("meeting-reminder-controls.png");
+  await page.screenshot({ path: screenshotPath });
+  await reminder.screenshot({ path: testInfo.outputPath("meeting-reminder-row.png") });
+  await testInfo.attach("meeting-reminder-controls", {
+    path: screenshotPath,
+    contentType: "image/png",
+  });
+  await dialog.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Meetings/\\d+$`), {
+    timeout: 60_000,
+  });
+  const id = meetingIdFromPath(new URL(page.url()).pathname);
+  await page.goto(moduleRecordEditPath(org.slug, TAB, id));
+  const saved = page.locator('[data-form-field="Remind_At"]');
+  await expect(saved.getByRole("button", { name: "Reminder", exact: true })).toContainText(
+    "10 minutes before",
+  );
+  await expect(saved.getByRole("button", { name: "Delivery channel", exact: true })).toContainText(
+    "Email",
+  );
+});

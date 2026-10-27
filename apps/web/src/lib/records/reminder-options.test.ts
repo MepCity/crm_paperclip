@@ -1,5 +1,11 @@
-import { describe, expect, it } from "vitest";
-import { REMINDER_OFFSETS, reminderOffsetOf, reminderValue } from "./reminder-options";
+import type { JsonObject } from "@crm/core/records";
+import { describe, expect, it, test } from "vitest";
+import {
+  REMINDER_OFFSETS,
+  reminderChannelOf,
+  reminderOffsetOf,
+  reminderValue,
+} from "./reminder-options";
 
 describe("reminder-options", () => {
   describe("REMINDER_OFFSETS", () => {
@@ -57,9 +63,9 @@ describe("reminder-options", () => {
       expect(reminderOffsetOf([{ ALARM: "FREQ=NONE;ACTION=EMAIL;TRIGGER=" }])).toBeNull();
     });
 
-    it("returns null for offsets not present in REMINDER_OFFSETS", () => {
-      expect(reminderOffsetOf([{ ALARM: "FREQ=NONE;ACTION=EMAIL;TRIGGER=-PT99M" }])).toBeNull();
-      expect(reminderOffsetOf([{ ALARM: "FREQ=NONE;ACTION=EMAIL;TRIGGER=-P3D" }])).toBeNull();
+    it("preserves offsets not present in REMINDER_OFFSETS", () => {
+      expect(reminderOffsetOf([{ ALARM: "FREQ=NONE;ACTION=EMAIL;TRIGGER=-PT99M" }])).toBe("PT99M");
+      expect(reminderOffsetOf([{ ALARM: "FREQ=NONE;ACTION=EMAIL;TRIGGER=-P3D" }])).toBe("P3D");
     });
   });
 
@@ -72,4 +78,28 @@ describe("reminder-options", () => {
       }
     });
   });
+});
+
+test("preserves unknown channels and offsets through a round trip", () => {
+  const value = reminderValue("PT99M", "LEGACY");
+  expect(reminderChannelOf(value)).toBe("LEGACY");
+  expect(reminderValue(reminderOffsetOf(value), reminderChannelOf(value))).toEqual(value);
+});
+
+test("defaults missing legacy actions to EMAIL", () => {
+  expect(reminderChannelOf(null)).toBe("EMAIL");
+  expect(reminderChannelOf([{ ALARM: "FREQ=NONE;TRIGGER=-PT15M" }])).toBe("EMAIL");
+  expect(reminderChannelOf(reminderValue("PT15M"))).toBe("EMAIL");
+});
+
+test("changing a control preserves other alarm parameters and additional reminders", () => {
+  const value: JsonObject[] = [
+    { ALARM: "FREQ=DAILY;ACTION=LEGACY;TRIGGER=-PT99M;REPEAT=2", custom: "kept" },
+    { ALARM: "FREQ=NONE;ACTION=EMAIL;TRIGGER=-P1D" },
+  ];
+  expect(reminderValue("PT10M", "EMAIL", value)).toEqual([
+    { ...value[0], ALARM: "FREQ=DAILY;ACTION=EMAIL;TRIGGER=-PT10M;REPEAT=2" },
+    value[1],
+  ]);
+  expect(value[0]?.ALARM).toContain("ACTION=LEGACY");
 });

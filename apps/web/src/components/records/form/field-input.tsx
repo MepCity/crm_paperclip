@@ -32,7 +32,13 @@ import {
   DATE_MASK_PLACEHOLDER,
   displayDateToModelShape,
 } from "@/lib/records/calendar-date";
-import { REMINDER_OFFSETS, reminderOffsetOf, reminderValue } from "@/lib/records/reminder-options";
+import {
+  REMINDER_CHANNELS,
+  REMINDER_OFFSETS,
+  reminderChannelOf,
+  reminderOffsetOf,
+  reminderValue,
+} from "@/lib/records/reminder-options";
 import {
   isModuleRegistered,
   resolveModuleLaterKey,
@@ -605,25 +611,52 @@ export function FieldInput({
           errorMessage={errorMessage}
         />
       );
-    case "multireminder":
+    case "multireminder": {
+      const offset = reminderOffsetOf(value);
+      const channel = reminderChannelOf(value);
+      const offsets = REMINDER_OFFSETS.map((item) => ({
+        value: item.id as string,
+        label: t(`records.reminders.${item.id}`),
+      }));
+      if (offset && !offsets.some((item) => item.value === offset)) {
+        offsets.push({ value: offset, label: offset });
+      }
+      const channels = REMINDER_CHANNELS.map((id) => ({
+        value: id as string,
+        label: t(`records.reminders.channels.${id}`),
+      }));
+      if (!channels.some((item) => item.value === channel)) {
+        channels.push({ value: channel, label: channel });
+      }
       return (
-        <RecordChoice
-          id={controlId}
-          hideLabel={hideLabel}
-          label={field.label}
-          value={reminderOffsetOf(value)}
-          onChange={(next) => onChange(reminderValue(next))}
-          options={[
-            { value: null, label: "-None-" },
-            ...REMINDER_OFFSETS.map((offset) => ({
-              value: offset.id,
-              label: t(`records.reminders.${offset.id}`),
-            })),
-          ]}
-          disabled={common.isDisabled}
-          inline={inline}
-        />
+        <div className="flex min-w-0 flex-col gap-1">
+          <RecordChoice
+            id={controlId}
+            hideLabel={hideLabel}
+            label={field.label}
+            value={offset}
+            onChange={(next) => onChange(reminderValue(next, channel, value))}
+            options={[{ value: null, label: t("records.reminders.none") }, ...offsets]}
+            disabled={common.isDisabled}
+            inline={inline}
+          />
+          {field.apiName === "Remind_At" && (
+            <RecordChoice
+              id={`${controlId}-channel`}
+              hideLabel
+              label={t("records.reminders.channel")}
+              value={offset ? channel : null}
+              onChange={(next) =>
+                onChange(next ? reminderValue(offset ?? "PT15M", next, value) : null)
+              }
+              options={[{ value: null, label: t("records.reminders.none") }, ...channels]}
+              disabled={common.isDisabled}
+              inline={inline}
+            />
+          )}
+        </div>
       );
+    }
     case "multi_module_lookup":
       return null;
   }
