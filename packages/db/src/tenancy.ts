@@ -6,6 +6,13 @@ export type TableContract = {
   privileges: readonly ("SELECT" | "INSERT" | "UPDATE" | "DELETE")[];
 };
 
+/** Installed CRM families are always checked, including when another adapter starts. */
+export const definitionTableContracts: readonly TableContract[] = [
+  { name: "report_definitions", privileges: ["SELECT", "INSERT", "UPDATE"] },
+  { name: "assignment_shells", privileges: ["SELECT", "INSERT"] },
+  { name: "organization_email_addresses", privileges: ["SELECT", "INSERT"] },
+];
+
 const identityTables = new Set([
   "users",
   "accounts",
@@ -64,6 +71,10 @@ export async function assertRuntimeCatalog(
   )
     unsafe();
 
+  tables = [
+    ...definitionTableContracts.filter((base) => !tables.some((t) => t.name === base.name)),
+    ...tables,
+  ];
   const contracts = new Map(tables.map((table) => [table.name, table]));
   if (contracts.size !== tables.length || tables.some((table) => identityTables.has(table.name)))
     unsafe();
