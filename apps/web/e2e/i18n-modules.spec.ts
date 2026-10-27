@@ -160,11 +160,8 @@ test.describe("CRM modules Turkish localization", () => {
     await page.getByRole("button", { name: "Başlayın", exact: true }).click();
     await expect(page.getByRole("button", { name: "Kişiler kuyruğu ekle" })).toBeVisible();
     await page.getByRole("button", { name: "Kuyruğu özelleştir" }).click();
-    await expect(
-      page.getByText(
-        "Kuyruk yönetimi bu önizlemede kullanılamaz: hiçbir değişiklik yapılmaz veya kaydedilmez.",
-      ),
-    ).toBeVisible();
+    await expect(page.getByRole("status")).toHaveText("Kuyruk yönetimi kullanılamıyor.");
+    await expect(page.getByText("Bu işlem kullanılamıyor.", { exact: true })).toBeHidden();
 
     await page.goto(`/crm/${org.slug}/tab/Visits/missing-visit`);
     await expect(page.getByRole("region", { name: "Ziyaret detayı" })).toBeVisible();

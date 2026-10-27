@@ -17,6 +17,23 @@ function fixtureSnapshot(ctx: OrgContext): DocumentsSnapshot {
         title: "Workspace Files",
       }),
       node(organizationId, "folder-app", "space-my", "folder-my", "folder", "Workspace Files"),
+      {
+        ...node(
+          organizationId,
+          "file-guide",
+          "space-my",
+          "folder-app",
+          "file",
+          "Getting started.pdf",
+        ),
+        managedAttachment: {
+          module: "Leads",
+          recordId: "100000000000000000",
+          attachmentId: "file-guide",
+          currentOwnerUserId: ctx.userId,
+          source: "record" as const,
+        },
+      },
       node(organizationId, "folder-team", "space-team", null, "folder", "Team Folder", undefined, {
         locked: true,
       }),

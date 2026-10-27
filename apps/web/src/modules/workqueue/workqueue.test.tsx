@@ -87,9 +87,8 @@ it("dismisses the welcome for the session and switches queues without a write", 
     "Add Leads queue",
   ]) {
     const btn = screen.getByRole("button", { name });
-    expect(describedBy(btn)).toBe(
-      "Action is unavailable in this preview: no changes are made or saved.",
-    );
+    expect(describedBy(btn)).toBe("This action is unavailable.");
+    expect(document.getElementById(btn.getAttribute("aria-describedby") ?? "")?.hidden).toBe(true);
     await user.click(btn);
   }
   expect(refresh).toHaveBeenCalledOnce();

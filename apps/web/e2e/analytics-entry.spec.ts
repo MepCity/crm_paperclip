@@ -16,6 +16,7 @@ test("Analytics entry: record-backed overview dashboard, toolbar, empty target s
     .click();
 
   await expect(page).toHaveURL(`/crm/${org.slug}/tab/Dashboards`);
+  await expect(page.locator("#analytics-unavailable")).toBeHidden();
   await expect(page.getByRole("heading", { name: "Analytics", exact: true })).toBeVisible();
 
   // Toolbar controls (A01–A09)

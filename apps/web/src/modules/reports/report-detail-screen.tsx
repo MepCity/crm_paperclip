@@ -69,7 +69,7 @@ export function ReportDetailScreen({
       aria-label={t("modules.reports.reportDetail")}
       className="min-h-full bg-bg text-md text-text"
     >
-      <span id="reports-unavailable" className="sr-only">
+      <span id="reports-unavailable" hidden>
         {t("modules.reports.notAvailableYet")}
       </span>
       <header className="flex items-center justify-between gap-4 border-b border-border bg-surface px-3 py-3">

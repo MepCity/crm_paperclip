@@ -20,6 +20,7 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
   const nav = page.getByRole("navigation", { name: "Main navigation" });
   await nav.getByRole("link", { name: "Workqueue", exact: true }).click();
   await expect(page).toHaveURL(`/crm/${slug}/workqueue`);
+  await expect(page.getByText("This action is unavailable.", { exact: true })).toBeHidden();
   await expect(nav.getByRole("link", { name: "Workqueue", exact: true })).toHaveAttribute(
     "aria-current",
     "page",
@@ -55,9 +56,7 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
   const selectUsersBtn = page.getByRole("button", { name: "Select users", exact: true });
   await expect(selectUsersBtn).toBeVisible();
   await selectUsersBtn.click();
-  await expect(page.getByRole("status")).toHaveText(
-    "User selection is unavailable in this preview: no changes are made or saved.",
-  );
+  await expect(page.getByRole("status")).toHaveText("User selection is unavailable.");
 
   // Left rail
   const rail = page.getByRole("complementary", { name: "Workqueue queues" });
@@ -91,35 +90,27 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
   const blueprintBtn = rail.getByRole("button", { name: /^Blueprint \d+$/, exact: true });
   await expect(blueprintBtn).toBeVisible();
   await blueprintBtn.click();
-  await expect(page.getByRole("status")).toHaveText(
-    "Jobs is unavailable in this preview: no changes are made or saved.",
-  );
+  await expect(page.getByRole("status")).toHaveText("Jobs is unavailable.");
 
   // W09: Left: Customize queue (WD07)
   await expect(rail.getByRole("heading", { name: "My Workqueue", exact: true })).toBeVisible();
   const customizeBtn = rail.getByRole("button", { name: "Customize queue", exact: true });
   await expect(customizeBtn).toBeVisible();
   await customizeBtn.click();
-  await expect(page.getByRole("status")).toHaveText(
-    "Queue management is unavailable in this preview: no changes are made or saved.",
-  );
+  await expect(page.getByRole("status")).toHaveText("Queue management is unavailable.");
 
   // W10: Left: Suggested queue (WD06)
   const suggestedBtn = rail.getByRole("button", { name: "Suggested queue", exact: true });
   await expect(suggestedBtn).toBeVisible();
   await suggestedBtn.click();
-  await expect(page.getByRole("status")).toHaveText(
-    "Queue creation is unavailable in this preview: no changes are made or saved.",
-  );
+  await expect(page.getByRole("status")).toHaveText("Queue creation is unavailable.");
 
   // W11, W12, W13: Leads section in documented order (WD05, WD06)
   await expect(rail.getByRole("heading", { name: "Leads", exact: true })).toBeVisible();
   const addLeadsBtn = rail.getByRole("button", { name: "Add Leads queue", exact: true });
   await expect(addLeadsBtn).toBeVisible();
   await addLeadsBtn.click();
-  await expect(page.getByRole("status")).toHaveText(
-    "Queue creation is unavailable in this preview: no changes are made or saved.",
-  );
+  await expect(page.getByRole("status")).toHaveText("Queue creation is unavailable.");
   const myLeadsBtn = rail.getByRole("button", { name: /^My Leads \d+$/, exact: true });
   const recentLeadsBtn = rail.getByRole("button", {
     name: /^Leads assigned in the last 3 hours \d+$/,
@@ -133,9 +124,7 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
   const addContactsBtn = rail.getByRole("button", { name: "Add Contacts queue", exact: true });
   await expect(addContactsBtn).toBeVisible();
   await addContactsBtn.click();
-  await expect(page.getByRole("status")).toHaveText(
-    "Queue creation is unavailable in this preview: no changes are made or saved.",
-  );
+  await expect(page.getByRole("status")).toHaveText("Queue creation is unavailable.");
   const myContactsBtn = rail.getByRole("button", { name: /^My Contacts \d+$/, exact: true });
   const recentContactsBtn = rail.getByRole("button", {
     name: /^Contacts assigned in the last 3 hours \d+$/,
@@ -149,9 +138,7 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
   const addDealsBtn = rail.getByRole("button", { name: "Add Deals queue", exact: true });
   await expect(addDealsBtn).toBeVisible();
   await addDealsBtn.click();
-  await expect(page.getByRole("status")).toHaveText(
-    "Queue creation is unavailable in this preview: no changes are made or saved.",
-  );
+  await expect(page.getByRole("status")).toHaveText("Queue creation is unavailable.");
   const myDealsBtn = rail.getByRole("button", { name: /^My Deals \d+$/, exact: true });
   const closingDealsBtn = rail.getByRole("button", {
     name: /^Deals Closing This Month \d+$/,
@@ -165,9 +152,7 @@ test("Workqueue inventory W01-W29 and functional WD01-WD10: entry modal, user ba
   const addCampaignsBtn = rail.getByRole("button", { name: "Add Campaigns queue", exact: true });
   await expect(addCampaignsBtn).toBeVisible();
   await addCampaignsBtn.click();
-  await expect(page.getByRole("status")).toHaveText(
-    "Queue creation is unavailable in this preview: no changes are made or saved.",
-  );
+  await expect(page.getByRole("status")).toHaveText("Queue creation is unavailable.");
   const myCampaignsBtn = rail.getByRole("button", {
     name: /^My Active Campaigns \d+$/,
     exact: true,

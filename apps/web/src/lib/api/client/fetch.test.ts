@@ -208,9 +208,10 @@ describe("shouldRetryQuery", () => {
     expect(shouldRetryQuery(0, new UnexpectedApiError(404))).toBe(false);
   });
 
-  it("retries server and unreadable 5xx responses up to three times", () => {
-    expect(shouldRetryQuery(0, new UnexpectedApiError(500))).toBe(true);
-    expect(shouldRetryQuery(3, new UnexpectedApiError(500))).toBe(false);
+  it.each([500, 502, 503])("retries unreadable %s responses up to three times", (status) => {
+    expect(shouldRetryQuery(0, new UnexpectedApiError(status))).toBe(true);
+    expect(shouldRetryQuery(2, new UnexpectedApiError(status))).toBe(true);
+    expect(shouldRetryQuery(3, new UnexpectedApiError(status))).toBe(false);
   });
 });
 

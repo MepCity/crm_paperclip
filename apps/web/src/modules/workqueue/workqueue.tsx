@@ -115,7 +115,7 @@ export function Workqueue({
           <Icons.plus aria-hidden className="size-5" />
         </Button>
       </div>
-      <span id={unavailableDescId} className="sr-only">
+      <span id={unavailableDescId} hidden>
         {t("modules.workqueue.unavailableSrOnly")}
       </span>
       <div className="flex min-h-0 flex-1 gap-4 p-4">
