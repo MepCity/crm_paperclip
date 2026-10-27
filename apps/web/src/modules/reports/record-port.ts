@@ -224,7 +224,11 @@ export const REPORT_CONFIGS: readonly ReportConfig[] = names.map((name, index) =
 });
 
 /** Read every page through the same permission-scoped service as record lists. */
-async function readRecords(service: RecordService, module: string): Promise<RecordData[]> {
+async function readRecords(
+  service: RecordService,
+  module: string,
+  definition?: Pick<import("@crm/core/definitions").ReportInput, "columns" | "criteria">,
+): Promise<RecordData[]> {
   const records: RecordData[] = [];
   let viewId = module === "Events" ? "all-meetings" : `all-${module.toLowerCase()}`;
   try {
@@ -246,6 +250,12 @@ async function readRecords(service: RecordService, module: string): Promise<Reco
         page,
         perPage: 100,
         systemFilters: { locked: { locked } },
+        ...(definition
+          ? {
+              fields: definition.columns,
+              ...(definition.criteria ? { filters: definition.criteria } : {}),
+            }
+          : {}),
       });
       records.push(...result.records);
       if (!result.moreRecords) break;
@@ -260,23 +270,39 @@ export function createRecordReportsPort(
     now?: () => Date;
     format?: FormatOptions;
     ownerNames?: ReadonlyMap<string, string>;
+    definitions?: {
+      list(): Promise<readonly import("@crm/core/definitions").ReportDefinition[]>;
+      get(id: string): Promise<import("@crm/core/definitions").ReportDefinition | null>;
+    };
   } = {},
 ): ReportsPort {
   return {
     async listReports(): Promise<readonly ReportDefinition[]> {
-      return REPORT_CONFIGS.map((config) => ({
-        id: config.id,
-        name: config.name,
-        description: config.description,
-        folder: config.folder,
-        lastAccessedDate: config.lastAccessedDate,
-        createdBy: config.createdBy,
-      }));
+      const saved = options.definitions ? await options.definitions.list() : [];
+      return [
+        ...saved.map((definition) => ({
+          ...definition,
+          folder: null,
+          lastAccessedDate: null,
+          createdBy: null,
+        })),
+        ...REPORT_CONFIGS.map((config) => ({
+          id: config.id,
+          name: config.name,
+          description: config.description,
+          folder: config.folder,
+          lastAccessedDate: config.lastAccessedDate,
+          createdBy: config.createdBy,
+        })),
+      ];
     },
 
     async getReport(id: string): Promise<ReportDetail | null> {
       const config = REPORT_CONFIGS.find((item) => item.id === id);
-      if (!config) return null;
+      if (!config) {
+        const definition = await options.definitions?.get(id);
+        return definition ? executeReport(service, definition, options) : null;
+      }
 
       const format = options.format ?? DEFAULT_FORMAT;
       const now = options.now?.() ?? new Date();
@@ -314,5 +340,41 @@ export function createRecordReportsPort(
         updatedAt: now.toISOString(),
       };
     },
+  };
+}
+
+/** Execute through RecordService so tenant, record guards and field projection stay authoritative. */
+export async function executeReport(
+  service: RecordService,
+  input: import("@crm/core/definitions").ReportInput & { id?: string },
+  options: { now?: () => Date; format?: FormatOptions } = {},
+): Promise<ReportDetail> {
+  const metadata = await service.getModule(input.module);
+  const fields = new Map(metadata.fields.map((field) => [field.apiName, field]));
+  if (!input.columns.length || input.columns.some((name) => !fields.has(name)))
+    throw new Error("Invalid report");
+  const records = await readRecords(service, input.module, input);
+  const format = options.format ?? DEFAULT_FORMAT;
+  return {
+    id: input.id ?? "",
+    name: input.name,
+    description: input.description,
+    folder: null,
+    createdBy: null,
+    lastAccessedDate: null,
+    headings: input.columns.map((name) => fields.get(name)?.label ?? name),
+    rows: records.map((record) =>
+      input.columns.map((name) => {
+        const value = record.fields[name];
+        if (value === null || value === undefined || value === "") return "-";
+        const field = fields.get(name);
+        if (typeof value === "number") return formatNumber(value, format);
+        if (field?.dataType === "date") return String(value);
+        if (field?.dataType === "datetime") return formatDateTime(String(value), format);
+        if (typeof value === "object") return "name" in value ? String(value.name) : "-";
+        return String(value);
+      }),
+    ),
+    updatedAt: (options.now?.() ?? new Date()).toISOString(),
   };
 }

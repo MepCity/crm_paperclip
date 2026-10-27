@@ -36,7 +36,8 @@
     "./mail/outbox": "./src/mail/outbox.ts",
     "./mail/recipient-list": "./src/mail/recipient-list.ts",
     "./mail/recipient-policy": "./src/mail/recipient-policy.ts",
-    "./definitions": "./src/definitions/index.ts"
+    "./definitions": "./src/definitions/index.ts",
+    "./definitions/runtime": "./src/definitions/runtime.ts"
   },
   "dependencies": {
     "@crm/db": "workspace:*",

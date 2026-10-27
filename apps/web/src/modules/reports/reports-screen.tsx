@@ -14,6 +14,7 @@ import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { useFormat } from "@/lib/format-context";
 import { fixtureReportsPort } from "./fixture-port";
 import type { ReportDefinition, ReportsPort } from "./port";
+import { ReportBuilder, type ReportBuilderActions } from "./report-builder";
 import { ReportsCategorySelector } from "./reports-category-selector";
 
 export function reportPath(orgSlug: string, id?: string) {
@@ -25,10 +26,14 @@ export function ReportsScreen({
   orgSlug,
   port = fixtureReportsPort,
   initialReports,
+  builderActions,
+  initialError = false,
 }: {
   orgSlug: string;
   port?: ReportsPort;
   initialReports?: readonly ReportDefinition[];
+  builderActions?: ReportBuilderActions;
+  initialError?: boolean;
 }) {
   const t = useUiTranslations();
   const display = useMetadataDisplayAdapter();
@@ -48,10 +53,11 @@ export function ReportsScreen({
   };
   const orgFormat = useFormat();
   const [creating, setCreating] = useState(false);
+  const [building, setBuilding] = useState(false);
   const [primaryModule, setPrimaryModule] = useState("");
   const [reports, setReports] = useState<readonly ReportDefinition[]>(initialReports ?? []);
   const [status, setStatus] = useState<"loading" | "ready" | "error">(
-    initialReports ? "ready" : "loading",
+    initialError ? "error" : initialReports ? "ready" : "loading",
   );
   useEffect(() => {
     if (initialReports) return;
@@ -80,6 +86,21 @@ export function ReportsScreen({
     t("modules.reports.createdBy"),
   ];
 
+  if (building && builderActions)
+    return (
+      <ReportBuilder
+        module={primaryModule}
+        actions={builderActions}
+        onCancel={() => {
+          setBuilding(false);
+          setPrimaryModule("");
+        }}
+        onSaved={(report) => {
+          window.location.assign(reportPath(orgSlug, report.id));
+        }}
+      />
+    );
+
   return (
     <section
       aria-label={t("modules.reports.reports")}
@@ -99,7 +120,7 @@ export function ReportsScreen({
           <Select
             label={t("modules.observedFlows.selectPrimaryModule")}
             placeholder={t("modules.observedFlows.selectModule")}
-            items={["Leads", "Contacts", "Accounts", "Deals", "Tasks", "Meetings", "Calls"].map(
+            items={["Leads", "Contacts", "Accounts", "Deals", "Tasks", "Events", "Calls"].map(
               (id) => ({ id }),
             )}
             value={primaryModule || null}
@@ -117,7 +138,13 @@ export function ReportsScreen({
             >
               {t("modules.observedFlows.cancel")}
             </Button>
-            <Button isDisabled={!primaryModule} laterModule="M13">
+            <Button
+              isDisabled={!primaryModule || !builderActions}
+              onPress={() => {
+                setCreating(false);
+                setBuilding(true);
+              }}
+            >
               {t("modules.observedFlows.continue")}
             </Button>
           </div>
@@ -154,7 +181,12 @@ export function ReportsScreen({
         </div>
       </div>
       {status === "loading" && <p role="status">{t("modules.reports.loading")}</p>}
-      {status === "error" && <p role="alert">{t("modules.reports.error")}</p>}
+      {status === "error" && (
+        <div>
+          <p role="alert">{t("modules.reports.error")}</p>
+          <Link href={reportPath(orgSlug)}>{t("modules.assignment.retry")}</Link>
+        </div>
+      )}
       {status === "ready" && (
         <div className="overflow-x-auto rounded-xl bg-surface">
           <table className="w-full table-fixed border-collapse text-left">
