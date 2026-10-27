@@ -125,7 +125,7 @@ test("captures Turkish core modules and their corrected entry controls", async (
       await expect(
         page
           .locator('[data-related-card="attachments"]')
-          .getByText("Ek bulunamadı", { exact: true }),
+          .getByText("Eklentisi Yok", { exact: true }),
       ).toBeVisible();
       await shot("Contacts-attachments");
     }

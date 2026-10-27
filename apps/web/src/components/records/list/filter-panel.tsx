@@ -245,6 +245,11 @@ export function FilterPanel({
     ) &&
     (!selectedCampaignItem ||
       (campaignDraft.campaignIds.length >= 1 && campaignDraft.campaignIds.length <= 5));
+  const emptyTagOnly =
+    selectedIds.length === 1 &&
+    selectedFieldItems.length === 1 &&
+    selectedFieldItems[0]?.editor?.fieldType === "tag" &&
+    tags.status === "ready";
   const [query, setQuery] = useState("");
   const [collapsedIds, setCollapsedIds] = useState<ReadonlySet<string>>(new Set());
   const visibleGroups = resolvedGroups
@@ -441,7 +446,7 @@ export function FilterPanel({
             {onApply && (
               <Button
                 size="sm"
-                isDisabled={!completed && (!tagModule || tags.status !== "ready")}
+                isDisabled={!completed && !emptyTagOnly}
                 onPress={() => {
                   if (!completed) return;
                   const applied = selectedFieldItems.flatMap((item) => {
