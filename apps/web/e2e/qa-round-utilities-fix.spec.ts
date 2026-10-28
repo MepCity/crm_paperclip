@@ -46,9 +46,7 @@ test("captures corrected Turkish utility, support and customization screens", as
     await expect(
       page.getByRole("menuitem", { name: "Toplu Güncelleştir", exact: true }),
     ).toBeVisible();
-    await expect(
-      page.getByRole("menuitem", { name: exportLabel, exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole("menuitem", { name: exportLabel, exact: true })).toBeVisible();
     await shot(`${tab}-actions`);
     await page.keyboard.press("Escape");
     await page.goto(`${root}/tab/${tab}/create`);
