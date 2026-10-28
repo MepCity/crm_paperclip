@@ -85,7 +85,7 @@ const badgeColumnClass = [
 ].join(" ");
 
 const headerBox = [
-  "relative h-(--size-list-header-height) overflow-hidden",
+  "sticky top-0 h-(--size-list-header-height) overflow-hidden",
   "border-b-(length:--size-list-header-border) border-b-panel-border",
   "text-left align-middle text-md font-normal text-text-strong",
 ].join(" ");
@@ -175,18 +175,18 @@ export function RecordTable({
             <tr data-part="header">
               <td
                 data-part="leading"
-                className={`${halfLeading} ${headerBox} sticky left-0 z-20`}
+                className={`${halfLeading} ${headerBox} sticky left-0 z-30`}
               />
               {empty ? (
                 <td
                   data-part="leading"
-                  className={`${halfLeading} ${headerBox} sticky left-[calc(var(--size-list-leading-pair-width)/2)] z-20`}
+                  className={`${halfLeading} ${headerBox} sticky left-[calc(var(--size-list-leading-pair-width)/2)] z-30`}
                 />
               ) : (
                 <th
                   scope="col"
                   data-part="leading"
-                  className={`${halfLeading} ${headerBox} sticky left-[calc(var(--size-list-leading-pair-width)/2)] z-20`}
+                  className={`${halfLeading} ${headerBox} sticky left-[calc(var(--size-list-leading-pair-width)/2)] z-30`}
                 >
                   <div className="flex h-full items-center justify-end pe-(--size-list-checkbox-inset)">
                     <SelectionBox
@@ -201,7 +201,7 @@ export function RecordTable({
                 <th
                   scope="col"
                   data-part="badge"
-                  className={`${badgeColumnClass} ${headerBox} sticky left-(--size-list-leading-pair-width) z-10`}
+                  className={`${badgeColumnClass} ${headerBox} sticky left-(--size-list-leading-pair-width) z-30`}
                 >
                   <span className="sr-only">Badges</span>
                 </th>
@@ -215,7 +215,7 @@ export function RecordTable({
                     scope="col"
                     data-part="column"
                     aria-label={label}
-                    className={`${dataColumn} ${headerBox} group/column`}
+                    className={`${dataColumn} ${headerBox} z-20 group/column`}
                   >
                     <div className={`flex h-full items-center overflow-hidden ${inset}`}>
                       <span data-part="header-label" className="min-w-0 truncate">

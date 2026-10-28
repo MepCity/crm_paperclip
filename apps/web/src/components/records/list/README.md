@@ -208,9 +208,8 @@ Also:
   observed.
 - The popover follows the measured row (`--size-popover-settings-width` 264px,
   `--size-list-settings-row-width` 250px by `--size-menu-item-height` 30px,
-  `--size-menu-inset` 6px). `Manage Columns` and `Reset Column Size` are not drawn: they
-  belong to the customization module, so the popover has only the page/view group and no
-  group divider.
+  `--size-menu-inset` 6px). `Manage Columns` and `Reset Column Size` are drawn only when the page supplies
+  `onManageColumns` (the list screen does), above a group divider.
 - The page-size submenu and the View Mode submenu are not measured in the spec. Their
   width follows their content, the marker sits before the label, and the submenu chevron
   is 16px (`--size-menu-icon`). The submenu's border keeps the shared popover border.
@@ -397,8 +396,9 @@ Visual layout (View Settings popover; Data and trailing column widths), Actions
   its value only while Wrap Text is on; the off-state label was never observed.
 - Wrap Text is a `menuitemcheckbox`; page sizes are `menuitemradio` and the current size
   carries a check marker.
-- Not drawn: **Manage Columns** and **Reset Column Size** — parity checklist row 9's
-  column work belongs to M11 (Customization).
+- **Manage Columns** opens the column dialog when the page supplies `onManageColumns`; the
+  list screen always does, and the selection lasts for the session. **Reset Column Size**
+  is shown disabled until column resizing exists. The trigger is never a later-module stub.
 - The component is presentational: the page owns the address, the preference keys and
   the record query.
 
@@ -662,7 +662,7 @@ answer the same restriction.
   parity checklist row 10.
 - Split Create arrow, Actions menu, view selector, and activity
   ribbon are not drawn on the page. View Settings is drawn, but its
-  `Manage Columns` and `Reset Column Size` entries belong to M11 and are not drawn.
+  `Manage Columns` opens the column dialog; `Reset Column Size` stays disabled.
 
 ### Page layout
 

@@ -1125,7 +1125,6 @@ function ModuleListScreenLoaded({
               emptyMessage={emptyMessage}
               settings={
                 <ViewSettingsMenu
-                  laterModule={config.inventory ? "M11" : undefined}
                   onManageColumns={() => setColumnsOpen(true)}
                   perPage={searchState.perPage}
                   onPerPageChange={changePerPage}

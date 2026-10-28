@@ -3,7 +3,6 @@
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
-import type { ModuleKey } from "@/components/ui/later-module";
 import {
   Menu,
   MenuDivider,
@@ -16,7 +15,6 @@ import { useUiTranslations } from "@/i18n/client-provider";
 import { LIST_PER_PAGE_OPTIONS, type ListPerPage } from "@/lib/records/list-search-params";
 
 export interface ViewSettingsMenuProps {
-  laterModule?: ModuleKey;
   onManageColumns?: () => void;
   /** Page size in effect: the address value when it carries `per_page`, otherwise the stored preference. */
   perPage: ListPerPage;
@@ -48,7 +46,6 @@ const rowValueClass = "ml-auto shrink-0 font-bold";
  * from the trigger row, which is how `list-page-size` names it ("Records Per Page 30").
  */
 export function ViewSettingsMenu({
-  laterModule,
   onManageColumns,
   perPage,
   onPerPageChange,
@@ -64,7 +61,6 @@ export function ViewSettingsMenu({
   return (
     <MenuTrigger>
       <Button
-        laterModule={laterModule}
         variant="ghost"
         size="listIcon"
         aria-label={t("records.chrome.viewSettings")}
