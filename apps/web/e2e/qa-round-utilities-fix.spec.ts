@@ -26,10 +26,10 @@ test("captures corrected Turkish utility, support and customization screens", as
       path: output ? join(output, `${name}.png`) : testInfo.outputPath(`${name}.png`),
     });
   };
-  for (const [tab, title] of [
-    ["Campaigns", "Kampanyalar"],
-    ["Cases", "Servis Dosyaları"],
-    ["Solutions", "Çözümler"],
+  for (const [tab, title, exportLabel] of [
+    ["Campaigns", "Kampanyalar", "Kampanyaları Dışa Aktar"],
+    ["Cases", "Servis Dosyaları", "Servis Dosyalarını Dışa Aktar"],
+    ["Solutions", "Çözümler", "Çözümleri Dışa Aktar"],
   ] as const) {
     await page.goto(`${root}/tab/${tab}/list`);
     await expect(page.getByRole("heading", { name: title, exact: true })).toBeVisible();
@@ -47,7 +47,7 @@ test("captures corrected Turkish utility, support and customization screens", as
       page.getByRole("menuitem", { name: "Toplu Güncelleştir", exact: true }),
     ).toBeVisible();
     await expect(
-      page.getByRole("menuitem", { name: `Dışa Aktar ${title}`, exact: true }),
+      page.getByRole("menuitem", { name: exportLabel, exact: true }),
     ).toBeVisible();
     await shot(`${tab}-actions`);
     await page.keyboard.press("Escape");
