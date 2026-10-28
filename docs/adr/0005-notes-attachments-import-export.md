@@ -297,6 +297,17 @@ construction is deferred; scope is selected through saved views. The CSV wizard
 and histories were not observed in the reference session: these rules are
 provisional product behavior approved by the CTO, not a claim of observed parity.
 
+**Amendment (real-data import, 2026-10-29).** Repeated header names are accepted and
+disambiguated as `<name> (2)`, `<name> (3)`. A value that does not fit an optional, non-lookup,
+non-matching field no longer fails its row: the field is left empty and a `warning` row result
+(`value_cleared`, field name and row number only, never the cell value) is recorded and counted
+in `counts.warnings`. Required fields and lookup or owner failures still skip the row. Picklist
+cells match stored values and display labels ignoring case, spacing, punctuation and diacritics.
+Export writes owner and lookup fields as display names followed by a `<Field> Id` column, and uses
+the requesting user's interface language for headers and the record id column. Auto Mapping
+matches API names, English labels and Turkish catalogue labels. Public result rows may therefore
+have the outcomes `skipped`, `error` and `warning`.
+
 ### Resolved and deferred questions
 
 - Conflicting edition row limits: use the accepted local budgets above; exact

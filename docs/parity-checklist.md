@@ -973,6 +973,38 @@ Interim rules: Retry in Export History opens the module list; Undo is offered fo
 is not already undone and the server re-checks the delete permission; selection export is
 disabled above 500 rows with the limit written in the menu label.
 
+### Module 6 real-data fixes (CSV exports of the reference CRM)
+
+Found by importing CSV exports of the reference CRM (Turkish interface) into the wizard. The
+wizard step order (Upload File, Record Handling, Field Mapping) already matches the documented
+flow in `csv-import-export.spec.ts` (file intake, record handling, mapping, submission, history)
+and is unchanged; `import-wizard.test.tsx` pins it.
+
+- **Repeated header names:** accepted. The second and later copies become "<name> (2)", "<name> (3)"
+  and stay unmapped by Auto Mapping. CSV error codes now reach the UI (the wire decoder used to turn
+  them into the generic message), so a rejected file shows its specific reason.
+- **Auto Mapping:** matches API name, English label and the Turkish label of our own catalogue
+  (plus the reference wording "Faturalama Adresi"), ignoring case, spacing, punctuation and
+  diacritics. Ambiguous or unknown headers stay unmapped. Server preview and the Auto Mapping button
+  share `packages/core/src/transfer/mapping.ts`.
+- **Values that do not fit:** picklists match case-, space-, punctuation- and diacritic-insensitively
+  on the stored value or display label (no Turkish option labels exist in the catalogue yet). A
+  value that still does not fit an optional, non-lookup field is left empty and the row is imported
+  with a per-row warning (`value_cleared`, shown in the summary and in History details). Required
+  fields, the matching field and lookup/owner failures still skip the row. Lookups try the id
+  first, then the record name. Boolean cells also accept yes/no and evet/hayır.
+- **History counts:** the job stores created, updated, skipped, errors and warnings. History and the
+  summary show Skipped as skipped plus failed rows (as the summary always did); failed and warning
+  counts are listed separately.
+- **Export:** owner and lookup columns carry the display name, followed by a "<Field> Id" column with
+  the id. Headers use the interface language ("Kayıt Id" for the record id in Turkish). Auto Mapping
+  maps the id column of a reference field in preference to its name column, so an exported file can
+  be imported again.
+- **Language:** wizard, export dialog, history, toasts, errors and the list "Import/Export <Module>"
+  items come from `records.transfer.*` in the EN and TR catalogues.
+- **Export toast:** stays until dismissed; Download fetches the file and saves it through a
+  temporary link instead of a plain navigation.
+
 ## Module 7 — Campaigns
 
 ### Campaigns list
