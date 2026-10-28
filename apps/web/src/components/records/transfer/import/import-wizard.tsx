@@ -2,6 +2,7 @@
 import { useCallback, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { ImportSummary } from "./import-summary";
 import { ImportMappingStep } from "./mapping-step";
 import { RecordHandlingStep } from "./record-handling-step";
@@ -16,7 +17,11 @@ import {
 } from "./types";
 import { UploadStep } from "./upload-step";
 
-const STEPS = ["Upload File", "Record Handling", "Field Mapping"];
+const STEP_KEYS = [
+  "records.transfer.stepUpload",
+  "records.transfer.stepHandling",
+  "records.transfer.stepMapping",
+] as const;
 
 export function ImportWizard({
   module,
@@ -26,6 +31,7 @@ export function ImportWizard({
   onDone,
   historyHref,
 }: ImportWizardProps) {
+  const t = useUiTranslations();
   const [step, setStep] = useState(0);
   const [file, setFile] = useState<File | null>(null);
   const [charset, setCharset] = useState<Charset>("UTF-8");
@@ -56,7 +62,7 @@ export function ImportWizard({
         );
         setStep(1);
       } catch (error) {
-        setFileError(errorMessage(error));
+        setFileError(errorMessage(error, t));
       } finally {
         setBusy(false);
       }
@@ -79,7 +85,7 @@ export function ImportWizard({
       });
       setJob(result);
     } catch (error) {
-      setRunError(errorMessage(error));
+      setRunError(errorMessage(error, t));
     } finally {
       setBusy(false);
     }
@@ -93,26 +99,40 @@ export function ImportWizard({
   if (job) {
     return (
       <div className="flex flex-col gap-6 p-6">
-        <h1 className="text-xl font-semibold text-text">Import {moduleLabel}</h1>
+        <h1 className="text-xl font-semibold text-text">
+          {t("records.transfer.title", { module: moduleLabel })}
+        </h1>
         <ImportSummary job={job} historyHref={historyHref} onDone={onDone} />
       </div>
     );
   }
 
+  const recordIdLabel = preview?.matchFields.find((item) => item.field === "id")?.label;
+  const recordIdLabels = recordIdLabel ? [recordIdLabel] : undefined;
+  const mappingFields = preview
+    ? [
+        ...preview.fields,
+        ...(recordIdLabel
+          ? [{ apiName: "id", label: recordIdLabel, required: false, type: "text" }]
+          : []),
+      ]
+    : [];
   const last = step === 2;
   const nextDisabled = busy || (step === 0 && !file);
   return (
     <div className="flex min-h-full flex-col" data-module={module}>
       <div className="flex flex-1 flex-col gap-6 p-6">
-        <h1 className="text-xl font-semibold text-text">Import {moduleLabel}</h1>
-        <ol className="flex gap-6 text-sm" aria-label="Import steps">
-          {STEPS.map((label, i) => (
+        <h1 className="text-xl font-semibold text-text">
+          {t("records.transfer.title", { module: moduleLabel })}
+        </h1>
+        <ol className="flex gap-6 text-sm" aria-label={t("records.transfer.stepsAria")}>
+          {STEP_KEYS.map((key, i) => (
             <li
-              key={label}
+              key={key}
               aria-current={i === step ? "step" : undefined}
               className={i === step ? "font-semibold text-text" : "text-text-muted"}
             >
-              {i + 1}. {label}
+              {i + 1}. {t(key)}
             </li>
           ))}
         </ol>
@@ -144,7 +164,8 @@ export function ImportWizard({
           <ImportMappingStep
             headers={preview.headers}
             sampleRows={preview.sampleRows}
-            fields={preview.fields}
+            fields={mappingFields}
+            recordIdLabels={recordIdLabels}
             mapping={mapping}
             onMappingChange={setMapping}
             defaults={defaults}
@@ -161,22 +182,24 @@ export function ImportWizard({
       </div>
       <footer className="sticky bottom-0 flex items-center justify-between border-t border-border bg-surface px-6 py-3">
         <Button variant="secondary" isDisabled={busy} onPress={cancel}>
-          Cancel
+          {t("records.transfer.cancel")}
         </Button>
         <div className="flex items-center gap-3">
-          {busy && last ? <span className="text-sm text-text-muted">Importing…</span> : null}
+          {busy && last ? (
+            <span className="text-sm text-text-muted">{t("records.transfer.importing")}</span>
+          ) : null}
           {step > 0 ? (
             <Button variant="secondary" isDisabled={busy} onPress={() => setStep(step - 1)}>
-              Back
+              {t("records.transfer.back")}
             </Button>
           ) : null}
           {last ? (
             <Button isDisabled={busy || !mappingValid} onPress={run}>
-              Import
+              {t("records.transfer.import")}
             </Button>
           ) : (
             <Button isDisabled={nextDisabled} isPending={busy} onPress={next}>
-              Next
+              {t("records.transfer.next")}
             </Button>
           )}
         </div>
@@ -184,10 +207,10 @@ export function ImportWizard({
       <ConfirmDialog
         isOpen={confirmOpen}
         onOpenChange={setConfirmOpen}
-        title="Discard this import?"
-        message="The selected file and your choices will be lost."
-        confirmLabel="Discard"
-        cancelLabel="Keep editing"
+        title={t("records.transfer.discardTitle")}
+        message={t("records.transfer.discardMessage")}
+        confirmLabel={t("records.transfer.discard")}
+        cancelLabel={t("records.transfer.keepEditing")}
         tone="danger"
         onConfirm={() => {
           setConfirmOpen(false);

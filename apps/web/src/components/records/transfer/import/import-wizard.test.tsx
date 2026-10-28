@@ -203,3 +203,44 @@ test("file size uses the decimal 25 MB server budget before preview", async () =
   await screen.findByText("How should records be handled?");
   expect(full.preview).toHaveBeenCalledWith(file, "UTF-8");
 });
+
+test("a duplicate-header failure explains itself instead of the generic message", async () => {
+  const user = userEvent.setup();
+  setup({ preview: vi.fn().mockRejectedValue({ code: "malformed_csv" }) });
+  await user.upload(input(), csv());
+  await user.click(next());
+  expect(await screen.findByText("The file is not a valid CSV file.")).toBeTruthy();
+  expect(screen.queryByText("Something went wrong. Try again.")).toBeNull();
+});
+
+test("summary counts skipped as skipped plus failed and lists values left empty", async () => {
+  const user = userEvent.setup();
+  setup({
+    run: vi.fn().mockResolvedValue(
+      job({
+        status: "completed_with_errors",
+        counts: { created: 10, updated: 0, skipped: 2, errors: 1, warnings: 1 },
+        rows: [
+          { row: 3, outcome: "skipped", code: "already_exists" },
+          { row: 4, outcome: "error", code: "required_missing", field: "Last_Name" },
+          { row: 5, outcome: "warning", code: "value_cleared", field: "Billing_State" },
+        ],
+      }),
+    ),
+  });
+  await toStep2(user);
+  await user.click(screen.getByRole("button", { name: "Next" }));
+  await user.click(screen.getByRole("button", { name: "Import" }));
+  await screen.findByText("Import completed with errors");
+  expect(screen.getByTestId("count-skipped").textContent).toBe("3");
+  expect(screen.getByTestId("count-failed").textContent).toBe("1");
+  expect(screen.getByTestId("count-warnings").textContent).toBe("1");
+  expect(screen.getByText("Rows imported with a value left empty")).toBeTruthy();
+  expect(screen.getByText("Billing_State")).toBeTruthy();
+});
+
+test("steps run in the documented order: upload, record handling, field mapping", () => {
+  setup();
+  const steps = screen.getAllByRole("listitem").map((item) => item.textContent);
+  expect(steps).toEqual(["1. Upload File", "2. Record Handling", "3. Field Mapping"]);
+});

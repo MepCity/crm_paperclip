@@ -4,6 +4,8 @@ import type { ImportJob, TransferModule } from "@crm/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { useExportHistory, useImportHistory, useTransferClient } from "@/lib/api/client/hooks";
 import { useOrgSlug } from "@/lib/api/client/provider";
 import { apiKeys } from "@/lib/api/client/query-keys";
@@ -18,11 +20,15 @@ function moduleListPath(orgSlug: string, module: TransferModule): string {
   return moduleListDefaultPath(orgSlug, resolveModuleScreenByApiName(module)?.tab ?? module);
 }
 
-function moduleLabel(module: TransferModule): string {
-  return resolveModuleScreenByApiName(module)?.pluralLabel ?? module;
+/** Plural module name in the interface language. */
+function useModuleLabel(): (module: TransferModule) => string {
+  const adapter = useMetadataDisplayAdapter();
+  return (module) =>
+    adapter.getModulePlural(module, resolveModuleScreenByApiName(module)?.pluralLabel);
 }
 
 export function ImportWizardScreen({ module }: { module: TransferModule }) {
+  const moduleLabel = useModuleLabel();
   const orgSlug = useOrgSlug();
   const router = useRouter();
   const client = useTransferClient();
@@ -54,12 +60,14 @@ export function ImportWizardScreen({ module }: { module: TransferModule }) {
 }
 
 export function ImportHistoryScreen() {
+  const moduleLabel = useModuleLabel();
+  const t = useUiTranslations();
   const orgSlug = useOrgSlug();
   const client = useTransferClient();
   const queryClient = useQueryClient();
   const history = useImportHistory();
   if (history.isError) {
-    return <p role="alert">Import history could not be loaded. Try again.</p>;
+    return <p role="alert">{t("records.transfer.importHistoryLoadError")}</p>;
   }
   return (
     <ImportHistory
@@ -78,12 +86,14 @@ export function ImportHistoryScreen() {
 }
 
 export function ExportHistoryScreen() {
+  const moduleLabel = useModuleLabel();
+  const t = useUiTranslations();
   const orgSlug = useOrgSlug();
   const router = useRouter();
   const client = useTransferClient();
   const history = useExportHistory();
   if (history.isError) {
-    return <p role="alert">Export history could not be loaded. Try again.</p>;
+    return <p role="alert">{t("records.transfer.exportHistoryLoadError")}</p>;
   }
   return (
     <ExportHistory

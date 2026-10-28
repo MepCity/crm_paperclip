@@ -182,3 +182,18 @@ test("loading state displays skeleton", () => {
   expect(screen.getByRole("status")).toBeTruthy();
   expect(screen.getByText("Loading")).toBeTruthy();
 });
+
+test("history Skipped matches the wizard summary and a failed job is not shown as zeros", () => {
+  renderImports([
+    imp({
+      id: "f",
+      status: "failed",
+      counts: { created: 0, updated: 0, skipped: 2, errors: 9 },
+      undoable: false,
+    }),
+  ]);
+  const cells = within(screen.getAllByRole("row")[1] as HTMLElement)
+    .getAllByRole("cell")
+    .map((cell) => cell.textContent);
+  expect(cells.slice(4, 7)).toEqual(["0", "0", "11"]);
+});

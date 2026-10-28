@@ -12,12 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useUiTranslations } from "@/i18n/client-provider";
+import { useUiLanguage, useUiTranslations } from "@/i18n/client-provider";
 import { useUtilityLabel } from "@/i18n/utility-labels";
+import { skippedTotal } from "../import/types";
 import { ImportDetails } from "./import-details";
 import {
   formatTime,
-  IMPORT_STATUS_LABELS,
+  IMPORT_STATUS_KEYS,
   type ImportHistoryProps,
   type ImportJob,
   TRANSFER_MODULES,
@@ -41,6 +42,7 @@ export function ImportHistory({
 }: ImportHistoryProps) {
   const copy = useUtilityLabel();
   const t = useUiTranslations();
+  const locale = useUiLanguage() === "tr" ? "tr-TR" : "en-US";
   const [tab, setTab] = useState("history");
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [undoId, setUndoId] = useState<string | null>(null);
@@ -115,13 +117,13 @@ export function ImportHistory({
                     <TableCell>{moduleLabel(j.module)}</TableCell>
                     <TableCell>{j.fileName}</TableCell>
                     <TableCell>{j.createdBy.name}</TableCell>
-                    <TableCell>{formatTime(j.createdAt)}</TableCell>
+                    <TableCell>{formatTime(j.createdAt, locale)}</TableCell>
                     <TableCell>{j.counts.created}</TableCell>
                     <TableCell>{j.counts.updated}</TableCell>
-                    <TableCell>{j.counts.skipped}</TableCell>
+                    <TableCell>{skippedTotal(j.counts)}</TableCell>
                     <TableCell>
                       <Badge variant={STATUS_VARIANT[j.status]}>
-                        {IMPORT_STATUS_LABELS[j.status]}
+                        {t(IMPORT_STATUS_KEYS[j.status])}
                       </Badge>
                     </TableCell>
                     <TableCell>
