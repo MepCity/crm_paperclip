@@ -213,7 +213,7 @@ test("a duplicate-header failure explains itself instead of the generic message"
   expect(screen.queryByText("Something went wrong. Try again.")).toBeNull();
 });
 
-test("summary counts skipped as skipped plus failed and lists values left empty", async () => {
+test("summary counts each row once and lists values left empty", async () => {
   const user = userEvent.setup();
   setup({
     run: vi.fn().mockResolvedValue(
@@ -232,7 +232,7 @@ test("summary counts skipped as skipped plus failed and lists values left empty"
   await user.click(screen.getByRole("button", { name: "Next" }));
   await user.click(screen.getByRole("button", { name: "Import" }));
   await screen.findByText("Import completed with errors");
-  expect(screen.getByTestId("count-skipped").textContent).toBe("3");
+  expect(screen.getByTestId("count-skipped").textContent).toBe("2");
   expect(screen.getByTestId("count-failed").textContent).toBe("1");
   expect(screen.getByTestId("count-warnings").textContent).toBe("1");
   expect(screen.getByText("Rows imported with a value left empty")).toBeTruthy();

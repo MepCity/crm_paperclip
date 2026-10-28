@@ -70,8 +70,10 @@ test("status labels", () => {
     imp({ id: "c", status: "undone" }),
     imp({ id: "d" }),
   ]);
+  // "Failed" is also the name of the failed-rows column header.
+  const expected: Record<string, number> = { Failed: 2 };
   for (const t of ["Completed", "Failed", "Undone", "Completed with errors"]) {
-    expect(screen.getAllByText(t).length).toBe(1);
+    expect(screen.getAllByText(t).length).toBe(expected[t] ?? 1);
   }
 });
 
@@ -183,7 +185,7 @@ test("loading state displays skeleton", () => {
   expect(screen.getByText("Loading")).toBeTruthy();
 });
 
-test("history Skipped matches the wizard summary and a failed job is not shown as zeros", () => {
+test("history counts each row once: a fully failed job shows skipped and failed separately", () => {
   renderImports([
     imp({
       id: "f",
@@ -195,5 +197,5 @@ test("history Skipped matches the wizard summary and a failed job is not shown a
   const cells = within(screen.getAllByRole("row")[1] as HTMLElement)
     .getAllByRole("cell")
     .map((cell) => cell.textContent);
-  expect(cells.slice(4, 7)).toEqual(["0", "0", "11"]);
+  expect(cells.slice(4, 8)).toEqual(["0", "0", "2", "9"]);
 });

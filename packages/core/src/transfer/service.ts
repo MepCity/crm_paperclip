@@ -6,6 +6,7 @@ import { exportFields, exportRecords } from "./export";
 import { createHistory, newest, stored } from "./history";
 import {
   allView,
+  importable,
   importMetadata,
   importRows,
   matchFields,
@@ -92,7 +93,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
       }
       const metadata = importMetadata(await deps.records(ctx).getModule(module), module);
       const locale = await localeOf(ctx);
-      const fields = metadata.fields.filter(writable).map((field) => {
+      const fields = metadata.fields.filter(importable).map((field) => {
         const label = locale.fieldLabel(module, field);
         const aliases = [field.label, ...locale.fieldAliases(module, field)].filter(
           (name, index, all) =>

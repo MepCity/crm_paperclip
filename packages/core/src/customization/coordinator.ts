@@ -83,7 +83,7 @@ export class InMemorySchemaCoordinator {
           ? modules.length === 1
             ? options.expectedRevision
             : undefined
-          : options?.expectedRevision[module];
+          : options?.expectedRevision?.[module];
       if (expected === undefined)
         invalid("An expected schema revision is required for every written module.");
       if (expected !== actual) throw new SchemaStaleError(actual);

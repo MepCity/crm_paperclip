@@ -11,7 +11,6 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useUiTranslations } from "@/i18n/client-provider";
-import { skippedTotal } from "../import/types";
 import { type ImportJob, reasonMessage } from "./types";
 
 export function ImportDetails({
@@ -42,7 +41,7 @@ export function ImportDetails({
               <dt className="text-text-muted">{t("records.transfer.countUpdated")}</dt>
               <dd>{counts.updated}</dd>
               <dt className="text-text-muted">{t("records.transfer.countSkipped")}</dt>
-              <dd>{skippedTotal(counts)}</dd>
+              <dd>{counts.skipped}</dd>
               <dt className="text-text-muted">{t("records.transfer.countFailed")}</dt>
               <dd>{counts.errors}</dd>
               {counts.warnings ? (

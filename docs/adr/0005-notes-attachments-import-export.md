@@ -308,6 +308,14 @@ the requesting user's interface language for headers and the record id column. A
 matches API names, English labels and Turkish catalogue labels. Public result rows may therefore
 have the outcomes `skipped`, `error` and `warning`.
 
+**Amendment (second real-data round, 2026-10-29).** Auto Mapping prefers a reference field's name
+column over its id column. An unresolved owner becomes the importing user with an `owner_defaulted`
+warning, and an unresolved optional lookup is cleared with the original warning code. Contact names
+match without salutation, case, diacritics or spacing differences. State / province fields are open
+text. `Created_Time` and `Modified_Time` are importable and travel through
+`RecordWriteOptions.sourceTimes` (ISO 8601 UTC, validated); Created By and Modified By remain
+managed. Each row is counted once in `counts`, and exports write picklists as display labels.
+
 ### Resolved and deferred questions
 
 - Conflicting edition row limits: use the accepted local budgets above; exact

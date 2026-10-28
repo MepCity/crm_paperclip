@@ -827,8 +827,8 @@ function ModuleListScreenLoaded({
     ? [
         {
           id: "import",
-          label: Object.hasOwn(english.records.transfer.importItem, config.module)
-            ? t(`records.transfer.importItem.${config.module}` as MessageKey)
+          label: Object.hasOwn(english.records.transfer.importItem, config.pluralLabel)
+            ? t(`records.transfer.importItem.${config.pluralLabel}` as MessageKey)
             : `Import ${config.pluralLabel}`,
           onAction: () => router.push(moduleImportPath(orgSlug, config.module)),
         },

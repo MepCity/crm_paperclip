@@ -600,6 +600,7 @@
       "already_exists": "Record already exists",
       "permission_denied": "No permission",
       "value_cleared": "Value does not fit the field and was left empty",
+      "owner_defaulted": "Owner not found, set to the importing user",
       "export_too_large": "Too many records to export (limit 30,000). Narrow the view.",
       "field_not_allowed": "One or more selected fields are not available for export.",
       "export_generic": "The export could not be completed. Try again."
@@ -617,6 +618,7 @@
       "export_too_large": "There are too many records to export.",
       "field_not_allowed": "A selected field is not available to you.",
       "value_cleared": "The value does not fit this field, so the field was left empty.",
+      "owner_defaulted": "The owner could not be matched, so the importing user was set as owner.",
       "unknown": "The row could not be processed."
     },
     "exportItem": {

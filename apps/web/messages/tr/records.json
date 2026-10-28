@@ -600,6 +600,7 @@
       "already_exists": "Kayıt zaten var",
       "permission_denied": "Yetki yok",
       "value_cleared": "Değer alana uymadığı için boş bırakıldı",
+      "owner_defaulted": "Sahip bulunamadı, içe aktaran kullanıcı atandı",
       "export_too_large": "Dışa aktarılacak kayıt çok fazla (sınır 30.000). Görünümü daraltın.",
       "field_not_allowed": "Seçilen alanlardan biri veya birkaçı dışa aktarma için kullanılamıyor.",
       "export_generic": "Dışa aktarma tamamlanamadı. Yeniden deneyin."
@@ -617,6 +618,7 @@
       "export_too_large": "Dışa aktarılacak kayıt çok fazla.",
       "field_not_allowed": "Seçilen alanlardan biri sizin için kullanılamıyor.",
       "value_cleared": "Değer bu alana uymadığı için alan boş bırakıldı.",
+      "owner_defaulted": "Sahip eşleştirilemedi, bu yüzden içe aktaran kullanıcı sahip olarak atandı.",
       "unknown": "Satır işlenemedi."
     },
     "exportItem": {

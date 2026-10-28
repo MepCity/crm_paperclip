@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table";
 import type { MessageKey } from "@/i18n/catalogs";
 import { useUiTranslations } from "@/i18n/client-provider";
-import { codeMessage, type ImportJob, skippedTotal } from "./types";
+import { codeMessage, type ImportJob } from "./types";
 
 const MAX_ERROR_ROWS = 50;
 
@@ -59,7 +59,7 @@ export function ImportSummary({ job, historyHref, onDone }: ImportSummaryProps) 
         </div>
         <div>
           <dt className="text-text-muted">{t("records.transfer.countSkipped")}</dt>
-          <dd data-testid="count-skipped">{skippedTotal(job.counts)}</dd>
+          <dd data-testid="count-skipped">{job.counts.skipped}</dd>
         </div>
         <div>
           <dt className="text-text-muted">{t("records.transfer.countFailed")}</dt>

@@ -29,13 +29,13 @@ export function normalizeKey(value: string): string {
     .replace(/[^\p{L}\p{N}]/gu, "");
 }
 
-/** Headers of the "<Field> Id" companion columns that exports write for references. */
 export const isReferenceType = (type: string) => REFERENCE_TYPES.has(type);
 
 /**
  * Maps each column to at most one field. Matches the API name, the label and any alias.
  * An ambiguous or unknown header stays unmapped. A reference field that has both a name
- * column and an "<Field> Id" column is mapped to the id column.
+ * column and an "<Field> Id" (or "<Field>.id") column is mapped to the name column: ids of
+ * another system rarely resolve, so the id column is used only when it is the sole column.
  */
 export function suggestMapping(
   headers: readonly string[],
@@ -92,7 +92,7 @@ export function suggestMapping(
   }
   for (const columns of byField.values()) {
     if (columns.length < 2) continue;
-    const keep = columns.find((item) => item.id) ?? columns[0];
+    const keep = columns.find((item) => !item.id) ?? columns[0];
     for (const item of columns)
       if (item !== keep) {
         const entry = result[item.column];

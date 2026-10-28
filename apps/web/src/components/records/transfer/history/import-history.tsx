@@ -14,7 +14,6 @@ import {
 } from "@/components/ui/table";
 import { useUiLanguage, useUiTranslations } from "@/i18n/client-provider";
 import { useUtilityLabel } from "@/i18n/utility-labels";
-import { skippedTotal } from "../import/types";
 import { ImportDetails } from "./import-details";
 import {
   formatTime,
@@ -107,11 +106,12 @@ export function ImportHistory({
                   <TableHead>{copy("Added")}</TableHead>
                   <TableHead>{copy("Updated")}</TableHead>
                   <TableHead>{copy("Skipped")}</TableHead>
+                  <TableHead>{t("records.transfer.countFailed")}</TableHead>
                   <TableHead>{copy("Status")}</TableHead>
                   <TableHead>{copy("Actions")}</TableHead>
                 </tr>
               </TableHeader>
-              <TableBody columnCount={9} emptyMessage={copy("No imports in the last 7 days.")}>
+              <TableBody columnCount={10} emptyMessage={copy("No imports in the last 7 days.")}>
                 {jobs.map((j) => (
                   <TableRow key={j.id}>
                     <TableCell>{moduleLabel(j.module)}</TableCell>
@@ -120,7 +120,8 @@ export function ImportHistory({
                     <TableCell>{formatTime(j.createdAt, locale)}</TableCell>
                     <TableCell>{j.counts.created}</TableCell>
                     <TableCell>{j.counts.updated}</TableCell>
-                    <TableCell>{skippedTotal(j.counts)}</TableCell>
+                    <TableCell>{j.counts.skipped}</TableCell>
+                    <TableCell>{j.counts.errors}</TableCell>
                     <TableCell>
                       <Badge variant={STATUS_VARIANT[j.status]}>
                         {t(IMPORT_STATUS_KEYS[j.status])}

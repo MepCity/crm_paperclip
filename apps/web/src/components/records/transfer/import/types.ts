@@ -59,6 +59,3 @@ export function errorMessage(error: unknown, t: Translate): string {
         : "";
   return codeMessage(code, t) ?? t("records.transfer.errors.generic");
 }
-
-/** Skipped as the wizard summary counts it: skipped rows plus failed rows. */
-export const skippedTotal = (counts: ImportJob["counts"]) => counts.skipped + counts.errors;

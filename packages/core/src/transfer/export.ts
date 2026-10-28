@@ -81,6 +81,11 @@ export async function exportRecords(
   };
   /** Name column first; reference fields also get an id column beside it. */
   const cells = async (field: FieldDefinition, value: FieldValue | undefined) => {
+    if (field.picklist && typeof value === "string") {
+      // Picklists are written with the option's display label; import accepts either form.
+      const option = field.picklist.find((item) => item.storedValue === value);
+      return [option?.displayValue ?? value];
+    }
     if (!isReferenceType(field.dataType)) return [text(value)];
     if (value == null || value === "") return ["", ""];
     if (typeof value === "string")

@@ -993,13 +993,22 @@ and is unchanged; `import-wizard.test.tsx` pins it.
   with a per-row warning (`value_cleared`, shown in the summary and in History details). Required
   fields, the matching field and lookup/owner failures still skip the row. Lookups try the id
   first, then the record name. Boolean cells also accept yes/no and evet/hayır.
-- **History counts:** the job stores created, updated, skipped, errors and warnings. History and the
-  summary show Skipped as skipped plus failed rows (as the summary always did); failed and warning
-  counts are listed separately.
+- **History counts:** the job stores created, updated, skipped, errors and warnings. Every row is
+  counted once: the summary, History and details show Skipped (duplicates, existing records) and
+  Failed separately, never both for the same row. Warnings are listed alongside.
 - **Export:** owner and lookup columns carry the display name, followed by a "<Field> Id" column with
   the id. Headers use the interface language ("Kayıt Id" for the record id in Turkish). Auto Mapping
-  maps the id column of a reference field in preference to its name column, so an exported file can
-  be imported again.
+  prefers the name column of a reference field over its id column (the id is used only when no name
+  column exists), and picklist columns carry the option's display label, so an exported file can be
+  imported again.
+- **Second real-data round:** an unresolved owner becomes the importing user (new records only) with
+  an `owner_defaulted` warning; a lookup that is not found or ambiguous (for example a deal's
+  contact) is left empty with a warning unless the field is required. Contact names match on full
+  name, with or without a salutation (Mr., Ms., Bay, Bayan, ...), ignoring case, diacritics and
+  spacing. State / province fields (billing, shipping, mailing, other) accept free text. Created Time
+  and Modified Time can be mapped; they must be ISO 8601 UTC (`2026-03-01T09:30:00Z`, optional
+  fractional seconds) and are kept as the record's timestamps, an invalid value is cleared with a
+  warning. Created By and Modified By stay system-managed and cannot be mapped.
 - **Language:** wizard, export dialog, history, toasts, errors and the list "Import/Export <Module>"
   items come from `records.transfer.*` in the EN and TR catalogues.
 - **Export toast:** stays until dismissed; Download fetches the file and saves it through a

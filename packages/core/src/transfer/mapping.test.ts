@@ -49,8 +49,10 @@ describe("suggestMapping", () => {
     expect(map(["Telefon", "Phone"])).toEqual(["Phone", null]);
     expect(map(["Fatura Adresi Şehir", "Fatura Adresi Şehir (2)"])).toEqual(["Billing_City", null]);
   });
-  it("prefers the companion id column of a reference field", () => {
-    expect(map(["Kayıt Sahibi", "Kayıt Sahibi Id"])).toEqual([null, "Owner"]);
+  it("prefers the name column over the id column of a reference field", () => {
+    expect(map(["Kayıt Sahibi", "Kayıt Sahibi Id"])).toEqual(["Owner", null]);
+    expect(map(["Kayıt Sahibi.id", "Kayıt Sahibi"])).toEqual([null, "Owner"]);
+    expect(map(["Kayıt Sahibi.id"])).toEqual(["Owner"]);
     expect(map(["Kayıt Sahibi"])).toEqual(["Owner"]);
   });
   it("does not guess between fields that share an alias", () => {
