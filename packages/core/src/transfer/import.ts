@@ -3,17 +3,21 @@ import type {
   FieldDefinition,
   FieldValue,
   ModuleMetadata,
+  PicklistOption,
   RecordData,
   RecordService,
 } from "../records/contract";
 import type { OrgContext } from "../tenancy/types";
 import type { Upload } from "./history";
-import type {
-  Actor,
-  ImportJob,
-  ImportSettings,
-  TransferDependencies,
-  TransferModule,
+import { matchPicklistOption, normalizeKey } from "./mapping";
+import {
+  type Actor,
+  englishLocale,
+  type ImportJob,
+  type ImportSettings,
+  type TransferDependencies,
+  type TransferLocale,
+  type TransferModule,
 } from "./types";
 
 export const defaultMatch: Record<TransferModule, string> = {
@@ -60,18 +64,34 @@ export function importMetadata(metadata: ModuleMetadata, module: TransferModule)
     ],
   };
 }
-export const normalizeHeader = (value: string) => value.toLowerCase().replace(/[\s_]/g, "");
-export function matchFields(metadata: ModuleMetadata, module: TransferModule) {
+export const normalizeHeader = normalizeKey;
+export function matchFields(
+  metadata: ModuleMetadata,
+  module: TransferModule,
+  locale: TransferLocale = englishLocale,
+) {
   return [
-    { field: "id", label: "Record Id" },
+    { field: "id", label: locale.recordIdLabel },
     ...metadata.fields
       .filter(
         (field) =>
           field.apiName !== "id" && (field.unique || field.apiName === defaultMatch[module]),
       )
-      .map((field) => ({ field: field.apiName, label: field.label })),
+      .map((field) => ({ field: field.apiName, label: locale.fieldLabel(module, field) })),
   ];
 }
+/** The field that names a record, used to show and to look up related records. */
+export function nameFieldOf(metadata: ModuleMetadata) {
+  return (
+    metadata.fields.find(
+      (item) => item.apiName === `${metadata.singularLabel.replace(/\s/g, "")}_Name`,
+    ) ??
+    metadata.fields.find((item) => item.apiName === "Full_Name") ??
+    metadata.fields.find((item) => item.apiName === "Last_Name")
+  );
+}
+const isReference = (field: FieldDefinition) =>
+  ["lookup", "ownerlookup", "multi_module_lookup"].includes(field.dataType);
 export async function allView(records: RecordService, module: string) {
   const metadata = await records.getModule(module);
   const views = await records.listViews(module);
@@ -176,6 +196,7 @@ async function convert(
   actors: readonly Actor[],
   idOnly = false,
   moduleHint?: string,
+  optionLabels: (option: PicklistOption) => readonly string[] = () => [],
 ): Promise<FieldValue> {
   if (raw === "") return null;
   if (["integer", "double", "currency"].includes(field.dataType)) {
@@ -184,14 +205,22 @@ async function convert(
     return value;
   }
   if (field.dataType === "boolean") {
-    if (/^(true|false)$/i.test(raw)) return raw.toLowerCase() === "true";
+    const word = normalizeKey(raw);
+    if (["true", "yes", "evet", "1"].includes(word)) return true;
+    if (["false", "no", "hayir", "0"].includes(word)) return false;
     throw new RowError("invalid_value", field.apiName);
+  }
+  if (field.dataType === "picklist" && field.picklist?.length) {
+    const option = matchPicklistOption(field.picklist, raw.trim(), optionLabels);
+    if (!option) throw new RowError("invalid_value", field.apiName);
+    return option.storedValue;
   }
   if (field.dataType === "ownerlookup") {
     const byId = actors.filter((actor) => actor.id === raw);
+    const key = normalizeKey(raw);
     const candidates = byId.length
       ? byId
-      : actors.filter((actor) => actor.name.toLowerCase() === raw.toLowerCase());
+      : actors.filter((actor) => normalizeKey(actor.name) === key);
     if (candidates.length !== 1)
       throw new RowError(candidates.length ? "multiple_matches" : "not_found", field.apiName);
     return candidates[0]?.id ?? null;
@@ -208,9 +237,15 @@ async function convert(
       try {
         ids = await matching(records, module, "id", raw);
       } catch (error) {
-        if (!idOnly || !isAppError(error) || error.code !== "forbidden") throw error;
-        unreadable = true;
-        continue;
+        if (!isAppError(error)) throw error;
+        if (error.code === "forbidden") {
+          if (!idOnly) throw error;
+          unreadable = true;
+          continue;
+        }
+        // A name is not a valid id: fall through to the name lookup below.
+        if (idOnly) throw error;
+        ids = [];
       }
       if (ids.length) {
         candidates.push(...ids.map((record) => ({ module, id: record.id })));
@@ -218,12 +253,7 @@ async function convert(
       }
       if (idOnly) continue;
       const metadata = await records.getModule(module);
-      const name =
-        metadata.fields.find(
-          (item) => item.apiName === `${metadata.singularLabel.replace(/\s/g, "")}_Name`,
-        ) ??
-        metadata.fields.find((item) => item.apiName === "Full_Name") ??
-        metadata.fields.find((item) => item.apiName === "Last_Name");
+      const name = nameFieldOf(metadata);
       if (name)
         candidates.push(
           ...(await matching(records, module, name.apiName, raw)).map((record) => ({
@@ -250,8 +280,15 @@ export async function importRows(
   metadata: ModuleMetadata,
   matchField: string,
   job: ImportJob,
+  locale: TransferLocale = englishLocale,
 ): Promise<string[]> {
   const actors = await deps.listActors(ctx);
+  const byName = new Map(metadata.fields.map((field) => [field.apiName, field]));
+  /** A value that does not fit may be dropped when it is optional and not a reference. */
+  const droppable = (name: string) => {
+    const field = byName.get(name);
+    return !!field && !field.required && name !== matchField && !isReference(field);
+  };
   const createdIds: string[] = [];
   const used = new Set<string>();
   for (const [index, row] of upload.rows.entries()) {
@@ -294,6 +331,7 @@ export async function importRows(
       const action = target ? "update" : "create";
       await deps.authorize(ctx, upload.module, action);
       const values: Record<string, FieldValue> = Object.create(null);
+      const warnings: string[] = [];
       for (const field of metadata.fields) {
         // The identifier is a matching key, never a writable record field.
         if (field.apiName === "id" || field.apiName === "$se_module") continue;
@@ -302,31 +340,51 @@ export async function importRows(
           continue;
         if (!field.views[target ? "edit" : "create"])
           throw new RowError("permission_denied", field.apiName);
-        values[field.apiName] = await convert(
-          field,
-          value,
-          records,
-          actors,
-          activityModule(upload.module) && ["What_Id", "Who_Id"].includes(field.apiName),
-          activityModule(upload.module) && field.apiName === "What_Id" ? raw.$se_module : undefined,
-        );
-      }
-      const result = target
-        ? await records.update(
-            upload.module,
-            target.id,
-            values,
-            settings.expectedRevision === undefined
-              ? undefined
-              : { expectedRevision: settings.expectedRevision },
-          )
-        : await records.create(
-            upload.module,
-            values,
-            settings.expectedRevision === undefined
-              ? undefined
-              : { expectedRevision: settings.expectedRevision },
+        try {
+          values[field.apiName] = await convert(
+            field,
+            value,
+            records,
+            actors,
+            activityModule(upload.module) && ["What_Id", "Who_Id"].includes(field.apiName),
+            activityModule(upload.module) && field.apiName === "What_Id"
+              ? raw.$se_module
+              : undefined,
+            (option) => locale.optionLabels(upload.module, field, option),
           );
+        } catch (error) {
+          if (!(error instanceof RowError) || error.code !== "invalid_value") throw error;
+          if (!droppable(field.apiName)) throw error;
+          warnings.push(field.apiName);
+        }
+      }
+      const options =
+        settings.expectedRevision === undefined
+          ? undefined
+          : { expectedRevision: settings.expectedRevision };
+      let result: Awaited<ReturnType<RecordService["create"]>>;
+      for (let attempt = 0; ; attempt++) {
+        try {
+          result = target
+            ? await records.update(upload.module, target.id, values, options)
+            : await records.create(upload.module, values, options);
+          break;
+        } catch (error) {
+          // The record layer rejected some optional values: import without them.
+          if (!(error instanceof ValidationError) || error.reason === "mandatory" || attempt >= 5)
+            throw error;
+          const bad = Object.keys(error.fieldErrors);
+          if (!bad.length || !bad.every((name) => name in values && droppable(name))) throw error;
+          for (const name of bad) {
+            delete values[name];
+            warnings.push(name);
+          }
+        }
+      }
+      for (const name of warnings) {
+        job.counts.warnings = (job.counts.warnings ?? 0) + 1;
+        job.rows.push({ row: index + 2, outcome: "warning", code: "value_cleared", field: name });
+      }
       if (target) job.counts.updated++;
       else {
         job.counts.created++;
@@ -364,7 +422,7 @@ export async function importRows(
   const successes = job.counts.created + job.counts.updated;
   job.status = !successes
     ? "failed"
-    : job.counts.errors || job.counts.skipped
+    : job.counts.errors || job.counts.skipped || job.counts.warnings
       ? "completed_with_errors"
       : "completed";
   job.undoable = createdIds.length > 0;

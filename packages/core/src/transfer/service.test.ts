@@ -6,7 +6,13 @@ import { createFixtureRecordService } from "../records/fixture";
 import type { OrgContext } from "../tenancy/types";
 import { parseCsv, serializeCsv } from "./csv";
 import { createTransferService } from "./service";
-import type { ExportRequest, ImportSettings, TransferDependencies, TransferModule } from "./types";
+import type {
+  ExportRequest,
+  ImportSettings,
+  TransferDependencies,
+  TransferLocale,
+  TransferModule,
+} from "./types";
 
 function setup(options: Partial<TransferDependencies> = {}) {
   const ctx: OrgContext = {
@@ -122,11 +128,11 @@ describe("transfer record-service integration", () => {
       { Last_Name: "Bad option", Email: "bad@example.test", Lead_Source: "Not a listed option" },
     ]);
     expect(job.status).toBe("completed_with_errors");
-    expect(job.counts).toEqual({ created: 1, updated: 0, skipped: 1, errors: 2 });
+    expect(job.counts).toEqual({ created: 2, updated: 0, skipped: 1, errors: 1, warnings: 1 });
     expect(job.rows).toEqual([
       { row: 2, outcome: "error", code: "required_missing", field: "Last_Name" },
       { row: 4, outcome: "skipped", code: "duplicate_in_file", field: "Email" },
-      { row: 5, outcome: "error", code: "invalid_value", field: "Lead_Source" },
+      { row: 5, outcome: "warning", code: "value_cleared", field: "Lead_Source" },
     ]);
     expect(JSON.stringify(job.rows)).not.toContain("@example.test");
   });
@@ -206,7 +212,7 @@ describe("transfer record-service integration", () => {
     expect(job.counts.created).toBe(1);
     expect(job.rows.map((row) => row.code)).toEqual(["not_found", "multiple_matches", "not_found"]);
   });
-  it("converts numeric and boolean fields and lets record validation reject invalid types", async () => {
+  it("converts numeric and boolean fields and leaves an unusable optional value empty", async () => {
     const s = setup();
     const job = await s.run("Leads", [
       {
@@ -224,8 +230,12 @@ describe("transfer record-service integration", () => {
         Email_Opt_Out: "false",
       },
     ]);
-    expect(job.counts).toMatchObject({ created: 1, errors: 1 });
-    expect(job.rows[0]).toMatchObject({ field: "No_of_Employees", code: "invalid_value" });
+    expect(job.counts).toMatchObject({ created: 2, errors: 0, warnings: 1 });
+    expect(job.rows[0]).toMatchObject({
+      outcome: "warning",
+      field: "No_of_Employees",
+      code: "value_cleared",
+    });
   });
 });
 
@@ -562,7 +572,6 @@ describe("transfer budgets", () => {
     for (const [body, code] of [
       ["", "empty_file"],
       ['a\n"unterminated', "malformed_csv"],
-      ["a,a\nx,y", "duplicate_header"],
     ]) {
       await expect(
         s.service.previewImport(s.ctx, "Contacts", {
@@ -627,7 +636,12 @@ describe("activity transfers", () => {
       for (const [key, value] of Object.entries(input)) {
         if (key === "$se_module") continue;
         const field = metadata.fields.find((field) => field.apiName === key);
-        expect(row?.[csv.headers.indexOf(field?.label ?? "")]).toBe(value);
+        const reference = ["lookup", "ownerlookup", "multi_module_lookup"].includes(
+          field?.dataType ?? "",
+        );
+        // References export a name column and a companion "<Field> Id" column.
+        const header = reference ? `${field?.label} Id` : (field?.label ?? "");
+        expect(row?.[csv.headers.indexOf(header)]).toBe(value);
       }
       const updated = await s.run(module, [{ id, [title]: "Updated transfer" }], {
         mode: "update",
@@ -776,5 +790,145 @@ describe.each(["Solutions", "Cases"] as const)("%s export-only transfer", (modul
     await expect(s.service.sampleCsv(s.ctx, module)).rejects.toMatchObject({
       code: "validation",
     });
+  });
+});
+
+async function contactByEmail(records: RecordService, email: string) {
+  const view = (await records.listViews("Contacts")).find((item) => item.isDefault);
+  const found = await records.list("Contacts", {
+    viewId: view?.id ?? "",
+    page: 1,
+    perPage: 10,
+    filters: { field: "Email", comparator: "equal", value: email },
+  });
+  return found.records[0]?.fields ?? {};
+}
+
+describe("real-data import and export behaviour", () => {
+  const turkish: TransferLocale = {
+    language: "tr",
+    fieldLabel: (_module, field) =>
+      ({ Last_Name: "Soyadı", Email: "E-posta", Account_Name: "Firma Adı", Owner: "Kayıt Sahibi" })[
+        field.apiName
+      ] ?? field.label,
+    fieldAliases: (_module, field) => (field.apiName === "Last_Name" ? ["Soyadı", "Soy Ad"] : []),
+    optionLabels: () => [],
+    recordIdLabel: "Kayıt Id",
+    idColumnLabel: (label) => `${label} Id`,
+  };
+
+  it("previews a file that repeats a column name", async () => {
+    const s = setup();
+    const preview = await s.preview(
+      "Contacts",
+      ["Last_Name", "Email", "Email"],
+      [["Örnek", "a@example.test", "b@example.test"]],
+    );
+    expect(preview.headers).toEqual(["Last_Name", "Email", "Email (2)"]);
+    expect(preview.suggestedMapping.map((item) => item.field)).toEqual([
+      "Last_Name",
+      "Email",
+      null,
+    ]);
+  });
+
+  it("auto-maps Turkish headers and shows localized field labels", async () => {
+    const s = setup({ locale: async () => turkish });
+    const preview = await s.preview(
+      "Contacts",
+      ["Soyadı", "E-posta", "Kayıt Id", "Bilinmiyor"],
+      [["Örnek", "a@example.test", "", "x"]],
+    );
+    expect(preview.suggestedMapping.map((item) => item.field)).toEqual([
+      "Last_Name",
+      "Email",
+      "id",
+      null,
+    ]);
+    expect(preview.fields.find((field) => field.apiName === "Last_Name")?.label).toBe("Soyadı");
+    expect(preview.matchFields[0]).toEqual({ field: "id", label: "Kayıt Id" });
+  });
+
+  it("accepts picklist options by display label and ignores case and spacing", async () => {
+    const s = setup();
+    const job = await s.run("Contacts", [
+      { Last_Name: "Örnek A", Email: "a@example.test", Lead_Source: "Online Store" },
+      { Last_Name: "Örnek B", Email: "b@example.test", Lead_Source: "online-store" },
+    ]);
+    expect(job.counts).toMatchObject({ created: 2, errors: 0 });
+    expect(job.counts.warnings).toBeUndefined();
+    expect((await contactByEmail(s.records, "a@example.test")).Lead_Source).toBe("OnlineStore");
+  });
+
+  it("imports the row without an unusable optional value and records a warning", async () => {
+    const s = setup();
+    const job = await s.run("Contacts", [
+      { Last_Name: "Örnek C", Email: "c@example.test", Lead_Source: "Nope" },
+    ]);
+    expect(job.status).toBe("completed_with_errors");
+    expect(job.counts).toMatchObject({ created: 1, errors: 0, skipped: 0, warnings: 1 });
+    expect(job.rows).toEqual([
+      { row: 2, outcome: "warning", code: "value_cleared", field: "Lead_Source" },
+    ]);
+    expect((await contactByEmail(s.records, "c@example.test")).Lead_Source ?? "").toBe("");
+  });
+
+  it("resolves a lookup by name when the value is not an id", async () => {
+    const s = setup();
+    const account = await s.records.create("Accounts", { Account_Name: "Örnek Firma A" });
+    const job = await s.run("Contacts", [
+      { Last_Name: "Örnek D", Email: "d@example.test", Account_Name: "Örnek Firma A" },
+    ]);
+    expect(job.counts).toMatchObject({ created: 1, errors: 0 });
+    expect((await contactByEmail(s.records, "d@example.test")).Account_Name).toMatchObject({
+      id: account.id,
+    });
+  });
+
+  it("exports owner and lookup names with a companion id column and localized headers", async () => {
+    const s = setup({ locale: async () => turkish });
+    const account = await s.records.create("Accounts", { Account_Name: "Örnek Firma B" });
+    await s.records.create("Contacts", {
+      Last_Name: "Örnek E",
+      Email: "e@example.test",
+      Account_Name: { module: "Accounts", id: account.id },
+      Owner: s.ctx.userId,
+    });
+    const exported = await s.service.runExport(s.ctx, { module: "Contacts", fields: "all" });
+    const csv = parseCsv(
+      new TextEncoder().encode((await s.service.downloadExport(s.ctx, exported.id)).body),
+      {
+        charset: "UTF-8",
+        maxColumns: 500,
+        maxRows: 5000,
+      },
+    );
+    expect(csv.headers[0]).toBe("Kayıt Id");
+    const row = csv.rows.find((item) => item[csv.headers.indexOf("E-posta")] === "e@example.test");
+    expect(row?.[csv.headers.indexOf("Firma Adı")]).toBe("Örnek Firma B");
+    expect(row?.[csv.headers.indexOf("Firma Adı Id")]).toBe(account.id);
+    expect(row?.[csv.headers.indexOf("Kayıt Sahibi")]).toBe("Example User");
+    expect(row?.[csv.headers.indexOf("Kayıt Sahibi Id")]).toBe(s.ctx.userId);
+  });
+
+  it("re-imports an exported file through the companion id columns", async () => {
+    const s = setup();
+    const account = await s.records.create("Accounts", { Account_Name: "Örnek Firma C" });
+    await s.records.create("Contacts", {
+      Last_Name: "Örnek F",
+      Email: "f@example.test",
+      Account_Name: { module: "Accounts", id: account.id },
+    });
+    const exported = await s.service.runExport(s.ctx, { module: "Contacts", fields: "all" });
+    const body = (await s.service.downloadExport(s.ctx, exported.id)).body;
+    const preview = await s.service.previewImport(s.ctx, "Contacts", {
+      name: "again.csv",
+      charset: "UTF-8",
+      bytes: new TextEncoder().encode(body),
+    });
+    const mapped = preview.suggestedMapping.map((item) => item.field);
+    expect(mapped.filter((field) => field === "Account_Name")).toHaveLength(1);
+    const header = preview.headers[mapped.indexOf("Account_Name")];
+    expect(header).toBe("Account Name Id");
   });
 });

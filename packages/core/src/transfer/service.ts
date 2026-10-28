@@ -9,19 +9,20 @@ import {
   importMetadata,
   importRows,
   matchFields,
-  normalizeHeader,
   validateMapping,
   writable,
 } from "./import";
+import { suggestMapping } from "./mapping";
 import type {
   Actor,
   ImportJob,
   TransferDependencies,
   TransferLimits,
+  TransferLocale,
   TransferModule,
   TransferService,
 } from "./types";
-import { IMPORT_MODULES } from "./types";
+import { englishLocale, IMPORT_MODULES } from "./types";
 
 export const DEFAULT_TRANSFER_LIMITS: Readonly<TransferLimits> = {
   fileBytes: 25_000_000,
@@ -53,6 +54,8 @@ export function createTransferService(deps: TransferDependencies): TransferServi
     if (mode !== "update") await deps.authorize(ctx, module, "create");
     if (mode !== "add") await deps.authorize(ctx, module, "update");
   };
+  const localeOf = async (ctx: OrgContext): Promise<TransferLocale> =>
+    (await deps.locale?.(ctx)) ?? englishLocale;
   const requireImportModule = (module: TransferModule) => {
     if (!(IMPORT_MODULES as readonly string[]).includes(module))
       throw new ValidationError({ module: ["Import is not supported for this module."] });
@@ -78,16 +81,31 @@ export function createTransferService(deps: TransferDependencies): TransferServi
           maxRows: limits.importRows,
         });
       } catch (error) {
-        if (error instanceof CsvError) throw new AppError(error.code, "The CSV file is invalid.");
+        if (error instanceof CsvError)
+          throw new AppError(
+            error.code,
+            error.line === undefined
+              ? "The CSV file is invalid."
+              : `The CSV file is invalid (line ${error.line}).`,
+          );
         throw error;
       }
       const metadata = importMetadata(await deps.records(ctx).getModule(module), module);
-      const fields = metadata.fields.filter(writable).map((field) => ({
-        apiName: field.apiName,
-        label: field.label,
-        required: field.required,
-        type: field.dataType,
-      }));
+      const locale = await localeOf(ctx);
+      const fields = metadata.fields.filter(writable).map((field) => {
+        const label = locale.fieldLabel(module, field);
+        const aliases = [field.label, ...locale.fieldAliases(module, field)].filter(
+          (name, index, all) =>
+            name !== label && name !== field.apiName && all.indexOf(name) === index,
+        );
+        return {
+          apiName: field.apiName,
+          label,
+          required: field.required,
+          type: field.dataType,
+          ...(aliases.length ? { aliases } : {}),
+        };
+      });
       const uploadId = crypto.randomUUID();
       const uploads = state(ctx).uploads;
       while (uploads.size >= 5) {
@@ -110,24 +128,12 @@ export function createTransferService(deps: TransferDependencies): TransferServi
         headers: parsed.headers,
         sampleRows: parsed.rows.slice(0, 5),
         rowCount: parsed.rows.length,
-        suggestedMapping: parsed.headers.map((header, column) => {
-          const matches = fields.filter(
-            (field) =>
-              normalizeHeader(field.label) === normalizeHeader(header) ||
-              normalizeHeader(field.apiName) === normalizeHeader(header),
-          );
-          return {
-            column,
-            field:
-              normalizeHeader(header) === "recordid" || normalizeHeader(header) === "id"
-                ? "id"
-                : matches.length === 1
-                  ? (matches[0]?.apiName ?? null)
-                  : null,
-          };
-        }),
+        suggestedMapping: suggestMapping(parsed.headers, fields, [
+          englishLocale.recordIdLabel,
+          locale.recordIdLabel,
+        ]),
         fields,
-        matchFields: matchFields(metadata, module),
+        matchFields: matchFields(metadata, module, locale),
       });
     },
     async runImport(ctx, module, uploadId, settings) {
@@ -165,6 +171,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
         metadata,
         matchField,
         job,
+        await localeOf(ctx),
       );
       state(ctx).imports.set(job.id, { job, createdIds });
       return copy(job);
@@ -231,7 +238,10 @@ export function createTransferService(deps: TransferDependencies): TransferServi
         fields: fields.map((field) => field.apiName),
       };
       try {
-        const result = await exportRecords(records, request, fields, limits);
+        const result = await exportRecords(records, request, fields, limits, {
+          locale: await localeOf(ctx),
+          actors: await deps.listActors(ctx),
+        });
         await deps.authorize(ctx, request.module, "read");
         entry.body = result.body;
         job.scope = result.scope;
@@ -264,6 +274,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
       await actor(ctx);
       await deps.authorize(ctx, module, "read");
       const metadata = await deps.records(ctx).getModule(module);
+      const locale = await localeOf(ctx);
       const fields = metadata.fields
         .filter(writable)
         .filter(
@@ -273,7 +284,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
       return {
         fileName: `${module}_Sample.csv`,
         body: serializeCsv(
-          fields.map((field) => field.label),
+          fields.map((field) => locale.fieldLabel(module, field)),
           [fields.map(sampleValue)],
         ),
       };

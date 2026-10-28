@@ -1,4 +1,4 @@
-import type { RecordServiceFactory } from "../records/contract";
+import type { FieldDefinition, PicklistOption, RecordServiceFactory } from "../records/contract";
 import type { OrgContext } from "../tenancy/types";
 
 export const IMPORT_MODULES = [
@@ -28,7 +28,15 @@ export interface ImportPreview {
   sampleRows: string[][];
   rowCount: number;
   suggestedMapping: FieldMapping[];
-  fields: { apiName: string; label: string; required: boolean; type: string }[];
+  fields: {
+    apiName: string;
+    /** Label in the user's interface language. */
+    label: string;
+    required: boolean;
+    type: string;
+    /** Other accepted column names (API name excluded); used by Auto Mapping. */
+    aliases?: string[];
+  }[];
   matchFields: { field: string; label: string }[];
 }
 export interface ImportSettings {
@@ -40,7 +48,8 @@ export interface ImportSettings {
   mapping: FieldMapping[];
   defaults: { field: string; value: string }[];
 }
-export type RowOutcome = "created" | "updated" | "skipped" | "error";
+/** "warning" rows belong to an imported record: one value was left empty. */
+export type RowOutcome = "created" | "updated" | "skipped" | "error" | "warning";
 export interface ImportRowResult {
   row: number;
   outcome: RowOutcome;
@@ -59,7 +68,14 @@ export interface ImportJob {
   createdBy: Actor;
   createdAt: string;
   status: "completed" | "completed_with_errors" | "failed" | "undone";
-  counts: { created: number; updated: number; skipped: number; errors: number };
+  counts: {
+    created: number;
+    updated: number;
+    skipped: number;
+    errors: number;
+    /** Values left empty; present only when at least one was. */
+    warnings?: number;
+  };
   undoable: boolean;
   rows: ImportRowResult[];
 }
@@ -110,12 +126,35 @@ export interface TransferLimits {
   exportBytes: number;
   selectedIds: number;
 }
+/** Interface-language labels. The default is English with no aliases. */
+export interface TransferLocale {
+  language: "en" | "tr";
+  /** Label for exported headers and the import mapping screen. */
+  fieldLabel(module: string, field: FieldDefinition): string;
+  /** Extra header names accepted on import (other languages, reference wording). */
+  fieldAliases(module: string, field: FieldDefinition): readonly string[];
+  /** Extra names accepted for a picklist option on import. */
+  optionLabels(module: string, field: FieldDefinition, option: PicklistOption): readonly string[];
+  recordIdLabel: string;
+  /** Header of the companion id column written next to a name column. */
+  idColumnLabel(label: string): string;
+}
+export const englishLocale: TransferLocale = {
+  language: "en",
+  fieldLabel: (_module, field) => field.label,
+  fieldAliases: () => [],
+  optionLabels: () => [],
+  recordIdLabel: "Record Id",
+  idColumnLabel: (label) => `${label} Id`,
+};
 export interface TransferDependencies {
   records: RecordServiceFactory;
   /** Must check current membership and module action permission; throws on denial. */
   authorize: (ctx: OrgContext, module: TransferModule, action: TransferAction) => Promise<void>;
   /** Must return only current members of ctx.orgId. Used for attribution and owner resolution. */
   listActors: (ctx: OrgContext) => Promise<readonly Actor[]>;
+  /** Resolves the caller's interface language; omitted means English. */
+  locale?: (ctx: OrgContext) => Promise<TransferLocale>;
   now?: () => Date;
   limits?: Partial<TransferLimits>;
 }
