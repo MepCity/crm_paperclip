@@ -2,14 +2,30 @@ import type { ExportJob, ImportJob, TransferModule } from "@crm/core";
 import { cleanup, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, expect, test, vi } from "vitest";
-import { ExportHistoryScreen, ImportHistoryScreen, ImportWizardScreen } from "./transfer-screens";
+import { PageTitleContext } from "@/components/shell/page-title";
+import {
+  ExportHistoryScreen,
+  ImportHistoryScreen,
+  ImportPageTitle,
+  ImportWizardScreen,
+} from "./transfer-screens";
 
 const state = vi.hoisted(() => ({
   data: undefined as ImportJob[] | ExportJob[] | undefined,
   isLoading: false,
   isError: true,
   push: vi.fn(),
+  language: "en" as "en" | "tr",
 }));
+vi.mock("@/i18n/client-provider", async (importOriginal) => {
+  const original = await importOriginal<typeof import("@/i18n/client-provider")>();
+  const { translator } = await import("@/i18n/catalogs");
+  return {
+    ...original,
+    useUiLanguage: () => state.language,
+    useUiTranslations: () => translator(state.language),
+  };
+});
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: state.push }) }));
 vi.mock("@tanstack/react-query", () => ({
   useQueryClient: () => ({ invalidateQueries: vi.fn() }),
@@ -28,6 +44,7 @@ afterEach(() => {
   state.push.mockClear();
   state.data = undefined;
   state.isError = true;
+  state.language = "en";
 });
 
 test.each([
@@ -113,4 +130,18 @@ test("retry meeting export opens the Meetings screen", async () => {
   render(<ExportHistoryScreen />);
   await userEvent.setup().click(screen.getByRole("button", { name: "Retry" }));
   expect(state.push).toHaveBeenCalledWith("/crm/test-org/tab/Meetings/list");
+});
+
+test.each([
+  ["tr", "Firmalar İçe Aktar"],
+  ["en", "Import Accounts"],
+] as const)("import tab title follows %s interface language", (language, expected) => {
+  state.language = language;
+  const setTitle = vi.fn();
+  render(
+    <PageTitleContext.Provider value={setTitle}>
+      <ImportPageTitle module="Accounts" />
+    </PageTitleContext.Provider>,
+  );
+  expect(document.title).toBe(`${expected} | MepCity CRM`);
 });

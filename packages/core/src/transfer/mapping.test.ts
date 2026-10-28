@@ -52,8 +52,17 @@ describe("suggestMapping", () => {
   it("prefers the name column over the id column of a reference field", () => {
     expect(map(["Kayıt Sahibi", "Kayıt Sahibi Id"])).toEqual(["Owner", null]);
     expect(map(["Kayıt Sahibi.id", "Kayıt Sahibi"])).toEqual([null, "Owner"]);
-    expect(map(["Kayıt Sahibi.id"])).toEqual(["Owner"]);
+    expect(map(["Kayıt Sahibi.id"])).toEqual([null]);
+    expect(map(["Kayıt Sahibi Id"])).toEqual(["Owner"]);
     expect(map(["Kayıt Sahibi"])).toEqual(["Owner"]);
+  });
+  it("never suggests dotted ids, including literal field labels and record ids", () => {
+    expect(
+      suggestMapping(
+        ["Bağlandı.id", "Record.id", "Owner.ID  "],
+        [{ apiName: "Connected_To", label: "Bağlandı.id", type: "text" }, ...fields],
+      ).map((item) => item.field),
+    ).toEqual([null, null, null]);
   });
   it("does not guess between fields that share an alias", () => {
     const shared = [

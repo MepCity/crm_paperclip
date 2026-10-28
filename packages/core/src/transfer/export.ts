@@ -82,6 +82,8 @@ export async function exportRecords(
   /** Name column first; reference fields also get an id column beside it. */
   const cells = async (field: FieldDefinition, value: FieldValue | undefined) => {
     if (field.picklist && typeof value === "string") {
+      // Stage keys preserve the source stage even when its UI label is expanded.
+      if (request.module === "Deals" && field.apiName === "Stage") return [value];
       // Picklists are written with the option's display label; import accepts either form.
       const option = field.picklist.find((item) => item.storedValue === value);
       return [option?.displayValue ?? value];

@@ -48,7 +48,7 @@ export interface ImportSettings {
   mapping: FieldMapping[];
   defaults: { field: string; value: string }[];
 }
-/** "warning" rows belong to an imported record: one value was left empty. */
+/** "warning" rows belong to an imported record: a value was cleared or defaulted. */
 export type RowOutcome = "created" | "updated" | "skipped" | "error" | "warning";
 export interface ImportRowResult {
   row: number;
@@ -73,7 +73,7 @@ export interface ImportJob {
     updated: number;
     skipped: number;
     errors: number;
-    /** Values left empty; present only when at least one was. */
+    /** Values cleared or defaulted; present only when at least one was. */
     warnings?: number;
   };
   undoable: boolean;
@@ -135,6 +135,7 @@ export interface TransferLocale {
   fieldAliases(module: string, field: FieldDefinition): readonly string[];
   /** Extra names accepted for a picklist option on import. */
   optionLabels(module: string, field: FieldDefinition, option: PicklistOption): readonly string[];
+  moduleLabel?(module: TransferModule): string;
   recordIdLabel: string;
   /** Header of the companion id column written next to a name column. */
   idColumnLabel(label: string): string;

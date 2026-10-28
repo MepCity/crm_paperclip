@@ -402,7 +402,7 @@ describe("CSV export", () => {
       fields: { include: ["Account_Name", "Description", "Annual_Revenue"] },
     });
     expect(job).toMatchObject({ rowCount: 1, status: "completed", scope: "Selected records" });
-    expect(job.fileName).toMatch(/^Accounts_\d{4}_\d{2}_\d{2}\.csv$/);
+    expect(job.fileName).toMatch(/^Accounts_\d{4}-\d{2}-\d{2}\.csv$/);
     const downloaded = await s.service.downloadExport(s.ctx, job.id);
     const parsed = parseCsv(new TextEncoder().encode(downloaded.body), {
       charset: "UTF-8",
@@ -1048,5 +1048,53 @@ describe("picklist round trip", () => {
     const mapped = again.suggestedMapping.map((item) => item.field);
     expect(mapped).toContain("Lead_Source");
     expect(mapped).toContain("Email");
+  });
+});
+
+describe("source stage fidelity", () => {
+  it("imports stage keys and expanded labels and exports their canonical stage keys", async () => {
+    const s = setup();
+    const account = await s.records.create("Accounts", { Account_Name: "Synthetic Stage Parent" });
+    const stages = [
+      "Id. Decision Makers",
+      "Identify Decision Makers",
+      "Closed Lost",
+      "Closed Lost to Competition",
+    ];
+    const job = await s.run(
+      "Deals",
+      stages.map((Stage, i) => ({
+        Deal_Name: `Synthetic stage ${i}`,
+        Closing_Date: "2026-12-01",
+        Account_Name: account.id,
+        Stage,
+      })),
+    );
+    expect(job.counts).toEqual({ created: 4, updated: 0, skipped: 0, errors: 0 });
+    const exported = await s.service.runExport(s.ctx, {
+      module: "Deals",
+      fields: { include: ["Deal_Name", "Stage"] },
+    });
+    const csv = parseCsv(
+      new TextEncoder().encode((await s.service.downloadExport(s.ctx, exported.id)).body),
+      {
+        charset: "UTF-8",
+        maxColumns: 10,
+        maxRows: 5000,
+      },
+    );
+    expect(
+      csv.rows
+        .filter((row) => row[1]?.startsWith("Synthetic stage"))
+        .map((row) => row[2])
+        .sort(),
+    ).toEqual(
+      [
+        "Id. Decision Makers",
+        "Id. Decision Makers",
+        "Closed Lost",
+        "Closed Lost to Competition",
+      ].sort(),
+    );
   });
 });

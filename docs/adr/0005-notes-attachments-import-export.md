@@ -316,6 +316,16 @@ text. `Created_Time` and `Modified_Time` are importable and travel through
 `RecordWriteOptions.sourceTimes` (ISO 8601 UTC, validated); Created By and Modified By remain
 managed. Each row is counted once in `counts`, and exports write picklists as display labels.
 
+Third CSV correction: dotted `.id` columns are excluded before header normalization, including
+when no name column exists. Explicit Turkish source aliases cover composite addresses, employee
+count, ticker, industry code and source timestamps in either UI language. Source timestamps
+accept ISO dates with space/T separators and day-first dotted/slashed dates; zone-free values
+are interpreted as UTC. Deals Stage exports use stored keys to retain source stage identity
+when the UI display label differs. Exact stored-value matching still wins over display labels;
+Closed Lost and Closed Lost to Competition stay distinct. Owner fallback warnings use a separate
+message and generic Warnings headings. Export field/module labels, dated filenames and import
+page titles follow the interface language. No customer values are included in fixtures.
+
 ### Resolved and deferred questions
 
 - Conflicting edition row limits: use the accepted local budgets above; exact

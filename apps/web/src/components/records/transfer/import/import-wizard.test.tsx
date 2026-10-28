@@ -219,11 +219,12 @@ test("summary counts each row once and lists values left empty", async () => {
     run: vi.fn().mockResolvedValue(
       job({
         status: "completed_with_errors",
-        counts: { created: 10, updated: 0, skipped: 2, errors: 1, warnings: 1 },
+        counts: { created: 10, updated: 0, skipped: 2, errors: 1, warnings: 2 },
         rows: [
           { row: 3, outcome: "skipped", code: "already_exists" },
           { row: 4, outcome: "error", code: "required_missing", field: "Last_Name" },
           { row: 5, outcome: "warning", code: "value_cleared", field: "Billing_State" },
+          { row: 6, outcome: "warning", code: "owner_defaulted", field: "Owner" },
         ],
       }),
     ),
@@ -234,9 +235,11 @@ test("summary counts each row once and lists values left empty", async () => {
   await screen.findByText("Import completed with errors");
   expect(screen.getByTestId("count-skipped").textContent).toBe("2");
   expect(screen.getByTestId("count-failed").textContent).toBe("1");
-  expect(screen.getByTestId("count-warnings").textContent).toBe("1");
-  expect(screen.getByText("Rows imported with a value left empty")).toBeTruthy();
+  expect(screen.getByTestId("count-warnings").textContent).toBe("2");
+  expect(screen.getByText("Rows imported with warnings")).toBeTruthy();
   expect(screen.getByText("Billing_State")).toBeTruthy();
+  expect(screen.getByText("Owner not found; assigned to the importing user")).toBeTruthy();
+  expect(screen.getByText("Warnings")).toBeTruthy();
 });
 
 test("steps run in the documented order: upload, record handling, field mapping", () => {

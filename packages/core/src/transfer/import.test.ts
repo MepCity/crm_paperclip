@@ -10,6 +10,7 @@ import {
   importRows,
   matchFields,
   normalizeHeader,
+  parseSourceTime,
   validateMapping,
   writable,
 } from "./import";
@@ -657,5 +658,20 @@ describe("importRows", () => {
     const missing = await run([["Ghost", "ghost@example.test"]], { mode: "update" });
     expect(missing.counts.errors).toBe(1);
     expect(missing.rows[0]).toMatchObject({ code: "not_found", field: "Email" });
+  });
+});
+
+describe("source timestamps", () => {
+  it.each([
+    ["2026-10-29 14:05:00", "2026-10-29T14:05:00.000Z"],
+    ["29/10/2026 14:05", "2026-10-29T14:05:00.000Z"],
+    ["29.10.2026 14:05:17", "2026-10-29T14:05:17.000Z"],
+    ["2026-10-29T14:05:00+03:00", "2026-10-29T11:05:00.000Z"],
+    ["2024-02-29", "2024-02-29T00:00:00.000Z"],
+    ["31/02/2026 14:05", null],
+    ["2026-10-29 24:00:00", null],
+    ["invalid", null],
+  ])("parses %s without host date or timezone heuristics", (raw, expected) => {
+    expect(parseSourceTime(raw)).toBe(expected);
   });
 });

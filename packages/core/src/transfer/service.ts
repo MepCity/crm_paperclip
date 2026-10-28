@@ -218,6 +218,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
       const metadata = await records.getModule(request.module);
       const fields = exportFields(metadata.fields, request);
       const now = clock();
+      const locale = await localeOf(ctx);
       const scope = request.ids
         ? "Selected records"
         : (request.viewId
@@ -232,7 +233,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
         createdAt: now.toISOString(),
         status: "completed" as "completed" | "failed",
         rowCount: 0,
-        fileName: `${request.module}_${now.toISOString().slice(0, 10).replaceAll("-", "_")}.csv`,
+        fileName: `${locale.moduleLabel?.(request.module) ?? request.module}_${now.toISOString().slice(0, 10)}.csv`,
       };
       const entry: import("./history").StoredExport = {
         job,
@@ -240,7 +241,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
       };
       try {
         const result = await exportRecords(records, request, fields, limits, {
-          locale: await localeOf(ctx),
+          locale,
           actors: await deps.listActors(ctx),
         });
         await deps.authorize(ctx, request.module, "read");

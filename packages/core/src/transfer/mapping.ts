@@ -34,8 +34,8 @@ export const isReferenceType = (type: string) => REFERENCE_TYPES.has(type);
 /**
  * Maps each column to at most one field. Matches the API name, the label and any alias.
  * An ambiguous or unknown header stays unmapped. A reference field that has both a name
- * column and an "<Field> Id" (or "<Field>.id") column is mapped to the name column: ids of
- * another system rarely resolve, so the id column is used only when it is the sole column.
+ * column and an "<Field> Id" column is mapped to the name column. Dotted id columns
+ * belong to another system and are never suggested, even when they are the sole column.
  */
 export function suggestMapping(
   headers: readonly string[],
@@ -69,6 +69,10 @@ export function suggestMapping(
   const byField = new Map<string, { column: number; id: boolean }[]>();
   let recordIdTaken = false;
   for (const [column, header] of headers.entries()) {
+    if (/\.id\s*$/i.test(header)) {
+      result.push({ column, field: null });
+      continue;
+    }
     const key = normalizeKey(header);
     let field: string | null = null;
     let id = false;

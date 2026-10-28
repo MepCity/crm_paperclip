@@ -999,16 +999,26 @@ and is unchanged; `import-wizard.test.tsx` pins it.
 - **Export:** owner and lookup columns carry the display name, followed by a "<Field> Id" column with
   the id. Headers use the interface language ("Kayıt Id" for the record id in Turkish). Auto Mapping
   prefers the name column of a reference field over its id column (the id is used only when no name
-  column exists), and picklist columns carry the option's display label, so an exported file can be
+  column exists; dotted `.id` columns are always excluded), and picklist columns carry the option's display label (Deals Stage carries its stored key), so an exported file can be
   imported again.
 - **Second real-data round:** an unresolved owner becomes the importing user (new records only) with
   an `owner_defaulted` warning; a lookup that is not found or ambiguous (for example a deal's
   contact) is left empty with a warning unless the field is required. Contact names match on full
   name, with or without a salutation (Mr., Ms., Bay, Bayan, ...), ignoring case, diacritics and
   spacing. State / province fields (billing, shipping, mailing, other) accept free text. Created Time
-  and Modified Time can be mapped; they must be ISO 8601 UTC (`2026-03-01T09:30:00Z`, optional
-  fractional seconds) and are kept as the record's timestamps, an invalid value is cleared with a
+  and Modified Time can be mapped; ISO 8601 (space or T separator, optional zone),
+  `DD/MM/YYYY HH:mm` and `DD.MM.YYYY HH:mm` are converted to UTC; zone-free values are
+  interpreted as UTC. They are kept as the record's timestamps; an invalid value is cleared with a
   warning. Created By and Modified By stay system-managed and cannot be mapped.
+- **Third CSV round:** composite billing/shipping/mailing/other and lead address headers accept
+  Turkish source wording, including `Açık Adres`, `Eyalet / İl` and `Ülke / Bölge`.
+  Employee count, ticker, industry-code and source-time aliases work in either interface language.
+  Dotted `.id` columns never auto-map, including a lone dotted id column. Owner fallback uses
+  its own message under the generic Warnings heading. Stage imports retain exact stored values;
+  expanded decision-maker labels resolve to the same key and exports preserve that key. Closed
+  Lost and Closed Lost to Competition remain distinct. Composite export headers, dialog module
+  labels, dated filenames and import tab titles follow the interface language. Synthetic tests
+  cover the mappings and stored values; customer data is never a fixture.
 - **Language:** wizard, export dialog, history, toasts, errors and the list "Import/Export <Module>"
   items come from `records.transfer.*` in the EN and TR catalogues.
 - **Export toast:** stays until dismissed; Download fetches the file and saves it through a

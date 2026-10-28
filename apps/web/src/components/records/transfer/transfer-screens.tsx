@@ -4,6 +4,7 @@ import type { ImportJob, TransferModule } from "@crm/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { useRouter } from "next/navigation";
 import { useMemo } from "react";
+import { PageTitle } from "@/components/shell/page-title";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { useExportHistory, useImportHistory, useTransferClient } from "@/lib/api/client/hooks";
@@ -25,6 +26,12 @@ function useModuleLabel(): (module: TransferModule) => string {
   const adapter = useMetadataDisplayAdapter();
   return (module) =>
     adapter.getModulePlural(module, resolveModuleScreenByApiName(module)?.pluralLabel);
+}
+
+export function ImportPageTitle({ module }: { module: TransferModule }) {
+  const moduleLabel = useModuleLabel();
+  const t = useUiTranslations();
+  return <PageTitle title={t("records.transfer.title", { module: moduleLabel(module) })} />;
 }
 
 export function ImportWizardScreen({ module }: { module: TransferModule }) {

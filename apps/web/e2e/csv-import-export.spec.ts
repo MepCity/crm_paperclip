@@ -52,7 +52,7 @@ test.describe("CSV import and export", () => {
     await page.setViewportSize({ width: 1470, height: 835 });
   });
 
-  test("Leads: import with a skipped row, history, undo", async ({ page }) => {
+  test("Leads: import with a failed row, history, undo", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
     await openImport(page, org.slug, "Leads");
@@ -66,7 +66,8 @@ test.describe("CSV import and export", () => {
 
     await expect(page.getByText(/Import completed/)).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId("count-added")).toHaveText("2");
-    await expect(page.getByTestId("count-skipped")).toHaveText("1");
+    await expect(page.getByTestId("count-skipped")).toHaveText("0");
+    await expect(page.getByTestId("count-failed")).toHaveText("1");
     await page.getByRole("button", { name: "Done" }).click();
 
     await expect(page).toHaveURL(/\/tab\/Leads\/list/);

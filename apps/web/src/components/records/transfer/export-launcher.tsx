@@ -36,6 +36,10 @@ export function ExportLauncher({
   const queryClient = useQueryClient();
   const moduleQuery = useModule(module);
   const viewsQuery = useViews(module);
+  const displayModuleLabel = adapter.getModulePlural(
+    module,
+    moduleQuery.data?.pluralLabel ?? moduleLabel,
+  );
   const fields = useMemo(
     () =>
       (moduleQuery.data?.fields ?? [])
@@ -47,9 +51,14 @@ export function ExportLauncher({
     () =>
       (viewsQuery.data ?? []).map((view) => ({
         id: view.id,
-        name: builtInViewLabel(view, moduleQuery.data?.pluralLabel ?? moduleLabel, moduleLabel, t),
+        name: builtInViewLabel(
+          view,
+          moduleQuery.data?.pluralLabel ?? moduleLabel,
+          displayModuleLabel,
+          t,
+        ),
       })),
-    [viewsQuery.data, moduleQuery.data?.pluralLabel, moduleLabel, t],
+    [viewsQuery.data, moduleQuery.data?.pluralLabel, moduleLabel, displayModuleLabel, t],
   );
   const historyHref = exportHistoryPath(orgSlug);
   /** Fetches the file and saves it through a temporary link, so one click always downloads. */
@@ -86,7 +95,7 @@ export function ExportLauncher({
       open={open}
       onOpenChange={onOpenChange}
       module={module}
-      moduleLabel={moduleLabel}
+      moduleLabel={displayModuleLabel}
       views={views}
       defaultViewId={viewId}
       selectedIds={selectedIds}
