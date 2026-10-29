@@ -91,13 +91,6 @@ export function createDealsRelatedLists(
       emptyText: "No records found",
       icon: Icons.calendar,
     },
-    {
-      id: "open-calls",
-      title: "Open Calls",
-      count: 0,
-      emptyText: "No records found",
-      icon: Icons.phone,
-    },
   ];
   const closedActivityColumns: readonly RelatedListActivityColumnDefinition[] = [
     {
@@ -113,13 +106,6 @@ export function createDealsRelatedLists(
       count: 0,
       emptyText: "No records found",
       icon: Icons.calendar,
-    },
-    {
-      id: "closed-calls",
-      title: "Closed Calls",
-      count: 0,
-      emptyText: "No records found",
-      icon: Icons.phone,
     },
   ];
   const openActivitiesBadge = badgeValue(activityCount(openActivityColumns, badges.openActivities));

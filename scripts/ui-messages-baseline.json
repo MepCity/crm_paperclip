@@ -1027,19 +1027,19 @@
   },
   {
     "file": "apps/web/src/components/records/detail/activity-categories-card-body.tsx",
-    "line": 30,
+    "line": 31,
     "column": 26,
     "hash": "b3a60e61a5233d05"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-categories-card-body.tsx",
-    "line": 31,
+    "line": 32,
     "column": 29,
     "hash": "bca705b63a3cf585"
   },
   {
     "file": "apps/web/src/components/records/detail/activity-categories-card-body.tsx",
-    "line": 32,
+    "line": 33,
     "column": 26,
     "hash": "b73a5e2ca6458665"
   },
@@ -3127,13 +3127,13 @@
   },
   {
     "file": "apps/web/src/components/ui/split-button.tsx",
-    "line": 103,
+    "line": 104,
     "column": 28,
     "hash": "d47d7cb0e4f8fd2b"
   },
   {
     "file": "apps/web/src/components/ui/split-button.tsx",
-    "line": 130,
+    "line": 131,
     "column": 26,
     "hash": "d47d7cb0e4f8fd2b"
   },

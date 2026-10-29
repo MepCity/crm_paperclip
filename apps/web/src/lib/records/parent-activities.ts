@@ -10,7 +10,7 @@ export interface ParentActivityRow {
   date: string | null;
   ownerName: string | null;
   /** Contact (Who_Id) the activity is with, when it names one. */
-  contactName: string | null;
+  contactName?: string | null;
   details: readonly { label: string; value: string }[];
 }
 export interface ParentActivityCategory {

@@ -42,13 +42,6 @@ function activityColumns(
       emptyText: "No records found",
       icon: Icons.calendar,
     },
-    {
-      id: `${prefix}-calls`,
-      title: `${word} Calls`,
-      count: 0,
-      emptyText: "No records found",
-      icon: Icons.phone,
-    },
   ];
 }
 

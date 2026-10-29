@@ -51,6 +51,14 @@ function IssueTable({
   const [limit, setLimit] = useState(ISSUE_PAGE_SIZE);
   const shown = rows.slice(0, limit);
   const more = rows.length - shown.length;
+  // The same row can carry several identical issues; a running count keeps the keys unique.
+  const seen = new Map<string, number>();
+  const keyOf = (r: IssueRow) => {
+    const base = `${keyPrefix}-${r.row}-${r.code ?? ""}-${r.field ?? ""}`;
+    const n = seen.get(base) ?? 0;
+    seen.set(base, n + 1);
+    return `${base}-${n}`;
+  };
   return (
     <div className="flex flex-col gap-2" data-testid={testId}>
       <Table>
@@ -62,9 +70,8 @@ function IssueTable({
           </tr>
         </TableHeader>
         <TableBody columnCount={3}>
-          {shown.map((r, index) => (
-            // The same row can carry several issues; the position keeps the keys unique.
-            <TableRow key={`${keyPrefix}-${index}-${r.row}-${r.code ?? ""}-${r.field ?? ""}`}>
+          {shown.map((r) => (
+            <TableRow key={keyOf(r)}>
               <TableCell>{r.row}</TableCell>
               <TableCell>{r.field ?? ""}</TableCell>
               <TableCell>{codeMessage(r.code, t) ?? r.code ?? ""}</TableCell>
