@@ -157,5 +157,7 @@ test("Solutions Actions exports through the shared dialog", async ({ page }) => 
   await expect(dialog).toBeHidden();
   await expect(page.getByText("Export completed", { exact: true })).toBeVisible();
   await page.goto(`/crm/${org.slug}/tab/Solutions/import`);
-  await expect(page.getByRole("heading", { name: "Page not found", exact: true })).toBeVisible();
+  // CSV import is available for this module: the wizard opens instead of a not-found page.
+  await expect(page.getByRole("heading", { name: "Page not found", exact: true })).toHaveCount(0);
+  await expect(page.getByTestId("csv-input")).toBeAttached();
 });

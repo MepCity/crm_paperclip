@@ -157,7 +157,9 @@ test("Cases Actions exports through the shared dialog", async ({ page }) => {
   await expect(dialog).toBeHidden();
   await expect(page.getByText("Export completed", { exact: true })).toBeVisible();
   await page.goto(`/crm/${org.slug}/tab/Cases/import`);
-  await expect(page.getByRole("heading", { name: "Page not found", exact: true })).toBeVisible();
+  // CSV import is available for this module: the wizard opens instead of a not-found page.
+  await expect(page.getByRole("heading", { name: "Page not found", exact: true })).toHaveCount(0);
+  await expect(page.getByTestId("csv-input")).toBeAttached();
 });
 
 test("Cases view menu and Actions links match the shared list flows", async ({
