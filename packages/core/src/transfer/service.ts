@@ -9,6 +9,7 @@ import {
   importable,
   importMetadata,
   importRows,
+  isTimestampColumn,
   matchFields,
   validateMapping,
   writable,
@@ -132,7 +133,12 @@ export function createTransferService(deps: TransferDependencies): TransferServi
         suggestedMapping: suggestMapping(parsed.headers, fields, [
           englishLocale.recordIdLabel,
           locale.recordIdLabel,
-        ]),
+        ]).map((item) =>
+          isTimestampColumn(parsed.rows, item.column) &&
+          fields.find((field) => field.apiName === item.field)?.type === "picklist"
+            ? { column: item.column, field: null }
+            : item,
+        ),
         fields,
         matchFields: matchFields(metadata, module, locale),
       });

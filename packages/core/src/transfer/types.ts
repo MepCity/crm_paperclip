@@ -10,8 +10,10 @@ export const IMPORT_MODULES = [
   "Tasks",
   "Events",
   "Calls",
+  "Solutions",
+  "Cases",
 ] as const;
-export const TRANSFER_MODULES = [...IMPORT_MODULES, "Solutions", "Cases"] as const;
+export const TRANSFER_MODULES = IMPORT_MODULES;
 export type TransferModule = (typeof TRANSFER_MODULES)[number];
 export type ImportMode = "add" | "update" | "both";
 export type Charset = "UTF-8" | "ISO-8859-1";
@@ -156,6 +158,11 @@ export interface TransferDependencies {
   listActors: (ctx: OrgContext) => Promise<readonly Actor[]>;
   /** Resolves the caller's interface language; omitted means English. */
   locale?: (ctx: OrgContext) => Promise<TransferLocale>;
+  /**
+   * IANA time zone in which imported date-times without an offset are read (the importing
+   * user's zone). Omitted means Europe/Istanbul.
+   */
+  timeZone?: (ctx: OrgContext) => string | Promise<string>;
   now?: () => Date;
   limits?: Partial<TransferLimits>;
 }

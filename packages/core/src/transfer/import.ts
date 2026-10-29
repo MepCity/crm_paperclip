@@ -71,14 +71,72 @@ export function importMetadata(metadata: ModuleMetadata, module: TransferModule)
 }
 export const normalizeHeader = normalizeKey;
 
+/** Zone applied to source timestamps that carry no offset until organization/user settings exist. */
+export const DEFAULT_IMPORT_TIME_ZONE = "Europe/Istanbul";
+
+const offsetFormats = new Map<string, Intl.DateTimeFormat>();
+/** Offset of `timeZone` from UTC, in minutes, at the given instant. */
+function zoneOffsetMinutes(instant: number, timeZone: string): number {
+  let format = offsetFormats.get(timeZone);
+  if (!format) {
+    format = new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "numeric",
+      day: "numeric",
+      hour: "numeric",
+      minute: "numeric",
+      second: "numeric",
+    });
+    offsetFormats.set(timeZone, format);
+  }
+  const parts = format.formatToParts(new Date(instant));
+  const part = (type: string) => Number(parts.find((item) => item.type === type)?.value);
+  const local = Date.UTC(
+    part("year"),
+    part("month") - 1,
+    part("day"),
+    part("hour"),
+    part("minute"),
+    part("second"),
+  );
+  return Math.round((local - Math.floor(instant / 1000) * 1000) / 60_000);
+}
+
+/** True when the runtime knows the IANA zone. */
+export function isValidTimeZone(timeZone: string): boolean {
+  try {
+    new Intl.DateTimeFormat("en-US", { timeZone });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
 /**
- * Reads a source timestamp as a UTC instant: ISO 8601 (space or T, optional zone) or
- * day.month.year / day/month/year with an optional time. Returns null when it is not a date.
+ * The instant at which a zone's wall clock shows the given fields. The offset is solved from the
+ * zone rules, so the result is right on both sides of a daylight-saving change; a wall time that
+ * does not exist (clock moved forward) resolves to the instant just after the change.
  */
-export function parseSourceTime(raw: string): string | null {
+function wallClockToInstant(wall: number, timeZone: string): number {
+  let instant = wall - zoneOffsetMinutes(wall, timeZone) * 60_000;
+  instant = wall - zoneOffsetMinutes(instant, timeZone) * 60_000;
+  return wall - zoneOffsetMinutes(instant, timeZone) * 60_000;
+}
+
+/**
+ * Reads a source timestamp as a UTC instant. Accepts ISO 8601 (space or T, optional fraction,
+ * zone `Z` or `+03:00`) and day.month.year / day/month/year with an optional time. A value with
+ * no zone is read as wall-clock time in `timeZone`. Returns null when it is not a date.
+ */
+export function parseSourceTime(
+  raw: string,
+  timeZone: string = DEFAULT_IMPORT_TIME_ZONE,
+): string | null {
   const text = raw.trim();
   const iso =
-    /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?)?\s*(Z|[+-]\d{2}:?\d{2})?$/i.exec(
+    /^(\d{4})-(\d{2})-(\d{2})(?:[T ](\d{2}):(\d{2})(?::(\d{2})(?:\.\d+)?)?)?\s*(Z|[+-]\d{2}(?::?\d{2})?)?$/i.exec(
       text,
     );
   const local = /^(\d{1,2})[./](\d{1,2})[./](\d{4})(?:[ T](\d{1,2}):(\d{2})(?::(\d{2}))?)?$/.exec(
@@ -111,15 +169,31 @@ export function parseSourceTime(raw: string): string | null {
     sec > 59
   )
     return null;
-  const zone =
-    parts.zone && parts.zone.toUpperCase() !== "Z"
-      ? /([+-])(\d{2}):?(\d{2})/.exec(parts.zone)
-      : null;
-  if (zone) {
-    const minutes = Number(zone[2]) * 60 + Number(zone[3]);
-    date.setTime(date.getTime() - (zone[1] === "-" ? -minutes : minutes) * 60_000);
+  if (!parts.zone) {
+    const zone = isValidTimeZone(timeZone) ? timeZone : DEFAULT_IMPORT_TIME_ZONE;
+    return new Date(wallClockToInstant(date.getTime(), zone)).toISOString();
+  }
+  const offset = /^([+-])(\d{2}):?(\d{2})?$/.exec(parts.zone);
+  if (offset) {
+    const minutes = Number(offset[2]) * 60 + Number(offset[3] ?? 0);
+    date.setTime(date.getTime() - (offset[1] === "-" ? -minutes : minutes) * 60_000);
   }
   return date.toISOString();
+}
+
+/**
+ * True when every non-empty cell of a column is a date-time. Auto Mapping uses it to keep such a
+ * column off a picklist field (the reference "Reminder" column holds a time, ours an offset).
+ */
+export function isTimestampColumn(rows: readonly (readonly string[])[], column: number): boolean {
+  let seen = false;
+  for (const row of rows) {
+    const cell = (row[column] ?? "").trim();
+    if (!cell) continue;
+    if (!/\d[:.\-/]\d/.test(cell) || parseSourceTime(cell, "UTC") === null) return false;
+    seen = true;
+  }
+  return seen;
 }
 
 const SALUTATIONS = new Set(["bay", "bayan", "mr", "mrs", "ms", "miss", "dr", "prof", "sayin"]);
@@ -259,11 +333,21 @@ async function convert(
   raw: string,
   records: RecordService,
   actors: readonly Actor[],
-  idOnly = false,
+  activityReference = false,
   moduleHint?: string,
   optionLabels: (option: PicklistOption) => readonly string[] = () => [],
+  timeZone: string = DEFAULT_IMPORT_TIME_ZONE,
+  /** Picks among several name matches (for example by the related account); empty keeps all. */
+  narrow?: (
+    candidates: { module: string; id: string }[],
+  ) => Promise<{ module: string; id: string }[]>,
 ): Promise<FieldValue> {
   if (raw === "") return null;
+  if (field.dataType === "datetime") {
+    const instant = parseSourceTime(raw, timeZone);
+    if (!instant) throw new RowError("invalid_value", field.apiName);
+    return instant;
+  }
   if (["integer", "double", "currency"].includes(field.dataType)) {
     const value = Number(raw);
     if (!raw.trim() || !Number.isFinite(value)) throw new RowError("invalid_value", field.apiName);
@@ -296,7 +380,7 @@ async function convert(
     const modules = field.lookup?.modules ?? (field.lookup ? [field.lookup.module] : []);
     if (moduleHint && !modules.includes(moduleHint))
       throw new RowError("invalid_value", "$se_module");
-    const candidates: { module: string; id: string }[] = [];
+    let candidates: { module: string; id: string }[] = [];
     let unreadable = false;
     for (const module of modules) {
       if (moduleHint && module !== moduleHint) continue;
@@ -306,26 +390,37 @@ async function convert(
       } catch (error) {
         if (!isAppError(error)) throw error;
         if (error.code === "forbidden") {
-          if (!idOnly) throw error;
+          if (!activityReference) throw error;
           unreadable = true;
           continue;
         }
         // A name is not a valid id: fall through to the name lookup below.
-        if (idOnly) throw error;
         ids = [];
       }
       if (ids.length) {
         candidates.push(...ids.map((record) => ({ module, id: record.id })));
         continue;
       }
-      if (idOnly) continue;
-      const metadata = await records.getModule(module);
-      const name = nameFieldOf(metadata);
+      // A target module this deployment does not hold (for example Products) has no records.
+      const metadata = await records.getModule(module).catch((error: unknown) => {
+        if (isAppError(error) && error.code === "not_found") return undefined;
+        throw error;
+      });
+      const name = metadata && nameFieldOf(metadata);
       if (name) {
-        let found = await matching(records, module, name.apiName, raw);
-        if (!found.length) found = await fuzzyByName(records, module, name.apiName, raw);
-        candidates.push(...found.map((record) => ({ module, id: record.id })));
+        try {
+          let found = await matching(records, module, name.apiName, raw);
+          if (!found.length) found = await fuzzyByName(records, module, name.apiName, raw);
+          candidates.push(...found.map((record) => ({ module, id: record.id })));
+        } catch (error) {
+          if (!activityReference || !isAppError(error) || error.code !== "forbidden") throw error;
+          unreadable = true;
+        }
       }
+    }
+    if (candidates.length > 1 && narrow) {
+      const narrowed = await narrow(candidates);
+      if (narrowed.length) candidates = narrowed;
     }
     if (candidates.length !== 1)
       throw new RowError(
@@ -386,6 +481,7 @@ export async function importRows(
   locale: TransferLocale = englishLocale,
 ): Promise<string[]> {
   const actors = await deps.listActors(ctx);
+  const timeZone = (await deps.timeZone?.(ctx)) ?? DEFAULT_IMPORT_TIME_ZONE;
   const byName = new Map(metadata.fields.map((field) => [field.apiName, field]));
   /** A value that does not fit may be dropped when its field is optional and not the match key. */
   const droppable = (name: string) => {
@@ -394,6 +490,7 @@ export async function importRows(
   };
   const createdIds: string[] = [];
   const used = new Set<string>();
+  const referenceCache = new Map<string, { resolved: FieldValue } | { failure: RowError }>();
   for (const [index, row] of upload.rows.entries()) {
     try {
       const raw: Record<string, string> = Object.create(null);
@@ -436,7 +533,11 @@ export async function importRows(
       const values: Record<string, FieldValue> = Object.create(null);
       const warnings: { field: string; code: string }[] = [];
       const sourceTimes: { createdTime?: string; modifiedTime?: string } = {};
-      for (const field of metadata.fields) {
+      // The related record is read first: it tells apart several contacts of the same name.
+      const fieldOrder = [...metadata.fields].sort(
+        (a, b) => Number(b.apiName === "What_Id") - Number(a.apiName === "What_Id"),
+      );
+      for (const field of fieldOrder) {
         // The identifier is a matching key, never a writable record field.
         if (field.apiName === "id" || field.apiName === "$se_module") continue;
         const value = raw[field.apiName];
@@ -445,26 +546,83 @@ export async function importRows(
         if (TIME_FIELDS.has(field.apiName)) {
           // Source timestamps are carried over as given; Created Time only applies to new records.
           if (value === "" || (target && field.apiName === "Created_Time")) continue;
-          const instant = parseSourceTime(value);
+          const instant = parseSourceTime(value, timeZone);
           if (!instant) warnings.push({ field: field.apiName, code: "value_cleared" });
           else if (field.apiName === "Created_Time") sourceTimes.createdTime = instant;
           else sourceTimes.modifiedTime = instant;
           continue;
         }
-        if (!field.views[target ? "edit" : "create"])
+        if (!field.views[target ? "edit" : "create"]) {
+          // An empty cell (our own export carries such columns) has nothing to refuse.
+          if (value === "") continue;
           throw new RowError("permission_denied", field.apiName);
+        }
         try {
-          values[field.apiName] = await convert(
-            field,
-            value,
-            records,
-            actors,
-            activityModule(upload.module) && ["What_Id", "Who_Id"].includes(field.apiName),
+          const hint =
             activityModule(upload.module) && field.apiName === "What_Id"
               ? raw.$se_module
-              : undefined,
-            (option) => locale.optionLabels(upload.module, field, option),
-          );
+              : undefined;
+          const parent = values.What_Id;
+          const parentId =
+            activityModule(upload.module) &&
+            field.apiName === "Who_Id" &&
+            parent &&
+            typeof parent === "object" &&
+            "id" in parent &&
+            parent.module === "Accounts"
+              ? String(parent.id)
+              : undefined;
+          const narrow = parentId
+            ? async (candidates: { module: string; id: string }[]) => {
+                const kept: { module: string; id: string }[] = [];
+                for (const candidate of candidates) {
+                  if (candidate.module !== "Contacts") continue;
+                  try {
+                    const account = (await records.get("Contacts", candidate.id)).fields
+                      .Account_Name;
+                    if (
+                      account &&
+                      typeof account === "object" &&
+                      "id" in account &&
+                      account.id === parentId
+                    )
+                      kept.push(candidate);
+                  } catch {
+                    // An unreadable contact cannot be told apart; leave the choice to the caller.
+                  }
+                }
+                return kept;
+              }
+            : undefined;
+          const convertValue = () =>
+            convert(
+              field,
+              value,
+              records,
+              actors,
+              activityModule(upload.module) && ["What_Id", "Who_Id"].includes(field.apiName),
+              hint,
+              (option) => locale.optionLabels(upload.module, field, option),
+              timeZone,
+              narrow,
+            );
+          if (isReference(field) && field.dataType !== "ownerlookup") {
+            // The same related record is named on many rows: resolve each reference once per run.
+            const cacheKey = `${field.apiName}\u0000${hint ?? ""}\u0000${parentId ?? ""}\u0000${value}`;
+            let outcome = referenceCache.get(cacheKey);
+            if (!outcome) {
+              outcome = await convertValue().then(
+                (resolved) => ({ resolved }),
+                (error: unknown) => {
+                  if (error instanceof RowError) return { failure: error };
+                  throw error;
+                },
+              );
+              referenceCache.set(cacheKey, outcome);
+            }
+            if ("failure" in outcome) throw outcome.failure;
+            values[field.apiName] = outcome.resolved;
+          } else values[field.apiName] = await convertValue();
         } catch (error) {
           if (!(error instanceof RowError) || !droppable(field.apiName)) throw error;
           if (field.dataType === "ownerlookup" && error.code !== "invalid_value") {

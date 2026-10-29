@@ -663,15 +663,52 @@ describe("importRows", () => {
 
 describe("source timestamps", () => {
   it.each([
-    ["2026-10-29 14:05:00", "2026-10-29T14:05:00.000Z"],
-    ["29/10/2026 14:05", "2026-10-29T14:05:00.000Z"],
-    ["29.10.2026 14:05:17", "2026-10-29T14:05:17.000Z"],
-    ["2026-10-29T14:05:00+03:00", "2026-10-29T11:05:00.000Z"],
-    ["2024-02-29", "2024-02-29T00:00:00.000Z"],
-    ["31/02/2026 14:05", null],
-    ["2026-10-29 24:00:00", null],
-    ["invalid", null],
-  ])("parses %s without host date or timezone heuristics", (raw, expected) => {
-    expect(parseSourceTime(raw)).toBe(expected);
+    // No zone: wall-clock time in the given zone (default Europe/Istanbul, UTC+3 all year).
+    ["2026-10-29 14:05:00", undefined, "2026-10-29T11:05:00.000Z"],
+    ["2026-10-29 14:05", undefined, "2026-10-29T11:05:00.000Z"],
+    ["2026-10-29T14:05:00", undefined, "2026-10-29T11:05:00.000Z"],
+    ["2026-10-29T14:05:00.250", undefined, "2026-10-29T11:05:00.000Z"],
+    ["29/10/2026 14:05", undefined, "2026-10-29T11:05:00.000Z"],
+    ["29.10.2026 14:05:17", undefined, "2026-10-29T11:05:17.000Z"],
+    ["2024-02-29", undefined, "2024-02-28T21:00:00.000Z"],
+    // Explicit zone wins over the importing user's zone.
+    ["2026-10-29T14:05:00Z", "America/New_York", "2026-10-29T14:05:00.000Z"],
+    ["2026-10-29T14:05:00+03:00", "America/New_York", "2026-10-29T11:05:00.000Z"],
+    ["2026-10-29 14:05:00 -0500", "Europe/Istanbul", "2026-10-29T19:05:00.000Z"],
+    ["2026-10-29T14:05:00+03", "Europe/Istanbul", "2026-10-29T11:05:00.000Z"],
+    // Zone rules, not a fixed offset: the same wall time lands on different instants by season.
+    ["2026-01-15 09:00:00", "Europe/Berlin", "2026-01-15T08:00:00.000Z"],
+    ["2026-07-15 09:00:00", "Europe/Berlin", "2026-07-15T07:00:00.000Z"],
+    ["2026-01-15 09:00:00", "America/New_York", "2026-01-15T14:00:00.000Z"],
+    ["2026-07-15 09:00:00", "America/New_York", "2026-07-15T13:00:00.000Z"],
+    ["2026-07-15 09:00:00", "UTC", "2026-07-15T09:00:00.000Z"],
+    // Either side of the Berlin change (2026-03-29 02:00 -> 03:00) and the New York change back.
+    ["2026-03-29 01:59:00", "Europe/Berlin", "2026-03-29T00:59:00.000Z"],
+    ["2026-03-29 03:00:00", "Europe/Berlin", "2026-03-29T01:00:00.000Z"],
+    ["2026-11-01 00:30:00", "America/New_York", "2026-11-01T04:30:00.000Z"],
+    ["2026-11-01 03:00:00", "America/New_York", "2026-11-01T08:00:00.000Z"],
+    // An unknown zone name falls back to the default instead of throwing.
+    ["2026-10-29 14:05:00", "Not/AZone", "2026-10-29T11:05:00.000Z"],
+    ["31/02/2026 14:05", undefined, null],
+    ["2026-10-29 24:00:00", undefined, null],
+    ["2026-10-29 14:05:00 +25:00x", undefined, null],
+    ["invalid", undefined, null],
+  ])("parses %s in %s", (raw, zone, expected) => {
+    expect(parseSourceTime(raw, zone)).toBe(expected);
+  });
+
+  it("does not depend on the host time zone", () => {
+    const previous = process.env.TZ;
+    try {
+      for (const host of ["UTC", "Pacific/Auckland", "America/Los_Angeles"]) {
+        process.env.TZ = host;
+        expect(parseSourceTime("2026-07-15 09:00:00", "Europe/Istanbul")).toBe(
+          "2026-07-15T06:00:00.000Z",
+        );
+      }
+    } finally {
+      if (previous === undefined) delete process.env.TZ;
+      else process.env.TZ = previous;
+    }
   });
 });

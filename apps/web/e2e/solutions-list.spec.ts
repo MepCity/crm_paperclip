@@ -92,8 +92,11 @@ test("Solutions Actions menu and later-module controls stay inert", async ({ pag
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
 
-  // SL-13 (M6) and SL-32 (M11)
-  await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
+  // SL-13 and SL-32 (M11)
+  // The Create chevron offers the CSV import and opens on the first click.
+  await list.getByRole("button", { name: "More", exact: true }).click();
+  await expect(page.getByRole("menuitem", { name: "Import Solutions" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
   await expect(page.getByRole("menuitem", { name: "Manage Columns" })).toBeVisible();

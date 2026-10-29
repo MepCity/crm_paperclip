@@ -11,6 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { useUiTranslations } from "@/i18n/client-provider";
+import { downloadCsv, issuesCsv, issuesFileName } from "../import/issues";
 import { type ImportJob, reasonMessage } from "./types";
 
 export function ImportDetails({
@@ -69,7 +70,16 @@ export function ImportDetails({
                 ))}
               </TableBody>
             </Table>
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-2">
+              {rows.length > 0 ? (
+                <Button
+                  variant="secondary"
+                  size="record"
+                  onPress={() => downloadCsv(issuesFileName(job), issuesCsv(job, t))}
+                >
+                  {t("records.transfer.downloadIssues")}
+                </Button>
+              ) : null}
               <Button variant="secondary" size="record" onPress={close}>
                 {t("records.transfer.close")}
               </Button>

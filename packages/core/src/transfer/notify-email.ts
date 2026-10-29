@@ -4,6 +4,7 @@ import type { ImportJob } from "./types";
 export const IMPORT_NOTIFY_TEXT = {
   subject: {
     completed: "Import completed",
+    completed_with_warnings: "Import completed with warnings",
     completed_with_errors: "Import completed with errors",
     failed: "Import failed",
   },
@@ -34,6 +35,12 @@ export function buildImportNotifyEmail(
     throw new ValidationError({}, "No notification mail is sent for an undone import.");
   }
   const t = IMPORT_NOTIFY_TEXT;
+  const kind =
+    job.status === "completed_with_errors" &&
+    job.counts.errors === 0 &&
+    (job.counts.warnings ?? 0) > 0
+      ? "completed_with_warnings"
+      : job.status;
   const text = [
     t.greeting(recipient.name),
     "",
@@ -53,7 +60,7 @@ export function buildImportNotifyEmail(
   ].join("\n");
   return {
     to: [recipient],
-    subject: `${t.subject[job.status]}: ${job.fileName}`,
+    subject: `${t.subject[kind]}: ${job.fileName}`,
     text,
   };
 }

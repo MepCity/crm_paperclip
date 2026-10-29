@@ -24,13 +24,76 @@ function referenceWording(label: string): string[] {
     : [];
 }
 
+/**
+ * Header wording of the reference CRM's Turkish exports that differs from our catalogue, by
+ * module. Contact/related-record names read "İrtibat Adı" / "İlgilisi"; the meeting host is
+ * "Sahibi" (our own export writes "Düzenleyen", which the reference uses for the last editor, so
+ * a file carrying both maps the host once, to the first column).
+ */
+const moduleAliases: Record<string, Record<string, string[]>> = {
+  Tasks: {
+    Owner: ["Görev Sahibi"],
+    Who_Id: ["İrtibat Adı", "İrtibat"],
+    What_Id: ["İlgilisi", "İlgili"],
+  },
+  Events: {
+    Owner: ["Sahibi", "Toplantı Sahibi"],
+    Event_Title: ["Başlık", "Toplantı Başlığı"],
+    Venue: ["Konum"],
+    Who_Id: ["İrtibat Adı", "İrtibat"],
+    What_Id: ["İlgilisi", "İlgili"],
+    Start_DateTime: ["Başlangıç"],
+    End_DateTime: ["Bitiş"],
+    All_day: ["Tüm gün"],
+    Meeting_Venue__s: ["Toplantı Yeri"],
+    Meeting_Provider__s: ["Sağlayıcı"],
+    Remind_Participants: ["Katılımcı Hatırlatması"],
+  },
+  Calls: {
+    Subject: ["Konu"],
+    Who_Id: ["İrtibat Adı", "İrtibat"],
+    What_Id: ["İlgilisi", "İlgili"],
+    Call_Start_Time: ["Arama Saati"],
+    Call_Agenda: ["Arama Ajandası"],
+    Voice_Recording__s: ["Ses Kaydetme"],
+    Outgoing_Call_Status: ["Giden Arama Durumu"],
+  },
+  Solutions: {
+    Owner: ["Kayıt Sahibi", "Çözüm Sahibi"],
+    Solution_Title: ["Çözüm Başlığı", "Başlık"],
+    Status: ["Durum"],
+    Product_Name: ["Ürün Adı", "Ürün"],
+    Question: ["Soru"],
+    Answer: ["Cevap", "Yanıt"],
+    Published: ["Yayınlandı"],
+  },
+  Cases: {
+    Owner: ["Kayıt Sahibi", "Servis Dosyası Sahibi", "Servis Dosyası Kayıt Sahibi"],
+    Subject: ["Konu"],
+    Status: ["Durum"],
+    Priority: ["Öncelik"],
+    Type: ["Tip", "Tür"],
+    Case_Origin: ["Servis Dosyası Kaynağı", "Kaynak"],
+    Case_Reason: ["Servis Dosyası Nedeni", "Neden"],
+    Product_Name: ["Ürün Adı", "Ürün"],
+    Related_To: ["İlgilisi", "İlgili"],
+    Reported_By: ["Bildiren"],
+    Account_Name: ["Firma Adı", "Firma"],
+    Contact_Name: ["Kişi Adı", "İrtibat Adı"],
+    Deal_Name: ["Satış Fırsatı Adı", "Fırsat Adı"],
+    Internal_Comments: ["İç Yorumlar"],
+    Solution: ["Çözüm"],
+    Description: ["Açıklama"],
+  },
+};
+
 export function createTransferLocale(language: UiLanguage): TransferLocale {
   const t = translator(language);
   return {
     language,
     fieldLabel: (_module, field) => builtInLabel(language, field),
     moduleLabel: (module) => t(`metadata.modules.${module}.plural` as MessageKey),
-    fieldAliases: (_module, field) => {
+    fieldAliases: (module, field) => {
       const turkishLabel = builtInLabel("tr", field);
       if ("custom" in field && field.custom) return [];
       const aliases = [turkishLabel, ...referenceWording(turkishLabel)];
@@ -42,6 +105,7 @@ export function createTransferLocale(language: UiLanguage): TransferLocale {
         Modified_Time: ["Düzenleme Tarihi", "Değiştirme Zamanı"],
       };
       aliases.push(...(scalar[field.apiName] ?? []));
+      aliases.push(...(moduleAliases[module]?.[field.apiName] ?? []));
       const address = /^(Billing|Shipping|Mailing|Other)_(.+)$/.exec(field.apiName);
       const part = address?.[2] ?? field.apiName;
       const prefixes: Record<string, string[]> = {

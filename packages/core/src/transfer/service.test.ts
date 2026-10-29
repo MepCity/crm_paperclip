@@ -608,6 +608,12 @@ const activityInputs = {
   },
 } satisfies Record<string, Record<string, string>>;
 
+async function idsOf(s: ReturnType<typeof setup>, module: TransferModule): Promise<string[]> {
+  const view = (await s.records.listViews(module)).find((item) => item.isDefault);
+  const list = await s.records.list(module, { viewId: view?.id ?? "", page: 1, perPage: 100 });
+  return list.records.map((record) => record.id);
+}
+
 describe("activity transfers", () => {
   it.each(["Tasks", "Events", "Calls"] as const)(
     "%s imports, exports, updates by Record Id and undoes through generic delete",
@@ -700,18 +706,21 @@ describe("activity transfers", () => {
   });
 
   it.each(["Tasks", "Events", "Calls"] as const)(
-    "%s rejects parent names, unknown and unreadable IDs with row errors",
+    "%s resolve related records by id or name and warn on unknown, ambiguous and unreadable ones",
     async (module) => {
       const s = setup();
       const parent = await s.records.create("Accounts", { Account_Name: "Named parent" });
+      await s.records.create("Accounts", { Account_Name: "Twin parent" });
+      await s.records.create("Accounts", { Account_Name: "Twin parent" });
       const get = s.records.get.bind(s.records);
       vi.spyOn(s.records, "get").mockImplementation(async (name, id) => {
         if (name === "Accounts" && id === parent.id) throw new ForbiddenError();
         return get(name, id);
       });
       for (const [value, code] of [
-        ["Named parent", "not_found"],
         ["missing-id", "not_found"],
+        ["No such parent", "not_found"],
+        ["Twin parent", "multiple_matches"],
         [parent.id, "permission_denied"],
       ]) {
         const job = await s.run(module, [
@@ -720,10 +729,23 @@ describe("activity transfers", () => {
         expect(job.counts).toMatchObject({ created: 1, errors: 0, warnings: 1 });
         expect(job.rows).toEqual([{ row: 2, outcome: "warning", code, field: "What_Id" }]);
       }
+      vi.mocked(s.records.get).mockImplementation(get);
+      for (const value of ["Named parent", "  named PARENT "]) {
+        const before = await idsOf(s, module);
+        const job = await s.run(module, [
+          { ...activityInputs[module], What_Id: value, $se_module: "Accounts" },
+        ]);
+        expect(job.counts).toMatchObject({ created: 1, errors: 0 });
+        expect(job.counts.warnings).toBeUndefined();
+        const added = (await idsOf(s, module)).filter((id) => !before.includes(id));
+        expect(added).toHaveLength(1);
+        const saved = await s.records.get(module, added[0] ?? "");
+        expect(saved.fields.What_Id).toMatchObject({ module: "Accounts", id: parent.id });
+      }
       const person = await s.records.create("Contacts", { Last_Name: "Named person" });
       for (const [value, code] of [
-        ["Named person", "not_found"],
         ["missing-person-id", "not_found"],
+        ["Nobody Here", "not_found"],
         [person.id, "permission_denied"],
       ]) {
         vi.mocked(s.records.get).mockImplementation(async (name, id) => {
@@ -733,6 +755,15 @@ describe("activity transfers", () => {
         const job = await s.run(module, [{ ...activityInputs[module], Who_Id: value ?? "" }]);
         expect(job.rows).toEqual([{ row: 2, outcome: "warning", code, field: "Who_Id" }]);
       }
+      vi.mocked(s.records.get).mockImplementation(get);
+      const before = await idsOf(s, module);
+      const named = await s.run(module, [{ ...activityInputs[module], Who_Id: "named person" }]);
+      expect(named.counts).toMatchObject({ created: 1, errors: 0 });
+      expect(named.counts.warnings).toBeUndefined();
+      const added = (await idsOf(s, module)).filter((id) => !before.includes(id));
+      expect((await s.records.get(module, added[0] ?? "")).fields.Who_Id).toMatchObject({
+        id: person.id,
+      });
       const invalid = await s.run(module, [
         { ...activityInputs[module], What_Id: parent.id, $se_module: "Tasks" },
       ]);
@@ -743,7 +774,84 @@ describe("activity transfers", () => {
   );
 });
 
-describe.each(["Solutions", "Cases"] as const)("%s export-only transfer", (module) => {
+describe("date-time import formats", () => {
+  const fields = {
+    Events: ["Start_DateTime", "End_DateTime"],
+    Calls: ["Call_Start_Time"],
+  } as const;
+  const wall = [
+    "2026-10-29 14:05:00",
+    "2026-10-29 14:05",
+    "2026-10-29T14:05:00",
+    "29/10/2026 14:05",
+    "29.10.2026 14:05:00",
+  ];
+  const zoned = [
+    ["2026-10-29T11:05:00Z", "2026-10-29T11:05:00.000Z"],
+    ["2026-10-29T14:05:00+03:00", "2026-10-29T11:05:00.000Z"],
+    ["2026-10-29 14:05:00+0300", "2026-10-29T11:05:00.000Z"],
+    ["2026-10-29T06:05:00-05:00", "2026-10-29T11:05:00.000Z"],
+  ] as const;
+  const read = async (s: ReturnType<typeof setup>, module: "Events" | "Calls", value: string) => {
+    const before = await idsOf(s, module);
+    const input: Record<string, string> = { ...activityInputs[module] };
+    for (const name of fields[module]) input[name] = value;
+    const job = await s.run(module, [input, { ...input, [fields[module][0]]: "not a date" }]);
+    const added = (await idsOf(s, module)).filter((id) => !before.includes(id));
+    return { job, saved: await Promise.all(added.map((id) => s.records.get(module, id))) };
+  };
+  it.each(["Events", "Calls"] as const)(
+    "%s reads zone-less values in the importing user's zone and honours explicit offsets",
+    async (module) => {
+      for (const [zone, expected] of [
+        [undefined, "2026-10-29T11:05:00.000Z"],
+        ["UTC", "2026-10-29T14:05:00.000Z"],
+        ["America/New_York", "2026-10-29T18:05:00.000Z"],
+      ] as const) {
+        const s = setup(zone ? { timeZone: () => zone } : {});
+        for (const value of wall) {
+          const { job, saved } = await read(s, module, value);
+          expect(job.counts).toMatchObject({ created: 1, errors: 1 });
+          const stored = saved.map((record) => record.fields[fields[module][0]]);
+          expect(stored).toContain(expected);
+        }
+      }
+      const s = setup({ timeZone: () => "Pacific/Auckland" });
+      for (const [value, expected] of zoned) {
+        const { saved } = await read(s, module, value);
+        expect(saved.map((record) => record.fields[fields[module][0]])).toContain(expected);
+      }
+    },
+    20_000,
+  );
+  it.each(["Events", "Calls"] as const)(
+    "%s rejects an unreadable required date-time",
+    async (module) => {
+      const s = setup();
+      const { job } = await read(s, module, "2026-10-29 14:05:00");
+      expect(job.rows).toEqual([
+        { row: 3, outcome: "error", code: "invalid_value", field: fields[module][0] },
+      ]);
+    },
+  );
+  it("reads Created Time and Modified Time in the importing user's zone", async () => {
+    const s = setup({ timeZone: async () => "Europe/Berlin" });
+    const job = await s.run("Contacts", [
+      {
+        Last_Name: "Zone Test",
+        Email: "zone@example.test",
+        Created_Time: "2026-07-15 09:00:00",
+        Modified_Time: "2026-01-15T09:00:00",
+      },
+    ]);
+    expect(job.counts).toMatchObject({ created: 1, errors: 0 });
+    const saved = await contactByEmail(s.records, "zone@example.test");
+    expect(saved.Created_Time).toBe("2026-07-15T07:00:00.000Z");
+    expect(saved.Modified_Time).toBe("2026-01-15T08:00:00.000Z");
+  });
+});
+
+describe.each(["Solutions", "Cases"] as const)("%s export and import", (module) => {
   it("exports selected metadata fields and records, history and tenant isolation", async () => {
     const s = setup();
     const field = module === "Solutions" ? "Solution_Title" : "Subject";
@@ -782,22 +890,15 @@ describe.each(["Solutions", "Cases"] as const)("%s export-only transfer", (modul
     expect(all.rowCount).toBeGreaterThanOrEqual(1);
     expect(s.authorize).toHaveBeenCalledWith(s.ctx, module, "read");
   });
-  it("keeps import preview, execution and samples unavailable", async () => {
+  it("offers import preview, execution and a sample file", async () => {
     const s = setup();
-    await expect(s.preview(module, ["Subject"], [["Example"]])).rejects.toMatchObject({
-      code: "validation",
-    });
-    await expect(
-      s.service.runImport(s.ctx, module, "missing", {
-        mode: "add",
-        ignoreEmptyOnUpdate: false,
-        mapping: [],
-        defaults: [],
-      }),
-    ).rejects.toMatchObject({ code: "validation" });
-    await expect(s.service.sampleCsv(s.ctx, module)).rejects.toMatchObject({
-      code: "validation",
-    });
+    const title = module === "Solutions" ? "Solution_Title" : "Subject";
+    const preview = await s.preview(module, [title], [["Example"]]);
+    expect(preview.matchFields).toEqual([{ field: "id", label: "Record Id" }]);
+    expect(preview.suggestedMapping).toEqual([{ column: 0, field: title }]);
+    expect((await s.service.sampleCsv(s.ctx, module)).body).toContain(
+      module === "Solutions" ? "Solution Title" : "Subject",
+    );
   });
 });
 
@@ -956,7 +1057,8 @@ describe("second round of real-data import behaviour", () => {
     ]);
     expect(job.counts).toMatchObject({ created: 2, errors: 0, warnings: 1 });
     const kept = await contactByEmail(s.records, "g@example.test");
-    expect(kept.Created_Time).toBe("2025-03-04T14:22:00.000Z");
+    // No offset: read in the default zone (Europe/Istanbul, UTC+3).
+    expect(kept.Created_Time).toBe("2025-03-04T11:22:00.000Z");
     expect(kept.Modified_Time).toBe("2025-03-05T05:00:00.000Z");
     expect(job.rows).toEqual([
       { row: 3, outcome: "warning", code: "value_cleared", field: "Created_Time" },

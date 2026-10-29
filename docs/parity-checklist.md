@@ -1019,6 +1019,22 @@ and is unchanged; `import-wizard.test.tsx` pins it.
   Lost and Closed Lost to Competition remain distinct. Composite export headers, dialog module
   labels, dated filenames and import tab titles follow the interface language. Synthetic tests
   cover the mappings and stored values; customer data is never a fixture.
+- **Fourth CSV round:** date-time values (every import module, including Created Time and
+  Modified Time) accept ISO 8601 with `Z` or an offset (taken as given) and zone-free
+  `YYYY-MM-DD HH:mm(:ss)` / `T` variants, `DD/MM/YYYY` and `DD.MM.YYYY` (read as wall-clock time in the
+  importing user's zone). No per-user zone setting exists yet, so the default is `Europe/Istanbul`
+  (`DEFAULT_TIME_ZONE`); DST is resolved per date. This replaces the earlier UTC reading of zone-free
+  Created/Modified Time. Tasks, Meetings and Calls auto-map the contact column (`İrtibat Adı`, Who_Id)
+  and the related-to column (`İlgilisi`, What_Id); both resolve by id first, then by name (contacts
+  salutation-insensitive, related records across the target modules, narrowed by the related account
+  when contact names repeat); not found, ambiguous or unreadable gives a warning and an empty cell.
+  Dotted `.id` columns stay unmapped, and an all-timestamp column is not mapped onto a picklist.
+  The summary heading reads "Import completed with warnings" / "İçe aktarma tamamlandı (uyarılarla)"
+  when no row failed but warnings exist (history badge and notification subject follow). Warning and
+  error lists page 50 at a time with Show more / Show all, and "Download warnings and errors (CSV)"
+  (row, type, field, reason only; also in the history details dialog). Solutions and Cases are
+  importable with the same wizard, mapping, history and undo. The Create chevron opens on the first
+  press even while another toolbar menu is open (`SplitButton`).
 - **Language:** wizard, export dialog, history, toasts, errors and the list "Import/Export <Module>"
   items come from `records.transfer.*` in the EN and TR catalogues.
 - **Export toast:** stays until dismissed; Download fetches the file and saves it through a

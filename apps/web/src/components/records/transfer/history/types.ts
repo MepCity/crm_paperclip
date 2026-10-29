@@ -30,12 +30,16 @@ export { TRANSFER_MODULES } from "@crm/core/transfer/types";
 
 export const IMPORT_STATUS_KEYS = {
   completed: "records.transfer.statusCompleted",
+  completed_with_warnings: "records.transfer.statusCompletedWithWarnings",
   completed_with_errors: "records.transfer.statusCompletedWithErrors",
   failed: "records.transfer.statusFailed",
   undone: "records.transfer.statusUndone",
-} as const satisfies Record<ImportJob["status"], MessageKey>;
+} as const satisfies Record<ReturnType<typeof displayStatus>, MessageKey>;
+
+import { displayStatus } from "../import/issues";
 
 export { reasonMessage } from "../import/types";
+export { displayStatus };
 
 export function formatTime(iso: string, locale = "en-US"): string {
   const d = new Date(iso);

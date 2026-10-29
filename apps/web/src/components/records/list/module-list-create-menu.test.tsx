@@ -8,10 +8,12 @@ import { ApiProvider } from "@/lib/api/client/provider";
 import { accountsListPageConfig } from "@/modules/accounts/list-config";
 import { callsListPageConfig } from "@/modules/calls/list-config";
 import { campaignsListPageConfig } from "@/modules/campaigns/list-config";
+import { casesListPageConfig } from "@/modules/cases/list-config";
 import { contactsListPageConfig } from "@/modules/contacts/list-config";
 import { dealsListPageConfig } from "@/modules/deals/list-config";
 import { leadsListPageConfig } from "@/modules/leads/list-config";
 import { meetingsListPageConfig } from "@/modules/meetings/list-config";
+import { solutionsListPageConfig } from "@/modules/solutions/list-config";
 import { tasksListPageConfig } from "@/modules/tasks/list-config";
 import { ModuleListScreen } from "./module-list-screen";
 
@@ -61,6 +63,8 @@ describe("Create button chevron menu", () => {
     ["Tasks", tasksListPageConfig, "Import Tasks"],
     ["Meetings", meetingsListPageConfig, "Import Meetings"],
     ["Calls", callsListPageConfig, "Import Calls"],
+    ["Solutions", solutionsListPageConfig, "Import Solutions"],
+    ["Cases", casesListPageConfig, "Import Cases"],
   ])(
     "opens on the first click for %s and navigates to the import page",
     async (_name, config, label) => {

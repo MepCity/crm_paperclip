@@ -16,6 +16,7 @@ import { useUiLanguage, useUiTranslations } from "@/i18n/client-provider";
 import { useUtilityLabel } from "@/i18n/utility-labels";
 import { ImportDetails } from "./import-details";
 import {
+  displayStatus,
   formatTime,
   IMPORT_STATUS_KEYS,
   type ImportHistoryProps,
@@ -26,6 +27,7 @@ import { UndoImportDialog } from "./undo-import-dialog";
 
 const STATUS_VARIANT = {
   completed: "success",
+  completed_with_warnings: "success",
   completed_with_errors: "warning",
   failed: "danger",
   undone: "neutral",
@@ -123,8 +125,8 @@ export function ImportHistory({
                     <TableCell>{j.counts.skipped}</TableCell>
                     <TableCell>{j.counts.errors}</TableCell>
                     <TableCell>
-                      <Badge variant={STATUS_VARIANT[j.status]}>
-                        {t(IMPORT_STATUS_KEYS[j.status])}
+                      <Badge variant={STATUS_VARIANT[displayStatus(j)]}>
+                        {t(IMPORT_STATUS_KEYS[displayStatus(j)])}
                       </Badge>
                     </TableCell>
                     <TableCell>

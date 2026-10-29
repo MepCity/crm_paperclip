@@ -134,8 +134,8 @@ for (const language of ["tr", "en"] as const) {
           expect(saved.fields.Ticker_Symbol).toBe("SYN");
           expect(saved.fields.SIC_Code).toBe(6201);
         }
-        expect(saved.fields.Created_Time).toBe("2026-10-29T14:05:00.000Z");
-        expect(saved.fields.Modified_Time).toBe("2026-10-29T14:06:00.000Z");
+        expect(saved.fields.Created_Time).toBe("2026-10-29T11:05:00.000Z");
+        expect(saved.fields.Modified_Time).toBe("2026-10-29T11:06:00.000Z");
       },
     );
     it("maps employee count, ticker and industry code aliases", async () => {
