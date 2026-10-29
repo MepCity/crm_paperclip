@@ -12,6 +12,7 @@ export interface ParentActivityRow {
   href: string;
   dateText: string | null;
   ownerName: string | null;
+  contactName?: string | null;
   details: readonly { label: string; value: string }[];
 }
 
@@ -77,6 +78,12 @@ export function ActivityCategoriesCardBody({
                         <span>{row.ownerName}</span>
                       </div>
                     )}
+                    {row.contactName ? (
+                      <div className="activity-categories-owner" data-part="contact">
+                        <Icons.phone size={16} aria-hidden="true" />
+                        <span>{row.contactName}</span>
+                      </div>
+                    ) : null}
                     {row.details.length > 0 && (
                       <dl className="activity-categories-details">
                         {row.details.map((detail) => (

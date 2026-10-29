@@ -92,6 +92,7 @@ describe("buildParentActivityCategories", () => {
       dateText: "2026-02-01",
       date: "2026-02-01",
       ownerName: "Ayşe",
+      contactName: null,
       details: [{ label: "L:Status", value: "Not Started" }],
     });
     const closed = buildParentActivityCategories({ ...base, records, variant: "closed" })[0];
@@ -99,6 +100,26 @@ describe("buildParentActivityCategories", () => {
       { label: "L:Closed_Time", value: "2026-01-02 10:00" },
     ]);
     expect(closed?.rows[0]?.ownerName).toBeNull();
+  });
+
+  it("carries the contact a call is with, next to its start time", () => {
+    const records = {
+      ...empty,
+      call: [
+        rec("9", {
+          Subject: "Follow-up",
+          Call_Start_Time: "2026-02-03T11:00:00Z",
+          Who_Id: { module: "Contacts", id: "c1", name: "Jane Example" },
+        }),
+      ],
+    };
+    const [, , call] = buildParentActivityCategories({ ...base, records, variant: "open" });
+    expect(call?.rows[0]).toMatchObject({
+      subject: "Follow-up",
+      href: "/call/9",
+      dateText: "2026-02-03 11:00",
+      contactName: "Jane Example",
+    });
   });
 
   it("sorts ascending (open) / descending (closed) with empty dates last", () => {
