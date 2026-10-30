@@ -40,7 +40,7 @@ Sources: `chat-shell`, `chat-chats`, `chat-contacts`, `chat-pins`.
 | 2 | Footer, middle: Chats / Sohbetler, chat icon | Opens Recent conversations. Selected footer entry is highlighted. |
 | 3 | Footer, right: Contacts / Kişiler, people icon | Opens the contact list, initially Frequents. These are messaging contacts, not CRM contact records. |
 | 4 | Header, left: avatar and Current user | Displays the signed-in user's identity. No profile editing inspected. |
-| 5 | Header, below name: presence dot, Available and caret | Current user has a green dot and Available label. Menu was not opened; no status changes authorized. |
+| 5 | Header, below name: presence dot, Available and caret | Current user has a green dot and Available label. Menu was not opened; status changes need immediate logged restoration within the authorized window. |
 | 6 | Header, right: diagonal arrows, accessible name Enlarge | Maximize affordance. Not activated because preference persistence is unverified and layout preference writes are forbidden. |
 | 7 | Header, far right: X, accessible name Minimize | Panel dismissal affordance; despite X artwork, accessibility calls it Minimize. Not activated. |
 | 8 | Below header, left: Search (Ctrl + Space), magnifier | Editable search field; shortcut is advertised, not exercised. No text was entered. |
@@ -114,7 +114,7 @@ Source: `chat-quick-actions`. The panel is dimmed behind an inset menu. Controls
 The control inventory reports the lower items with `aria-disabled=false`, even
 though their screenshot treatment is gray beneath the service-access notice.
 Record this accessibility/visual discrepancy; do not claim a verified enabled
-channel-creation flow or click through the access restriction.
+channel-creation flow. A subsequent safe opening attempt is documented below; no access restriction was bypassed.
 
 ### Invitation dialog
 
@@ -248,9 +248,9 @@ implied by this UI research.
    service or change settings to investigate.
 2. No existing direct conversation, channel or thread was available to open.
    Their headers, composer tools, message ordering, replies, menus, populated
-   pins and message actions remain unobserved. Never create test content here.
+   pins and message actions remain unobserved. Test writes require the supported, scoped capture-tool window described below.
 3. Maximize/minimize persistence is unknown. The controls are inventoried, but
-   no maximized screenshot was obtained under the layout-preference prohibition.
+   no maximized screenshot was obtained; safe logged restoration support is pending.
 4. Search results, unread badges with nonzero values, presence transitions,
    realtime behavior and invitation validation/errors require further safe
    evidence or explicitly recorded design decisions. Do not synthesize them as
@@ -296,3 +296,40 @@ menu action; it was blocked. The group-start system-action POST was also
 blocked. No block was bypassed and no user selected. These capture restrictions
 and page errors can limit list completeness and must not become product error
 requirements without corroborating evidence.
+
+## Authorized chat window follow-up
+
+The board authorized CRM Analyst to observe Chat writes on 2026-10-31 until
+10:00 Istanbul (07:00 UTC), superseding the original read-only task scope for
+that interval only. Targets are restricted to self-chat and `ZZTEST-` channels
+with only the signed-in user. Other people must never be messaged, mentioned,
+invited or notified. Every write requires a durable change log and verified
+cleanup before expiry; settings require immediate restoration. After expiry,
+read-only rules apply again. This authorization does not disable capture guards.
+
+At 02:46–02:49 Istanbul, follow-up inspection established a tooling blocker:
+`write-window.mjs` fixes its expiry to 2026-10-26T04:00:00Z, and both write-policy
+versions omit Chat from their allowed modules. The observe-mode activation also
+requires a published policy and identity/recipient evidence. The existing local
+policies belong to the earlier window; none was reused or edited. Therefore no
+Chat write activation or reference write was attempted. Platform support is
+tracked in MEP-1417; it must supply tested, approved, scoped tool support before
+write research resumes. Permission alone does not make the present tool capable
+of safely observing self-chat, membership, message cleanup or restored settings.
+
+`chat-channel-start` is a **partial capture**, not a completed screen capture.
+Steps 1 and 2 opened Chats and Quick Actions. Step 3 targeted the uniquely named
+Create a Channel menu item with a normal click. It timed out after 15 seconds:
+the enclosing menu intercepted pointer events, while the target had disabled
+visual styling despite `aria-disabled=false`. Step screenshots and accessibility
+trees, network output and partial metadata were preserved. No channel dialog
+opened; no forced click, service connection or alternative selector was used.
+Seven background reminder/status/telemetry requests were blocked. This proves
+that the normal opening attempt failed in this session, not its root cause or
+the creation flow's behavior.
+
+The original 15 completed captures and 64-control inventory remain valid within
+their stated limits. The additional partial capture does not close acceptance
+gaps. Send/edit/delete/react/reply/pin/unpin, populated threads/channels/pins,
+nonzero unread states and maximized view remain pending. No test content or
+setting was created or changed in this follow-up, so no Chat cleanup was due.
