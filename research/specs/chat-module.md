@@ -313,8 +313,8 @@ versions omit Chat from their allowed modules. The observe-mode activation also
 requires a published policy and identity/recipient evidence. The existing local
 policies belong to the earlier window; none was reused or edited. Therefore no
 Chat write activation or reference write was attempted. Platform support is
-tracked in MEP-1417; it must supply tested, approved, scoped tool support before
-write research resumes. Permission alone does not make the present tool capable
+tracked in MEP-1417; tested, approved, scoped tool support would be required
+before write research resumes. Permission alone does not make the present tool capable
 of safely observing self-chat, membership, message cleanup or restored settings.
 
 `chat-channel-start` is a **partial capture**, not a completed screen capture.
@@ -333,3 +333,13 @@ their stated limits. The additional partial capture does not close acceptance
 gaps. Send/edit/delete/react/reply/pin/unpin, populated threads/channels/pins,
 nonzero unread states and maximized view remain pending. No test content or
 setting was created or changed in this follow-up, so no Chat cleanup was due.
+
+Platform disposition (MEP-1417, 2026-10-31): safe Chat write support cannot be
+provided within this window. The analyst must stay read-only; no tool files
+were changed. The expired REST-oriented policy cannot safely establish Chat
+transport, self-only membership and verified deletion. This is a platform
+constraint decision, not observed transport evidence or approval of invented
+reference behavior. Write-flow gaps above remain explicit. CTO/UI Lead must
+record any implementation choices for those gaps; they are not parity findings.
+The updated evidence-bounded research returns to independent review without
+claiming that every requested state has been captured.
