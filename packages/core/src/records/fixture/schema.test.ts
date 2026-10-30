@@ -180,8 +180,13 @@ describe("schema coordinated fixture records", () => {
       authorize: async () => {},
     } as unknown as TransferDependencies;
     const ids = await importRows(t.ctx, t.records, deps, upload, settings, metadata, "id", job);
-    expect(ids).toHaveLength(1);
-    expect(job.counts).toMatchObject({ created: 1, errors: 1 });
+    // An optional value over the length limit is cleared with a warning; the row is kept.
+    expect(ids).toHaveLength(2);
+    expect(job.counts).toMatchObject({ created: 2, errors: 0, warnings: 1 });
+    expect(job.rows).toEqual([
+      { row: 3, outcome: "warning", code: "value_cleared", field: "Custom_Note" },
+    ]);
+    expect((await t.records.get("Leads", ids[1] ?? "")).fields.Custom_Note ?? null).toBeNull();
     await t.patch({ "custom-note": { label: "New label" } });
     const staleJob = {
       ...job,

@@ -29,6 +29,20 @@ describe("buildImportNotifyEmail", () => {
     expect(buildImportNotifyEmail(job({ status }), to, links).subject).toBe(subject);
   });
 
+  it("calls a run with warnings but no failed row a success with warnings", () => {
+    const counts = { created: 5, updated: 0, skipped: 0, errors: 0, warnings: 2 };
+    expect(
+      buildImportNotifyEmail(job({ status: "completed_with_errors", counts }), to, links).subject,
+    ).toBe("Import completed with warnings: leads.csv");
+    expect(
+      buildImportNotifyEmail(
+        job({ status: "completed_with_errors", counts: { ...counts, errors: 1 } }),
+        to,
+        links,
+      ).subject,
+    ).toBe("Import completed with errors: leads.csv");
+  });
+
   it("throws for undone", () => {
     expect(() => buildImportNotifyEmail(job({ status: "undone" }), to, links)).toThrow(
       ValidationError,

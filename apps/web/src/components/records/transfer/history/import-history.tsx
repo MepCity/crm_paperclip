@@ -12,12 +12,13 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
-import { useUiTranslations } from "@/i18n/client-provider";
+import { useUiLanguage, useUiTranslations } from "@/i18n/client-provider";
 import { useUtilityLabel } from "@/i18n/utility-labels";
 import { ImportDetails } from "./import-details";
 import {
+  displayStatus,
   formatTime,
-  IMPORT_STATUS_LABELS,
+  IMPORT_STATUS_KEYS,
   type ImportHistoryProps,
   type ImportJob,
   TRANSFER_MODULES,
@@ -26,6 +27,7 @@ import { UndoImportDialog } from "./undo-import-dialog";
 
 const STATUS_VARIANT = {
   completed: "success",
+  completed_with_warnings: "success",
   completed_with_errors: "warning",
   failed: "danger",
   undone: "neutral",
@@ -41,6 +43,7 @@ export function ImportHistory({
 }: ImportHistoryProps) {
   const copy = useUtilityLabel();
   const t = useUiTranslations();
+  const locale = useUiLanguage() === "tr" ? "tr-TR" : "en-US";
   const [tab, setTab] = useState("history");
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [undoId, setUndoId] = useState<string | null>(null);
@@ -105,23 +108,25 @@ export function ImportHistory({
                   <TableHead>{copy("Added")}</TableHead>
                   <TableHead>{copy("Updated")}</TableHead>
                   <TableHead>{copy("Skipped")}</TableHead>
+                  <TableHead>{t("records.transfer.countFailed")}</TableHead>
                   <TableHead>{copy("Status")}</TableHead>
                   <TableHead>{copy("Actions")}</TableHead>
                 </tr>
               </TableHeader>
-              <TableBody columnCount={9} emptyMessage={copy("No imports in the last 7 days.")}>
+              <TableBody columnCount={10} emptyMessage={copy("No imports in the last 7 days.")}>
                 {jobs.map((j) => (
                   <TableRow key={j.id}>
                     <TableCell>{moduleLabel(j.module)}</TableCell>
                     <TableCell>{j.fileName}</TableCell>
                     <TableCell>{j.createdBy.name}</TableCell>
-                    <TableCell>{formatTime(j.createdAt)}</TableCell>
+                    <TableCell>{formatTime(j.createdAt, locale)}</TableCell>
                     <TableCell>{j.counts.created}</TableCell>
                     <TableCell>{j.counts.updated}</TableCell>
                     <TableCell>{j.counts.skipped}</TableCell>
+                    <TableCell>{j.counts.errors}</TableCell>
                     <TableCell>
-                      <Badge variant={STATUS_VARIANT[j.status]}>
-                        {IMPORT_STATUS_LABELS[j.status]}
+                      <Badge variant={STATUS_VARIANT[displayStatus(j)]}>
+                        {t(IMPORT_STATUS_KEYS[displayStatus(j)])}
                       </Badge>
                     </TableCell>
                     <TableCell>

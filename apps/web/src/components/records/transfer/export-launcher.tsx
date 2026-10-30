@@ -4,6 +4,9 @@ import type { ExportJob, TransferModule } from "@crm/core";
 import { useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { toast } from "@/components/ui/toast";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
+import { builtInViewLabel } from "@/i18n/record-labels";
 import { useModule, useTransferClient, useViews } from "@/lib/api/client/hooks";
 import { useOrgSlug } from "@/lib/api/client/provider";
 import { apiKeys } from "@/lib/api/client/query-keys";
@@ -26,32 +29,64 @@ export function ExportLauncher({
   open: boolean;
   onOpenChange(open: boolean): void;
 }) {
+  const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
   const orgSlug = useOrgSlug();
   const client = useTransferClient();
   const queryClient = useQueryClient();
   const moduleQuery = useModule(module);
   const viewsQuery = useViews(module);
+  const displayModuleLabel = adapter.getModulePlural(
+    module,
+    moduleQuery.data?.pluralLabel ?? moduleLabel,
+  );
   const fields = useMemo(
     () =>
       (moduleQuery.data?.fields ?? [])
         .filter((field) => field.views.view)
-        .map((field) => ({ apiName: field.apiName, label: field.label })),
-    [moduleQuery.data],
+        .map((field) => ({ apiName: field.apiName, label: adapter.getFieldLabel(module, field) })),
+    [moduleQuery.data, adapter, module],
   );
   const views = useMemo(
-    () => (viewsQuery.data ?? []).map((view) => ({ id: view.id, name: view.name })),
-    [viewsQuery.data],
+    () =>
+      (viewsQuery.data ?? []).map((view) => ({
+        id: view.id,
+        name: builtInViewLabel(
+          view,
+          moduleQuery.data?.pluralLabel ?? moduleLabel,
+          displayModuleLabel,
+          t,
+        ),
+      })),
+    [viewsQuery.data, moduleQuery.data?.pluralLabel, moduleLabel, displayModuleLabel, t],
   );
   const historyHref = exportHistoryPath(orgSlug);
+  /** Fetches the file and saves it through a temporary link, so one click always downloads. */
+  async function download(job: ExportJob) {
+    try {
+      const file = await client.downloadExport(job.id);
+      const url = URL.createObjectURL(file.blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = file.fileName;
+      document.body.append(link);
+      link.click();
+      link.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 10_000);
+    } catch {
+      toast({ variant: "danger", title: t("records.transfer.downloadFailed") });
+    }
+  }
   function completed(job: ExportJob) {
     void queryClient.invalidateQueries({ queryKey: apiKeys.exports(orgSlug) });
     toast({
       variant: "success",
-      title: "Export completed",
-      message: `${job.rowCount} records exported to ${job.fileName}.`,
+      persistent: true,
+      title: t("records.transfer.exportCompleted"),
+      message: t("records.transfer.exportDone", { count: job.rowCount, file: job.fileName }),
       actions: [
-        { label: "Download", href: client.exportDownloadUrl(job.id) },
-        { label: "View export history", href: historyHref },
+        { label: t("records.transfer.download"), onPress: () => void download(job) },
+        { label: t("records.transfer.viewExportHistory"), href: historyHref },
       ],
     });
   }
@@ -60,7 +95,7 @@ export function ExportLauncher({
       open={open}
       onOpenChange={onOpenChange}
       module={module}
-      moduleLabel={moduleLabel}
+      moduleLabel={displayModuleLabel}
       views={views}
       defaultViewId={viewId}
       selectedIds={selectedIds}

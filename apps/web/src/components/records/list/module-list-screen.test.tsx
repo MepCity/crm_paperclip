@@ -1825,3 +1825,18 @@ it("offers an effective custom column and filters retired fields without editing
   const originalView = await getView.mock.results[0]?.value;
   expect(originalView?.columns).not.toContain("Custom_Text");
 });
+
+it("opens View Settings and the column dialog on a screen with the inventory chrome", async () => {
+  const user = userEvent.setup();
+  const records = createFixtureRecordService(ctx);
+  const service = createClientRecordService(records, { listUsers: async () => [] });
+  render(<ModuleListScreen orgSlug={ctx.orgSlug} config={accountsListPageConfig} />, {
+    wrapper: wrapper(service),
+  });
+  await screen.findByRole("table", { name: "Records" });
+  const trigger = screen.getByRole("button", { name: "View Settings" });
+  expect(trigger.closest("[data-later-module]")).toBeNull();
+  await user.click(trigger);
+  await user.click(await screen.findByRole("menuitem", { name: "Manage Columns" }));
+  expect(await screen.findByRole("dialog", { name: /^Manage Columns/ })).toBeTruthy();
+});

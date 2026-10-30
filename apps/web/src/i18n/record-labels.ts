@@ -11,9 +11,12 @@ export function useRecordLabel() {
     if (entry) return t(`records.chrome.${entry[0]}` as MessageKey);
     const action = Object.entries(english.records.actions).find(([, value]) => value === label);
     if (action) return t(`records.actions.${action[0]}` as MessageKey);
-    for (const module of ["Campaigns", "Cases", "Solutions"] as const) {
-      if (label === `Export ${module}`)
-        return t("records.chrome.exportModule", { module: t(`metadata.modules.${module}.plural`) });
+    const transfer = english.records.transfer;
+    for (const [module, names] of Object.entries(english.metadata.modules)) {
+      if (label === `Export ${names.plural}` && Object.hasOwn(transfer.exportItem, module))
+        return t(`records.transfer.exportItem.${module}` as MessageKey);
+      if (label === `Import ${names.plural}` && Object.hasOwn(transfer.importItem, module))
+        return t(`records.transfer.importItem.${module}` as MessageKey);
     }
     if (label === "Edit") return t("common.actions.edit");
     return label;

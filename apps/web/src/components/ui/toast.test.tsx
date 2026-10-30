@@ -131,3 +131,19 @@ test("Toast renders link and button actions", async () => {
   expect(onPress).toHaveBeenCalledTimes(1);
   expect(screen.getByRole("link", { name: "View history" }).getAttribute("href")).toBe("/history");
 });
+
+test("A persistent toast stays after the default timeout", () => {
+  vi.useFakeTimers();
+  render(
+    <ToastProvider>
+      <div />
+    </ToastProvider>,
+  );
+  act(() => {
+    toast({ variant: "success", title: "Export completed", persistent: true });
+  });
+  act(() => {
+    vi.advanceTimersByTime(TOAST_TIMEOUT_MS * 20);
+  });
+  expect(screen.getByRole("alert").textContent).toContain("Export completed");
+});

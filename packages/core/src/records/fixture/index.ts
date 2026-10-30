@@ -33,6 +33,7 @@ import type {
   RecordData,
   RecordInput,
   RecordService,
+  RecordWriteOptions,
   RelatedModuleFilter,
 } from "../contract";
 import type { HistorySource, RecordHistoryEvent, RecordHistoryService } from "../history";
@@ -78,7 +79,7 @@ import { validateSchemaRecord } from "./schema-validation";
 import { relatedFilterHistory } from "./system-filter-history";
 import { fixtureTagService, projectTags } from "./tags";
 import { assertUniqueFieldValues, projectRecordsWithOverrides } from "./unique";
-import { validateInput } from "./validation";
+import { assertSourceTimes, validateInput } from "./validation";
 
 interface FixtureStore {
   schema?: InMemorySchemaCoordinator;
@@ -836,7 +837,11 @@ export function createFixtureRecordService(
     });
 
   /** Synchronous insert shared by create and the conversion coordinator; callers validate first. */
-  const insertRecord = (module: string, normalized: Record<string, FieldValue>): RecordData => {
+  const insertRecord = (
+    module: string,
+    normalized: Record<string, FieldValue>,
+    sourceTimes?: RecordWriteOptions["sourceTimes"],
+  ): RecordData => {
     const bundle = bundleFor(module);
     const moduleState = moduleStore(module);
     const id = String(moduleState.nextId++);
@@ -852,6 +857,10 @@ export function createFixtureRecordService(
       Created_By: ctx.userId,
       Modified_By: ctx.userId,
     });
+    if (sourceTimes?.createdTime && "Created_Time" in fields)
+      fields.Created_Time = sourceTimes.createdTime;
+    if (sourceTimes?.modifiedTime && "Modified_Time" in fields)
+      fields.Modified_Time = sourceTimes.modifiedTime;
     if (bundle.autoNumberField) assignAutoNumber(moduleState, bundle.autoNumberField, fields);
     bundle.applyRules?.(fields, normalized, undefined, hookContext);
     assertNoteParentVisible(module, fields);
@@ -1449,18 +1458,22 @@ export function createFixtureRecordService(
         throw new NotFoundError("Record not found.");
       return copy(resolveRead(module, record));
     },
-    async create(module, input) {
+    async create(module, input, options) {
       assertModuleWritable(module);
+      assertSourceTimes(options?.sourceTimes);
       const bundle = bundleFor(module);
       const stringFields = stringFieldNames(bundle);
       const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
       validateInput(normalized, false, relaxRequired(bundle, normalized), bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
-      return atomic({ module, mechanism: "create" }, () => insertRecord(module, normalized));
+      return atomic({ module, mechanism: "create" }, () =>
+        insertRecord(module, normalized, options?.sourceTimes),
+      );
     },
-    async update(module, id, input) {
+    async update(module, id, input, options) {
       assertModuleWritable(module);
+      assertSourceTimes(options?.sourceTimes);
       const bundle = bundleFor(module);
       recordFor(module, id);
       const stringFields = stringFieldNames(bundle);
@@ -1481,7 +1494,7 @@ export function createFixtureRecordService(
           ...copy(record.fields),
           ...normalized,
           Modified_By: ctx.userId,
-          Modified_Time: clock().toISOString(),
+          Modified_Time: options?.sourceTimes?.modifiedTime ?? clock().toISOString(),
         };
         bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext);
         fields[bundle.displayNameField] = bundle.fullName(fields);

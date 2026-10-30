@@ -4,7 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "@/components/ui/link";
 import { Select, SelectItem } from "@/components/ui/select";
-import { type Charset, MAX_FILE_BYTES } from "./types";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { type Charset, codeMessage, MAX_FILE_BYTES } from "./types";
 
 const CHARSETS = [{ id: "UTF-8" }, { id: "ISO-8859-1" }];
 
@@ -22,6 +23,7 @@ export interface UploadStepProps {
 export function UploadStep(props: UploadStepProps) {
   const { file, charset, error, sampleCsvUrl, disabled, onFileChange, onCharsetChange, onError } =
     props;
+  const t = useUiTranslations();
   const input = useRef<HTMLInputElement>(null);
   const [dragging, setDragging] = useState(false);
 
@@ -29,12 +31,12 @@ export function UploadStep(props: UploadStepProps) {
     if (!candidate) return;
     if (!candidate.name.toLowerCase().endsWith(".csv")) {
       onFileChange(null);
-      onError("Only CSV files are supported.");
+      onError(t("records.transfer.onlyCsv"));
       return;
     }
     if (candidate.size > MAX_FILE_BYTES) {
       onFileChange(null);
-      onError("File exceeds the 25 MB limit.");
+      onError(codeMessage("file_too_large", t) ?? null);
       return;
     }
     onError(null);
@@ -47,7 +49,7 @@ export function UploadStep(props: UploadStepProps) {
         {/* biome-ignore lint/a11y/useSemanticElements: drop zone wraps a real Browse button */}
         <div
           role="group"
-          aria-label="Upload file"
+          aria-label={t("records.transfer.uploadGroup")}
           data-dragging={dragging || undefined}
           onDragOver={(e) => {
             e.preventDefault();
@@ -70,24 +72,24 @@ export function UploadStep(props: UploadStepProps) {
                 variant="secondary"
                 size="sm"
                 isDisabled={disabled}
-                aria-label="Remove file"
+                aria-label={t("records.transfer.removeFile")}
                 onPress={() => {
                   onFileChange(null);
                   onError(null);
                 }}
               >
-                Remove
+                {t("records.transfer.remove")}
               </Button>
             </div>
           ) : (
             <>
-              <p className="text-sm text-text-muted">Drag and drop a CSV file here, or</p>
+              <p className="text-sm text-text-muted">{t("records.transfer.dragDrop")}</p>
               <Button
                 variant="secondary"
                 isDisabled={disabled}
                 onPress={() => input.current?.click()}
               >
-                Browse
+                {t("records.transfer.browse")}
               </Button>
             </>
           )}
@@ -109,11 +111,11 @@ export function UploadStep(props: UploadStepProps) {
           </p>
         ) : null}
         <Link href={sampleCsvUrl} variant="text" download prefetch={false}>
-          Download sample CSV file
+          {t("records.transfer.sampleCsv")}
         </Link>
       </section>
       <Select
-        label="Character encoding"
+        label={t("records.transfer.charset")}
         items={CHARSETS}
         selectedKey={charset}
         isDisabled={disabled}
@@ -121,11 +123,7 @@ export function UploadStep(props: UploadStepProps) {
       >
         {(item) => <SelectItem id={item.id}>{item.id}</SelectItem>}
       </Select>
-      <Checkbox
-        label="Notify me by email when the import is complete"
-        laterModule="M10"
-        isSelected={false}
-      />
+      <Checkbox label={t("records.transfer.notifyEmail")} laterModule="M10" isSelected={false} />
     </div>
   );
 }

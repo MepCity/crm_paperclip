@@ -9,6 +9,8 @@ export interface ParentActivityRow {
   /** Raw ISO sort date (due date, start or call start); null when the activity has none. */
   date: string | null;
   ownerName: string | null;
+  /** Contact (Who_Id) the activity is with, when it names one. */
+  contactName?: string | null;
   details: readonly { label: string; value: string }[];
 }
 export interface ParentActivityCategory {
@@ -149,6 +151,7 @@ export function buildParentActivityCategories(
         dateText: dateText(kind, record, input),
         date: sortDate(kind, record),
         ownerName: input.ownerName(record.fields.Owner),
+        contactName: text(record.fields.Who_Id),
         details: detailPairs(kind, record, input.variant, input),
       }),
     );

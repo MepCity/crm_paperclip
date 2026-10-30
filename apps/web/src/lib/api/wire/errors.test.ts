@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import {
+  AppError,
   ConflictError,
   ForbiddenError,
   isAppError,
@@ -214,5 +215,13 @@ describe("schema revision conflicts", () => {
     });
     expect(decodeError(400, encoded.body)).toBeInstanceOf(UnexpectedApiError);
     expect(decodeError(409, { ...encoded.body, details: {} })).toBeInstanceOf(UnexpectedApiError);
+  });
+});
+
+describe("transfer error codes", () => {
+  it("restores a CSV failure with its code so the UI can explain it", () => {
+    const encoded = encodeError(new AppError("duplicate_header", "The CSV file is invalid."));
+    const decoded = decodeError(encoded.status, JSON.parse(JSON.stringify(encoded.body)));
+    expect(decoded).toMatchObject({ code: "duplicate_header", name: "AppError" });
   });
 });

@@ -973,6 +973,73 @@ Interim rules: Retry in Export History opens the module list; Undo is offered fo
 is not already undone and the server re-checks the delete permission; selection export is
 disabled above 500 rows with the limit written in the menu label.
 
+### Module 6 real-data fixes (CSV exports of the reference CRM)
+
+Found by importing CSV exports of the reference CRM (Turkish interface) into the wizard. The
+wizard step order (Upload File, Record Handling, Field Mapping) already matches the documented
+flow in `csv-import-export.spec.ts` (file intake, record handling, mapping, submission, history)
+and is unchanged; `import-wizard.test.tsx` pins it.
+
+- **Repeated header names:** accepted. The second and later copies become "<name> (2)", "<name> (3)"
+  and stay unmapped by Auto Mapping. CSV error codes now reach the UI (the wire decoder used to turn
+  them into the generic message), so a rejected file shows its specific reason.
+- **Auto Mapping:** matches API name, English label and the Turkish label of our own catalogue
+  (plus the reference wording "Faturalama Adresi"), ignoring case, spacing, punctuation and
+  diacritics. Ambiguous or unknown headers stay unmapped. Server preview and the Auto Mapping button
+  share `packages/core/src/transfer/mapping.ts`.
+- **Values that do not fit:** picklists match case-, space-, punctuation- and diacritic-insensitively
+  on the stored value or display label (no Turkish option labels exist in the catalogue yet). A
+  value that still does not fit an optional, non-lookup field is left empty and the row is imported
+  with a per-row warning (`value_cleared`, shown in the summary and in History details). Required
+  fields, the matching field and lookup/owner failures still skip the row. Lookups try the id
+  first, then the record name. Boolean cells also accept yes/no and evet/hayır.
+- **History counts:** the job stores created, updated, skipped, errors and warnings. Every row is
+  counted once: the summary, History and details show Skipped (duplicates, existing records) and
+  Failed separately, never both for the same row. Warnings are listed alongside.
+- **Export:** owner and lookup columns carry the display name, followed by a "<Field> Id" column with
+  the id. Headers use the interface language ("Kayıt Id" for the record id in Turkish). Auto Mapping
+  prefers the name column of a reference field over its id column (the id is used only when no name
+  column exists; dotted `.id` columns are always excluded), and picklist columns carry the option's display label (Deals Stage carries its stored key), so an exported file can be
+  imported again.
+- **Second real-data round:** an unresolved owner becomes the importing user (new records only) with
+  an `owner_defaulted` warning; a lookup that is not found or ambiguous (for example a deal's
+  contact) is left empty with a warning unless the field is required. Contact names match on full
+  name, with or without a salutation (Mr., Ms., Bay, Bayan, ...), ignoring case, diacritics and
+  spacing. State / province fields (billing, shipping, mailing, other) accept free text. Created Time
+  and Modified Time can be mapped; ISO 8601 (space or T separator, optional zone),
+  `DD/MM/YYYY HH:mm` and `DD.MM.YYYY HH:mm` are converted to UTC; zone-free values are
+  interpreted as UTC. They are kept as the record's timestamps; an invalid value is cleared with a
+  warning. Created By and Modified By stay system-managed and cannot be mapped.
+- **Third CSV round:** composite billing/shipping/mailing/other and lead address headers accept
+  Turkish source wording, including `Açık Adres`, `Eyalet / İl` and `Ülke / Bölge`.
+  Employee count, ticker, industry-code and source-time aliases work in either interface language.
+  Dotted `.id` columns never auto-map, including a lone dotted id column. Owner fallback uses
+  its own message under the generic Warnings heading. Stage imports retain exact stored values;
+  expanded decision-maker labels resolve to the same key and exports preserve that key. Closed
+  Lost and Closed Lost to Competition remain distinct. Composite export headers, dialog module
+  labels, dated filenames and import tab titles follow the interface language. Synthetic tests
+  cover the mappings and stored values; customer data is never a fixture.
+- **Fourth CSV round:** date-time values (every import module, including Created Time and
+  Modified Time) accept ISO 8601 with `Z` or an offset (taken as given) and zone-free
+  `YYYY-MM-DD HH:mm(:ss)` / `T` variants, `DD/MM/YYYY` and `DD.MM.YYYY` (read as wall-clock time in the
+  importing user's zone). No per-user zone setting exists yet, so the default is `Europe/Istanbul`
+  (`DEFAULT_TIME_ZONE`); DST is resolved per date. This replaces the earlier UTC reading of zone-free
+  Created/Modified Time. Tasks, Meetings and Calls auto-map the contact column (`İrtibat Adı`, Who_Id)
+  and the related-to column (`İlgilisi`, What_Id); both resolve by id first, then by name (contacts
+  salutation-insensitive, related records across the target modules, narrowed by the related account
+  when contact names repeat); not found, ambiguous or unreadable gives a warning and an empty cell.
+  Dotted `.id` columns stay unmapped, and an all-timestamp column is not mapped onto a picklist.
+  The summary heading reads "Import completed with warnings" / "İçe aktarma tamamlandı (uyarılarla)"
+  when no row failed but warnings exist (history badge and notification subject follow). Warning and
+  error lists page 50 at a time with Show more / Show all, and "Download warnings and errors (CSV)"
+  (row, type, field, reason only; also in the history details dialog). Solutions and Cases are
+  importable with the same wizard, mapping, history and undo. The Create chevron opens on the first
+  press even while another toolbar menu is open (`SplitButton`).
+- **Language:** wizard, export dialog, history, toasts, errors and the list "Import/Export <Module>"
+  items come from `records.transfer.*` in the EN and TR catalogues.
+- **Export toast:** stays until dismissed; Download fetches the file and saves it through a
+  temporary link instead of a plain navigation.
+
 ## Module 7 — Campaigns
 
 ### Campaigns list

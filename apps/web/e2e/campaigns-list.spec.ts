@@ -111,6 +111,8 @@ test("Campaigns Actions menu and later-module controls stay inert", async ({ pag
 
   // CL-32 (M11)
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
+  await expect(page.getByRole("menuitem", { name: "Manage Columns" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   expect(page.url()).toBe(before);
 

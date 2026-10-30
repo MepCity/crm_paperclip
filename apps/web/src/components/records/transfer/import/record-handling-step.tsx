@@ -2,6 +2,7 @@
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup } from "@/components/ui/radio-group";
 import { Select, SelectItem } from "@/components/ui/select";
+import { useUiLanguage, useUiTranslations } from "@/i18n/client-provider";
 import type { ImportMode, ImportPreview } from "./types";
 
 export interface RecordHandlingStepProps {
@@ -17,24 +18,26 @@ export interface RecordHandlingStepProps {
 
 export function RecordHandlingStep(props: RecordHandlingStepProps) {
   const { moduleLabel, preview, mode, matchField, ignoreEmptyOnUpdate } = props;
-  const noun = moduleLabel.toLowerCase();
+  const t = useUiTranslations();
+  const language = useUiLanguage();
+  const noun = moduleLabel.toLocaleLowerCase(language === "tr" ? "tr-TR" : "en-US");
   return (
     <div className="flex flex-col gap-6">
       <RadioGroup
         name="import-mode"
-        label="How should records be handled?"
+        label={t("records.transfer.handlingQuestion")}
         value={mode}
         onChange={(value) => props.onModeChange(value as ImportMode)}
         options={[
-          { value: "add", label: `Add as new ${noun}` },
-          { value: "update", label: `Update existing ${noun} only` },
-          { value: "both", label: "Both" },
+          { value: "add", label: t("records.transfer.handlingAdd", { module: noun }) },
+          { value: "update", label: t("records.transfer.handlingUpdate", { module: noun }) },
+          { value: "both", label: t("records.transfer.handlingBoth") },
         ]}
       />
       {mode !== "add" ? (
         <>
           <Select
-            label="Find existing records by"
+            label={t("records.transfer.findBy")}
             items={preview.matchFields.map((f) => ({ id: f.field, name: f.label }))}
             selectedKey={matchField}
             onSelectionChange={(key) => props.onMatchFieldChange(String(key))}
@@ -42,7 +45,7 @@ export function RecordHandlingStep(props: RecordHandlingStepProps) {
             {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
           </Select>
           <Checkbox
-            label="Don't update empty values for existing records"
+            label={t("records.transfer.ignoreEmpty")}
             isSelected={ignoreEmptyOnUpdate}
             onChange={props.onIgnoreEmptyChange}
           />

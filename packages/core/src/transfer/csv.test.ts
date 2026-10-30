@@ -51,7 +51,8 @@ describe("parseCsv", () => {
   });
   it("validates headers", () => {
     expect(code(() => parseCsv(enc("a,,b\n1"), opts))).toMatchObject({ code: "no_header" });
-    expect(code(() => parseCsv(enc("a, A \n1"), opts))).toMatchObject({ code: "duplicate_header" });
+    expect(parseCsv(enc("a, A ,A,b\n1"), opts).headers).toEqual(["a", "A (2)", "A (3)", "b"]);
+    expect(parseCsv(enc("x,x (2),x\n1"), opts).headers).toEqual(["x", "x (2)", "x (3)"]);
     expect(code(() => parseCsv(enc(""), opts))).toMatchObject({ code: "empty_file" });
     expect(code(() => parseCsv(enc(" \n\n"), opts))).toMatchObject({ code: "empty_file" });
   });

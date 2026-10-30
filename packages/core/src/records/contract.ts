@@ -293,7 +293,12 @@ export interface ListResult {
 
 /** Required by schema-coordinated adapters; conversion supplies every target module token. */
 export interface RecordWriteOptions {
-  expectedRevision: string | Readonly<Record<string, string>>;
+  expectedRevision?: string | Readonly<Record<string, string>>;
+  /**
+   * Source timestamps kept by a data import (ISO 8601, UTC). Only the import path sets them;
+   * `createdTime` applies to create, `modifiedTime` to create and update.
+   */
+  sourceTimes?: { createdTime?: string; modifiedTime?: string };
 }
 
 export type RecordInput = Readonly<Record<string, FieldValue>>;
