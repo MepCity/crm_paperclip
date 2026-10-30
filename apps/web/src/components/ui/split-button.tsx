@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { Button } from "./button";
 import { Icons } from "./icon";
 import type { ModuleKey } from "./later-module";
@@ -16,6 +17,40 @@ export interface SplitButtonProps {
   moreLaterModule?: ModuleKey;
 }
 
+/**
+ * Opens the chevron menu when a press lands on it while another modal menu or popover is open.
+ * That overlay blocks the page, so its own dismiss swallows the press and the chevron needed a
+ * second click; here the same press closes the other overlay and opens this menu.
+ */
+function useOpenOnPressThroughOverlay(
+  trigger: React.RefObject<HTMLButtonElement | null>,
+  enabled: boolean,
+  open: () => void,
+) {
+  useEffect(() => {
+    if (!enabled) return;
+    const onPointerDown = (event: PointerEvent) => {
+      const button = trigger.current;
+      if (!button || event.button !== 0) return;
+      if (event.target instanceof Node && button.contains(event.target)) return;
+      if (!document.querySelector('[role="menu"], [role="dialog"]')) return;
+      const box = button.getBoundingClientRect();
+      if (box.width === 0 || box.height === 0) return;
+      if (
+        event.clientX < box.left ||
+        event.clientX > box.right ||
+        event.clientY < box.top ||
+        event.clientY > box.bottom
+      )
+        return;
+      // After the other overlay has handled this press and closed.
+      window.setTimeout(open, 0);
+    };
+    document.addEventListener("pointerdown", onPointerDown, true);
+    return () => document.removeEventListener("pointerdown", onPointerDown, true);
+  }, [trigger, enabled, open]);
+}
+
 export function SplitButton({
   label,
   onPress,
@@ -26,6 +61,11 @@ export function SplitButton({
   moreLaterModule,
 }: SplitButtonProps) {
   const primaryLater = primaryLaterModule ?? laterModule;
+  const [menuOpen, setMenuOpen] = useState(false);
+  const arrowRef = useRef<HTMLButtonElement>(null);
+  useOpenOnPressThroughOverlay(arrowRef, items.length > 0 && !moreLaterModule, () =>
+    setMenuOpen(true),
+  );
   const joined = items.length > 0 || Boolean(moreLaterModule);
   const primaryClass = joined ? "rounded-r-none" : undefined;
   return (
@@ -58,8 +98,9 @@ export function SplitButton({
             data-split-divider
           />
           {items.length > 0 ? (
-            <MenuTrigger>
+            <MenuTrigger isOpen={menuOpen} onOpenChange={setMenuOpen}>
               <Button
+                ref={arrowRef}
                 aria-label="More"
                 size="splitArrow"
                 className="rounded-l-none"

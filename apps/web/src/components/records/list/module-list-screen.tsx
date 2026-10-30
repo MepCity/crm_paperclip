@@ -26,6 +26,7 @@ import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ModuleKey } from "@/components/ui/later-module";
 import type { MenuAction } from "@/components/ui/menu";
+import { english, type MessageKey } from "@/i18n/catalogs";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { builtInViewLabel } from "@/i18n/record-labels";
@@ -826,7 +827,9 @@ function ModuleListScreenLoaded({
     ? [
         {
           id: "import",
-          label: `Import ${config.pluralLabel}`,
+          label: Object.hasOwn(english.records.transfer.importItem, config.pluralLabel)
+            ? t(`records.transfer.importItem.${config.pluralLabel}` as MessageKey)
+            : `Import ${config.pluralLabel}`,
           onAction: () => router.push(moduleImportPath(orgSlug, config.module)),
         },
         ...(config.inventory?.createItems ?? []).filter((item) => item.id !== "import"),
@@ -854,8 +857,8 @@ function ModuleListScreenLoaded({
     {
       id: "export-selected",
       label: exportSelectedTooLarge
-        ? `Export Selected Records (max ${MAX_EXPORT_SELECTION})`
-        : "Export Selected Records",
+        ? t("records.transfer.exportSelectedMax", { max: MAX_EXPORT_SELECTION })
+        : t("records.transfer.exportSelected"),
       isDisabled: exportSelectedTooLarge,
       onAction: transferModule
         ? () => {
@@ -1125,7 +1128,6 @@ function ModuleListScreenLoaded({
               emptyMessage={emptyMessage}
               settings={
                 <ViewSettingsMenu
-                  laterModule={config.inventory ? "M11" : undefined}
                   onManageColumns={() => setColumnsOpen(true)}
                   perPage={searchState.perPage}
                   onPerPageChange={changePerPage}

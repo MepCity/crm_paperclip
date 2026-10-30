@@ -137,4 +137,16 @@ describe("ActivityCategoriesCardBody", () => {
     expect(row?.querySelector("dl")).toBeNull();
     expect(row?.querySelector("svg")).toBeNull();
   });
+
+  it("shows the contact an activity is with, after its owner", () => {
+    const withContact = { ...call, dateText: "04.11.2026 02:00 PM", contactName: "Jane Example" };
+    render(
+      <ActivityCategoriesCardBody
+        variant="open"
+        categories={[{ kind: "call", count: 1, rows: [withContact] }]}
+      />,
+    );
+    const row = screen.getByRole("link", { name: call.subject }).closest("li");
+    expect(row?.textContent).toBe(`${call.subject}04.11.2026 02:00 PMJane Example`);
+  });
 });

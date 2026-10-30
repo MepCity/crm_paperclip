@@ -13,6 +13,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table";
+import { useUiLanguage, useUiTranslations } from "@/i18n/client-provider";
 import { type ExportHistoryProps, formatTime, reasonMessage, TRANSFER_MODULES } from "./types";
 
 export function ExportHistory({
@@ -22,11 +23,13 @@ export function ExportHistory({
   onRetry,
   moduleLabel,
 }: ExportHistoryProps) {
+  const t = useUiTranslations();
+  const locale = useUiLanguage() === "tr" ? "tr-TR" : "en-US";
   const [module, setModule] = useState<string>("all");
   if (loading) return <Skeleton variant="block" />;
 
   const items = [
-    { id: "all", name: "All" },
+    { id: "all", name: t("records.transfer.exportAll") },
     ...TRANSFER_MODULES.map((m) => ({ id: m as string, name: moduleLabel(m) })),
   ];
   const shown = module === "all" ? jobs : jobs.filter((j) => j.module === module);
@@ -34,7 +37,7 @@ export function ExportHistory({
   return (
     <div className="flex flex-col gap-2">
       <Select
-        label="Module"
+        label={t("records.transfer.moduleLabel")}
         items={items}
         selectedKey={module}
         onSelectionChange={(k) => setModule(String(k))}
@@ -44,39 +47,41 @@ export function ExportHistory({
       <Table>
         <TableHeader>
           <tr>
-            <TableHead>Module</TableHead>
-            <TableHead>Scope</TableHead>
-            <TableHead>Exported By</TableHead>
-            <TableHead>Exported Time</TableHead>
-            <TableHead>Records</TableHead>
-            <TableHead>Status</TableHead>
-            <TableHead>Actions</TableHead>
+            <TableHead>{t("records.transfer.moduleLabel")}</TableHead>
+            <TableHead>{t("records.transfer.exportColScope")}</TableHead>
+            <TableHead>{t("records.transfer.exportColBy")}</TableHead>
+            <TableHead>{t("records.transfer.exportColTime")}</TableHead>
+            <TableHead>{t("records.transfer.exportColRecords")}</TableHead>
+            <TableHead>{t("records.transfer.exportColStatus")}</TableHead>
+            <TableHead>{t("records.transfer.exportColActions")}</TableHead>
           </tr>
         </TableHeader>
-        <TableBody columnCount={7} emptyMessage="No exports in the last 7 days.">
+        <TableBody columnCount={7} emptyMessage={t("records.transfer.exportEmpty")}>
           {shown.map((j) => (
             <TableRow key={j.id}>
               <TableCell>{moduleLabel(j.module)}</TableCell>
               <TableCell>{j.scope}</TableCell>
               <TableCell>{j.createdBy.name}</TableCell>
-              <TableCell>{formatTime(j.createdAt)}</TableCell>
+              <TableCell>{formatTime(j.createdAt, locale)}</TableCell>
               <TableCell>{j.rowCount}</TableCell>
               <TableCell>
                 <Badge variant={j.status === "completed" ? "success" : "danger"}>
-                  {j.status === "completed" ? "Completed" : "Failed"}
+                  {j.status === "completed"
+                    ? t("records.transfer.statusCompleted")
+                    : t("records.transfer.statusFailed")}
                 </Badge>
                 {j.status === "failed" ? (
-                  <span className="ml-2 text-text-muted">{reasonMessage(j.code)}</span>
+                  <span className="ml-2 text-text-muted">{reasonMessage(j.code, t)}</span>
                 ) : null}
               </TableCell>
               <TableCell>
                 {j.status === "completed" ? (
                   <a href={downloadHref(j)} download={j.fileName} className="text-link underline">
-                    Download
+                    {t("records.transfer.download")}
                   </a>
                 ) : (
                   <Button variant="secondary" size="record" onPress={() => onRetry(j)}>
-                    Retry
+                    {t("records.transfer.retry")}
                   </Button>
                 )}
               </TableCell>
@@ -84,7 +89,7 @@ export function ExportHistory({
           ))}
         </TableBody>
       </Table>
-      <p className="text-sm text-text-muted">Export history is kept for 7 days.</p>
+      <p className="text-sm text-text-muted">{t("records.transfer.exportKept")}</p>
     </div>
   );
 }

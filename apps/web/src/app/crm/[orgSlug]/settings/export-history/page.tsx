@@ -1,6 +1,7 @@
 import { ExportHistoryScreen } from "@/components/records/transfer/transfer-screens";
 import { PageHeader } from "@/components/shell/page-header";
 import { PageTitle } from "@/components/shell/page-title";
+import { getUiTranslations } from "@/i18n/request";
 import { ApiProvider } from "@/lib/api/client/provider";
 import { requireOrgContext } from "@/lib/session";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
@@ -14,10 +15,11 @@ export default async function ExportHistoryPage({
 }) {
   const { orgSlug } = await params;
   await requireOrgContext(orgSlug);
+  const t = await getUiTranslations();
   return (
     <>
       <PageTitle title={shellPageTitle.settings} />
-      <PageHeader description="Export history." />
+      <PageHeader description={t("records.transfer.exportHistoryDescription")} />
       <ApiProvider key={orgSlug} orgSlug={orgSlug}>
         <ExportHistoryScreen />
       </ApiProvider>

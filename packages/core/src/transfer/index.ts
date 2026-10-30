@@ -17,8 +17,9 @@ export type {
   TransferAction,
   TransferDependencies,
   TransferLimits,
+  TransferLocale,
   TransferModule,
   TransferService,
 } from "./types";
 
-export { TRANSFER_MODULES } from "./types";
+export { englishLocale, TRANSFER_MODULES } from "./types";

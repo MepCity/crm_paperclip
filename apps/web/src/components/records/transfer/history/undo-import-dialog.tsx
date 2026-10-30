@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
+import { useUiTranslations } from "@/i18n/client-provider";
 
 export function UndoImportDialog({
   count,
@@ -14,6 +15,7 @@ export function UndoImportDialog({
   onOpenChange: (open: boolean) => void;
   onConfirm: () => Promise<void>;
 }) {
+  const t = useUiTranslations();
   const [error, setError] = useState<string | null>(null);
   return (
     <ConfirmDialog
@@ -22,10 +24,10 @@ export function UndoImportDialog({
         if (!open) setError(null);
         onOpenChange(open);
       }}
-      title="Undo Import"
-      message={`This will delete the ${count} records added by this import. Updated records are not changed. This cannot be reversed.`}
-      confirmLabel="Undo Import"
-      cancelLabel="Cancel"
+      title={t("records.transfer.undoTitle")}
+      message={t("records.transfer.undoMessage", { count })}
+      confirmLabel={t("records.transfer.undoTitle")}
+      cancelLabel={t("records.transfer.cancel")}
       tone="danger"
       errorMessage={error}
       onConfirm={async () => {
@@ -33,7 +35,7 @@ export function UndoImportDialog({
         try {
           await onConfirm();
         } catch (e) {
-          setError(e instanceof Error ? e.message : "The import could not be undone.");
+          setError(e instanceof Error ? e.message : t("records.transfer.undoFailed"));
           throw e;
         }
       }}

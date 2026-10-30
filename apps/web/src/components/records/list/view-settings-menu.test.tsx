@@ -63,7 +63,7 @@ test("opens the View Settings menu with the keyboard and closes it with Escape",
   );
 });
 
-test("does not draw the controls that belong to the customization module", async () => {
+test("does not draw Manage Columns unless the page supplies it", async () => {
   const user = userEvent.setup();
   setup();
   await openMenu(user);

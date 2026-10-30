@@ -6,6 +6,7 @@ import {
   type RecordInput,
 } from "../contract";
 import { isJsonArray, isJsonObject } from "../json";
+import { OPEN_PICKLIST_FIELDS } from "../picklist-policy";
 
 function valueLength(value: FieldValue): number | undefined {
   if (typeof value === "string") return value.length;
@@ -107,6 +108,7 @@ export function validateInput(
         errors[field.apiName] = ["Value is too long."];
       else if (
         field.picklist &&
+        !OPEN_PICKLIST_FIELDS.has(field.apiName) &&
         value !== null &&
         !field.picklist.some((option) => option.storedValue === value)
       )
@@ -115,4 +117,16 @@ export function validateInput(
   }
   if (Object.keys(errors).length)
     throw new ValidationError(errors, undefined, mandatory ? "mandatory" : "invalid");
+}
+
+const SOURCE_TIME = /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z$/;
+/** Import-supplied timestamps must be UTC ISO 8601 instants. */
+export function assertSourceTimes(
+  times: { createdTime?: string; modifiedTime?: string } | undefined,
+) {
+  for (const [key, value] of Object.entries(times ?? {}))
+    if (value !== undefined && !(SOURCE_TIME.test(value) && Number.isFinite(Date.parse(value))))
+      throw new ValidationError({
+        [key === "createdTime" ? "Created_Time" : "Modified_Time"]: ["Invalid field type."],
+      });
 }

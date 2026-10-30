@@ -51,6 +51,7 @@ export type {
   TransferAction,
   TransferDependencies,
   TransferLimits,
+  TransferLocale,
   TransferModule,
   TransferService,
 } from "./transfer";

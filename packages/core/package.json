@@ -10,6 +10,7 @@
     "./errors": "./src/errors.ts",
     "./format": "./src/format/index.ts",
     "./transfer/types": "./src/transfer/types.ts",
+    "./transfer/mapping": "./src/transfer/mapping.ts",
     "./testing": "./src/testing.ts",
     "./automation": "./src/automation/index.ts",
     "./attachments": "./src/attachments/index.ts",

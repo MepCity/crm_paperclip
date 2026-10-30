@@ -1,6 +1,6 @@
 import type { InMemorySchemaCoordinator } from "../../customization/coordinator";
 import type { OrgContext } from "../../tenancy/types";
-import type { RecordService } from "../contract";
+import type { RecordService, RecordWriteOptions } from "../contract";
 
 /** Every caller (inline editing and imports included) enters the same service boundary. */
 export function schemaRecordService<T extends RecordService>(
@@ -8,6 +8,10 @@ export function schemaRecordService<T extends RecordService>(
   service: T,
   schema: InMemorySchemaCoordinator,
 ): T {
+  const revisionOf = (options: RecordWriteOptions | undefined) =>
+    options?.expectedRevision === undefined
+      ? undefined
+      : { expectedRevision: options.expectedRevision };
   const run = async <R>(
     modules: readonly string[],
     options: Parameters<typeof schema.run>[2],
@@ -26,9 +30,10 @@ export function schemaRecordService<T extends RecordService>(
       schema.readConsistently(ctx.orgId, () => service.summarize(module, query)),
     findDuplicateGroups: (module, fields) =>
       schema.readConsistently(ctx.orgId, () => service.findDuplicateGroups(module, fields)),
-    create: (module, input, options) => run([module], options, () => service.create(module, input)),
+    create: (module, input, options) =>
+      run([module], revisionOf(options), () => service.create(module, input, options)),
     update: (module, id, input, options) =>
-      run([module], options, () => service.update(module, id, input)),
+      run([module], revisionOf(options), () => service.update(module, id, input, options)),
     massUpdate: (module, ids, input, options) =>
       run([module], options, () => service.massUpdate(module, ids, input)),
     changeOwner: (module, ids, ownerId, options) =>

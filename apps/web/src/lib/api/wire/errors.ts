@@ -1,5 +1,5 @@
 import {
-  type AppError,
+  AppError,
   ConflictError,
   type ErrorCode,
   type FieldErrors,
@@ -207,8 +207,11 @@ function restore(parsed: ParsedBody, status: number): AppError | UnexpectedApiEr
             : "invalid",
       );
     }
-    default:
-      return new UnexpectedApiError(status);
+    default: {
+      // Transfer (CSV) failures carry their code so the UI can explain them.
+      const code = appCode(parsed.code);
+      return code ? new AppError(code, parsed.message) : new UnexpectedApiError(status);
+    }
   }
 }
 

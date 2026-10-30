@@ -92,10 +92,15 @@ test("Solutions Actions menu and later-module controls stay inert", async ({ pag
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
 
-  // SL-13 (M6) and SL-32 (M11)
-  await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
+  // SL-13 and SL-32 (M11)
+  // The Create chevron offers the CSV import and opens on the first click.
+  await list.getByRole("button", { name: "More", exact: true }).click();
+  await expect(page.getByRole("menuitem", { name: "Import Solutions" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
+  await expect(page.getByRole("menuitem", { name: "Manage Columns" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   expect(page.url()).toBe(before);
 
@@ -152,5 +157,7 @@ test("Solutions Actions exports through the shared dialog", async ({ page }) => 
   await expect(dialog).toBeHidden();
   await expect(page.getByText("Export completed", { exact: true })).toBeVisible();
   await page.goto(`/crm/${org.slug}/tab/Solutions/import`);
-  await expect(page.getByRole("heading", { name: "Page not found", exact: true })).toBeVisible();
+  // CSV import is available for this module: the wizard opens instead of a not-found page.
+  await expect(page.getByRole("heading", { name: "Page not found", exact: true })).toHaveCount(0);
+  await expect(page.getByTestId("csv-input")).toBeAttached();
 });

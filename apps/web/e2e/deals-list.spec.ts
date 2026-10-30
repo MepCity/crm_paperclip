@@ -226,6 +226,8 @@ test("Deals later-module inventory stays inert and mass flows reuse selection di
 
   // View Settings (M11)
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
+  await expect(page.getByRole("menuitem", { name: "Manage Columns" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
 
   // DL-25: Cadences system filter (P3)
