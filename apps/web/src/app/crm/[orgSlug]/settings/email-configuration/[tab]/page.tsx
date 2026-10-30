@@ -1,6 +1,7 @@
 import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/shell/page-title";
 import { getUiTranslations } from "@/i18n/request";
+import { addOrganizationAddress } from "@/lib/definitions/actions";
 import { requireOrgContext } from "@/lib/session";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import { EmailSettingsScreen } from "@/modules/email-settings/email-settings-screen";
@@ -21,7 +22,13 @@ export default async function EmailConfigurationTabPage({
   return (
     <>
       <PageTitle title={t("shell.settings")} />
-      <EmailSettingsScreen orgSlug={orgSlug} initialTab={selected.id} />
+      <EmailSettingsScreen
+        orgSlug={orgSlug}
+        initialTab={selected.id}
+        addressActions={{
+          add: addOrganizationAddress.bind(null, orgSlug),
+        }}
+      />
     </>
   );
 }

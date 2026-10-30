@@ -1,8 +1,8 @@
 import { PageTitle } from "@/components/shell/page-title";
+import { assignmentReadPort } from "@/lib/definitions/automation";
 import { requireOrgContext } from "@/lib/session";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import { AssignmentRuleDetail } from "@/modules/assignment-rules/assignment-rule-detail";
-import { createAutomationPort } from "@/modules/automation/port";
 
 export const metadata = shellPageMetadata(shellPageTitle.settings);
 
@@ -13,7 +13,7 @@ export default async function AssignmentRuleDetailPage({
 }) {
   const { orgSlug, ruleId } = await params;
   const ctx = await requireOrgContext(orgSlug);
-  const result = await createAutomationPort().get(ctx, { kind: "assignment", id: ruleId });
+  const result = await assignmentReadPort().get(ctx, { kind: "assignment", id: ruleId });
   return (
     <>
       <PageTitle title={shellPageTitle.settings} />

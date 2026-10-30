@@ -72,6 +72,13 @@ it("opens the unsaved assignment entry and cancels without a write", async () =>
   await user.click(screen.getByRole("button", { name: "Create Assignment Rule" }));
   expect(screen.getByRole("dialog", { name: "Create Assignment Rule" })).toBeTruthy();
   expect(screen.getByRole("button", { name: "Next" })).toHaveProperty("disabled", true);
+  for (const control of [
+    screen.getByRole("combobox", { name: "Module" }),
+    screen.getByRole("textbox", { name: "Rule Name" }),
+  ]) {
+    expect(control).toHaveProperty("required", true);
+    expect(control.classList.contains("border-l-danger")).toBe(true);
+  }
   await user.type(screen.getByRole("textbox", { name: "Rule Name" }), "Routing draft");
   await user.click(screen.getByRole("button", { name: "Cancel" }));
   expect(screen.queryByRole("dialog")).toBeNull();
