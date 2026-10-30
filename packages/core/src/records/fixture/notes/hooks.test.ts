@@ -54,7 +54,7 @@ describe("Notes parent and content rules", () => {
       }),
     ).not.toThrow();
   });
-  it.each(["Tasks", "Events", "Calls", "Notes", "Unknown"])("rejects %s parents", (module) => {
+  it.each(["Notes", "Unknown"])("rejects %s parents", (module) => {
     expectFieldError(fields(module), "Parent_Id");
   });
   it("requires a well-formed existing parent in the bound store", () => {

@@ -288,3 +288,12 @@ describe("formatNumericDate / formatNumericDateTime", () => {
     expect(formatNumericDateTime(undefined, utc)).toBe("");
   });
 });
+
+it("localizes Turkish day periods while preserving explicit clock and date settings", () => {
+  const options = { locale: "en-US", timeZone: "UTC", language: "tr" };
+  const instant = "2026-03-15T15:30:00Z";
+  expect(formatNumericDateTime(instant, options)).toContain("ÖS");
+  expect(formatNumericDateTime("2026-03-15T03:30:00Z", options)).toContain("ÖÖ");
+  expect(formatNumericDateTime(instant, { ...options, clock: 24 })).toBe("15.03.2026 15:30");
+  expect(formatNumericDateTime(instant, { ...options, clock: 12 })).toBe("15.03.2026 3:30 ÖS");
+});

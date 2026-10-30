@@ -43,15 +43,16 @@ export const solutionsListPageConfig: ModuleListScreenConfig = {
   sortFieldLabels: SOLUTIONS_SORT_FIELD_LABELS,
   pinnedViews: ["All Solutions"],
   badgeColumn: false,
+  selectionTags: true,
   inventory: {
     actions: [
       { id: "mass-transfer", label: "Mass Transfer" },
       { id: "mass-delete", label: "Mass Delete" },
       { id: "mass-update", label: "Mass Update" },
-      { id: "tags", label: "Manage Tags", laterModule: "M6" },
+      { id: "tags", label: "Manage Tags" },
       { id: "drafts", label: "Drafts" },
       { id: "client-script", label: "Create Client Script", laterModule: "M11" },
-      { id: "export", label: "Export Solutions", laterModule: "M6" },
+      { id: "export", label: "Export Solutions" },
       { id: "sheet", label: "Sheet view", laterModule: "P3" },
       { id: "print", label: "Print View", submenuIndicator: true },
     ],

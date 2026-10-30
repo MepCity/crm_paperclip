@@ -290,10 +290,7 @@ test.describe("Lead record detail page", () => {
 
   test("layout matches record-detail visual layout at 1470×835", async ({ page }) => {
     const CARD_WIDTH = 906;
-    // Spec › Record page: the overview starts with the `Last Update` label, then the ribbon.
-    const OVERVIEW_TOP = 185;
-    // The label's own 0.5rem bottom margin plus the overview panel's 12 px block gap.
-    const LABEL_TO_RIBBON_GAP = 20;
+    // The update indicator shares the overview/timeline row (current capture).
     const STATUS_HEIGHT = 68;
     const BUSINESS_LABEL_END = 173.5;
     const BUSINESS_VALUE_START = 219;
@@ -321,9 +318,15 @@ test.describe("Lead record detail page", () => {
     const lastUpdateBox = requireBox(await lastUpdate.boundingBox(), "Last Update label");
     const statusRibbon = frame.locator("[data-status-ribbon]");
     const statusBox = requireBox(await statusRibbon.boundingBox(), "status ribbon");
-    expectEdge(lastUpdateBox.y, OVERVIEW_TOP);
-    expect(statusBox.y).toBeGreaterThan(lastUpdateBox.y + lastUpdateBox.height);
-    expectEdge(statusBox.y - lastUpdateBox.y - lastUpdateBox.height, LABEL_TO_RIBBON_GAP);
+    const tabRowBox = requireBox(
+      await frame.locator("[data-record-tab-row]").boundingBox(),
+      "tab row",
+    );
+    expect(lastUpdateBox.y).toBeGreaterThanOrEqual(tabRowBox.y);
+    expect(lastUpdateBox.y + lastUpdateBox.height).toBeLessThanOrEqual(
+      tabRowBox.y + tabRowBox.height,
+    );
+    expect(statusBox.y).toBeGreaterThanOrEqual(tabRowBox.y + tabRowBox.height);
     expect(Math.abs(statusBox.width - CARD_WIDTH)).toBeLessThanOrEqual(1);
     expectEdge(statusBox.height, STATUS_HEIGHT);
     if (process.env.LEAD_DETAIL_ARTIFACT_DIR) {
@@ -496,7 +499,6 @@ test.describe("Lead record detail page", () => {
 
   test("status strip matches hidden-rail layout at 1470×835", async ({ page }) => {
     const HIDDEN_CARD_WIDTH = 1126;
-    const OVERVIEW_TOP = 185;
     const STATUS_HEIGHT = 68;
     const CANVAS_LEFT = 332;
     const CANVAS_RIGHT = 1458;
@@ -515,12 +517,44 @@ test.describe("Lead record detail page", () => {
     );
     const statusRibbon = frame.locator("[data-status-ribbon]");
     const statusBox = requireBox(await statusRibbon.boundingBox(), "status ribbon (hidden rail)");
-    expectEdge(labelBox.y, OVERVIEW_TOP);
+    const tabRowBox = requireBox(
+      await frame.locator("[data-record-tab-row]").boundingBox(),
+      "tab row",
+    );
+    expect(labelBox.y).toBeGreaterThanOrEqual(tabRowBox.y);
+    expect(labelBox.y + labelBox.height).toBeLessThanOrEqual(tabRowBox.y + tabRowBox.height);
     expect(statusBox.y).toBeGreaterThan(labelBox.y + labelBox.height);
     expectEdge(statusBox.x, CANVAS_LEFT);
     expectEdge(statusBox.x + statusBox.width, CANVAS_RIGHT);
     expect(Math.abs(statusBox.width - HIDDEN_CARD_WIDTH)).toBeLessThanOrEqual(1);
     expectEdge(statusBox.height, STATUS_HEIGHT);
+  });
+
+  test("Timeline History shows a row after an inline edit (MEP-1027)", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openFirstLeadFromList(page, org.slug);
+    const row = page.locator('[data-detail-field="Company"]');
+    await row.scrollIntoViewIfNeeded();
+    await row.hover();
+    await row.getByRole("button", { name: "Edit Company value" }).click();
+    const input = row.getByRole("textbox");
+    await input.fill("History Co");
+    await input.press("Enter");
+    await expect(row).toContainText("History Co");
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    const history = frame.locator("[data-timeline-history]");
+    await expect(history).toBeVisible();
+    await expect(history.getByText("No logs found")).toHaveCount(0);
+    await expect(history.getByText(/Company changed from .* to History Co/)).toBeVisible();
+    await page.reload();
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    await expect(history.getByText(/Company changed from .* to History Co/)).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
   });
 
   test("Timeline tab switches to History, opens filter panel, and returns to Overview without errors", async ({

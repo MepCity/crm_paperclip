@@ -3,6 +3,7 @@ import { signUpNewUser } from "./support/auth";
 import { moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
+import { exerciseTouchedFilter } from "./support/touched-filter";
 
 test("Tasks shell entry, single tab, view menu with search, columns and sorting", async ({
   page,
@@ -42,9 +43,9 @@ test("Tasks shell entry, single tab, view menu with search, columns and sorting"
     /\/tab\/Tasks\/create$/,
   );
 
-  // TL-02, TL-02.1 – TL-02.20: view menu (17 stock views + 3 menu controls)
+  // TL-02, TL-02.1 – TL-02.20: view menu (17 stock views + 5 menu controls)
   await list.getByRole("button", { name: "Custom views" }).click();
-  await expect(page.getByRole("menuitem")).toHaveCount(21);
+  await expect(page.getByRole("menuitem")).toHaveCount(22);
   const search = page.getByRole("textbox", { name: "Search views" });
   await expect(search).toBeVisible();
   await search.fill("overdue");
@@ -133,11 +134,13 @@ test("Tasks import and export open while later-module controls stay inert", asyn
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
 
-  // Import is available; View Settings remains a later-module control.
+  // Import is available; View Settings opens its menu.
   await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
   await expect(page.getByRole("menuitem", { name: "Import Tasks" })).toBeVisible();
   await page.keyboard.press("Escape");
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
+  await expect(page.getByRole("menuitem", { name: "Manage Columns" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   expect(page.url()).toBe(before);
 
@@ -170,4 +173,10 @@ test("Tasks list measured evidence and row configuration", async ({ page }) => {
   if (process.env.MEP_LIST_EVIDENCE_DIR) {
     await page.screenshot({ path: join(process.env.MEP_LIST_EVIDENCE_DIR, "tasks-list.png") });
   }
+});
+
+test("Tasks applies the Touched Records system filter and restores on Clear", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseTouchedFilter(page, org.slug, "Tasks");
 });

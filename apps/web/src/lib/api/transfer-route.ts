@@ -1,7 +1,9 @@
 import { createTransferService, listMembers, type TransferService } from "@crm/core";
 import { ForbiddenError } from "@crm/core/errors";
+import { DEFAULT_TIME_ZONE } from "@/lib/locale";
 import { getRecordService } from "@/lib/records";
 import { apiRoute } from "./server";
+import { transferLocale } from "./transfer-locale";
 import type { TransferOperation } from "./wire/transfer";
 
 const globalForTransfer = globalThis as { __crmTransferService?: TransferService };
@@ -15,6 +17,9 @@ export function getTransferService(): TransferService {
       const members = await listMembers(ctx);
       if (!members.some((member) => member.userId === ctx.userId)) throw new ForbiddenError();
     },
+    locale: transferLocale,
+    // No per-user zone setting exists yet; the app formats and imports in the default zone.
+    timeZone: () => DEFAULT_TIME_ZONE,
     listActors: async (ctx) =>
       (await listMembers(ctx)).map((member) => ({ id: member.userId, name: member.name })),
   });

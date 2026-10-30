@@ -1,6 +1,7 @@
 "use client";
 
 import { ComboBox, Input, ListBox, ListBoxItem, Popover } from "react-aria-components";
+import { useUtilityLabel } from "@/i18n/utility-labels";
 
 /** Free-form tag input; catalogue selection and delimiter entry share one pending list. */
 export function TagEntry({
@@ -16,12 +17,13 @@ export function TagEntry({
   suggestions: readonly { id: string; name: string }[];
   disabled: boolean;
 }) {
+  const copy = useUtilityLabel();
   const matches = value.trim()
     ? suggestions.filter((tag) => tag.name.toLowerCase().includes(value.toLowerCase()))
     : [];
   return (
     <ComboBox
-      aria-label="Enter Tags"
+      aria-label={copy("Enter Tags")}
       allowsCustomValue
       inputValue={value}
       selectedKey={null}
@@ -36,7 +38,7 @@ export function TagEntry({
     >
       <Input
         autoFocus
-        placeholder="Enter Tags"
+        placeholder={copy("Enter Tags")}
         className="w-full rounded-md border border-border bg-surface px-3 py-1.5 text-md text-text outline-none focus:border-primary focus:ring-1 focus:ring-focus-ring"
         onKeyDown={(event) => {
           if (event.nativeEvent.isComposing) return;

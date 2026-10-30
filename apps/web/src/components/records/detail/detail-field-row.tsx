@@ -5,11 +5,13 @@ import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { useId, useLayoutEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { isFieldValueEmpty } from "../field-format";
 import { FieldPencil } from "./field-pencil";
 import { FieldValueView } from "./field-value";
 import { useInlineEdit } from "./inline-edit-context";
 import { InlineFieldEditor } from "./inline-field-editor";
+import { useRecordCall } from "./record-call-context";
 
 export interface DetailFieldRowProps {
   field: FieldDefinition;
@@ -37,7 +39,9 @@ export function DetailFieldRow({
   valueSuffix,
   onEdit,
 }: DetailFieldRowProps) {
+  const adapter = useMetadataDisplayAdapter();
   const inline = useInlineEdit();
+  const openCall = useRecordCall();
   const rowId = useId();
   const editable = inline?.eligible(field) ?? false;
   const editing = editable && inline?.activeId === rowId;
@@ -114,7 +118,7 @@ export function DetailFieldRow({
       data-detail-wrapped={wrappedValue ? "true" : undefined}
       data-detail-wrapped-link={wrappedLink ? "true" : undefined}
     >
-      <div className="detail-field-label">{field.label}</div>
+      <div className="detail-field-label">{adapter.getNamedLabel(field.label)}</div>
       <div className="detail-field-value-wrap" ref={valueWrapRef}>
         {editing && inline ? (
           <InlineFieldEditor
@@ -172,7 +176,8 @@ export function DetailFieldRow({
                 variant="icon"
                 size="compact"
                 aria-label="Call"
-                laterModule="M5"
+                onPress={openCall ?? undefined}
+                laterModule={openCall ? undefined : "M5"}
                 className="ms-1.5 inline-flex shrink-0 size-4 text-text-muted hover:text-text items-center justify-center self-center"
               >
                 <Icons.phone aria-hidden className="size-3.5" />

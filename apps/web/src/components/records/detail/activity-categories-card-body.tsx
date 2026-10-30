@@ -1,10 +1,10 @@
 "use client";
 
+import type { ActivityKind } from "@crm/core/records";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { useRecordLabel } from "@/i18n/record-labels";
 import "./activity-categories-card-body.css";
-
-export type ActivityKind = "task" | "meeting" | "call";
 
 export interface ParentActivityRow {
   id: string;
@@ -12,6 +12,7 @@ export interface ParentActivityRow {
   href: string;
   dateText: string | null;
   ownerName: string | null;
+  contactName?: string | null;
   details: readonly { label: string; value: string }[];
 }
 
@@ -36,6 +37,7 @@ export function ActivityCategoriesCardBody({
   variant,
   categories,
 }: ActivityCategoriesCardBodyProps) {
+  const recordLabel = useRecordLabel();
   const prefix = variant === "open" ? "Open" : "Closed";
 
   return (
@@ -45,7 +47,7 @@ export function ActivityCategoriesCardBody({
         const category = categories.find((item) => item.kind === kind);
         const count = category?.count ?? 0;
         const rows = category?.rows ?? [];
-        const title = `${prefix} ${label}`;
+        const title = recordLabel(`${prefix} ${label}`);
 
         return (
           <section
@@ -60,7 +62,9 @@ export function ActivityCategoriesCardBody({
             </h3>
             <ul className="activity-categories-rows">
               {rows.length === 0 ? (
-                <li className="activity-categories-row text-text-empty">No records found</li>
+                <li className="activity-categories-row text-text-empty">
+                  {recordLabel("No records found")}
+                </li>
               ) : (
                 rows.map((row) => (
                   <li key={row.id} className="activity-categories-row">
@@ -74,6 +78,12 @@ export function ActivityCategoriesCardBody({
                         <span>{row.ownerName}</span>
                       </div>
                     )}
+                    {row.contactName ? (
+                      <div className="activity-categories-owner" data-part="contact">
+                        <Icons.phone size={16} aria-hidden="true" />
+                        <span>{row.contactName}</span>
+                      </div>
+                    ) : null}
                     {row.details.length > 0 && (
                       <dl className="activity-categories-details">
                         {row.details.map((detail) => (

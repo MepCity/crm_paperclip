@@ -297,6 +297,35 @@ construction is deferred; scope is selected through saved views. The CSV wizard
 and histories were not observed in the reference session: these rules are
 provisional product behavior approved by the CTO, not a claim of observed parity.
 
+**Amendment (real-data import, 2026-10-29).** Repeated header names are accepted and
+disambiguated as `<name> (2)`, `<name> (3)`. A value that does not fit an optional, non-lookup,
+non-matching field no longer fails its row: the field is left empty and a `warning` row result
+(`value_cleared`, field name and row number only, never the cell value) is recorded and counted
+in `counts.warnings`. Required fields and lookup or owner failures still skip the row. Picklist
+cells match stored values and display labels ignoring case, spacing, punctuation and diacritics.
+Export writes owner and lookup fields as display names followed by a `<Field> Id` column, and uses
+the requesting user's interface language for headers and the record id column. Auto Mapping
+matches API names, English labels and Turkish catalogue labels. Public result rows may therefore
+have the outcomes `skipped`, `error` and `warning`.
+
+**Amendment (second real-data round, 2026-10-29).** Auto Mapping prefers a reference field's name
+column over its id column. An unresolved owner becomes the importing user with an `owner_defaulted`
+warning, and an unresolved optional lookup is cleared with the original warning code. Contact names
+match without salutation, case, diacritics or spacing differences. State / province fields are open
+text. `Created_Time` and `Modified_Time` are importable and travel through
+`RecordWriteOptions.sourceTimes` (ISO 8601 UTC, validated); Created By and Modified By remain
+managed. Each row is counted once in `counts`, and exports write picklists as display labels.
+
+Third CSV correction: dotted `.id` columns are excluded before header normalization, including
+when no name column exists. Explicit Turkish source aliases cover composite addresses, employee
+count, ticker, industry code and source timestamps in either UI language. Source timestamps
+accept ISO dates with space/T separators and day-first dotted/slashed dates; zone-free values
+are interpreted as UTC. Deals Stage exports use stored keys to retain source stage identity
+when the UI display label differs. Exact stored-value matching still wins over display labels;
+Closed Lost and Closed Lost to Competition stay distinct. Owner fallback warnings use a separate
+message and generic Warnings headings. Export field/module labels, dated filenames and import
+page titles follow the interface language. No customer values are included in fixtures.
+
 ### Resolved and deferred questions
 
 - Conflicting edition row limits: use the accepted local budgets above; exact

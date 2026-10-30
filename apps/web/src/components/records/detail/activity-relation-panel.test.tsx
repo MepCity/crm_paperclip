@@ -1,8 +1,10 @@
 import { cleanup, fireEvent, screen, within } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { LanguageProvider } from "@/i18n/client-provider";
 import { render } from "@/test/render";
 import { ActivityRelationPanel, type ActivityRelationPanelProps } from "./activity-relation-panel";
 
+vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }));
 afterEach(cleanup);
 
 function props(over: Partial<ActivityRelationPanelProps> = {}): ActivityRelationPanelProps {
@@ -136,4 +138,16 @@ describe("ActivityRelationPanel", () => {
     expect(screen.getByRole("tab", { name: "Info" })).toBeTruthy();
     expect(screen.getByRole("button", { name: /Ada Test|Related person/ })).toBeTruthy();
   });
+});
+
+it("keeps the Turkish person-details link distinct from the Info tab", () => {
+  render(
+    <LanguageProvider language="tr">
+      <ActivityRelationPanel {...props()} />
+    </LanguageProvider>,
+  );
+  expect(screen.getByRole("tab", { name: "Bilgi" })).toBeTruthy();
+  expect(screen.getByRole("link", { name: "Daha Fazla Bilgi" }).getAttribute("href")).toBe(
+    "/contacts/p1",
+  );
 });

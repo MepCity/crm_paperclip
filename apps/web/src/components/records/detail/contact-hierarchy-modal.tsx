@@ -8,6 +8,7 @@ import { RelatedRecordsListError } from "@/components/records/detail/related-rec
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { useRecord, useViews } from "@/lib/api/client/hooks";
 import { useClientRecordService } from "@/lib/api/client/provider";
 import { moduleRecordPath } from "@/lib/crm-paths";
@@ -93,6 +94,7 @@ export function ContactHierarchyModal({
   contact,
   triggerElement,
 }: ContactHierarchyModalProps) {
+  const t = useUiTranslations();
   const titleId = useId();
   const service = useClientRecordService();
   const closeButtonRef = useRef<HTMLButtonElement>(null);
@@ -253,7 +255,7 @@ export function ContactHierarchyModal({
         <AriaDialog aria-labelledby={titleId} className="outline-none">
           <div className="flex items-center justify-between pb-3">
             <Heading slot="title" id={titleId} className="text-lg font-bold text-text-strong">
-              Contact Hierarchy
+              {t("records.chrome.contactHierarchy")}
             </Heading>
             <Button
               ref={closeButtonRef}
@@ -274,7 +276,11 @@ export function ContactHierarchyModal({
           ) : isError ? (
             <RelatedRecordsListError />
           ) : tree ? (
-            <div role="tree" aria-label="Contact Hierarchy" className="contact-hierarchy-tree">
+            <div
+              role="tree"
+              aria-label={t("records.chrome.contactHierarchy")}
+              className="contact-hierarchy-tree"
+            >
               {tree.rootAccount ? (
                 // biome-ignore lint/a11y/useFocusableInteractive: root account is non-interactive display node
                 <div
@@ -283,7 +289,11 @@ export function ContactHierarchyModal({
                   data-part="account-root"
                   className="contact-hierarchy-account-row"
                 >
-                  <Icons.building aria-hidden className="size-4 shrink-0 text-text-muted" />
+                  <Icons.recordLookup
+                    module="Accounts"
+                    aria-hidden
+                    className="size-4 shrink-0 text-text-strong"
+                  />
                   <span>{tree.rootAccount.name}</span>
                 </div>
               ) : null}

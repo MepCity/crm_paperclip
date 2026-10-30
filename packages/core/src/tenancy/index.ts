@@ -10,6 +10,7 @@ import {
   parseInput,
   ValidationError,
 } from "../errors";
+import { insertOrganization } from "./create-organization";
 import type {
   Invitation,
   InvitationPreview,
@@ -67,14 +68,7 @@ export async function createOrganization(
 ): Promise<Organization> {
   const values = parseInput(orgInput, input);
   try {
-    return await getDb().transaction(async (tx) => {
-      const [org] = await tx.insert(schema.organizations).values(values).returning();
-      if (!org) throw new Error("Organization insert returned no row");
-      await tx
-        .insert(schema.memberships)
-        .values({ organizationId: org.id, userId: user.id, role: "admin" });
-      return org;
-    });
+    return await getDb().transaction((tx) => insertOrganization(tx, user, values));
   } catch (error) {
     if (isUniqueViolation(error, "organizations_slug_unique"))
       throw new ValidationError({ slug: ["This slug is already in use."] });

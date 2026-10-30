@@ -4,6 +4,8 @@ import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useUtilityLabel } from "@/i18n/utility-labels";
 import type { BinSearch } from "./contracts";
 import { SearchRows } from "./search-rows";
 
@@ -45,6 +47,8 @@ export function RecycleBin({
   total = rows.length,
   onPageChange,
 }: RecycleBinProps) {
+  const copy = useUtilityLabel();
+  const t = useUiTranslations();
   const titleId = useId();
   const [searchOpen, setSearchOpen] = useState(
     Boolean(
@@ -70,26 +74,37 @@ export function RecycleBin({
     >
       <div className="flex items-center justify-between gap-4">
         <h2 id={titleId} className="text-xl font-bold text-text-strong">
-          Recycle Bin
+          {copy("Recycle Bin")}
         </h2>
         <Button variant="icon" size="sm" onPress={onHelp}>
-          Help
+          {copy("Help")}
         </Button>
       </div>
-      <p className="mt-1">Deleted records you have access to are displayed in the Recycle Bin.</p>
+      <p className="mt-1">
+        {copy("Deleted records you have access to are displayed in the Recycle Bin.")}
+      </p>
       <ul className="mt-4 list-disc space-y-1 pl-5">
-        <li>Deleted records remain here for 60 days before they are permanently removed.</li>
-        <li>Only users with an administrator profile can permanently delete records here.</li>
         <li>
-          You can restore your own records. Restoring other users’ records requires the appropriate
-          permissions.
+          {copy("Deleted records remain here for 60 days before they are permanently removed.")}
         </li>
         <li>
-          Mass restore excludes Notes, Attachments, Emails, Visits and Appointments while their
-          parent records remain in the Recycle Bin.
+          {copy("Only users with an administrator profile can permanently delete records here.")}
+        </li>
+        <li>
+          {copy(
+            "You can restore your own records. Restoring other users’ records requires the appropriate permissions.",
+          )}
+        </li>
+        <li>
+          {copy(
+            "Mass restore excludes Notes, Attachments, Emails, Visits and Appointments while their parent records remain in the Recycle Bin.",
+          )}
         </li>
       </ul>
-      <fieldset aria-label="Recycle Bin actions" className="mt-8 flex flex-wrap items-center gap-3">
+      <fieldset
+        aria-label={copy("Recycle Bin actions")}
+        className="mt-8 flex flex-wrap items-center gap-3"
+      >
         <Button
           variant="ghost"
           size="sm"
@@ -97,7 +112,7 @@ export function RecycleBin({
           isDisabled={busy}
           onPress={() => onRestore(selectedIds)}
         >
-          Restore
+          {copy("Restore")}
         </Button>
         <Button
           variant="ghost"
@@ -106,7 +121,7 @@ export function RecycleBin({
           isDisabled={busy}
           onPress={() => onDelete(selectedIds)}
         >
-          Delete
+          {copy("Delete")}
         </Button>
         <Button
           variant="ghost"
@@ -115,25 +130,28 @@ export function RecycleBin({
           isDisabled={busy}
           onPress={() => onEmpty(selectedIds)}
         >
-          Empty Recycle Bin
+          {copy("Empty Recycle Bin")}
         </Button>
       </fieldset>
       <p className="mb-1 mt-5 text-right text-text-muted">
-        Displaying {rows.length ? (page - 1) * perPage + 1 : 0} to{" "}
-        {rows.length ? (page - 1) * perPage + rows.length : 0} of {total}
+        {t("records.utilities.binRange", {
+          from: rows.length ? (page - 1) * perPage + 1 : 0,
+          to: rows.length ? (page - 1) * perPage + rows.length : 0,
+          total,
+        })}
       </p>
       <section
-        aria-label="Deleted records"
+        aria-label={copy("Deleted records")}
         // biome-ignore lint/a11y/noNoninteractiveTabindex: keyboard users must be able to scroll this independent region.
         tabIndex={0}
         className="min-h-0 flex-1 overflow-auto outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
       >
-        <table aria-label="Recycle Bin records" className="w-full text-left">
+        <table aria-label={copy("Recycle Bin records")} className="w-full text-left">
           <thead className="sticky top-0 bg-surface">
             <tr className="border-y border-panel-border">
               <th scope="col" className="w-10 px-2 py-2">
                 <Checkbox
-                  label="Select all records"
+                  label={copy("Select all records")}
                   isDisabled={busy}
                   hideLabel
                   isSelected={allSelected}
@@ -145,14 +163,14 @@ export function RecycleBin({
               </th>
               {["Name", "Type", "Deleted By", "Deleted Time"].map((label) => (
                 <th key={label} scope="col" className="px-3 py-2 font-normal text-text-strong">
-                  {label}
+                  {copy(label)}
                 </th>
               ))}
               <th scope="col" className="w-8">
                 <Button
                   variant="icon"
                   size="sm"
-                  aria-label="Search"
+                  aria-label={copy("Search")}
                   aria-expanded={searchOpen}
                   onPress={() => setSearchOpen((open) => !open)}
                 >
@@ -193,7 +211,7 @@ export function RecycleBin({
             {rows.length === 0 && (
               <tr>
                 <td colSpan={6} className="p-6 text-center text-text-muted">
-                  No deleted records.
+                  {copy("No deleted records.")}
                 </td>
               </tr>
             )}
@@ -201,23 +219,26 @@ export function RecycleBin({
         </table>
       </section>
       {onPageChange && (
-        <fieldset aria-label="Recycle Bin pagination" className="mt-3 flex justify-end gap-3">
+        <fieldset
+          aria-label={copy("Recycle Bin pagination")}
+          className="mt-3 flex justify-end gap-3"
+        >
           <Button
             variant="secondary"
             size="sm"
             isDisabled={busy || page <= 1}
             onPress={() => onPageChange(page - 1)}
           >
-            Previous
+            {copy("Previous")}
           </Button>
-          <span className="self-center">Page {page}</span>
+          <span className="self-center">{t("records.utilities.binPage", { page })}</span>
           <Button
             variant="secondary"
             size="sm"
             isDisabled={busy || page * perPage >= total}
             onPress={() => onPageChange(page + 1)}
           >
-            Next
+            {copy("Next")}
           </Button>
         </fieldset>
       )}

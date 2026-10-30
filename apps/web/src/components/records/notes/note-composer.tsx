@@ -3,6 +3,8 @@
 import { Paperclip, Type } from "lucide-react";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Button } from "@/components/ui/button";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useUtilityLabel } from "@/i18n/utility-labels";
 import { addPendingFiles, notifyOverBudget, PendingFileChips } from "./note-attachments";
 import { sanitizeNoteHtml } from "./note-content-policy";
 import {
@@ -54,6 +56,8 @@ export function NoteComposer({
   attachedCount = 0,
   attachedBytes = 0,
 }: NoteComposerProps) {
+  const copy = useUtilityLabel();
+  const t = useUiTranslations();
   const editorRef = useRef<HTMLDivElement>(null);
   const rangeRef = useRef<Range | null>(null);
   const [title, setTitle] = useState(initial?.title ?? "");
@@ -112,7 +116,7 @@ export function NoteComposer({
           }
         }}
       >
-        Add a note
+        {copy("Add a note")}
       </button>
     );
   }
@@ -136,7 +140,7 @@ export function NoteComposer({
     <div
       data-testid="note-composer"
       data-mode={mode}
-      className="flex flex-col gap-2 rounded-md border border-border bg-surface p-3"
+      className="flex flex-col gap-2 rounded-md border border-primary bg-surface p-3 shadow-xs"
       onKeyDown={(e) => {
         if (e.key === "Escape") {
           e.stopPropagation();
@@ -145,12 +149,12 @@ export function NoteComposer({
       }}
     >
       <input
-        aria-label="Title"
-        placeholder="Title"
+        aria-label={t("records.notes.title")}
+        placeholder={t("records.notes.title")}
         maxLength={TITLE_MAX_LENGTH}
         value={title}
         onChange={(e) => setTitle(e.target.value)}
-        className="border-b border-border bg-transparent pb-1 text-base outline-none"
+        className="bg-transparent pb-1 text-base outline-none"
       />
       {/* biome-ignore lint/a11y/useSemanticElements: rich text needs contentEditable */}
       <div
@@ -158,12 +162,12 @@ export function NoteComposer({
         role="textbox"
         tabIndex={0}
         aria-multiline="true"
-        aria-label="Note content"
+        aria-label={t("records.notes.noteContent")}
         contentEditable
         suppressContentEditableWarning
-        data-placeholder="What's this note about?"
+        data-placeholder={t("records.notes.placeholder")}
         data-empty={isNoteContentEmpty(content) ? "true" : "false"}
-        className="min-h-24 resize-y overflow-auto text-base outline-none data-[empty=true]:before:pointer-events-none data-[empty=true]:before:text-text-muted data-[empty=true]:before:content-[attr(data-placeholder)]"
+        className="min-h-20 resize-y overflow-auto text-base outline-none data-[empty=true]:before:pointer-events-none data-[empty=true]:before:text-text-muted data-[empty=true]:before:content-[attr(data-placeholder)]"
         onInput={(e) => setContent(e.currentTarget.innerHTML)}
         onKeyUp={(e) => {
           rangeRef.current = saveSelection(e.currentTarget);
@@ -186,7 +190,7 @@ export function NoteComposer({
       {toolbarOpen && renderToolbar ? (
         <div
           role="toolbar"
-          aria-label="Formatting"
+          aria-label={copy("Formatting")}
           data-testid="note-composer-toolbar"
           onMouseDown={(e) => e.preventDefault()}
         >
@@ -215,7 +219,7 @@ export function NoteComposer({
       />
       {tooLong ? (
         <p role="alert" className="text-sm text-danger">
-          Note content exceeds the maximum length.
+          {t("records.notes.contentExceeds")}
         </p>
       ) : null}
       {error ? (
@@ -223,11 +227,11 @@ export function NoteComposer({
           {error}
         </p>
       ) : null}
-      <div className="flex items-center justify-between">
+      <div className="-mx-3 -mb-3 flex items-center justify-between border-t border-border bg-surface-muted/30 px-3 py-2">
         <div className="flex items-center gap-1">
           <Button
             variant="icon"
-            aria-label="Format"
+            aria-label={t("records.notes.format")}
             aria-pressed={toolbarOpen}
             onPress={() => setToolbarOpen((v) => !v)}
           >
@@ -236,7 +240,7 @@ export function NoteComposer({
           {toolbarOpen ? null : (
             <Button
               variant="icon"
-              aria-label="Attach file"
+              aria-label={t("records.notes.attachFile")}
               onPress={() => fileInputRef.current?.click()}
             >
               <Paperclip className="size-4" strokeWidth={1.75} aria-hidden="true" />
@@ -245,10 +249,10 @@ export function NoteComposer({
         </div>
         <div className="flex items-center gap-2">
           <Button variant="secondary" size="sm" onPress={cancel}>
-            Cancel
+            {t("common.actions.cancel")}
           </Button>
           <Button size="sm" isDisabled={saveDisabled} onPress={save}>
-            Save
+            {t("common.actions.save")}
           </Button>
         </div>
       </div>

@@ -3,6 +3,7 @@ import { signUpNewUser } from "./support/auth";
 import { moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
+import { exerciseTouchedFilter } from "./support/touched-filter";
 
 test("Meetings shell entry, single tab, view menu with search, columns and sorting", async ({
   page,
@@ -152,11 +153,13 @@ test("Meetings import and export open while later-module controls stay inert", a
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
 
-  // Import is available; View Settings remains a later-module control.
+  // Import is available; View Settings opens its menu.
   await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
   await expect(page.getByRole("menuitem", { name: "Import Meetings" })).toBeVisible();
   await page.keyboard.press("Escape");
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
+  await expect(page.getByRole("menuitem", { name: "Manage Columns" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   expect(page.url()).toBe(before);
 
@@ -207,4 +210,12 @@ test("Meetings list measured evidence and row configuration", async ({ page }) =
   await expect(page).toHaveURL(/\/tab\/Meetings\/[^/]+\/edit$/);
   await expect(page.getByRole("button", { name: "Save", exact: true })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Title", exact: true })).not.toHaveValue("");
+});
+
+test("Meetings applies the Touched Records system filter and restores on Clear", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseTouchedFilter(page, org.slug, "Events");
 });

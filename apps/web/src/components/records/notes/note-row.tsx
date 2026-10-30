@@ -7,7 +7,8 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Link } from "@/components/ui/link";
 import { UserAvatarPlaceholder } from "@/components/ui/user-avatar-placeholder";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useUtilityLabel } from "@/i18n/utility-labels";
+import { useFormat } from "@/lib/format-context";
 import type { NoteListItem } from "./note-list";
 import "./notes.css";
 
@@ -18,6 +19,8 @@ export interface NoteRowProps {
 }
 
 export function NoteRow({ item, onEdit, onDelete }: NoteRowProps) {
+  const copy = useUtilityLabel();
+  const orgFormat = useFormat();
   const bodyRef = useRef<HTMLDivElement>(null);
   const [expanded, setExpanded] = useState(false);
   const [overflows, setOverflows] = useState(false);
@@ -39,7 +42,7 @@ export function NoteRow({ item, onEdit, onDelete }: NoteRowProps) {
         </div>
         {overflows || expanded ? (
           <Button variant="ghost" size="sm" onPress={() => setExpanded((v) => !v)}>
-            {expanded ? "Show Less" : "Show More"}
+            {copy(expanded ? "Show Less" : "Show More")}
             <ChevronDown
               aria-hidden="true"
               className={expanded ? "h-4 w-4 rotate-180" : "h-4 w-4"}
@@ -49,15 +52,20 @@ export function NoteRow({ item, onEdit, onDelete }: NoteRowProps) {
         {item.attachments}
         <div className="note-row-meta">
           <Link href={item.parentHref}>{item.parentLabel}</Link>
-          <span>Add Note</span>
-          <span>{formatDateTime(item.createdAt, DEFAULT_FORMAT)}</span>
+          <span>{copy("Add Note")}</span>
+          <span>{formatDateTime(item.createdAt, orgFormat)}</span>
           <span>{item.authorName}</span>
         </div>
       </div>
       {item.canEdit || item.canDelete ? (
         <div className="note-row-actions">
           {item.canEdit ? (
-            <Button variant="icon" size="sm" aria-label="Edit note" onPress={() => onEdit(item.id)}>
+            <Button
+              variant="icon"
+              size="sm"
+              aria-label={copy("Edit note")}
+              onPress={() => onEdit(item.id)}
+            >
               <Pencil aria-hidden="true" className="h-4 w-4" />
             </Button>
           ) : null}
@@ -65,7 +73,7 @@ export function NoteRow({ item, onEdit, onDelete }: NoteRowProps) {
             <Button
               variant="icon"
               size="sm"
-              aria-label="Delete note"
+              aria-label={copy("Delete note")}
               onPress={() => setConfirming(true)}
             >
               <Trash2 aria-hidden="true" className="h-4 w-4" />
@@ -77,10 +85,10 @@ export function NoteRow({ item, onEdit, onDelete }: NoteRowProps) {
         <ConfirmDialog
           isOpen
           onOpenChange={setConfirming}
-          title="Delete Note"
-          message="Are you sure you want to delete this note?"
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
+          title={copy("Delete Note")}
+          message={copy("Are you sure you want to delete this note?")}
+          confirmLabel={copy("Delete")}
+          cancelLabel={copy("Cancel")}
           tone="danger"
           onConfirm={() => onDelete(item.id)}
         />

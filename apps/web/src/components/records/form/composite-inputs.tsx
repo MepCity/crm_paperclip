@@ -7,6 +7,7 @@ import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { NumberField } from "@/components/ui/number-field";
 import { RecordChoice } from "@/components/ui/record-choice";
 import { TextField, type TextFieldProps } from "@/components/ui/text-field";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { FieldGroup } from "./field-group";
 import { picklistChoices } from "./field-input";
 import { RECORD_FORM_COPY } from "./record-form-copy";
@@ -149,6 +150,7 @@ export interface CopyAddressMenuProps {
 }
 
 export function CopyAddressMenu({ groups, disabled, onCopy }: CopyAddressMenuProps) {
+  const t = useUiTranslations();
   if (groups.length !== 2) return null;
   const items = groups.flatMap((from) =>
     groups
@@ -163,10 +165,10 @@ export function CopyAddressMenu({ groups, disabled, onCopy }: CopyAddressMenuPro
   return (
     <MenuTrigger>
       <Button variant="recordSecondary" size="record" isDisabled={disabled}>
-        {RECORD_FORM_COPY.copyAddress}
+        {t("records.actions.copyAddress")}
       </Button>
       <Menu
-        aria-label={RECORD_FORM_COPY.copyAddress}
+        aria-label={t("records.actions.copyAddress")}
         onAction={(key) => {
           const item = items.find((entry) => entry.id === String(key));
           if (item) onCopy(item.fromId, item.toId);

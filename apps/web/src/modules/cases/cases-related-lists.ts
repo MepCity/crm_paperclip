@@ -1,5 +1,6 @@
 import { Icons } from "@/components/ui/icon";
-import { notesCardBody } from "../notes-card";
+import { attachmentsCard } from "../attachments-card";
+import { notesCardBody, openNotesComposer } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type {
   RelatedListActivityColumnDefinition,
@@ -77,19 +78,20 @@ export const casesRelatedLists: readonly RelatedListDefinition[] = [
     id: "notes",
     renderBody: notesCardBody("Cases"),
     title: "Notes",
-    moduleKey: "M6",
+    moduleKey: "M2",
     order: 2,
     targetId: "related-list-notes",
-    railAction: { id: "notes-add", label: "Add", moduleKey: "M6" },
+    railAction: { id: "notes-add", label: "Add", onAction: openNotesComposer },
     emptyStateText: "No records found",
   },
   {
     id: "attachments",
+    renderCard: attachmentsCard("Cases"),
     title: "Attachments",
-    moduleKey: "M6",
+    moduleKey: "M8",
     order: 4,
     targetId: "related-list-attachments",
-    upperControls: [{ id: "attach", label: "Attach", type: "split-button", moduleKey: "M6" }],
+    upperControls: [{ id: "attach", label: "Attach", type: "split-button" }],
     emptyStateText: "No Attachment",
   },
   {

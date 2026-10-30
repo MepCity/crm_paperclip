@@ -1,8 +1,11 @@
+import { createElement } from "react";
 import { campaignsCardBody } from "@/components/records/campaigns/campaigns-card";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
+import { emailsCard } from "../emails/record-card";
 import { notesCardBody } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
+import { SocialRecordCardBody } from "../social/social-record-card";
 import type { RelatedListDefinition } from "../types";
 
 export interface LeadsRelatedListBadges {
@@ -53,7 +56,7 @@ export function createLeadsRelatedLists(
       id: "notes",
       renderBody: notesCardBody("Leads"),
       title: "Notes",
-      moduleKey: "M6",
+      moduleKey: "M2",
       order: 0,
       targetId: "related-list-notes",
       emptyStateText: "No records found",
@@ -92,6 +95,28 @@ export function createLeadsRelatedLists(
       emptyStateText: "No Attachment",
     },
     {
+      id: "emails",
+      renderCard: emailsCard("Leads"),
+      title: "Emails",
+      moduleKey: "M10",
+      order: 4,
+      targetId: "related-list-emails",
+      upperControls: [
+        {
+          id: "compose-email",
+          label: "Compose Email",
+          type: "button",
+          moduleKey: "M10",
+        },
+      ],
+      subtabs: [
+        { id: "mails", label: "Mails" },
+        { id: "drafts", label: "Drafts" },
+        { id: "scheduled", label: "Scheduled" },
+      ],
+      emptyStateText: "No records found",
+    },
+    {
       id: "campaigns",
       renderBody: ({ record, recordPath }) =>
         record
@@ -100,7 +125,7 @@ export function createLeadsRelatedLists(
       title: "Campaigns",
       // The card is live; "M2" keeps the rail entry and controls unlocked.
       moduleKey: "M2",
-      order: 4,
+      order: 5,
       targetId: "related-list-campaigns",
       countBadge: badgeValue(badges.campaigns),
       railAction: {
@@ -117,6 +142,14 @@ export function createLeadsRelatedLists(
         },
       ],
       emptyStateText: "No records found",
+    },
+    {
+      id: "social",
+      renderBody: () => createElement(SocialRecordCardBody),
+      title: "Social",
+      moduleKey: "M2",
+      order: 6,
+      targetId: "related-list-social",
     },
   ];
 }

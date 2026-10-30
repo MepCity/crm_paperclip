@@ -72,7 +72,14 @@ test.describe("Cases record detail (provisional rules, MEP-863)", () => {
     // GK-5: Notes card works
     const notesCard = page.locator("#related-list-notes");
     await expect(notesCard).toBeVisible();
-    await notesCard.getByTestId("note-composer-collapsed").click();
+    const rail = page.locator("[data-record-rail]");
+    const notesLink = rail.getByRole("link", { name: "Notes" });
+    await expect(notesLink).not.toHaveAttribute("data-later-module");
+    await notesLink.click();
+    const addNote = rail.getByRole("button", { name: "Add" });
+    await expect(addNote).not.toHaveAttribute("data-later-module");
+    await addNote.click();
+    await expect(notesCard.getByTestId("note-composer")).toBeVisible();
     await notesCard.getByLabel("Title").fill("E2E Case Note");
     await notesCard
       .getByRole("textbox", { name: "Note content" })
@@ -97,4 +104,25 @@ test.describe("Cases record detail (provisional rules, MEP-863)", () => {
     await expect(frame.locator("[data-timeline-filter-panel]")).toHaveCount(0);
     ignoreFailedResponses(pageErrors, [400]);
   });
+});
+
+test("Attachments: attach a link, reload and show its Timeline event", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await openFirstCase(page, org.slug);
+  const card = page.locator("#related-list-attachments");
+  await expect(card.getByText("No Attachment")).toBeVisible();
+  await card.getByRole("button", { name: "Attach", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Link (URL)" }).click();
+  await page.getByRole("textbox").fill("https://example.com/support-guide");
+  await page.getByRole("button", { name: "Attach", exact: true }).last().click();
+  await expect(card.getByRole("link", { name: "https://example.com/support-guide" })).toBeVisible();
+  await page.reload();
+  await expect(card.getByRole("link", { name: "https://example.com/support-guide" })).toBeVisible();
+  await page.getByRole("tab", { name: "Timeline", exact: true }).click();
+  await expect(
+    page
+      .locator("[data-timeline-history]")
+      .getByText("Attachment added: https://example.com/support-guide"),
+  ).toBeVisible();
 });

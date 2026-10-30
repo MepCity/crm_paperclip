@@ -2,6 +2,7 @@ import { signUpNewUser } from "./support/auth";
 import { moduleDraftsPath, moduleListDefaultPath, moduleTagsPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
+import { exerciseTouchedFilter } from "./support/touched-filter";
 
 test("Contacts shell, views, sorting, filters, alphabet, paging and record route", async ({
   page,
@@ -20,7 +21,7 @@ test("Contacts shell, views, sorting, filters, alphabet, paging and record route
   await expect(list.getByRole("columnheader", { name: "Account Name", exact: true })).toBeVisible();
   await expect(list.getByRole("columnheader", { name: "Email", exact: true })).toBeVisible();
   await list.getByRole("button", { name: "Custom views" }).click();
-  await expect(page.getByRole("menuitem")).toHaveCount(14);
+  await expect(page.getByRole("menuitem")).toHaveCount(15);
   await page.getByRole("menuitem", { name: "My Contacts", exact: true }).click();
   await expect(list.locator("[data-view-pill]")).toHaveText("My Contacts");
   await list.getByRole("button", { name: "Custom views" }).click();
@@ -68,6 +69,8 @@ test("Contacts later-module inventory stays inert and mass flows reuse selection
   await expect(page).toHaveURL(before);
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
+  await expect(page.getByRole("menuitem", { name: "Manage Columns" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   await list.getByRole("button", { name: "Actions", exact: true }).click();
   await expect(page.getByRole("menuitem")).toHaveText([
@@ -227,6 +230,29 @@ test("applies Campaigns system filter to Contacts list and restores on Clear", a
   await expect(list.locator("tbody tr")).toHaveCount(1);
   await expect(list.locator("[data-part=total-value]")).toHaveText("1");
 
+  const panel = list.getByRole("region", { name: "Filter Contacts by" });
+  const scrollLeft = await panel
+    .locator(".filter-panel-content")
+    .evaluate((element) => element.scrollLeft);
+  const panelLeft = await panel.evaluate((element) => element.getBoundingClientRect().left);
+  const headingLeft = await panel
+    .getByRole("heading", { name: "Filter Contacts by" })
+    .evaluate((element) => element.getBoundingClientRect().left);
+  const checkboxLeft = await campaignsCheckbox.evaluate(
+    (element) => element.getBoundingClientRect().left,
+  );
+  expect(scrollLeft).toBe(0);
+  expect(headingLeft).toBeGreaterThanOrEqual(panelLeft);
+  expect(checkboxLeft).toBeGreaterThanOrEqual(panelLeft);
+
   await list.getByRole("button", { name: "Clear", exact: true }).click();
   await expect(list.locator("tbody tr")).toHaveCount(initialRowCount);
+});
+
+test("Contacts applies the Touched Records system filter and restores on Clear", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseTouchedFilter(page, org.slug, "Contacts");
 });

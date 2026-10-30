@@ -30,6 +30,12 @@ export async function signUpNewUser(
   await page.getByRole("button", { name: "Sign up" }).click();
   await expect(page).toHaveURL("/orgs/new", { timeout: AUTH_NAVIGATION_TIMEOUT_MS });
   await expect(page.getByRole("heading", { name: "Create an organization" })).toBeVisible();
+  // Pin the saved authenticated preference; browser locale never selects UI language.
+  const pinned = await page.request.put("/api/personal-settings/language", {
+    headers: { Origin: new URL(page.url()).origin },
+    data: { language: "en" },
+  });
+  expect(pinned.ok()).toBe(true);
   return credentials;
 }
 

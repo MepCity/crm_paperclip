@@ -44,6 +44,39 @@ describeRecordServiceContract(
   contactsRecordServiceContractModule,
 );
 
+describe("Lead creation across request services", () => {
+  it("keeps distinct ids and both records visible to a new service instance", async () => {
+    const ctx = {
+      orgId: randomUUID(),
+      orgSlug: "regression",
+      orgName: "Example",
+      userId: "member",
+      role: "admin" as const,
+    };
+    const first = await createFixtureRecordService(ctx).create(
+      "Leads",
+      input({ Last_Name: "Sequential Alpha" }),
+    );
+    const second = await createFixtureRecordService(ctx).create(
+      "Leads",
+      input({ Last_Name: "Sequential Beta" }),
+    );
+    expect(second.id).not.toBe(first.id);
+    const reader = createFixtureRecordService(ctx);
+    expect(await reader.get("Leads", first.id)).toEqual(first);
+    expect(await reader.get("Leads", second.id)).toEqual(second);
+    const result = await reader.list("Leads", {
+      viewId: "all-leads",
+      page: 1,
+      perPage: 10,
+      search: "Sequential",
+    });
+    expect(result.records.map((row) => row.id).sort()).toEqual([first.id, second.id].sort());
+    const search = await reader.search({ text: "Sequential", modules: ["Leads"] });
+    expect(search[0]?.records.map((row) => row.id).sort()).toEqual([first.id, second.id].sort());
+  });
+});
+
 describe("Leads surface metadata", () => {
   it("publishes the exact surface counts and observed layout columns", async () => {
     const metadata = await make().getModule("Leads");

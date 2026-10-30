@@ -3,6 +3,7 @@
 import type { FormatOptions } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
 import { useState } from "react";
+import { useUiTranslations } from "@/i18n/client-provider";
 import "./detail-cards.css";
 import { DetailFieldRow } from "./detail-field-row";
 
@@ -42,8 +43,9 @@ export function DetailsCard({
   railLayout = "shown",
   activity = false,
 }: DetailsCardProps) {
+  const t = useUiTranslations();
   const [expanded, setExpanded] = useState(!defaultDetailsHidden);
-  const toggleLabel = expanded ? "Hide Details" : "Show Details";
+  const toggleLabel = expanded ? t("records.chrome.hideDetails") : t("records.chrome.showDetails");
 
   return (
     <section

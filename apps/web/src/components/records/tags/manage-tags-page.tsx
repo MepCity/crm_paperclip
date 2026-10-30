@@ -7,6 +7,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Icons } from "@/components/ui/icon";
 import { TextField } from "@/components/ui/text-field";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
+import { useUtilityLabel } from "@/i18n/utility-labels";
 
 export interface ManageTagsPageProps {
   tags?: readonly Tag[];
@@ -46,6 +48,9 @@ export function ManageTagsPage({
   onHelp,
   onNewTag,
 }: ManageTagsPageProps) {
+  const copy = useUtilityLabel();
+  const display = useMetadataDisplayAdapter();
+  const moduleLabel = (name: string) => display.getModulePlural(name, name);
   const titleId = useId();
   const [editing, setEditing] = useState<Tag | "new" | null>(null);
   const [deleting, setDeleting] = useState<Tag | null>(null);
@@ -77,39 +82,40 @@ export function ManageTagsPage({
         <div className="flex items-center gap-3">
           <button
             type="button"
-            aria-label="Back"
+            aria-label={copy("Back")}
             onClick={onBack}
             className="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-surface-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
           >
             <Icons.arrowLeft className="h-4 w-4" aria-hidden />
           </button>
           <h1 id={titleId} className="text-xl font-bold text-text-strong">
-            Manage Tags
+            {copy("Manage Tags")}
           </h1>
           <span className="rounded border border-border px-2 py-0.5 text-xs font-normal text-text-muted">
-            {moduleName}
+            {moduleLabel(moduleName)}
           </span>
         </div>
         <button
           type="button"
           onClick={onHelp}
-          aria-label="Help"
+          aria-label={copy("Help")}
           className="inline-flex items-center gap-1.5 rounded px-1.5 py-1 text-sm font-normal text-text-muted transition-colors hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
         >
           <Icons.info className="h-4 w-4" aria-hidden />
-          <span>Help</span>
+          <span>{copy("Help")}</span>
         </button>
       </div>
 
       {/* Explanatory description */}
       <p className="mt-3 text-sm text-text-muted">
-        Tags are keywords that help you categorize your records based on their characteristics. Tags
-        help you sort your data and find it easily when you need it.
+        {copy(
+          "Tags are keywords that help you categorize your records based on their characteristics. Tags help you sort your data and find it easily when you need it.",
+        )}
       </p>
 
       {/* Usage counter */}
       <div className="mt-4 text-right text-sm text-text">
-        Tags used : {tagsUsed} / {tagsCapacity}
+        {copy("Tags used")} : {tagsUsed} / {tagsCapacity}
       </div>
 
       {error && !editing && !deleting ? (
@@ -120,23 +126,23 @@ export function ManageTagsPage({
       {tags.length > 0 && canManage ? (
         <div className="mt-3 flex justify-end">
           <Button onPress={() => edit("new")} isDisabled={loading || tags.length >= tagsCapacity}>
-            New Tag
+            {copy("New Tag")}
           </Button>
         </div>
       ) : null}
       {/* Catalogue table */}
       <div className="mt-2 overflow-hidden rounded-lg border border-border bg-surface shadow-xs">
-        <table aria-label="Tags table" className="w-full text-left text-sm">
+        <table aria-label={copy("Tags table")} className="w-full text-left text-sm">
           <thead>
             <tr className="border-b border-border bg-surface-hover/50 text-xs font-semibold text-text">
               <th scope="col" className="px-6 py-3 font-semibold text-text">
-                Tag Color
+                {copy("Tag Color")}
               </th>
               <th scope="col" className="px-6 py-3 font-semibold text-text">
-                Tag Name
+                {copy("Tag Name")}
               </th>
               <th scope="col" className="px-6 py-3 font-semibold text-text">
-                Last Modified
+                {copy("Last Modified")}
               </th>
             </tr>
           </thead>
@@ -165,7 +171,7 @@ export function ManageTagsPage({
                         aria-label={`Rename tag ${tag.name}`}
                         onPress={() => edit(tag)}
                       >
-                        Rename
+                        {copy("Rename")}
                       </Button>
                       <Button
                         variant="ghost"
@@ -176,7 +182,7 @@ export function ManageTagsPage({
                           setDeleting(tag);
                         }}
                       >
-                        Delete
+                        {copy("Delete")}
                       </Button>
                     </span>
                   ) : null}
@@ -188,17 +194,23 @@ export function ManageTagsPage({
             ))}
             {!tags.length ? (
               <tr>
-                <td colSpan={3} className="px-6 py-16 text-center">
+                <td colSpan={3} className="px-6 py-8 text-center">
                   <p className="mb-4 text-sm text-text-muted">
                     {loading
-                      ? "Loading tags…"
+                      ? copy("Loading tags…")
                       : error
-                        ? "Unable to load tags."
-                        : "There are currently no available Tags. Add new Tags by clicking the button below."}
+                        ? copy("Unable to load tags.")
+                        : copy(
+                            "There are currently no available Tags. Add new Tags by clicking the button below.",
+                          )}
                   </p>
                   {canManage && !loading && !error ? (
-                    <Button variant="primary" onPress={() => edit("new")} aria-label="New Tag">
-                      New Tag
+                    <Button
+                      variant="primary"
+                      onPress={() => edit("new")}
+                      aria-label={copy("New Tag")}
+                    >
+                      {copy("New Tag")}
                     </Button>
                   ) : null}
                 </td>
@@ -213,7 +225,7 @@ export function ManageTagsPage({
           if (!open && !busy) setEditing(null);
         }}
       >
-        <Dialog title={editing === "new" ? "New Tag" : "Rename Tag"}>
+        <Dialog title={copy(editing === "new" ? "New Tag" : "Rename Tag")}>
           <form
             onSubmit={(event) => {
               event.preventDefault();
@@ -221,7 +233,7 @@ export function ManageTagsPage({
             }}
           >
             <TextField
-              label="Tag Name"
+              label={copy("Tag Name")}
               description="Enter 1 to 50 characters."
               value={name}
               onChange={setName}
@@ -235,23 +247,23 @@ export function ManageTagsPage({
             ) : null}
             <div className="mt-5 flex justify-end gap-3">
               <Button variant="secondary" isDisabled={busy} onPress={() => setEditing(null)}>
-                Cancel
+                {copy("Cancel")}
               </Button>
               <Button
                 type="submit"
                 isDisabled={busy || !name.trim() || [...name.trim().normalize("NFC")].length > 50}
               >
-                Save
+                {copy("Save")}
               </Button>
             </div>
           </form>
         </Dialog>
       </DialogTrigger>
       <ConfirmDialog
-        title="Delete Tag"
+        title={copy("Delete Tag")}
         message={`Delete “${deleting?.name ?? ""}” and remove it from all records?`}
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        confirmLabel={copy("Delete")}
+        cancelLabel={copy("Cancel")}
         tone="danger"
         isOpen={deleting !== null}
         errorMessage={mutationError || error}

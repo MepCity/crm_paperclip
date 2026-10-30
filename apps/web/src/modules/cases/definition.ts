@@ -1,7 +1,6 @@
 import { Icons } from "@/components/ui/icon";
 import { buildAccountsRecordMoreMenuGroups } from "../accounts/accounts-record-more-options";
 import {
-  ACCOUNTS_TIMELINE_EMPTY_EVENTS,
   ACCOUNTS_TIMELINE_MODULE_OPTIONS,
   ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
   ACCOUNTS_TIMELINE_SUBTABS,
@@ -32,7 +31,7 @@ export const casesScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Case",
   pluralLabel: "Cases",
   pageTitle: "Cases",
-  navigation: { id: "cases", icon: Icons.building },
+  navigation: { id: "cases", icon: Icons.ticket, group: "flat" },
   list: casesListPageConfig,
   listCurrencyCode: CASES_LIST_CURRENCY_CODE,
   searchColumns: ["Case_Number", "Subject", "Status", "Priority", "Owner"],
@@ -61,7 +60,6 @@ export const casesScreenDefinition: ModuleScreenDefinition = {
       subtabs: ACCOUNTS_TIMELINE_SUBTABS,
       modules: ACCOUNTS_TIMELINE_MODULE_OPTIONS,
       sources: ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
-      events: ACCOUNTS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeAccountsEventKind,
       upcomingAutomatedActions: {
         label: "Show Upcoming Automated Actions",

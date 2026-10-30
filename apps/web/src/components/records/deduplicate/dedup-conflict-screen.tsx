@@ -28,7 +28,7 @@ import { Icons } from "@/components/ui/icon";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/ui/tabs";
 import { toast } from "@/components/ui/toast";
 import { useDuplicateGroups, useMergeRecords, useUsers } from "@/lib/api/client/hooks";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import type { ModuleMergeDefinition } from "@/modules/types";
 import { DEDUP_MAX_MERGE_RECORDS, dedupConflictIntro, isDedupConflictGroup } from "./dedup-config";
 
@@ -60,6 +60,7 @@ export function DedupConflictGroups({
   listHref,
   merge,
 }: DedupConflictGroupsProps) {
+  const orgFormat = useFormat();
   const router = useRouter();
   const groupsQuery = useDuplicateGroups(module, apiNames);
   const usersQuery = useUsers();
@@ -192,7 +193,7 @@ export function DedupConflictGroups({
             fieldChoices={fieldChoices}
             conflictsOnly={conflictsOnly}
             ownerNames={ownerNames}
-            format={DEFAULT_FORMAT}
+            format={orgFormat}
             displayNameField={linkField}
             onMasterChange={setMasterId}
             onFieldChoiceChange={(fieldApiName, id) =>
@@ -246,7 +247,7 @@ export function DedupConflictGroups({
             anchorId=""
             maxSelected={DEDUP_MAX_MERGE_RECORDS}
             ownerNames={ownerNames}
-            format={DEFAULT_FORMAT}
+            format={orgFormat}
             emptyMessage="No records found."
             onToggle={(id, checked) =>
               setSelectedIds((current) => {

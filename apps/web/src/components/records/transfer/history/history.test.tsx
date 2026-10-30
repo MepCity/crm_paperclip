@@ -53,10 +53,14 @@ function renderImports(
   );
 }
 
-test("import history empty state and note", () => {
+test("import history empty state uses the tabbed panel without a retention note", () => {
   renderImports([]);
-  expect(screen.getByText("No imports in the last 7 days.")).toBeTruthy();
-  expect(screen.getByText("Import history is kept for 7 days.")).toBeTruthy();
+  expect(screen.getByRole("tab", { name: "Import History" }).getAttribute("aria-selected")).toBe(
+    "true",
+  );
+  expect(within(screen.getByRole("tabpanel")).getByText("No recent imports")).toBeTruthy();
+  expect(screen.queryByRole("table")).toBeNull();
+  expect(screen.queryByText("Import history is kept for 7 days.")).toBeNull();
 });
 
 test("status labels", () => {
@@ -66,8 +70,10 @@ test("status labels", () => {
     imp({ id: "c", status: "undone" }),
     imp({ id: "d" }),
   ]);
+  // "Failed" is also the name of the failed-rows column header.
+  const expected: Record<string, number> = { Failed: 2 };
   for (const t of ["Completed", "Failed", "Undone", "Completed with errors"]) {
-    expect(screen.getAllByText(t).length).toBe(1);
+    expect(screen.getAllByText(t).length).toBe(expected[t] ?? 1);
   }
 });
 
@@ -177,4 +183,19 @@ test("loading state displays skeleton", () => {
   );
   expect(screen.getByRole("status")).toBeTruthy();
   expect(screen.getByText("Loading")).toBeTruthy();
+});
+
+test("history counts each row once: a fully failed job shows skipped and failed separately", () => {
+  renderImports([
+    imp({
+      id: "f",
+      status: "failed",
+      counts: { created: 0, updated: 0, skipped: 2, errors: 9 },
+      undoable: false,
+    }),
+  ]);
+  const cells = within(screen.getAllByRole("row")[1] as HTMLElement)
+    .getAllByRole("cell")
+    .map((cell) => cell.textContent);
+  expect(cells.slice(4, 8)).toEqual(["0", "0", "2", "9"]);
 });

@@ -1,6 +1,7 @@
 import { signUpNewUser } from "./support/auth";
-import { moduleListDefaultPath } from "./support/crm-paths";
+import { moduleDraftsPath, moduleListDefaultPath, moduleTagsPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
+import { exerciseSystemFilters } from "./support/system-filters";
 import { expect, test } from "./support/test";
 
 test("Cases shell entry, views, columns and sorting", async ({ page }) => {
@@ -89,10 +90,15 @@ test("Cases Actions menu and later-module controls stay inert", async ({ page })
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
 
-  // KL-13 (M6) and KL-32 (M11)
-  await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
+  // KL-13 and KL-32 (M11)
+  // The Create chevron offers the CSV import and opens on the first click.
+  await list.getByRole("button", { name: "More", exact: true }).click();
+  await expect(page.getByRole("menuitem", { name: "Import Cases" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
+  await expect(page.getByRole("menuitem", { name: "Manage Columns" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   expect(page.url()).toBe(before);
 
@@ -112,6 +118,238 @@ test("Cases Actions menu and later-module controls stay inert", async ({ page })
     "Print View",
   ]);
   await page.getByRole("menuitem", { name: "Manage Tags", exact: true }).click({ force: true });
-  await expect(page.getByRole("menu")).toBeVisible();
-  expect(page.url()).toBe(before);
+  await expect(page).toHaveURL(moduleTagsPath(org.slug, "Cases"));
+});
+
+test("Cases applies and clears all five system filters with matching list/count requests", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseSystemFilters(page, org.slug, "Cases", 60);
+});
+
+test("Cases Actions exports through the shared dialog", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Cases"));
+  const list = page.locator(".module-list-page");
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+  await list.getByRole("button", { name: "Actions", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Export Cases", exact: true }).click();
+  const dialog = page.getByRole("dialog", { name: "Export Cases", exact: true });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("button", { name: /Select view/ })).toContainText("All Cases");
+  await expect(dialog.getByRole("radio", { name: "All fields", exact: true })).toBeChecked();
+  await expect(dialog.getByRole("radio", { name: "Choose fields", exact: true })).toBeVisible();
+  await expect(dialog.getByRole("radio", { name: "Exclude fields", exact: true })).toBeVisible();
+  await expect(dialog.getByText("CSV", { exact: true })).toBeVisible();
+  await expect(dialog.getByText("UTF-8", { exact: true })).toBeVisible();
+  const responsePromise = page.waitForResponse(
+    (response) =>
+      response.url().includes("/crm/v2.2/Cases/actions/export") &&
+      response.request().method() === "POST",
+  );
+  await dialog.getByRole("button", { name: "Export", exact: true }).click();
+  const response = await responsePromise;
+  expect(response.status()).toBe(200);
+  expect(await response.json()).toMatchObject({ module: "Cases", status: "completed" });
+  await expect(dialog).toBeHidden();
+  await expect(page.getByText("Export completed", { exact: true })).toBeVisible();
+  await page.goto(`/crm/${org.slug}/tab/Cases/import`);
+  // CSV import is available for this module: the wizard opens instead of a not-found page.
+  await expect(page.getByRole("heading", { name: "Page not found", exact: true })).toHaveCount(0);
+  await expect(page.getByTestId("csv-input")).toBeAttached();
+});
+
+test("Cases view menu and Actions links match the shared list flows", async ({
+  page,
+}, testInfo) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Cases"));
+  const list = page.locator(".module-list-page");
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+
+  await list.getByRole("button", { name: "Custom views" }).click();
+  const dropdownRow = page.getByRole("menuitem", { name: "Show custom views as Dropdown" });
+  await expect(dropdownRow).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("cases-view-menu.png") });
+  expect((await dropdownRow.boundingBox())?.height).toBeLessThan(42);
+  expect(
+    (await page.getByRole("menu", { name: "Custom views" }).boundingBox())?.width,
+  ).toBeGreaterThan(300);
+  await page.keyboard.press("Escape");
+
+  await page.goto(moduleListDefaultPath(org.slug, "Accounts"));
+  await page.getByRole("button", { name: "Custom views" }).click();
+  await expect(page.getByRole("menuitem", { name: "Show custom views as Dropdown" })).toBeVisible();
+  await page.screenshot({ path: testInfo.outputPath("accounts-view-menu.png") });
+  expect(
+    (await page.getByRole("menuitem", { name: "Show custom views as Dropdown" }).boundingBox())
+      ?.height,
+  ).toBeLessThan(42);
+  await page.goto(moduleListDefaultPath(org.slug, "Cases"));
+  await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
+
+  await list.getByRole("button", { name: "Actions", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Drafts", exact: true }).click();
+  await expect(page).toHaveURL(moduleDraftsPath(org.slug, "Cases"));
+  await expect(page.getByRole("heading", { name: "Criteria", exact: true })).toBeVisible();
+  await page.getByRole("button", { name: "Back", exact: true }).click();
+  await expect(page).toHaveURL(moduleListDefaultPath(org.slug, "Cases"));
+
+  await list.getByRole("button", { name: "Actions", exact: true }).click();
+  await page.getByRole("menuitem", { name: "Print View", exact: true }).hover();
+  const printMenu = page.getByRole("menu", { name: "Print View", exact: true });
+  await expect(printMenu.getByRole("menuitem")).toHaveText([
+    "Print Default view",
+    "Print Using Canvas",
+  ]);
+  await expect(
+    printMenu.getByRole("menuitem", { name: "Print Using Canvas", exact: true }),
+  ).toHaveAttribute("data-later-module", "M6");
+  await printMenu.getByRole("menuitem", { name: "Print Default view", exact: true }).click();
+  await expect(page).toHaveURL(/\/tab\/Cases\/print\?viewId=/);
+  await expect(page.locator('[data-print-kind="list"]')).toBeVisible();
+});
+
+test("Cases related-module filter applies with and without Notes", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Cases"));
+  const headers = { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin };
+  const created = await page.request.post("/crm/v2.2/Cases", {
+    headers,
+    data: {
+      data: [{ Subject: "Synthetic related filter case", Status: "New", Case_Origin: "Web" }],
+    },
+  });
+  expect(created.status()).toBe(200);
+  const id = (await created.json()).data[0].details.id;
+  const note = await page.request.post("/crm/v2.2/Notes", {
+    headers,
+    data: {
+      data: [
+        {
+          Parent_Id: { module: "Cases", id },
+          Note_Title: "Synthetic related note",
+          Note_Content: "Synthetic content",
+        },
+      ],
+    },
+  });
+  expect(note.status()).toBe(200);
+  await page.reload();
+  const list = page.locator(".module-list-page");
+  const total = list
+    .getByRole("group", { name: "Records summary" })
+    .locator('[data-part="total-value"]');
+  await expect(total).toHaveText("61");
+
+  // Emails stays a later-module row; Notes is live.
+  await expect(list.getByRole("checkbox", { name: "Emails", exact: true })).toHaveAttribute(
+    "data-later-module",
+    "M10",
+  );
+  const notes = list.getByRole("checkbox", { name: "Notes", exact: true });
+  await notes.scrollIntoViewIfNeeded();
+  await list.getByText("Notes", { exact: true }).last().click();
+  await expect(list.getByText("Any Notes")).toBeVisible();
+  await list.getByRole("button", { name: "Apply Filter" }).click();
+  // The seed already has one case with a note, so assert the partition rather than a fixed count.
+  await expect(total).not.toHaveText("61");
+  const withNotes = Number(await total.textContent());
+  expect(withNotes).toBeGreaterThanOrEqual(1);
+  await list.getByRole("button", { name: /Notes presence/ }).click();
+  await page.getByRole("option", { name: "without", exact: true }).click();
+  await list.getByRole("button", { name: "Apply Filter" }).click();
+  await expect(total).toHaveText(String(61 - withNotes));
+});
+
+test("Cases related-module filter with child criteria for Calls, Meetings, Notes and Tasks", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Cases"));
+  const headers = { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin };
+  const created = await page.request.post("/crm/v2.2/Cases", {
+    headers,
+    data: {
+      data: [{ Subject: "Synthetic child criteria case", Status: "New", Case_Origin: "Web" }],
+    },
+  });
+  expect(created.status()).toBe(200);
+  const parent = { module: "Cases", id: (await created.json()).data[0].details.id };
+  const children = [
+    [
+      "Calls",
+      "Calls",
+      "Subject",
+      {
+        Call_Type: "Outbound",
+        Call_Start_Time: "2026-01-15T10:00:00.000Z",
+        Call_Duration: "05:00",
+        Subject: "Zzrf Calls",
+        What_Id: parent,
+      },
+    ],
+    [
+      "Meetings",
+      "Events",
+      "Title",
+      {
+        Event_Title: "Zzrf Meetings",
+        Meeting_Venue__s: "In-office",
+        Start_DateTime: "2026-01-15T12:00:00.000Z",
+        End_DateTime: "2026-01-15T13:00:00.000Z",
+        What_Id: parent,
+      },
+    ],
+    [
+      "Notes",
+      "Notes",
+      "Note Title",
+      {
+        Parent_Id: parent,
+        Note_Title: "Zzrf Notes",
+        Note_Content: "Synthetic content",
+      },
+    ],
+    ["Tasks", "Tasks", "Subject", { Subject: "Zzrf Tasks", What_Id: parent }],
+  ] as const;
+  for (const [, apiModule, , input] of children) {
+    const response = await page.request.post(`/crm/v2.2/${apiModule}`, {
+      headers,
+      data: { data: [input] },
+    });
+    expect(response.status()).toBe(200);
+  }
+  await page.reload();
+  const list = page.locator(".module-list-page");
+  const total = list
+    .getByRole("group", { name: "Records summary" })
+    .locator('[data-part="total-value"]');
+  await expect(total).toHaveText("61");
+
+  for (const [label, , fieldLabel] of children) {
+    const checkbox = list.getByRole("checkbox", { name: label, exact: true });
+    await checkbox.scrollIntoViewIfNeeded();
+    await list.getByText(label, { exact: true }).last().click();
+    await list.getByRole("button", { name: "+ Add Field" }).click();
+    await expect(page.getByRole("listbox"), label).toBeVisible();
+    const option = page.getByRole("option", { name: fieldLabel, exact: true });
+    await expect(option, `${label} option`).toBeVisible();
+    await option.click();
+    await list.getByPlaceholder("Type here").fill(`Zzrf ${label}`);
+    await list.getByRole("button", { name: "Apply Filter" }).click();
+    await expect(total).toHaveText("1");
+    await list.getByRole("button", { name: new RegExp(`${label} presence`) }).click();
+    await page.getByRole("option", { name: "without", exact: true }).click();
+    await list.getByRole("button", { name: "Apply Filter" }).click();
+    await expect(total).toHaveText("60");
+    await list.getByRole("button", { name: "Clear", exact: true }).click();
+    await expect(total).toHaveText("61");
+  }
 });

@@ -13,7 +13,7 @@ export interface RecordFormShellActionLabels {
 export interface RecordFormShellProps {
   title: string;
   variant?: "activity";
-  layout?: "call";
+  layout?: "call" | "solutions";
   formAriaLabel: string;
   actionLabels: RecordFormShellActionLabels;
   titleAccessory?: ReactNode;

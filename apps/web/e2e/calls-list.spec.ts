@@ -3,6 +3,7 @@ import { signUpNewUser } from "./support/auth";
 import { moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
+import { exerciseTouchedFilter } from "./support/touched-filter";
 
 test("Calls shell entry, single tab, view menu with search, columns and sorting", async ({
   page,
@@ -39,10 +40,10 @@ test("Calls shell entry, single tab, view menu with search, columns and sorting"
   for (const name of ["Subject", "Call Type", "Call Start Time", "Call Duration"]) {
     await expect(list.getByRole("columnheader", { name, exact: true })).toBeVisible();
   }
-  await expect(list.getByRole("link", { name: "Create Call" })).toHaveAttribute(
-    "href",
-    /\/tab\/Calls\/create$/,
-  );
+  await list.getByRole("button", { name: "Create Call", exact: true }).click();
+  await expect(page.getByRole("menuitem", { name: "Schedule a call", exact: true })).toBeVisible();
+  await expect(page.getByRole("menuitem", { name: "Log a call", exact: true })).toBeVisible();
+  await page.keyboard.press("Escape");
 
   // CL-02: view menu
   await list.getByRole("button", { name: "Custom views" }).click();
@@ -153,11 +154,13 @@ test("Calls import and export open while later-module controls stay inert", asyn
   await expect(list.getByRole("table", { name: "Records" })).toBeVisible();
   const before = page.url();
 
-  // Import is available; View Settings remains a later-module control.
+  // Import is available; View Settings opens its menu.
   await list.getByRole("button", { name: "More", exact: true }).click({ force: true });
   await expect(page.getByRole("menuitem", { name: "Import Calls" })).toBeVisible();
   await page.keyboard.press("Escape");
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
+  await expect(page.getByRole("menuitem", { name: "Manage Columns" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
   expect(page.url()).toBe(before);
 
@@ -199,4 +202,10 @@ test("Calls list measured evidence and row configuration", async ({ page }) => {
   await expect(page).toHaveURL(/\/tab\/Calls\/[^/]+\/edit$/);
   await expect(page.getByRole("button", { name: "Save", exact: true })).toBeVisible();
   await expect(page.getByRole("textbox", { name: "Subject", exact: true })).not.toHaveValue("");
+});
+
+test("Calls applies the Touched Records system filter and restores on Clear", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseTouchedFilter(page, org.slug, "Calls");
 });

@@ -48,7 +48,9 @@ for (const module of Object.keys(builders) as TagModule[]) {
     const user = userEvent.setup();
     render(<FilterPanel {...base} groups={groups} onApply={onApply} />);
     const apply = screen.getByRole("button", { name: "Apply Filter" });
-    expect((apply as HTMLButtonElement).disabled).toBe(true);
+    await waitFor(() => expect((apply as HTMLButtonElement).disabled).toBe(false));
+    await user.click(apply);
+    expect(onApply).not.toHaveBeenCalled();
     for (const [label, comparator] of [
       ["is", "equal"],
       ["is not", "not_equal"],
@@ -56,7 +58,7 @@ for (const module of Object.keys(builders) as TagModule[]) {
       if (label !== "is") {
         await user.click(screen.getByRole("button", { name: /Tag operator$/ }));
         await user.click(screen.getByRole("option", { name: label }));
-        expect((apply as HTMLButtonElement).disabled).toBe(true);
+        expect((apply as HTMLButtonElement).disabled).toBe(false);
       }
       await user.click(screen.getByRole("button", { name: "Tag value" }));
       await user.type(screen.getByRole("textbox", { name: "Search Tag value" }), "follow");
@@ -97,7 +99,7 @@ const groups: FilterGroup[] = [
   },
 ];
 for (const state of ["loading", "empty", "error"] as const) {
-  test(`tag catalog ${state} explains the state and blocks Apply`, async () => {
+  test(`tag catalog ${state} explains the state and preserves a safe Apply action`, async () => {
     const client =
       state === "empty"
         ? createFixtureTagCatalog({})
@@ -126,6 +128,39 @@ for (const state of ["loading", "empty", "error"] as const) {
     await user.keyboard("{Escape}");
     expect(
       (screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement).disabled,
-    ).toBe(true);
+    ).toBe(state !== "empty");
+  });
+}
+
+for (const selectedIds of [["Name"], ["Tag", "Name"]]) {
+  test(`incomplete ordinary fields keep Apply disabled with ${selectedIds.join(" and ")}`, async () => {
+    const onApply = vi.fn();
+    render(
+      <FilterPanel
+        {...base}
+        groups={[
+          {
+            id: "fields",
+            label: "Fields",
+            items: [
+              { id: "Tag", label: "Tag", editor: { fieldType: "tag", tagModule: "Leads" } },
+              { id: "Name", label: "Name", editor: { fieldType: "text" } },
+            ],
+          },
+        ]}
+        selectedIds={selectedIds}
+        onApply={onApply}
+      />,
+    );
+    const apply = screen.getByRole("button", { name: "Apply Filter" }) as HTMLButtonElement;
+    if (selectedIds.includes("Tag")) {
+      const user = userEvent.setup();
+      await user.click(screen.getByRole("button", { name: "Tag value" }));
+      await screen.findByRole("option", { name: "Follow up" });
+      await user.keyboard("{Escape}");
+    }
+    expect(apply.disabled).toBe(true);
+    await userEvent.click(apply);
+    expect(onApply).not.toHaveBeenCalled();
   });
 }

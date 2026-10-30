@@ -1,6 +1,5 @@
 "use client";
 
-import { supportsAttachmentCard } from "@crm/core/attachments/modules";
 import { NotFoundError } from "@crm/core/errors";
 import type {
   ListQuery,
@@ -12,7 +11,6 @@ import type {
 } from "@crm/core/records";
 import { useRouter } from "next/navigation";
 import { type ReactNode, useMemo, useState, useSyncExternalStore } from "react";
-import { useAttachments } from "@/components/records/attachments/use-attachments";
 import { BusinessCard } from "@/components/records/detail/business-card";
 import { DetailsCard } from "@/components/records/detail/details-card";
 import { LastUpdateLabel } from "@/components/records/detail/last-update-label";
@@ -21,8 +19,7 @@ import { RECORD_DETAIL_RAIL_VISIBLE_KEY } from "@/components/records/detail/reco
 import { RecordHeader } from "@/components/records/detail/record-header";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
-import { TimelineHistory, TimelineSurface } from "@/components/records/detail/timeline";
-import { useRecordNoteEvents } from "@/components/records/notes/use-record-note-events";
+import { TimelineSurface } from "@/components/records/detail/timeline";
 import { supportsRecordPrint } from "@/components/records/print/print-modules";
 import { RecordTags } from "@/components/records/tags/record-tags";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
@@ -31,6 +28,9 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Icons } from "@/components/ui/icon";
 import { resolveLaterModule } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
+import { useRecordLabel } from "@/i18n/record-labels";
 import {
   useDeleteRecords,
   useHomeCurrency,
@@ -42,7 +42,7 @@ import {
   useViews,
 } from "@/lib/api/client/hooks";
 import { moduleRecordPrintPath } from "@/lib/crm-paths";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import { usePreference } from "@/lib/preferences";
 import {
   type RecordListContext,
@@ -51,6 +51,7 @@ import {
   subscribeRecordListContext,
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
+import { openActivityCreate } from "@/modules/activity-add-new";
 import { resolveModuleLaterKey, resolveModuleScreenByApiName } from "@/modules/registry";
 import type {
   HeaderConfirmRequest,
@@ -59,9 +60,14 @@ import type {
 } from "@/modules/types";
 import { AccountsLinkedContactSummary } from "./accounts-linked-contact-summary";
 import { InlineEditProvider } from "./inline-edit-context";
+import { ACTIVITY_PARENT_MODULES, RecordCallProvider } from "./record-call-context";
 import { RelatedCardsContainer } from "./related-cards-container";
+import { RecordTimelineHistory } from "./timeline/record-timeline-history";
 
 const FALLBACK_LIST_PAGE_SIZE = 30;
+
+// Activity modules whose lists show numeric dates; their details match.
+const NUMERIC_DATE_MODULES = new Set(["Events", "Calls", "Tasks"]);
 
 export type RecordDetailPaths = {
   defaultList: (orgSlug: string, module: ModuleApiName) => string;
@@ -136,6 +142,10 @@ export function RecordDetailScreen({
   buildDetailSlots,
   saveRecord: saveRecordOverride,
 }: RecordDetailScreenProps) {
+  const t = useUiTranslations();
+  const recordLabel = useRecordLabel();
+  const adapter = useMetadataDisplayAdapter();
+  const orgFormat = useFormat();
   const moduleApiName = definition.apiName;
   const rules = definition.detail;
   const StatusSection = rules.statusRibbon?.component;
@@ -160,10 +170,6 @@ export function RecordDetailScreen({
   const moduleQuery = useModule(moduleApiName);
   const recordQuery = useRecord(moduleApiName, recordId);
   const usersQuery = useUsers();
-  const noteEvents = useRecordNoteEvents(moduleApiName, recordId);
-  const attachmentEvents = useAttachments(moduleApiName, recordId, {
-    enabled: supportsAttachmentCard(moduleApiName),
-  }).events;
   const homeCurrencyQuery = useHomeCurrency({ enabled: Boolean(rules.headerCurrency) });
   const viewsQuery = useViews(moduleApiName, { enabled: viewsQueryEnabled });
 
@@ -202,10 +208,21 @@ export function RecordDetailScreen({
     [usersQuery.data],
   );
 
-  const relatedLists = useMemo(() => {
+  const adaptedModule = useMemo(
+    () => (moduleQuery.data ? adapter.adaptModule(moduleQuery.data) : null),
+    [adapter, moduleQuery.data],
+  );
+
+  const rawRelatedLists = useMemo(() => {
     if (recordQuery.data && buildRelatedLists) return buildRelatedLists(recordQuery.data);
     return rules.relatedLists ?? [];
   }, [buildRelatedLists, recordQuery.data, rules.relatedLists]);
+  const relatedLists = useMemo(() => {
+    return rawRelatedLists.map((item) => ({
+      ...item,
+      title: adapter.getRelatedListTitle(item.id, item.title),
+    }));
+  }, [adapter, rawRelatedLists]);
   const hasRelatedLists = relatedLists.length > 0;
   const relatedEntries = useMemo(() => {
     const selfModuleKey = resolveModuleLaterKey(moduleApiName);
@@ -229,6 +246,19 @@ export function RecordDetailScreen({
         : undefined,
     }));
   }, [moduleApiName, relatedLists]);
+
+  const singularLabel = adaptedModule?.singularLabel ?? definition.singularLabel;
+  const isStandardDeleteTitle =
+    !rules.deleteTitle || rules.deleteTitle === `Delete ${definition.singularLabel}`;
+  const deleteTitle = isStandardDeleteTitle
+    ? t("records.detail.deleteTitle", { module: singularLabel })
+    : rules.deleteTitle;
+  const isStandardDeleteMessage =
+    !rules.deleteMessage ||
+    rules.deleteMessage === `Are you sure you want to delete this ${definition.singularLabel}?`;
+  const deleteMessage = isStandardDeleteMessage
+    ? t("records.detail.deleteMessage", { module: singularLabel })
+    : rules.deleteMessage;
 
   const loading =
     moduleQuery.isLoading ||
@@ -279,9 +309,14 @@ export function RecordDetailScreen({
     currency: homeCurrencyQuery.data,
     currencySymbol: homeCurrencyQuery.data?.symbol,
   });
-  const lastUpdate = rules.lastUpdate(record, now, DEFAULT_FORMAT);
-  const businessFields = rules.businessCard(module, displayRecord);
-  const detailSections = rules.sections(module, displayRecord);
+  const lastUpdate = rules.lastUpdate(record, now, orgFormat);
+  const businessFields = rules.businessCard(adaptedModule ?? module, displayRecord);
+  const detailSections = rules
+    .sections({ ...(adaptedModule ?? module), layout: module.layout }, displayRecord)
+    .map((section) => ({
+      ...section,
+      title: adapter.getLayoutSectionLabel(moduleApiName, section.title),
+    }));
 
   async function persistRecord(input: RecordInput) {
     if (saveRecordOverride) {
@@ -312,13 +347,14 @@ export function RecordDetailScreen({
       setDeleteOpen(false);
       router.push(backHref);
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Delete failed.";
+      const message = error instanceof Error ? error.message : t("records.detail.deleteFailed");
       setDeleteError(message);
       throw error;
     }
   }
 
   const moreMenuGroups = rules.moreOptions({
+    onEdit: () => router.push(paths.edit(orgSlug, definition.tab, recordId)),
     onClone: () => router.push(paths.clone(orgSlug, definition.tab, recordId)),
     onDelete: openDeleteDialog,
     ...(definition.merge
@@ -338,78 +374,89 @@ export function RecordDetailScreen({
   // Accounts and Contacts draw the update label in the tab row instead (AD-35 / D-35).
   const lastUpdateInTabRow = rules.lastUpdatePlacement === "tab-row";
   const overview = (
-    <NumericDatesProvider value={moduleApiName === "Events" || moduleApiName === "Calls"}>
-      {lastUpdate && !lastUpdateInTabRow ? <LastUpdateLabel text={lastUpdate} /> : null}
-      {statusField && StatusSection ? (
-        <StatusSection
-          module={moduleApiName}
-          recordId={recordId}
-          field={statusField}
-          value={displayStatus}
-          onValueChange={setStatusOverride}
-        />
-      ) : null}
-      <InlineEditProvider
-        key={recordId}
-        eligible={rules.inlineEditable}
-        users={(usersQuery.data ?? []).map((user) => ({
-          id: user.userId,
-          name: user.name,
-          email: user.email,
-        }))}
-        ownerNames={ownerNames}
-        recordPath={(targetModule, id) => {
-          const targetDef = resolveModuleScreenByApiName(targetModule);
-          return paths.record(orgSlug, (targetDef?.tab ?? targetModule) as ModuleApiName, id);
-        }}
-        save={persistRecord}
+    <NumericDatesProvider value={NUMERIC_DATE_MODULES.has(moduleApiName)}>
+      <RecordCallProvider
+        value={
+          ACTIVITY_PARENT_MODULES.includes(moduleApiName)
+            ? () =>
+                openActivityCreate(
+                  orgSlug,
+                  "Calls",
+                  moduleApiName,
+                  record,
+                  (path) => router.push(path),
+                  paths.record(orgSlug, definition.tab, recordId),
+                )
+            : null
+        }
       >
-        {detailSlots?.overviewPrefix}
-        <BusinessCard fields={businessFields} ownerNames={ownerNames} format={DEFAULT_FORMAT} />
-        {rules.BetweenCards ? <rules.BetweenCards record={displayRecord} /> : null}
-        {detailSlots?.contactSummary ??
-          (rules.linkedContactSummary && linkedContactSummaryPath ? (
-            <AccountsLinkedContactSummary
-              accountRecord={displayRecord}
-              contactRecordPath={linkedContactSummaryPath}
-            />
-          ) : null)}
-        <DetailsCard
-          sections={detailSections}
-          ownerNames={ownerNames}
-          format={DEFAULT_FORMAT}
-          railLayout={railVisible ? "shown" : "hidden"}
-          activity={activityLayout}
-        />
-        {relatedLists.length > 0 ? (
-          <RelatedCardsContainer
-            relatedLists={relatedLists}
-            context={{
-              orgSlug,
-              record,
-              module: moduleApiName,
-              recordPath: (targetModule, id) => paths.record(orgSlug, targetModule, id),
-            }}
+        {lastUpdate && !lastUpdateInTabRow ? <LastUpdateLabel text={lastUpdate} /> : null}
+        {statusField && StatusSection ? (
+          <StatusSection
+            module={moduleApiName}
+            recordId={recordId}
+            field={statusField}
+            value={displayStatus}
+            onValueChange={setStatusOverride}
           />
         ) : null}
-      </InlineEditProvider>
+        <InlineEditProvider
+          key={recordId}
+          eligible={rules.inlineEditable}
+          users={(usersQuery.data ?? []).map((user) => ({
+            id: user.userId,
+            name: user.name,
+            email: user.email,
+          }))}
+          ownerNames={ownerNames}
+          recordPath={(targetModule, id) => {
+            const targetDef = resolveModuleScreenByApiName(targetModule);
+            return paths.record(orgSlug, (targetDef?.tab ?? targetModule) as ModuleApiName, id);
+          }}
+          save={persistRecord}
+        >
+          {detailSlots?.overviewPrefix}
+          <BusinessCard fields={businessFields} ownerNames={ownerNames} format={orgFormat} />
+          {rules.BetweenCards ? <rules.BetweenCards record={displayRecord} /> : null}
+          {detailSlots?.contactSummary ??
+            (rules.linkedContactSummary && linkedContactSummaryPath ? (
+              <AccountsLinkedContactSummary
+                accountRecord={displayRecord}
+                contactRecordPath={linkedContactSummaryPath}
+              />
+            ) : null)}
+          <DetailsCard
+            sections={detailSections}
+            ownerNames={ownerNames}
+            format={orgFormat}
+            railLayout={railVisible ? "shown" : "hidden"}
+            activity={activityLayout}
+          />
+          {relatedLists.length > 0 ? (
+            <RelatedCardsContainer
+              relatedLists={relatedLists}
+              context={{
+                orgSlug,
+                record,
+                module: moduleApiName,
+                recordPath: (targetModule, id) => paths.record(orgSlug, targetModule, id),
+              }}
+            />
+          ) : null}
+        </InlineEditProvider>
+      </RecordCallProvider>
     </NumericDatesProvider>
   );
 
   const timeline = (
     <TimelineSurface subtabs={rules.timeline.subtabs} activeSubtabId="history">
-      <TimelineHistory
+      <RecordTimelineHistory
+        key={`${moduleApiName}:${recordId}`}
+        module={moduleApiName}
+        recordId={recordId}
         heading="Timeline History"
         filterButtonLabel="History filter"
-        events={[
-          ...rules.timeline.events.map((event) => ({
-            ...event,
-            kind: rules.timeline.normalizeEventKind(event.kind),
-          })),
-          ...noteEvents,
-          ...attachmentEvents,
-        ]}
-        format={DEFAULT_FORMAT}
+        format={orgFormat}
         initialFilterExpanded={false}
         modulesLabel="Modules"
         modulesAllLabel="All Modules"
@@ -449,13 +496,13 @@ export function RecordDetailScreen({
         laterModule="M11"
         className="flex items-center h-(--size-menu-item-height) px-(--size-record-rail-text-inset) text-md font-normal text-primary hover:underline"
       >
-        Add Related List
+        {t("records.detail.addRelatedList")}
       </Link>
       {detailSlots?.relatedRailAfterFooter}
       {railChrome?.linksGroup ? (
         <>
           <h3 className="px-(--size-record-rail-text-inset) pt-2 text-sm font-semibold text-text-muted">
-            {railChrome.linksGroup.title}
+            {adapter.getRelatedListTitle("links", railChrome.linksGroup.title)}
           </h3>
           <Link
             href={`#${railChrome.linksGroup.addLink.id}`}
@@ -463,7 +510,7 @@ export function RecordDetailScreen({
             laterModule={railChrome.linksGroup.addLink.moduleKey}
             className="flex items-center h-(--size-menu-item-height) px-(--size-record-rail-text-inset) text-md font-normal text-primary hover:underline"
           >
-            {railChrome.linksGroup.addLink.label}
+            {adapter.getRelatedListTitle("addLink", railChrome.linksGroup.addLink.label)}
           </Link>
         </>
       ) : null}
@@ -481,7 +528,7 @@ export function RecordDetailScreen({
           title={headerConfirm.title}
           message={headerConfirm.message}
           confirmLabel={headerConfirm.confirmLabel}
-          cancelLabel="Close"
+          cancelLabel={t("common.actions.close")}
           busy={headerConfirmBusy}
           errorMessage={headerConfirmError}
           onConfirm={async () => {
@@ -491,7 +538,9 @@ export function RecordDetailScreen({
               await headerConfirm.onConfirm();
               setHeaderConfirm(null);
             } catch (error) {
-              setHeaderConfirmError(error instanceof Error ? error.message : "Action failed.");
+              setHeaderConfirmError(
+                error instanceof Error ? error.message : t("common.errorShort"),
+              );
             } finally {
               setHeaderConfirmBusy(false);
             }
@@ -504,10 +553,10 @@ export function RecordDetailScreen({
           onOpenChange={(open) => {
             if (!open && !deleteRecords.isPending) setDeleteOpen(false);
           }}
-          title={rules.deleteTitle}
-          message={rules.deleteMessage}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
+          title={deleteTitle}
+          message={deleteMessage}
+          confirmLabel={t("common.actions.delete")}
+          cancelLabel={t("common.actions.cancel")}
           tone="danger"
           busy={deleteRecords.isPending}
           errorMessage={deleteError}
@@ -525,7 +574,11 @@ export function RecordDetailScreen({
             showPortrait={hasPortrait ?? rules.hasPortrait ?? true}
             portraitAppearance={rules.portraitAppearance}
             showRecordNavigation={recordNavigation ?? rules.recordNavigation ?? true}
-            addTags={rules.addTags}
+            addTags={
+              rules.addTags
+                ? { ...rules.addTags, label: recordLabel(rules.addTags.label) }
+                : undefined
+            }
             tagsContent={
               rules.addTags && !rules.addTags.laterModule ? (
                 <RecordTags
@@ -533,45 +586,47 @@ export function RecordDetailScreen({
                   orgSlug={orgSlug}
                   module={definition.apiName}
                   recordId={recordId}
-                  label={rules.addTags.label}
+                  label={recordLabel(rules.addTags.label)}
                 />
               ) : undefined
             }
-            back={{ label: "Back", href: backHref }}
+            back={{ label: t("common.actions.back"), href: backHref }}
             titleGlyph={rules.titleGlyph}
             titleSuffix={titleSuffix}
-            commands={
-              rules.buildHeaderCommands
-                ? rules.buildHeaderCommands(displayRecord, {
-                    editHref: paths.edit(orgSlug, definition.tab, recordId),
-                    save: persistRecord,
-                    navigate: (href) => router.push(href),
-                    confirm: (request) => {
-                      setHeaderConfirmError(null);
-                      setHeaderConfirm(request);
-                    },
-                  })
-                : [
-                    ...(rules.headerCommands ?? []),
-                    {
-                      id: "edit",
-                      label: "Edit",
-                      variant: "secondary",
-                      href: paths.edit(orgSlug, definition.tab, recordId),
-                    },
-                  ]
-            }
-            menuGroups={moreMenuGroups}
-            moreLabel="More Options"
-            previousLabel="Previous Record"
-            nextLabel="Next Record"
+            commands={(rules.buildHeaderCommands
+              ? rules.buildHeaderCommands(displayRecord, {
+                  editHref: paths.edit(orgSlug, definition.tab, recordId),
+                  save: persistRecord,
+                  navigate: (href) => router.push(href),
+                  confirm: (request) => {
+                    setHeaderConfirmError(null);
+                    setHeaderConfirm(request);
+                  },
+                })
+              : [
+                  ...(rules.headerCommands ?? []),
+                  {
+                    id: "edit",
+                    label: t("common.actions.edit"),
+                    variant: "secondary" as const,
+                    href: paths.edit(orgSlug, definition.tab, recordId),
+                  },
+                ]
+            ).map((command) => ({ ...command, label: recordLabel(command.label) }))}
+            menuGroups={moreMenuGroups.map((group) => ({
+              ...group,
+              items: group.items.map((item) => ({ ...item, label: recordLabel(item.label) })),
+            }))}
+            moreLabel={t("records.actions.moreOptions")}
+            previousLabel={t("records.detail.previousRecord")}
+            nextLabel={t("records.detail.nextRecord")}
             previousHref={
               previousId ? paths.record(orgSlug, definition.tab, previousId) : undefined
             }
             nextHref={nextId ? paths.record(orgSlug, definition.tab, nextId) : undefined}
           />
         }
-        relatedListLabel="Related List"
+        relatedListLabel={t("records.detail.relatedList")}
         relatedEntries={relatedEntries}
         selectedRelatedId={selectedRelatedId}
         onRelatedSelectionChange={setSelectedRelatedId}
@@ -582,12 +637,12 @@ export function RecordDetailScreen({
             <LastUpdateLabel text={lastUpdate} inTabRow />
           ) : undefined
         }
-        tabsLabel="Record detail"
+        tabsLabel={t("records.detail.recordDetail")}
         selectedTabId={selectedTabId}
         onTabChange={setSelectedTabId}
         tabs={[
-          { id: "overview", label: "Overview", content: overview },
-          { id: "timeline", label: "Timeline", content: timeline },
+          { id: "overview", label: t("records.detail.overview"), content: overview },
+          { id: "timeline", label: t("records.detail.timeline"), content: timeline },
         ]}
         relatedRailVisible={railVisible && !activityLayout}
         railControl={
@@ -598,7 +653,7 @@ export function RecordDetailScreen({
         sidePanel={
           rules.SidePanel ? <rules.SidePanel record={displayRecord} orgSlug={orgSlug} /> : undefined
         }
-        scrollTopLabel="Scroll To Top"
+        scrollTopLabel={t("records.detail.scrollToTop")}
       />
     </>
   );

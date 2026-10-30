@@ -7,12 +7,15 @@ import type {
   ModuleRecordReference,
   RecordData,
 } from "@crm/core/records";
+import { useRouter } from "next/navigation";
 import { useMemo } from "react";
 import { RelatedRecordsListError } from "@/components/records/detail/related-records-list-error";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { useRecordLabel } from "@/i18n/record-labels";
 import { useRecordList, useViews } from "@/lib/api/client/hooks";
+import { openActivityCreate } from "@/modules/activity-add-new";
 
 const LIST_PAGE_SIZE = 100;
 
@@ -20,6 +23,7 @@ export interface CampaignMembersCardBodyProps {
   campaignRecord: RecordData;
   memberKind: "Lead" | "Contact";
   recordPath: (module: ModuleApiName, id: string) => string;
+  orgSlug?: string;
 }
 
 function reference(value: FieldValue | undefined): ModuleRecordReference | null {
@@ -36,7 +40,10 @@ export function CampaignMembersCardBody({
   campaignRecord,
   memberKind,
   recordPath,
+  orgSlug = "",
 }: CampaignMembersCardBodyProps) {
+  const recordLabel = useRecordLabel();
+  const router = useRouter();
   const filter = useMemo<Criteria>(
     () => ({ field: "Campaign", comparator: "equal", value: campaignRecord.id }),
     [campaignRecord.id],
@@ -119,7 +126,7 @@ export function CampaignMembersCardBody({
   if (matchingMemberRows.length === 0) {
     return (
       <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-        No records found
+        {recordLabel("No records found")}
       </div>
     );
   }
@@ -185,7 +192,22 @@ export function CampaignMembersCardBody({
                   {phone ? (
                     <span className="inline-flex items-center gap-1">
                       <span>{phone}</span>
-                      <Button variant="icon" size="compact" laterModule="M5" aria-label="Call">
+                      <Button
+                        variant="icon"
+                        size="compact"
+                        aria-label="Call"
+                        onPress={() =>
+                          targetRecord &&
+                          openActivityCreate(
+                            orgSlug,
+                            "Calls",
+                            targetModule,
+                            targetRecord,
+                            (path) => router.push(path),
+                            recordPath("Campaigns", campaignRecord.id),
+                          )
+                        }
+                      >
                         <Icons.phone aria-hidden className="size-3.5" />
                       </Button>
                     </span>

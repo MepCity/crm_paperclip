@@ -77,7 +77,7 @@ test("Cancel creates nothing and closes the window", async ({ page }) => {
 
 test("To earlier than From blocks Save and reports under To", async ({ page }) => {
   const { dialog } = await openDialog(page);
-  await dialog.getByLabel("To date", { exact: true }).fill("2000-01-01");
+  await dialog.getByLabel("To date", { exact: true }).fill("01.01.2000");
   await dialog.getByRole("button", { name: "Save", exact: true }).click();
   await expect(dialog.getByText("Please enter a valid To.")).toBeVisible();
   await expect(dialog).toBeVisible();
@@ -96,18 +96,35 @@ test("Save creates the meeting and opens its record", async ({ page }) => {
   ).toContainText("Planning sync");
 });
 
-test("Add more details opens the full form with the typed values", async ({ page }) => {
+test("Add more details expands the same window and saves the extra field", async ({ page }) => {
   const { org, dialog } = await openDialog(page);
+  const windowUrl = page.url();
   await dialog.getByRole("textbox", { name: "Title", exact: true }).fill("Quarterly review");
+  const save = dialog.getByRole("button", { name: "Save", exact: true });
+  const before = await dialog.boundingBox();
+  const footerBefore = await save.boundingBox();
+  expect(before?.y).toBe(0);
+  expect(before?.height).toBe(547);
   await dialog.getByRole("button", { name: "Add more details" }).click();
-  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Meetings/create`));
-  await expect(page.getByRole("heading", { name: "Create Meeting" })).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Title", exact: true })).toHaveValue(
-    "Quarterly review",
-  );
-  await expect(page.getByRole("switch", { name: "Repeat" })).toBeVisible();
-  await expect(page.getByRole("textbox", { name: "Description", exact: true })).toBeVisible();
-  await expect(page.getByRole("button", { name: "Participants Reminder" })).toBeVisible();
+  expect(page.url()).toBe(windowUrl);
+  await expect(dialog.getByRole("button", { name: "Add more details" })).toHaveCount(0);
+  const after = await dialog.boundingBox();
+  const footerAfter = await save.boundingBox();
+  expect(after?.y).toBe(0);
+  expect(after?.height).toBe(547);
+  expect(footerAfter?.y).toBe(footerBefore?.y);
+  await expect
+    .poll(() => dialog.locator(".meeting-window__body").evaluate((el) => el.scrollTop))
+    .toBeGreaterThan(0);
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("switch", { name: "Repeat" })).toBeVisible();
+  await expect(dialog.getByRole("button", { name: "Save", exact: true })).toBeVisible();
+  await dialog.getByRole("textbox", { name: "Description", exact: true }).fill("Agenda notes");
+  await dialog.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Meetings/\\d+$`), {
+    timeout: 60_000,
+  });
+  await expect(page.getByText("Agenda notes").first()).toBeVisible();
 });
 
 test("adds a participant in the window and edits the meeting from the record", async ({ page }) => {
@@ -139,4 +156,46 @@ test("adds a participant in the window and edits the meeting from the record", a
   await expect(
     page.locator("[data-record-header]").getByRole("heading", { level: 1 }),
   ).toContainText("Customer call (moved)");
+});
+
+test("expanded reminder saves its offset and delivery channel", async ({ page }, testInfo) => {
+  await page.setViewportSize({ width: 1470, height: 835 });
+  const { org, dialog } = await openDialog(page);
+  await dialog.getByRole("button", { name: "Add more details" }).click();
+  const reminder = dialog.locator('[data-form-field="Remind_At"]');
+  await reminder.getByRole("button", { name: "Reminder", exact: true }).click();
+  await page.getByRole("option", { name: "10 minutes before", exact: true }).click();
+  await expect(
+    reminder.getByRole("button", { name: "Delivery channel", exact: true }),
+  ).toContainText("Email");
+  await reminder.getByRole("button", { name: "Delivery channel", exact: true }).click();
+  await page.getByRole("option", { name: "None", exact: true }).click();
+  await expect(reminder.getByRole("button", { name: "Reminder", exact: true })).toContainText(
+    "None",
+  );
+  await reminder.getByRole("button", { name: "Delivery channel", exact: true }).click();
+  await page.getByRole("option", { name: "Email", exact: true }).click();
+  await reminder.getByRole("button", { name: "Reminder", exact: true }).click();
+  await page.getByRole("option", { name: "10 minutes before", exact: true }).click();
+  await reminder.scrollIntoViewIfNeeded();
+  const screenshotPath = testInfo.outputPath("meeting-reminder-controls.png");
+  await page.screenshot({ path: screenshotPath });
+  await reminder.screenshot({ path: testInfo.outputPath("meeting-reminder-row.png") });
+  await testInfo.attach("meeting-reminder-controls", {
+    path: screenshotPath,
+    contentType: "image/png",
+  });
+  await dialog.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Meetings/\\d+$`), {
+    timeout: 60_000,
+  });
+  const id = meetingIdFromPath(new URL(page.url()).pathname);
+  await page.goto(moduleRecordEditPath(org.slug, TAB, id));
+  const saved = page.locator('[data-form-field="Remind_At"]');
+  await expect(saved.getByRole("button", { name: "Reminder", exact: true })).toContainText(
+    "10 minutes before",
+  );
+  await expect(saved.getByRole("button", { name: "Delivery channel", exact: true })).toContainText(
+    "Email",
+  );
 });

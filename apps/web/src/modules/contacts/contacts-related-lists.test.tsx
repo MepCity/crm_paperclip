@@ -14,7 +14,7 @@ describe("contactsRelatedLists definition", () => {
     expect(contactsRelatedLists).toHaveLength(19);
 
     const expectedOrder = [
-      { order: 1, id: "notes", title: "Notes", moduleKey: "M6" },
+      { order: 1, id: "notes", title: "Notes", moduleKey: "M2" },
       { order: 2, id: "connected-records", title: "Connected Records", moduleKey: "P3" },
       { order: 3, id: "attachments", title: "Attachments", moduleKey: "M6" },
       { order: 4, id: "cadences", title: "Cadences", moduleKey: "P3" },
@@ -30,7 +30,7 @@ describe("contactsRelatedLists definition", () => {
       { order: 14, id: "emails", title: "Emails", moduleKey: "M10" },
       { order: 15, id: "invoices", title: "Invoices", moduleKey: "P2" },
       { order: 16, id: "campaigns", title: "Campaigns", moduleKey: "M2" },
-      { order: 17, id: "social", title: "Social", moduleKey: "M15" },
+      { order: 17, id: "social", title: "Social", moduleKey: "M2" },
       { order: 18, id: "reporting-contacts", title: "Reporting Contacts", moduleKey: "M2" },
       { order: 19, id: "voice-of-the-customer", title: "Voice of the Customer", moduleKey: "P3" },
     ];
@@ -58,8 +58,14 @@ describe("contactsRelatedLists definition", () => {
     expect(reportingContacts?.moduleKey).toBe("M2");
 
     for (const card of contactsRelatedLists) {
-      // The Campaigns card is live and borrows the live key so its controls stay unlocked.
-      if (card.id === "reporting-contacts" || card.id === "campaigns" || card.id === "cases") {
+      // Campaigns, Cases and Notes cards are live and borrow the live key so their controls stay unlocked.
+      if (
+        card.id === "reporting-contacts" ||
+        card.id === "campaigns" ||
+        card.id === "cases" ||
+        card.id === "social" ||
+        card.id === "notes"
+      ) {
         expect(card.moduleKey).toBe("M2");
       } else {
         expect(card.moduleKey).not.toBe("M2");
@@ -181,28 +187,21 @@ describe("RelatedCardsContainer with Contacts card set", () => {
     const casesSection = screen.getByRole("region", { name: "Cases" });
     expect(casesSection.querySelector("[data-later-module]")).toBeNull();
 
-    // D-79 Emails Compose Email (M10)
+    // D-79 to D-82 (MEP-1049): Emails card opens compose and has interactive tabs
     const composeEmailBtn = screen.getByRole("button", { name: "Compose Email" });
-    expect(composeEmailBtn.getAttribute("data-later-module")).toBe("M10");
-
-    // D-80 to D-82 Emails subtabs (M10)
-    expect(screen.getByRole("tab", { name: "Mails" }).getAttribute("data-later-module")).toBe(
-      "M10",
-    );
-    expect(screen.getByRole("tab", { name: "Drafts" }).getAttribute("data-later-module")).toBe(
-      "M10",
-    );
-    expect(screen.getByRole("tab", { name: "Scheduled" }).getAttribute("data-later-module")).toBe(
-      "M10",
+    expect(composeEmailBtn.hasAttribute("disabled")).toBe(false);
+    expect(composeEmailBtn.getAttribute("aria-disabled")).not.toBe("true");
+    expect(screen.getByRole("tab", { name: "Mails" }).getAttribute("aria-selected")).toBe("true");
+    expect(screen.getByRole("tab", { name: "Drafts" }).getAttribute("aria-selected")).toBe("false");
+    expect(screen.getByRole("tab", { name: "Scheduled" }).getAttribute("aria-selected")).toBe(
+      "false",
     );
 
-    // D-87, D-88 Social links (M15) in two-panel layout
-    const twitterLink = screen.getByRole("link", { name: "Associate Twitter" });
-    expect(twitterLink.getAttribute("data-later-module")).toBe("M15");
-    const facebookLink = screen.getByRole("link", { name: "Associate Facebook" });
-    expect(facebookLink.getAttribute("data-later-module")).toBe("M15");
+    // D-87, D-88 Social card: two inert associate controls, no later-module marker
     const socialSection = screen.getByRole("region", { name: "Social" });
-    expect(within(socialSection).getByText(/You cannot search a profile in Facebook/)).toBeTruthy();
+    expect(within(socialSection).getByRole("button", { name: "Associate Twitter" })).toBeTruthy();
+    expect(within(socialSection).getByRole("button", { name: "Associate Facebook" })).toBeTruthy();
+    expect(socialSection.querySelector("[data-later-module]")).toBeNull();
 
     // Notes card (M6): the body needs a record; the card itself is rendered
     expect(screen.getByRole("region", { name: "Notes" })).toBeTruthy();
@@ -337,7 +336,7 @@ describe("RecordPageFrame with Contacts rail", () => {
     const notesRow = notesLink.closest("div[class*='flex items-center']");
     const notesAddBtn = notesRow?.querySelector("button");
     expect(notesAddBtn).not.toBeNull();
-    expect(notesAddBtn?.getAttribute("data-later-module")).toBe("M6");
+    expect(notesAddBtn?.getAttribute("data-later-module")).toBeNull();
 
     // Reporting Contacts is NOT initially selected, so its plus button is not rendered
     const reportingLink = within(rail).getByRole("link", { name: "Reporting Contacts" });
@@ -501,6 +500,6 @@ describe("RecordPageFrame with Contacts rail", () => {
     expect(onSelect).toHaveBeenCalledWith("notes");
     const notesAddBtn = notesRow?.querySelector("button");
     expect(notesAddBtn).not.toBeNull();
-    expect(notesAddBtn?.getAttribute("data-later-module")).toBe("M6");
+    expect(notesAddBtn?.getAttribute("data-later-module")).toBeNull();
   });
 });

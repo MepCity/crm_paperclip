@@ -1,25 +1,51 @@
 "use client";
 
+import { Building2, Database, MessagesSquare, Settings, Workflow } from "lucide-react";
 import { usePathname } from "next/navigation";
+import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useSettingsLabel } from "@/i18n/settings-labels";
+import { useShellLabel } from "@/i18n/shell-labels";
 import { isNavLinkActive, settingsNav } from "./nav";
 
 const itemClasses = "inline-flex rounded-md px-3 py-2 text-md";
 
 export function SettingsNavigation({ orgSlug }: { orgSlug: string }) {
+  const t = useUiTranslations();
+  const copy = useSettingsLabel();
+  const label = useShellLabel();
   const pathname = usePathname();
   return (
-    <nav aria-label="Settings navigation" className="flex shrink-0 flex-col gap-1">
+    <nav aria-label={t("shell.settingsNavigation")} className="flex shrink-0 flex-col gap-1">
+      <Link
+        href={`/crm/${orgSlug}/settings`}
+        className="mb-2 inline-flex items-center gap-2 rounded-md px-3 py-2 text-md font-semibold text-text-muted hover:bg-surface-hover hover:text-text"
+      >
+        <Icons.arrowLeft className="size-4 shrink-0" aria-hidden />
+        <span>{t("shell.setupHome")}</span>
+      </Link>
       {settingsNav.map((link, index) => {
         const active = isNavLinkActive(link, orgSlug, pathname);
         const heading = link.group && link.group !== settingsNav[index - 1]?.group;
+        const Icon =
+          (
+            {
+              General: Building2,
+              Channels: MessagesSquare,
+              "Data Administration": Database,
+              Customization: Settings,
+              Automation: Workflow,
+            } as Record<string, typeof Building2>
+          )[link.group ?? ""] ?? Settings;
         return [
           heading ? (
             <span
               key={`${link.group}-heading`}
-              className="mt-3 px-3 pb-1 text-sm font-semibold text-text-muted"
+              className="mt-3 flex items-center gap-2 px-3 pb-1 text-sm font-semibold text-text-muted"
             >
-              {link.group}
+              <Icon className="size-5" aria-hidden="true" />
+              {copy(link.group ?? "")}
             </span>
           ) : null,
           <Link
@@ -32,7 +58,7 @@ export function SettingsNavigation({ orgSlug }: { orgSlug: string }) {
                 : `${itemClasses} text-text-muted data-hovered:bg-surface-hover`
             }
           >
-            {link.label}
+            {label(link.id, link.label)}
           </Link>,
         ];
       })}

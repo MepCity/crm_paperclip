@@ -1,7 +1,7 @@
 .kanban-settings-panel {
-  top: 50%;
-  transform: translate(-50%, -50%);
-  width: min(100%, 48rem);
+  top: 0;
+  transform: translateX(-50%);
+  width: min(100%, 42rem);
   border-radius: var(--radius-lg);
 }
 .kanban-settings-content {
@@ -46,8 +46,8 @@
   }
 }
 .kanban-manage-panel {
-  top: 50%;
-  transform: translate(-50%, -50%);
+  top: 0;
+  transform: translateX(-50%);
   width: min(100%, 64rem);
   border-radius: var(--radius-lg);
 }

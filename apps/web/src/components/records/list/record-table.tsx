@@ -10,6 +10,7 @@ import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { Menu, MenuItem, MenuTrigger } from "@/components/ui/menu";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { ActivityRibbon } from "./activity-ribbon";
 import { CellValue } from "./cell-value";
 import { RecordTableFooter, type RecordTableFooterProps } from "./record-table-footer";
@@ -84,7 +85,7 @@ const badgeColumnClass = [
 ].join(" ");
 
 const headerBox = [
-  "relative h-(--size-list-header-height) overflow-hidden",
+  "sticky top-0 h-(--size-list-header-height) overflow-hidden",
   "border-b-(length:--size-list-header-border) border-b-panel-border",
   "text-left align-middle text-md font-normal text-text-strong",
 ].join(" ");
@@ -131,6 +132,7 @@ export function RecordTable({
   rowTools = ["ellipsis", "note"],
   footer,
 }: RecordTableProps) {
+  const t = useUiTranslations();
   const empty = records.length === 0;
 
   const selected = new Set(selectedIds);
@@ -173,18 +175,18 @@ export function RecordTable({
             <tr data-part="header">
               <td
                 data-part="leading"
-                className={`${halfLeading} ${headerBox} sticky left-0 z-20`}
+                className={`${halfLeading} ${headerBox} sticky left-0 z-30`}
               />
               {empty ? (
                 <td
                   data-part="leading"
-                  className={`${halfLeading} ${headerBox} sticky left-[calc(var(--size-list-leading-pair-width)/2)] z-20`}
+                  className={`${halfLeading} ${headerBox} sticky left-[calc(var(--size-list-leading-pair-width)/2)] z-30`}
                 />
               ) : (
                 <th
                   scope="col"
                   data-part="leading"
-                  className={`${halfLeading} ${headerBox} sticky left-[calc(var(--size-list-leading-pair-width)/2)] z-20`}
+                  className={`${halfLeading} ${headerBox} sticky left-[calc(var(--size-list-leading-pair-width)/2)] z-30`}
                 >
                   <div className="flex h-full items-center justify-end pe-(--size-list-checkbox-inset)">
                     <SelectionBox
@@ -199,7 +201,7 @@ export function RecordTable({
                 <th
                   scope="col"
                   data-part="badge"
-                  className={`${badgeColumnClass} ${headerBox} sticky left-(--size-list-leading-pair-width) z-10`}
+                  className={`${badgeColumnClass} ${headerBox} sticky left-(--size-list-leading-pair-width) z-30`}
                 >
                   <span className="sr-only">Badges</span>
                 </th>
@@ -213,7 +215,7 @@ export function RecordTable({
                     scope="col"
                     data-part="column"
                     aria-label={label}
-                    className={`${dataColumn} ${headerBox} group/column`}
+                    className={`${dataColumn} ${headerBox} z-20 group/column`}
                   >
                     <div className={`flex h-full items-center overflow-hidden ${inset}`}>
                       <span data-part="header-label" className="min-w-0 truncate">
@@ -221,7 +223,7 @@ export function RecordTable({
                       </span>
                       {isLinkField && alphabet ? (
                         <AlphabetFilter
-                          label="Filter by first letter"
+                          label={t("records.list.filterByFirstLetter")}
                           value={alphabet.value}
                           onChange={alphabet.onChange}
                           className="shrink-0"

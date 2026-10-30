@@ -1,6 +1,7 @@
 "use client";
 
 import type {
+  ConvertLeadInput,
   CurrencyDefinition,
   DeduplicateResult,
   DuplicateGroup,
@@ -10,6 +11,7 @@ import type {
   MergeInput,
   ModuleApiName,
   ModuleMetadata,
+  ModuleReadProjection,
   RecordData,
   RecordId,
   RecordInput,
@@ -48,6 +50,19 @@ export function useModule(module: ModuleApiName) {
   });
 }
 
+export function useModuleProjection(module: ModuleApiName, options?: { enabled?: boolean }) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  return useQuery<ModuleReadProjection>({
+    queryKey: apiKeys.moduleProjection(orgSlug, module),
+    queryFn: () =>
+      service.getModuleProjection
+        ? service.getModuleProjection(module)
+        : (service.getModule(module) as unknown as Promise<ModuleReadProjection>),
+    enabled: options?.enabled ?? true,
+  });
+}
+
 export function useViews(module: ModuleApiName, options?: { enabled?: boolean }) {
   const orgSlug = useOrgSlug();
   const service = useClientRecordService();
@@ -58,13 +73,13 @@ export function useViews(module: ModuleApiName, options?: { enabled?: boolean })
   });
 }
 
-export function useView(module: ModuleApiName, viewId: string) {
+export function useView(module: ModuleApiName, viewId: string, options?: { enabled?: boolean }) {
   const orgSlug = useOrgSlug();
   const service = useClientRecordService();
   return useQuery({
     queryKey: apiKeys.view(orgSlug, module, viewId),
     queryFn: () => service.getView(module, viewId),
-    enabled: Boolean(viewId),
+    enabled: Boolean(viewId) && (options?.enabled ?? true),
   });
 }
 
@@ -86,9 +101,40 @@ export function useRecordList(
   });
 }
 
+/** Loads every page of a list (until `moreRecords` is false) as one query under the list key prefix. */
+export function useAllRecordPages(
+  module: ModuleApiName,
+  query: Omit<ListQuery, "page">,
+  options?: { enabled?: boolean },
+) {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  return useQuery({
+    queryKey: [...apiKeys.list(orgSlug, module, { ...query, page: 1 }), "all-pages"],
+    queryFn: async () => {
+      const records: RecordData[] = [];
+      for (let page = 1; ; page += 1) {
+        const result = await service.list(module, { ...query, page });
+        records.push(...result.records);
+        if (result.moreRecords !== true || result.records.length === 0) return records;
+      }
+    },
+    enabled: options?.enabled ?? Boolean(query.viewId),
+  });
+}
+
 export function useRecordCount(
   module: ModuleApiName,
-  query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
+  query: Pick<
+    ListQuery,
+    | "viewId"
+    | "filters"
+    | "search"
+    | "activityFilter"
+    | "campaignFilter"
+    | "systemFilters"
+    | "relatedModules"
+  >,
 ) {
   const orgSlug = useOrgSlug();
   const service = useClientRecordService();
@@ -137,6 +183,7 @@ export function invalidateModuleLists(
   module: ModuleApiName,
   recordId?: RecordId,
 ) {
+  void queryClient.invalidateQueries({ queryKey: apiKeys.timelines(orgSlug) });
   void queryClient.invalidateQueries({ queryKey: listQueriesPrefix(orgSlug, module) });
   void queryClient.invalidateQueries({ queryKey: countQueriesPrefix(orgSlug, module) });
   void queryClient.invalidateQueries({ queryKey: summarizeQueriesPrefix(orgSlug, module) });
@@ -171,6 +218,7 @@ export function useUpdateRecord(module: ModuleApiName) {
     onSuccess: async (record) => {
       await queryClient.cancelQueries({ queryKey: apiKeys.record(orgSlug, module, record.id) });
       queryClient.setQueryData(apiKeys.record(orgSlug, module, record.id), record);
+      void queryClient.invalidateQueries({ queryKey: apiKeys.timelines(orgSlug) });
       void queryClient.invalidateQueries({ queryKey: listQueriesPrefix(orgSlug, module) });
       void queryClient.invalidateQueries({ queryKey: countQueriesPrefix(orgSlug, module) });
     },
@@ -236,6 +284,21 @@ export function useMergeRecords(module: ModuleApiName) {
         queryClient.removeQueries({ queryKey: apiKeys.record(orgSlug, module, id) });
       }
       void queryClient.invalidateQueries({ queryKey: apiKeys.record(orgSlug, module, record.id) });
+    },
+  });
+}
+
+export function useConvertLead() {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ leadId, input }: { leadId: RecordId; input: ConvertLeadInput }) =>
+      service.convertLead(leadId, input),
+    onSuccess: (_result, { leadId }) => {
+      invalidateModuleLists(queryClient, orgSlug, "Leads", leadId);
+      for (const module of ["Accounts", "Contacts", "Deals"])
+        invalidateModuleLists(queryClient, orgSlug, module);
     },
   });
 }

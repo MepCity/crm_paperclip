@@ -5,8 +5,10 @@ import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-
 import { ReportingContactsCardBody } from "@/components/records/detail/reporting-contacts-card-body";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
-import { notesCardBody } from "../notes-card";
+import { emailsCard } from "../emails/record-card";
+import { notesCardBody, openNotesComposer } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
+import { SocialRecordCardBody } from "../social/social-record-card";
 import type { RelatedListActivityColumnDefinition, RelatedListDefinition } from "../types";
 
 export interface ContactsRelatedListHandlers {
@@ -76,13 +78,13 @@ export function createContactsRelatedLists(
       id: "notes",
       renderBody: notesCardBody("Contacts"),
       title: "Notes",
-      moduleKey: "M6",
+      moduleKey: "M2",
       order: 1,
       targetId: "related-list-notes",
       railAction: {
         id: "notes-add",
         label: "Add",
-        moduleKey: "M6",
+        onAction: openNotesComposer,
       },
       emptyStateText: "No records found",
     },
@@ -353,6 +355,7 @@ export function createContactsRelatedLists(
     },
     {
       id: "emails",
+      renderCard: emailsCard("Contacts"),
       title: "Emails",
       moduleKey: "M10",
       order: 14,
@@ -430,15 +433,11 @@ export function createContactsRelatedLists(
     {
       id: "social",
       title: "Social",
-      moduleKey: "M15",
+      // The card is static and local; "M2" keeps the rail entry unlocked.
+      moduleKey: "M2",
       order: 17,
       targetId: "related-list-social",
-      socialLinks: [
-        { id: "assoc-twitter", label: "Associate Twitter", moduleKey: "M15" },
-        { id: "assoc-facebook", label: "Associate Facebook", moduleKey: "M15" },
-      ],
-      socialGuidance:
-        "You cannot search a profile in Facebook. This has to be associated from the Social Tab",
+      renderBody: () => createElement(SocialRecordCardBody),
     },
     {
       id: "reporting-contacts",

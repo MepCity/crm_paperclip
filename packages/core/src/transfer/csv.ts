@@ -66,11 +66,13 @@ export function parseCsv(
     if (!headers) {
       const trimmed = row.map((c) => c.trim());
       if (trimmed.some((c) => c === "")) throw new CsvError("no_header", line);
-      const seen = new Set<string>();
-      for (const h of trimmed) {
-        const key = h.toLowerCase();
-        if (seen.has(key)) throw new CsvError("duplicate_header", line);
-        seen.add(key);
+      // Repeated names (the reference CRM repeats some) get " (2)", " (3)", ...
+      const used = new Set<string>();
+      for (const [index, name] of trimmed.entries()) {
+        let candidate = name;
+        for (let n = 2; used.has(candidate.toLowerCase()); n++) candidate = `${name} (${n})`;
+        used.add(candidate.toLowerCase());
+        trimmed[index] = candidate;
       }
       headers = trimmed;
       return;

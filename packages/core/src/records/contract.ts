@@ -108,6 +108,18 @@ export interface ModuleMetadata {
   layout: readonly LayoutSection[];
 }
 
+/** One atomic, organization-bound settings read; record engine integration is separate. */
+export interface ModuleReadProjection extends ModuleMetadata {
+  revision: string;
+  layoutId: string;
+  fields: readonly (FieldDefinition & { id: string; custom: boolean })[];
+  views: readonly ListView[];
+}
+
+export interface ModuleMetadataReader {
+  getModuleProjection(module: ModuleApiName): Promise<ModuleReadProjection>;
+}
+
 export interface RecordData {
   id: RecordId;
   /** Keys are field API names, including owner and creation/modification fields. */
@@ -203,6 +215,34 @@ export type CampaignFilterValue = {
   memberStatuses?: readonly string[];
 };
 
+export interface FilterPeriod {
+  from: string;
+  to: string;
+}
+export type RecordActionKind = "created" | "updated" | "converted" | "merged";
+export type RelatedActionKind = "added" | "updated" | "deleted";
+export interface SystemFiltersValue {
+  locked?: { locked: boolean };
+  recordAction?: { action: RecordActionKind; actorIds?: readonly string[]; period: FilterPeriod };
+  relatedRecordsAction?: {
+    module: string;
+    action: RelatedActionKind;
+    actorIds?: readonly string[];
+    period: FilterPeriod;
+  };
+  touched?: { actorIds?: readonly string[]; period: FilterPeriod };
+  untouched?: { actorIds?: readonly string[]; period: FilterPeriod };
+}
+
+/** A single field condition (a leaf of `Criteria`), evaluated on a child module's fields. */
+export type FieldCriterion = Extract<Criteria, { field: string }>;
+export type RelatedFilterModule = "Calls" | "Meetings" | "Notes" | "Tasks";
+export interface RelatedModuleFilter {
+  module: RelatedFilterModule;
+  presence: "with" | "without";
+  criteria: readonly FieldCriterion[];
+}
+
 export interface ListQuery {
   viewId: string;
   /** One-based page number. */
@@ -214,6 +254,8 @@ export interface ListQuery {
   sort?: SortSpec;
   filters?: Criteria;
   search?: string;
+  systemFilters?: SystemFiltersValue;
+  relatedModules?: readonly RelatedModuleFilter[];
   activityFilter?: ActivityFilterValue;
   campaignFilter?: CampaignFilterValue;
   includeActivitySummary?: boolean;
@@ -221,7 +263,13 @@ export interface ListQuery {
 
 export type SummaryQuery = Pick<
   ListQuery,
-  "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter"
+  | "viewId"
+  | "filters"
+  | "search"
+  | "activityFilter"
+  | "campaignFilter"
+  | "systemFilters"
+  | "relatedModules"
 > & {
   groupBy: string;
   sum?: string;
@@ -241,6 +289,16 @@ export interface ListResult {
   moreRecords: boolean;
   /** The order the adapter applied: query sort, else view sort, else the default. */
   sort: SortSpec;
+}
+
+/** Required by schema-coordinated adapters; conversion supplies every target module token. */
+export interface RecordWriteOptions {
+  expectedRevision?: string | Readonly<Record<string, string>>;
+  /**
+   * Source timestamps kept by a data import (ISO 8601, UTC). Only the import path sets them;
+   * `createdTime` applies to create, `modifiedTime` to create and update.
+   */
+  sourceTimes?: { createdTime?: string; modifiedTime?: string };
 }
 
 export type RecordInput = Readonly<Record<string, FieldValue>>;
@@ -291,6 +349,18 @@ export interface CurrencyDefinition {
   prefixSymbol: boolean;
 }
 
+export type ConvertTarget = { reuseId: string; update?: RecordInput } | { create: RecordInput };
+export interface ConvertLeadInput {
+  account?: ConvertTarget;
+  contact?: ConvertTarget;
+  deal?: ConvertTarget;
+}
+export interface ConvertLeadResult {
+  accountId: string | null;
+  contactId: string | null;
+  dealId: string | null;
+}
+
 /**
  * update, massUpdate, changeOwner and delete reject Locked__s === true with
  * RecordLockedError. Batch operations validate all targets before writing;
@@ -302,8 +372,22 @@ export interface RecordService {
     module: ModuleApiName,
     fields: readonly string[],
   ): Promise<readonly DuplicateGroup[]>;
-  merge(module: ModuleApiName, input: MergeInput): Promise<RecordData>;
-  deduplicate(module: ModuleApiName, fields: readonly string[]): Promise<DeduplicateResult>;
+  merge(
+    module: ModuleApiName,
+    input: MergeInput,
+    options?: RecordWriteOptions,
+  ): Promise<RecordData>;
+  /** Converts a lead into account/contact/deal targets under one history operation. */
+  convertLead(
+    leadId: string,
+    input: ConvertLeadInput,
+    options?: RecordWriteOptions,
+  ): Promise<ConvertLeadResult>;
+  deduplicate(
+    module: ModuleApiName,
+    fields: readonly string[],
+    options?: RecordWriteOptions,
+  ): Promise<DeduplicateResult>;
   getHomeCurrency(): Promise<CurrencyDefinition>;
   getModule(module: ModuleApiName): Promise<ModuleMetadata>;
   listViews(module: ModuleApiName): Promise<readonly ListView[]>;
@@ -311,15 +395,47 @@ export interface RecordService {
   list(module: ModuleApiName, query: ListQuery): Promise<ListResult>;
   count(
     module: ModuleApiName,
-    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
+    query: Pick<
+      ListQuery,
+      | "viewId"
+      | "filters"
+      | "search"
+      | "activityFilter"
+      | "campaignFilter"
+      | "systemFilters"
+      | "relatedModules"
+    >,
   ): Promise<number>;
   summarize(module: ModuleApiName, query: SummaryQuery): Promise<readonly GroupSummary[]>;
   get(module: ModuleApiName, id: RecordId): Promise<RecordData>;
-  create(module: ModuleApiName, input: RecordInput): Promise<RecordData>;
-  update(module: ModuleApiName, id: RecordId, input: RecordInput): Promise<RecordData>;
-  massUpdate(module: ModuleApiName, ids: readonly RecordId[], input: RecordInput): Promise<void>;
-  changeOwner(module: ModuleApiName, ids: readonly RecordId[], ownerId: string): Promise<void>;
-  delete(module: ModuleApiName, ids: readonly RecordId[]): Promise<void>;
+  create(
+    module: ModuleApiName,
+    input: RecordInput,
+    options?: RecordWriteOptions,
+  ): Promise<RecordData>;
+  update(
+    module: ModuleApiName,
+    id: RecordId,
+    input: RecordInput,
+    options?: RecordWriteOptions,
+  ): Promise<RecordData>;
+  massUpdate(
+    module: ModuleApiName,
+    ids: readonly RecordId[],
+    input: RecordInput,
+    options?: RecordWriteOptions,
+  ): Promise<void>;
+  changeOwner(
+    module: ModuleApiName,
+    ids: readonly RecordId[],
+    ownerId: string,
+    options?: RecordWriteOptions,
+  ): Promise<void>;
+  delete(
+    module: ModuleApiName,
+    ids: readonly RecordId[],
+    options?: RecordWriteOptions,
+  ): Promise<void>;
   listKanbanViews(module: ModuleApiName): Promise<readonly KanbanView[]>;
   getKanbanView(module: ModuleApiName, id: string): Promise<KanbanView>;
   createKanbanView(module: ModuleApiName, input: KanbanViewInput): Promise<KanbanView>;

@@ -3,6 +3,7 @@ import { Icons } from "@/components/ui/icon";
 import { getModuleScreens } from "@/modules/registry";
 import {
   createRecordsNav,
+  flatNavOrder,
   isNavLinkActive,
   type NavLink,
   navLinkIconClassName,
@@ -56,11 +57,34 @@ describe("navLinkIconClassName", () => {
 
 describe("shellNav", () => {
   it("defines top-level pinned links and teamspace section structure", () => {
-    expect(shellNav.links).toHaveLength(1);
+    expect(shellNav.links.map((link) => link.id)).toEqual([
+      "home",
+      "workqueue",
+      "reports",
+      "analytics",
+    ]);
+    const workqueueLink = shellNav.links[1];
+    if (!workqueueLink) throw new Error("Missing Workqueue link");
+    expect(workqueueLink.href("acme")).toBe("/crm/acme/workqueue");
+    expect(isNavLinkActive(workqueueLink, "acme", "/crm/acme/workqueue")).toBe(true);
+
+    const reportsLink = shellNav.links.find((link) => link.id === "reports");
+    expect(reportsLink?.href("acme")).toBe("/crm/acme/tab/Reports");
+    if (reportsLink) {
+      expect(isNavLinkActive(reportsLink, "acme", "/crm/acme/tab/Reports/sample-report-1")).toBe(
+        true,
+      );
+    }
+    const analyticsLink = shellNav.links.find((link) => link.id === "analytics");
+    expect(analyticsLink?.href("acme")).toBe("/crm/acme/tab/Dashboards");
+    if (analyticsLink) {
+      expect(isNavLinkActive(analyticsLink, "acme", "/crm/acme/tab/Dashboards")).toBe(true);
+    }
     const homeLink = shellNav.links[0];
     expect(homeLink).toBeDefined();
     if (!homeLink) return;
 
+    expect(isNavLinkActive(homeLink, "acme", "/crm/acme/workqueue")).toBe(false);
     expect(homeLink.id).toBe("home");
     expect(homeLink.label).toBe("Home");
     expect(homeLink.icon).toBe(Icons.home);
@@ -75,7 +99,11 @@ describe("shellNav", () => {
 
     expect(teamspace.id).toBe("teamspace");
     expect(teamspace.label).toBe("Teamspace");
-    expect(teamspace.groups.map((group) => group.id)).toEqual(["sales", "activities"]);
+    expect(teamspace.groups.map((group) => group.id)).toEqual([
+      "sales",
+      "activities",
+      "integrations",
+    ]);
   });
 
   it("populates sales and activities groups from module screen registry", () => {
@@ -93,10 +121,9 @@ describe("shellNav", () => {
     const expectedActivitiesModules = screens.filter(
       (screen) => screen.navigation.group === "activities",
     );
-
-    expect(salesGroup?.links.map((link) => link.id)).toEqual(
-      expectedSalesModules.map((screen) => screen.navigation.id),
-    );
+    const salesIds = expectedSalesModules.map((screen) => screen.navigation.id);
+    salesIds.splice(salesIds.indexOf("deals") + 1, 0, "documents");
+    expect(salesGroup?.links.map((link) => link.id)).toEqual(salesIds);
     expect(activitiesGroup?.links.map((link) => link.id)).toEqual(
       expectedActivitiesModules.map((screen) => screen.navigation.id),
     );
@@ -106,6 +133,68 @@ describe("shellNav", () => {
       expect(link.href("acme")).toContain("/crm/acme/");
       expect(link.activePrefix?.("acme")).toContain("/crm/acme/");
     }
+  });
+
+  it("keeps Campaigns in Sales and places Solutions and Cases as ungrouped rows in reference order", () => {
+    const teamspace = shellNav.sections[0];
+    const sales = teamspace?.groups.find((group) => group.id === "sales");
+    expect(sales?.links.map((link) => link.id)).toEqual([
+      "leads",
+      "contacts",
+      "accounts",
+      "deals",
+      "documents",
+      "campaigns",
+    ]);
+    expect(teamspace?.links?.map((link) => link.id)).toEqual(["solutions", "social", "cases"]);
+  });
+
+  it("lists the full reference order of ungrouped rows with Solutions before Cases", () => {
+    expect(flatNavOrder.indexOf("solutions")).toBeLessThan(flatNavOrder.indexOf("cases"));
+    expect(flatNavOrder).toEqual([
+      "price-books",
+      "products",
+      "quotes",
+      "invoices",
+      "sales-orders",
+      "solutions",
+      "social",
+      "forecasts",
+      "purchase-orders",
+      "vendors",
+      "salesinbox",
+      "cases",
+      "my-jobs",
+      "services",
+    ]);
+  });
+
+  it("opens disconnected integrations without list or create routes", () => {
+    const teamspace = shellNav.sections[0];
+    const visits = teamspace?.groups.find((group) => group.id === "integrations")?.links[0];
+    const social = teamspace?.links?.find((link) => link.id === "social");
+    for (const [link, tab] of [
+      [visits, "Visits"],
+      [social, "Social"],
+    ] as const) {
+      expect(link).toBeDefined();
+      if (!link) continue;
+      expect(link.href("demo")).toBe(`/crm/demo/tab/${tab}`);
+      expect(isNavLinkActive(link, "demo", `/crm/demo/tab/${tab}`)).toBe(true);
+      expect(isNavLinkActive(link, "demo", "/crm/demo/tab/Leads")).toBe(false);
+      expect(createRecordsNav.some((entry) => entry.id === tab)).toBe(false);
+    }
+  });
+
+  it("gives every module row its own glyph", () => {
+    const teamspace = shellNav.sections[0];
+    const rows = [
+      ...(teamspace?.groups.flatMap((g) => g.links) ?? []),
+      ...(teamspace?.links ?? []),
+    ];
+    const glyphs = rows.filter((l) => l.id !== "accounts").map((l) => l.icon);
+    expect(new Set(glyphs).size).toBe(glyphs.length);
+    expect(rows.find((l) => l.id === "accounts")?.icon).toBe(Icons.building);
   });
 
   it("edge case: generates valid paths for empty and complex organization slugs", () => {
@@ -126,14 +215,23 @@ describe("shellNav", () => {
 });
 
 describe("settingsNav", () => {
-  it("defines general, members and data administration links in order", () => {
+  it("defines settings links in group order", () => {
     expect(settingsNav.map((link) => link.id)).toEqual([
       "general",
       "members",
+      "personal-settings",
+      "company-details",
+      "currencies",
+      "calendar-booking",
+      "email",
       "import-history",
       "export-history",
+      "modules-and-fields",
+      "workflow-rules",
+      "assignment-rules",
     ]);
     const [general, members] = settingsNav;
+    const calendarBooking = settingsNav.find((link) => link.id === "calendar-booking");
 
     expect(general).toEqual({
       id: "general",
@@ -141,6 +239,7 @@ describe("settingsNav", () => {
       icon: Icons.settings,
       href: expect.any(Function),
       match: "exact",
+      group: "General",
     });
     expect(members).toEqual({
       id: "members",
@@ -148,10 +247,66 @@ describe("settingsNav", () => {
       icon: Icons.users,
       href: expect.any(Function),
       match: "exact",
+      group: "General",
+    });
+    expect(calendarBooking).toEqual({
+      id: "calendar-booking",
+      label: "Calendar Booking",
+      icon: Icons.calendar,
+      href: expect.any(Function),
+      match: "exact",
+      group: "General",
     });
 
     expect(general?.href("acme")).toBe("/crm/acme/settings");
     expect(members?.href("acme")).toBe("/crm/acme/settings/members");
+    expect(calendarBooking?.href("acme")).toBe("/crm/acme/settings/calendar-booking");
+  });
+
+  it("groups calendar booking under General and matches only its own settings page", () => {
+    const generalLinks = settingsNav.filter((link) => link.group === "General");
+    expect(generalLinks.map((link) => link.label)).toEqual([
+      "General",
+      "Members",
+      "Personal Settings",
+      "Company Details",
+      "Currencies",
+      "Calendar Booking",
+    ]);
+
+    const bookingLink = settingsNav.find((link) => link.id === "calendar-booking");
+    expect(bookingLink).toBeDefined();
+    if (!bookingLink) return;
+
+    const path = "/crm/acme/settings/calendar-booking";
+    expect(bookingLink.href("acme")).toBe(path);
+    expect(bookingLink.match).toBe("exact");
+    expect(isNavLinkActive(bookingLink, "acme", path)).toBe(true);
+    expect(isNavLinkActive(bookingLink, "acme", "/crm/acme/settings")).toBe(false);
+    expect(isNavLinkActive(bookingLink, "acme", `${path}/subpage`)).toBe(false);
+  });
+
+  it("resolves company, currency and personal settings without matching sibling routes", () => {
+    for (const id of ["company-details", "currencies", "personal-settings"]) {
+      const link = settingsNav.find((entry) => entry.id === id);
+      expect(link).toBeDefined();
+      if (!link) continue;
+      const path = `/crm/example/settings/${id}`;
+      expect(link.href("example")).toBe(path);
+      expect(isNavLinkActive(link, "example", path)).toBe(true);
+      expect(isNavLinkActive(link, "example", "/crm/example/settings")).toBe(false);
+    }
+  });
+
+  it("exposes Email under Channels and keeps it active on configuration subtabs", () => {
+    const email = settingsNav.find((link) => link.id === "email");
+    expect(email?.group).toBe("Channels");
+    expect(email?.href("demo")).toBe("/crm/demo/settings/email-configuration");
+    if (!email) return;
+    expect(
+      isNavLinkActive(email, "demo", "/crm/demo/settings/email-configuration/email-sharing"),
+    ).toBe(true);
+    expect(isNavLinkActive(email, "demo", "/crm/demo/settings/members")).toBe(false);
   });
 
   it("groups transfer history links and matches only their own settings page", () => {

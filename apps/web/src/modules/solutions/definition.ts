@@ -1,7 +1,6 @@
 import { Icons } from "@/components/ui/icon";
 import { buildAccountsRecordMoreMenuGroups } from "../accounts/accounts-record-more-options";
 import {
-  ACCOUNTS_TIMELINE_EMPTY_EVENTS,
   ACCOUNTS_TIMELINE_MODULE_OPTIONS,
   ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
   ACCOUNTS_TIMELINE_SUBTABS,
@@ -34,7 +33,7 @@ export const solutionsScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Solution",
   pluralLabel: "Solutions",
   pageTitle: "Solutions",
-  navigation: { id: "solutions", icon: Icons.building },
+  navigation: { id: "solutions", icon: Icons.bookUser, group: "flat" },
   list: solutionsListPageConfig,
   listCurrencyCode: SOLUTIONS_LIST_CURRENCY_CODE,
   searchColumns: ["Solution_Title", "Solution_Number", "Status", "Owner"],
@@ -42,6 +41,7 @@ export const solutionsScreenDefinition: ModuleScreenDefinition = {
   form: {
     rules: solutionsFormRules,
     inventoryChrome: true,
+    inventoryFooterEnd: true,
   },
   detail: {
     header: solutionsRecordHeaderIdentity,
@@ -61,7 +61,6 @@ export const solutionsScreenDefinition: ModuleScreenDefinition = {
       subtabs: ACCOUNTS_TIMELINE_SUBTABS,
       modules: ACCOUNTS_TIMELINE_MODULE_OPTIONS,
       sources: ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
-      events: ACCOUNTS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeAccountsEventKind,
       upcomingAutomatedActions: {
         label: "Show Upcoming Automated Actions",

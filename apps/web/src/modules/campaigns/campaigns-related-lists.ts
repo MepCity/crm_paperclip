@@ -3,7 +3,8 @@ import { CampaignChildCampaignsCardBody } from "@/components/records/detail/camp
 import { CampaignMembersCardBody } from "@/components/records/detail/campaign-members-card-body";
 import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
 import { Icons } from "@/components/ui/icon";
-import { notesCardBody } from "../notes-card";
+import { attachmentsCard } from "../attachments-card";
+import { notesCardBody, openNotesComposer } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type {
   RelatedListActivityColumnDefinition,
@@ -200,11 +201,11 @@ export function createCampaignsRelatedLists(
       id: "notes",
       renderBody: notesCardBody("Campaigns"),
       title: "Notes",
-      moduleKey: "M6",
+      moduleKey: "M2",
       order: 2,
       targetId: "related-list-notes",
       countBadge: badgeValue(badges.notes),
-      railAction: { id: "notes-add", label: "Add", moduleKey: "M6" },
+      railAction: { id: "notes-add", label: "Add", onAction: openNotesComposer },
       notesShowMore: true,
       emptyStateText: "No records found",
     },
@@ -235,13 +236,14 @@ export function createCampaignsRelatedLists(
       targetId: "related-list-open-activities",
       countBadge: openActivitiesBadge,
       upperControls: [
-        { id: "add-new", label: "Add New", type: "split-button", moduleKey: "M5" },
+        { id: "add-new", label: "Add New", type: "split-button" },
         ...viewControls("open"),
       ],
       activityColumns: openActivityColumns,
     },
     {
       id: "attachments",
+      renderCard: attachmentsCard("Campaigns"),
       title: "Attachments",
       moduleKey: "M6",
       order: 9,
@@ -262,12 +264,13 @@ export function createCampaignsRelatedLists(
     },
     {
       id: "leads",
-      renderBody: ({ record, recordPath, definition }) =>
+      renderBody: ({ record, recordPath, orgSlug, definition }) =>
         record && !definition.tablePreviewRows?.length
           ? createElement(CampaignMembersCardBody, {
               campaignRecord: record,
               memberKind: "Lead",
               recordPath,
+              orgSlug,
             })
           : undefined,
       title: "Leads",
@@ -321,12 +324,13 @@ export function createCampaignsRelatedLists(
     },
     {
       id: "contacts",
-      renderBody: ({ record, recordPath, definition }) =>
+      renderBody: ({ record, recordPath, orgSlug, definition }) =>
         record && !definition.tablePreviewRows?.length
           ? createElement(CampaignMembersCardBody, {
               campaignRecord: record,
               memberKind: "Contact",
               recordPath,
+              orgSlug,
             })
           : undefined,
       title: "Contacts",

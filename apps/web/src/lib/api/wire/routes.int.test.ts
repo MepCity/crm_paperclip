@@ -6,15 +6,29 @@ import { addTestMember, createTestOrganization } from "@crm/core/testing";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import { getRecordService } from "@/lib/records";
 import { encodeInput, MAX_CRITERIA_GROUP_SIZE, MAX_CRITERIA_NODES } from "./codec";
+import { customizationOperations } from "./customization";
 import { type Operation, operationPath, operations } from "./operations";
 
 const handlers = [
+  [operations.createField, () => import("@/app/crm/v2.2/settings/fields/route")],
+  [operations.patchField, () => import("@/app/crm/v2.2/settings/fields/route")],
+  [operations.retireField, () => import("@/app/crm/v2.2/settings/fields/route")],
+  [operations.patchModule, () => import("@/app/crm/v2.2/settings/modules/[module]/route")],
+  [operations.patchLayout, () => import("@/app/crm/v2.1/settings/layouts/route")],
+  [operations.createSharedView, () => import("@/app/crm/v9/settings/custom_views/route")],
+  [operations.patchSharedView, () => import("@/app/crm/v9/settings/custom_views/[viewId]/route")],
+  [operations.deleteSharedView, () => import("@/app/crm/v9/settings/custom_views/[viewId]/route")],
+
   [operations.search, () => import("@/app/crm/v2.2/actions/search/route")],
   [
     operations.duplicateGroups,
     () => import("@/app/crm/v2.2/[module]/actions/duplicate_groups/route"),
   ],
   [operations.merge, () => import("@/app/crm/v2.2/[module]/actions/merge/route")],
+  [
+    operations.convertLead,
+    () => import("@/app/crm/v2.2/[module]/[recordId]/actions/convert/route"),
+  ],
   [operations.deduplicate, () => import("@/app/crm/v2.2/[module]/actions/deduplicate/route")],
   [operations.currencies, () => import("@/app/crm/v2.2/org/currencies/route")],
   [operations.module, () => import("@/app/crm/v2.2/settings/modules/[module]/route")],
@@ -151,6 +165,36 @@ describe("operation routes", () => {
     a = await createTestOrganization();
     b = await createTestOrganization();
   });
+  it.each([operations.bulk, operations.count, operations.summarize])(
+    "validates system filters through authenticated $path",
+    async (op) => {
+      const query = { group_by: "Lead_Status" };
+      for (const system_filters of [
+        { unknown: {} },
+        { locked: { locked: "true" } },
+        {
+          touched: {
+            actor_ids: ["foreign-user"],
+            period: { from: "2026-10-01T00:00:00Z", to: "2026-10-02T00:00:00Z" },
+          },
+        },
+        { record_action: { action: "created", period: { from: "invalid", to: "invalid" } } },
+      ]) {
+        const response = await call(op, a, { query, body: { system_filters } });
+        expect(response.status).toBe(400);
+        expect(await response.json()).toMatchObject({
+          code: "INVALID_DATA",
+          details: { fields: expect.any(Object) },
+        });
+      }
+      const response = await call(op, a, {
+        query,
+        body: { system_filters: { locked: { locked: false } } },
+      });
+      expect([200, 204]).toContain(response.status);
+    },
+  );
+
   it("preserves requested activity summaries and validates filters on authenticated routes", async () => {
     const service = getRecordService(a.ctx);
     const lead = await service.create("Leads", {
@@ -373,9 +417,11 @@ describe("operation routes", () => {
     for (const [op] of handlers.filter(
       ([op]) =>
         ![
+          ...Object.values(customizationOperations),
           operations.search,
           operations.duplicateGroups,
           operations.merge,
+          operations.convertLead,
           operations.deduplicate,
           operations.create,
           operations.update,
@@ -396,6 +442,30 @@ describe("operation routes", () => {
       if (op === operations.record)
         expect(body.data[0]).toMatchObject({ id: created.id, Last_Name: "Handler Example" });
     }
+  });
+  it("converts a lead through the authenticated route and rejects bad requests", async () => {
+    const lead = await getRecordService(a.ctx).create("Leads", {
+      Last_Name: "Route Convert",
+      Company: "Route Co",
+    });
+    const anonymous = await call(operations.convertLead, undefined, { recordId: lead.id });
+    expect(anonymous.status).toBe(401);
+    const invalid = await call(operations.convertLead, a, {
+      recordId: lead.id,
+      body: { account: { create: {} } },
+    });
+    expect(invalid.status).toBe(400);
+    const response = await call(operations.convertLead, a, {
+      recordId: lead.id,
+      body: { contact: { create: {} } },
+    });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toMatchObject({ accountId: null, dealId: null });
+    const again = await call(operations.convertLead, a, {
+      recordId: lead.id,
+      body: { contact: { create: {} } },
+    });
+    expect(again.status).toBe(400);
   });
   it("serves, creates and updates Kanban views through the routes", async () => {
     const list = await call(operations.kanbanViews, a, { module: "Deals" });

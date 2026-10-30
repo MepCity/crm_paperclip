@@ -1,9 +1,12 @@
+import { DOTTED_DAY_FIRST_FORMAT, formatOptionsFromOrganization } from "@crm/core/format";
 import type { FieldDataType, FieldDefinition, FieldValue, RecordService } from "@crm/core/records";
-import { cleanup, screen } from "@testing-library/react";
+import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { useState } from "react";
 import { afterEach, expect, test, vi } from "vitest";
 import { RecordChoice } from "@/components/ui/record-choice";
+import { FormatProvider } from "@/lib/format-context";
+import { dealsFormRules } from "@/modules/deals/deals-form-rules";
 import { render } from "@/test/render";
 import { FieldInput, type FieldInputProps } from "./field-input";
 import { FormRow } from "./form-row";
@@ -709,4 +712,214 @@ test("the default toggle retains its visible label", () => {
   render(<Controlled type="ALARM" />);
   expect(screen.getByRole("switch", { name: "Example" })).toBeTruthy();
   expect(screen.getByText("Example").classList.contains("sr-only")).toBe(false);
+});
+
+test("currency help opens on click or keyboard, dismisses and never edits the amount", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <Controlled
+      type="currency"
+      field={{ ...field("currency"), apiName: "Amount", label: "Amount" }}
+      initial={125}
+      onChange={change}
+      currencyPrefix="$"
+      currencyHelp={dealsFormRules.currencyHelp?.Amount}
+    />,
+  );
+  const amount = screen.getByRole("textbox", { name: "Amount" });
+  const trigger = screen.getByRole("button", { name: "Amount information" });
+  await user.hover(trigger);
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await user.click(trigger);
+  expect(screen.getByRole("dialog", { name: "Amount information" })).toBeTruthy();
+  expect(screen.getByText("20 + 20").tagName).toBe("STRONG");
+  expect(screen.getByText("40").tagName).toBe("STRONG");
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await waitFor(() => expect(document.activeElement).toBe(trigger));
+  await user.keyboard("{Enter}");
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  await user.click(amount);
+  expect(screen.queryByRole("dialog")).toBeNull();
+  trigger.focus();
+  await user.keyboard(" ");
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  await user.keyboard("{Escape}");
+  expect((screen.getByRole("textbox", { name: "Amount" }) as HTMLInputElement).value).toBe("125");
+  expect(change).not.toHaveBeenCalled();
+});
+
+test("text suggestions open, filter, select with keyboard, and preserve custom text", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <Controlled
+      type="text"
+      suggestions={["Email", "Call", "Meeting", "Send Letter", "Product Demo"]}
+      onChange={change}
+    />,
+  );
+  const input = screen.getByRole("combobox", { name: "Example" });
+  await user.click(input);
+  expect(screen.getAllByRole("option")).toHaveLength(5);
+  await user.type(input, "mee");
+  expect(screen.getAllByRole("option")).toHaveLength(1);
+  await user.keyboard("{ArrowDown}{Enter}");
+  expect((input as HTMLInputElement).value).toBe("Meeting");
+  expect(change).toHaveBeenLastCalledWith("Meeting");
+  await user.click(input);
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("listbox")).toBeNull();
+  await user.clear(input);
+  await user.type(input, "Custom follow up");
+  await user.tab();
+  expect((input as HTMLInputElement).value).toBe("Custom follow up");
+  expect(change).toHaveBeenLastCalledWith("Custom follow up");
+});
+
+test("calendar chooses a model day, dismisses, and keeps invalid and partial text", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(<Controlled type="date" initial="2026-11-10" onChange={change} />);
+  const input = screen.getByRole("textbox", { name: "Example" });
+  await user.click(input);
+  const day = screen.getByRole("button", { name: /November 15, 2026/ });
+  await user.click(day);
+  expect((input as HTMLInputElement).value).toBe("15.11.2026");
+  expect(change).toHaveBeenLastCalledWith("2026-11-15");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await user.click(input);
+  await user.keyboard("{Escape}");
+  expect(screen.queryByRole("dialog")).toBeNull();
+  await user.clear(input);
+  await user.type(input, "31.02.2026");
+  expect((input as HTMLInputElement).value).toBe("31.02.2026");
+  expect(change).toHaveBeenLastCalledWith("2026-02-31");
+  await user.clear(input);
+  await user.type(input, "12.0");
+  expect((input as HTMLInputElement).value).toBe("12.0");
+  expect(change).toHaveBeenLastCalledWith("12.0");
+});
+
+test("every date field opens a calendar without a module opt-in", async () => {
+  const user = userEvent.setup();
+  render(<Controlled type="date" />);
+  await user.click(screen.getByRole("textbox", { name: "Example" }));
+  const dialog = screen.getByRole("dialog", { name: "Example calendar" });
+  const input = screen.getByRole("textbox", { name: "Example" });
+  expect(input.getAttribute("aria-haspopup")).toBe("dialog");
+  expect(input.getAttribute("aria-details")).toBe(dialog.id);
+  expect(input.hasAttribute("aria-expanded")).toBe(false);
+  expect(input.hasAttribute("aria-controls")).toBe(false);
+  await user.keyboard("{Escape}");
+  expect(input.hasAttribute("aria-details")).toBe(false);
+});
+
+test("calendar supports keyboard opening and a disabled field cannot open it", async () => {
+  const user = userEvent.setup();
+  render(<Controlled type="date" initial="2026-11-10" />);
+  const input = screen.getByRole("textbox", { name: "Example" });
+  input.focus();
+  await user.keyboard("{Alt>}{ArrowDown}{/Alt}");
+  expect(screen.getByRole("dialog", { name: "Example calendar" })).toBeTruthy();
+  await user.keyboard("{ArrowRight}{Enter}");
+  expect((input as HTMLInputElement).value).toBe("11.11.2026");
+  cleanup();
+  render(<Controlled type="date" disabled />);
+  await user.click(screen.getByRole("textbox", { name: "Example" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+});
+
+test("calendar dismisses on an outside click without changing the date", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <>
+      <Controlled type="date" initial="2026-11-10" onChange={change} />
+      <button type="button">Outside</button>
+    </>,
+  );
+  await user.click(screen.getByRole("textbox", { name: "Example" }));
+  expect(screen.getByRole("dialog")).toBeTruthy();
+  await user.click(screen.getByRole("button", { name: "Outside" }));
+  expect(screen.queryByRole("dialog")).toBeNull();
+  expect(change).not.toHaveBeenCalled();
+});
+
+test("form accepts organization format: 1.234,56 amount maps to 1234.56 and 30.06.2026 date maps to 2026-06-30", async () => {
+  const user = userEvent.setup();
+  const changeAmount = vi.fn();
+  const changeDate = vi.fn();
+  const orgFormat = formatOptionsFromOrganization(DOTTED_DAY_FIRST_FORMAT);
+  render(
+    <FormatProvider format={orgFormat}>
+      <Controlled type="currency" initial={null} onChange={changeAmount} />
+      <Controlled type="date" initial={null} onChange={changeDate} />
+    </FormatProvider>,
+  );
+  const [amountInput, dateInput] = screen.getAllByRole("textbox", { name: "Example" });
+  expect(amountInput).toBeDefined();
+  expect(dateInput).toBeDefined();
+  if (!amountInput || !dateInput) return;
+
+  await user.type(amountInput, "1.234,56");
+  await user.tab();
+  expect(changeAmount).toHaveBeenLastCalledWith(1234.56);
+
+  await user.type(dateInput, "30.06.2026");
+  expect(changeDate).toHaveBeenLastCalledWith("2026-06-30");
+});
+
+test("multireminder changes offset and delivery channel without losing legacy data", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <Controlled
+      type="multireminder"
+      field={{ ...field("multireminder"), apiName: "Remind_At" }}
+      initial={[{ ALARM: "FREQ=NONE;ACTION=LEGACY;TRIGGER=-PT99M;REPEAT=2" }]}
+      onChange={change}
+    />,
+  );
+  expect(screen.getByRole("button", { name: "Delivery channel" }).textContent).toContain("LEGACY");
+  await user.click(screen.getByRole("button", { name: "Example" }));
+  await user.click(screen.getByRole("option", { name: "10 minutes before" }));
+  expect(change).toHaveBeenLastCalledWith([
+    { ALARM: "FREQ=NONE;ACTION=LEGACY;TRIGGER=-PT10M;REPEAT=2" },
+  ]);
+  await user.click(screen.getByRole("button", { name: "Delivery channel" }));
+  await user.click(screen.getByRole("option", { name: "Email" }));
+  expect(change).toHaveBeenLastCalledWith([
+    { ALARM: "FREQ=NONE;ACTION=EMAIL;TRIGGER=-PT10M;REPEAT=2" },
+  ]);
+  await user.click(screen.getByRole("button", { name: "Delivery channel" }));
+  await user.click(screen.getByRole("option", { name: "None" }));
+  expect(change).toHaveBeenLastCalledWith(null);
+});
+
+test("multireminder keeps EMAIL records and disables both controls when read-only", () => {
+  render(
+    <Controlled
+      type="multireminder"
+      field={{ ...field("multireminder"), apiName: "Remind_At" }}
+      initial={[{ ALARM: "FREQ=NONE;ACTION=EMAIL;TRIGGER=-PT15M" }]}
+      disabled
+    />,
+  );
+  expect(screen.getByRole("button", { name: "Example" }).hasAttribute("disabled")).toBe(true);
+  const channel = screen.getByRole("button", { name: "Delivery channel" });
+  expect(channel.textContent).toContain("Email");
+  expect(channel.hasAttribute("disabled")).toBe(true);
+});
+
+test("participants reminder keeps the single offset control observed in the reference", () => {
+  render(
+    <Controlled
+      type="multireminder"
+      field={{ ...field("multireminder"), apiName: "Remind_Participants" }}
+    />,
+  );
+  expect(screen.getByRole("button", { name: "Example" })).toBeTruthy();
+  expect(screen.queryByRole("button", { name: "Delivery channel" })).toBeNull();
 });

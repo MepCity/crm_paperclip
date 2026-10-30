@@ -1,34 +1,36 @@
 "use client";
-
 import type { ListView } from "@crm/core/records";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Menu, MenuDivider, MenuItem, MenuTrigger } from "@/components/ui/menu";
 import { TextField } from "@/components/ui/text-field";
+import { useUiTranslations } from "@/i18n/client-provider";
 
+// biome-ignore format: preserve line numbers
 export interface ViewTabStripProps {
   viewName: string;
-  views?: readonly Pick<ListView, "id" | "name">[];
+  views?: readonly (Pick<ListView, "id" | "name"> & Partial<Pick<ListView, "systemDefined" | "isDefault">>)[];
   onViewChange?: (id: string) => void;
   pinnedViews?: readonly string[];
   /** Draws a Search box above Public Views that filters the rows by name (Tasks only). */
   searchable?: boolean;
+  hideEmptyCreatedGroup?: boolean;
+  onNewView?: () => void; onEditView?: (id: string) => void; onManageViews?: () => void;
 }
 
-export function ViewTabStrip({
-  viewName,
-  views,
-  onViewChange,
-  pinnedViews,
-  searchable,
-}: ViewTabStripProps) {
-  const [publicOpen, setPublicOpen] = useState(true);
-  const [query, setQuery] = useState("");
+// biome-ignore format: preserve line numbers
+export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searchable, hideEmptyCreatedGroup, onNewView, onEditView, onManageViews }: ViewTabStripProps) {
+  const t = useUiTranslations(); const [createdOpen, setCreatedOpen] = useState(true); const [publicOpen, setPublicOpen] = useState(true), [query, setQuery] = useState("");
+  // biome-ignore format: preserve line numbers
+  const itemNewProps = onNewView ? { onAction: onNewView } : { laterModule: "M11" as const };
+  // biome-ignore format: preserve line numbers
+  const mgrProps = onManageViews ? { onAction: onManageViews } : { laterModule: "M11" as const };
   const needle = query.trim().toLowerCase();
   const visibleViews = needle
     ? views?.filter((view) => view.name.toLowerCase().includes(needle))
     : views;
+  const showCreatedGroup = !hideEmptyCreatedGroup || visibleViews?.some((view) => view.systemDefined === false && view.isDefault === false);
   return (
     <div
       className="flex h-(--size-list-tab-height) items-center gap-3 border-b border-(--color-panel-border)"
@@ -83,19 +85,20 @@ export function ViewTabStrip({
       )}
       {views ? (
         <MenuTrigger>
-          <Button variant="ghost" size="listIcon" aria-label="Custom views">
+          <Button variant="ghost" size="listIcon" aria-label={t("records.chrome.customViews")}>
             <Icons.ellipsis aria-hidden className="h-4 w-4" />
           </Button>
           <Menu
-            aria-label="Custom views"
+            aria-label={t("records.chrome.customViews")}
             placement="bottom start"
             appearance="measured"
-            widthPx={searchable ? 320 : undefined}
+            tall
+            widthPx={320}
             header={
               searchable ? (
                 <TextField
-                  label="Search views"
-                  placeholder="Search"
+                  label={t("records.chrome.searchViews")}
+                  placeholder={t("records.chrome.search")}
                   variant="filter-search"
                   value={query}
                   onChange={setQuery}
@@ -103,16 +106,23 @@ export function ViewTabStrip({
               ) : undefined
             }
           >
+            {showCreatedGroup ? <MenuItem id="created" shouldCloseOnSelect={false} onAction={() => setCreatedOpen(!createdOpen)}>
+              <Icons.chevronDown aria-hidden className="h-4 w-4" />
+              {t("records.chrome.createdByMe")}
+            </MenuItem> : null}
+            {createdOpen ? visibleViews?.filter((view) => view.systemDefined === false && view.isDefault === false).map((view) => (
+              <MenuItem key={view.id} id={view.id} onAction={() => onViewChange?.(view.id)}>{view.name}</MenuItem>
+            )) : null}
             <MenuItem
               id="public"
               shouldCloseOnSelect={false}
               onAction={() => setPublicOpen(!publicOpen)}
             >
               <Icons.chevronDown aria-hidden className="h-4 w-4" />
-              Public Views
+              {t("records.chrome.publicViews")}
             </MenuItem>
             {publicOpen
-              ? visibleViews?.map((view) => (
+              ? visibleViews?.filter((view) => view.systemDefined !== false || view.isDefault !== false).map((view) => (
                   <MenuItem key={view.id} id={view.id} onAction={() => onViewChange?.(view.id)}>
                     {view.name === viewName ? (
                       <Icons.check aria-hidden className="h-4 w-4" />
@@ -122,14 +132,25 @@ export function ViewTabStrip({
                 ))
               : null}
             <MenuDivider />
-            <MenuItem id="dropdown">Show custom views as Dropdown</MenuItem>
+            <MenuItem id="dropdown">{t("records.chrome.showAsDropdown")}</MenuItem>
             <MenuDivider />
-            <MenuItem id="new" laterModule="M11">
-              New Custom View
+            <MenuItem id="new" {...itemNewProps}>
+              {t("records.chrome.newView")}
             </MenuItem>
-            <MenuItem id="manage" laterModule="M11">
-              Manage Custom View
+            <MenuItem id="manage"     {...mgrProps}>
+              {t("records.chrome.manageViews")}
             </MenuItem>
+            {onEditView ? (
+              <MenuItem
+                id="edit"
+                onAction={() => {
+                  const current = views?.find((v) => v.name === viewName);
+                  if (current) onEditView(current.id);
+                }}
+              >
+                {t("common.customViews.editCurrentView")}
+              </MenuItem>
+            ) : null}
           </Menu>
         </MenuTrigger>
       ) : null}

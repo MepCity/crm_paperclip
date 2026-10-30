@@ -16,6 +16,7 @@ import {
   moduleRecordMergePath,
   moduleRecordPath,
 } from "@/lib/crm-paths";
+import { LeadConvertScreen } from "./leads/lead-convert-screen";
 import { ModuleFormClient } from "./module-form-client";
 import { ModuleListClient } from "./module-list-client";
 import { resolveModuleScreen } from "./registry";
@@ -27,6 +28,7 @@ export type ModuleRouteKind =
   | "edit"
   | "clone"
   | "merge"
+  | "convert"
   | "deduplicate"
   | "tags"
   | "drafts"
@@ -40,6 +42,7 @@ export function ModuleRouteClient({
   viewId,
   recordId,
   currentUserId,
+  userRole,
   createPrefill,
 }: {
   moduleTab: string;
@@ -48,6 +51,7 @@ export function ModuleRouteClient({
   viewId?: string;
   recordId?: string;
   currentUserId: string;
+  userRole?: "admin" | "member";
   createPrefill?: Readonly<Record<string, FieldValue>>;
 }) {
   const definition = resolveModuleScreen(moduleTab);
@@ -76,6 +80,7 @@ export function ModuleRouteClient({
         orgSlug={orgSlug}
         viewId={viewId}
         currentUserId={currentUserId}
+        userRole={userRole}
       />
     );
   if (kind === "print-list")
@@ -84,6 +89,8 @@ export function ModuleRouteClient({
     return <RecordPrintScreen orgSlug={orgSlug} recordId={recordId} definition={definition} />;
   if (kind === "deduplicate")
     return <DedupConflictRoute orgSlug={orgSlug} definition={definition} />;
+  if (kind === "convert" && recordId)
+    return <LeadConvertScreen orgSlug={orgSlug} recordId={recordId} />;
   if (kind === "merge" && recordId) {
     const paths = {
       defaultList: moduleListDefaultPath,

@@ -5,6 +5,7 @@ import {
   moduleListDefaultPath,
   moduleRecordPath,
 } from "@/lib/crm-paths";
+import { renderCallsCreateControl } from "./calls-create-control";
 import { callsFilterGroups } from "./list-filters";
 
 export const CALLS_LIST_CURRENCY_CODE = "TRY";
@@ -47,6 +48,7 @@ export const CALLS_VIEW_TYPE_TILE_IDS = ["list", "split", "chart", "cards"] as c
 
 export const callsListPageConfig: ModuleListScreenConfig = {
   module: "Calls",
+  renderCreateControl: renderCallsCreateControl,
   linkField: "Subject",
   linkFieldLabel: "Subject",
   pluralLabel: "Calls",

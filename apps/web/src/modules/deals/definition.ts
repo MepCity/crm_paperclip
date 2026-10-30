@@ -13,7 +13,6 @@ import {
 } from "./deals-record-more-options";
 import { dealsRelatedListRail } from "./deals-related-lists";
 import {
-  DEALS_TIMELINE_EMPTY_EVENTS,
   DEALS_TIMELINE_MODULE_OPTIONS,
   DEALS_TIMELINE_SOURCE_OPTIONS,
   DEALS_TIMELINE_SUBTABS,
@@ -28,7 +27,7 @@ export const dealsScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Deal",
   pluralLabel: "Deals",
   pageTitle: "Deals",
-  navigation: { id: "deals", icon: Icons.building },
+  navigation: { id: "deals", icon: Icons.wallet },
   list: dealsListPageConfig,
   listCurrencyCode: DEALS_LIST_CURRENCY_CODE,
   searchColumns: [
@@ -45,6 +44,7 @@ export const dealsScreenDefinition: ModuleScreenDefinition = {
     rules: dealsFormRules,
     fallbackColumns: { "Deal Information": DEALS_FORM_INFORMATION_COLUMNS },
     inventoryChrome: true,
+    inventoryFooterPinned: true,
   },
   detail: {
     Screen: DealRecordScreen,
@@ -70,7 +70,6 @@ export const dealsScreenDefinition: ModuleScreenDefinition = {
       subtabs: DEALS_TIMELINE_SUBTABS,
       modules: DEALS_TIMELINE_MODULE_OPTIONS,
       sources: DEALS_TIMELINE_SOURCE_OPTIONS,
-      events: DEALS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeDealsEventKind,
       upcomingAutomatedActions: {
         label: "Show Upcoming Automated Actions",

@@ -2,6 +2,7 @@ import { signUpNewUser } from "./support/auth";
 import { moduleDraftsPath, moduleListDefaultPath, moduleTagsPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
+import { exerciseTouchedFilter } from "./support/touched-filter";
 
 test("Deals shell, pinned tab, views, switcher and sorting", async ({ page }) => {
   await signUpNewUser(page);
@@ -41,12 +42,12 @@ test("Deals shell, pinned tab, views, switcher and sorting", async ({ page }) =>
     "true",
   );
 
-  // Table presentation keeps the refresh button; Amount cells carry the TRY code and decimals
+  // Table presentation keeps the refresh button; Amount cells carry the TL prefix and decimals
   await expect(list.getByRole("button", { name: "Refresh Custom View" })).toBeVisible();
   await expect(
     list
       .locator("tbody")
-      .getByText(/^TRY\u00A0[\d,]+\.\d{2}$/)
+      .getByText(/^TL\s[\d.]+,[\d]{2}$/)
       .first(),
   ).toBeVisible();
 
@@ -65,7 +66,7 @@ test("Deals shell, pinned tab, views, switcher and sorting", async ({ page }) =>
 
   // Ellipsis menu DL-02 (11 stock views + 4 menu controls = 15 items)
   await list.getByRole("button", { name: "Custom views" }).click();
-  await expect(page.getByRole("menuitem")).toHaveCount(15);
+  await expect(page.getByRole("menuitem")).toHaveCount(16);
 
   // Switch to "My Deals" (DL-02.5: Owner column is omitted)
   await page.getByRole("menuitem", { name: "My Deals", exact: true }).click();
@@ -225,6 +226,8 @@ test("Deals later-module inventory stays inert and mass flows reuse selection di
 
   // View Settings (M11)
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
+  await expect(page.getByRole("menuitem", { name: "Manage Columns" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
 
   // DL-25: Cadences system filter (P3)
@@ -338,4 +341,10 @@ test("Deals later-module inventory stays inert and mass flows reuse selection di
         .nth(1),
     ).not.toBeChecked();
   }
+});
+
+test("Deals applies the Touched Records system filter and restores on Clear", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseTouchedFilter(page, org.slug, "Deals");
 });

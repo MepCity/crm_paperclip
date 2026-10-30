@@ -1,6 +1,7 @@
 "use client";
 
 import { NotFoundError, ValidationError } from "@crm/core/errors";
+import type { FormatOptions } from "@crm/core/format";
 import type {
   ActivityFilterValue,
   CampaignFilterValue,
@@ -10,9 +11,11 @@ import type {
   ModuleApiName,
   ModuleMetadata,
   RecordData,
+  RelatedModuleFilter,
   SortSpec,
+  SystemFiltersValue,
 } from "@crm/core/records";
-import { TRANSFER_MODULES } from "@crm/core/transfer/types";
+import { IMPORT_MODULES, TRANSFER_MODULES } from "@crm/core/transfer/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { type ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import { RecordBoard, type RecordBoardProps } from "@/components/records/board/record-board";
@@ -23,6 +26,10 @@ import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ModuleKey } from "@/components/ui/later-module";
 import type { MenuAction } from "@/components/ui/menu";
+import { english, type MessageKey } from "@/i18n/catalogs";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
+import { builtInViewLabel } from "@/i18n/record-labels";
 import { moduleListPrintPath } from "@/lib/crm-paths";
 import {
   combineCriteriaAnd,
@@ -31,14 +38,20 @@ import {
 } from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
 import { AddToCampaignsDialog } from "../campaigns/add-to-campaigns-dialog";
+import { ManageColumnsDialog } from "../search/manage-columns-dialog";
 import { ExportLauncher } from "../transfer/export-launcher";
 import { ChangeOwnerDialog } from "./change-owner-dialog";
+import { effectiveColumns, effectiveFilterGroups } from "./effective-fields";
 import type { FilterGroup } from "./filter-panel";
 import { FilterPanel } from "./filter-panel";
 import { ListToolbar } from "./list-toolbar";
 import { MassUpdateDialog } from "./mass-update-dialog";
 import { massUpdateFieldsInLayoutOrder } from "./mass-update-fields";
+import { useCustomViewModal } from "./module-list-custom-view";
+import type { RelatedModuleDraft } from "./related-module-filter-editor";
 import { SelectionBar } from "./selection-bar";
+import { SelectionTagsDialog } from "./selection-tags-dialog";
+import type { SystemFilterDraft } from "./system-filter-editor";
 import "./module-list-page.css";
 import {
   useDeleteRecords,
@@ -57,7 +70,7 @@ import {
   moduleTagsPath,
   withSearchParams,
 } from "@/lib/crm-paths";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import { usePreference } from "@/lib/preferences";
 import {
   appliedSortFromState,
@@ -103,6 +116,7 @@ export interface ModuleListScreenConfig {
     metadata: ModuleMetadata;
     orgSlug: string;
     ownerNames: Readonly<Record<string, string>>;
+    format?: FormatOptions;
   }) => RecordBoardProps;
   boardComponent?: React.ComponentType<ModuleListBoardProps>;
   boardToolbar?: ReactNode;
@@ -140,6 +154,8 @@ export interface ModuleListScreenConfig {
   rowEditLink?: boolean;
   rowTools?: readonly ("edit" | "ellipsis" | "note")[];
   /** Screen inventory absent from field metadata; omitted for the original Leads screen. */
+  /** Selection bar Tags adds tags to the selected records (Solutions, Cases). */
+  selectionTags?: boolean;
   inventory?: {
     actions: readonly Omit<MenuAction, "onAction">[];
     createItems?: readonly MenuAction[];
@@ -150,6 +166,11 @@ export interface ModuleListScreenConfig {
    */
   toolbarActions?: readonly Omit<MenuAction, "onAction">[];
   /** Create opens this dialog over the list instead of the create page (Meetings). */
+  renderCreateControl?: (props: {
+    orgSlug: string;
+    currentUserId: string;
+    items?: readonly MenuAction[];
+  }) => ReactNode;
   quickCreate?: (props: {
     orgSlug: string;
     currentUserId: string;
@@ -170,6 +191,8 @@ export interface ModuleListScreenProps {
   viewId?: string;
   /** The signed-in user; a quick-create dialog uses it as the default Host. */
   currentUserId?: string;
+  userRole?: "admin" | "member";
+  isAdmin?: boolean;
 }
 
 function ListNotFound() {
@@ -180,13 +203,14 @@ function ListNotFound() {
   );
 }
 
+// biome-ignore format: preserve line numbers
 export function ModuleListScreen({
   orgSlug,
   config,
   viewId: routeViewId,
-  currentUserId,
+  currentUserId, userRole, isAdmin: explicitIsAdmin,
 }: ModuleListScreenProps) {
-  const viewsQuery = useViews(config.module);
+  const isAdmin = Boolean(explicitIsAdmin ?? userRole === "admin"), viewsQuery = useViews(config.module);
   const resolvedViewId = useMemo(() => {
     if (routeViewId) return routeViewId;
     return viewsQuery.data?.find((view) => view.isDefault)?.id ?? null;
@@ -201,27 +225,30 @@ export function ModuleListScreen({
   }
 
   return (
-    <ModuleListScreenLoaded
-      orgSlug={orgSlug}
-      config={config}
-      routeViewId={routeViewId}
-      viewId={resolvedViewId}
-      currentUserId={currentUserId}
-    />
+    // biome-ignore format: preserve line numbers
+    <ModuleListScreenLoaded orgSlug={orgSlug} config={config} routeViewId={routeViewId} viewId={resolvedViewId} currentUserId={currentUserId} userRole={userRole} isAdmin={isAdmin} />
   );
 }
 
+// biome-ignore format: preserve line numbers
 function ModuleListScreenLoaded({
   orgSlug,
   config,
   routeViewId,
   viewId,
-  currentUserId,
+  currentUserId, userRole, isAdmin: explicitIsAdmin,
 }: ModuleListScreenProps & { routeViewId?: string; viewId: string }) {
+  const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
+  const singularLabel = adapter.getModuleSingular(config.module, config.singularLabel);
+  const pluralLabel = adapter.getModulePlural(config.module, config.pluralLabel);
+  const linkFieldLabel = adapter.getFieldLabel(config.module, { apiName: config.linkField, label: config.linkFieldLabel });
+  const orgFormat = useFormat();
+  const isAdmin = Boolean(explicitIsAdmin ?? userRole === "admin");
   const router = useRouter();
   const refreshModuleListData = useRefreshModuleListData(config.module);
   const searchParams = useSearchParams();
-  const [storedPerPage, setStoredPerPage] = usePreference("list.per-page", LIST_PER_PAGE_DEFAULT);
+  const [storedPerPage, setStoredPerPage] = usePreference("list.per-page", config.module === "Leads" ? 10 : LIST_PER_PAGE_DEFAULT);
   const [wrapText, setWrapText] = usePreference(`list.wrap-text.${viewId}`, true);
   const searchState = useMemo(
     () => parseListSearchParams(searchParams, storedPerPage),
@@ -245,6 +272,16 @@ function ModuleListScreenLoaded({
   const [appliedCampaignFilter, setAppliedCampaignFilter] = useState<CampaignFilterValue | null>(
     null,
   );
+  const [appliedSystemFilters, setAppliedSystemFilters] = useState<SystemFiltersValue | null>(null);
+  const [appliedRelatedModules, setAppliedRelatedModules] = useState<RelatedModuleFilter[] | null>(
+    null,
+  );
+  const [appliedRelatedDrafts, setAppliedRelatedDrafts] = useState<
+    Record<string, RelatedModuleDraft>
+  >({});
+  const [appliedSystemDrafts, setAppliedSystemDrafts] = useState<Record<string, SystemFilterDraft>>(
+    {},
+  );
   const [letter, setLetter] = useState<string | null>(null);
   const [filterApplyError, setFilterApplyError] = useState<string | null>(null);
   const [acceptedListSnapshot, setAcceptedListSnapshot] = useState<{
@@ -257,6 +294,7 @@ function ModuleListScreenLoaded({
   const [massUpdateOpen, setMassUpdateOpen] = useState(false);
   const [quickCreateOpen, setQuickCreateOpen] = useState(false);
   const [changeOwnerOpen, setChangeOwnerOpen] = useState(false);
+  const [selectionTagsOpen, setSelectionTagsOpen] = useState(false);
   const [dedupOpen, setDedupOpen] = useState(false);
   const [exportOpen, setExportOpen] = useState(false);
   const [exportSelected, setExportSelected] = useState<string[] | undefined>(undefined);
@@ -270,8 +308,15 @@ function ModuleListScreenLoaded({
   const viewQuery = useView(config.module, viewId);
   const users = useUsers();
   const view = viewQuery.data;
-
-  const columnApiNames = view?.columns ?? [];
+  // biome-ignore format: preserve line numbers
+  const { onNewView, onEditView, modalElement } = useCustomViewModal({ config, orgSlug, currentUserId, isAdmin, view, views: viewsQuery.data, moduleFields: moduleQuery.data?.fields });
+  const [columnsOpen, setColumnsOpen] = useState(false);
+  const [selectedColumns, setSelectedColumns] = useState<{
+    viewId: string;
+    names: string[];
+  } | null>(null);
+  const columnApiNames =
+    selectedColumns?.viewId === viewId ? selectedColumns.names : (view?.columns ?? []);
   const sortFields = useMemo(
     () => resolveSortFieldLabels(config, moduleQuery.data?.fields ?? []),
     [config, moduleQuery.data?.fields],
@@ -288,6 +333,10 @@ function ModuleListScreenLoaded({
     setAppliedCriteria(undefined);
     setAppliedActivityFilter(null);
     setAppliedCampaignFilter(null);
+    setAppliedSystemFilters(null);
+    setAppliedSystemDrafts({});
+    setAppliedRelatedModules(null);
+    setAppliedRelatedDrafts({});
     setLetter(null);
     setFilterSelection([]);
     setFilterApplyError(null);
@@ -300,7 +349,6 @@ function ModuleListScreenLoaded({
     () => combineCriteriaAnd([appliedCriteria, firstLetterCriteria(config.linkField, letter)]),
     [appliedCriteria, config.linkField, letter],
   );
-
   const listQuery = useMemo(() => {
     if (columnApiNames.length === 0) return null;
     // Row presentation may need a field that is not a visible column.
@@ -313,11 +361,15 @@ function ModuleListScreenLoaded({
       ...(listCriteria ? { filters: listCriteria } : {}),
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
       ...(appliedCampaignFilter ? { campaignFilter: appliedCampaignFilter } : {}),
+      ...(appliedSystemFilters ? { systemFilters: appliedSystemFilters } : {}),
+      ...(appliedRelatedModules ? { relatedModules: appliedRelatedModules } : {}),
       ...(config.activityRibbon ? { includeActivitySummary: true } : {}),
     };
   }, [
     appliedActivityFilter,
     appliedCampaignFilter,
+    appliedSystemFilters,
+    appliedRelatedModules,
     columnApiNames,
     config.allDayField,
     config.activityRibbon,
@@ -333,8 +385,17 @@ function ModuleListScreenLoaded({
       ...(listCriteria ? { filters: listCriteria } : {}),
       ...(appliedActivityFilter ? { activityFilter: appliedActivityFilter } : {}),
       ...(appliedCampaignFilter ? { campaignFilter: appliedCampaignFilter } : {}),
+      ...(appliedSystemFilters ? { systemFilters: appliedSystemFilters } : {}),
+      ...(appliedRelatedModules ? { relatedModules: appliedRelatedModules } : {}),
     }),
-    [appliedActivityFilter, appliedCampaignFilter, listCriteria, viewId],
+    [
+      appliedActivityFilter,
+      appliedCampaignFilter,
+      appliedSystemFilters,
+      appliedRelatedModules,
+      listCriteria,
+      viewId,
+    ],
   );
 
   const list = useRecordList(
@@ -380,7 +441,9 @@ function ModuleListScreenLoaded({
     const messages =
       error.fieldErrors.filters ??
       error.fieldErrors.activityFilter ??
-      error.fieldErrors.campaignFilter;
+      error.fieldErrors.campaignFilter ??
+      error.fieldErrors.relatedModules ??
+      Object.entries(error.fieldErrors).find(([key]) => key.startsWith("systemFilters."))?.[1];
     return messages?.[0] ?? error.message;
   }, [countValidationError, listValidationError]);
 
@@ -394,27 +457,21 @@ function ModuleListScreenLoaded({
     return map;
   }, [users.data]);
 
+  const adaptedFields = useMemo(() => {
+    return (moduleQuery.data?.fields ?? []).map((field) =>
+      adapter.adaptField(config.module, field),
+    );
+  }, [adapter, config.module, moduleQuery.data?.fields]);
+
   const columns = useMemo((): FieldDefinition[] => {
-    const byName = new Map((moduleQuery.data?.fields ?? []).map((field) => [field.apiName, field]));
-    return columnApiNames
-      .map(
-        (apiName) =>
-          byName.get(apiName) ??
-          (config.inventory
-            ? {
-                apiName,
-                label: apiName,
-                dataType: "text" as const,
-                required: false,
-                readOnly: true,
-                unique: false,
-                massUpdate: false,
-                views: { view: true, create: false, edit: false, quickCreate: false },
-              }
-            : undefined),
-      )
-      .filter((field): field is FieldDefinition => field !== undefined);
-  }, [columnApiNames, config.inventory, moduleQuery.data?.fields]);
+    return effectiveColumns(columnApiNames, adaptedFields);
+  }, [columnApiNames, adaptedFields]);
+
+  const filterGroups = useMemo(
+    () =>
+      effectiveFilterGroups(config.filterGroups, adaptedFields, config.linkField, linkFieldLabel),
+    [config.filterGroups, config.linkField, linkFieldLabel, adaptedFields],
+  );
 
   const massUpdateFields = useMemo(
     () => (moduleQuery.data ? massUpdateFieldsInLayoutOrder(moduleQuery.data) : []),
@@ -517,6 +574,10 @@ function ModuleListScreenLoaded({
     applied: AppliedFilter[],
     activityFilter?: ActivityFilterValue | null,
     campaignFilter?: CampaignFilterValue | null,
+    systemFilters?: SystemFiltersValue | null,
+    systemDrafts?: Record<string, SystemFilterDraft>,
+    relatedModules?: RelatedModuleFilter[] | null,
+    relatedDrafts?: Record<string, RelatedModuleDraft>,
   ) {
     const inputs = applied.map((row) => ({
       field: row.itemId,
@@ -529,6 +590,10 @@ function ModuleListScreenLoaded({
     setAppliedCriteria(panelFiltersToCriteria(inputs));
     setAppliedActivityFilter(activityFilter ?? null);
     setAppliedCampaignFilter(campaignFilter ?? null);
+    setAppliedSystemFilters(systemFilters ?? null);
+    setAppliedSystemDrafts(systemDrafts ?? {});
+    setAppliedRelatedModules(relatedModules ?? null);
+    setAppliedRelatedDrafts(relatedDrafts ?? {});
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
       navigate({ ...searchState, page: LIST_PAGE_DEFAULT });
@@ -540,6 +605,10 @@ function ModuleListScreenLoaded({
     setAppliedCriteria(undefined);
     setAppliedActivityFilter(null);
     setAppliedCampaignFilter(null);
+    setAppliedSystemFilters(null);
+    setAppliedSystemDrafts({});
+    setAppliedRelatedModules(null);
+    setAppliedRelatedDrafts({});
     setFilterApplyError(null);
     setSelectedIds([]);
     if (searchState.page !== LIST_PAGE_DEFAULT) {
@@ -553,7 +622,9 @@ function ModuleListScreenLoaded({
       next.length === 0 &&
       (appliedCriteria !== undefined ||
         appliedActivityFilter !== null ||
-        appliedCampaignFilter !== null)
+        appliedCampaignFilter !== null ||
+        appliedSystemFilters !== null ||
+        appliedRelatedModules !== null)
     ) {
       clearPanelFilters();
     }
@@ -563,7 +634,9 @@ function ModuleListScreenLoaded({
     if (
       appliedCriteria === undefined &&
       appliedActivityFilter === null &&
-      appliedCampaignFilter === null
+      appliedCampaignFilter === null &&
+      appliedSystemFilters === null &&
+      appliedRelatedModules === null
     ) {
       clearPanelFilters();
     }
@@ -586,7 +659,7 @@ function ModuleListScreenLoaded({
   }
 
   const appliedSort = appliedSortFromState(searchState, eligibleSortFields);
-  const emptyMessage = `No ${config.pluralLabel} found.`;
+  const emptyMessage = t("records.list.emptyModule", { plural: pluralLabel });
   const initialLoading =
     moduleQuery.isLoading ||
     (viewQuery.isLoading && !view) ||
@@ -704,12 +777,15 @@ function ModuleListScreenLoaded({
 
   const deleteTitle =
     pageSelectedIds.length === 1
-      ? `Delete ${config.singularLabel}`
-      : `Delete ${config.pluralLabel}`;
+      ? t("records.actions.delete", { module: singularLabel })
+      : t("records.actions.delete", { module: pluralLabel });
   const deleteMessage =
     pageSelectedIds.length === 1
-      ? `Are you sure you want to delete the selected ${config.singularLabel}?`
-      : `Are you sure you want to delete the ${pageSelectedIds.length} selected ${config.pluralLabel}?`;
+      ? t("records.list.deleteSingle", { module: singularLabel })
+      : t("records.list.deleteMultiple", {
+          count: pageSelectedIds.length,
+          module: pluralLabel,
+        });
 
   const previousState: ListSearchState = { ...searchState, page: Math.max(1, page - 1) };
   const nextState: ListSearchState = { ...searchState, page: page + 1 };
@@ -722,7 +798,13 @@ function ModuleListScreenLoaded({
   }
   const boardProps =
     presentation === "board" && config.board && moduleQuery.data
-      ? config.board({ records, metadata: moduleQuery.data, orgSlug, ownerNames })
+      ? config.board({
+          records,
+          metadata: moduleQuery.data,
+          orgSlug,
+          ownerNames,
+          format: orgFormat,
+        })
       : null;
   const previousHref =
     page > 1 && listBasePath ? withSearchParams(listBasePath, previousParams) : null;
@@ -732,11 +814,22 @@ function ModuleListScreenLoaded({
   const toolbarActions = config.inventory?.actions ?? config.toolbarActions;
   const transferModule = isTransferModule(config.module) ? config.module : null;
   const exportSelectedTooLarge = pageSelectedIds.length > MAX_EXPORT_SELECTION;
-  const createItems: readonly MenuAction[] | undefined = transferModule
+  const importEnabled = (IMPORT_MODULES as readonly string[]).includes(config.module);
+  const isStandardCreate = config.createLabel === `Create ${config.singularLabel}`;
+  const createLabel = isStandardCreate
+    ? t("records.actions.create", { module: singularLabel })
+    : config.createLabel;
+  const isStandardFilterTitle = config.filterTitle === `Filter ${config.pluralLabel} by`;
+  const filterTitle = isStandardFilterTitle
+    ? t("records.filter.filterBy", { plural: pluralLabel })
+    : config.filterTitle;
+  const createItems: readonly MenuAction[] | undefined = importEnabled
     ? [
         {
           id: "import",
-          label: `Import ${config.pluralLabel}`,
+          label: Object.hasOwn(english.records.transfer.importItem, config.pluralLabel)
+            ? t(`records.transfer.importItem.${config.pluralLabel}` as MessageKey)
+            : `Import ${config.pluralLabel}`,
           onAction: () => router.push(moduleImportPath(orgSlug, config.module)),
         },
         ...(config.inventory?.createItems ?? []).filter((item) => item.id !== "import"),
@@ -747,7 +840,7 @@ function ModuleListScreenLoaded({
     { id: "create-task", label: "Create Task", onAction: inert },
     {
       id: "change-owner",
-      label: "Change Owner",
+      label: t("records.actions.changeOwner"),
       onAction: ownerField ? () => setChangeOwnerOpen(true) : inert,
     },
     { id: "cadences", label: "Cadences", onAction: inert },
@@ -760,12 +853,12 @@ function ModuleListScreenLoaded({
     { id: "print-using-canvas", label: "Print Using Canvas", onAction: inert },
     { id: "mail-merge", label: "Mail Merge", onAction: inert },
     { id: "mass-convert", label: "Mass Convert", onAction: inert },
-    { id: "delete", label: "Delete", onAction: openDeleteDialog },
+    { id: "delete", label: t("common.actions.delete"), onAction: openDeleteDialog },
     {
       id: "export-selected",
       label: exportSelectedTooLarge
-        ? `Export Selected Records (max ${MAX_EXPORT_SELECTION})`
-        : "Export Selected Records",
+        ? t("records.transfer.exportSelectedMax", { max: MAX_EXPORT_SELECTION })
+        : t("records.transfer.exportSelected"),
       isDisabled: exportSelectedTooLarge,
       onAction: transferModule
         ? () => {
@@ -775,7 +868,6 @@ function ModuleListScreenLoaded({
         : inert,
     },
   ];
-
   return (
     <div
       className="module-list-page"
@@ -783,10 +875,14 @@ function ModuleListScreenLoaded({
       data-list-module={config.listVariant ? config.module : undefined}
     >
       <ViewTabStrip
-        viewName={view.name}
-        views={config.inventory ? viewsQuery.data : undefined}
-        pinnedViews={config.pinnedViews}
-        searchable={config.viewMenuSearch}
+        viewName={builtInViewLabel(view, config.pluralLabel, pluralLabel, t)}
+        views={viewsQuery.data?.map((item) => ({ ...item, name: builtInViewLabel(item, config.pluralLabel, pluralLabel, t) })).sort((a,b) => ["Campaigns","Cases","Solutions"].includes(config.module) ? a.name.localeCompare(b.name, adapter.language) : 0)}
+        hideEmptyCreatedGroup={["Campaigns","Cases","Solutions"].includes(config.module)}
+        pinnedViews={config.pinnedViews?.map((name) => {
+          const item = viewsQuery.data?.find((candidate) => candidate.name === name);
+          return item ? builtInViewLabel(item, config.pluralLabel, pluralLabel, t) : name;
+        })}
+        searchable={config.module === "Leads" || config.viewMenuSearch}
         onViewChange={(id) => {
           const params = new URLSearchParams();
           if (hasBoard && requestedPresentation) params.set("presentation", presentation);
@@ -794,10 +890,13 @@ function ModuleListScreenLoaded({
             withSearchParams(config.paths.customList(orgSlug, config.module, id), params),
           );
         }}
+        {...{ onNewView, onEditView }}
       />
       {selectionActive && presentation === "table" ? (
         <SelectionBar
           laterInventory={Boolean(config.inventory)}
+          tagsEnabled={Boolean(config.selectionTags)}
+          onTags={config.selectionTags ? () => setSelectionTagsOpen(true) : undefined}
           selectedCount={pageSelectedIds.length}
           onClear={clearSelection}
           onMassUpdate={massUpdateFields.length > 0 ? () => setMassUpdateOpen(true) : undefined}
@@ -822,6 +921,7 @@ function ModuleListScreenLoaded({
           onFilterChange={(open) => {
             const activeIds = appliedFilters.map((filter) => filter.itemId);
             if (appliedActivityFilter) activeIds.push("Activities");
+            activeIds.push(...Object.keys(appliedSystemDrafts));
             setFilterSelection(activeIds);
             setFilterOpen(open);
           }}
@@ -848,12 +948,13 @@ function ModuleListScreenLoaded({
                 }
               : {}),
           }))}
+          createControl={config.renderCreateControl?.({ orgSlug, currentUserId: currentUserId ?? "", items: createItems })}
           create={{
-            label: config.createLabel,
+            label: createLabel,
             href: config.quickCreate ? undefined : config.paths.create(orgSlug, config.module),
             onPress: config.quickCreate ? () => setQuickCreateOpen(true) : undefined,
             items: createItems,
-            moreLaterModule: config.inventory && !transferModule ? "M6" : undefined,
+            moreLaterModule: config.inventory && !importEnabled ? "M6" : undefined,
           }}
         />
       )}
@@ -877,6 +978,15 @@ function ModuleListScreenLoaded({
           recordIds={pageSelectedIds}
           fields={massUpdateFields}
           users={ownerOptions}
+          onSuccess={clearSelection}
+        />
+      ) : null}
+      {selectionTagsOpen ? (
+        <SelectionTagsDialog
+          orgSlug={orgSlug}
+          module={config.module}
+          recordIds={pageSelectedIds}
+          onOpenChange={setSelectionTagsOpen}
           onSuccess={clearSelection}
         />
       ) : null}
@@ -930,25 +1040,39 @@ function ModuleListScreenLoaded({
           }}
           title={deleteTitle}
           message={deleteMessage}
-          confirmLabel="Delete"
-          cancelLabel="Cancel"
+          confirmLabel={t("common.actions.delete")}
+          cancelLabel={t("common.actions.cancel")}
           tone="danger"
           busy={deleteRecords.isPending}
           errorMessage={deleteError}
           onConfirm={confirmDelete}
         />
       ) : null}
+      {modalElement}
+      {columnsOpen && moduleQuery.data ? (
+        <ManageColumnsDialog
+          isOpen
+          onClose={() => setColumnsOpen(false)}
+          moduleLabel={pluralLabel}
+          allFields={moduleQuery.data.fields.filter((field) => field.views.view)}
+          selectedColumns={columns.map((field) => field.apiName)}
+          onSave={(names) => setSelectedColumns({ viewId, names })}
+        />
+      ) : null}
       <div className="module-list-body">
         {filterOpen ? (
           <FilterPanel
             key={viewId}
-            title={config.filterTitle}
-            searchLabel="Search filter choices"
-            searchPlaceholder="Search"
-            groups={config.filterGroups}
+            title={filterTitle}
+            searchLabel={t("records.filter.searchChoices")}
+            searchPlaceholder={t("common.actions.search")}
+            groups={filterGroups}
             initialFilters={appliedFilters}
             initialActivityFilter={appliedActivityFilter}
             initialCampaignFilter={appliedCampaignFilter}
+            initialSystemDrafts={appliedSystemDrafts}
+            initialRelatedDrafts={appliedRelatedDrafts}
+            userOptions={users.data?.map((user) => ({ id: user.userId, label: user.name }))}
             selectedIds={filterSelection}
             onSelectionChange={handleFilterSelectionChange}
             applyErrorMessage={filterApplyError}
@@ -990,7 +1114,7 @@ function ModuleListScreenLoaded({
               columns={columns}
               records={records}
               linkField={config.linkField}
-              linkFieldLabel={config.linkFieldLabel}
+              linkFieldLabel={linkFieldLabel}
               rowHref={(record) => config.paths.record(orgSlug, config.module, record.id)}
               selectedIds={pageSelectedIds}
               onSelectedIdsChange={(ids) => {
@@ -1004,7 +1128,7 @@ function ModuleListScreenLoaded({
               emptyMessage={emptyMessage}
               settings={
                 <ViewSettingsMenu
-                  laterModule={config.inventory ? "M11" : undefined}
+                  onManageColumns={() => setColumnsOpen(true)}
                   perPage={searchState.perPage}
                   onPerPageChange={changePerPage}
                   wrapText={wrapText}
@@ -1012,7 +1136,7 @@ function ModuleListScreenLoaded({
                 />
               }
               ownerNames={ownerNames}
-              format={DEFAULT_FORMAT}
+              format={orgFormat}
               footer={{
                 total,
                 page,

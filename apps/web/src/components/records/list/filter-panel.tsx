@@ -2,7 +2,13 @@
 
 import "./filter-panel.css";
 
-import type { ActivityFilterValue, CampaignFilterValue } from "@crm/core/records";
+import type {
+  ActivityFilterValue,
+  CampaignFilterValue,
+  RelatedModuleFilter,
+  SystemFiltersValue,
+} from "@crm/core/records";
+import { MAX_RELATED_MODULE_FILTERS } from "@crm/core/records/related-module-filters";
 import { useEffect, useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -10,6 +16,9 @@ import { Disclosure } from "@/components/ui/disclosure";
 import type { ModuleKey } from "@/components/ui/later-module";
 import type { MultiSelectOption } from "@/components/ui/multi-select";
 import { TextField } from "@/components/ui/text-field";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
+import { DEFAULT_TIME_ZONE } from "@/lib/locale";
 import { activityFilterToCriteria } from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
 import { useModuleTags } from "@/lib/records/tags";
@@ -23,13 +32,33 @@ import {
   initialFilterDraft,
   isFilterComplete,
 } from "./filter-editor";
+import {
+  initialRelatedModuleDraft,
+  type RelatedModuleDraft,
+  type RelatedModuleFilterConfig,
+  RelatedModuleFilterEditor,
+  relatedModuleIsComplete,
+  relatedModuleValue,
+} from "./related-module-filter-editor";
+import {
+  initialSystemFilterDraft,
+  isSystemFilterComplete,
+  type SystemEditorKind,
+  type SystemEditorOptions,
+  type SystemFilterDraft,
+  SystemFilterEditor,
+  systemFilterValue,
+} from "./system-filter-editor";
 
 export interface FilterItem {
   id: string;
   label: string;
   disabled?: boolean;
   editor?: FilterEditorDefinition;
-  systemEditor?: "activities" | "campaigns";
+  systemEditor?: "activities" | "campaigns" | SystemEditorKind;
+  systemOptions?: SystemEditorOptions;
+  /** Related-module row (Filter By Related Modules): editor config supplied by the module. */
+  relatedModule?: RelatedModuleFilterConfig;
   laterModule?: ModuleKey;
 }
 
@@ -50,15 +79,27 @@ export interface FilterPanelProps {
   initialFilters?: readonly AppliedFilter[];
   initialActivityFilter?: ActivityFilterValue | null;
   initialCampaignFilter?: CampaignFilterValue | null;
+  initialSystemDrafts?: Readonly<Record<string, SystemFilterDraft>>;
+  initialRelatedDrafts?: Readonly<Record<string, RelatedModuleDraft>>;
+  userOptions?: readonly MultiSelectOption[];
+  timeZone?: string;
   campaignOptions?: readonly MultiSelectOption[];
   onApply?: (
     filters: AppliedFilter[],
     activityFilter?: ActivityFilterValue | null,
     campaignFilter?: CampaignFilterValue | null,
+    systemFilters?: SystemFiltersValue | null,
+    systemDrafts?: Record<string, SystemFilterDraft>,
+    relatedModules?: RelatedModuleFilter[] | null,
+    relatedDrafts?: Record<string, RelatedModuleDraft>,
   ) => void;
   onClear?: () => void;
   /** Shown above the footer actions when a server-side filter validation fails. */
   applyErrorMessage?: string | null;
+}
+
+function isSystemItem(item: FilterItem): boolean {
+  return Boolean(item.systemEditor && !["activities", "campaigns"].includes(item.systemEditor));
 }
 
 const DEFAULT_ACTIVITY_FILTER: ActivityFilterValue = {
@@ -81,11 +122,23 @@ export function FilterPanel({
   initialFilters = [],
   initialActivityFilter = null,
   initialCampaignFilter = null,
+  initialSystemDrafts = {},
+  initialRelatedDrafts = {},
+  userOptions = [],
+  timeZone = DEFAULT_TIME_ZONE,
   campaignOptions,
   onApply,
   onClear,
   applyErrorMessage,
 }: FilterPanelProps) {
+  const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
+  const [systemDrafts, setSystemDrafts] = useState<Record<string, SystemFilterDraft>>(() => ({
+    ...initialSystemDrafts,
+  }));
+  const [relatedDrafts, setRelatedDrafts] = useState<Record<string, RelatedModuleDraft>>(() => ({
+    ...initialRelatedDrafts,
+  }));
   const tagModule = groups
     .flatMap((group) => group.items)
     .find((item) => selectedIds.includes(item.id) && item.editor?.tagModule)?.editor?.tagModule;
@@ -126,6 +179,14 @@ export function FilterPanel({
 
   // External deselection (including page-level reset) must discard drafts too.
   useEffect(() => {
+    setSystemDrafts((current) => {
+      const entries = Object.entries(current).filter(([id]) => selectedIds.includes(id));
+      return entries.length === Object.keys(current).length ? current : Object.fromEntries(entries);
+    });
+    setRelatedDrafts((current) => {
+      const entries = Object.entries(current).filter(([id]) => selectedIds.includes(id));
+      return entries.length === Object.keys(current).length ? current : Object.fromEntries(entries);
+    });
     setDrafts((current) => {
       const entries = Object.entries(current).filter(([id]) => selectedIds.includes(id));
       return entries.length === Object.keys(current).length ? current : Object.fromEntries(entries);
@@ -153,9 +214,30 @@ export function FilterPanel({
   const selectedCampaignItem = groups
     .flatMap((group) => group.items)
     .find((item) => selectedIds.includes(item.id) && isCampaignItem(item));
+  const selectedSystemItems = groups
+    .flatMap((group) => group.items)
+    .filter((item) => selectedIds.includes(item.id) && isSystemItem(item));
+  const selectedRelatedItems = groups
+    .flatMap((group) => group.items)
+    .filter((item) => selectedIds.includes(item.id) && item.relatedModule);
   const hasSelectedItems =
-    selectedFieldItems.length > 0 || Boolean(selectedActivityItem) || Boolean(selectedCampaignItem);
+    selectedSystemItems.length > 0 ||
+    selectedRelatedItems.length > 0 ||
+    selectedFieldItems.length > 0 ||
+    Boolean(selectedActivityItem) ||
+    Boolean(selectedCampaignItem);
   const completed =
+    selectedRelatedItems.every((item) =>
+      relatedModuleIsComplete(relatedDrafts[item.id] ?? initialRelatedModuleDraft()),
+    ) &&
+    selectedSystemItems.every((item) =>
+      isSystemFilterComplete(
+        item.systemEditor as SystemEditorKind,
+        systemDrafts[item.id] ?? initialSystemFilterDraft(item.systemEditor as SystemEditorKind),
+        item.systemOptions,
+        userOptions,
+      ),
+    ) &&
     selectedFieldItems.every(
       (item) =>
         item.editor &&
@@ -163,12 +245,19 @@ export function FilterPanel({
     ) &&
     (!selectedCampaignItem ||
       (campaignDraft.campaignIds.length >= 1 && campaignDraft.campaignIds.length <= 5));
+  const emptyTagOnly =
+    selectedIds.length === 1 &&
+    selectedFieldItems.length === 1 &&
+    selectedFieldItems[0]?.editor?.fieldType === "tag" &&
+    tags.status === "ready";
   const [query, setQuery] = useState("");
   const [collapsedIds, setCollapsedIds] = useState<ReadonlySet<string>>(new Set());
   const visibleGroups = resolvedGroups
     .map((group) => ({
       ...group,
-      items: group.items.filter((item) => item.label.toLowerCase().includes(query.toLowerCase())),
+      items: group.items.filter((item) =>
+        adapter.getNamedLabel(item.label).toLocaleLowerCase().includes(query.toLocaleLowerCase()),
+      ),
     }))
     .filter((group) => group.items.length > 0);
 
@@ -190,91 +279,159 @@ export function FilterPanel({
         value={query}
         onChange={setQuery}
       />
-      <div className="filter-panel-content mt-(--size-list-filter-search-to-group)">
-        {visibleGroups.map((group, index) => (
-          <div
-            key={group.id}
-            className={index === 0 ? undefined : "mt-(--size-list-filter-group-gap)"}
-          >
-            <Disclosure
-              variant="filter"
-              label={group.label}
-              isExpanded={!collapsedIds.has(group.id)}
-              onExpandedChange={(expanded) => {
-                setCollapsedIds((current) => {
-                  const next = new Set(current);
-                  if (expanded) next.delete(group.id);
-                  else next.add(group.id);
-                  return next;
-                });
-              }}
+      <div
+        className="filter-panel-content mt-(--size-list-filter-search-to-group)"
+        onScroll={(event) => {
+          // Focus scrolling must never shift the panel sideways (CX-18).
+          if (event.currentTarget.scrollLeft !== 0) event.currentTarget.scrollLeft = 0;
+        }}
+      >
+        {visibleGroups.map((group, index) => {
+          const groupLabel =
+            group.id === "system"
+              ? t("records.filter.systemDefined")
+              : group.id === "fields"
+                ? t("records.filter.byFields")
+                : group.id === "related"
+                  ? t("records.filter.byRelated")
+                  : group.label;
+          return (
+            <div
+              key={group.id}
+              className={index === 0 ? undefined : "mt-(--size-list-filter-group-gap)"}
             >
-              <ul className="min-w-0 pt-(--size-list-filter-group-to-row)">
-                {group.items.map((item) => (
-                  <li
-                    key={item.id}
-                    className="flex flex-col min-h-(--size-list-filter-row-height) w-full min-w-0 items-start py-(--size-list-filter-row-padding)"
-                  >
-                    <Checkbox
-                      align="first-line"
-                      variant="filter"
-                      label={item.label}
-                      labelClassName="w-(--size-list-filter-label-width)"
-                      isDisabled={item.disabled}
-                      laterModule={item.laterModule}
-                      isSelected={selectedIds.includes(item.id)}
-                      onChange={(selected) => {
-                        setDrafts((current) => {
-                          const next = { ...current };
-                          if (selected && item.editor)
-                            next[item.id] = initialFilterDraft(item.editor);
-                          else delete next[item.id];
-                          return next;
-                        });
-                        if (!selected && isActivityItem(item)) {
-                          setActivityDraft(initialActivityFilter ?? DEFAULT_ACTIVITY_FILTER);
+              <Disclosure
+                variant="filter"
+                label={groupLabel}
+                isExpanded={!collapsedIds.has(group.id)}
+                onExpandedChange={(expanded) => {
+                  setCollapsedIds((current) => {
+                    const next = new Set(current);
+                    if (expanded) next.delete(group.id);
+                    else next.add(group.id);
+                    return next;
+                  });
+                }}
+              >
+                <ul className="min-w-0 pt-(--size-list-filter-group-to-row)">
+                  {group.items.map((item) => (
+                    <li
+                      key={item.id}
+                      className="flex flex-col min-h-(--size-list-filter-row-height) w-full min-w-0 items-start py-(--size-list-filter-row-padding)"
+                    >
+                      <Checkbox
+                        align="first-line"
+                        variant="filter"
+                        label={adapter.getNamedLabel(item.label)}
+                        labelClassName="w-(--size-list-filter-label-width)"
+                        isDisabled={
+                          item.disabled ||
+                          Boolean(
+                            item.relatedModule &&
+                              !selectedIds.includes(item.id) &&
+                              selectedRelatedItems.length >= MAX_RELATED_MODULE_FILTERS,
+                          )
                         }
-                        if (!selected && isCampaignItem(item)) {
-                          setCampaignDraft(initialCampaignFilter ?? DEFAULT_CAMPAIGN_FILTER);
-                        }
-                        onSelectionChange(
-                          selected
-                            ? [...selectedIds, item.id]
-                            : selectedIds.filter((id) => id !== item.id),
-                        );
-                      }}
-                    />
-                    {selectedIds.includes(item.id) && item.editor && (
-                      <FilterEditor
-                        label={item.label}
-                        editor={item.editor}
-                        draft={drafts[item.id] ?? initialFilterDraft(item.editor)}
-                        onChange={(draft) =>
-                          setDrafts((current) => ({ ...current, [item.id]: draft }))
-                        }
+                        laterModule={item.laterModule}
+                        isSelected={selectedIds.includes(item.id)}
+                        onChange={(selected) => {
+                          if (isSystemItem(item)) {
+                            setSystemDrafts((current) => {
+                              const next = { ...current };
+                              if (selected)
+                                next[item.id] = initialSystemFilterDraft(
+                                  item.systemEditor as SystemEditorKind,
+                                );
+                              else delete next[item.id];
+                              return next;
+                            });
+                          }
+                          if (item.relatedModule) {
+                            setRelatedDrafts((current) => {
+                              const next = { ...current };
+                              if (selected) next[item.id] = initialRelatedModuleDraft();
+                              else delete next[item.id];
+                              return next;
+                            });
+                          }
+                          setDrafts((current) => {
+                            const next = { ...current };
+                            if (selected && item.editor)
+                              next[item.id] = initialFilterDraft(item.editor);
+                            else delete next[item.id];
+                            return next;
+                          });
+                          if (!selected && isActivityItem(item)) {
+                            setActivityDraft(initialActivityFilter ?? DEFAULT_ACTIVITY_FILTER);
+                          }
+                          if (!selected && isCampaignItem(item)) {
+                            setCampaignDraft(initialCampaignFilter ?? DEFAULT_CAMPAIGN_FILTER);
+                          }
+                          onSelectionChange(
+                            selected
+                              ? [...selectedIds, item.id]
+                              : selectedIds.filter((id) => id !== item.id),
+                          );
+                        }}
                       />
-                    )}
-                    {selectedIds.includes(item.id) && isActivityItem(item) && (
-                      <ActivityFilterEditor
-                        className="filter-editor"
-                        value={activityDraft}
-                        onChange={setActivityDraft}
-                      />
-                    )}
-                    {selectedIds.includes(item.id) && isCampaignItem(item) && (
-                      <CampaignFilterEditor
-                        className="filter-editor"
-                        value={campaignDraft}
-                        onChange={setCampaignDraft}
-                        campaignOptions={campaignOptions}
-                      />
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </Disclosure>
-          </div>
-        ))}
+                      {selectedIds.includes(item.id) && isSystemItem(item) && (
+                        <SystemFilterEditor
+                          kind={item.systemEditor as SystemEditorKind}
+                          label={adapter.getNamedLabel(item.label)}
+                          value={
+                            systemDrafts[item.id] ??
+                            initialSystemFilterDraft(item.systemEditor as SystemEditorKind)
+                          }
+                          onChange={(draft) =>
+                            setSystemDrafts((current) => ({ ...current, [item.id]: draft }))
+                          }
+                          users={userOptions}
+                          {...item.systemOptions}
+                        />
+                      )}
+                      {selectedIds.includes(item.id) && item.relatedModule && (
+                        <RelatedModuleFilterEditor
+                          label={adapter.getNamedLabel(item.label)}
+                          config={item.relatedModule}
+                          draft={relatedDrafts[item.id] ?? initialRelatedModuleDraft()}
+                          onChange={(draft) =>
+                            setRelatedDrafts((current) => ({ ...current, [item.id]: draft }))
+                          }
+                          users={userOptions}
+                        />
+                      )}
+                      {selectedIds.includes(item.id) && item.editor && (
+                        <FilterEditor
+                          label={adapter.getNamedLabel(item.label)}
+                          editor={item.editor}
+                          draft={drafts[item.id] ?? initialFilterDraft(item.editor)}
+                          onChange={(draft) =>
+                            setDrafts((current) => ({ ...current, [item.id]: draft }))
+                          }
+                        />
+                      )}
+                      {selectedIds.includes(item.id) && isActivityItem(item) && (
+                        <ActivityFilterEditor
+                          className="filter-editor"
+                          value={activityDraft}
+                          onChange={setActivityDraft}
+                        />
+                      )}
+                      {selectedIds.includes(item.id) && isCampaignItem(item) && (
+                        <CampaignFilterEditor
+                          className="filter-editor"
+                          value={campaignDraft}
+                          onChange={setCampaignDraft}
+                          campaignOptions={campaignOptions}
+                        />
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </Disclosure>
+            </div>
+          );
+        })}
       </div>
       {hasSelectedItems && (
         <div className="filter-panel-actions flex flex-col gap-2 py-3">
@@ -283,11 +440,13 @@ export function FilterPanel({
               {applyErrorMessage}
             </p>
           ) : null}
-          <div className="flex items-center gap-2">
+          <div
+            className={tagModule ? "flex flex-col items-start gap-2" : "flex items-center gap-2"}
+          >
             {onApply && (
               <Button
                 size="sm"
-                isDisabled={!completed}
+                isDisabled={!completed && !emptyTagOnly}
                 onPress={() => {
                   if (!completed) return;
                   const applied = selectedFieldItems.flatMap((item) => {
@@ -321,7 +480,85 @@ export function FilterPanel({
                       }
                     : undefined;
 
-                  if (selectedCampaignItem) {
+                  const appliedRelatedDrafts = Object.fromEntries(
+                    selectedRelatedItems.map((item) => [
+                      item.id,
+                      relatedDrafts[item.id] ?? initialRelatedModuleDraft(),
+                    ]),
+                  );
+                  const appliedRelated =
+                    selectedRelatedItems.length > 0
+                      ? selectedRelatedItems.flatMap((item) =>
+                          item.relatedModule
+                            ? [
+                                relatedModuleValue(
+                                  item.relatedModule,
+                                  appliedRelatedDrafts[item.id] ?? initialRelatedModuleDraft(),
+                                ),
+                              ]
+                            : [],
+                        )
+                      : null;
+                  if (selectedRelatedItems.length > 0) {
+                    const systemDraftEntries = Object.fromEntries(
+                      selectedSystemItems.map((item) => [
+                        item.id,
+                        systemDrafts[item.id] ??
+                          initialSystemFilterDraft(item.systemEditor as SystemEditorKind),
+                      ]),
+                    );
+                    const now = new Date();
+                    onApply(
+                      applied,
+                      selectedActivityItem ? activityFilterToCriteria(activityDraft) : undefined,
+                      appliedCampaign,
+                      selectedSystemItems.length > 0
+                        ? Object.assign(
+                            {},
+                            ...selectedSystemItems.map((item) =>
+                              systemFilterValue(
+                                item.systemEditor as SystemEditorKind,
+                                systemDraftEntries[item.id] ??
+                                  initialSystemFilterDraft(item.systemEditor as SystemEditorKind),
+                                now,
+                                timeZone,
+                              ),
+                            ),
+                          )
+                        : undefined,
+                      systemDraftEntries,
+                      appliedRelated,
+                      appliedRelatedDrafts,
+                    );
+                  } else if (selectedSystemItems.length > 0) {
+                    const now = new Date();
+                    const appliedDrafts = Object.fromEntries(
+                      selectedSystemItems.map((item) => [
+                        item.id,
+                        systemDrafts[item.id] ??
+                          initialSystemFilterDraft(item.systemEditor as SystemEditorKind),
+                      ]),
+                    );
+                    const systemFilters = Object.assign(
+                      {},
+                      ...selectedSystemItems.map((item) =>
+                        systemFilterValue(
+                          item.systemEditor as SystemEditorKind,
+                          appliedDrafts[item.id] ??
+                            initialSystemFilterDraft(item.systemEditor as SystemEditorKind),
+                          now,
+                          timeZone,
+                        ),
+                      ),
+                    );
+                    onApply(
+                      applied,
+                      selectedActivityItem ? activityFilterToCriteria(activityDraft) : undefined,
+                      appliedCampaign,
+                      systemFilters,
+                      appliedDrafts,
+                    );
+                  } else if (selectedCampaignItem) {
                     onApply(
                       applied,
                       selectedActivityItem ? activityFilterToCriteria(activityDraft) : undefined,
@@ -334,7 +571,7 @@ export function FilterPanel({
                   }
                 }}
               >
-                Apply Filter
+                {t("records.filter.apply")}
               </Button>
             )}
             <Button
@@ -342,13 +579,15 @@ export function FilterPanel({
               variant="secondary"
               onPress={() => {
                 setDrafts({});
+                setSystemDrafts({});
+                setRelatedDrafts({});
                 setActivityDraft(initialActivityFilter ?? DEFAULT_ACTIVITY_FILTER);
                 setCampaignDraft(initialCampaignFilter ?? DEFAULT_CAMPAIGN_FILTER);
                 onSelectionChange([]);
                 onClear?.();
               }}
             >
-              Clear
+              {t("records.filter.clear")}
             </Button>
           </div>
         </div>

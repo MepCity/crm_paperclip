@@ -1,4 +1,5 @@
-import { notesCardBody } from "../notes-card";
+import { attachmentsCard } from "../attachments-card";
+import { notesCardBody, openNotesComposer } from "../notes-card";
 import type { RelatedListDefinition, RelatedListRailChromeDefinition } from "../types";
 
 /**
@@ -27,19 +28,20 @@ export const solutionsRelatedLists: readonly RelatedListDefinition[] = [
     id: "notes",
     renderBody: notesCardBody("Solutions"),
     title: "Notes",
-    moduleKey: "M6",
+    moduleKey: "M2",
     order: 2,
     targetId: "related-list-notes",
-    railAction: { id: "notes-add", label: "Add", moduleKey: "M6" },
+    railAction: { id: "notes-add", label: "Add", onAction: openNotesComposer },
     emptyStateText: "No records found",
   },
   {
     id: "attachments",
+    renderCard: attachmentsCard("Solutions"),
     title: "Attachments",
-    moduleKey: "M6",
+    moduleKey: "M8",
     order: 3,
     targetId: "related-list-attachments",
-    upperControls: [{ id: "attach", label: "Attach", type: "split-button", moduleKey: "M6" }],
+    upperControls: [{ id: "attach", label: "Attach", type: "split-button" }],
     emptyStateText: "No Attachment",
   },
 ];

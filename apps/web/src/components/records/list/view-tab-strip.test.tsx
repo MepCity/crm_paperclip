@@ -76,3 +76,90 @@ test("searchable draws the search box only when enabled and filters case-insensi
   await user.clear(box);
   expect(screen.getAllByRole("menuitem", { name: /Tasks$/ })).toHaveLength(2);
 });
+
+test("calls onNewView when New Custom View is clicked and handler is provided", async () => {
+  const user = userEvent.setup();
+  const onNewView = vi.fn();
+  render(
+    <ViewTabStrip
+      viewName="All Contacts"
+      views={[{ id: "all", name: "All Contacts" }]}
+      onNewView={onNewView}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Custom views" }));
+  const newItem = screen.getByRole("menuitem", { name: "New Custom View" });
+  expect(newItem.getAttribute("data-later-module")).toBeNull();
+  await user.click(newItem);
+  expect(onNewView).toHaveBeenCalledTimes(1);
+});
+
+test("renders Edit Current View and calls onEditView with active view id", async () => {
+  const user = userEvent.setup();
+  const onEditView = vi.fn();
+  render(
+    <ViewTabStrip
+      viewName="My Contacts"
+      views={[
+        { id: "all", name: "All Contacts" },
+        { id: "mine", name: "My Contacts" },
+      ]}
+      onEditView={onEditView}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Custom views" }));
+  const editItem = screen.getByRole("menuitem", { name: "Edit Current View" });
+  await user.click(editItem);
+  expect(onEditView).toHaveBeenCalledWith("mine");
+});
+
+test("keeps created and public view groups independently collapsible", async () => {
+  const user = userEvent.setup();
+  const change = vi.fn();
+  render(
+    <ViewTabStrip
+      viewName="All Contacts"
+      views={[
+        { id: "all", name: "All Contacts", systemDefined: true },
+        { id: "custom", name: "Custom Contacts", systemDefined: false, isDefault: false },
+      ]}
+      onViewChange={change}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Custom views" }));
+  await user.click(screen.getByRole("menuitem", { name: "Created By Me" }));
+  expect(screen.queryByRole("menuitem", { name: "Custom Contacts" })).toBeNull();
+  expect(screen.getByRole("menuitem", { name: "All Contacts" })).toBeTruthy();
+  await user.click(screen.getByRole("menuitem", { name: "Public Views" }));
+  expect(screen.queryByRole("menuitem", { name: "All Contacts" })).toBeNull();
+  await user.click(screen.getByRole("menuitem", { name: "Created By Me" }));
+  await user.click(screen.getByRole("menuitem", { name: "Custom Contacts" }));
+  expect(change).toHaveBeenCalledWith("custom");
+});
+
+test("support module menus omit an empty created group and retain custom views when present", async () => {
+  const user = userEvent.setup();
+  const { rerender } = render(
+    <ViewTabStrip
+      viewName="All Cases"
+      views={[{ id: "all", name: "All Cases", systemDefined: true }]}
+      hideEmptyCreatedGroup
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Custom views" }));
+  expect(screen.queryByRole("menuitem", { name: "Created By Me" })).toBeNull();
+  await user.keyboard("{Escape}");
+  rerender(
+    <ViewTabStrip
+      viewName="All Cases"
+      views={[
+        { id: "all", name: "All Cases", systemDefined: true },
+        { id: "custom", name: "My custom view", systemDefined: false, isDefault: false },
+      ]}
+      hideEmptyCreatedGroup
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Custom views" }));
+  expect(screen.getByRole("menuitem", { name: "Created By Me" })).toBeTruthy();
+  expect(screen.getByRole("menuitem", { name: "My custom view" })).toBeTruthy();
+});

@@ -73,10 +73,7 @@ it("renders header, ordered rows, links, toolbar and footer without empty text",
   expect(document.querySelector('[data-board-column="b"] .record-board-cards')?.textContent).toBe(
     "",
   );
-  fireEvent.click(screen.getByRole("checkbox", { name: "Select First" }));
-  expect((screen.getByRole("checkbox", { name: "Select First" }) as HTMLInputElement).checked).toBe(
-    true,
-  );
+  expect(screen.queryByRole("checkbox", { name: "Select First" })).toBeNull();
   fireEvent.click(
     within(screen.getByRole("region", { name: "Empty" })).getByRole("button", {
       name: "Create Record",

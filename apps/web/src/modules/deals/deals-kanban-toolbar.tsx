@@ -7,6 +7,7 @@ import { KanbanSettingsDialog } from "@/components/records/board/kanban-settings
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { toast } from "@/components/ui/toast";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { useModule, useSaveKanbanView } from "@/lib/api/client/hooks";
 import { setSelectedDealsKanbanViewId, useSelectedDealsKanbanView } from "./deals-kanban-selection";
 
@@ -27,6 +28,7 @@ const BLANK_VIEW: KanbanViewInput = {
 };
 
 export function DealsKanbanToolbar() {
+  const t = useUiTranslations();
   const { views, view } = useSelectedDealsKanbanView();
   const module = useModule("Deals");
   const save = useSaveKanbanView("Deals");
@@ -53,7 +55,7 @@ export function DealsKanbanToolbar() {
       dialog === "edit" && view ? { id: view.id, input } : { input },
     );
     if (dialog === "create") setSelectedDealsKanbanViewId(saved.id);
-    toast({ variant: "success", title: "Kanban view saved" });
+    toast({ variant: "success", title: t("records.kanban.saved") });
     setDialog(null);
   }
 
@@ -66,7 +68,7 @@ export function DealsKanbanToolbar() {
     <>
       <span className="relative inline-flex h-[27px] w-[109px] items-center">
         <select
-          aria-label="Board grouping"
+          aria-label={t("records.kanban.grouping")}
           className="h-full w-full appearance-none rounded border border-control-border bg-surface pl-2 pr-6 text-sm text-(--color-text-muted) outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
           value={view?.id ?? ""}
           onChange={(event) => {
@@ -86,8 +88,8 @@ export function DealsKanbanToolbar() {
               {v.name}
             </option>
           ))}
-          <option value={CREATE_VALUE}>Create Kanban View</option>
-          <option value={MANAGE_VALUE}>Manage Kanban Views</option>
+          <option value={CREATE_VALUE}>{t("records.kanban.create")}</option>
+          <option value={MANAGE_VALUE}>{t("records.kanban.manage")}</option>
         </select>
         <Icons.recordFormCaret
           aria-hidden
@@ -96,7 +98,7 @@ export function DealsKanbanToolbar() {
       </span>
       <Button
         variant="ghost"
-        aria-label="Board settings"
+        aria-label={t("records.kanban.settings")}
         isDisabled={!view}
         onPress={() => setDialog("edit")}
       >
@@ -118,7 +120,7 @@ export function DealsKanbanToolbar() {
           initial={initial}
           categorizeOptions={options.categorize}
           aggregateOptions={options.aggregate}
-          headerStyleOptions={[{ value: "mono_color", label: "Mono Color" }]}
+          headerStyleOptions={[{ value: "mono_color", label: t("records.kanban.singleColor") }]}
           fieldOptions={options.cardFields}
           onSave={handleSave}
           onCancel={() => setDialog(null)}

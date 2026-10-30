@@ -1,7 +1,6 @@
 import { Icons } from "@/components/ui/icon";
 import { buildAccountsRecordMoreMenuGroups } from "../accounts/accounts-record-more-options";
 import {
-  ACCOUNTS_TIMELINE_EMPTY_EVENTS,
   ACCOUNTS_TIMELINE_MODULE_OPTIONS,
   ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
   ACCOUNTS_TIMELINE_SUBTABS,
@@ -34,7 +33,7 @@ export const campaignsScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Campaign",
   pluralLabel: "Campaigns",
   pageTitle: "Campaigns",
-  navigation: { id: "campaigns", icon: Icons.building },
+  navigation: { id: "campaigns", icon: Icons.megaphone },
   list: campaignsListPageConfig,
   listCurrencyCode: CAMPAIGNS_LIST_CURRENCY_CODE,
   searchColumns: ["Campaign_Name", "Type", "Status", "Owner"],
@@ -42,6 +41,7 @@ export const campaignsScreenDefinition: ModuleScreenDefinition = {
   form: {
     rules: campaignsFormRules,
     inventoryChrome: true,
+    inventoryFooterPinned: true,
   },
   detail: {
     header: campaignsRecordHeaderIdentity,
@@ -61,7 +61,6 @@ export const campaignsScreenDefinition: ModuleScreenDefinition = {
       subtabs: ACCOUNTS_TIMELINE_SUBTABS,
       modules: ACCOUNTS_TIMELINE_MODULE_OPTIONS,
       sources: ACCOUNTS_TIMELINE_SOURCE_OPTIONS,
-      events: ACCOUNTS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: normalizeAccountsEventKind,
       upcomingAutomatedActions: {
         label: "Show Upcoming Automated Actions",

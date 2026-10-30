@@ -10,6 +10,8 @@ export type WireCriteria =
   | { field: { api_name: string }; comparator: Comparator; value: WireCriteriaValue }
   | { group_operator: "AND" | "OR"; group: readonly WireCriteria[] };
 export type WireField = {
+  id: string;
+  custom_field: boolean;
   accepts_json_array?: boolean;
   api_name: string;
   field_label: string;
@@ -36,6 +38,8 @@ export type WireModule = {
   business_card_fields: readonly { api_name: string }[];
 };
 export type WireLayout = {
+  id: string;
+  default: true;
   sections: readonly {
     display_label: string;
     column_count: number;
@@ -54,6 +58,7 @@ export type WireView = {
   sort_order: "asc" | "desc" | null;
 };
 export type WireInfo = {
+  revision?: string;
   per_page: number;
   count: number;
   page: number;
@@ -74,14 +79,18 @@ export type WireWriteResult = {
 
 export type WireViewSummary = Pick<WireView, "id" | "name" | "system_defined" | "default">;
 export type WirePageInfo = Pick<WireInfo, "per_page" | "count" | "page" | "more_records">;
-export type WireModuleResponse = { modules: readonly WireModule[] };
-export type WireFieldsResponse = { fields: readonly WireField[] };
-export type WireLayoutsResponse = { layouts: readonly WireLayout[] };
+export type WireModuleResponse = {
+  revision: string;
+  modules: readonly WireModule[];
+  capabilities?: { fields: boolean; layouts: boolean; module: boolean; sharedViews: boolean };
+};
+export type WireFieldsResponse = { revision: string; fields: readonly WireField[] };
+export type WireLayoutsResponse = { revision: string; layouts: readonly WireLayout[] };
 export type WireViewsResponse = {
   custom_views: readonly WireViewSummary[];
-  info: WirePageInfo & { default?: string };
+  info: WirePageInfo & { default?: string; revision?: string };
 };
-export type WireViewResponse = { custom_views: readonly WireView[] };
+export type WireViewResponse = { revision: string; custom_views: readonly WireView[] };
 export type WireActivitySummaries = Readonly<
   Record<
     string,
@@ -96,8 +105,31 @@ export type WireBulkResponse = {
 export type WireCountResponse = { count: number };
 export type WireRecordResponse = { data: readonly WireRecord[] };
 export type WireUsersResponse = { users: readonly WireUser[]; info: WirePageInfo };
+export interface WireSystemFilters {
+  locked?: { locked: boolean };
+  record_action?: {
+    action: import("@crm/core/records").RecordActionKind;
+    actor_ids?: readonly string[];
+    period: import("@crm/core/records").FilterPeriod;
+  };
+  related_records_action?: {
+    module: string;
+    action: import("@crm/core/records").RelatedActionKind;
+    actor_ids?: readonly string[];
+    period: import("@crm/core/records").FilterPeriod;
+  };
+  touched?: { actor_ids?: readonly string[]; period: import("@crm/core/records").FilterPeriod };
+  untouched?: { actor_ids?: readonly string[]; period: import("@crm/core/records").FilterPeriod };
+}
+export interface WireRelatedModule {
+  module: import("@crm/core/records").RelatedFilterModule;
+  presence: "with" | "without";
+  criteria: readonly WireCriteria[];
+}
 export type WireRestrictions = {
+  system_filters?: WireSystemFilters;
   campaign_filter?: { campaign_ids: readonly string[]; member_statuses?: readonly string[] };
+  related_modules?: readonly WireRelatedModule[];
   filters?: WireCriteria;
   search?: string;
   activity_filter?: import("@crm/core/records").ActivityFilterValue;

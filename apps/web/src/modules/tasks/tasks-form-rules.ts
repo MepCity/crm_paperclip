@@ -38,6 +38,8 @@ export function buildTasksFormDefaults(metadata?: ModuleMetadata): Record<string
 
 export const tasksFormRules: FormRules = {
   owner: "Owner",
+  initialFocus: false,
+  textSuggestions: { Subject: ["Email", "Call", "Meeting", "Send Letter", "Product Demo"] },
   omitted: TASKS_FORM_OMITTED_FIELDS,
   lookupLabelFields: ["Who_Id", "What_Id"],
   subduedToggles: ["Recurring_Activity"],

@@ -57,6 +57,12 @@
   width: var(--size-form-page-save-new-width);
 }
 
+.record-form-shell[data-form-layout="call"] .record-form-strip__action--save-new {
+  order: -1;
+  width: auto;
+  padding-inline: var(--space-4);
+}
+
 .record-form-strip__action--save {
   width: var(--size-form-page-save-width);
 }
@@ -402,8 +408,25 @@
   color: var(--color-text-muted);
 }
 
+.record-form-shell:has([data-pin-bottom]) {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100dvh - var(--size-topbar-height));
+}
+
+.record-form-shell:has([data-pin-bottom]) .record-form-card,
+.record-form-shell:has([data-pin-bottom]) .record-form-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+}
+
 .record-form-inventory-footer[data-align-end] {
   justify-content: flex-end;
+}
+
+.record-form-inventory-footer[data-pin-bottom] {
+  margin-top: auto;
 }
 
 .record-form-standard-view {
@@ -648,19 +671,47 @@
 [data-form-layout="call"] .record-form-card__body {
   width: var(--size-call-form-width);
 }
+[data-form-layout="call"] .record-form-section:first-child {
+  padding-top: 85px;
+}
+[data-form-layout="call"] .record-form-section:first-child .record-form-section__title {
+  top: 42.5px;
+  left: 18.5px;
+  transform: none;
+}
+[data-form-layout="call"] .record-form-section:not(:first-child) .record-form-section__title {
+  margin-top: 72.5px;
+  margin-bottom: 28px;
+  margin-left: 18.5px;
+}
 [data-form-layout="call"] .record-form-row {
   display: block;
   position: relative;
   box-sizing: border-box;
   width: var(--size-call-form-box-width);
   margin-left: var(--size-call-form-box-left);
-  min-height: var(--size-call-form-box-height);
+  height: 32px;
+  min-height: 32px;
   border: 1px solid var(--color-call-form-border);
   border-radius: 4px;
   background: var(--color-surface);
 }
+[data-form-layout="call"] [data-form-field="What_Id"] .record-form-row {
+  height: 33px;
+  min-height: 33px;
+}
+[data-form-layout="call"] [data-form-field="Reminder"] .record-form-row {
+  height: 33.5px;
+  min-height: 33.5px;
+}
 [data-form-layout="call"]
-  .record-form-row:has([data-focused], [data-focus-visible], [aria-expanded="true"]) {
+  .record-form-row:has(
+    [data-focused],
+    [data-focus-visible],
+    [aria-expanded="true"],
+    :focus,
+    :focus-visible
+  ) {
   border-color: var(--color-call-form-focus);
   box-shadow: 0 0 0 2px rgb(84 100 242 / 20%);
 }
@@ -672,9 +723,36 @@
   transform: translateY(-50%);
   justify-self: auto;
   text-align: right;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+[data-form-layout="call"] [data-form-field="Who_Id"] .record-form-row__label {
+  top: 0;
+  transform: none;
+}
+[data-form-layout="call"] .record-form-row__label-text {
+  display: block;
+  width: 100%;
+  text-align: right;
+  line-height: 18px;
+}
+[data-form-layout="call"] .record-form-row__label > div {
+  width: 100%;
+  align-items: flex-end;
 }
 [data-form-layout="call"] .record-form-row__label .record-choice-trigger {
-  width: auto;
+  width: 100%;
+  display: flex;
+  justify-content: flex-end;
+  text-align: right;
+  padding-right: 15px;
+  position: relative;
+  line-height: 18px;
+}
+[data-form-layout="call"] .record-form-row__label .record-form-caret {
+  right: 0;
+  left: auto;
 }
 [data-form-layout="call"] .record-form-row[data-required]::after {
   display: none;
@@ -689,18 +767,150 @@
   background: var(--color-call-form-required);
 }
 [data-form-layout="call"] .record-form-row__control {
-  padding: 0 10px;
-  min-height: calc(var(--size-call-form-box-height) - 2px);
+  padding: 0 0 0 10px;
+  min-height: 30px;
+  height: 100%;
   display: flex;
   align-items: center;
+}
+[data-form-layout="call"] .record-form-row:not(:has(.record-input-end)) .record-form-row__control {
+  padding-right: 10px;
 }
 [data-form-layout="call"] .record-form-row__control > * {
   flex: 1 1 auto;
   min-width: 0;
+  height: 100%;
 }
 [data-form-layout="call"] .record-form-row__control .record-choice-trigger {
   width: 100%;
 }
+[data-form-layout="call"] .record-input-frame {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+}
+[data-form-layout="call"] .record-input-frame > input.record-control {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding-right: 8px;
+}
+[data-form-layout="call"] .record-input-end {
+  width: 33px;
+  height: 100%;
+  min-height: 30px;
+  margin: 0;
+  margin-left: auto;
+  background: #f0f4ff;
+  border-left: 1px solid var(--color-call-form-border);
+  border-top-right-radius: 3px;
+  border-bottom-right-radius: 3px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-activity-form-lookup);
+  flex-shrink: 0;
+  cursor: pointer;
+}
+[data-form-layout="call"] .record-input-end-icon {
+  width: 16px;
+  height: 16px;
+}
+[data-form-layout="call"] .record-choice-shell--owner {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  align-items: center;
+}
+[data-form-layout="call"] .record-choice-shell--owner .record-choice-trigger {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  padding-right: 25px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  text-align: left;
+}
+[data-form-layout="call"] .record-choice-shell--owner .record-form-caret {
+  right: 8px;
+  left: auto;
+}
+[data-form-layout="call"] .record-choice-shell--owner .record-input-end {
+  color: var(--color-text-strong);
+}
 [data-form-layout="call"] [data-form-field] + [data-form-field] {
-  margin-top: var(--size-call-form-row-gap);
+  margin-top: 23px;
+}
+[data-form-layout="call"] [data-form-field="Who_Id"] + [data-form-field="What_Id"] {
+  margin-top: 37.5px;
+}
+[data-form-layout="call"] [data-form-field="What_Id"] + [data-form-field="Call_Type"] {
+  margin-top: 21.5px;
+}
+[data-form-layout="call"] [data-form-field="Subject"] + [data-form-field="Reminder"] {
+  margin-top: 22px;
+}
+
+/* solutions.md → Layout — m8f-solutions-create (measured at 1470×835): the card runs to the page
+   bottom, Question / Answer rows keep the 54 px pitch, the footer group is pinned to the card base. */
+[data-form-layout="solutions"] .record-form-card {
+  display: flex;
+  flex-direction: column;
+  min-height: calc(100vh - 107px - 16px);
+}
+[data-form-layout="solutions"] .record-form-card__body {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  padding-bottom: 0;
+}
+[data-form-layout="solutions"] .record-form-section:first-child {
+  margin-bottom: 17px;
+}
+[data-form-layout="solutions"]
+  [data-record-form-section-layout="single"]
+  > [data-form-field]
+  + [data-form-field] {
+  margin-top: calc(var(--size-form-row-pitch) - var(--size-form-input-height));
+}
+[data-form-layout="solutions"] .record-form-inventory-footer {
+  box-sizing: border-box;
+  width: 100%;
+  max-width: none;
+  margin-top: auto;
+  padding: var(--space-3) 20px var(--space-3) 0;
+  border-top: 1px solid var(--color-detail-divider);
+}
+[data-form-layout="solutions"] .record-form-inventory-footer button {
+  height: 32px;
+}
+
+/* activities-form.md → Visual layout — Call form (measured) rows 1 and 10: white title band, Start Time geometry. */
+.record-form-shell[data-form-layout="call"] .record-form-strip {
+  background-color: var(--color-surface);
+}
+[data-form-layout="call"] .record-form-datetime {
+  gap: 9px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  height: 100%;
+}
+[data-form-layout="call"] .record-form-datetime > :first-child {
+  width: 210px;
+}
+[data-form-layout="call"] .record-form-datetime > :nth-child(2) {
+  width: 76px;
+}
+[data-form-layout="call"] .record-form-datetime::after {
+  content: "";
+  position: absolute;
+  left: 212px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 1px;
+  height: 30px;
+  background-color: #c8cdd6;
 }

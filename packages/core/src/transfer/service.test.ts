@@ -6,7 +6,13 @@ import { createFixtureRecordService } from "../records/fixture";
 import type { OrgContext } from "../tenancy/types";
 import { parseCsv, serializeCsv } from "./csv";
 import { createTransferService } from "./service";
-import type { ExportRequest, ImportSettings, TransferDependencies, TransferModule } from "./types";
+import type {
+  ExportRequest,
+  ImportSettings,
+  TransferDependencies,
+  TransferLocale,
+  TransferModule,
+} from "./types";
 
 function setup(options: Partial<TransferDependencies> = {}) {
   const ctx: OrgContext = {
@@ -122,11 +128,11 @@ describe("transfer record-service integration", () => {
       { Last_Name: "Bad option", Email: "bad@example.test", Lead_Source: "Not a listed option" },
     ]);
     expect(job.status).toBe("completed_with_errors");
-    expect(job.counts).toEqual({ created: 1, updated: 0, skipped: 1, errors: 2 });
+    expect(job.counts).toEqual({ created: 2, updated: 0, skipped: 1, errors: 1, warnings: 1 });
     expect(job.rows).toEqual([
       { row: 2, outcome: "error", code: "required_missing", field: "Last_Name" },
       { row: 4, outcome: "skipped", code: "duplicate_in_file", field: "Email" },
-      { row: 5, outcome: "error", code: "invalid_value", field: "Lead_Source" },
+      { row: 5, outcome: "warning", code: "value_cleared", field: "Lead_Source" },
     ]);
     expect(JSON.stringify(job.rows)).not.toContain("@example.test");
   });
@@ -169,7 +175,7 @@ describe("transfer record-service integration", () => {
       ignoreEmptyOnUpdate: true,
     });
     expect(job.counts.updated).toBe(1);
-    expect(update).toHaveBeenCalledWith("Contacts", record.id, {});
+    expect(update).toHaveBeenCalledWith("Contacts", record.id, {}, undefined);
     expect((await s.records.get("Contacts", record.id)).fields).toMatchObject({
       Last_Name: "Original",
       Description: "Keep",
@@ -203,10 +209,16 @@ describe("transfer record-service integration", () => {
       },
       { Last_Name: "Owner", Email: "owner@example.test", Account_Name: "", Owner: "Other member" },
     ]);
-    expect(job.counts.created).toBe(1);
-    expect(job.rows.map((row) => row.code)).toEqual(["not_found", "multiple_matches", "not_found"]);
+    // Unresolved lookups are left empty and an unknown owner becomes the importing user.
+    expect(job.counts).toMatchObject({ created: 4, errors: 0, warnings: 3 });
+    expect(job.rows.map((row) => [row.outcome, row.code, row.field])).toEqual([
+      ["warning", "not_found", "Account_Name"],
+      ["warning", "multiple_matches", "Account_Name"],
+      ["warning", "owner_defaulted", "Owner"],
+    ]);
+    expect((await contactByEmail(s.records, "owner@example.test")).Owner).toBe(s.ctx.userId);
   });
-  it("converts numeric and boolean fields and lets record validation reject invalid types", async () => {
+  it("converts numeric and boolean fields and leaves an unusable optional value empty", async () => {
     const s = setup();
     const job = await s.run("Leads", [
       {
@@ -224,8 +236,12 @@ describe("transfer record-service integration", () => {
         Email_Opt_Out: "false",
       },
     ]);
-    expect(job.counts).toMatchObject({ created: 1, errors: 1 });
-    expect(job.rows[0]).toMatchObject({ field: "No_of_Employees", code: "invalid_value" });
+    expect(job.counts).toMatchObject({ created: 2, errors: 0, warnings: 1 });
+    expect(job.rows[0]).toMatchObject({
+      outcome: "warning",
+      field: "No_of_Employees",
+      code: "value_cleared",
+    });
   });
 });
 
@@ -243,7 +259,9 @@ describe("transfer preflight and isolation", () => {
       null,
       "id",
     ]);
-    expect(preview.fields.some((field) => field.apiName === "Created_Time")).toBe(false);
+    // Created By is system managed; the two timestamps can be carried over by an import.
+    expect(preview.fields.some((field) => field.apiName === "Created_By")).toBe(false);
+    expect(preview.fields.some((field) => field.apiName === "Created_Time")).toBe(true);
     expect(preview.matchFields.map((field) => field.field)).toEqual(["id", "Email"]);
   });
   it.each([
@@ -257,7 +275,7 @@ describe("transfer preflight and isolation", () => {
       },
     ],
     ["mapping_missing_required", { mapping: [{ column: 0, field: "Email" }] }],
-    ["mapping_system_field", { mapping: [{ column: 0, field: "Created_Time" }] }],
+    ["mapping_system_field", { mapping: [{ column: 0, field: "Created_By" }] }],
     ["mapping_system_field", { defaults: [{ field: "Modified_By", value: "Example" }] }],
     ["match_field_required", { mode: "update", mapping: [{ column: 0, field: "Last_Name" }] }],
     ["invalid_match_field", { matchField: "Description" }],
@@ -384,7 +402,7 @@ describe("CSV export", () => {
       fields: { include: ["Account_Name", "Description", "Annual_Revenue"] },
     });
     expect(job).toMatchObject({ rowCount: 1, status: "completed", scope: "Selected records" });
-    expect(job.fileName).toMatch(/^Accounts_\d{4}_\d{2}_\d{2}\.csv$/);
+    expect(job.fileName).toMatch(/^Accounts_\d{4}-\d{2}-\d{2}\.csv$/);
     const downloaded = await s.service.downloadExport(s.ctx, job.id);
     const parsed = parseCsv(new TextEncoder().encode(downloaded.body), {
       charset: "UTF-8",
@@ -562,7 +580,6 @@ describe("transfer budgets", () => {
     for (const [body, code] of [
       ["", "empty_file"],
       ['a\n"unterminated', "malformed_csv"],
-      ["a,a\nx,y", "duplicate_header"],
     ]) {
       await expect(
         s.service.previewImport(s.ctx, "Contacts", {
@@ -590,6 +607,12 @@ const activityInputs = {
     Call_Duration: "05:00",
   },
 } satisfies Record<string, Record<string, string>>;
+
+async function idsOf(s: ReturnType<typeof setup>, module: TransferModule): Promise<string[]> {
+  const view = (await s.records.listViews(module)).find((item) => item.isDefault);
+  const list = await s.records.list(module, { viewId: view?.id ?? "", page: 1, perPage: 100 });
+  return list.records.map((record) => record.id);
+}
 
 describe("activity transfers", () => {
   it.each(["Tasks", "Events", "Calls"] as const)(
@@ -627,7 +650,12 @@ describe("activity transfers", () => {
       for (const [key, value] of Object.entries(input)) {
         if (key === "$se_module") continue;
         const field = metadata.fields.find((field) => field.apiName === key);
-        expect(row?.[csv.headers.indexOf(field?.label ?? "")]).toBe(value);
+        const reference = ["lookup", "ownerlookup", "multi_module_lookup"].includes(
+          field?.dataType ?? "",
+        );
+        // References export a name column and a companion "<Field> Id" column.
+        const header = reference ? `${field?.label} Id` : (field?.label ?? "");
+        expect(row?.[csv.headers.indexOf(header)]).toBe(value);
       }
       const updated = await s.run(module, [{ id, [title]: "Updated transfer" }], {
         mode: "update",
@@ -678,30 +706,46 @@ describe("activity transfers", () => {
   });
 
   it.each(["Tasks", "Events", "Calls"] as const)(
-    "%s rejects parent names, unknown and unreadable IDs with row errors",
+    "%s resolve related records by id or name and warn on unknown, ambiguous and unreadable ones",
     async (module) => {
       const s = setup();
       const parent = await s.records.create("Accounts", { Account_Name: "Named parent" });
+      await s.records.create("Accounts", { Account_Name: "Twin parent" });
+      await s.records.create("Accounts", { Account_Name: "Twin parent" });
       const get = s.records.get.bind(s.records);
       vi.spyOn(s.records, "get").mockImplementation(async (name, id) => {
         if (name === "Accounts" && id === parent.id) throw new ForbiddenError();
         return get(name, id);
       });
       for (const [value, code] of [
-        ["Named parent", "not_found"],
         ["missing-id", "not_found"],
+        ["No such parent", "not_found"],
+        ["Twin parent", "multiple_matches"],
         [parent.id, "permission_denied"],
       ]) {
         const job = await s.run(module, [
           { ...activityInputs[module], What_Id: value ?? "", $se_module: "Accounts" },
         ]);
-        expect(job.counts).toEqual({ created: 0, updated: 0, skipped: 0, errors: 1 });
-        expect(job.rows).toEqual([{ row: 2, outcome: "error", code, field: "What_Id" }]);
+        expect(job.counts).toMatchObject({ created: 1, errors: 0, warnings: 1 });
+        expect(job.rows).toEqual([{ row: 2, outcome: "warning", code, field: "What_Id" }]);
+      }
+      vi.mocked(s.records.get).mockImplementation(get);
+      for (const value of ["Named parent", "  named PARENT "]) {
+        const before = await idsOf(s, module);
+        const job = await s.run(module, [
+          { ...activityInputs[module], What_Id: value, $se_module: "Accounts" },
+        ]);
+        expect(job.counts).toMatchObject({ created: 1, errors: 0 });
+        expect(job.counts.warnings).toBeUndefined();
+        const added = (await idsOf(s, module)).filter((id) => !before.includes(id));
+        expect(added).toHaveLength(1);
+        const saved = await s.records.get(module, added[0] ?? "");
+        expect(saved.fields.What_Id).toMatchObject({ module: "Accounts", id: parent.id });
       }
       const person = await s.records.create("Contacts", { Last_Name: "Named person" });
       for (const [value, code] of [
-        ["Named person", "not_found"],
         ["missing-person-id", "not_found"],
+        ["Nobody Here", "not_found"],
         [person.id, "permission_denied"],
       ]) {
         vi.mocked(s.records.get).mockImplementation(async (name, id) => {
@@ -709,14 +753,450 @@ describe("activity transfers", () => {
           return get(name, id);
         });
         const job = await s.run(module, [{ ...activityInputs[module], Who_Id: value ?? "" }]);
-        expect(job.rows).toEqual([{ row: 2, outcome: "error", code, field: "Who_Id" }]);
+        expect(job.rows).toEqual([{ row: 2, outcome: "warning", code, field: "Who_Id" }]);
       }
+      vi.mocked(s.records.get).mockImplementation(get);
+      const before = await idsOf(s, module);
+      const named = await s.run(module, [{ ...activityInputs[module], Who_Id: "named person" }]);
+      expect(named.counts).toMatchObject({ created: 1, errors: 0 });
+      expect(named.counts.warnings).toBeUndefined();
+      const added = (await idsOf(s, module)).filter((id) => !before.includes(id));
+      expect((await s.records.get(module, added[0] ?? "")).fields.Who_Id).toMatchObject({
+        id: person.id,
+      });
       const invalid = await s.run(module, [
         { ...activityInputs[module], What_Id: parent.id, $se_module: "Tasks" },
       ]);
       expect(invalid.rows).toEqual([
-        { row: 2, outcome: "error", code: "invalid_value", field: "$se_module" },
+        { row: 2, outcome: "warning", code: "value_cleared", field: "What_Id" },
       ]);
     },
   );
+});
+
+describe("date-time import formats", () => {
+  const fields = {
+    Events: ["Start_DateTime", "End_DateTime"],
+    Calls: ["Call_Start_Time"],
+  } as const;
+  const wall = [
+    "2026-10-29 14:05:00",
+    "2026-10-29 14:05",
+    "2026-10-29T14:05:00",
+    "29/10/2026 14:05",
+    "29.10.2026 14:05:00",
+  ];
+  const zoned = [
+    ["2026-10-29T11:05:00Z", "2026-10-29T11:05:00.000Z"],
+    ["2026-10-29T14:05:00+03:00", "2026-10-29T11:05:00.000Z"],
+    ["2026-10-29 14:05:00+0300", "2026-10-29T11:05:00.000Z"],
+    ["2026-10-29T06:05:00-05:00", "2026-10-29T11:05:00.000Z"],
+  ] as const;
+  const read = async (s: ReturnType<typeof setup>, module: "Events" | "Calls", value: string) => {
+    const before = await idsOf(s, module);
+    const input: Record<string, string> = { ...activityInputs[module] };
+    for (const name of fields[module]) input[name] = value;
+    const job = await s.run(module, [input, { ...input, [fields[module][0]]: "not a date" }]);
+    const added = (await idsOf(s, module)).filter((id) => !before.includes(id));
+    return { job, saved: await Promise.all(added.map((id) => s.records.get(module, id))) };
+  };
+  it.each(["Events", "Calls"] as const)(
+    "%s reads zone-less values in the importing user's zone and honours explicit offsets",
+    async (module) => {
+      for (const [zone, expected] of [
+        [undefined, "2026-10-29T11:05:00.000Z"],
+        ["UTC", "2026-10-29T14:05:00.000Z"],
+        ["America/New_York", "2026-10-29T18:05:00.000Z"],
+      ] as const) {
+        const s = setup(zone ? { timeZone: () => zone } : {});
+        for (const value of wall) {
+          const { job, saved } = await read(s, module, value);
+          expect(job.counts).toMatchObject({ created: 1, errors: 1 });
+          const stored = saved.map((record) => record.fields[fields[module][0]]);
+          expect(stored).toContain(expected);
+        }
+      }
+      const s = setup({ timeZone: () => "Pacific/Auckland" });
+      for (const [value, expected] of zoned) {
+        const { saved } = await read(s, module, value);
+        expect(saved.map((record) => record.fields[fields[module][0]])).toContain(expected);
+      }
+    },
+    20_000,
+  );
+  it.each(["Events", "Calls"] as const)(
+    "%s rejects an unreadable required date-time",
+    async (module) => {
+      const s = setup();
+      const { job } = await read(s, module, "2026-10-29 14:05:00");
+      expect(job.rows).toEqual([
+        { row: 3, outcome: "error", code: "invalid_value", field: fields[module][0] },
+      ]);
+    },
+  );
+  it("reads Created Time and Modified Time in the importing user's zone", async () => {
+    const s = setup({ timeZone: async () => "Europe/Berlin" });
+    const job = await s.run("Contacts", [
+      {
+        Last_Name: "Zone Test",
+        Email: "zone@example.test",
+        Created_Time: "2026-07-15 09:00:00",
+        Modified_Time: "2026-01-15T09:00:00",
+      },
+    ]);
+    expect(job.counts).toMatchObject({ created: 1, errors: 0 });
+    const saved = await contactByEmail(s.records, "zone@example.test");
+    expect(saved.Created_Time).toBe("2026-07-15T07:00:00.000Z");
+    expect(saved.Modified_Time).toBe("2026-01-15T08:00:00.000Z");
+  });
+});
+
+describe.each(["Solutions", "Cases"] as const)("%s export and import", (module) => {
+  it("exports selected metadata fields and records, history and tenant isolation", async () => {
+    const s = setup();
+    const field = module === "Solutions" ? "Solution_Title" : "Subject";
+    const record = await s.records.create(module, {
+      [field]: "Synthetic export record",
+      ...(module === "Cases" ? { Status: "New", Case_Origin: "Phone" } : {}),
+    });
+    const job = await s.service.runExport(s.ctx, {
+      module,
+      ids: [record.id],
+      fields: { include: [field] },
+    });
+    expect(job).toMatchObject({
+      module,
+      status: "completed",
+      rowCount: 1,
+      scope: "Selected records",
+    });
+    const file = await s.service.downloadExport(s.ctx, job.id);
+    const csv = parseCsv(new TextEncoder().encode(file.body), {
+      charset: "UTF-8",
+      maxColumns: 500,
+      maxRows: 30000,
+    });
+    expect(csv.headers).toEqual([
+      "Record Id",
+      module === "Solutions" ? "Solution Title" : "Subject",
+    ]);
+    expect(csv.rows).toEqual([[record.id, "Synthetic export record"]]);
+    expect(await s.service.listExports(s.ctx)).toContainEqual(job);
+    await expect(
+      s.service.downloadExport({ ...s.ctx, orgId: randomUUID() }, job.id),
+    ).rejects.toMatchObject({ code: "not_found" });
+    const all = await s.service.runExport(s.ctx, { module, fields: "all" });
+    expect(all.status).toBe("completed");
+    expect(all.rowCount).toBeGreaterThanOrEqual(1);
+    expect(s.authorize).toHaveBeenCalledWith(s.ctx, module, "read");
+  });
+  it("offers import preview, execution and a sample file", async () => {
+    const s = setup();
+    const title = module === "Solutions" ? "Solution_Title" : "Subject";
+    const preview = await s.preview(module, [title], [["Example"]]);
+    expect(preview.matchFields).toEqual([{ field: "id", label: "Record Id" }]);
+    expect(preview.suggestedMapping).toEqual([{ column: 0, field: title }]);
+    expect((await s.service.sampleCsv(s.ctx, module)).body).toContain(
+      module === "Solutions" ? "Solution Title" : "Subject",
+    );
+  });
+});
+
+async function contactByEmail(records: RecordService, email: string) {
+  const view = (await records.listViews("Contacts")).find((item) => item.isDefault);
+  const found = await records.list("Contacts", {
+    viewId: view?.id ?? "",
+    page: 1,
+    perPage: 10,
+    filters: { field: "Email", comparator: "equal", value: email },
+  });
+  return found.records[0]?.fields ?? {};
+}
+
+describe("real-data import and export behaviour", () => {
+  const turkish: TransferLocale = {
+    language: "tr",
+    fieldLabel: (_module, field) =>
+      ({ Last_Name: "Soyadı", Email: "E-posta", Account_Name: "Firma Adı", Owner: "Kayıt Sahibi" })[
+        field.apiName
+      ] ?? field.label,
+    fieldAliases: (_module, field) => (field.apiName === "Last_Name" ? ["Soyadı", "Soy Ad"] : []),
+    optionLabels: () => [],
+    recordIdLabel: "Kayıt Id",
+    idColumnLabel: (label) => `${label} Id`,
+  };
+
+  it("previews a file that repeats a column name", async () => {
+    const s = setup();
+    const preview = await s.preview(
+      "Contacts",
+      ["Last_Name", "Email", "Email"],
+      [["Örnek", "a@example.test", "b@example.test"]],
+    );
+    expect(preview.headers).toEqual(["Last_Name", "Email", "Email (2)"]);
+    expect(preview.suggestedMapping.map((item) => item.field)).toEqual([
+      "Last_Name",
+      "Email",
+      null,
+    ]);
+  });
+
+  it("auto-maps Turkish headers and shows localized field labels", async () => {
+    const s = setup({ locale: async () => turkish });
+    const preview = await s.preview(
+      "Contacts",
+      ["Soyadı", "E-posta", "Kayıt Id", "Bilinmiyor"],
+      [["Örnek", "a@example.test", "", "x"]],
+    );
+    expect(preview.suggestedMapping.map((item) => item.field)).toEqual([
+      "Last_Name",
+      "Email",
+      "id",
+      null,
+    ]);
+    expect(preview.fields.find((field) => field.apiName === "Last_Name")?.label).toBe("Soyadı");
+    expect(preview.matchFields[0]).toEqual({ field: "id", label: "Kayıt Id" });
+  });
+
+  it("accepts picklist options by display label and ignores case and spacing", async () => {
+    const s = setup();
+    const job = await s.run("Contacts", [
+      { Last_Name: "Örnek A", Email: "a@example.test", Lead_Source: "Online Store" },
+      { Last_Name: "Örnek B", Email: "b@example.test", Lead_Source: "online-store" },
+    ]);
+    expect(job.counts).toMatchObject({ created: 2, errors: 0 });
+    expect(job.counts.warnings).toBeUndefined();
+    expect((await contactByEmail(s.records, "a@example.test")).Lead_Source).toBe("OnlineStore");
+  });
+
+  it("imports the row without an unusable optional value and records a warning", async () => {
+    const s = setup();
+    const job = await s.run("Contacts", [
+      { Last_Name: "Örnek C", Email: "c@example.test", Lead_Source: "Nope" },
+    ]);
+    expect(job.status).toBe("completed_with_errors");
+    expect(job.counts).toMatchObject({ created: 1, errors: 0, skipped: 0, warnings: 1 });
+    expect(job.rows).toEqual([
+      { row: 2, outcome: "warning", code: "value_cleared", field: "Lead_Source" },
+    ]);
+    expect((await contactByEmail(s.records, "c@example.test")).Lead_Source ?? "").toBe("");
+  });
+
+  it("resolves a lookup by name when the value is not an id", async () => {
+    const s = setup();
+    const account = await s.records.create("Accounts", { Account_Name: "Örnek Firma A" });
+    const job = await s.run("Contacts", [
+      { Last_Name: "Örnek D", Email: "d@example.test", Account_Name: "Örnek Firma A" },
+    ]);
+    expect(job.counts).toMatchObject({ created: 1, errors: 0 });
+    expect((await contactByEmail(s.records, "d@example.test")).Account_Name).toMatchObject({
+      id: account.id,
+    });
+  });
+
+  it("exports owner and lookup names with a companion id column and localized headers", async () => {
+    const s = setup({ locale: async () => turkish });
+    const account = await s.records.create("Accounts", { Account_Name: "Örnek Firma B" });
+    await s.records.create("Contacts", {
+      Last_Name: "Örnek E",
+      Email: "e@example.test",
+      Account_Name: { module: "Accounts", id: account.id },
+      Owner: s.ctx.userId,
+    });
+    const exported = await s.service.runExport(s.ctx, { module: "Contacts", fields: "all" });
+    const csv = parseCsv(
+      new TextEncoder().encode((await s.service.downloadExport(s.ctx, exported.id)).body),
+      {
+        charset: "UTF-8",
+        maxColumns: 500,
+        maxRows: 5000,
+      },
+    );
+    expect(csv.headers[0]).toBe("Kayıt Id");
+    const row = csv.rows.find((item) => item[csv.headers.indexOf("E-posta")] === "e@example.test");
+    expect(row?.[csv.headers.indexOf("Firma Adı")]).toBe("Örnek Firma B");
+    expect(row?.[csv.headers.indexOf("Firma Adı Id")]).toBe(account.id);
+    expect(row?.[csv.headers.indexOf("Kayıt Sahibi")]).toBe("Example User");
+    expect(row?.[csv.headers.indexOf("Kayıt Sahibi Id")]).toBe(s.ctx.userId);
+  });
+
+  it("re-imports an exported file; the name column wins over the id column", async () => {
+    const s = setup();
+    const account = await s.records.create("Accounts", { Account_Name: "Örnek Firma C" });
+    await s.records.create("Contacts", {
+      Last_Name: "Örnek F",
+      Email: "f@example.test",
+      Account_Name: { module: "Accounts", id: account.id },
+    });
+    const exported = await s.service.runExport(s.ctx, { module: "Contacts", fields: "all" });
+    const body = (await s.service.downloadExport(s.ctx, exported.id)).body;
+    const preview = await s.service.previewImport(s.ctx, "Contacts", {
+      name: "again.csv",
+      charset: "UTF-8",
+      bytes: new TextEncoder().encode(body),
+    });
+    const mapped = preview.suggestedMapping.map((item) => item.field);
+    expect(mapped.filter((field) => field === "Account_Name")).toHaveLength(1);
+    const header = preview.headers[mapped.indexOf("Account_Name")];
+    // The name column is mapped; the id column of the same field stays unmapped.
+    expect(header).toBe("Account Name");
+  });
+});
+
+describe("second round of real-data import behaviour", () => {
+  it("keeps the source Created Time and Modified Time and rejects other formats with a warning", async () => {
+    const s = setup();
+    const job = await s.run("Contacts", [
+      {
+        Last_Name: "Örnek G",
+        Email: "g@example.test",
+        Created_Time: "04.03.2025 14:22",
+        Modified_Time: "2025-03-05T08:00:00+03:00",
+      },
+      { Last_Name: "Örnek H", Email: "h@example.test", Created_Time: "not a date" },
+    ]);
+    expect(job.counts).toMatchObject({ created: 2, errors: 0, warnings: 1 });
+    const kept = await contactByEmail(s.records, "g@example.test");
+    // No offset: read in the default zone (Europe/Istanbul, UTC+3).
+    expect(kept.Created_Time).toBe("2025-03-04T11:22:00.000Z");
+    expect(kept.Modified_Time).toBe("2025-03-05T05:00:00.000Z");
+    expect(job.rows).toEqual([
+      { row: 3, outcome: "warning", code: "value_cleared", field: "Created_Time" },
+    ]);
+  });
+
+  it("stores any text in a state or province field", async () => {
+    const s = setup();
+    const job = await s.run("Accounts", [
+      { Account_Name: "Örnek Firma D", Billing_State: "Örnek İl / Bölge", Shipping_State: "Kuzey" },
+    ]);
+    expect(job.counts).toMatchObject({ created: 1, errors: 0 });
+    expect(job.counts.warnings).toBeUndefined();
+  });
+
+  it("finds a contact by full name ignoring salutation, case and diacritics", async () => {
+    const s = setup();
+    const person = await s.records.create("Contacts", { First_Name: "Ayşe", Last_Name: "Örnek" });
+    const account = await s.records.create("Accounts", { Account_Name: "Örnek Firma E" });
+    const job = await s.run("Deals", [
+      ...["Bayan Ayşe Örnek", "ayse ornek", "Ms. AYŞE  ÖRNEK"].map((name, index) => ({
+        Deal_Name: `Fırsat ${index}`,
+        Closing_Date: "2026-12-01",
+        Stage: "Qualification",
+        Account_Name: account.id,
+        Contact_Name: name,
+      })),
+    ]);
+    expect(job.counts).toMatchObject({ created: 3, errors: 0 });
+    expect(job.counts.warnings).toBeUndefined();
+    expect(person.id).toBeTruthy();
+  });
+
+  it("leaves an unknown contact empty with a warning on a deal", async () => {
+    const s = setup();
+    const account = await s.records.create("Accounts", { Account_Name: "Örnek Firma F" });
+    const job = await s.run("Deals", [
+      {
+        Deal_Name: "Fırsat X",
+        Account_Name: account.id,
+        Closing_Date: "2026-12-01",
+        Stage: "Qualification",
+        Contact_Name: "Yok Kişi",
+      },
+    ]);
+    expect(job.counts).toMatchObject({ created: 1, errors: 0, warnings: 1 });
+    expect(job.rows).toEqual([
+      { row: 2, outcome: "warning", code: "not_found", field: "Contact_Name" },
+    ]);
+  });
+
+  it("imports with the id columns of a reference ignored when the name column exists", async () => {
+    const s = setup();
+    const preview = await s.preview(
+      "Contacts",
+      ["Last_Name", "Account Name", "Account Name.id", "Owner", "Owner.id"],
+      [["Örnek", "", "ref-1", "Example User", "ref-2"]],
+    );
+    expect(preview.suggestedMapping.map((item) => item.field)).toEqual([
+      "Last_Name",
+      "Account_Name",
+      null,
+      "Owner",
+      null,
+    ]);
+  });
+});
+
+describe("picklist round trip", () => {
+  it("exports the display label and imports it back to the stored value", async () => {
+    const s = setup();
+    await s.run("Contacts", [
+      { Last_Name: "Örnek I", Email: "i@example.test", Lead_Source: "OnlineStore" },
+    ]);
+    const exported = await s.service.runExport(s.ctx, { module: "Contacts", fields: "all" });
+    const body = (await s.service.downloadExport(s.ctx, exported.id)).body;
+    const csv = parseCsv(new TextEncoder().encode(body), {
+      charset: "UTF-8",
+      maxColumns: 500,
+      maxRows: 5000,
+    });
+    const row = csv.rows.find((item) => item.includes("i@example.test"));
+    expect(row?.[csv.headers.indexOf("Lead Source")]).toBe("Online Store");
+    const again = await s.service.previewImport(s.ctx, "Contacts", {
+      name: "again.csv",
+      charset: "UTF-8",
+      bytes: new TextEncoder().encode(body),
+    });
+    const mapped = again.suggestedMapping.map((item) => item.field);
+    expect(mapped).toContain("Lead_Source");
+    expect(mapped).toContain("Email");
+  });
+});
+
+describe("source stage fidelity", () => {
+  it("imports stage keys and expanded labels and exports their canonical stage keys", async () => {
+    const s = setup();
+    const account = await s.records.create("Accounts", { Account_Name: "Synthetic Stage Parent" });
+    const stages = [
+      "Id. Decision Makers",
+      "Identify Decision Makers",
+      "Closed Lost",
+      "Closed Lost to Competition",
+    ];
+    const job = await s.run(
+      "Deals",
+      stages.map((Stage, i) => ({
+        Deal_Name: `Synthetic stage ${i}`,
+        Closing_Date: "2026-12-01",
+        Account_Name: account.id,
+        Stage,
+      })),
+    );
+    expect(job.counts).toEqual({ created: 4, updated: 0, skipped: 0, errors: 0 });
+    const exported = await s.service.runExport(s.ctx, {
+      module: "Deals",
+      fields: { include: ["Deal_Name", "Stage"] },
+    });
+    const csv = parseCsv(
+      new TextEncoder().encode((await s.service.downloadExport(s.ctx, exported.id)).body),
+      {
+        charset: "UTF-8",
+        maxColumns: 10,
+        maxRows: 5000,
+      },
+    );
+    expect(
+      csv.rows
+        .filter((row) => row[1]?.startsWith("Synthetic stage"))
+        .map((row) => row[2])
+        .sort(),
+    ).toEqual(
+      [
+        "Id. Decision Makers",
+        "Id. Decision Makers",
+        "Closed Lost",
+        "Closed Lost to Competition",
+      ].sort(),
+    );
+  });
 });

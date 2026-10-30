@@ -1,4 +1,5 @@
 import { Icons } from "@/components/ui/icon";
+import { english } from "@/i18n/catalogs";
 import type { ModuleScreenDefinition } from "../types";
 import { LeadRecordScreen } from "./lead-record-screen";
 import { LeadStatusRibbonSection } from "./lead-status-ribbon-section";
@@ -14,7 +15,6 @@ import {
 } from "./leads-record-more-options";
 import { readLeadStatusValue } from "./leads-status-ribbon";
 import {
-  LEADS_TIMELINE_EMPTY_EVENTS,
   LEADS_TIMELINE_MODULE_OPTIONS,
   LEADS_TIMELINE_SOURCE_OPTIONS,
   LEADS_TIMELINE_SUBTABS,
@@ -43,22 +43,42 @@ export const leadsScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Lead",
   pluralLabel: "Leads",
   pageTitle: "Leads",
-  navigation: { id: "leads", icon: Icons.building },
+  navigation: { id: "leads", icon: Icons.target },
   search: { secondaryFields: ["Email", "Phone"] },
   list: leadsListPageConfig,
   listCurrencyCode: LEADS_LIST_CURRENCY_CODE,
   searchColumns: ["Full_Name", "Company", "Email", "Phone", "Lead_Source"],
   merge: leadsMergeDefinition,
   buildFilterGroups: buildLeadsFilterGroups,
-  form: { rules: leadsFormRules },
+  form: { rules: leadsFormRules, inventoryChrome: true },
   detail: {
     addTags: { label: "Add Tags" },
+    buildHeaderCommands: (record, { editHref }) => [
+      {
+        id: "send-email",
+        label: english.records.actions.sendEmail,
+        variant: "primary",
+        laterModule: "M10",
+      },
+      ...(record.fields.Converted__s === true
+        ? []
+        : [
+            {
+              id: "convert",
+              label: "Convert",
+              variant: "secondary" as const,
+              href: editHref.replace(/\/edit$/, "/convert"),
+            },
+          ]),
+      { id: "edit", label: "Edit", variant: "secondary" as const, href: editHref },
+    ],
     Screen: LeadRecordScreen,
     header: leadsRecordHeaderIdentity,
     businessCard: buildLeadsBusinessCardFields,
     sections: buildLeadsDetailSections,
     inlineEditable: isLeadInlineEditable,
     lastUpdate: formatLeadsLastUpdateLabel,
+    lastUpdatePlacement: "tab-row",
     moreOptions: buildLeadsRecordMoreMenuGroups,
     deleteTitle: LEADS_DELETE_CONFIRM_TITLE,
     deleteMessage: LEADS_DELETE_CONFIRM_MESSAGE,
@@ -72,7 +92,6 @@ export const leadsScreenDefinition: ModuleScreenDefinition = {
       subtabs: LEADS_TIMELINE_SUBTABS,
       modules: LEADS_TIMELINE_MODULE_OPTIONS,
       sources: LEADS_TIMELINE_SOURCE_OPTIONS,
-      events: LEADS_TIMELINE_EMPTY_EVENTS,
       normalizeEventKind: (kind) => (kind === "lead_image_upload" ? "image_upload" : kind),
     },
     relatedLists: [],

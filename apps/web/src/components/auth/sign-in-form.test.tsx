@@ -137,3 +137,24 @@ test("submits from the keyboard", async () => {
     password: "long-password",
   });
 });
+
+test("accepts the local username only when the server enables development login", async () => {
+  const user = userEvent.setup();
+  auth.signIn.mockResolvedValue({ ok: true } satisfies AuthResult);
+  render(<SignInForm next="/" devLogin />);
+  await user.type(screen.getByRole("textbox", { name: "Email or username" }), "admin");
+  await user.type(screen.getByLabelText("Password"), "admin");
+  await user.click(screen.getByRole("button", { name: "Sign in" }));
+  await waitFor(() =>
+    expect(auth.signIn).toHaveBeenCalledWith({ email: "admin", password: "admin" }),
+  );
+});
+
+test("rejects the local username in the normal sign-in form", async () => {
+  const user = userEvent.setup();
+  render(<SignInForm next="/" />);
+  await user.type(screen.getByRole("textbox", { name: "Email" }), "admin");
+  await user.type(screen.getByLabelText("Password"), "admin");
+  await user.click(screen.getByRole("button", { name: "Sign in" }));
+  expect(auth.signIn).not.toHaveBeenCalled();
+});

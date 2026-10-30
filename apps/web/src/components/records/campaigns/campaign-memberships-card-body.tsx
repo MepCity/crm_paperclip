@@ -17,8 +17,11 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Link } from "@/components/ui/link";
 import { RecordChoice } from "@/components/ui/record-choice";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
+import { useUtilityLabel } from "@/i18n/utility-labels";
 import { useDeleteRecords, useRecordList, useUpdateRecord, useViews } from "@/lib/api/client/hooks";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 
 const LIST_PAGE_SIZE = 100;
 const DATE_FIELDS = {
@@ -62,7 +65,7 @@ function text(value: FieldValue | undefined): string {
 
 function EmptyState({ children }: { children: string }) {
   return (
-    <div data-part="empty" className="py-8 text-center text-md text-text-empty">
+    <div data-part="empty" className="py-8 text-left text-md text-text-empty">
       {children}
     </div>
   );
@@ -82,6 +85,7 @@ function EditStatusDialog({
   busy: boolean;
   error: string | null;
 }) {
+  const copy = useUtilityLabel();
   const titleId = useId();
   const [status, setStatus] = useState<string | null>(initial);
   return (
@@ -95,10 +99,10 @@ function EditStatusDialog({
       <Modal className="w-(--size-dialog-width) max-w-full rounded-(--radius-create-menu) bg-surface p-6 shadow-lg outline-none">
         <AriaDialog aria-labelledby={titleId} className="outline-none">
           <Heading slot="title" id={titleId} className="mb-4 text-2xl font-bold text-text-strong">
-            Edit Member Status
+            {copy("Edit Member Status")}
           </Heading>
           <RecordChoice
-            label="Member Status"
+            label={copy("Member Status")}
             value={status}
             onChange={setStatus}
             disabled={busy}
@@ -114,10 +118,10 @@ function EditStatusDialog({
           ) : null}
           <div className="mt-6 flex justify-end gap-2">
             <Button variant="secondary" onPress={onClose} isDisabled={busy}>
-              Cancel
+              {copy("Cancel")}
             </Button>
             <Button variant="primary" onPress={() => onSave(status)} isDisabled={busy}>
-              Save
+              {copy("Save")}
             </Button>
           </div>
         </AriaDialog>
@@ -131,6 +135,10 @@ export function CampaignMembershipsCardBody({
   recordId,
   campaignPath,
 }: CampaignMembershipsCardBodyProps) {
+  const copy = useUtilityLabel();
+  const t = useUiTranslations();
+  const display = useMetadataDisplayAdapter();
+  const orgFormat = useFormat();
   const filter = useMemo(() => membershipsOfRecord(module, recordId), [module, recordId]);
   const members = useRecordList(
     "Campaign_Members",
@@ -179,12 +187,12 @@ export function CampaignMembershipsCardBody({
   const [error, setError] = useState<string | null>(null);
 
   if (members.isLoading || (hasCampaigns && (campaignViews.isLoading || campaigns.isLoading))) {
-    return <EmptyState>Loading...</EmptyState>;
+    return <EmptyState>{copy("Loading...")}</EmptyState>;
   }
   if (members.isError || (hasCampaigns && (campaignViews.isError || campaigns.isError))) {
     return <RelatedRecordsListError />;
   }
-  if (rows.length === 0) return <EmptyState>No records found</EmptyState>;
+  if (rows.length === 0) return <EmptyState>{copy("No records found")}</EmptyState>;
 
   async function saveStatus(status: string | null) {
     if (!editing) return;
@@ -207,7 +215,7 @@ export function CampaignMembershipsCardBody({
                 key={label || `actions-${index}`}
                 className="px-2 py-2 font-semibold text-text-strong"
               >
-                {label}
+                {display.getNamedLabel(label)}
               </th>
             ))}
           </tr>
@@ -240,14 +248,14 @@ export function CampaignMembershipsCardBody({
                   <FieldValueView
                     field={DATE_FIELDS.Start_Date}
                     value={campaign?.fields.Start_Date ?? null}
-                    format={DEFAULT_FORMAT}
+                    format={orgFormat}
                   />
                 </td>
                 <td className="whitespace-nowrap px-2 py-2 text-text">
                   <FieldValueView
                     field={DATE_FIELDS.End_Date}
                     value={campaign?.fields.End_Date ?? null}
-                    format={DEFAULT_FORMAT}
+                    format={orgFormat}
                   />
                 </td>
                 <td className="whitespace-nowrap px-2 py-2 text-text">
@@ -257,13 +265,15 @@ export function CampaignMembershipsCardBody({
                   <button
                     type="button"
                     className="text-primary hover:underline"
-                    aria-label={`Edit ${name || "membership"}`}
+                    aria-label={t("records.utilities.editMembership", {
+                      name: name || display.getNamedLabel("Member Status"),
+                    })}
                     onClick={() => {
                       setError(null);
                       setEditing(row);
                     }}
                   >
-                    Edit
+                    {copy("Edit")}
                   </button>
                   <span aria-hidden className="px-1 text-text-muted">
                     |
@@ -271,10 +281,12 @@ export function CampaignMembershipsCardBody({
                   <button
                     type="button"
                     className="text-primary hover:underline"
-                    aria-label={`Remove ${name || "membership"}`}
+                    aria-label={t("records.utilities.removeMembership", {
+                      name: name || display.getNamedLabel("Member Status"),
+                    })}
                     onClick={() => setRemoving(row)}
                   >
-                    Remove
+                    {copy("Remove")}
                   </button>
                 </td>
               </tr>
@@ -297,10 +309,10 @@ export function CampaignMembershipsCardBody({
           onOpenChange={(open) => {
             if (!open && !remove.isPending) setRemoving(null);
           }}
-          title="Remove Campaign"
-          message="Are you sure you want to remove this campaign membership?"
-          confirmLabel="Remove"
-          cancelLabel="Cancel"
+          title={copy("Remove Campaign")}
+          message={copy("Are you sure you want to remove this campaign membership?")}
+          confirmLabel={copy("Remove")}
+          cancelLabel={copy("Cancel")}
           tone="danger"
           busy={remove.isPending}
           onConfirm={async () => {

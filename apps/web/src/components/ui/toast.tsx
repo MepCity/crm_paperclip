@@ -29,6 +29,8 @@ export interface ToastContentValue {
   message?: string;
   /** Inline actions under the message: a link when `href` is set, otherwise a button. */
   actions?: { label: string; href?: string; onPress?: () => void }[];
+  /** Stays until the person dismisses it (for a message carrying a link or a result). */
+  persistent?: boolean;
 }
 
 export const TOAST_TIMEOUT_MS = 5000;
@@ -36,7 +38,7 @@ export const TOAST_TIMEOUT_MS = 5000;
 const toastQueue = new ToastQueue<ToastContentValue>({ maxVisibleToasts: 5 });
 
 export function toast(content: ToastContentValue) {
-  return toastQueue.add(content, { timeout: TOAST_TIMEOUT_MS });
+  return toastQueue.add(content, content.persistent ? {} : { timeout: TOAST_TIMEOUT_MS });
 }
 
 export function clearToasts() {

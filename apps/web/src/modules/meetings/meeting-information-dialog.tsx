@@ -5,7 +5,11 @@ import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-components";
 import { FieldInput } from "@/components/records/form/field-input";
-import { formPayload, initialFormValues } from "@/components/records/form/form-model";
+import {
+  buildFormModel,
+  formPayload,
+  initialFormValues,
+} from "@/components/records/form/form-model";
 import { FormRow } from "@/components/records/form/form-row";
 import {
   formSaveBannerMessage,
@@ -13,14 +17,15 @@ import {
 } from "@/components/records/form/form-save-error";
 import { validateRanges, validateRecordForm } from "@/components/records/form/form-validation";
 import { Button } from "@/components/ui/button";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { useCreateRecord, useModule, useUsers } from "@/lib/api/client/hooks";
-import { moduleCreatePath, moduleRecordPath } from "@/lib/crm-paths";
+import { moduleRecordPath } from "@/lib/crm-paths";
 import {
   allDayClearedTime,
   dateTimePartsToIso,
   isoToDateTimeParts,
 } from "@/lib/records/datetime-parts";
-import { writeRecordCreatePrefill } from "@/lib/records/record-create-prefill";
 import { buildMeetingsFormDefaults, meetingsFormRules } from "./meetings-form-rules";
 
 /** MF-01 – MF-11 in the reference order. */
@@ -57,6 +62,8 @@ export function MeetingInformationDialog({
   onClose,
   now,
 }: MeetingInformationDialogProps) {
+  const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
   const router = useRouter();
   const metadata = useModule(MODULE);
   const users = useUsers();
@@ -68,13 +75,46 @@ export function MeetingInformationDialog({
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [banner, setBanner] = useState<string | null>(null);
 
-  const fields = useMemo(() => {
+  const [expanded, setExpanded] = useState(false);
+  const windowFields = useMemo(() => {
     const byName = new Map((metadata.data?.fields ?? []).map((f) => [f.apiName, f]));
-    return MEETING_INFORMATION_FIELDS.flatMap((name) => {
+    const quickFields =
+      metadata.data?.layout
+        .flatMap((section) => section.columns.flat())
+        .filter(
+          (name) =>
+            byName.get(name)?.views.quickCreate &&
+            !MEETING_INFORMATION_FIELDS.some((base) => base === name),
+        ) ?? [];
+    return [...MEETING_INFORMATION_FIELDS, ...quickFields].flatMap((name) => {
       const field = byName.get(name);
-      return field ? [field] : [];
+      return field?.views.create ? [field] : [];
     });
   }, [metadata.data]);
+  // Add more details: the rest of the full create form, in layout order, inside this same window.
+  const extraFields = useMemo(() => {
+    if (!metadata.data) return [];
+    const shown = new Set(windowFields.map((field) => field.apiName));
+    const omitted = new Set<string>(meetingsFormRules.omitted ?? []);
+    return buildFormModel(metadata.data, "create", meetingsFormRules)
+      .flatMap((section) => section.columns.flat())
+      .filter((f) => !shown.has(f.apiName) && !omitted.has(f.apiName) && f.apiName !== "Who_Id");
+  }, [metadata.data, windowFields]);
+  const fields = useMemo(() => {
+    if (!expanded) return windowFields;
+    const ordered = [...windowFields, ...extraFields];
+    const tail = [
+      "What_Id",
+      "Recurring_Activity",
+      "Remind_Participants",
+      "Description",
+      "Remind_At",
+    ];
+    return [
+      ...ordered.filter((field) => !tail.includes(field.apiName)),
+      ...tail.flatMap((name) => ordered.filter((field) => field.apiName === name)),
+    ];
+  }, [expanded, windowFields, extraFields]);
 
   function change(name: string, value: FieldValue) {
     const writes: Record<string, FieldValue> = { [name]: value };
@@ -125,13 +165,13 @@ export function MeetingInformationDialog({
     }
   }
 
+  const bodyRef = useRef<HTMLDivElement>(null);
   function addMoreDetails() {
-    writeRecordCreatePrefill(orgSlug, {
-      module: MODULE,
-      fields: formPayload(fields, initialFormValues(fields, values)),
+    setExpanded(true);
+    requestAnimationFrame(() => {
+      const first = bodyRef.current?.querySelector<HTMLElement>("[data-more-details-start]");
+      first?.scrollIntoView({ block: "start" });
     });
-    onClose();
-    router.push(moduleCreatePath(orgSlug, TAB));
   }
 
   const ready = Boolean(metadata.data && users.data);
@@ -159,20 +199,20 @@ export function MeetingInformationDialog({
       onOpenChange={(open) => {
         if (!open) onClose();
       }}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50 p-4"
+      className="fixed inset-0 z-50 flex items-start justify-center bg-overlay/50 px-4 pt-0"
     >
-      <Modal className="flex max-h-full w-full max-w-[var(--size-meeting-window-width)] flex-col rounded-lg bg-surface shadow-lg outline-none">
+      <Modal className="flex h-[547px] max-h-screen w-full max-w-[var(--size-meeting-window-width)] flex-col rounded-lg bg-surface shadow-lg outline-none">
         <AriaDialog
-          aria-label="Meeting Information"
-          className="flex min-h-0 flex-col outline-none"
+          aria-label={t("metadata.sections.Meeting Information")}
+          className="flex h-full min-h-0 flex-col outline-none"
           data-meeting-information-dialog
         >
           <Heading slot="title" className="meeting-window__title">
-            Meeting Information
+            {t("metadata.sections.Meeting Information")}
           </Heading>
           <form
             ref={formRef}
-            className="meeting-window__form flex min-h-0 flex-col"
+            className="meeting-window__form flex min-h-0 flex-1 flex-col"
             data-form-variant="activity"
             noValidate
             onSubmit={(event) => {
@@ -180,13 +220,19 @@ export function MeetingInformationDialog({
               void save();
             }}
           >
-            <div className="meeting-window__body min-h-0 flex-1 overflow-y-auto">
+            <div ref={bodyRef} className="meeting-window__body min-h-0 flex-1 overflow-y-auto">
               {banner ? <p role="alert">{banner}</p> : null}
               {ready ? (
                 fields.map((field) => (
-                  <div key={field.apiName} data-form-field={field.apiName}>
+                  <div
+                    key={field.apiName}
+                    data-form-field={field.apiName}
+                    data-more-details-start={
+                      expanded && field.apiName === extraFields[0]?.apiName ? "" : undefined
+                    }
+                  >
                     <FormRow
-                      label={field.label}
+                      label={adapter.getFieldLabel(MODULE, field)}
                       controlId={`meeting-information-${field.apiName}`}
                       column="full"
                       required={field.required}
@@ -195,7 +241,7 @@ export function MeetingInformationDialog({
                         id={`meeting-information-${field.apiName}`}
                         hideLabel
                         variant="activity"
-                        field={field}
+                        field={adapter.adaptField(MODULE, field)}
                         value={values[field.apiName] ?? null}
                         onChange={(next) => change(field.apiName, next)}
                         errorMessage={errors[field.apiName]}
@@ -214,20 +260,24 @@ export function MeetingInformationDialog({
                 <p role="status">Loading...</p>
               )}
             </div>
-            <footer className="meeting-window__footer flex items-center justify-between">
-              <Button
-                type="button"
-                variant="ghost"
-                size="md"
-                className="meeting-window__more"
-                onPress={addMoreDetails}
-                isDisabled={!ready}
-              >
-                Add more details
-              </Button>
+            <footer className="meeting-window__footer flex shrink-0 items-center justify-between">
+              {expanded ? (
+                <span className="h-8" />
+              ) : (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="md"
+                  className="meeting-window__more"
+                  onPress={addMoreDetails}
+                  isDisabled={!ready}
+                >
+                  {t("records.chrome.moreDetails")}
+                </Button>
+              )}
               <div className="flex gap-2">
                 <Button type="button" variant="secondary" size="md" onPress={onClose}>
-                  Cancel
+                  {t("common.actions.cancel")}
                 </Button>
                 <Button
                   type="submit"
@@ -235,7 +285,7 @@ export function MeetingInformationDialog({
                   size="md"
                   isDisabled={!ready || create.isPending}
                 >
-                  Save
+                  {t("common.actions.save")}
                 </Button>
               </div>
             </footer>

@@ -34,6 +34,11 @@ export function ModuleFormClient({
   const moduleApiName = definition.apiName;
   const router = useRouter();
   const homeCurrency = useHomeCurrency();
+  const [returnTo] = useState(() =>
+    recordId || cloneSourceId
+      ? undefined
+      : readRecordCreatePrefill(orgSlug, moduleApiName)?.returnTo,
+  );
   const [sessionPrefill, setSessionPrefill] = useState<Readonly<Record<string, FieldValue>> | null>(
     () => {
       if (recordId || cloneSourceId) return null;
@@ -78,6 +83,7 @@ export function ModuleFormClient({
           sectionColumnOverrides: definition.form.fallbackColumns,
           inventoryChrome: definition.form.inventoryChrome,
           inventoryFooterEnd: definition.form.inventoryFooterEnd,
+          inventoryFooterPinned: definition.form.inventoryFooterPinned,
           profileImageLaterModule: definition.form.profileImageLaterModule,
           profileImageIcon: definition.form.profileImageIcon,
           createPrefill: hasPrefill ? prefill : undefined,
@@ -85,6 +91,7 @@ export function ModuleFormClient({
           currencyPrefix: homeCurrency.data?.symbol,
           paths: {
             detail: (id, targetModule) => {
+              if (returnTo && !recordId && !cloneSourceId && !targetModule) return returnTo;
               if (targetModule) {
                 const targetDef = resolveModuleScreenByApiName(targetModule);
                 return moduleRecordPath(orgSlug, targetDef?.tab ?? targetModule, id);
@@ -96,6 +103,11 @@ export function ModuleFormClient({
               return moduleRecordPath(orgSlug, targetDef?.tab ?? targetModule, id);
             },
             create: moduleCreatePath(orgSlug, definition.tab),
+            createIn: (targetModule, params) => {
+              const targetDef = resolveModuleScreenByApiName(targetModule);
+              const query = new URLSearchParams(params).toString();
+              return `${moduleCreatePath(orgSlug, targetDef?.tab ?? targetModule)}${query ? `?${query}` : ""}`;
+            },
             cancel: defaultCancel,
           },
           navigate: (path) => {

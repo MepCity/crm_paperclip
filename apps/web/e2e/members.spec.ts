@@ -25,7 +25,7 @@ test("two people join through an invitation and manage membership", async ({ pag
   const membersUrl = `/crm/${organization.slug}/settings/members`;
 
   await page.getByRole("link", { name: "Settings", exact: true }).click();
-  await page.getByRole("link", { name: "Members" }).click();
+  await page.getByRole("link", { name: "Users", exact: true }).click();
   await expect(page).toHaveURL(membersUrl);
   await expect(page.getByRole("link", { name: "Members" })).toHaveAttribute("aria-current", "page");
   await expect(page.getByText("You")).toBeVisible();

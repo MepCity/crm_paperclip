@@ -13,19 +13,51 @@ export const REMINDER_OFFSETS = [
   { id: "P2D", label: "2 days before" },
 ] as const;
 
-export function reminderValue(offsetId: string | null): FieldValue {
+export const REMINDER_CHANNELS = ["EMAIL"] as const;
+
+/** Preserve channels and offsets from older records, including unfamiliar values. */
+function firstAlarm(value: FieldValue | undefined): { index: number; alarm: string } | null {
+  if (!Array.isArray(value)) return null;
+  for (const [index, entry] of value.entries()) {
+    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) continue;
+    const alarm = (entry as Record<string, unknown>).ALARM;
+    if (typeof alarm === "string") return { index, alarm };
+  }
+  return null;
+}
+
+export function reminderValue(
+  offsetId: string | null,
+  channel = "EMAIL",
+  previous?: FieldValue,
+): FieldValue {
   if (!offsetId) return null;
   const trigger = offsetId === "PT0M" ? offsetId : `-${offsetId}`;
-  return [{ ALARM: `FREQ=NONE;ACTION=EMAIL;TRIGGER=${trigger}` }];
+  const existing = firstAlarm(previous);
+  if (existing && Array.isArray(previous)) {
+    let alarm = existing.alarm;
+    for (const [key, next] of [
+      ["ACTION", channel],
+      ["TRIGGER", trigger],
+    ]) {
+      const pattern = new RegExp(`(^|;)${key}=[^;]*`);
+      alarm = pattern.test(alarm)
+        ? alarm.replace(pattern, (_, separator) => `${separator}${key}=${next}`)
+        : `${alarm};${key}=${next}`;
+    }
+    return previous.map((entry, index) =>
+      index === existing.index ? { ...(entry as Record<string, FieldValue>), ALARM: alarm } : entry,
+    ) as FieldValue;
+  }
+  return [{ ALARM: `FREQ=NONE;ACTION=${channel};TRIGGER=${trigger}` }];
 }
 
 export function reminderOffsetOf(value: FieldValue | undefined): string | null {
-  if (!Array.isArray(value)) return null;
-  for (const entry of value) {
-    if (typeof entry !== "object" || entry === null || Array.isArray(entry)) continue;
-    const alarm = (entry as Record<string, unknown>).ALARM;
-    const match = typeof alarm === "string" ? /TRIGGER=(-?)(\w+)/.exec(alarm) : null;
-    if (match?.[2] && REMINDER_OFFSETS.some((o) => o.id === match[2])) return match[2];
-  }
-  return null;
+  const alarm = firstAlarm(value)?.alarm;
+  return alarm?.match(/(?:^|;)TRIGGER=-?([^;]+)(?:;|$)/)?.[1] ?? null;
+}
+
+export function reminderChannelOf(value: FieldValue | undefined): string {
+  const alarm = firstAlarm(value)?.alarm;
+  return alarm?.match(/(?:^|;)ACTION=([^;]+)(?:;|$)/)?.[1] ?? "EMAIL";
 }

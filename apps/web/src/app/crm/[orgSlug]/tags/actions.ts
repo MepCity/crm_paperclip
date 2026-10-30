@@ -100,7 +100,7 @@ export async function readTagCatalogueAction(
       status: "success",
       tags,
       capacity: 100,
-      canManage: ["Leads", "Contacts", "Accounts", "Deals"].includes(module),
+      canManage: ["Leads", "Contacts", "Accounts", "Deals", "Cases", "Solutions"].includes(module),
     };
   } catch (error) {
     const state = toActionState(error);

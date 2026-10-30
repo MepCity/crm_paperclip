@@ -2,6 +2,7 @@
 
 import type { ReactNode } from "react";
 import { Select, SelectItem } from "@/components/ui/select";
+import { useUtilityLabel } from "@/i18n/utility-labels";
 import { NoteRow } from "./note-row";
 import { type NoteSortOrder, sortNotes } from "./note-sort";
 
@@ -44,11 +45,12 @@ export function NoteList({
   renderEditor,
   footer,
 }: NoteListProps) {
+  const copy = useUtilityLabel();
   return (
     <div className="note-list">
-      <div className="flex justify-end">
+      <div className="note-list-sort flex justify-end">
         <Select
-          label="Sort notes"
+          label={copy("Sort notes")}
           hideLabel
           variant="sort"
           items={sortOptions}
@@ -59,7 +61,7 @@ export function NoteList({
         >
           {(option) => (
             <SelectItem variant="sort" id={option.id}>
-              {option.name}
+              {copy(option.name)}
             </SelectItem>
           )}
         </Select>

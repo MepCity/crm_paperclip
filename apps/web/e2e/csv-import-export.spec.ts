@@ -52,7 +52,7 @@ test.describe("CSV import and export", () => {
     await page.setViewportSize({ width: 1470, height: 835 });
   });
 
-  test("Leads: import with a skipped row, history, undo", async ({ page }) => {
+  test("Leads: import with a failed row, history, undo", async ({ page }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
     await openImport(page, org.slug, "Leads");
@@ -66,7 +66,8 @@ test.describe("CSV import and export", () => {
 
     await expect(page.getByText(/Import completed/)).toBeVisible({ timeout: 15_000 });
     await expect(page.getByTestId("count-added")).toHaveText("2");
-    await expect(page.getByTestId("count-skipped")).toHaveText("1");
+    await expect(page.getByTestId("count-skipped")).toHaveText("0");
+    await expect(page.getByTestId("count-failed")).toHaveText("1");
     await page.getByRole("button", { name: "Done" }).click();
 
     await expect(page).toHaveURL(/\/tab\/Leads\/list/);
@@ -131,7 +132,7 @@ test.describe("CSV import and export", () => {
     await expect(page.getByText("Export completed")).toBeVisible({ timeout: 15_000 });
     const [download] = await Promise.all([
       page.waitForEvent("download"),
-      page.getByRole("link", { name: "Download" }).click(),
+      page.getByRole("button", { name: "Download" }).click(),
     ]);
     const path = await download.path();
     const { readFile } = await import("node:fs/promises");
@@ -153,7 +154,7 @@ test.describe("CSV import and export", () => {
     await expect(notification).toBeVisible({ timeout: 15_000 });
     const [selectedDownload] = await Promise.all([
       page.waitForEvent("download"),
-      notification.getByRole("link", { name: "Download", exact: true }).click(),
+      notification.getByRole("button", { name: "Download", exact: true }).click(),
     ]);
     const selectedRows = parseCsv(await readFile(await selectedDownload.path(), "utf8"));
     expect(selectedRows).toHaveLength(3);
@@ -220,7 +221,10 @@ for (const { label, csv } of [
     await expect(page.getByRole("alertdialog", { name: "Export completed" })).toBeVisible({
       timeout: 15_000,
     });
-    await page.getByRole("alertdialog", { name: "Export completed" }).getByRole("button").click();
+    await page
+      .getByRole("alertdialog", { name: "Export completed" })
+      .getByRole("button", { name: "Close" })
+      .click();
     await row.getByRole("checkbox").check({ force: true });
     await page.getByRole("button", { name: "Actions", exact: true }).click();
     await page.getByRole("menuitem", { name: "Export Selected Records", exact: true }).click();
@@ -233,14 +237,14 @@ for (const { label, csv } of [
     await expect(notification).toBeVisible({ timeout: 15_000 });
     const [download] = await Promise.all([
       page.waitForEvent("download"),
-      notification.getByRole("link", { name: "Download", exact: true }).click(),
+      notification.getByRole("button", { name: "Download", exact: true }).click(),
     ]);
     const { readFile } = await import("node:fs/promises");
     const rows = parseCsv(await readFile(await download.path(), "utf8"));
     expect(rows).toHaveLength(2);
     expect(rows[1]).toContain(title);
-    expect(rows[1]?.[rows[0]?.indexOf("Related To") ?? -1]).toBe(accountId);
-    expect(rows[1]?.[rows[0]?.indexOf("Contact Name") ?? -1]).toBe(contactId);
+    expect(rows[1]?.[rows[0]?.indexOf("Related To Id") ?? -1]).toBe(accountId);
+    expect(rows[1]?.[rows[0]?.indexOf("Contact Name Id") ?? -1]).toBe(contactId);
     await page.goto(`/crm/${org.slug}/settings/import-history`);
     await expect(
       page

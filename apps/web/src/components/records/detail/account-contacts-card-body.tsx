@@ -7,8 +7,9 @@ import { RelatedRecordsListError } from "@/components/records/detail/related-rec
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
+import { useRecordLabel } from "@/i18n/record-labels";
 import { useModule, useRecordList, useViews } from "@/lib/api/client/hooks";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 
 const LIST_PAGE_SIZE = 100;
 
@@ -28,6 +29,8 @@ export function AccountContactsCardBody({
   accountRecord,
   contactRecordPath,
 }: AccountContactsCardBodyProps) {
+  const recordLabel = useRecordLabel();
+  const orgFormat = useFormat();
   const moduleQuery = useModule("Contacts");
   const viewsQuery = useViews("Contacts");
   const defaultViewId = useMemo(
@@ -64,7 +67,7 @@ export function AccountContactsCardBody({
   if (rows.length === 0) {
     return (
       <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-        No records found
+        {recordLabel("No records found")}
       </div>
     );
   }
@@ -131,7 +134,7 @@ export function AccountContactsCardBody({
                 }
                 return (
                   <td key={field.apiName} className="px-2 py-2 text-text">
-                    <FieldValueView field={field} value={value} format={DEFAULT_FORMAT} />
+                    <FieldValueView field={field} value={value} format={orgFormat} />
                   </td>
                 );
               })}

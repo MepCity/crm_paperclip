@@ -40,8 +40,11 @@ function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | 
   }
   const special =
     field.apiName === "Connected_To__s" ? "multilookup" : field.apiName === "Tag" ? "tag" : null;
-  if (!special && !(field.dataType in filterOperators)) return undefined;
-  const fieldType = special ?? (field.dataType as FilterFieldType);
+  if (!special && field.dataType !== "autonumber" && !(field.dataType in filterOperators))
+    return undefined;
+  // Autonumbers (Solution/Case Number) match as text.
+  const fieldType =
+    special ?? (field.dataType === "autonumber" ? "text" : (field.dataType as FilterFieldType));
   return {
     fieldType,
     ...(fieldType === "picklist"
@@ -80,15 +83,36 @@ export function buildSolutionsFilterGroups(input: Input): readonly FilterGroup[]
     {
       id: "system",
       label: "System Defined Filters",
-      items: systemRows.map(([label, moduleKey], index) => {
-        // Evaluated on the server at import time: no client-only resolver; none of these keys is a live module.
-        const laterModule = moduleKey;
-        return {
-          id: `system-${index}`,
-          label,
-          ...(laterModule ? { laterModule } : { disabled: true }),
-        };
-      }),
+      items: systemRows.map(([label, moduleKey], index) => ({
+        id: `system-${index}`,
+        label,
+        ...(moduleKey
+          ? { laterModule: moduleKey }
+          : {
+              systemEditor: (
+                {
+                  Locked: "locked",
+                  "Record Action": "record_action",
+                  "Related Records Action": "related_records_action",
+                  "Touched Records": "touched",
+                  "Untouched Records": "untouched",
+                } as const
+              )[
+                label as
+                  | "Locked"
+                  | "Record Action"
+                  | "Related Records Action"
+                  | "Touched Records"
+                  | "Untouched Records"
+              ],
+              systemOptions: {
+                relatedModules: [
+                  { id: "Notes", label: "Notes" },
+                  { id: "Attachments", label: "Attachments" },
+                ],
+              },
+            }),
+      })),
     },
     {
       id: "fields",

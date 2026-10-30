@@ -24,6 +24,9 @@ export function fixtureHistoryReader(
   knownModule: (module: string) => boolean,
   permissions: FixtureHistoryPermissions,
   cursors: Map<string, Cursor>,
+  projectChild?: (
+    event: RecordHistoryEvent,
+  ) => { name?: string; payload: RecordHistoryEvent["payload"] } | null,
 ): RecordHistoryService {
   const invalid = () => new ValidationError({ history: ["Invalid history query or page token."] });
   const canRead = (module: string, id: string) => {
@@ -32,6 +35,18 @@ export function fixtureHistoryReader(
       return permissions.canReadRecord?.(module, id) ?? true;
     } catch {
       return false;
+    }
+  };
+  // Direct attachment deletion preserves its rows (ADR 0006 §4); the stream's own parent
+  // access already gates them, so a vanished attachment record must not hide them.
+  const isAttachmentTombstone = (event: RecordHistoryEvent) => {
+    if (event.subject.module !== "Attachments" || !event.kind.startsWith("attachment_"))
+      return false;
+    try {
+      assertRecord(event.subject.module, event.subject.recordId);
+      return false;
+    } catch {
+      return true;
     }
   };
   const visibleValue = (value: FieldValue): boolean => {
@@ -123,19 +138,27 @@ export function fixtureHistoryReader(
           (query.actorId != null && event.actor.id !== query.actorId) ||
           (query.from != null && Date.parse(event.occurredAt) < Date.parse(query.from)) ||
           (query.to != null && Date.parse(event.occurredAt) >= Date.parse(query.to)) ||
-          !canRead(event.subject.module, event.subject.recordId)
+          !(isAttachmentTombstone(event)
+            ? (permissions.canReadRecord?.(event.subject.module, event.subject.recordId) ?? true)
+            : canRead(event.subject.module, event.subject.recordId))
         )
           continue;
         const changes = event.changes.filter((change) => visibleChange(event, change));
         if (event.kind === "fields_updated" && changes.length === 0) continue;
         // Identity/payload snapshots may derive from hidden fields. Only the typed field
         // snapshots are exposed for direct CRUD until kind-specific readers are supplied.
+        const child = projectChild?.(event);
+        if (child === null) continue;
         visible.push({
           ...event,
           stream: { module, recordId },
-          subject: { module: event.subject.module, recordId: event.subject.recordId },
+          subject: {
+            module: event.subject.module,
+            recordId: event.subject.recordId,
+            ...(child?.name ? { name: child.name } : {}),
+          },
           changes,
-          payload: null,
+          payload: child?.payload ?? null,
         });
         if (visible.length > perPage) break;
       }

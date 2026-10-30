@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
 import { RecordChoice } from "@/components/ui/record-choice";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import {
   useCreateRecord,
   useModule,
@@ -16,6 +18,7 @@ import {
   useUpdateRecord,
   useUsers,
 } from "@/lib/api/client/hooks";
+import { SchemaRevisionMismatchError } from "@/lib/api/wire/errors";
 import { addressSubfieldApiNames } from "@/lib/records/composite-address";
 import {
   allDayClearedTime,
@@ -98,9 +101,10 @@ function addressParentForField(
 }
 
 function RecordNotFound() {
+  const t = useUiTranslations();
   return (
     <div className="p-6 text-md text-text">
-      <p>The requested page could not be found.</p>
+      <p>{t("common.notFound")}</p>
     </div>
   );
 }
@@ -120,6 +124,8 @@ export interface RecordFormConfig {
     detail: (id: string, module?: string) => string;
     record?: (module: string, id: string) => string;
     create: string;
+    /** Create route of another module with prefill query parameters (follow-up actions). */
+    createIn?: (module: string, params: Readonly<Record<string, string>>) => string;
     cancel: string;
   };
   navigate: (path: string) => void;
@@ -127,6 +133,8 @@ export interface RecordFormConfig {
   sectionColumnOverrides?: Readonly<Record<string, readonly (readonly string[])[]>>;
   inventoryChrome?: boolean;
   inventoryFooterEnd?: boolean;
+  /** Pins the inventory footer to the bottom edge of the form view instead of below the last field. */
+  inventoryFooterPinned?: boolean;
   profileImageLaterModule?: ModuleKey;
   profileImageIcon?: import("react").ComponentType<import("react").SVGProps<SVGSVGElement>>;
   renderOwnerPicker?: (props: OwnerPickerProps) => ReactNode;
@@ -144,17 +152,18 @@ export interface RecordFormScreenProps {
 
 /** Page addresses and navigation come from the route layer; this screen has no URL rules. */
 export function RecordFormScreen(props: RecordFormScreenProps) {
+  const t = useUiTranslations();
   const metadata = useModule(props.config.module);
   const loadId = props.cloneSourceId ?? props.recordId ?? "";
   const needsRecord = Boolean(props.cloneSourceId || props.recordId);
   const record = useRecord(props.config.module, loadId);
   const users = useUsers();
   const recordError = needsRecord ? record.error : null;
-  const error = metadata.error ?? users.error ?? recordError;
+  const error = (metadata.data ? null : metadata.error) ?? users.error ?? recordError;
   if (recordError instanceof NotFoundError) return <RecordNotFound />;
-  if (error) return <Alert variant="danger">Unable to load the form.</Alert>;
+  if (error) return <Alert variant="danger">{t("common.formLoadError")}</Alert>;
   if (!metadata.data || !users.data || (needsRecord && !record.data))
-    return <p role="status">Loading...</p>;
+    return <p role="status">{t("common.formLoading")}</p>;
   const intent: FormIntent = props.cloneSourceId ? "clone" : props.recordId ? "edit" : "create";
   const formKey =
     intent !== "create"
@@ -168,6 +177,10 @@ export function RecordFormScreen(props: RecordFormScreenProps) {
       key={formKey}
       {...props}
       intent={intent}
+      refreshMetadata={async () => {
+        const result = await metadata.refetch();
+        if (result.error) throw result.error;
+      }}
       metadata={metadata.data}
       sourceRecord={needsRecord ? record.data : undefined}
       users={users.data.map((user) => ({ id: user.userId, name: user.name, email: user.email }))}
@@ -179,15 +192,23 @@ function LoadedRecordForm({
   config,
   currentUserId,
   intent,
-  metadata,
+  metadata: rawMetadata,
   sourceRecord,
   users,
+  refreshMetadata,
 }: RecordFormScreenProps & {
   intent: FormIntent;
+  refreshMetadata: () => Promise<unknown>;
   metadata: ModuleMetadata;
   sourceRecord?: RecordData;
   users: OwnerOption[];
 }) {
+  const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
+  const metadata = useMemo(
+    () => ({ ...adapter.adaptModule(rawMetadata), layout: rawMetadata.layout }),
+    [adapter, rawMetadata],
+  );
   const mode: FormMode = intent === "edit" ? "edit" : "create";
   const rules = useMemo(
     () => resolveFormRules(config.rules, { mode, metadata, record: sourceRecord }),
@@ -270,6 +291,8 @@ function LoadedRecordForm({
     dynamic?.required?.[field.apiName] ?? field.required;
   const [lookupModules, setLookupModules] = useState<Record<string, string>>({});
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [refreshingSchema, setRefreshingSchema] = useState(false);
+  const [schemaChanged, setSchemaChanged] = useState(false);
   const [bannerMessage, setBannerMessage] = useState<string | null>(null);
   const [pickerOpen, setPickerOpen] = useState(false);
   const [unsavedOpen, setUnsavedOpen] = useState(false);
@@ -284,10 +307,10 @@ function LoadedRecordForm({
   const editing = intent === "edit" ? sourceRecord : undefined;
   const title =
     intent === "clone"
-      ? `Clone ${metadata.singularLabel}`
+      ? t("records.form.cloneTitle", { module: metadata.singularLabel })
       : intent === "edit"
-        ? `Edit ${metadata.singularLabel}`
-        : `Create ${metadata.singularLabel}`;
+        ? t("records.form.editTitle", { module: metadata.singularLabel })
+        : t("records.form.createTitle", { module: metadata.singularLabel });
   const ownerNames = useMemo(
     () => Object.fromEntries(users.map((user) => [user.id, user.name])),
     [users],
@@ -364,7 +387,7 @@ function LoadedRecordForm({
       const row = rootRef.current?.querySelector<HTMLElement>(`[data-form-field="${focusTarget}"]`);
       row
         ?.querySelector<HTMLElement>(
-          "button:not(:disabled),input:not(:disabled),textarea:not(:disabled)",
+          "[data-record-form-control-slot] input:not(:disabled),[data-record-form-control-slot] button:not(:disabled),[data-record-form-control-slot] textarea:not(:disabled)",
         )
         ?.focus();
     });
@@ -431,6 +454,7 @@ function LoadedRecordForm({
         .map((field) => ({ ...field, required: isRequired(field) })),
       values,
       (field) => labelsByField.get(field.apiName) ?? field.label,
+      (label) => t("records.form.fieldRequired", { field: label }),
     );
     const checked = validateRanges(
       rules.ranges,
@@ -456,6 +480,20 @@ function LoadedRecordForm({
     setUnsavedOpen(true);
   }
 
+  async function refreshFields() {
+    if (refreshingSchema) return;
+    setRefreshingSchema(true);
+    try {
+      await refreshMetadata();
+      setSchemaChanged(false);
+      setBannerMessage(null);
+    } catch {
+      setBannerMessage(t("records.form.refreshError"));
+    } finally {
+      setRefreshingSchema(false);
+    }
+  }
+
   async function save(andNew: boolean) {
     if (writeInFlight.current) return;
     if (!runClientValidation()) return;
@@ -472,7 +510,11 @@ function LoadedRecordForm({
       const saved = editing
         ? await update.mutateAsync({ id: editing.id, input })
         : await create.mutateAsync(input);
-      if (andNew) {
+      if (andNew && rules.followUp && config.paths.createIn) {
+        config.navigate(
+          config.paths.createIn(rules.followUp.module, rules.followUp.params(values)),
+        );
+      } else if (andNew) {
         const next = emptyValues();
         setValues(next);
         setLookupModules({});
@@ -487,6 +529,7 @@ function LoadedRecordForm({
         setErrors(fieldMessages);
         return;
       }
+      if (error instanceof SchemaRevisionMismatchError) setSchemaChanged(true);
       const message = formSaveBannerMessage(error);
       if (message) setBannerMessage(message);
     } finally {
@@ -502,8 +545,9 @@ function LoadedRecordForm({
       isHidden(field.apiName)
     )
       return null;
-    const label =
-      rules.labelOverrides?.[field.apiName] ?? (parent ? addressLabel(field, parent) : field.label);
+    const label = adapter.getNamedLabel(
+      rules.labelOverrides?.[field.apiName] ?? (parent ? addressLabel(field, parent) : field.label),
+    );
     const id = `record-form-${field.apiName}`;
     if (field.dataType === "profileimage") {
       if (!config.profileImageLaterModule) {
@@ -651,6 +695,7 @@ function LoadedRecordForm({
           hideLabel
           variant={config.variant}
           lookupModule={lookupModule}
+          suppressPolymorphicPrefix={rules.suppressLookupPrefix?.includes(field.apiName)}
           field={{ ...field, label }}
           value={isState && emptyCountry ? null : (values[field.apiName] ?? null)}
           onChange={(next) => change(field.apiName, next)}
@@ -672,6 +717,7 @@ function LoadedRecordForm({
           }
           options={isState && emptyCountry ? [] : undefined}
           textPrefix={rules.textPrefixes?.[field.apiName]}
+          suggestions={rules.textSuggestions?.[field.apiName]}
           numberLimits={rules.numberLimits?.[field.apiName]}
           lookupPicker={rules.lookupPickers?.[field.apiName]}
           lookupRecordHref={
@@ -696,6 +742,7 @@ function LoadedRecordForm({
               ? config.currencyPrefix
               : undefined
           }
+          currencyHelp={rules.currencyHelp?.[field.apiName]}
           currencyInformation={
             field.apiName === rules.currency || rules.currencies?.includes(field.apiName)
               ? RECORD_FORM_COPY.currencyInformation
@@ -764,12 +811,39 @@ function LoadedRecordForm({
       ) : null}
       <RecordFormShell
         variant={config.variant}
-        layout={config.variant === "activity" && config.module === "Calls" ? "call" : undefined}
+        layout={
+          config.variant === "activity" && config.module === "Calls"
+            ? "call"
+            : config.module === "Solutions"
+              ? "solutions"
+              : undefined
+        }
         title={title}
         formAriaLabel={title}
         titleAccessory={config.inventoryChrome ? <RecordFormEditPageLayoutLink /> : undefined}
-        actionLabels={{ cancel: "Cancel", saveAndNew: "Save and New", save: "Save" }}
-        errorBanner={bannerMessage ? <FormErrorBanner>{bannerMessage}</FormErrorBanner> : null}
+        actionLabels={{
+          cancel: t("common.actions.cancel"),
+          saveAndNew: rules.followUp?.label ?? t("common.actions.saveAndNew"),
+          save: t("common.actions.save"),
+        }}
+        errorBanner={
+          bannerMessage ? (
+            <FormErrorBanner>
+              {bannerMessage}
+              {schemaChanged ? (
+                <Button
+                  variant="secondary"
+                  isDisabled={refreshingSchema}
+                  onPress={() => {
+                    void refreshFields();
+                  }}
+                >
+                  {t("records.form.refreshFields")}
+                </Button>
+              ) : null}
+            </FormErrorBanner>
+          ) : null
+        }
         disabled={saving}
         onCancel={requestCancel}
         onSave={() => {
@@ -812,7 +886,7 @@ function LoadedRecordForm({
             return (
               <FormSection
                 key={section.label}
-                title={section.label}
+                title={adapter.getLayoutSectionLabel(metadata.apiName, section.label)}
                 layout="single"
                 headerEnd={
                   groupsInSection.length === 2 ? (
@@ -876,7 +950,7 @@ function LoadedRecordForm({
           return (
             <FormSection
               key={section.label}
-              title={section.label}
+              title={adapter.getLayoutSectionLabel(metadata.apiName, section.label)}
               layout={columns.length === 1 ? "single" : "two-column"}
             >
               {columns.length === 1 ? (
@@ -891,7 +965,10 @@ function LoadedRecordForm({
           );
         })}
         {config.inventoryChrome && config.variant !== "activity" ? (
-          <RecordFormInventoryFooter alignEnd={config.inventoryFooterEnd} />
+          <RecordFormInventoryFooter
+            alignEnd={config.inventoryFooterEnd}
+            pinBottom={config.inventoryFooterPinned}
+          />
         ) : null}
       </RecordFormShell>
       <UnsavedChangesDialog

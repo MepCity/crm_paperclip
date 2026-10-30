@@ -2,6 +2,7 @@ import type { FieldDefinition } from "@crm/core/records";
 import type { FilterEditorDefinition } from "@/components/records/list/filter-editor";
 import type { FilterGroup } from "@/components/records/list/filter-panel";
 import { type FilterFieldType, filterOperators } from "@/lib/records/filter-operators";
+import { systemFilterProps } from "../system-filter-props";
 import type { ModuleScreenDefinition } from "../types";
 
 type Input = Parameters<ModuleScreenDefinition["buildFilterGroups"]>[0];
@@ -31,8 +32,10 @@ const initialFieldLabels = [
 function editor(field: FieldDefinition, input: Input): FilterEditorDefinition | undefined {
   const special =
     field.apiName === "Connected_To__s" ? "multilookup" : field.apiName === "Tag" ? "tag" : null;
-  if (!special && !(field.dataType in filterOperators)) return undefined;
-  const fieldType = special ?? (field.dataType as FilterFieldType);
+  // bigint columns (Expected Response, Numbers sent) filter like the other number fields.
+  const dataType = field.dataType === "bigint" ? "integer" : field.dataType;
+  if (!special && !(dataType in filterOperators)) return undefined;
+  const fieldType = special ?? (dataType as FilterFieldType);
   return {
     fieldType,
     ...(fieldType === "picklist"
@@ -73,7 +76,7 @@ export function buildCampaignsFilterGroups(input: Input): readonly FilterGroup[]
       items: systemLabels.map((label, index) => ({
         id: `system-${index}`,
         label,
-        disabled: true,
+        ...(systemFilterProps(label, "Campaigns") ?? { disabled: true }),
       })),
     },
     {

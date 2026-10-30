@@ -59,18 +59,27 @@ export function applySectionColumnOverrides(
   return sections.map((section) => {
     const override = overrides[section.label];
     if (!override) return section;
+    const activePlacement = new Set(section.columns.flat().map((field) => field.apiName));
+    const placed = new Set(override.flat());
+    const additions = section.columns.map((column) =>
+      column.filter((field) => !placed.has(field.apiName)),
+    );
     return {
       label: section.label,
-      columns: override.map((column) =>
-        column.flatMap((name) => {
-          const field = fields.get(name);
-          if (!field) return [];
-          const isReadOnlyEdit = mode === "edit" && Boolean(readOnlyFields?.includes(name));
-          if (fieldInView(field, mode, rules) || isReadOnlyEdit) {
-            return [isReadOnlyEdit ? { ...field, readOnly: true } : field];
-          }
-          return [];
-        }),
+      columns: Array.from(
+        { length: Math.max(override.length, section.columns.length) },
+        (_, index) =>
+          (override[index] ?? [])
+            .flatMap((name) => {
+              const field = fields.get(name);
+              if (!field || !activePlacement.has(name)) return [];
+              const isReadOnlyEdit = mode === "edit" && Boolean(readOnlyFields?.includes(name));
+              if (fieldInView(field, mode, rules) || isReadOnlyEdit) {
+                return [isReadOnlyEdit ? { ...field, readOnly: true } : field];
+              }
+              return [];
+            })
+            .concat(additions[index] ?? []),
       ),
     };
   });
@@ -218,7 +227,18 @@ export interface FormDynamicState {
 }
 
 export interface FormRules {
+  /** Observed free-text suggestion catalogs, scoped by the module form. */
+  textSuggestions?: Readonly<Record<string, readonly string[]>>;
   owner: string;
+  /**
+   * Replaces Save and New: saves, then opens a create form of `module` prefilled with `params`.
+   * Provisional (the reference action was never invoked).
+   */
+  followUp?: {
+    label: string;
+    module: string;
+    params: (values: Readonly<Record<string, FieldValue | undefined>>) => Record<string, string>;
+  };
   /** Per-mode view overrides for fields whose export view disagrees with the reference form. */
   viewOverrides?: Readonly<Record<string, Partial<Record<FormMode, boolean>>>>;
   /** Row label shown instead of the export label (also used in validation messages). */
@@ -234,6 +254,7 @@ export interface FormRules {
   countries?: readonly { field: string; state: string }[];
   currency?: string;
   currencies?: readonly string[];
+  currencyHelp?: Readonly<Record<string, { text: string; expression: string; result: string }>>;
   textPrefixes?: Readonly<Record<string, string>>;
   omitted?: readonly string[];
   /** Fields the service hides in edit that the reference edit form still draws (read-only ones). */
@@ -257,6 +278,8 @@ export interface FormRules {
   lookupPickers?: Readonly<Record<string, LookupPickerRule>>;
   /** Activity lookups whose module selector replaces the static row label. */
   lookupLabelFields?: readonly string[];
+  /** Lookup fields where the polymorphic in-input module prefix selector is suppressed. */
+  suppressLookupPrefix?: readonly string[];
   /** Subdued off-state appearance; selection and editability are unchanged. */
   subduedToggles?: readonly string[];
   /** Fields marked required by layout rules even when not system-mandatory in metadata. */
@@ -266,7 +289,7 @@ export interface FormRules {
   /** Field column order overrides when service layout columns do not match the reference form. */
   fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
   /** Initial field to focus when opening create form (defaults to owner). */
-  initialFocus?: string;
+  initialFocus?: string | false;
   defaultValues?:
     | Readonly<Record<string, FieldValue>>
     | ((metadata?: ModuleMetadata) => Readonly<Record<string, FieldValue>>);

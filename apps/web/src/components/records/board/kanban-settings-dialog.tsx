@@ -10,6 +10,8 @@ import { Select, SelectItem } from "@/components/ui/select";
 import { TextField } from "@/components/ui/text-field";
 import { Tooltip, TooltipTrigger } from "@/components/ui/tooltip";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import "./kanban-settings-dialog.css";
 
 /** Matches the Kanban service input until the service contract reaches main. */
@@ -56,6 +58,8 @@ function SettingsContent({
   onCancel,
   mode,
 }: KanbanSettingsDialogProps) {
+  const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
   const titleId = useId();
   const [input, setInput] = useState<KanbanViewInput>(() => ({
     ...initial,
@@ -78,9 +82,9 @@ function SettingsContent({
   async function save() {
     if (saving.current) return;
     const nextErrors: Record<string, string[]> = {};
-    if (!input.name.trim()) nextErrors.name = ["Enter a Kanban view name."];
-    if (!input.categorizeBy) nextErrors.categorizeBy = ["Select a field."];
-    if (!input.headerStyle) nextErrors.headerStyle = ["Select a header style."];
+    if (!input.name.trim()) nextErrors.name = [t("records.kanban.nameRequired")];
+    if (!input.categorizeBy) nextErrors.categorizeBy = [t("records.kanban.fieldRequired")];
+    if (!input.headerStyle) nextErrors.headerStyle = [t("records.kanban.styleRequired")];
     setErrors(nextErrors);
     setMessage("");
     if (Object.keys(nextErrors).length) return;
@@ -93,7 +97,7 @@ function SettingsContent({
         setErrors(error.fieldErrors);
         setMessage(error.message);
       } else {
-        setMessage("Unable to save the Kanban view. Try again.");
+        setMessage(t("records.kanban.saveFailed"));
       }
     } finally {
       saving.current = false;
@@ -103,7 +107,7 @@ function SettingsContent({
   const available = fieldOptions.filter(
     (field) =>
       !input.fields.includes(field.apiName) &&
-      field.label.toLowerCase().includes(search.trim().toLowerCase()),
+      adapter.getNamedLabel(field.label).toLowerCase().includes(search.trim().toLowerCase()),
   );
   const selected = input.fields.flatMap((apiName) => {
     const field = fieldOptions.find((option) => option.apiName === apiName);
@@ -112,19 +116,24 @@ function SettingsContent({
   const selects = [
     {
       key: "categorizeBy",
-      label: "Categorize By",
+      label: t("records.kanban.categorize"),
       options: categorizeOptions,
       required: true,
-      info: "Groups records by the selected field.",
+      info: t("records.kanban.groupInfo"),
     },
     {
       key: "aggregateBy",
-      label: "Aggregate By",
-      options: [{ value: "", label: "--None--" }, ...aggregateOptions],
+      label: t("records.kanban.aggregate"),
+      options: [{ value: "", label: t("records.kanban.none") }, ...aggregateOptions],
       required: false,
-      info: "Shows the sum for each category.",
+      info: t("records.kanban.sumInfo"),
     },
-    { key: "headerStyle", label: "Header Style", options: headerStyleOptions, required: true },
+    {
+      key: "headerStyle",
+      label: t("records.kanban.headerStyle"),
+      options: headerStyleOptions,
+      required: true,
+    },
   ] as const;
   return (
     <TopAlignedModal
@@ -138,17 +147,17 @@ function SettingsContent({
       <div className="kanban-settings-content" data-mode={mode}>
         <header className="flex items-center justify-between gap-4 px-6 py-6">
           <h2 id={titleId} className="text-xl font-semibold">
-            Kanban View - Settings
+            {t("records.kanban.settingsTitle")}
           </h2>
-          <Link href="#" isDisabled aria-label="Help (destination not available)">
-            Help
+          <Link href="#" isDisabled aria-label={t("shell.help")}>
+            {t("shell.help")}
           </Link>
         </header>
         <div className="kanban-settings-body">
           <div className="kanban-settings-row">
-            <span className="text-right text-text-muted">Kanban View Name</span>
+            <span className="text-right text-text-muted">{t("records.kanban.viewName")}</span>
             <TextField
-              label="Kanban View Name"
+              label={t("records.kanban.viewName")}
               hideLabel
               autoFocus
               isRequired
@@ -166,7 +175,11 @@ function SettingsContent({
                 {label}
                 {"info" in rest && (
                   <TooltipTrigger>
-                    <Button variant="ghost" size="sm" aria-label={`${label} information`}>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      aria-label={t("records.kanban.information", { label })}
+                    >
                       <Icons.info aria-hidden className="h-4 w-4" />
                     </Button>
                     <Tooltip>{rest.info}</Tooltip>
@@ -177,7 +190,7 @@ function SettingsContent({
                 label={label}
                 hideLabel
                 items={options}
-                placeholder="Select Field"
+                placeholder={t("records.kanban.selectField")}
                 isRequired={required}
                 validationBehavior="aria"
                 isDisabled={pending}
@@ -191,69 +204,80 @@ function SettingsContent({
                 isInvalid={Boolean(errors[key]?.length)}
                 errorMessage={errors[key]?.join(" ")}
               >
-                {(option) => <SelectItem id={option.value}>{option.label}</SelectItem>}
+                {(option) => (
+                  <SelectItem id={option.value}>{adapter.getNamedLabel(option.label)}</SelectItem>
+                )}
               </Select>
             </div>
           ))}
           {mode === "create" && (
             <div className="kanban-settings-row">
-              <span className="text-right text-text-muted">Share this with</span>
+              <span className="text-right text-text-muted">{t("records.kanban.share")}</span>
               <RadioGroup
-                label="Share this with"
+                label={t("records.kanban.share")}
                 orientation="horizontal"
                 value={input.sharedTo ?? "only_me"}
                 onChange={(value) => change("sharedTo", value)}
                 isDisabled={pending}
                 options={[
-                  { value: "only_me", label: "Only me" },
-                  { value: "everyone", label: "Everyone" },
+                  { value: "only_me", label: t("records.kanban.onlyMe") },
+                  { value: "everyone", label: t("records.kanban.everyone") },
                   // The user picker was not observed; the choice is shown but unavailable.
-                  { value: "selected_users", label: "Selected users", isDisabled: true },
+                  {
+                    value: "selected_users",
+                    label: t("records.kanban.selectedUsers"),
+                    isDisabled: true,
+                  },
                 ]}
               />
             </div>
           )}
-          <h3 className="mt-6 mb-4 font-semibold">Select Fields</h3>
+          <h3 className="mt-6 mb-4 font-semibold">{t("records.kanban.selectFields")}</h3>
           <div className="grid grid-cols-2 gap-6">
-            <section aria-label="Available fields">
-              <h4 className="mb-2 text-text-muted">Available</h4>
+            <section aria-label={t("records.kanban.availableFields")}>
+              <h4 className="mb-2 text-text-muted">{t("records.kanban.available")}</h4>
               <div className="kanban-settings-fields">
                 <TextField
-                  label="Search available fields"
+                  label={t("records.kanban.searchFields")}
                   hideLabel
                   variant="filter-search"
                   size="fill"
                   value={search}
                   onChange={setSearch}
                 />
-                <ul aria-label="Available" className="kanban-settings-list">
+                <ul aria-label={t("records.kanban.available")} className="kanban-settings-list">
                   {available.map((field) => (
                     <li key={field.apiName}>
                       <Button
                         variant="ghost"
                         isDisabled={pending}
                         className="kanban-settings-field"
-                        aria-label={`Add ${field.label}`}
+                        aria-label={t("records.kanban.add", {
+                          field: adapter.getNamedLabel(field.label),
+                        })}
                         onPress={() => change("fields", [...input.fields, field.apiName])}
                       >
-                        {field.label}
+                        {adapter.getNamedLabel(field.label)}
                       </Button>
                     </li>
                   ))}
                 </ul>
               </div>
             </section>
-            <section aria-label="Selected fields">
-              <h4 className="mb-2 text-text-muted">Selected</h4>
+            <section aria-label={t("records.kanban.selectedFields")}>
+              <h4 className="mb-2 text-text-muted">{t("records.kanban.selected")}</h4>
               <div className="kanban-settings-fields">
-                <ul aria-label="Selected" className="kanban-settings-list">
+                <ul aria-label={t("records.kanban.selected")} className="kanban-settings-list">
                   {selected.map((field) => (
                     <li key={field.apiName}>
                       <Button
                         variant="ghost"
                         isDisabled={pending || field.required}
                         className="kanban-settings-field"
-                        aria-label={`${field.required ? "Required" : "Remove"} ${field.label}`}
+                        aria-label={t(
+                          field.required ? "records.kanban.required" : "records.kanban.remove",
+                          { field: adapter.getNamedLabel(field.label) },
+                        )}
                         onPress={() =>
                           change(
                             "fields",
@@ -261,7 +285,7 @@ function SettingsContent({
                           )
                         }
                       >
-                        {field.label}
+                        {adapter.getNamedLabel(field.label)}
                         {field.required && <span className="ml-1 text-danger">*</span>}
                       </Button>
                     </li>
@@ -283,10 +307,10 @@ function SettingsContent({
         </div>
         <footer className="flex shrink-0 justify-end gap-2 border-t border-border px-6 py-6">
           <Button variant="secondary" onPress={onCancel}>
-            Cancel
+            {t("common.actions.cancel")}
           </Button>
           <Button isDisabled={pending} isPending={pending} onPress={save}>
-            Save
+            {t("common.actions.save")}
           </Button>
         </footer>
       </div>

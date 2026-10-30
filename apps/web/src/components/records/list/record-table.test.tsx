@@ -219,6 +219,20 @@ test("renders the settings slot and keeps selection off the rest of the page", a
   expect(screen.queryByRole("toolbar")).toBeNull();
 });
 
+test("keeps the header row pinned to the top of the scroller above the body", () => {
+  render(<Harness records={[record("rec-001", "Lead 001")]} />);
+  const cells = document.querySelectorAll("[data-part=header] > *");
+  expect(cells.length).toBeGreaterThan(0);
+  for (const cell of cells) expect(cell.className).toContain("sticky top-0");
+  const column = document.querySelector("[data-part=header] [data-part=column]");
+  const leading = document.querySelector("[data-part=header] [data-part=leading]");
+  const bodyLeading = document.querySelector("[data-part=row] [data-part=leading]");
+  expect(column?.className).toContain("z-20");
+  expect(leading?.className).toContain("z-30");
+  expect(bodyLeading?.className).toContain("z-10");
+  expect(column?.className).toContain("bg-surface");
+});
+
 test("draws the column options trigger only for fields in the sortable set", () => {
   render(
     <Harness
@@ -643,5 +657,5 @@ test("formats timestamp summaries in the configured time zone", () => {
       }}
     />,
   );
-  expect(screen.getByRole("img", { name: "Open call, due Oct 14, 2026" })).toBeTruthy();
+  expect(screen.getByRole("img", { name: "Open call, Oct 14, 2026" })).toBeTruthy();
 });

@@ -2,15 +2,10 @@
 
 import "./activity-filter-editor.css";
 
+import type { ActivityDueRange, ActivityFilterValue } from "@crm/core/records";
 import { Radio, RadioGroup } from "react-aria-components";
 import { Icons } from "@/components/ui/icon";
 import { Select, SelectItem } from "@/components/ui/select";
-
-export type ActivityDueRange = "today" | "tomorrow" | "next_7_days" | "today_overdue";
-
-export type ActivityFilterValue =
-  | { choice: "without_open_activity" | "overdue" | "without_any_activity" | "activity_done" }
-  | { choice: "activity_due"; range: ActivityDueRange };
 
 export interface ActivityFilterEditorProps {
   value: ActivityFilterValue;

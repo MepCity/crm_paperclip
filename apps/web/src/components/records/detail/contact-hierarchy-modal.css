@@ -8,6 +8,7 @@
   left: 50%;
   transform: translateX(-50%);
   width: 550px;
+  min-height: min(220px, calc(100vh - 48px));
   max-width: calc(100vw - 32px);
   max-height: calc(100vh - 48px);
   overflow-y: auto;
@@ -22,7 +23,7 @@
 }
 
 .contact-hierarchy-tree {
-  margin-top: 16px;
+  margin-top: 42px;
   font-size: var(--text-md);
 }
 

@@ -61,6 +61,21 @@ test.describe("Accounts record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("rail Notes link and Add open the note composer", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const rail = page.locator("[data-record-rail]");
+    const notesLink = rail.getByRole("link", { name: "Notes" });
+    await expect(notesLink).not.toHaveAttribute("data-later-module");
+    await notesLink.click();
+    const addNote = rail.getByRole("button", { name: "Add" });
+    await expect(addNote).not.toHaveAttribute("data-later-module");
+    await addNote.click();
+    await expect(page.locator("#related-list-notes").getByTestId("note-composer")).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("opens from list context with header inventory and related rail", async ({
     page,
     pageErrors,
@@ -164,9 +179,7 @@ test.describe("Accounts record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
-  // AD-159 – AD-162: an inline edit should leave a History row. The Accounts Timeline never
-  // receives events (ACCOUNTS_TIMELINE_EMPTY_EVENTS), so the row is missing; bug reported on MEP-672.
-  test.fixme("Timeline History shows a row after an inline edit (AD-159 – AD-162)", async ({
+  test("Timeline History shows a row after an inline edit (AD-159 – AD-162)", async ({
     page,
     pageErrors,
   }) => {
@@ -185,7 +198,10 @@ test.describe("Accounts record detail", () => {
     const history = frame.locator("[data-timeline-history]");
     await expect(history).toBeVisible();
     await expect(history.getByText("No logs found")).toHaveCount(0);
-    await expect(history.getByText(/Account Site/)).toBeVisible();
+    await expect(history.getByText(/Account Site changed from .* to History Site/)).toBeVisible();
+    await page.reload();
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    await expect(history.getByText(/Account Site changed from .* to History Site/)).toBeVisible();
     ignoreFailedResponses(pageErrors, [400]);
   });
 

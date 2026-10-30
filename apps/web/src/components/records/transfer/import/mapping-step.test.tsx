@@ -61,14 +61,31 @@ test("auto mapping matches labels and API names ignoring case and whitespace; re
   const user = userEvent.setup();
   render(<Harness />);
   await user.click(screen.getByRole("button", { name: "Auto Mapping" }));
-  expect(screen.getByRole("tab", { name: "Mapped (3)" })).toBeTruthy();
-  expect(screen.getAllByText("This field is already mapped.")).toHaveLength(2);
+  // Two columns name the same field: only the first is mapped, so the result is valid.
+  expect(screen.getByRole("tab", { name: "Mapped (2)" })).toBeTruthy();
+  expect(screen.queryByText("This field is already mapped.")).toBeNull();
   expect(screen.getByRole("button", { name: /CRM field for Unknown/ }).textContent).toContain(
     "None",
   );
   await user.click(screen.getByRole("button", { name: "Reset" }));
   expect(screen.getByRole("tab", { name: "Unmapped (4)" })).toBeTruthy();
   expect(screen.queryByText("This field is already mapped.")).toBeNull();
+});
+
+test("auto mapping also matches aliases such as Turkish labels, ignoring diacritics", async () => {
+  const user = userEvent.setup();
+  render(
+    <Harness
+      headers={["firma ADI", "E-posta", "Bilinmeyen"]}
+      fields={[
+        { apiName: "Account_Name", label: "Account Name", required: false, aliases: ["Firma Adı"] },
+        { apiName: "Email", label: "Email", required: false, aliases: ["E-posta"] },
+      ]}
+    />,
+  );
+  await user.click(screen.getByRole("button", { name: "Auto Mapping" }));
+  expect(screen.getByRole("tab", { name: "Mapped (2)" })).toBeTruthy();
+  expect(screen.getByRole("tab", { name: "Unmapped (1)" })).toBeTruthy();
 });
 
 test("manual mapping toggles replacement inputs and retains typed replacement values", async () => {

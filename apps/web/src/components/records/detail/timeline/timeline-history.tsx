@@ -5,6 +5,8 @@ import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import type { ModuleKey } from "@/components/ui/later-module";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useRecordLabel } from "@/i18n/record-labels";
 import { TimelineEventTrack } from "./timeline-event-track";
 import {
   TimelineHistoryFilterPanel,
@@ -19,6 +21,13 @@ export interface TimelineHistoryProps extends TimelineHistoryFilterProps {
   events: readonly TimelineEvent[];
   format: FormatOptions;
   initialFilterExpanded?: boolean;
+  serverFiltered?: boolean;
+  loading?: boolean;
+  error?: boolean;
+  onRetry?: () => void;
+  hasMore?: boolean;
+  loadingMore?: boolean;
+  onShowMore?: () => void;
   upcomingAutomatedActions?: { label: string; laterModule: ModuleKey };
 }
 
@@ -72,21 +81,27 @@ export function TimelineHistory({
   initialFilterExpanded = false,
   upcomingAutomatedActions,
   onApply,
+  serverFiltered = false,
+  loading = false,
+  error = false,
+  onRetry,
+  hasMore = false,
+  loadingMore = false,
+  onShowMore,
   ...filterProps
 }: TimelineHistoryProps) {
+  const label = useRecordLabel();
+  const t = useUiTranslations();
   const [applied, setApplied] = useState<TimelineHistoryFilterValue>(NO_FILTER);
-  const visibleEvents = useMemo(() => filterTimelineEvents(events, applied), [events, applied]);
+  const visibleEvents = useMemo(
+    () => (serverFiltered ? events : filterTimelineEvents(events, applied)),
+    [events, applied, serverFiltered],
+  );
   const [filterExpanded, setFilterExpanded] = useState(initialFilterExpanded);
   return (
     <div className="timeline-history" data-timeline-history>
       <div className="timeline-history-header">
-        <h3 className="timeline-history-title">{heading}</h3>
-        <span className="flex-1" aria-hidden />
-        {upcomingAutomatedActions ? (
-          <Button variant="ghost" size="compact" laterModule={upcomingAutomatedActions.laterModule}>
-            {upcomingAutomatedActions.label}
-          </Button>
-        ) : null}
+        <h3 className="timeline-history-title">{label(heading)}</h3>
         <button
           type="button"
           className="timeline-history-filter-button"
@@ -97,21 +112,49 @@ export function TimelineHistory({
         >
           <Icons.filter aria-hidden="true" className="h-4 w-4" />
         </button>
+        <span className="flex-1" aria-hidden />
+        {upcomingAutomatedActions ? (
+          <Button variant="ghost" size="compact" laterModule={upcomingAutomatedActions.laterModule}>
+            {label(upcomingAutomatedActions.label)}
+          </Button>
+        ) : null}
       </div>
       {filterExpanded && (
         <TimelineHistoryFilterPanel
           {...filterProps}
+          initialValue={applied}
           onApply={(value) => {
             setApplied(value);
             onApply(value);
           }}
         />
       )}
-      {visibleEvents.length === 0 ? (
-        <p className="timeline-history-empty text-md text-text-muted px-3 py-4">No logs found</p>
+      {loading ? <p role="status">{t("records.chrome.loadingHistory")}</p> : null}
+      {error ? (
+        <div role="alert">
+          {t("records.chrome.historyError")}{" "}
+          <button type="button" onClick={onRetry}>
+            {t("records.chrome.retryHistory")}
+          </button>
+        </div>
+      ) : null}
+      {!loading && !error && visibleEvents.length === 0 ? (
+        <p className="timeline-history-empty text-md text-text-muted px-3 py-4">
+          {t("records.chrome.noLogs")}
+        </p>
       ) : (
-        <TimelineEventTrack events={visibleEvents} format={format} />
+        <TimelineEventTrack events={visibleEvents} format={format} preserveOrder={serverFiltered} />
       )}
+      {hasMore ? (
+        <button
+          type="button"
+          className="timeline-event-show-more"
+          disabled={loadingMore}
+          onClick={onShowMore}
+        >
+          {loadingMore ? t("records.chrome.loadingMore") : t("records.chrome.showMore")}
+        </button>
+      ) : null}
     </div>
   );
 }

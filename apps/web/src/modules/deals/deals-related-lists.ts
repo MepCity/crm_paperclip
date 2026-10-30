@@ -4,7 +4,8 @@ import { DealStageHistoryCardBody } from "@/components/records/detail/deal-stage
 import { RelatedCasesCardBody } from "@/components/records/detail/related-cases-card-body";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
-import { notesCardBody } from "../notes-card";
+import { emailsCard } from "../emails/record-card";
+import { notesCardBody, openNotesComposer } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
 import type {
   RelatedListActivityColumnDefinition,
@@ -12,6 +13,7 @@ import type {
   RelatedListRailChromeDefinition,
   RelatedListTableColumnDefinition,
 } from "../types";
+import { DealsContactRolesCard } from "./contact-roles-dialog";
 
 export const dealsRelatedListRail: RelatedListRailChromeDefinition = {
   organizeAriaLabel: "Organize Deal Details",
@@ -116,13 +118,13 @@ export function createDealsRelatedLists(
       id: "notes",
       renderBody: notesCardBody("Deals"),
       title: "Notes",
-      moduleKey: "M6",
+      moduleKey: "M2",
       order: 1,
       targetId: "related-list-notes",
       railAction: {
         id: "notes-add",
         label: "Add",
-        moduleKey: "M6",
+        onAction: openNotesComposer,
       },
       emptyStateText: "No records found",
     },
@@ -346,6 +348,13 @@ export function createDealsRelatedLists(
     },
     {
       id: "contact-roles",
+      renderCard: (context) =>
+        context.record
+          ? createElement(DealsContactRolesCard, {
+              context: { ...context, record: context.record },
+              definition: context.definition,
+            })
+          : undefined,
       renderBody: ({ record, recordPath }) =>
         record
           ? createElement(ContactRolesCardBody, {
@@ -386,6 +395,7 @@ export function createDealsRelatedLists(
     },
     {
       id: "emails",
+      renderCard: emailsCard("Deals"),
       title: "Emails",
       moduleKey: "M10",
       order: 13,

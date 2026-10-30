@@ -147,6 +147,20 @@ test.describe("Calls record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("More Options > Edit opens the edit route", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleRecordPath(org.slug, CALLS_TAB, SCHEDULED_CALL_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible({ timeout: 15_000 });
+    await page
+      .locator("[data-record-header]")
+      .getByRole("button", { name: "More Options" })
+      .click();
+    await page.getByRole("menuitem", { name: "Edit" }).click();
+    await expect(page).toHaveURL(/\/edit/);
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("Related To shows the plural module suffix without a link", async ({ page, pageErrors }) => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
@@ -168,6 +182,34 @@ test.describe("Calls record detail", () => {
     await frame.getByRole("tab", { name: "Timeline" }).click();
     await expect(frame.locator("[data-timeline-history]")).toBeVisible();
     await expect(frame.getByText("No logs found")).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Timeline History shows a row after an inline edit", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await page.goto(moduleRecordPath(org.slug, CALLS_TAB, SCHEDULED_CALL_ID));
+    await expect(page.locator("[data-record-frame]")).toBeVisible({ timeout: 15_000 });
+    const subjectRow = page.locator('[data-detail-field="Subject"]');
+    await subjectRow.hover();
+    await subjectRow.getByRole("button", { name: "Edit Subject value" }).click();
+    const input = subjectRow.getByRole("textbox");
+    await input.fill("History Call Subject");
+    await input.press("Enter");
+    await expect(subjectRow).toContainText("History Call Subject");
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    const history = frame.locator("[data-timeline-history]");
+    await expect(history).toBeVisible();
+    await expect(history.getByText("No logs found")).toHaveCount(0);
+    await expect(
+      history.getByText(/Subject changed from .* to History Call Subject/),
+    ).toBeVisible();
+    await page.reload();
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    await expect(
+      history.getByText(/Subject changed from .* to History Call Subject/),
+    ).toBeVisible();
     ignoreFailedResponses(pageErrors, [400]);
   });
 

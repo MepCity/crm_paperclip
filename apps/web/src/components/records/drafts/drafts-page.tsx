@@ -3,6 +3,7 @@
 import { useId, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
+import { useUtilityLabel } from "@/i18n/utility-labels";
 
 export interface DraftsPageProps {
   /** Back navigation callback (PS-07). */
@@ -21,6 +22,7 @@ export interface DraftsPageProps {
  * and an empty results card.
  */
 export function DraftsPage({ onBack, onInfo, onHelp, onAddCriterion }: DraftsPageProps) {
+  const copy = useUtilityLabel();
   const titleId = useId();
   const [isCriteriaExpanded, setIsCriteriaExpanded] = useState(true);
 
@@ -32,19 +34,19 @@ export function DraftsPage({ onBack, onInfo, onHelp, onAddCriterion }: DraftsPag
           {/* PS-07: Back navigation */}
           <button
             type="button"
-            aria-label="Back"
+            aria-label={copy("Back")}
             onClick={onBack}
             className="inline-flex h-8 w-8 items-center justify-center rounded-md text-text-muted transition-colors hover:bg-surface-hover hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
           >
             <Icons.arrowLeft className="h-4 w-4" aria-hidden />
           </button>
           <h1 id={titleId} className="text-xl font-bold text-text-strong">
-            Drafts
+            {copy("Drafts")}
           </h1>
           {/* PS-08: Information icon */}
           <button
             type="button"
-            aria-label="Information"
+            aria-label={copy("Information")}
             onClick={onInfo}
             className="inline-flex h-6 w-6 items-center justify-center rounded-full text-text-muted transition-colors hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
           >
@@ -55,26 +57,26 @@ export function DraftsPage({ onBack, onInfo, onHelp, onAddCriterion }: DraftsPag
         <button
           type="button"
           onClick={onHelp}
-          aria-label="Help"
+          aria-label={copy("Help")}
           className="inline-flex items-center gap-1.5 rounded px-1.5 py-1 text-sm font-normal text-text-muted transition-colors hover:text-text focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
         >
           <Icons.info className="h-4 w-4" aria-hidden />
-          <span>Help</span>
+          <span>{copy("Help")}</span>
         </button>
       </div>
 
       {/* Criteria card */}
       <div className="mt-4 rounded-lg border border-border bg-surface p-5 shadow-xs">
         <div className="flex items-center justify-between">
-          <h2 className="text-sm font-semibold text-text">Criteria</h2>
+          <h2 className="text-sm font-semibold text-text">{copy("Criteria")}</h2>
           {/* PS-10: Hide / chevron toggles local expanded state */}
           <button
             type="button"
-            aria-label={isCriteriaExpanded ? "Hide criteria" : "Show criteria"}
+            aria-label={copy(isCriteriaExpanded ? "Hide criteria" : "Show criteria")}
             onClick={() => setIsCriteriaExpanded(!isCriteriaExpanded)}
             className="inline-flex items-center gap-1 rounded text-sm font-semibold text-primary hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
           >
-            <span>{isCriteriaExpanded ? "Hide" : "Show"}</span>
+            <span>{copy(isCriteriaExpanded ? "Hide" : "Show")}</span>
             {isCriteriaExpanded ? (
               <Icons.chevronUp className="h-4 w-4" aria-hidden />
             ) : (
@@ -91,17 +93,17 @@ export function DraftsPage({ onBack, onInfo, onHelp, onAddCriterion }: DraftsPag
                 type="text"
                 readOnly
                 value="1"
-                aria-label="Criterion index"
+                aria-label={copy("Criterion index")}
                 className="h-8 w-8 select-none rounded border border-border bg-surface text-center text-sm font-semibold text-text focus:outline-none"
               />
 
               {/* PS-12: Field selector showing None */}
               <button
                 type="button"
-                aria-label="Field selector"
+                aria-label={copy("Field selector")}
                 className="flex h-8 w-52 items-center justify-between rounded border border-border bg-surface px-3 text-sm text-text transition-colors hover:border-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
               >
-                <span>None</span>
+                <span>{copy("None")}</span>
                 <Icons.chevronDown className="h-3.5 w-3.5 text-text-muted" aria-hidden />
               </button>
 
@@ -110,10 +112,10 @@ export function DraftsPage({ onBack, onInfo, onHelp, onAddCriterion }: DraftsPag
                 type="button"
                 disabled
                 aria-disabled="true"
-                aria-label="Operator selector"
+                aria-label={copy("Operator selector")}
                 className="flex h-8 w-36 cursor-not-allowed items-center justify-between rounded border border-border bg-surface-muted px-3 text-sm text-text-muted opacity-60"
               >
-                <span>None</span>
+                <span>{copy("None")}</span>
                 <Icons.chevronDown className="h-3.5 w-3.5 text-text-muted" aria-hidden />
               </button>
 
@@ -122,7 +124,7 @@ export function DraftsPage({ onBack, onInfo, onHelp, onAddCriterion }: DraftsPag
                 type="text"
                 disabled
                 aria-disabled="true"
-                aria-label="Criterion value"
+                aria-label={copy("Criterion value")}
                 placeholder=""
                 className="h-8 flex-1 min-w-[200px] max-w-md cursor-not-allowed rounded border border-border bg-surface-muted px-3 text-sm text-text-muted opacity-60 focus:outline-none"
               />
@@ -130,9 +132,9 @@ export function DraftsPage({ onBack, onInfo, onHelp, onAddCriterion }: DraftsPag
               {/* PS-15: Plus icon */}
               <button
                 type="button"
-                aria-label="Add criterion"
+                aria-label={copy("Add criterion")}
                 onClick={onAddCriterion}
-                className="inline-flex h-7 w-7 items-center justify-center rounded-full border border-success text-success transition-colors hover:bg-success/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                className="inline-flex h-5 w-5 items-center justify-center rounded-full border border-success text-success transition-colors hover:bg-success/10 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
               >
                 <Icons.plus className="h-4 w-4" aria-hidden />
               </button>
@@ -140,8 +142,8 @@ export function DraftsPage({ onBack, onInfo, onHelp, onAddCriterion }: DraftsPag
 
             {/* PS-16: Search button disabled */}
             <div className="flex justify-end">
-              <Button variant="primary" isDisabled aria-label="Search">
-                Search
+              <Button variant="primary" isDisabled aria-label={copy("Search")}>
+                {copy("Search")}
               </Button>
             </div>
           </div>
@@ -149,8 +151,8 @@ export function DraftsPage({ onBack, onInfo, onHelp, onAddCriterion }: DraftsPag
       </div>
 
       {/* Results card: empty status */}
-      <div className="mt-4 rounded-lg border border-border bg-surface p-12 text-center shadow-xs">
-        <p className="text-sm text-text-muted">No records available</p>
+      <div className="mt-4 rounded-lg border border-border bg-surface p-6 text-center shadow-xs">
+        <p className="text-sm text-text-muted">{copy("No records available")}</p>
       </div>
     </div>
   );

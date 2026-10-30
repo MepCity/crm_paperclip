@@ -1430,23 +1430,23 @@ describe("ModuleListScreen", () => {
     const { perPageSizesRequested } = screenWithFixture();
     await waitFor(() => expect(screen.getByRole("table", { name: "Records" })).toBeTruthy());
 
-    await openViewSubmenu(user, "Records Per Page 30");
-    await user.click(screen.getByRole("menuitemradio", { name: "10" }));
+    await openViewSubmenu(user, "Records Per Page 10");
+    await user.click(screen.getByRole("menuitemradio", { name: "20" }));
 
     const href = navigation.push.mock.calls.at(-1)?.[0] ?? "";
     const params = new URLSearchParams(String(href).split("?")[1] ?? "");
-    expect(params.get("per_page")).toBe("10");
+    expect(params.get("per_page")).toBe("20");
     expect(params.get("page")).toBeNull();
     expect(params.get("sort_by")).toBe("Company");
     await waitFor(() => expect(screen.queryByRole("menu")).toBeNull());
-    expect(perPageSizesRequested()).toContain(10);
+    expect(perPageSizesRequested()).toContain(20);
   });
 
   it("uses the stored page size when the address carries no per_page", async () => {
     const user = userEvent.setup();
     screenWithFixture();
     await waitFor(() => expect(screen.getByRole("table", { name: "Records" })).toBeTruthy());
-    await openViewSubmenu(user, "Records Per Page 30");
+    await openViewSubmenu(user, "Records Per Page 10");
     await user.click(screen.getByRole("menuitemradio", { name: "20" }));
 
     cleanup();
@@ -1750,4 +1750,93 @@ it("requests the hidden all-day field for Meetings without adding a visible colu
   expect(screen.getAllByRole("link", { name: "Edit record" })[0]?.getAttribute("href")).toMatch(
     /\/tab\/Meetings\/[^/]+\/edit$/,
   );
+});
+
+it("keeps system filters in list/count queries across panel toggles and clears them", async () => {
+  const records = createFixtureRecordService(ctx);
+  const config = {
+    ...leadsListPageConfig,
+    filterGroups: [
+      {
+        id: "system",
+        label: "System Defined Filters",
+        items: [{ id: "locked", label: "Locked", systemEditor: "locked" as const }],
+      },
+    ],
+  };
+  const listSpy = vi.spyOn(records, "list");
+  const countSpy = vi.spyOn(records, "count");
+  const service = createClientRecordService(records, {
+    listUsers: async () => [{ userId: ctx.userId, name: "User", email: "user@example.test" }],
+  });
+  const user = userEvent.setup();
+  render(<ModuleListScreen orgSlug={ctx.orgSlug} config={config} />, { wrapper: wrapper(service) });
+  await screen.findByRole("table", { name: "Records" });
+  await user.click(screen.getByRole("checkbox", { name: "Locked" }));
+  await user.click(screen.getByRole("button", { name: "Apply Filter" }));
+  await waitFor(() => {
+    expect(listSpy.mock.calls.at(-1)?.[1]?.systemFilters).toEqual({ locked: { locked: true } });
+    expect(countSpy.mock.calls.at(-1)?.[1]?.systemFilters).toEqual({ locked: { locked: true } });
+  });
+  await user.click(screen.getByRole("button", { name: "Filter" }));
+  await user.click(screen.getByRole("button", { name: "Filter" }));
+  expect((screen.getByRole("checkbox", { name: "Locked" }) as HTMLInputElement).checked).toBe(true);
+  await user.click(screen.getByRole("button", { name: "Clear" }));
+  await waitFor(() => {
+    expect(listSpy.mock.calls.at(-1)?.[1]?.systemFilters).toBeUndefined();
+    expect(countSpy.mock.calls.at(-1)?.[1]?.systemFilters).toBeUndefined();
+  });
+});
+
+it("offers an effective custom column and filters retired fields without editing the saved view", async () => {
+  const user = userEvent.setup();
+  const records = createFixtureRecordService(ctx);
+  const service = createClientRecordService(records, {
+    listUsers: async () => [{ userId: ctx.userId, name: "User", email: "u@example.test" }],
+  });
+  const baseline = await records.getModule("Leads");
+  const source = baseline.fields.find((field) => field.apiName === "Company");
+  if (!source) throw new Error("Missing fixture field.");
+  vi.spyOn(service, "getModule").mockResolvedValue({
+    ...baseline,
+    fields: [
+      ...baseline.fields.filter((field) => field.apiName !== "Email"),
+      { ...source, apiName: "Custom_Text", label: "Custom Text" },
+    ],
+  });
+  const getView = vi.spyOn(service, "getView");
+  render(<ModuleListScreen orgSlug={ctx.orgSlug} config={leadsListPageConfig} />, {
+    wrapper: wrapper(service),
+  });
+  await screen.findByRole("table", { name: "Records" });
+  expect(screen.queryByRole("columnheader", { name: /^Email/ })).toBeNull();
+  expect(screen.getByRole("checkbox", { name: "Custom Text" })).toBeTruthy();
+  const trigger = screen.getByRole("button", { name: "View Settings" });
+  trigger.focus();
+  await user.keyboard("{Enter}");
+  const manage = screen.getByRole("menuitem", { name: "Manage Columns" });
+  manage.focus();
+  await user.keyboard("{Enter}");
+  const dialog = await screen.findByRole("dialog", { name: "Manage Columns Leads" });
+  expect(within(dialog).queryByRole("checkbox", { name: "Email" })).toBeNull();
+  await user.click(within(dialog).getByRole("checkbox", { name: "Custom Text" }));
+  await user.click(within(dialog).getByRole("button", { name: "Save" }));
+  await screen.findByRole("columnheader", { name: /Custom Text/ });
+  const originalView = await getView.mock.results[0]?.value;
+  expect(originalView?.columns).not.toContain("Custom_Text");
+});
+
+it("opens View Settings and the column dialog on a screen with the inventory chrome", async () => {
+  const user = userEvent.setup();
+  const records = createFixtureRecordService(ctx);
+  const service = createClientRecordService(records, { listUsers: async () => [] });
+  render(<ModuleListScreen orgSlug={ctx.orgSlug} config={accountsListPageConfig} />, {
+    wrapper: wrapper(service),
+  });
+  await screen.findByRole("table", { name: "Records" });
+  const trigger = screen.getByRole("button", { name: "View Settings" });
+  expect(trigger.closest("[data-later-module]")).toBeNull();
+  await user.click(trigger);
+  await user.click(await screen.findByRole("menuitem", { name: "Manage Columns" }));
+  expect(await screen.findByRole("dialog", { name: /^Manage Columns/ })).toBeTruthy();
 });

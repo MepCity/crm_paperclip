@@ -52,6 +52,7 @@ test.describe("Tasks record detail", () => {
     expect(positions.every((p) => p >= 0)).toBe(true);
     expect(positions).toEqual([...positions].sort((x, y) => x - y));
     await expect(page.getByText("Task Information")).toBeVisible();
+    expect(cardText).toMatch(/Due Date\s*\d{2}\.\d{2}\.\d{4}/);
     const infoText = (await page.locator("[data-record-frame]").innerText()).replace(/\s+/g, " ");
     const infoStart = infoText.indexOf("Task Information");
     const infoPositions = ["Task Owner", "Subject", "Due Date", "Contact Name", "Related To"].map(
@@ -104,6 +105,33 @@ test.describe("Tasks record detail", () => {
     await frame.getByRole("tab", { name: "Timeline" }).click();
     await expect(frame.locator("[data-timeline-history]")).toBeVisible();
     await expect(frame.getByText("No logs found")).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Timeline History shows a row after an inline edit", async ({ page, pageErrors }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openTaskFromList(page, org.slug);
+    const subjectRow = page.locator('[data-detail-field="Subject"]');
+    await subjectRow.hover();
+    await subjectRow.getByRole("button", { name: "Edit Subject value" }).click();
+    const input = subjectRow.getByRole("textbox");
+    await input.fill("History Task Subject");
+    await input.press("Enter");
+    await expect(subjectRow).toContainText("History Task Subject");
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    const history = frame.locator("[data-timeline-history]");
+    await expect(history).toBeVisible();
+    await expect(history.getByText("No logs found")).toHaveCount(0);
+    await expect(
+      history.getByText(/Subject changed from .* to History Task Subject/),
+    ).toBeVisible();
+    await page.reload();
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    await expect(
+      history.getByText(/Subject changed from .* to History Task Subject/),
+    ).toBeVisible();
     ignoreFailedResponses(pageErrors, [400]);
   });
 

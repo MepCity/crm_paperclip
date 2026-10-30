@@ -1,6 +1,7 @@
 import type { FieldDefinition, ModuleMetadata, RecordData } from "@crm/core/records";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailFieldEntry, DetailSection } from "@/components/records/detail/details-card";
+import { addressSubfieldApiNames } from "@/lib/records/composite-address";
 
 function visible(field: FieldDefinition, record: RecordData) {
   return field.views.view && Object.hasOwn(record.fields, field.apiName);
@@ -42,6 +43,18 @@ export function buildContactsDetailSections(
   record: RecordData,
 ): DetailSection[] {
   const byName = new Map(module.fields.map((field) => [field.apiName, field]));
+  const activeRecord = {
+    ...record,
+    fields: Object.fromEntries(
+      Object.entries(record.fields).filter(([name]) => byName.get(name)?.views.view),
+    ),
+  };
+  const addressParts = new Set(
+    ["Mailing", "Other"].flatMap((prefix) => [
+      ...addressSubfieldApiNames(`${prefix}_Address`),
+      `${prefix}_Code`,
+    ]),
+  );
   return module.layout
     .filter((section) => section.label !== "Contact Image")
     .map((section) => {
@@ -52,7 +65,8 @@ export function buildContactsDetailSections(
           if (!field?.views.view) continue;
           const prefix =
             name === "Mailing_Address" ? "Mailing" : name === "Other_Address" ? "Other" : null;
-          if (section.label === "Address Information" && !prefix) continue;
+          if (section.label === "Address Information" && !prefix && addressParts.has(name))
+            continue;
           if (!prefix && !visible(field, record)) continue;
           const timestamp =
             name === "Created_By"
@@ -61,7 +75,7 @@ export function buildContactsDetailSections(
                 ? record.fields.Modified_Time
                 : undefined;
           const value = prefix
-            ? formatContactsAddress(record, prefix) || null
+            ? formatContactsAddress(activeRecord, prefix) || null
             : (record.fields[name] ?? null);
           const isPhone =
             section.label === "Contact Information" && name === "Phone" && index === 0;

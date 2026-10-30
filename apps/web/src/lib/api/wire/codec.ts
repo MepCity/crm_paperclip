@@ -14,9 +14,21 @@ import type {
   RecordData,
   RecordInput,
 } from "@crm/core/records";
-import { isJsonArray, isJsonObject, lookupTargetModules } from "@crm/core/records";
+import {
+  baselineFieldId,
+  baselineLayoutId,
+  isJsonArray,
+  isJsonObject,
+  lookupTargetModules,
+} from "@crm/core/records";
 import { validateActivityFilter } from "@crm/core/records/activities";
 import { validateCampaignFilter } from "@crm/core/records/campaigns";
+import {
+  MAX_RELATED_MODULE_CRITERIA,
+  MAX_RELATED_MODULE_FILTERS,
+  validateRelatedModules,
+} from "@crm/core/records/related-module-filters";
+import { validateSystemFilters } from "@crm/core/records/system-filters";
 import type {
   WireCriteria,
   WireCriteriaValue,
@@ -152,7 +164,17 @@ export function encodeInput(
   return result;
 }
 export function decodeInput(row: unknown, metadata: ModuleMetadata): RecordInput {
-  const source = object(row, "data");
+  let source = object(row, "data");
+  if (metadata.apiName === "Notes" && Object.hasOwn(source, "$se_module")) {
+    const module = source.$se_module;
+    const parent = object(source.Parent_Id, "Parent_Id");
+    const field = metadata.fields.find((candidate) => candidate.apiName === "Parent_Id");
+    if (typeof module !== "string" || !field || !lookupTargetModules(field).includes(module))
+      invalid("$se_module");
+    if (parent.module !== undefined && parent.module !== module) invalid("Parent_Id");
+    source = { ...source, Parent_Id: { ...parent, module } };
+    delete source.$se_module;
+  }
   const result: Record<string, FieldValue> = Object.create(null);
   for (const [name, value] of Object.entries(source)) {
     const field = metadata.fields.find((candidate) => candidate.apiName === name);
@@ -166,8 +188,12 @@ export function decodeRecord(row: WireRecord, metadata: ModuleMetadata): RecordD
   return { id: row.id, fields: decodeInput(row, metadata) };
 }
 
-export function encodeField(field: FieldDefinition): WireField {
+export function encodeField(
+  field: FieldDefinition & Partial<{ id: string; custom: boolean }>,
+): WireField {
   return {
+    id: field.id ?? baselineFieldId(field.apiName),
+    custom_field: field.custom ?? false,
     api_name: field.apiName,
     field_label: field.label,
     data_type: field.dataType,
@@ -287,8 +313,10 @@ export function encodeModule(metadata: ModuleMetadata): WireModule {
     business_card_fields: metadata.businessCardFields.map((api_name) => ({ api_name })),
   };
 }
-export function encodeLayout(metadata: ModuleMetadata): WireLayout {
+export function encodeLayout(metadata: ModuleMetadata & { layoutId?: string }): WireLayout {
   return {
+    id: metadata.layoutId ?? baselineLayoutId(metadata.apiName),
+    default: true,
     sections: metadata.layout.map((section) => ({
       display_label: section.label,
       column_count: section.columnCount,
@@ -310,13 +338,19 @@ export function decodeModule(
     apiName: module.api_name,
     singularLabel: module.singular_label,
     pluralLabel: module.plural_label,
-    businessCardFields: module.business_card_fields.map((field) => field.api_name),
+    businessCardFields: module.business_card_fields
+      .map((field) => field.api_name)
+      .filter((name) => fields.some((field) => field.api_name === name)),
     fields: fields.map(decodeField),
     layout: layout.sections.map((section) => ({
       label: section.display_label,
       columnCount: section.column_count,
-      columns: section.columns.map((column) => [...column]),
-      fields: section.fields.map((field) => field.api_name),
+      columns: section.columns.map((column) =>
+        column.filter((name) => fields.some((field) => field.api_name === name)),
+      ),
+      fields: section.fields
+        .map((field) => field.api_name)
+        .filter((name) => fields.some((field) => field.api_name === name)),
     })),
   };
 }
@@ -714,4 +748,92 @@ export function encodeCampaignFilter(value: import("@crm/core/records").Campaign
     campaign_ids: [...value.campaignIds],
     ...(value.memberStatuses === undefined ? {} : { member_statuses: [...value.memberStatuses] }),
   };
+}
+
+const systemFilterNames = {
+  locked: "locked",
+  record_action: "recordAction",
+  related_records_action: "relatedRecordsAction",
+  touched: "touched",
+  untouched: "untouched",
+} as const;
+export function decodeSystemFilters(
+  value: unknown,
+): import("@crm/core/records").SystemFiltersValue {
+  const body = object(value, "systemFilters.filters");
+  const decoded: Record<string, unknown> = {};
+  for (const [key, item] of Object.entries(body)) {
+    if (!Object.hasOwn(systemFilterNames, key)) invalid(`systemFilters.${key}`);
+    const name = systemFilterNames[key as keyof typeof systemFilterNames];
+    const entry = object(item, `systemFilters.${name}`);
+    const result: Record<string, unknown> = {};
+    for (const [field, content] of Object.entries(entry)) {
+      if (!["locked", "action", "module", "actor_ids", "period"].includes(field))
+        invalid(`systemFilters.${name}`);
+      result[field === "actor_ids" ? "actorIds" : field] = content;
+    }
+    decoded[name] = result;
+  }
+  validateSystemFilters(decoded);
+  return decoded;
+}
+export function encodeSystemFilters(
+  value: import("@crm/core/records").SystemFiltersValue,
+): import("./types").WireSystemFilters {
+  validateSystemFilters(value);
+  return Object.fromEntries(
+    Object.entries(systemFilterNames).flatMap(([wire, domain]) => {
+      const entry = value[domain];
+      return entry === undefined
+        ? []
+        : [
+            [
+              wire,
+              Object.fromEntries(
+                Object.entries(entry).map(([key, content]) => [
+                  key === "actorIds" ? "actor_ids" : key,
+                  content,
+                ]),
+              ),
+            ],
+          ];
+    }),
+  ) as import("./types").WireSystemFilters;
+}
+
+export function decodeRelatedModules(
+  value: unknown,
+): import("@crm/core/records").RelatedModuleFilter[] {
+  if (!Array.isArray(value)) invalid("relatedModules");
+  const rows = value as unknown[];
+  if (rows.length > MAX_RELATED_MODULE_FILTERS)
+    invalid("relatedModules", "Send at most 3 related-module conditions.");
+  const decoded = rows.map((row): import("@crm/core/records").RelatedModuleFilter => {
+    const wire = object(row, "relatedModules");
+    if (Object.keys(wire).some((key) => !["module", "presence", "criteria"].includes(key)))
+      invalid("relatedModules");
+    const criteria = wire.criteria === undefined ? [] : wire.criteria;
+    if (!Array.isArray(criteria)) invalid("relatedModules");
+    if ((criteria as unknown[]).length > MAX_RELATED_MODULE_CRITERIA)
+      invalid("relatedModules", "Send at most 5 criteria per related-module condition.");
+    return {
+      module: wire.module as import("@crm/core/records").RelatedFilterModule,
+      presence: wire.presence as "with" | "without",
+      criteria: (criteria as unknown[]).map(
+        (item) => decodeCriteria(item) as import("@crm/core/records").FieldCriterion,
+      ),
+    };
+  });
+  validateRelatedModules(decoded);
+  return decoded;
+}
+export function encodeRelatedModules(
+  value: readonly import("@crm/core/records").RelatedModuleFilter[],
+): import("./types").WireRelatedModule[] {
+  validateRelatedModules(value);
+  return value.map((row) => ({
+    module: row.module,
+    presence: row.presence,
+    criteria: row.criteria.map(encodeCriteria),
+  }));
 }

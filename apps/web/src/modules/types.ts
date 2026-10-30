@@ -13,11 +13,7 @@ import type { ComponentType, ReactNode } from "react";
 import type { BusinessCardField } from "@/components/records/detail/business-card";
 import type { DetailSection } from "@/components/records/detail/details-card";
 import type { RecordCommand, RecordMenuGroup } from "@/components/records/detail/record-header";
-import type {
-  TimelineEvent,
-  TimelineFilterOption,
-  TimelineSubtab,
-} from "@/components/records/detail/timeline";
+import type { TimelineFilterOption, TimelineSubtab } from "@/components/records/detail/timeline";
 import type { FormRules } from "@/components/records/form/form-model";
 import type { FilterGroup } from "@/components/records/list/filter-panel";
 import type { ModuleListScreenConfig } from "@/components/records/list/module-list-screen";
@@ -172,7 +168,7 @@ export interface ModuleScreenDefinition {
   singularLabel: string;
   pluralLabel: string;
   pageTitle: string;
-  navigation: { id: string; icon: Icon; group?: "sales" | "activities" };
+  navigation: { id: string; icon: Icon; group?: "sales" | "activities" | "flat" };
   search?: { secondaryFields: readonly string[] };
   list: ModuleListScreenConfig;
   listCurrencyCode: string;
@@ -190,6 +186,8 @@ export interface ModuleScreenDefinition {
     /** Screen column order when service layout columns do not match the reference form. */
     fallbackColumns?: Readonly<Record<string, readonly (readonly string[])[]>>;
     inventoryChrome?: boolean;
+    /** Inventory footer sits on the bottom edge of the form view. */
+    inventoryFooterPinned?: boolean;
     /** Edit-route `intent` query values a record action opens the form with. */
     editIntents?: Readonly<
       Record<string, { set?: Readonly<Record<string, FieldValue>>; focus?: string }>
@@ -283,7 +281,6 @@ export interface ModuleScreenDefinition {
       subtabs: readonly TimelineSubtab[];
       modules: readonly TimelineFilterOption[];
       sources: readonly TimelineFilterOption[];
-      events: readonly TimelineEvent[];
       normalizeEventKind: (kind: string) => string;
       upcomingAutomatedActions?: { label: string; laterModule: ModuleKey };
     };

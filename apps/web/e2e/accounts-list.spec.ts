@@ -2,6 +2,7 @@ import { signUpNewUser } from "./support/auth";
 import { moduleDraftsPath, moduleListDefaultPath, moduleTagsPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
+import { exerciseTouchedFilter } from "./support/touched-filter";
 
 test("Accounts shell, pinned tabs, views and sorting", async ({ page }) => {
   await signUpNewUser(page);
@@ -41,7 +42,7 @@ test("Accounts shell, pinned tabs, views and sorting", async ({ page }) => {
 
   // Ellipsis menu (AL-02)
   await list.getByRole("button", { name: "Custom views" }).click();
-  await expect(page.getByRole("menuitem")).toHaveCount(12);
+  await expect(page.getByRole("menuitem")).toHaveCount(13);
 
   // Switch to "My Accounts" (AL-02.4)
   await page.getByRole("menuitem", { name: "My Accounts", exact: true }).click();
@@ -131,6 +132,8 @@ test("Accounts later-module inventory stays inert and mass flows reuse selection
 
   // AL-33: View Settings (M11)
   await list.getByRole("button", { name: "View Settings" }).click({ force: true });
+  await expect(page.getByRole("menuitem", { name: "Manage Columns" })).toBeVisible();
+  await page.keyboard.press("Escape");
   await expect(page.getByRole("menu")).toHaveCount(0);
 
   // AL-25: Cadences system filter (P3)
@@ -265,4 +268,12 @@ test("Accounts later-module inventory stays inert and mass flows reuse selection
         .nth(1),
     ).not.toBeChecked();
   }
+});
+
+test("Accounts applies the Touched Records system filter and restores on Clear", async ({
+  page,
+}) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await exerciseTouchedFilter(page, org.slug, "Accounts");
 });

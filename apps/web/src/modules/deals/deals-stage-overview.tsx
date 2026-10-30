@@ -8,8 +8,9 @@ import {
   type StageBarLabels,
   StageChangeDialog,
 } from "@/components/records/detail/stage-bar";
+import { useUiTranslations } from "@/i18n/client-provider";
 import { useHomeCurrency } from "@/lib/api/client/hooks";
-import { DEFAULT_FORMAT } from "@/lib/locale";
+import { useFormat } from "@/lib/format-context";
 import {
   buildStageBarStages,
   buildStageChangeInitialValues,
@@ -48,6 +49,8 @@ export function DealsStageOverview({
   saveRecord,
   isSaving = false,
 }: DealsStageOverviewProps) {
+  const t = useUiTranslations();
+  const orgFormat = useFormat();
   const stages = useMemo(() => buildStageBarStages(module), [module]);
   const currentStage = readStageValue(record);
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -58,14 +61,14 @@ export function DealsStageOverview({
   const startDate = useMemo(() => {
     const created = record.fields.Created_Time;
     if (typeof created !== "string" || !created) return "—";
-    return formatDate(created, DEFAULT_FORMAT);
-  }, [record.fields.Created_Time]);
+    return formatDate(created, orgFormat);
+  }, [record.fields.Created_Time, orgFormat]);
 
   const closingDate = useMemo(() => {
     const closing = record.fields.Closing_Date;
     if (typeof closing !== "string" || !closing) return "—";
-    return formatDate(closing, DEFAULT_FORMAT);
-  }, [record.fields.Closing_Date]);
+    return formatDate(closing, orgFormat);
+  }, [record.fields.Closing_Date, orgFormat]);
 
   const dialogInitial = useMemo(() => {
     const base = buildStageChangeInitialValues(record);
@@ -109,7 +112,11 @@ export function DealsStageOverview({
         currentStageValue={currentStage}
         startDate={startDate}
         closingDate={closingDate}
-        labels={STAGE_BAR_LABELS}
+        labels={{
+          ...STAGE_BAR_LABELS,
+          startPrefix: t("records.chrome.start"),
+          closingPrefix: t("records.chrome.closing"),
+        }}
         onSelectStage={(value) => void applyStage(value)}
         isDisabled={isSaving}
       />

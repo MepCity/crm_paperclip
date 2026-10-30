@@ -1,5 +1,5 @@
 import {
-  type AppError,
+  AppError,
   ConflictError,
   type ErrorCode,
   type FieldErrors,
@@ -7,11 +7,13 @@ import {
   isAppError,
   NotFoundError,
   RecordLockedError,
+  SchemaStaleError,
   UnauthenticatedError,
   ValidationError,
 } from "@crm/core/errors";
 
 const STATUS_BY_CODE = {
+  schema_stale: 409,
   validation: 400,
   unauthenticated: 401,
   forbidden: 403,
@@ -47,6 +49,7 @@ export const UNEXPECTED_API_MESSAGE = "The response could not be read.";
 const BODY_KEYS = ["code", "details", "message", "status"] as const;
 
 const WIRE_CODES = {
+  schema_stale: "SCHEMA_REVISION_MISMATCH",
   unauthenticated: "AUTHENTICATION_FAILURE",
   forbidden: "NO_PERMISSION",
   not_found: "not_found",
@@ -79,7 +82,7 @@ export type WireErrorCode =
 
 export type WireErrorBody = {
   code: WireErrorCode;
-  details: { fields?: FieldErrors };
+  details: { fields?: FieldErrors; revision?: string };
   message: string;
   status: "error";
 };
@@ -95,6 +98,16 @@ export class UnexpectedApiError extends Error {
   constructor(status: number) {
     super(UNEXPECTED_API_MESSAGE);
     this.status = status;
+  }
+}
+
+/** Client refresh handling preserves the core stale-schema error contract. */
+export class SchemaRevisionMismatchError extends SchemaStaleError {
+  override name = "SchemaRevisionMismatchError";
+  constructor(revision: string) {
+    super(revision);
+    this.message =
+      "The module fields have changed. Refresh the form before saving. Your draft has been kept.";
   }
 }
 
@@ -166,6 +179,11 @@ function appCode(code: string): ErrorCode | undefined {
 
 function restore(parsed: ParsedBody, status: number): AppError | UnexpectedApiError {
   switch (appCode(parsed.code)) {
+    case "schema_stale":
+      return typeof parsed.details.revision === "string" &&
+        /^[A-Za-z0-9._:-]{1,64}$/.test(parsed.details.revision)
+        ? new SchemaStaleError(parsed.details.revision)
+        : new UnexpectedApiError(status);
     case "unauthenticated":
       return new UnauthenticatedError(parsed.message);
     case "forbidden":
@@ -189,8 +207,11 @@ function restore(parsed: ParsedBody, status: number): AppError | UnexpectedApiEr
             : "invalid",
       );
     }
-    default:
-      return new UnexpectedApiError(status);
+    default: {
+      // Transfer (CSV) failures carry their code so the UI can explain them.
+      const code = appCode(parsed.code);
+      return code ? new AppError(code, parsed.message) : new UnexpectedApiError(status);
+    }
   }
 }
 
@@ -199,9 +220,11 @@ export function encodeError(error: unknown): { status: number; body: WireErrorBo
   if (isAppError(error)) {
     const status = STATUS_BY_CODE[error.code];
     const details =
-      error.code === "validation"
-        ? { fields: copyFieldErrors((error as ValidationError).fieldErrors) }
-        : {};
+      error.code === "schema_stale"
+        ? { revision: (error as SchemaStaleError).revision }
+        : error.code === "validation"
+          ? { fields: copyFieldErrors((error as ValidationError).fieldErrors) }
+          : {};
     return {
       status,
       body: {
@@ -236,6 +259,14 @@ export function encodeError(error: unknown): { status: number; body: WireErrorBo
  */
 export function decodeError(status: number, body: unknown): AppError | UnexpectedApiError {
   const parsed = parseBody(body);
+  if (
+    status === 409 &&
+    parsed?.code === "SCHEMA_REVISION_MISMATCH" &&
+    typeof parsed.details.revision === "string" &&
+    /^[A-Za-z0-9._:-]{1,64}$/.test(parsed.details.revision)
+  ) {
+    return new SchemaRevisionMismatchError(parsed.details.revision);
+  }
   const code = parsed ? appCode(parsed.code) : undefined;
   if (!parsed || !code || status !== STATUS_BY_CODE[code]) return new UnexpectedApiError(status);
   return restore(parsed, status);

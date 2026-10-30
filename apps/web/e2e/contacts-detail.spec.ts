@@ -147,6 +147,35 @@ test.describe("Contacts record detail", () => {
     ignoreFailedResponses(pageErrors, [400]);
   });
 
+  test("Timeline History shows a row after an inline edit (MEP-1027)", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openContactDetail(page, org.slug, REPORT_ONLY_RECORD_ID);
+    const row = page
+      .getByRole("region", { name: "Business card" })
+      .locator('[data-detail-field="Department"]');
+    await row.scrollIntoViewIfNeeded();
+    await row.hover();
+    await row.getByRole("button", { name: "Edit Department value" }).click();
+    const input = row.getByRole("textbox");
+    await input.fill("History Dept");
+    await input.press("Enter");
+    await expect(row).toContainText("History Dept");
+    const frame = page.locator("[data-record-frame]");
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    const history = frame.locator("[data-timeline-history]");
+    await expect(history).toBeVisible();
+    await expect(history.getByText("No logs found")).toHaveCount(0);
+    await expect(history.getByText(/Department changed from .* to History Dept/)).toBeVisible();
+    await page.reload();
+    await frame.getByRole("tab", { name: "Timeline" }).click();
+    await expect(history.getByText(/Department changed from .* to History Dept/)).toBeVisible();
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
   test("Reporting Contacts card lists direct reports and supports New", async ({
     page,
     pageErrors,
@@ -345,7 +374,7 @@ test.describe("Contacts record detail", () => {
     await expect(businessPhoneRow).toContainText("100-001");
     const businessCallButton = businessPhoneRow.getByRole("button", { name: "Call" });
     await expect(businessCallButton).toBeVisible();
-    await expect(businessCallButton).toHaveAttribute("data-later-module", "M5");
+    await expect(businessCallButton).not.toHaveAttribute("data-later-module", /.+/);
 
     // Details card Contact Information Phone call icon
     const detailsSection = page.locator('[data-detail-section="Contact Information"]');
@@ -353,12 +382,19 @@ test.describe("Contacts record detail", () => {
     await expect(detailsPhoneRow).toContainText("100-001");
     const detailsCallButton = detailsPhoneRow.getByRole("button", { name: "Call" });
     await expect(detailsCallButton).toBeVisible();
-    await expect(detailsCallButton).toHaveAttribute("data-later-module", "M5");
+    await expect(detailsCallButton).not.toHaveAttribute("data-later-module", /.+/);
 
-    // Clicking call button stays inert
-    const beforeUrl = page.url();
-    await detailsCallButton.click({ force: true });
-    expect(page.url()).toBe(beforeUrl);
+    // Clicking the call button opens the Call create form with the contact pre-filled
+    await detailsCallButton.click();
+    await expect(page).toHaveURL(/\/calls\/create/i);
+    await expect(page.locator("[data-form-field=Who_Id] input")).toHaveValue(/.+/);
+    await expect(page.locator("[data-form-field=What_Id] input")).toHaveValue(/.+/);
+
+    await page.goBack();
+    await expect(businessCallButton).toBeVisible();
+    await businessCallButton.click();
+    await expect(page).toHaveURL(/\/calls\/create/i);
+    await expect(page.locator("[data-form-field=Who_Id] input")).toHaveValue(/.+/);
 
     ignoreFailedResponses(pageErrors, [400]);
   });

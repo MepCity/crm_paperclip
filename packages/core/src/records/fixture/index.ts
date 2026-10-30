@@ -1,4 +1,7 @@
 import { randomUUID } from "node:crypto";
+import { ATTACHMENT_PARENT_MODULES } from "../../attachments/modules";
+import type { CustomizationPort } from "../../customization";
+import type { InMemorySchemaCoordinator } from "../../customization/coordinator";
 import {
   ConflictError,
   ForbiddenError,
@@ -20,26 +23,38 @@ import {
 } from "../activities";
 import { validateCampaignFilter } from "../campaigns";
 import type {
+  ConvertLeadInput,
   DuplicateGroup,
   FieldDefinition,
   FieldValue,
   ListQuery,
   MergeInput,
+  ModuleMetadataReader,
   RecordData,
   RecordInput,
   RecordService,
+  RecordWriteOptions,
+  RelatedModuleFilter,
 } from "../contract";
 import type { HistorySource, RecordHistoryEvent, RecordHistoryService } from "../history";
 import { isJsonArray, isJsonObject } from "../json";
 import type { RecycleBinService } from "../recycle-bin";
+import {
+  relatedFilterModules,
+  relatedFilterParentModules,
+  validateRelatedModules,
+} from "../related-module-filters";
 import { roundMoneyTwoDecimals } from "../rounding";
+import { matchesSystemFilters, validateSystemFilters } from "../system-filters";
 import type { TagService } from "../tags";
 import {
+  attachmentParent,
   attachmentUltimateParent,
   fixtureAttachmentLifecycle,
   removeAttachmentIds,
 } from "./attachments/hooks";
 import { assignAutoNumber, seedAutoNumbers } from "./auto-number";
+import { leadConvertMapping } from "./convert-mapping";
 import {
   automaticMaster,
   duplicateGroups,
@@ -53,15 +68,21 @@ import { fixtureHistoryStore } from "./history-store";
 import { type FixtureHistoryOperation, historyBatch } from "./history-write";
 import type { FixtureHookContext, FixtureModuleStore } from "./hooks";
 import { createFixtureKanbanViews } from "./kanban-views";
+import { readFixtureModuleProjection } from "./metadata-projection";
+import { notesParentModules } from "./notes/metadata";
 import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
 import { type DeletionManifest, fixtureRecycleBinService, retainDeletion } from "./recycle-bin";
 import { type FixtureReferenceModule, resolveRecordReferences } from "./references";
 import { type FixtureModuleBundle, fixtureModules } from "./registry";
+import { schemaRecordService } from "./schema-service";
+import { validateSchemaRecord } from "./schema-validation";
+import { relatedFilterHistory } from "./system-filter-history";
 import { fixtureTagService, projectTags } from "./tags";
 import { assertUniqueFieldValues, projectRecordsWithOverrides } from "./unique";
-import { validateInput } from "./validation";
+import { assertSourceTimes, validateInput } from "./validation";
 
 interface FixtureStore {
+  schema?: InMemorySchemaCoordinator;
   modules: Map<string, FixtureModuleStore>;
   memberIds: Set<string>;
   deduplicating: Set<string>;
@@ -126,6 +147,9 @@ const normalizeInput = (
 };
 
 export interface FixtureRecordServiceOptions extends FixtureHistoryPermissions {
+  customization?: CustomizationPort;
+  /** Internal ephemeral schema integration; shared by every service for this organization. */
+  schema?: InMemorySchemaCoordinator;
   actorName?: string;
   source?: HistorySource;
   /** Internal synchronous failure seam; runs before staged history publication. */
@@ -145,11 +169,13 @@ function moduleBundle(module: string): FixtureModuleBundle {
 export function createFixtureRecordService(
   context: OrgContext,
   options?: FixtureRecordServiceOptions,
-): RecordService & {
-  readonly history: RecordHistoryService;
-  readonly tags: TagService;
-  readonly recycleBin: RecycleBinService;
-} {
+): RecordService &
+  ModuleMetadataReader & {
+    readonly attachmentLifecycle: ReturnType<typeof fixtureAttachmentLifecycle>;
+    readonly history: RecordHistoryService;
+    readonly tags: TagService;
+    readonly recycleBin: RecycleBinService;
+  } {
   const ctx = { ...context };
   const clock = () => options?.now?.() ?? new Date();
   let store = stores.get(ctx.orgId);
@@ -161,12 +187,16 @@ export function createFixtureRecordService(
           name,
           {
             records: new Map(
-              bundle.generateSeed(now).map((record) => [
+              bundle.generateSeed(now).map((record, index) => [
                 record.id,
                 {
                   ...record,
                   fields: {
                     ...record.fields,
+                    // Internal lock state is separate from exported module fields.
+                    ...(["Calls", "Events", "Campaigns"].includes(name)
+                      ? { Locked__s: index === 125 }
+                      : {}),
                     ...(bundle.metadata.fields.some((field) => field.apiName === "Owner")
                       ? { Owner: ctx.userId }
                       : {}),
@@ -201,9 +231,59 @@ export function createFixtureRecordService(
         seedAutoNumbers(seedContext.moduleStore(name), bundle.autoNumberField);
       bundle.afterSeed?.(seedContext);
     }
+    // Seeded notes get their parent-stream row up front, as if created through the service.
+    const notes = store.modules.get("Notes");
+    const seedEvents = relatedFilterHistory(
+      new Map(),
+      store.modules,
+      [],
+      {
+        sequence: 0,
+        occurredAt: new Date(0).toISOString(),
+        actor: { id: "system", name: "System" },
+        source: "manual",
+      },
+      "seed",
+    )
+      .filter((event) => event.kind === "note_added")
+      .map((event) => {
+        // Date the row at the note's own creation so seeds never count as recent activity.
+        const created = notes?.records.get(event.subject.recordId)?.fields.Created_Time;
+        const at = typeof created === "string" ? Date.parse(created) : Number.NaN;
+        return { ...event, occurredAt: new Date(Number.isNaN(at) ? 0 : at).toISOString() };
+      });
+    if (seedEvents.length) fixtureHistoryStore(store.history).appendBatch(seedEvents);
     stores.set(ctx.orgId, store);
   }
   const state = store;
+  if (!state.schema && options?.schema && state.memberIds.size)
+    throw new ConflictError(
+      "Schema coordination must be configured before opening organization records.",
+    );
+  if (state.schema && options?.schema && state.schema !== options.schema)
+    throw new ConflictError("Organization already has a schema coordinator.");
+  state.schema ??= options?.schema;
+  const schema = state.schema;
+  for (const [module, bundle] of Object.entries(fixtureModules)) {
+    if (!schema?.metadata.hasModule(module)) continue;
+    schema.register(ctx.orgId, module, {
+      records: () => {
+        const current = state.modules.get(module);
+        return [...(current?.records.values() ?? []), ...(current?.deletedRecords?.values() ?? [])];
+      },
+      // Built-in code can depend on any baseline field. Custom scalar fields have no
+      // executable hooks; layouts and views are checked by the metadata resolver.
+      dependencies: () => ({
+        complete: true,
+        fieldIds: bundle.metadata.fields.map((f) => {
+          return (
+            schema.read(ctx.orgId, module).fields.find((field) => field.apiName === f.apiName)
+              ?.id ?? f.apiName
+          );
+        }),
+      }),
+    });
+  }
   // A development hot reload may retain a store from before discovery was added.
   state.deduplicating ??= new Set();
   state.history ??= new Map();
@@ -229,7 +309,54 @@ export function createFixtureRecordService(
   const moduleExists = (module: string) => {
     moduleBundle(module);
   };
-  const bundleFor = (module: string) => moduleBundle(module);
+  const bundleFor = (module: string): FixtureModuleBundle => {
+    const bundle = moduleBundle(module);
+    if (!schema?.metadata.hasModule(module)) return bundle;
+    const effective = schema.read(ctx.orgId, module);
+    const byId = new Map(effective.fields.map((field) => [field.id, field.apiName]));
+    const name = (id: string) => {
+      const apiName = byId.get(id);
+      if (!apiName) throw new ValidationError({ fields: ["Inactive schema field reference."] });
+      return apiName;
+    };
+    const criteria = (value: import("../contract").Criteria): import("../contract").Criteria =>
+      "group" in value
+        ? { ...value, group: value.group.map(criteria) }
+        : {
+            ...value,
+            field: effective.externalCriteriaFields.includes(value.field)
+              ? value.field
+              : name(value.field),
+          };
+    return {
+      ...bundle,
+      metadata: {
+        ...bundle.metadata,
+        singularLabel: effective.singularLabel,
+        pluralLabel: effective.pluralLabel,
+        businessCardFields: bundle.metadata.businessCardFields.filter((name) =>
+          effective.fields.some((field) => field.apiName === name),
+        ),
+        fields: effective.fields,
+        layout:
+          effective.layouts[0]?.sections.map((section) => ({
+            label: section.label,
+            columnCount: section.columnCount,
+            columns: section.columns.map((column) => column.map(name)),
+            fields: section.fields.map(name),
+          })) ?? [],
+      },
+      views: effective.views.map((view) => ({
+        ...view,
+        columns: view.columns.map(name),
+        criteria: view.criteria ? criteria(view.criteria) : null,
+        sort: view.sort ? { ...view.sort, field: name(view.sort.field) } : null,
+      })),
+      searchFields: bundle.searchFields.filter((apiName) =>
+        effective.fields.some((f) => f.apiName === apiName),
+      ),
+    };
+  };
   const kanbanViews = createFixtureKanbanViews(ctx, bundleFor);
   let transactionOriginal: Map<string, FixtureModuleStore> | undefined;
   let hookCopies = new Set<string>();
@@ -267,18 +394,56 @@ export function createFixtureRecordService(
     if (!view) throw new NotFoundError("View not found.");
     return view;
   };
+  const noteParentVisible = (fields: RecordData["fields"]) => {
+    const parent = fields.Parent_Id;
+    return (
+      isJsonObject(parent) &&
+      typeof parent.module === "string" &&
+      typeof parent.id === "string" &&
+      Object.hasOwn(fixtureModules, parent.module) &&
+      moduleStore(parent.module).records.has(parent.id) &&
+      options?.canReadRecord?.(parent.module, parent.id) !== false
+    );
+  };
+  const assertNoteParentVisible = (module: string, fields: RecordData["fields"]) => {
+    if (module === "Notes" && !noteParentVisible(fields))
+      throw new NotFoundError("Record not found.");
+  };
   const recordFor = (module: string, id: string) => {
     const record = moduleStore(module).records.get(id);
     if (!record) throw new NotFoundError("Record not found.");
+    assertNoteParentVisible(module, record.fields);
     return record;
   };
   const resolveRead = (module: string, record: RecordData, now = clock()) => {
     const bundle = bundleFor(module);
     if (module === "Attachments") attachmentUltimateParent(record.fields, hookContext);
+    // Some modules have no public lock field; their fixture lock remains server-only.
+    const publicRecord =
+      Object.hasOwn(record.fields, "Locked__s") &&
+      !bundle.metadata.fields.some((field) => field.apiName === "Locked__s")
+        ? {
+            ...record,
+            fields: Object.fromEntries(
+              Object.entries(record.fields).filter(([name]) => name !== "Locked__s"),
+            ),
+          }
+        : record;
+    const activeRecord = schema?.metadata.hasModule(module)
+      ? {
+          ...publicRecord,
+          fields: Object.fromEntries(
+            bundle.metadata.fields.map((field) => [
+              field.apiName,
+              publicRecord.fields[field.apiName] ?? null,
+            ]),
+          ),
+        }
+      : publicRecord;
     return resolveRecordReferences(
       bundle.metadata.fields.some((field) => field.apiName === "Tag")
-        ? projectTags(moduleStore(module), bundle.readRecord?.(record, now) ?? record)
-        : (bundle.readRecord?.(record, now) ?? record),
+        ? projectTags(moduleStore(module), bundle.readRecord?.(activeRecord, now) ?? activeRecord)
+        : (bundle.readRecord?.(activeRecord, now) ?? activeRecord),
       bundle.metadata.fields,
       referenceModules(),
     );
@@ -291,7 +456,12 @@ export function createFixtureRecordService(
     const optional = bundle.optionalFields?.(fields);
     return optional?.length
       ? bundle.metadata.fields.map((f) =>
-          optional.includes(f.apiName) ? { ...f, required: false } : f,
+          optional.includes(f.apiName) &&
+          moduleBundle(bundle.metadata.apiName).metadata.fields.find(
+            (base) => base.apiName === f.apiName,
+          )?.required === f.required
+            ? { ...f, required: false }
+            : f,
         )
       : bundle.metadata.fields;
   };
@@ -342,13 +512,78 @@ export function createFixtureRecordService(
     }
     return result;
   };
-  const matching = (
+  /** Builds a per-parent predicate for `relatedModules` conditions (EXISTS / NOT EXISTS). */
+  const relatedModuleMatcher = async (module: string, rows: readonly RelatedModuleFilter[]) => {
+    validateRelatedModules(rows);
+    if (!relatedFilterParentModules.has(module))
+      throw new ValidationError({ relatedModules: ["Choose a parent record module."] });
+    const now = clock();
+    const runtimeCtx = { userId: ctx.userId, now };
+    const linked = rows.map((row) => {
+      const target = relatedFilterModules[row.module];
+      if (!Object.hasOwn(fixtureModules, target.module))
+        throw new ValidationError({ relatedModules: ["Choose a valid related module."] });
+      const childFields = new Map(
+        bundleFor(target.module).metadata.fields.map((field) => [field.apiName, field]),
+      );
+      for (const criterion of row.criteria) validateCriteria(criterion, childFields);
+      const parents = new Set<string>();
+      for (const child of moduleStore(target.module).records.values()) {
+        if (options?.canReadRecord?.(target.module, child.id) === false) continue;
+        const parentIds =
+          target.kind === "note"
+            ? noteParentVisible(child.fields) &&
+              isJsonObject(child.fields.Parent_Id) &&
+              child.fields.Parent_Id.module === module
+              ? [String(child.fields.Parent_Id.id)]
+              : []
+            : activityParentIds(module, child);
+        if (!parentIds.length) continue;
+        const resolved = resolveRead(target.module, child, now);
+        if (!row.criteria.every((c) => matches(resolved, c, runtimeCtx, childFields))) continue;
+        for (const id of parentIds) parents.add(id);
+      }
+      return { presence: row.presence, parents };
+    });
+    return (id: string) =>
+      linked.every(({ presence, parents }) => (presence === "with") === parents.has(id));
+  };
+  const matching = async (
     module: string,
-    query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
+    query: Pick<
+      ListQuery,
+      | "viewId"
+      | "filters"
+      | "search"
+      | "activityFilter"
+      | "campaignFilter"
+      | "systemFilters"
+      | "relatedModules"
+    >,
     applyView = true,
     now = clock(),
   ) => {
     const bundle = bundleFor(module);
+    if (query.systemFilters !== undefined)
+      validateSystemFilters(query.systemFilters, {
+        module,
+        memberIds: options?.listMemberIds ? await options.listMemberIds() : [...state.memberIds],
+        relatedModules: [
+          ...((notesParentModules as readonly string[]).includes(module) ? ["Notes"] : []),
+          ...(ATTACHMENT_PARENT_MODULES.includes(module) ? ["Attachments"] : []),
+          ...(activityParentModules.has(module) ? ["Tasks", "Events", "Calls"] : []),
+        ],
+      });
+    const systemFilters =
+      query.systemFilters && Object.keys(query.systemFilters).length
+        ? query.systemFilters
+        : undefined;
+    const systemEvents = systemFilters
+      ? [...state.history.values()].filter(
+          (event) =>
+            options?.canReadRecord?.(event.subject.module, event.subject.recordId) !== false,
+        )
+      : [];
     const view = applyView ? viewFor(module, query.viewId) : undefined;
     const fieldMap = new Map(bundle.metadata.fields.map((field) => [field.apiName, field]));
     if (query.filters) validateCriteria(query.filters, fieldMap);
@@ -385,18 +620,29 @@ export function createFixtureRecordService(
           campaignMembers.add(parent.id);
       }
     }
+    const relatedRows = query.relatedModules?.length
+      ? await relatedModuleMatcher(module, query.relatedModules)
+      : undefined;
     const activities = query.activityFilter ? linkedActivities(module, now) : undefined;
     const runtimeCtx = { userId: ctx.userId, now };
     const storedRows = [...moduleStore(module).records.values()];
     bundle.orderRows?.(storedRows);
     return storedRows
+      .filter((record) => module !== "Notes" || noteParentVisible(record.fields))
       .filter((record) => module !== "Attachments" || record.fields.$state === "ready")
+      .filter(
+        (record) =>
+          !systemFilters || matchesSystemFilters(module, record, systemFilters, systemEvents),
+      )
       .map((record) => resolveRead(module, record, now))
       .filter(
         (record) =>
+          ((!systemFilters && !relatedRows) ||
+            options?.canReadRecord?.(module, record.id) !== false) &&
           (!view?.criteria || matches(record, view.criteria, runtimeCtx, fieldMap)) &&
           (!query.filters || matches(record, query.filters, runtimeCtx, fieldMap)) &&
           matchesSearch(record, query.search, bundle.searchFields) &&
+          (!relatedRows || relatedRows(record.id)) &&
           (!campaignMembers || campaignMembers.has(record.id)) &&
           (!query.activityFilter ||
             matchesActivityFilter(activities?.get(record.id) ?? [], query.activityFilter, now)),
@@ -406,7 +652,11 @@ export function createFixtureRecordService(
     if (ids.length < 1 || ids.length > 500)
       throw new ValidationError({ ids: ["Choose between 1 and 500 records."] }, undefined, "limit");
   };
-  const atomic = <T>(operation: FixtureHistoryOperation, write: () => T): T => {
+  const atomic = <T>(operation: FixtureHistoryOperation, write: () => T): T =>
+    schema
+      ? schema.commit(ctx.orgId, () => atomicWrite(operation, write))
+      : atomicWrite(operation, write);
+  const atomicWrite = <T>(operation: FixtureHistoryOperation, write: () => T): T => {
     const previous = state.modules;
     const previousDeletions = state.deletions;
     state.deletions = new Map(previousDeletions);
@@ -416,15 +666,65 @@ export function createFixtureRecordService(
     hookCopies = new Set();
     try {
       const result = write();
-      const events = historyBatch(previous, state.modules, fixtureModules, operation, {
+      if (schema) {
+        for (const [module, current] of state.modules) {
+          if (!schema.metadata.hasModule(module)) continue;
+          const effective = schema.read(ctx.orgId, module);
+          const baselineFields = moduleBundle(module).metadata.fields;
+          const constraints = effective.fields.filter((field) => {
+            const original = baselineFields.find((f) => f.apiName === field.apiName);
+            return (
+              !original ||
+              ["required", "maxLength", "picklist"].some(
+                (key) =>
+                  JSON.stringify(original[key as keyof typeof original]) !==
+                  JSON.stringify(field[key as keyof typeof field]),
+              )
+            );
+          });
+          for (const record of current.records.values()) {
+            if (previous.get(module)?.records.get(record.id) !== record)
+              validateSchemaRecord({ ...effective, fields: constraints }, record);
+          }
+        }
+      }
+      const commit = {
         sequence: state.sequence + 1,
         occurredAt: clock().toISOString(),
         actor: { id: ctx.userId, name: options?.actorName ?? ctx.userId },
-        source: options?.source ?? "manual",
-      });
+        source: options?.source ?? ("manual" as const),
+      };
+      const operationId = operation.operationId ?? randomUUID();
+      const events = historyBatch(
+        previous,
+        state.modules,
+        fixtureModules,
+        { ...operation, operationId },
+        commit,
+      );
+      const noteIds = new Set(
+        [...state.history.values()]
+          .filter((event) => event.kind === "note_added")
+          .map((event) => event.subject.recordId),
+      );
+      events.push(
+        ...relatedFilterHistory(previous, state.modules, events, commit, operationId).filter(
+          (event) => event.kind !== "note_added" || !noteIds.has(event.subject.recordId),
+        ),
+      );
       const nextHistory = new Map(state.history);
       if (events.length) options?.beforeHistoryAppend?.(copy(events));
       fixtureHistoryStore(nextHistory).appendBatch(events);
+      for (const [id, event] of nextHistory) {
+        if (event.kind !== "note_added") continue;
+        const note = state.modules.get("Notes")?.records.get(event.subject.recordId);
+        const parent = attachmentParent(note?.fields.Parent_Id);
+        if (
+          parent &&
+          (event.stream.module !== parent.module || event.stream.recordId !== parent.id)
+        )
+          nextHistory.set(id, { ...event, stream: { module: parent.module, recordId: parent.id } });
+      }
       state.history = nextHistory;
       if (events.length) state.sequence++;
       return result;
@@ -496,8 +796,8 @@ export function createFixtureRecordService(
         new Set(),
       );
       validateReferences(module, record.fields);
-      if (module === "Notes" || module === "Attachments")
-        attachmentUltimateParent(record.fields, hookContext);
+      assertNoteParentVisible(module, record.fields);
+      if (module === "Attachments") attachmentUltimateParent(record.fields, hookContext);
     },
   });
   const writeBatch = (
@@ -535,6 +835,45 @@ export function createFixtureRecordService(
         moduleState.records.set(record.id, record);
       }
     });
+
+  /** Synchronous insert shared by create and the conversion coordinator; callers validate first. */
+  const insertRecord = (
+    module: string,
+    normalized: Record<string, FieldValue>,
+    sourceTimes?: RecordWriteOptions["sourceTimes"],
+  ): RecordData => {
+    const bundle = bundleFor(module);
+    const moduleState = moduleStore(module);
+    const id = String(moduleState.nextId++);
+    const fields: Record<string, FieldValue> = Object.fromEntries(
+      bundle.metadata.fields.map((field) => [field.apiName, null]),
+    );
+    const stamp = clock().toISOString();
+    Object.assign(fields, normalized, bundle.createDefaults(stamp), {
+      id,
+      ...(bundle.metadata.fields.some((field) => field.apiName === "Owner")
+        ? { Owner: normalized.Owner ?? ctx.userId }
+        : {}),
+      Created_By: ctx.userId,
+      Modified_By: ctx.userId,
+    });
+    if (sourceTimes?.createdTime && "Created_Time" in fields)
+      fields.Created_Time = sourceTimes.createdTime;
+    if (sourceTimes?.modifiedTime && "Modified_Time" in fields)
+      fields.Modified_Time = sourceTimes.modifiedTime;
+    if (bundle.autoNumberField) assignAutoNumber(moduleState, bundle.autoNumberField, fields);
+    bundle.applyRules?.(fields, normalized, undefined, hookContext);
+    assertNoteParentVisible(module, fields);
+    fields[bundle.displayNameField] = bundle.fullName(fields);
+    const record = { id, fields };
+    assertUniqueFieldValues(
+      bundle.metadata.fields,
+      projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
+    );
+    moduleState.records.set(id, record);
+    bundle.afterWrite?.(record, undefined, hookContext);
+    return copy(resolveRead(module, record));
+  };
 
   const merge = async (module: string, input: MergeInput): Promise<RecordData> => {
     assertModuleWritable(module);
@@ -647,7 +986,7 @@ export function createFixtureRecordService(
     if (bundle.childModule) return [];
     return copy(
       duplicateGroups(
-        matching(module, { viewId: "" }, false),
+        await matching(module, { viewId: "" }, false),
         fields,
         bundle.metadata.fields,
         bundle.managedFields,
@@ -655,7 +994,183 @@ export function createFixtureRecordService(
     );
   };
 
-  return {
+  const attachmentLifecycle = fixtureAttachmentLifecycle(hookContext);
+  const convertLead = async (leadId: string, input: ConvertLeadInput) => {
+    assertModuleWritable("Leads");
+    const sourceLead = recordFor("Leads", leadId);
+    if (!input.contact)
+      throw new ValidationError({ contact: ["Choose or create a contact to convert into."] });
+    const targets = [
+      ["Accounts", input.account, "Converted_Account", "accountId"],
+      ["Contacts", input.contact, "Converted_Contact", "contactId"],
+      ["Deals", input.deal, "Converted_Deal", "dealId"],
+    ] as const;
+    const lookup = (module: string, id: string, name?: FieldValue): FieldValue => ({
+      module,
+      id,
+      ...(typeof name === "string" ? { name } : {}),
+    });
+    /** Explicit input wins over the mapped lead values; links are added by the caller. */
+    const explicitInput = (
+      module: "Accounts" | "Contacts" | "Deals",
+      lead: RecordData,
+      target: NonNullable<(typeof targets)[number][1]>,
+    ): RecordInput => {
+      if ("reuseId" in target) return target.update ?? {};
+      const bundle = bundleFor(module);
+      const defaults: Record<string, FieldValue> = {};
+      for (const [to, from] of Object.entries(leadConvertMapping[module])) {
+        const value = lead.fields[from];
+        if (value != null && bundle.metadata.fields.some((field) => field.apiName === to))
+          defaults[to] = value;
+      }
+      return { ...defaults, Owner: lead.fields.Owner ?? ctx.userId, ...target.create };
+    };
+    const linkFields = (
+      module: "Accounts" | "Contacts" | "Deals",
+      account: FieldValue | undefined,
+      contact: FieldValue | undefined,
+    ): Record<string, FieldValue> => ({
+      ...(module !== "Accounts" && account ? { Account_Name: account } : {}),
+      ...(module === "Deals" && contact ? { Contact_Name: contact } : {}),
+    });
+    // Validate like create/update before staging anything (async work stays outside atomic).
+    for (const [module, target] of targets) {
+      if (!target) continue;
+      assertModuleWritable(module);
+      const bundle = bundleFor(module);
+      const stringFields = stringFieldNames(bundle);
+
+      if ("reuseId" in target) {
+        const existing = recordFor(module, target.reuseId);
+        if (!target.update) continue;
+        const normalized = normalizeInput(target.update, stringFields, bundle.metadata.fields);
+        validateInput(
+          normalized,
+          true,
+          relaxRequired(bundle, { ...existing.fields, ...normalized }),
+          bundle.managedFields,
+        );
+        validateReferences(module, normalized);
+        await validateOwner(normalized);
+        continue;
+      }
+      const normalized = normalizeInput(
+        explicitInput(module, sourceLead, target),
+        stringFields,
+        bundle.metadata.fields,
+      );
+      const linked = {
+        ...linkFields(
+          module,
+          input.account ? lookup("Accounts", "0") : undefined,
+          input.contact ? lookup("Contacts", "0") : undefined,
+        ),
+        ...normalized,
+      };
+      validateInput(linked, false, relaxRequired(bundle, linked), bundle.managedFields);
+      validateReferences(module, normalized);
+      await validateOwner(normalized);
+    }
+    return atomic(
+      { module: "Leads", recordId: leadId, kind: "record_converted", mechanism: "convert" },
+      () => {
+        const lead = recordFor("Leads", leadId);
+        assertWritable(lead);
+        if (lead.fields.Converted__s === true)
+          throw new ValidationError({ Converted__s: ["This lead is already converted."] });
+        const stamp = clock().toISOString();
+        const refs: Record<string, FieldValue> = {};
+        const ids: Record<string, string | null> = {};
+        let account: FieldValue | undefined;
+        let contact: FieldValue | undefined;
+        for (const [module, target, leadField, resultKey] of targets) {
+          ids[resultKey] = null;
+          if (!target) continue;
+          const bundle = bundleFor(module);
+          const moduleState = moduleStore(module);
+          const links = linkFields(module, account, contact);
+          let record: RecordData;
+          if ("reuseId" in target) {
+            const existing = recordFor(module, target.reuseId);
+            assertWritable(existing);
+            // A reused contact keeps an account it already has.
+            const newLinks = Object.fromEntries(
+              Object.entries(links).filter(([name]) => existing.fields[name] == null),
+            );
+            const normalized = normalizeInput(
+              { ...newLinks, ...explicitInput(module, lead, target) },
+              stringFieldNames(bundle),
+              bundle.metadata.fields,
+            );
+            const fields: Record<string, FieldValue> = {
+              ...copy(existing.fields),
+              ...normalized,
+              Modified_By: ctx.userId,
+              Modified_Time: stamp,
+            };
+            bundle.applyRules?.(fields, normalized, copy(existing.fields), hookContext);
+            fields[bundle.displayNameField] = bundle.fullName(fields);
+            if (JSON.stringify(fields) === JSON.stringify(existing.fields)) record = existing;
+            else {
+              assertUniqueFieldValues(
+                bundle.metadata.fields,
+                projectRecordsWithOverrides(moduleState.records, new Map([[existing.id, fields]])),
+              );
+              record = { id: existing.id, fields };
+              bundle.afterWrite?.(record, copy(existing), hookContext);
+              moduleState.records.set(record.id, record);
+            }
+          } else {
+            const normalized = normalizeInput(
+              { ...links, ...explicitInput(module, lead, target) },
+              stringFieldNames(bundle),
+              bundle.metadata.fields,
+            );
+            record = insertRecord(module, normalized);
+          }
+          ids[resultKey] = record.id;
+          const ref = lookup(module, record.id, record.fields[bundle.displayNameField]);
+          refs[leadField] = ref;
+          if (module === "Accounts") account = ref;
+          if (module === "Contacts") contact = ref;
+        }
+        moduleStore("Leads").records.set(leadId, {
+          id: leadId,
+          fields: {
+            ...copy(lead.fields),
+            ...refs,
+            Converted__s: true,
+            Converted_Date_Time: stamp,
+            Modified_By: ctx.userId,
+            Modified_Time: stamp,
+          },
+        });
+        return {
+          accountId: ids.accountId ?? null,
+          contactId: ids.contactId ?? null,
+          dealId: ids.dealId ?? null,
+        };
+      },
+    );
+  };
+  const service: RecordService &
+    ModuleMetadataReader & {
+      attachmentLifecycle: typeof attachmentLifecycle;
+      history: RecordHistoryService;
+      tags: TagService;
+      recycleBin: RecycleBinService;
+    } = {
+    convertLead,
+    attachmentLifecycle: {
+      ...attachmentLifecycle,
+      publish(id, data) {
+        return atomic(
+          { module: "Attachments", recordId: id, mechanism: "attachment_publish" },
+          () => attachmentLifecycle.publish(id, data),
+        );
+      },
+    },
     tags,
     recycleBin,
     history: fixtureHistoryReader(
@@ -673,6 +1188,42 @@ export function createFixtureRecordService(
           (options?.canReadField?.(module, apiName) ?? true),
       },
       state.cursors,
+      (event) => {
+        if (event.kind === "note_added") {
+          const note = state.modules.get("Notes")?.records.get(event.subject.recordId);
+          if (!note || !noteParentVisible(note.fields)) return null;
+          return {
+            ...(options?.canReadField?.("Notes", "Note_Title") !== false &&
+            typeof note.fields.Note_Title === "string"
+              ? { name: note.fields.Note_Title }
+              : {}),
+            payload: {
+              body:
+                options?.canReadField?.("Notes", "Note_Content") !== false
+                  ? String(note.fields.Note_Content ?? "")
+                  : "",
+            },
+          };
+        }
+        if (["attachment_added", "attachment_deleted"].includes(event.kind)) {
+          const noteId = event.payload?.noteId;
+          if (typeof noteId === "string") {
+            const note = state.modules.get("Notes")?.records.get(noteId);
+            if (
+              !note ||
+              !noteParentVisible(note.fields) ||
+              options?.canReadRecord?.("Notes", noteId) === false
+            )
+              return null;
+          }
+        }
+        if (
+          ["attachment_added", "attachment_deleted"].includes(event.kind) &&
+          options?.canReadField?.("Attachments", "File_Name") !== false
+        )
+          return { name: event.subject.name ?? undefined, payload: null };
+        return { payload: null };
+      },
     ),
     merge,
     findDuplicateGroups,
@@ -755,7 +1306,7 @@ export function createFixtureRecordService(
           throw new ValidationError({ fields: ["Choose known field API names."] });
         const fieldMap = new Map(bundle.metadata.fields.map((field) => [field.apiName, field]));
         const rows = sortRecords(
-          matching(module, { viewId: "", filters: query.filters }, false).filter((record) =>
+          (await matching(module, { viewId: "", filters: query.filters }, false)).filter((record) =>
             matchesGlobalSearch(
               record,
               bundle.metadata.fields,
@@ -800,6 +1351,14 @@ export function createFixtureRecordService(
     async getHomeCurrency() {
       return { isoCode: "TRY", symbol: "TL", name: "Turkish Lira - TRY", prefixSymbol: true };
     },
+    async getModuleProjection(module) {
+      bundleFor(module);
+      return readFixtureModuleProjection(
+        ctx.orgId,
+        module,
+        schema?.metadata ?? options?.customization,
+      );
+    },
     async getModule(module) {
       return copy(bundleFor(module).metadata);
     },
@@ -827,7 +1386,7 @@ export function createFixtureRecordService(
       const fieldMap = new Map(bundle.metadata.fields.map((field) => [field.apiName, field]));
       const applied = query.sort ?? view.sort ?? DEFAULT_LIST_SORT;
       const now = clock();
-      const rows = sortRecords(matching(module, query, true, now), applied, fieldMap);
+      const rows = sortRecords(await matching(module, query, true, now), applied, fieldMap);
       const start = (query.page - 1) * query.perPage;
       const activities = query.includeActivitySummary ? linkedActivities(module, now) : undefined;
       const activitySummaries = Object.fromEntries(
@@ -858,7 +1417,7 @@ export function createFixtureRecordService(
       });
     },
     async count(module, query) {
-      return matching(module, query).length;
+      return (await matching(module, query)).length;
     },
     async summarize(module, query) {
       const metadata = bundleFor(module).metadata;
@@ -871,7 +1430,7 @@ export function createFixtureRecordService(
         (!sumField || !["currency", "integer", "double"].includes(sumField.dataType))
       )
         throw new ValidationError({ sum: ["Choose a known numeric field."] });
-      const rows = matching(module, query);
+      const rows = await matching(module, query);
       const values: (string | null)[] = (groupField.picklist ?? []).map(
         (option) => option.storedValue,
       );
@@ -899,44 +1458,22 @@ export function createFixtureRecordService(
         throw new NotFoundError("Record not found.");
       return copy(resolveRead(module, record));
     },
-    async create(module, input) {
+    async create(module, input, options) {
       assertModuleWritable(module);
+      assertSourceTimes(options?.sourceTimes);
       const bundle = bundleFor(module);
       const stringFields = stringFieldNames(bundle);
       const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
       validateInput(normalized, false, relaxRequired(bundle, normalized), bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
-      return atomic({ module, mechanism: "create" }, () => {
-        const moduleState = moduleStore(module);
-        const id = String(moduleState.nextId++);
-        const fields: Record<string, FieldValue> = Object.fromEntries(
-          bundle.metadata.fields.map((field) => [field.apiName, null]),
-        );
-        const stamp = clock().toISOString();
-        Object.assign(fields, normalized, bundle.createDefaults(stamp), {
-          id,
-          ...(bundle.metadata.fields.some((field) => field.apiName === "Owner")
-            ? { Owner: normalized.Owner ?? ctx.userId }
-            : {}),
-          Created_By: ctx.userId,
-          Modified_By: ctx.userId,
-        });
-        if (bundle.autoNumberField) assignAutoNumber(moduleState, bundle.autoNumberField, fields);
-        bundle.applyRules?.(fields, normalized, undefined, hookContext);
-        fields[bundle.displayNameField] = bundle.fullName(fields);
-        const record = { id, fields };
-        assertUniqueFieldValues(
-          bundle.metadata.fields,
-          projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
-        );
-        moduleState.records.set(id, record);
-        bundle.afterWrite?.(record, undefined, hookContext);
-        return copy(resolveRead(module, record));
-      });
+      return atomic({ module, mechanism: "create" }, () =>
+        insertRecord(module, normalized, options?.sourceTimes),
+      );
     },
-    async update(module, id, input) {
+    async update(module, id, input, options) {
       assertModuleWritable(module);
+      assertSourceTimes(options?.sourceTimes);
       const bundle = bundleFor(module);
       recordFor(module, id);
       const stringFields = stringFieldNames(bundle);
@@ -957,7 +1494,7 @@ export function createFixtureRecordService(
           ...copy(record.fields),
           ...normalized,
           Modified_By: ctx.userId,
-          Modified_Time: clock().toISOString(),
+          Modified_Time: options?.sourceTimes?.modifiedTime ?? clock().toISOString(),
         };
         bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext);
         fields[bundle.displayNameField] = bundle.fullName(fields);
@@ -1021,21 +1558,15 @@ export function createFixtureRecordService(
       });
     },
   };
+  return schema ? schemaRecordService(ctx, service, schema) : service;
 }
 
 /** Internal lifecycle access for the server-side blob adapter; never a wire API. */
-export function createFixtureAttachmentLifecycle(context: OrgContext) {
-  createFixtureRecordService(context);
-  const state = stores.get(context.orgId);
-  if (!state) throw new NotFoundError("Organization store not found.");
-  return fixtureAttachmentLifecycle({
-    registeredModules: Object.keys(fixtureModules),
-    moduleStore(module) {
-      const store = state.modules.get(module);
-      if (!store) throw new NotFoundError("Module not found.");
-      return store;
-    },
-  });
+export function createFixtureAttachmentLifecycle(
+  context: OrgContext,
+  options?: FixtureRecordServiceOptions,
+) {
+  return createFixtureRecordService(context, options).attachmentLifecycle;
 }
 
 /** Read-only history facade sharing the tenant's atomic fixture state. */

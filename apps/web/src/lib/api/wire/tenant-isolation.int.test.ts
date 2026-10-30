@@ -1,5 +1,6 @@
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
+import { type CustomizationSnapshot, resolveEffectiveModule } from "@crm/core/customization";
 import {
   type FieldValue,
   lookupTargetModules,
@@ -8,6 +9,10 @@ import {
 } from "@crm/core/records";
 import { activityRules } from "@crm/core/records/activities";
 import * as contracts from "@crm/core/records/contract-suite-module";
+import {
+  fixtureCustomizationPort,
+  fixtureMetadataBaselines,
+} from "@crm/core/records/fixture/metadata-projection";
 import { addTestMember, createTestOrganization } from "@crm/core/testing";
 import { beforeAll, describe, expect, it, vi } from "vitest";
 import * as recordsAdapter from "@/lib/records";
@@ -32,6 +37,9 @@ const handlers = [
   [operations.changeOwner, () => import("@/app/crm/v2.2/[module]/actions/change_owner/route")],
   [operations.merge, () => import("@/app/crm/v2.2/[module]/actions/merge/route")],
   [operations.currencies, () => import("@/app/crm/v2.2/org/currencies/route")],
+  [operations.module, () => import("@/app/crm/v2.2/settings/modules/[module]/route")],
+  [operations.layouts, () => import("@/app/crm/v2.1/settings/layouts/route")],
+  [operations.view, () => import("@/app/crm/v9/settings/custom_views/[viewId]/route")],
   [operations.fields, () => import("@/app/crm/v2.2/settings/fields/route")],
   [operations.views, () => import("@/app/crm/v9/settings/custom_views/route")],
   [operations.kanbanViews, () => import("@/app/crm/v9/settings/kanban_views/route")],
@@ -409,4 +417,120 @@ describe.each(
       });
     }
   });
+});
+
+it("isolates a published metadata overlay, revision and layout at the real HTTP boundary", async () => {
+  const a = await createTestOrganization();
+  const b = await createTestOrganization();
+  const actorA = { org: a.org, headers: a.admin.headers };
+  const actorB = { org: b.org, headers: b.admin.headers };
+  const port = fixtureCustomizationPort();
+  const before = await Promise.all(
+    [operations.fields, operations.layouts].map(async (op) =>
+      (await call(op, actorB, "Leads")).json(),
+    ),
+  );
+  const effective = await port.readEffective(a.ctx.orgId, "Leads");
+  const original = effective.fields[0];
+  const layout = effective.layouts[0];
+  const section = layout?.sections[0];
+  if (!original || !layout || !section) throw new Error("Missing baseline fixture");
+  const added = {
+    ...original,
+    id: `custom:${a.ctx.orgId}`,
+    apiName: "Tenant_Custom_Text",
+    label: "Tenant Custom Text",
+    dataType: "text" as const,
+    required: false,
+    readOnly: false,
+  };
+  await port.applyPatch(a.ctx.orgId, "Leads", effective.revision, {
+    addFields: [added],
+    layouts: [
+      {
+        ...layout,
+        sections: [
+          {
+            ...section,
+            fields: [...section.fields, added.id],
+            columns: section.columns.map((column, index) =>
+              index === 0 ? [...column, added.id] : column,
+            ),
+          },
+          ...layout.sections.slice(1),
+        ],
+      },
+    ],
+  });
+  for (const [index, op] of [operations.fields, operations.layouts].entries()) {
+    const local = await call(op, actorA, "Leads", { query: { org: b.org.slug } });
+    expect(local.status).toBe(200);
+    const localBody = await local.json();
+    expect(JSON.stringify(localBody)).toContain(added.id);
+    expect(localBody.revision).not.toBe(before[index].revision);
+    const foreign = await call(op, actorB, "Leads", { query: { org: a.org.slug } });
+    expect(foreign.status).toBe(200);
+    expect(await foreign.json()).toEqual(before[index]);
+    await notFound(await call(op, actorA, "Leads", { orgSlug: b.org.slug }));
+  }
+  const ids = async (org: typeof a) =>
+    (await recordsAdapter.getRecordService(org.ctx).getModuleProjection("Leads")).fields
+      .filter((field) => !field.custom)
+      .map((field) => field.id);
+  expect(await ids(a)).toEqual(await ids(b));
+  expect(await ids(a)).toEqual(await ids(a));
+});
+
+it("returns only INTERNAL_ERROR for invalid stored metadata on all five reads", async () => {
+  const a = await createTestOrganization();
+  const actor = { org: a.org, headers: a.admin.headers };
+  const baseline = fixtureMetadataBaselines().find((entry) => entry.apiName === "Calls");
+  if (!baseline) throw new Error("Missing Calls baseline");
+  const good = resolveEffectiveModule(baseline);
+  const layout = good.layouts[0];
+  const first = layout?.sections.find((section) =>
+    section.columns.flat().includes("field:Description"),
+  );
+  const repeated = layout?.sections.find((section) => section.label === "Reason For Incoming Call");
+  if (!layout || !first || !repeated) throw new Error("Missing Calls sections");
+  const invalid: CustomizationSnapshot = {
+    baselineVersion: baseline.version,
+    revision: 2,
+    fields: [],
+    fieldPatches: {},
+    layouts: [
+      {
+        ...layout,
+        sections: layout.sections.map((section) =>
+          section.id === repeated.id ? { ...section, columns: [["field:Description"]] } : section,
+        ),
+      },
+    ],
+  };
+  const port = fixtureCustomizationPort();
+  const spy = vi
+    .spyOn(port, "readEffective")
+    .mockImplementation(async () => resolveEffectiveModule(baseline, invalid));
+  const log = vi.spyOn(console, "error").mockImplementation(() => {});
+  try {
+    for (const op of [
+      operations.module,
+      operations.fields,
+      operations.layouts,
+      operations.views,
+      operations.view,
+    ]) {
+      const response = await call(op, actor, "Calls", { viewId: "all-calls" });
+      expect(response.status).toBe(500);
+      expect(await response.json()).toEqual({
+        code: "INTERNAL_ERROR",
+        details: {},
+        message: "Something went wrong.",
+        status: "error",
+      });
+    }
+  } finally {
+    spy.mockRestore();
+    log.mockRestore();
+  }
 });

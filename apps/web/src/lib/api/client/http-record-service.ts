@@ -1,4 +1,6 @@
 import type {
+  ConvertLeadResult,
+  ConvertTarget,
   DeduplicateResult,
   DuplicateGroup,
   GroupSummary,
@@ -7,6 +9,7 @@ import type {
   ListView,
   ModuleApiName,
   ModuleMetadata,
+  ModuleReadProjection,
   RecordData,
   RecordHistoryPage,
   RecordHistoryQuery,
@@ -18,6 +21,7 @@ import type {
 import {
   decodeActivitySummaries,
   decodeCurrency,
+  decodeField,
   decodeList,
   decodeModule,
   decodeRecord,
@@ -26,8 +30,11 @@ import {
   encodeCampaignFilter,
   encodeCriteria,
   encodeInput,
+  encodeRelatedModules,
+  encodeSystemFilters,
   invalid,
 } from "@/lib/api/wire/codec";
+import { SchemaRevisionMismatchError, UnexpectedApiError } from "@/lib/api/wire/errors";
 import {
   decodeKanbanView,
   encodeKanbanViewInput,
@@ -61,11 +68,21 @@ export type OrgMember = { userId: string; name: string; email: string };
 export type ViewSummary = Pick<ListView, "id" | "name" | "systemDefined" | "isDefault">;
 
 export type ClientRecordService = RecordService & {
+  invalidate?(module: ModuleApiName): void;
+  getModuleProjection?(module: ModuleApiName): Promise<ModuleReadProjection>;
   listViewSummaries(module: ModuleApiName): Promise<readonly ViewSummary[]>;
   listUsers(): Promise<readonly OrgMember[]>;
+  /** Optional for in-memory screen fixtures; HTTP clients always supply this reader. */
+  listHistory?(
+    module: ModuleApiName,
+    recordId: RecordId,
+    query: RecordHistoryQuery,
+  ): Promise<RecordHistoryPage>;
 };
 
 export type HttpRecordService = ClientRecordService & {
+  invalidate(module: ModuleApiName): void;
+  getModuleProjection(module: ModuleApiName): Promise<ModuleReadProjection>;
   listHistory(
     module: ModuleApiName,
     recordId: RecordId,
@@ -97,10 +114,20 @@ function requiredWire<T>(value: T | undefined, label: string): T {
 function listBody(
   query: Pick<
     ListQuery,
-    "filters" | "search" | "activityFilter" | "campaignFilter" | "includeActivitySummary"
+    | "filters"
+    | "search"
+    | "activityFilter"
+    | "campaignFilter"
+    | "systemFilters"
+    | "relatedModules"
+    | "includeActivitySummary"
   >,
 ): unknown | undefined {
   const body: import("../wire/types").WireRestrictions = {};
+  if (query.systemFilters !== undefined)
+    body.system_filters = encodeSystemFilters(query.systemFilters);
+  if (query.relatedModules !== undefined)
+    body.related_modules = encodeRelatedModules(query.relatedModules);
   if (query.campaignFilter !== undefined)
     body.campaign_filter = encodeCampaignFilter(query.campaignFilter);
   if (query.activityFilter !== undefined)
@@ -145,14 +172,26 @@ function decodeViewSummaries(views: WireViewsResponse["custom_views"]): readonly
   }));
 }
 
+/** Terminal for this load: React Query must not start another retry pair. */
+export class ModuleMetadataLoadError extends UnexpectedApiError {
+  override name = "ModuleMetadataLoadError";
+  constructor() {
+    super(409);
+    this.message = "Module metadata changed while loading. Refresh to try again.";
+  }
+}
+
+type RevisionResponse<T> = T & { revision: string };
+
 type ModuleWireBundle = {
+  revision: string;
   module: WireModuleResponse["modules"][number];
   fields: readonly WireField[];
   layout: WireLayout;
 };
 
 type ModuleLoadState = {
-  settled: ModuleWireBundle | null;
+  revision: string | null;
   inflight: Promise<ModuleWireBundle> | null;
 };
 
@@ -166,16 +205,36 @@ export function createHttpRecordService({
   fetch: fetchImpl = (path, options) => apiFetch(orgSlug, path, options),
 }: HttpRecordServiceOptions): HttpRecordService {
   const moduleState = new Map<ModuleApiName, ModuleLoadState>();
+  const bundles = new Map<ModuleApiName, Map<string, ModuleWireBundle>>();
+
+  function invalidate(module: ModuleApiName): void {
+    moduleState.delete(module);
+    bundles.delete(module);
+  }
 
   const request = (
     path: string,
     options: { method?: string; body?: unknown; signal?: AbortSignal } = {},
-  ) => fetchImpl(path, options);
+  ) =>
+    fetchImpl(path, options).catch((error: unknown) => {
+      if (error instanceof SchemaRevisionMismatchError) {
+        // Mutations are never replayed. The form retains its draft and prompts a refresh.
+        const url = new URL(path, "http://client.local");
+        for (const module of moduleState.keys()) {
+          if (
+            url.searchParams.get("module") === module ||
+            url.pathname.split("/")[3] === encodeURIComponent(module)
+          )
+            invalidate(module);
+        }
+      }
+      throw error;
+    });
 
   function moduleLoadState(module: ModuleApiName): ModuleLoadState {
     let state = moduleState.get(module);
     if (!state) {
-      state = { settled: null, inflight: null };
+      state = { revision: null, inflight: null };
       moduleState.set(module, state);
     }
     return state;
@@ -183,29 +242,50 @@ export function createHttpRecordService({
 
   async function loadModuleWire(module: ModuleApiName): Promise<ModuleWireBundle> {
     const state = moduleLoadState(module);
-    if (state.settled) return state.settled;
+    const cached = state.revision ? bundles.get(module)?.get(state.revision) : undefined;
+    if (cached) return cached;
     if (state.inflight) return state.inflight;
 
     state.inflight = (async () => {
       const modulePath = operationPath(operations.module, { module });
       const fieldsPath = operationPath(operations.fields, { module });
       const layoutsPath = operationPath(operations.layouts, { module });
-      const [moduleBody, fieldsBody, layoutsBody] = await Promise.all([
-        request(modulePath) as Promise<WireModuleResponse>,
-        request(`${fieldsPath}${queryString({ module })}`) as Promise<WireFieldsResponse | null>,
-        request(`${layoutsPath}${queryString({ module })}`) as Promise<WireLayoutsResponse | null>,
-      ]);
-      const fields = fieldsBody?.fields ?? [];
-      const layout = layoutsBody?.layouts?.[0];
-      if (!layout) throw new Error("Module layout is missing from the API response.");
-      return {
-        module: requiredWire(moduleBody.modules[0], "Module"),
-        fields,
-        layout,
-      };
+      for (let attempt = 0; attempt < 2; attempt++) {
+        const [moduleBody, fieldsBody, layoutsBody] = await Promise.all([
+          request(modulePath) as Promise<RevisionResponse<WireModuleResponse>>,
+          request(
+            `${fieldsPath}${queryString({ module })}`,
+          ) as Promise<RevisionResponse<WireFieldsResponse> | null>,
+          request(
+            `${layoutsPath}${queryString({ module })}`,
+          ) as Promise<RevisionResponse<WireLayoutsResponse> | null>,
+        ]);
+        const revision = moduleBody.revision;
+        if (
+          typeof revision !== "string" ||
+          !/^[A-Za-z0-9._:-]{1,64}$/.test(revision) ||
+          revision !== fieldsBody?.revision ||
+          revision !== layoutsBody?.revision
+        ) {
+          if (attempt === 0) continue;
+          throw new ModuleMetadataLoadError();
+        }
+        const fields = fieldsBody?.fields ?? [];
+        const layout = layoutsBody?.layouts?.[0];
+        if (!layout) throw new Error("Module layout is missing from the API response.");
+        return {
+          revision,
+          module: requiredWire(moduleBody.modules[0], "Module"),
+          fields,
+          layout,
+        };
+      }
+      throw new Error("Unable to load module metadata.");
     })()
       .then((bundle) => {
-        state.settled = bundle;
+        if (moduleState.get(module) !== state) return loadModuleWire(module);
+        state.revision = bundle.revision;
+        bundles.set(module, new Map([[bundle.revision, bundle]]));
         state.inflight = null;
         return bundle;
       })
@@ -222,6 +302,7 @@ export function createHttpRecordService({
   }
 
   const service: HttpRecordService = {
+    invalidate,
     async search(query) {
       return (await request(operationPath(operations.search), {
         method: operations.search.method,
@@ -241,6 +322,27 @@ export function createHttpRecordService({
         body: { ...input, values: encodeInput(input.values, metadata) },
       })) as RecordData;
     },
+    async convertLead(leadId, input) {
+      const target = async (module: string, value: ConvertTarget | undefined) => {
+        if (!value) return undefined;
+        const metadata = await loadModuleMetadata(module);
+        return "reuseId" in value
+          ? {
+              reuseId: value.reuseId,
+              ...(value.update ? { update: encodeInput(value.update, metadata) } : {}),
+            }
+          : { create: encodeInput(value.create, metadata) };
+      };
+      const [account, contact, deal] = await Promise.all([
+        target("Accounts", input.account),
+        target("Contacts", input.contact),
+        target("Deals", input.deal),
+      ]);
+      return (await request(
+        operationPath(operations.convertLead, { module: "Leads", recordId: leadId }),
+        { method: operations.convertLead.method, body: { account, contact, deal } },
+      )) as ConvertLeadResult;
+    },
     async deduplicate(module, fields) {
       return (await request(operationPath(operations.deduplicate, { module }), {
         method: operations.deduplicate.method,
@@ -256,6 +358,23 @@ export function createHttpRecordService({
       return decodeCurrency(requiredWire(currencies[0], "Currency"));
     },
     getModule: loadModuleMetadata,
+
+    async getModuleProjection(module: ModuleApiName): Promise<ModuleReadProjection> {
+      const bundle = await loadModuleWire(module);
+      const metadata = metadataFromWire(bundle);
+      const fields = bundle.fields.map((field) => ({
+        ...decodeField(field),
+        id: field.id,
+        custom: field.custom_field,
+      }));
+      return {
+        ...metadata,
+        revision: bundle.revision,
+        layoutId: bundle.layout.id,
+        fields,
+        views: await service.listViews(module),
+      };
+    },
 
     async listViews(module: ModuleApiName): Promise<readonly ListView[]> {
       const summaries = await service.listViewSummaries(module);
@@ -336,7 +455,16 @@ export function createHttpRecordService({
 
     async count(
       module: ModuleApiName,
-      query: Pick<ListQuery, "viewId" | "filters" | "search" | "activityFilter" | "campaignFilter">,
+      query: Pick<
+        ListQuery,
+        | "viewId"
+        | "filters"
+        | "search"
+        | "activityFilter"
+        | "campaignFilter"
+        | "systemFilters"
+        | "relatedModules"
+      >,
     ): Promise<number> {
       const path = operationPath(operations.count, { module });
       const restrictions = listBody(query);

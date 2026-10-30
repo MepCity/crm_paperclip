@@ -5,6 +5,7 @@ import { getModuleScreens } from "@/modules/registry";
 export const shellPageTitle = {
   home: "Home",
   settings: "Settings",
+  recycleBin: "Recycle Bin",
   ...Object.fromEntries(
     getModuleScreens().map((definition) => [definition.navigation.id, definition.pageTitle]),
   ),

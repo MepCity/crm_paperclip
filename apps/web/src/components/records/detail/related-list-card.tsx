@@ -1,22 +1,63 @@
 "use client";
 
+import type { ModuleApiName, RecordData } from "@crm/core/records";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { laterModuleProps, resolveLaterModule } from "@/components/ui/later-module";
 import { Link } from "@/components/ui/link";
 import { SplitButton } from "@/components/ui/split-button";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
+import { useRecordLabel } from "@/i18n/record-labels";
+import {
+  ACTIVITY_ADD_NEW_ENTRIES,
+  type ActivityModule,
+  openActivityCreate,
+} from "@/modules/activity-add-new";
 import type {
   RelatedListBodyContext,
   RelatedListControlDefinition,
   RelatedListDefinition,
 } from "@/modules/types";
+import { ACTIVITY_PARENT_MODULES } from "./record-call-context";
 export interface RelatedListCardProps {
   definition: RelatedListDefinition;
   context?: RelatedListBodyContext;
 }
 
+function ActivityAddNew({
+  label,
+  orgSlug,
+  module,
+  record,
+  returnTo,
+}: {
+  label: string;
+  orgSlug: string;
+  module: ModuleApiName;
+  record: RecordData;
+  returnTo: string;
+}) {
+  const router = useRouter();
+  const open = (activity: ActivityModule) =>
+    openActivityCreate(orgSlug, activity, module, record, (path) => router.push(path), returnTo);
+  return (
+    <SplitButton
+      label={label}
+      onPress={() => open("Tasks")}
+      items={ACTIVITY_ADD_NEW_ENTRIES.map((entry) => ({
+        id: `add-new-${entry.module}`,
+        label: entry.label,
+        onAction: () => open(entry.module),
+      }))}
+    />
+  );
+}
+
 export function RelatedListCard({ definition, context }: RelatedListCardProps) {
+  const recordLabel = useRecordLabel();
+  const adapter = useMetadataDisplayAdapter();
   const {
     id,
     title,
@@ -58,18 +99,37 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
     const laterMod = resolveLaterModule(ctrl.moduleKey);
     const moreLaterMod =
       ctrl.moreModuleKey !== undefined ? resolveLaterModule(ctrl.moreModuleKey) : laterMod;
+    if (
+      ctrl.type === "split-button" &&
+      ctrl.id === "add-new" &&
+      id === "open-activities" &&
+      context?.record &&
+      context.module &&
+      ACTIVITY_PARENT_MODULES.includes(context.module)
+    ) {
+      return (
+        <ActivityAddNew
+          key={ctrl.id}
+          label={recordLabel(ctrl.label)}
+          orgSlug={context.orgSlug}
+          module={context.module}
+          record={context.record}
+          returnTo={context.recordPath(context.module, context.record.id)}
+        />
+      );
+    }
     if (ctrl.type === "split-button") {
       return (
         <SplitButton
           key={ctrl.id}
-          label={ctrl.label}
+          label={recordLabel(ctrl.label)}
           laterModule={laterMod}
           moreLaterModule={moreLaterMod}
           items={
             ctrl.options
               ? ctrl.options.map((opt) => ({
                   id: opt.id,
-                  label: opt.label,
+                  label: recordLabel(opt.label),
                   laterModule: laterMod,
                   onAction: opt.onAction ?? (() => {}),
                 }))
@@ -89,14 +149,13 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
       return (
         <Button
           key={ctrl.id}
-          variant="secondary"
-          size="compact"
+          variant="recordSelector"
+          size="cardSelector"
           laterModule={laterMod}
           onPress={ctrl.onAction}
-          className="flex items-center gap-1.5"
         >
-          <span>{ctrl.label}</span>
-          <Icons.chevronDown aria-hidden className="size-3 text-text-muted" />
+          <span>{recordLabel(ctrl.label)}</span>
+          <Icons.chevronDown aria-hidden className="size-3 text-(--color-form-caret)" />
         </Button>
       );
     }
@@ -111,7 +170,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
           key={ctrl.id}
           variant="icon"
           size="compact"
-          aria-label={ctrl.label}
+          aria-label={recordLabel(ctrl.label)}
           laterModule={laterMod}
           onPress={ctrl.onAction}
         >
@@ -122,12 +181,13 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
     return (
       <Button
         key={ctrl.id}
-        variant="secondary"
-        size="compact"
+        variant="relatedAction"
+        size="relatedAction"
+        className={ctrl.id === "add-campaigns" ? "min-w-[122px]" : undefined}
         laterModule={laterMod}
         onPress={ctrl.onAction}
       >
-        {ctrl.label}
+        <span data-related-action-label>{recordLabel(ctrl.label)}</span>
       </Button>
     );
   }
@@ -168,7 +228,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
                 </th>
                 {tableColumns.map((col) => (
                   <th key={col.id} className="px-2 py-2 font-semibold text-text-strong">
-                    {col.label}
+                    {adapter.getNamedLabel(col.label)}
                   </th>
                 ))}
               </tr>
@@ -249,13 +309,15 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
                   {ColumnIcon && (
                     <ColumnIcon aria-hidden className="size-3.5 text-text-muted shrink-0" />
                   )}
-                  <span className="text-md font-semibold text-text-strong">{col.title}</span>
+                  <span className="text-md font-semibold text-text-strong">
+                    {recordLabel(col.title)}
+                  </span>
                   <span className="inline-flex items-center justify-center min-w-5 h-4 px-1 rounded-full bg-surface-active text-2xs font-semibold text-text-muted">
                     {col.count}
                   </span>
                 </div>
                 <div data-part="empty" className="py-4 text-center text-md text-text-empty">
-                  {col.emptyText}
+                  {recordLabel(col.emptyText)}
                 </div>
               </div>
             );
@@ -282,7 +344,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
                         : "text-text-muted hover:text-text font-normal"
                     }`}
                   >
-                    {tab.label}
+                    {recordLabel(tab.label)}
                   </button>
                 );
               })}
@@ -292,7 +354,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
             ) : null}
           </div>
           <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-            {emptyStateText}
+            {emptyStateText ? recordLabel(emptyStateText) : emptyStateText}
           </div>
         </div>
       ) : socialLinks && socialLinks.length > 0 ? (
@@ -340,19 +402,19 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
                 </th>
                 {tableColumns.map((col) => (
                   <th key={col.id} className="px-2 py-2 font-semibold text-text-strong">
-                    {col.label}
+                    {adapter.getNamedLabel(col.label)}
                   </th>
                 ))}
               </tr>
             </thead>
           </table>
           <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-            {emptyStateText}
+            {emptyStateText ? recordLabel(emptyStateText) : emptyStateText}
           </div>
         </div>
       ) : (
         <div data-part="empty" className="py-8 text-center text-md text-text-empty">
-          {emptyStateText}
+          {emptyStateText ? recordLabel(emptyStateText) : emptyStateText}
         </div>
       )}
     </section>

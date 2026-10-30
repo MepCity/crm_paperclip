@@ -10,9 +10,11 @@ describe("createLeadsRelatedLists", () => {
       "open-activities",
       "closed-activities",
       "attachments",
+      "emails",
       "campaigns",
+      "social",
     ]);
-    expect(lists.map((card) => card.order)).toEqual([0, 1, 2, 3, 4]);
+    expect(lists.map((card) => card.order)).toEqual([0, 1, 2, 3, 4, 5, 6]);
 
     const [notes, openActivities, closedActivities] = lists;
     expect(notes).toBeDefined();
@@ -23,7 +25,7 @@ describe("createLeadsRelatedLists", () => {
     expect(notes.order).toBe(0);
     expect(notes.id).toBe("notes");
     expect(notes.title).toBe("Notes");
-    expect(notes.moduleKey).toBe("M6");
+    expect(notes.moduleKey).toBe("M2");
     expect(notes.targetId).toBe("related-list-notes");
     expect(notes.emptyStateText).toBe("No records found");
 
@@ -38,6 +40,17 @@ describe("createLeadsRelatedLists", () => {
     expect(closedActivities.title).toBe("Closed Activities");
     expect(closedActivities.moduleKey).toBe("M5");
     expect(closedActivities.targetId).toBe("related-list-closed-activities");
+  });
+
+  it("mounts the Emails card with renderCard in rail order", () => {
+    const lists = createLeadsRelatedLists();
+    const emails = lists.find((card) => card.id === "emails");
+    expect(emails).toBeDefined();
+    expect(emails?.order).toBe(4);
+    expect(emails?.title).toBe("Emails");
+    expect(emails?.moduleKey).toBe("M10");
+    expect(emails?.targetId).toBe("related-list-emails");
+    expect(emails?.renderCard).toBeDefined();
   });
 
   it("adds a live Campaigns card wired to Add Campaigns", () => {
@@ -170,7 +183,9 @@ describe("createLeadsRelatedLists", () => {
         recordPath: () => "/crm/acme/leads/lead-test-1",
         definition: card,
       });
-      expect(renderedWithoutRecord).toBeUndefined();
+      // The Social card is static and renders without a record.
+      if (card.id === "social") expect(renderedWithoutRecord).toBeDefined();
+      else expect(renderedWithoutRecord).toBeUndefined();
     }
   });
 });

@@ -5,8 +5,10 @@ import { RelatedCasesCardBody } from "@/components/records/detail/related-cases-
 import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
-import { notesCardBody } from "../notes-card";
+import { emailsCard } from "../emails/record-card";
+import { notesCardBody, openNotesComposer } from "../notes-card";
 import { parentActivitiesBody } from "../parent-activity-cards";
+import { SocialRecordCardBody } from "../social/social-record-card";
 import type {
   RelatedListActivityColumnDefinition,
   RelatedListDefinition,
@@ -138,14 +140,14 @@ export function createAccountsRelatedLists(
       id: "notes",
       renderBody: notesCardBody("Accounts"),
       title: "Notes",
-      moduleKey: "M6",
+      moduleKey: "M2",
       order: 1,
       targetId: "related-list-notes",
       countBadge: notesBadge,
       railAction: {
         id: "notes-add",
         label: "Add",
-        moduleKey: "M6",
+        onAction: openNotesComposer,
       },
       notesShowMore: true,
       emptyStateText: "No records found",
@@ -281,6 +283,7 @@ export function createAccountsRelatedLists(
     },
     {
       id: "emails",
+      renderCard: emailsCard("Accounts"),
       title: "Emails",
       moduleKey: "M10",
       order: 6,
@@ -528,15 +531,11 @@ export function createAccountsRelatedLists(
     {
       id: "social",
       title: "Social",
-      moduleKey: "M15",
+      // The card is static and local; "M2" keeps the rail entry unlocked.
+      moduleKey: "M2",
       order: 15,
       targetId: "related-list-social",
-      socialLinks: [
-        { id: "assoc-twitter", label: "Associate Twitter", moduleKey: "M15" },
-        { id: "assoc-facebook", label: "Associate Facebook", moduleKey: "M15" },
-      ],
-      socialGuidance:
-        "You cannot search a profile in Facebook. This has to be associated from the Social Tab",
+      renderBody: () => createElement(SocialRecordCardBody),
     },
   ];
 }

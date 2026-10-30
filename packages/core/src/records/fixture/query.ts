@@ -44,7 +44,15 @@ const PERIODS = new Set([
   "PREVIOUS_YEAR",
   "NEXT_YEAR",
 ]);
-const TEXT_TYPES = new Set(["text", "textarea", "email", "phone", "website", "lookup"]);
+const TEXT_TYPES = new Set([
+  "text",
+  "textarea",
+  "email",
+  "phone",
+  "website",
+  "lookup",
+  "autonumber",
+]);
 const CRITERIA_UNITS = new Set(["days", "weeks", "months"]);
 const fieldByName = new Map(leadsMetadata.fields.map((field) => [field.apiName, field]));
 
@@ -260,8 +268,15 @@ function comparatorFits(
     }
     return false;
   }
-  if (NUMBER_TYPES.has(field.dataType)) {
-    const number = (item: FieldValue) => typeof item === "number" && acceptsFieldValue(field, item);
+  // bigint columns store digit strings; the filter panel sends plain numbers for them while
+  // existing string equality keeps working.
+  if (
+    NUMBER_TYPES.has(field.dataType) ||
+    (field.dataType === "bigint" && (typeof value === "number" || isValueList(value)))
+  ) {
+    const number = (item: FieldValue) =>
+      typeof item === "number" &&
+      (field.dataType === "bigint" ? Number.isSafeInteger(item) : acceptsFieldValue(field, item));
     if (comparator === "between" || comparator === "not_between")
       return (
         isValueList(value) &&
@@ -452,6 +467,14 @@ function matchesAge(value: FieldValue, expected: CriteriaValue, runtime: Criteri
   return parsed >= subtractCalendarMonths(runtime.now, expected.offset);
 }
 
+// Criteria carry safe integers, so a stored value beyond the safe range is further out than any
+// criteria value: map it to +/-Infinity instead of losing precision in Number().
+function bigintDigitsToNumber(digits: string): number {
+  const asNumber = Number(digits);
+  if (Number.isSafeInteger(asNumber)) return asNumber;
+  return digits.startsWith("-") ? Number.NEGATIVE_INFINITY : Number.POSITIVE_INFINITY;
+}
+
 export function matches(
   record: RecordData,
   criteria: Criteria,
@@ -522,7 +545,12 @@ export function matches(
       ? typeof raw.name === "string"
         ? raw.name
         : null
-      : raw;
+      : fields.get(criteria.field)?.dataType === "bigint" &&
+          typeof raw === "string" &&
+          typeof criteria.value !== "string" &&
+          /^-?\d+$/.test(raw)
+        ? bigintDigitsToNumber(raw)
+        : raw;
   const dayRuntime =
     fields.get(criteria.field)?.dataType === "date"
       ? {

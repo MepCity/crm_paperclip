@@ -10,28 +10,42 @@ import type {
 } from "@crm/core/records";
 import { lookupTargetModules } from "@crm/core/records";
 import { type ReactNode, useState } from "react";
+import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
 import { laterModuleProps, type ModuleKey, useLaterModule } from "@/components/ui/later-module";
 import { NumberField } from "@/components/ui/number-field";
+import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { RecordChoice } from "@/components/ui/record-choice";
+import { SuggestionField } from "@/components/ui/suggestion-field";
 import { Switch } from "@/components/ui/switch";
 import { TextArea } from "@/components/ui/text-area";
+import { TextCalendarField } from "@/components/ui/text-calendar-field";
 import { TextField, type TextFieldProps } from "@/components/ui/text-field";
+import { useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import type { ClientRecordService } from "@/lib/api/client/provider";
+import { useFormat } from "@/lib/format-context";
+import { numberInputLocale } from "@/lib/locale";
 import {
   calendarShapeToDisplayDate,
   DATE_MASK_PLACEHOLDER,
   displayDateToModelShape,
 } from "@/lib/records/calendar-date";
-import { REMINDER_OFFSETS, reminderOffsetOf, reminderValue } from "@/lib/records/reminder-options";
+import {
+  REMINDER_CHANNELS,
+  REMINDER_OFFSETS,
+  reminderChannelOf,
+  reminderOffsetOf,
+  reminderValue,
+} from "@/lib/records/reminder-options";
 import {
   isModuleRegistered,
   resolveModuleLaterKey,
   resolveModuleScreenByApiName,
 } from "@/modules/registry";
 import { DateTimeInput } from "./datetime-input";
-import type { LookupPickerRule, NumberLimits } from "./form-model";
+import type { FormRules, LookupPickerRule, NumberLimits } from "./form-model";
 import { ParticipantsInput } from "./participants-input";
 import { SelectRecordDialog } from "./select-record-dialog";
 
@@ -45,6 +59,8 @@ export interface FieldInputProps {
   variant?: "activity";
   /** Module selected by a label-side selector; suppresses the input prefix selector. */
   lookupModule?: string;
+  /** Suppresses the polymorphic prefix select inside the input (CF-08, Activities Call form). */
+  suppressPolymorphicPrefix?: boolean;
   value: FieldValue;
   onChange: (value: FieldValue) => void;
   errorMessage?: string;
@@ -57,7 +73,9 @@ export interface FieldInputProps {
   searchLabel?: string;
   currencyPrefix?: string;
   currencyInformation?: string;
+  currencyHelp?: NonNullable<FormRules["currencyHelp"]>[string];
   textPrefix?: string;
+  suggestions?: readonly string[];
   /** Business range of a numeric entry; metadata carries no minimum or maximum. */
   numberLimits?: NumberLimits;
   /** Picker shape for this lookup field, when it differs from the target module's configuration. */
@@ -154,7 +172,7 @@ function DateField({ value, onModelChange, ...textField }: DateFieldProps) {
     setEntry(calendarShapeToDisplayDate(value));
   }
   return (
-    <TextField
+    <TextCalendarField
       {...textField}
       type="text"
       value={entry}
@@ -174,6 +192,7 @@ export function FieldInput({
   field,
   variant,
   lookupModule,
+  suppressPolymorphicPrefix,
   value,
   onChange,
   errorMessage,
@@ -186,7 +205,9 @@ export function FieldInput({
   searchLabel,
   currencyPrefix,
   currencyInformation,
+  currencyHelp,
   textPrefix,
+  suggestions,
   numberLimits,
   lookupPicker,
   placeholder,
@@ -201,6 +222,9 @@ export function FieldInput({
   participantModules,
   laterModule,
 }: FieldInputProps) {
+  const t = useUiTranslations();
+  const adapter = useMetadataDisplayAdapter();
+  const orgFormat = useFormat();
   const controlId = id ?? field.apiName;
   const common = {
     label: field.label,
@@ -244,6 +268,17 @@ export function FieldInput({
     case "email":
     case "phone":
     case "website":
+      if (field.dataType === "text" && suggestions) {
+        return (
+          <SuggestionField
+            {...common}
+            value={text}
+            suggestions={suggestions}
+            maxLength={field.maxLength}
+            onChange={(next) => onChange(next === "" ? null : next)}
+          />
+        );
+      }
       return (
         <TextField
           {...common}
@@ -328,6 +363,7 @@ export function FieldInput({
           // An integer field still accepts what is typed: `Save` rejects a decimal with
           // `Please enter a valid <label>.`, which needs the value to survive in the input.
           formatOptions={{ useGrouping: false, maximumFractionDigits: 20 }}
+          locale={field.dataType === "currency" ? numberInputLocale(orgFormat) : undefined}
           prefix={
             field.dataType === "currency" && currencyPrefix ? (
               <span className="record-currency-prefix">
@@ -341,6 +377,34 @@ export function FieldInput({
               <span role="img" className="record-input-end" aria-label="Locked">
                 <Icons.lock className="record-input-end-icon" aria-hidden />
               </span>
+            ) : field.dataType === "currency" && currencyHelp ? (
+              <PopoverTrigger>
+                <Button
+                  slot={null}
+                  variant="ghost"
+                  className="record-input-end"
+                  aria-label={`${field.label} information`}
+                  isDisabled={disabled}
+                >
+                  <Icons.recordInfo className="record-input-end-icon" aria-hidden />
+                </Button>
+                <Popover
+                  title={`${field.label} information`}
+                  hideTitle
+                  placement="bottom end"
+                  className="max-w-xs text-md text-text"
+                >
+                  <span
+                    aria-hidden
+                    className="absolute -top-1 right-4 size-2 rotate-45 border-l border-t border-border bg-surface"
+                  />
+                  <p>{currencyHelp.text}</p>
+                  <p>
+                    For example, <strong>{currencyHelp.expression}</strong> gives{" "}
+                    <strong>{currencyHelp.result}</strong>.
+                  </p>
+                </Popover>
+              </PopoverTrigger>
             ) : field.dataType === "currency" && currencyInformation ? (
               <span role="img" className="record-input-end" aria-label={currencyInformation}>
                 <Icons.recordInfo className="record-input-end-icon" aria-hidden />
@@ -437,7 +501,7 @@ export function FieldInput({
             value={displayText}
             laterModule={targetLaterModule}
             prefix={
-              isPolymorphic && lookupModule === undefined ? (
+              isPolymorphic && lookupModule === undefined && !suppressPolymorphicPrefix ? (
                 <div className="record-prefix-select">
                   <RecordChoice
                     id={`${controlId}-module`}
@@ -452,7 +516,7 @@ export function FieldInput({
                     }}
                     options={lookupTargets.map((module) => ({
                       value: module,
-                      label: moduleSingularLabel(module),
+                      label: adapter.getModuleSingular(module, moduleSingularLabel(module)),
                     }))}
                     disabled={common.isDisabled}
                   />
@@ -547,22 +611,52 @@ export function FieldInput({
           errorMessage={errorMessage}
         />
       );
-    case "multireminder":
+    case "multireminder": {
+      const offset = reminderOffsetOf(value);
+      const channel = reminderChannelOf(value);
+      const offsets = REMINDER_OFFSETS.map((item) => ({
+        value: item.id as string,
+        label: t(`records.reminders.${item.id}`),
+      }));
+      if (offset && !offsets.some((item) => item.value === offset)) {
+        offsets.push({ value: offset, label: offset });
+      }
+      const channels = REMINDER_CHANNELS.map((id) => ({
+        value: id as string,
+        label: t(`records.reminders.channels.${id}`),
+      }));
+      if (!channels.some((item) => item.value === channel)) {
+        channels.push({ value: channel, label: channel });
+      }
       return (
-        <RecordChoice
-          id={controlId}
-          hideLabel={hideLabel}
-          label={field.label}
-          value={reminderOffsetOf(value)}
-          onChange={(next) => onChange(reminderValue(next))}
-          options={[
-            { value: null, label: "-None-" },
-            ...REMINDER_OFFSETS.map((offset) => ({ value: offset.id, label: offset.label })),
-          ]}
-          disabled={common.isDisabled}
-          inline={inline}
-        />
+        <div className="flex min-w-0 flex-col gap-1">
+          <RecordChoice
+            id={controlId}
+            hideLabel={hideLabel}
+            label={field.label}
+            value={offset}
+            onChange={(next) => onChange(reminderValue(next, channel, value))}
+            options={[{ value: null, label: t("records.reminders.none") }, ...offsets]}
+            disabled={common.isDisabled}
+            inline={inline}
+          />
+          {field.apiName === "Remind_At" && (
+            <RecordChoice
+              id={`${controlId}-channel`}
+              hideLabel
+              label={t("records.reminders.channel")}
+              value={offset ? channel : null}
+              onChange={(next) =>
+                onChange(next ? reminderValue(offset ?? "PT15M", next, value) : null)
+              }
+              options={[{ value: null, label: t("records.reminders.none") }, ...channels]}
+              disabled={common.isDisabled}
+              inline={inline}
+            />
+          )}
+        </div>
       );
+    }
     case "multi_module_lookup":
       return null;
   }

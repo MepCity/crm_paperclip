@@ -27,10 +27,17 @@ test("list config names the link column, labels and Actions rows for Cases", () 
     "Sheet view",
     "Print View",
   ]);
+  const manageTags = casesListPageConfig.inventory?.actions.find((a) => a.id === "tags");
+  expect(manageTags?.laterModule).toBeUndefined();
+  const exportItem = casesListPageConfig.inventory?.actions.find((a) => a.id === "export");
+  expect(exportItem).toEqual({ id: "export", label: "Export Cases" });
   const massEmail = casesListPageConfig.inventory?.actions.find((a) => a.id === "mass-email");
   expect(massEmail?.laterModule).toBe("M10");
   const approve = casesListPageConfig.inventory?.actions.find((a) => a.id === "approve");
   expect(approve?.laterModule).toBe("P3");
   const sheet = casesListPageConfig.inventory?.actions.find((a) => a.id === "sheet");
   expect(sheet?.laterModule).toBe("P3");
+  const print = casesListPageConfig.inventory?.actions.find((a) => a.id === "print");
+  expect(print?.submenu?.map((r) => r.label)).toEqual(["Print Default view", "Print Using Canvas"]);
+  expect(casesListPageConfig.paths.drafts).toBeDefined();
 });

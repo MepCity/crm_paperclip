@@ -43,18 +43,23 @@ export function buildCallsFormDefaults(metadata?: ModuleMetadata): Record<string
 /**
  * Interim rule: the form is in "record" mode (a call that already happened) when the type is
  * Inbound or Missed or the status is Completed. Scheduling mode paints Reminder; record mode
- * hides it and paints the outcome section; Call Duration shows for Inbound and Completed only.
+ * hides it and paints the outcome section; Call Duration shows for Inbound and Completed only (Missed + Completed included).
  */
 export function isCallRecordMode(values: Readonly<Record<string, FieldValue | undefined>>) {
   const type = values.Call_Type;
   return type === "Inbound" || type === "Missed" || values.Outgoing_Call_Status === "Completed";
 }
 
+/** Same matrix as the service hook: Inbound or Completed calls carry a required duration. */
+export function isCallDurationRequired(values: Readonly<Record<string, FieldValue | undefined>>) {
+  return values.Call_Type === "Inbound" || values.Outgoing_Call_Status === "Completed";
+}
+
 export function callsFormDynamicState(
   values: Readonly<Record<string, FieldValue | undefined>>,
 ): FormDynamicState {
   const record = isCallRecordMode(values);
-  const hasDuration = record && values.Call_Type !== "Missed";
+  const hasDuration = isCallDurationRequired(values);
   return {
     hidden: [
       ...(record ? ["Reminder"] : ["Call_Result", "Description"]),
@@ -65,8 +70,30 @@ export function callsFormDynamicState(
   };
 }
 
+function lookupParams(
+  values: Readonly<Record<string, FieldValue | undefined>>,
+  apiName: string,
+): Record<string, string> {
+  const value = values[apiName];
+  if (typeof value !== "object" || value === null || !("id" in value)) return {};
+  return { [apiName]: String(value.id), [`${apiName}_module`]: String(value.module) };
+}
+
 export const callsFormRules: FormRules = {
+  initialFocus: "Who_Id",
   owner: "Owner",
+  // Provisional: the reference action was never invoked (`activities-form.md` CF-02).
+  followUp: {
+    label: "Save and Create Follow-up Task",
+    module: "Tasks",
+    params: (values) => ({
+      ...(typeof values.Subject === "string" && values.Subject
+        ? { Subject: `Follow-up: ${values.Subject}` }
+        : {}),
+      ...lookupParams(values, "Who_Id"),
+      ...lookupParams(values, "What_Id"),
+    }),
+  },
   omitted: CALLS_FORM_OMITTED_FIELDS,
   omittedSections: ["Reason For Incoming Call"],
   viewOverrides: {
@@ -76,6 +103,7 @@ export const callsFormRules: FormRules = {
   },
   labelOverrides: { Who_Id: "Call From/To" },
   lookupLabelFields: ["Who_Id"],
+  suppressLookupPrefix: ["What_Id"],
   durationFields: ["Call_Duration"],
   dynamic: callsFormDynamicState,
   defaultValues: buildCallsFormDefaults,

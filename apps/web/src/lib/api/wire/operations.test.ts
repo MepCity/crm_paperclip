@@ -1,8 +1,9 @@
 import { randomUUID } from "node:crypto";
-import { NotFoundError, ValidationError } from "@crm/core/errors";
+import { ForbiddenError, NotFoundError, ValidationError } from "@crm/core/errors";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { decodeView, encodeCriteria, encodeModule } from "./codec";
+import { customizationOperations } from "./customization";
 import { encodeError } from "./errors";
 import { type OperationDeps, type OperationRequest, operationPath, operations } from "./operations";
 
@@ -46,7 +47,7 @@ describe("wire operations", () => {
     const module = await operations.module.run(deps, input());
     expect(json(module)).toEqual({
       status: 200,
-      body: { modules: [encodeModule(await deps.records.getModule("Leads"))] },
+      body: { modules: [encodeModule(await deps.records.getModule("Leads"))], revision: "v1:0" },
     });
     expect(json(await operations.views.run(deps, input())).body.custom_views[0]).toEqual({
       id: "all-leads",
@@ -343,9 +344,17 @@ describe("wire operations", () => {
       operations.delete.run(deps, { ...input(), params: { module: "Leads" } }),
     ).rejects.toBeInstanceOf(ValidationError);
   });
+  it("denies customization mutations before decoding when no command service is bound", async () => {
+    for (const op of Object.values(customizationOperations))
+      await expect(op.run(deps, input({}, {}))).rejects.toBeInstanceOf(ForbiddenError);
+  });
   it("returns 404 for unknown modules, views and records", async () => {
     for (const op of Object.values(operations).filter(
-      (op) => op !== operations.users && op !== operations.currencies && op !== operations.search,
+      (op) =>
+        op !== operations.users &&
+        op !== operations.currencies &&
+        op !== operations.search &&
+        !Object.values(customizationOperations).includes(op),
     )) {
       await expect(
         op.run(deps, {
@@ -572,5 +581,35 @@ it.each([
     );
     await operations.delete.run(deps, recordRequest);
     await expect(deps.records.get(module, id)).rejects.toBeInstanceOf(NotFoundError);
+  },
+);
+
+it.each(["Tasks", "Events", "Calls", "Campaigns", "Cases", "Solutions"])(
+  "decodes Notes Parent_Id plus $se_module for %s and rejects mismatches",
+  async (module) => {
+    const view = (await deps.records.listViews(module)).find((view) => view.criteria === null);
+    if (!view) throw new Error("Missing view");
+    const parent = (await deps.records.list(module, { viewId: view.id, page: 1, perPage: 10 }))
+      .records[0];
+    if (!parent) throw new Error("Missing parent");
+    const request = {
+      params: { module: "Notes" },
+      query: {},
+      body: {
+        data: [{ Parent_Id: { id: parent.id }, $se_module: module, Note_Content: "Wire note" }],
+      },
+    };
+    const created = json(await operations.create.run(deps, request));
+    const note = await deps.records.get("Notes", created.body.data[0].details.id);
+    expect(note.fields.Parent_Id).toMatchObject({ module, id: parent.id });
+    for (const row of [
+      { Parent_Id: { id: parent.id }, $se_module: "Unknown" },
+      { Parent_Id: { id: parent.id, module: "Leads" }, $se_module: module },
+      { Parent_Id: { id: parent.id }, $se_module: null },
+    ]) {
+      await expect(
+        operations.create.run(deps, { ...request, body: { data: [row] } }),
+      ).rejects.toBeInstanceOf(ValidationError);
+    }
   },
 );

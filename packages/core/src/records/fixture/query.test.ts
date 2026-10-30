@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ValidationError } from "../../errors";
-import type { Criteria, FieldValue, RecordData } from "../contract";
+import type { Criteria, FieldDefinition, FieldValue, RecordData } from "../contract";
 import { matches, validateCriteria } from "./query";
 
 const runtime = { now: new Date("2026-01-05T12:00:00.000Z"), userId: "test-owner" };
@@ -97,6 +97,25 @@ describe("panel predicate boundaries", () => {
         validateCriteria({ field: "Annual_Revenue", comparator: "equal", value }),
       ).toThrow(ValidationError);
   });
+  it("bigint digit strings compare safely beyond the safe integer range", () => {
+    const fields = new Map([
+      ["Big", { apiName: "Big", dataType: "bigint" }],
+    ]) as unknown as Parameters<typeof matches>[3];
+    const hit = (stored: string, comparator: string, value: FieldValue) =>
+      matches(
+        record("Big", stored),
+        { field: "Big", comparator, value } as Criteria,
+        runtime,
+        fields,
+      );
+    expect(hit("9007199254740993", "equal", 9007199254740992)).toBe(false);
+    expect(hit("9007199254740993", "greater_than", 9007199254740991)).toBe(true);
+    expect(hit("-9007199254740993", "less_than", -9007199254740991)).toBe(true);
+    expect(hit("9007199254740993", "between", [0, 9007199254740991])).toBe(false);
+    expect(hit("100", "between", [100, 200])).toBe(true);
+    expect(hit("100", "less_equal", 100)).toBe(true);
+  });
+
   it("periods re-evaluate Sunday to Monday and preserve leap-day month boundaries", () => {
     const week: Criteria = {
       field: "Created_Time",
@@ -118,5 +137,25 @@ describe("panel predicate boundaries", () => {
     const march = { ...runtime, now: new Date("2024-03-01T00:00:00.000Z") };
     expect(matches(record("Created_Time", "2024-02-29T23:59:59.999Z"), month, march)).toBe(true);
     expect(matches(record("Created_Time", "2024-03-01T00:00:00.000Z"), month, march)).toBe(false);
+  });
+});
+
+describe("inventory text filters", () => {
+  const def = (apiName: string, dataType: FieldDefinition["dataType"]): FieldDefinition => ({
+    apiName,
+    label: apiName,
+    dataType,
+    massUpdate: false,
+    views: { create: true, edit: true, view: true, quickCreate: false },
+    required: false,
+    readOnly: false,
+    unique: false,
+  });
+  const fields = new Map([["Solution_Number", def("Solution_Number", "autonumber")]]);
+  it("Solution Number autonumber matches as text", () => {
+    const criterion: Criteria = { field: "Solution_Number", comparator: "contains", value: "1002" };
+    validateCriteria(criterion, fields);
+    expect(matches(record("Solution_Number", "SOL-1002"), criterion, runtime, fields)).toBe(true);
+    expect(matches(record("Solution_Number", "SOL-2001"), criterion, runtime, fields)).toBe(false);
   });
 });

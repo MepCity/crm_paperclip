@@ -129,11 +129,10 @@ test.describe("members screen on a narrow screen", () => {
   });
 
   test("the general screen keeps the document at the viewport width", async ({ page }) => {
-    await page.getByRole("link", { name: "General" }).click();
-    await expect(page.getByRole("link", { name: "General" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    await page.getByRole("link", { name: "Setup Home" }).click();
+    await expect(
+      page.getByRole("main").getByRole("heading", { name: "Setup", level: 1 }),
+    ).toBeVisible();
     const measured = await measure(page);
     expect(measured.innerWidth).toBe(NARROW.width);
     expect(measured.scrollWidth).toBe(NARROW.width);
@@ -162,10 +161,9 @@ test.describe("members screen on a desktop screen", () => {
     await signUpNewUser(page, testUser());
     const organization = await createOrganization(page);
     await page.goto(`/crm/${organization.slug}/settings`);
-    await expect(page.getByRole("link", { name: "General" })).toHaveAttribute(
-      "aria-current",
-      "page",
-    );
+    await expect(
+      page.getByRole("main").getByRole("heading", { name: "Setup", level: 1 }),
+    ).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(WIDE.width);
   });
 });

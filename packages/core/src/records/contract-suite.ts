@@ -15,6 +15,7 @@ import type {
   RecordService,
 } from "./contract";
 import type { RecordServiceContractModuleDefinition } from "./contract-suite-module";
+import { OPEN_PICKLIST_FIELDS } from "./picklist-policy";
 import { roundMoneyTwoDecimals } from "./rounding";
 
 type ContractFactory = (
@@ -538,7 +539,9 @@ export function describeRecordServiceContract(
         ),
         lengthValidationField,
       );
-      for (const field of metadata.fields.filter((field) => field.picklist && !field.readOnly))
+      for (const field of metadata.fields.filter(
+        (field) => field.picklist && !field.readOnly && !OPEN_PICKLIST_FIELDS.has(field.apiName),
+      ))
         await validation(
           service.create(moduleApiName, input({ [field.apiName]: "not-a-listed-option" })),
           field.apiName,
@@ -2288,3 +2291,5 @@ export function describeActivityReadContract(name: string, makeService: Contract
 }
 
 export { describeRecordHistoryContract } from "./history-contract-suite";
+
+export { describeNotesContract } from "./notes-contract-suite";
