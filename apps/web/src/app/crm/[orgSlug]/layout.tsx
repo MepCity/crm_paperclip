@@ -5,6 +5,7 @@ import { FormatProvider } from "@/lib/format-context";
 import { loadOrganizationFormat } from "@/lib/format-settings";
 import { PreferenceProvider } from "@/lib/preferences";
 import { requireOrgContext, requireUser } from "@/lib/session";
+import { createInvitationAction } from "./settings/members/actions";
 
 export default async function OrganizationLayout({
   children,
@@ -14,15 +15,21 @@ export default async function OrganizationLayout({
   params: Promise<{ orgSlug: string }>;
 }) {
   const { orgSlug } = await params;
-  await requireOrgContext(orgSlug);
+  const org = await requireOrgContext(orgSlug);
   const user = await requireUser(`/crm/${orgSlug}`);
   const organizations = await listOrganizationsForUser(user.id);
   const format = await loadOrganizationFormat();
+  // Bind the invite action to the current org slug for client-side use in the chat panel.
+  const boundInviteAction = createInvitationAction.bind(null, orgSlug);
+  // Admin role (and above) may invite people.
+  const canInvite = org.role === "admin";
   return (
     <AppShell
       orgSlug={orgSlug}
-      organizations={organizations.map((org) => ({ name: org.name, slug: org.slug }))}
+      organizations={organizations.map((o) => ({ name: o.name, slug: o.slug }))}
       user={{ id: user.id, name: user.name, email: user.email }}
+      inviteAction={boundInviteAction}
+      canInvite={canInvite}
     >
       <PreferenceProvider orgSlug={orgSlug} userId={user.id}>
         <FormatProvider format={format}>{children}</FormatProvider>
