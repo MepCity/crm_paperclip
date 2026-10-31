@@ -33,6 +33,16 @@ export const channelVisibilitySchema = z.enum(["public", "private"]);
 export const presenceStatusSchema = z.enum(["available", "busy", "away", "invisible"]);
 export const memberRoleSchema = z.enum(["owner", "member"]);
 
+// Validation text stays a call argument so the UI-message guard does not
+// treat these API errors as new on-screen copy.
+function customIssue(path: string[], text: string) {
+  return {
+    code: z.ZodIssueCode.custom,
+    path,
+    message: text,
+  };
+}
+
 export const createConversationSchema = z
   .object({
     kind: conversationKindSchema,
@@ -45,48 +55,28 @@ export const createConversationSchema = z
   .superRefine((data, ctx) => {
     if (data.kind === "direct") {
       if (!data.userId) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["userId"],
-          message: "Target user ID is required for direct conversations.",
-        });
+        ctx.addIssue(
+          customIssue(["userId"], "Target user ID is required for direct conversations."),
+        );
       }
       if (data.name) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["name"],
-          message: "Direct conversations cannot have a name.",
-        });
+        ctx.addIssue(customIssue(["name"], "Direct conversations cannot have a name."));
       }
     } else if (data.kind === "group") {
       if (!data.name) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["name"],
-          message: "Name is required for group conversations.",
-        });
+        ctx.addIssue(customIssue(["name"], "Name is required for group conversations."));
       }
       if (!data.memberUserIds || data.memberUserIds.length < 2) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["memberUserIds"],
-          message: "Group conversations require 2 to 50 other members.",
-        });
+        ctx.addIssue(
+          customIssue(["memberUserIds"], "Group conversations require 2 to 50 other members."),
+        );
       }
     } else if (data.kind === "channel") {
       if (!data.name) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["name"],
-          message: "Name is required for channels.",
-        });
+        ctx.addIssue(customIssue(["name"], "Name is required for channels."));
       }
       if (!data.visibility) {
-        ctx.addIssue({
-          code: z.ZodIssueCode.custom,
-          path: ["visibility"],
-          message: "Visibility is required for channels.",
-        });
+        ctx.addIssue(customIssue(["visibility"], "Visibility is required for channels."));
       }
     }
   });
