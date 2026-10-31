@@ -307,6 +307,100 @@ describe("ChatPanel", () => {
     });
     expect(screen.getByText("https://crm.local/invite/abc-123")).toBeTruthy();
   });
+
+  test("closes Invite People dialog on Escape and returns focus", async () => {
+    const ds = createMockDataSource();
+    const inviteAction = vi.fn(async (): Promise<InvitationActionState> => ({ status: "idle" }));
+    const userEv = userEvent.setup();
+
+    render(
+      <ChatPanel
+        destination="chats"
+        user={user}
+        dataSource={ds}
+        inviteAction={inviteAction}
+        onClose={vi.fn()}
+        onDestinationChange={vi.fn()}
+      />,
+    );
+
+    const fab = screen.getByTestId("chat-quick-actions-fab");
+    await userEv.click(fab);
+    const inviteBtn = screen.getByTestId("chat-qa-invite");
+    await userEv.click(inviteBtn);
+
+    const dialog = screen.getByTestId("chat-invite-dialog");
+    expect(dialog).toBeTruthy();
+    expect(dialog.contains(document.activeElement)).toBe(true);
+
+    // Press Escape to dismiss
+    await userEv.keyboard("{Escape}");
+    await waitFor(() => {
+      expect(screen.queryByTestId("chat-invite-dialog")).toBeNull();
+    });
+    // Focus returns gracefully to FAB
+    await waitFor(() => {
+      expect(document.activeElement).toBe(fab);
+    });
+  });
+
+  test("renders server error alert when invitation action fails", async () => {
+    const ds = createMockDataSource();
+    const inviteAction = vi.fn(
+      async (): Promise<InvitationActionState> => ({
+        status: "error",
+        message: "This email address has already been invited.",
+      }),
+    );
+    const userEv = userEvent.setup();
+
+    render(
+      <ChatPanel
+        destination="chats"
+        user={user}
+        dataSource={ds}
+        inviteAction={inviteAction}
+        onClose={vi.fn()}
+        onDestinationChange={vi.fn()}
+      />,
+    );
+
+    await userEv.click(screen.getByTestId("chat-quick-actions-fab"));
+    await userEv.click(screen.getByTestId("chat-qa-invite"));
+
+    const dialog = screen.getByTestId("chat-invite-dialog");
+    const emailInput = within(dialog).getByRole("textbox", { name: "Email Address" });
+    await userEv.type(emailInput, "existing@example.test");
+    await userEv.click(within(dialog).getByRole("button", { name: "Send Invites" }));
+
+    await waitFor(() => {
+      expect(screen.getByText("This email address has already been invited.")).toBeTruthy();
+    });
+  });
+
+  test("search row contains advanced search button inside search box", () => {
+    const ds = createMockDataSource();
+    render(
+      <ChatPanel
+        destination="chats"
+        user={user}
+        dataSource={ds}
+        onClose={vi.fn()}
+        onDestinationChange={vi.fn()}
+      />,
+    );
+
+    const searchBox = screen.getByTestId("chat-search");
+    const advBtn = screen.getByTestId("chat-advanced-search-btn");
+    expect(advBtn).toBeTruthy();
+    expect(searchBox.parentElement?.contains(advBtn)).toBe(true);
+  });
+
+  test("data source contract includes empty conversations list", () => {
+    const ds = new EmptyChatDataSource();
+    expect(Array.isArray(ds.conversations)).toBe(true);
+    expect(ds.conversations).toHaveLength(0);
+  });
 });
 
 describe("ChatBottomBar", () => {

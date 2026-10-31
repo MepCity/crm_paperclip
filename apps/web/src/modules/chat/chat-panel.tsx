@@ -86,9 +86,12 @@ export function ChatPanel({
     return () => window.removeEventListener("keydown", onKey);
   }, []);
 
+  const inviteTriggerRef = useRef<HTMLElement | null>(null);
+
   const openInvite = useCallback(
     (email?: string) => {
       if (!inviteAction) return;
+      inviteTriggerRef.current = (document.activeElement as HTMLElement) ?? null;
       setInviteEmail(email);
       setShowInvite(true);
       setQuickActionsOpen(false);
@@ -99,6 +102,14 @@ export function ChatPanel({
   const closeInvite = useCallback(() => {
     setShowInvite(false);
     setInviteEmail(undefined);
+    requestAnimationFrame(() => {
+      if (inviteTriggerRef.current && document.contains(inviteTriggerRef.current)) {
+        inviteTriggerRef.current.focus();
+      } else {
+        const fab = document.querySelector<HTMLElement>('[data-testid="chat-quick-actions-fab"]');
+        fab?.focus();
+      }
+    });
   }, []);
 
   function presenceLabel(s: PresenceStatus | null) {
@@ -259,16 +270,19 @@ export function ChatPanel({
               onChange={(e) => setSearchText(e.target.value)}
               data-testid="chat-search"
             />
+            {/* Advanced search (#9) inside search field */}
+            <button
+              type="button"
+              className="chat-search-advanced"
+              aria-label={t("chat.advancedSearch")}
+              data-testid="chat-advanced-search-btn"
+            >
+              <Icons.settingsSliders
+                className="size-3.5 text-text-muted hover:text-text"
+                aria-hidden
+              />
+            </button>
           </div>
-          {/* Advanced search (#9) */}
-          <Button
-            variant="icon"
-            size="compact"
-            aria-label={t("chat.advancedSearch")}
-            className="size-7"
-          >
-            <Icons.settingsSliders className="size-4" aria-hidden />
-          </Button>
           {/* @Mentions (#10) */}
           <Button
             variant="icon"
@@ -296,32 +310,44 @@ export function ChatPanel({
         {/* === Tabs (#12 / #13) === */}
         <div className="chat-tabs" role="tablist">
           {destination === "contacts" ? (
-            <div className="flex items-center">
+            <div className="relative flex flex-1 items-center">
               <button
                 type="button"
                 role="tab"
                 aria-selected={tab === "primary"}
-                className={`chat-tab${tab === "primary" ? " chat-tab-active" : ""}`}
+                className={`chat-tab w-full${tab === "primary" ? " chat-tab-active pr-7" : ""}`}
                 onClick={() => setTab("primary")}
                 data-testid={leftTabTestId}
               >
                 {contactCategory === "frequents" ? (
-                  <HeartIcon className="size-3.5 text-text-muted" aria-hidden />
+                  <HeartIcon
+                    className={`size-3.5 ${tab === "primary" ? "text-white" : "text-text-muted"}`}
+                    aria-hidden
+                  />
                 ) : (
-                  <Icons.clock className="size-3.5 text-text-muted" aria-hidden />
+                  <Icons.clock
+                    className={`size-3.5 ${tab === "primary" ? "text-white" : "text-text-muted"}`}
+                    aria-hidden
+                  />
                 )}
                 {leftTabLabel}
               </button>
               <button
                 type="button"
-                className="chat-category-trigger"
+                className="absolute right-1 flex size-5 items-center justify-center rounded text-current hover:bg-black/10 outline-none"
                 aria-label={t("chat.contactCategories")}
                 aria-haspopup="true"
                 aria-expanded={showCategoryMenu}
-                onClick={() => setShowCategoryMenu((v) => !v)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setShowCategoryMenu((v) => !v);
+                }}
                 data-testid="chat-category-caret"
               >
-                <Icons.chevronDown className="size-3" aria-hidden />
+                <Icons.chevronDown
+                  className={`size-3 ${tab === "primary" ? "text-white" : "text-text-muted"}`}
+                  aria-hidden
+                />
               </button>
             </div>
           ) : (
@@ -352,7 +378,7 @@ export function ChatPanel({
         {/* Category dropdown menu for contacts */}
         {showCategoryMenu && destination === "contacts" && (
           <div
-            className="absolute left-10 top-24 z-10 w-40 rounded-md border border-border bg-surface shadow-lg"
+            className="absolute left-2 top-24 z-10 w-40 rounded-md border border-border bg-surface shadow-lg"
             role="menu"
             data-testid="chat-contact-categories"
           >
@@ -542,6 +568,7 @@ export function ChatPanel({
         <InvitePeopleDialog
           action={inviteAction}
           initialEmail={inviteEmail}
+          isOpen={showInvite}
           onClose={closeInvite}
         />
       )}

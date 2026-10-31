@@ -44,6 +44,20 @@ export interface ChatContact {
   presence: PresenceStatus | "offline";
 }
 
+/** Minimal conversation entry placeholder (MEP-1420 will replace with wire/chat.ts). */
+export interface ChatConversation {
+  id: string;
+  title: string;
+  type: "direct" | "group" | "channel" | "thread";
+  unreadCount?: number;
+  lastMessage?: {
+    text: string;
+    timestamp: string;
+    senderId: string;
+  };
+  pinned?: boolean;
+}
+
 /** Action stubs for the Quick Actions menu items that are not Invite People. */
 export interface ChatActions {
   /** Open the new direct-message picker. */
@@ -56,6 +70,8 @@ export interface ChatActions {
 
 /** The full data contract between the panel and its data provider. */
 export interface ChatDataSource {
+  /** Conversations list (empty placeholder for now). */
+  conversations: ChatConversation[];
   /** Current user's presence (null while loading). */
   currentPresence: ChatPresence | null;
   /** Aggregated badge counts (null while loading). */
@@ -80,6 +96,7 @@ export interface ChatDataSource {
  * All collections are empty; badge counts are zero; actions are no-ops.
  */
 export class EmptyChatDataSource implements ChatDataSource {
+  conversations: ChatConversation[] = [];
   currentPresence: ChatPresence | null = {
     userId: "current-user",
     status: "available",
