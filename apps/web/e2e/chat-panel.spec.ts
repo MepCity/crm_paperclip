@@ -1,3 +1,5 @@
+import { mkdir } from "node:fs/promises";
+import { join } from "node:path";
 import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
@@ -5,6 +7,9 @@ import { expect, test } from "./support/test";
 test("chat bottom bar, panel destinations, empty states, quick actions and invite dialog work", async ({
   page,
 }) => {
+  const screenshotDir = join(process.cwd(), "test-results", "chat-screenshots");
+  await mkdir(screenshotDir, { recursive: true });
+
   await signUpNewUser(page, { name: "Test User" });
   await createOrganization(page, "Acme Corp");
 
@@ -21,6 +26,9 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
   await expect(threadsFooter).toBeVisible();
   await expect(contactsFooter).toBeVisible();
 
+  // 0. Screenshot closed shell footer
+  await page.screenshot({ path: join(screenshotDir, "chat-shell.png") });
+
   // 1. Open Chats
   await chatsFooter.click();
   const panel = page.getByTestId("chat-panel");
@@ -30,11 +38,13 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
 
   // Chats empty state
   await expect(panel.getByText("No conversations yet")).toBeVisible();
+  await page.screenshot({ path: join(screenshotDir, "chat-chats.png") });
 
   // Switch to Unread tab
   await page.getByTestId("chat-tab-unread").click();
   await expect(page.getByTestId("chat-unread-empty")).toBeVisible();
   await expect(panel.getByText("No unread chats")).toBeVisible();
+  await page.screenshot({ path: join(screenshotDir, "chat-unread.png") });
 
   // Switch back to Recent tab
   await page.getByTestId("chat-tab-recent").click();
@@ -44,6 +54,7 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
   await pinsFooter.click();
   await expect(page.getByTestId("chat-pins-empty")).toBeVisible();
   await expect(page.getByTestId("chat-add-chats")).toBeVisible();
+  await page.screenshot({ path: join(screenshotDir, "chat-pins.png") });
 
   // 3. Switch to Channels
   await channelsFooter.click();
@@ -56,11 +67,15 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
   // 5. Switch to Contacts
   await contactsFooter.click();
   await expect(page.getByTestId("chat-contacts-empty")).toBeVisible();
+  await page.screenshot({ path: join(screenshotDir, "chat-contacts.png") });
 
   // Contact categories dropdown
   await page.getByTestId("chat-category-caret").click();
   const categoryMenu = page.getByTestId("chat-contact-categories");
   await expect(categoryMenu).toBeVisible();
+  await page.screenshot({
+    path: join(screenshotDir, "chat-contact-categories.png"),
+  });
   await page.getByTestId("chat-category-recent").click();
   await expect(categoryMenu).toBeHidden();
 
@@ -78,6 +93,7 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
   await expect(page.getByTestId("chat-qa-group")).toBeVisible();
   await expect(page.getByTestId("chat-qa-channel")).toBeVisible();
   await expect(page.getByTestId("chat-qa-invite")).toBeVisible();
+  await page.screenshot({ path: join(screenshotDir, "chat-quick-actions.png") });
 
   // 7. Open Invite Dialog from Quick Actions
   await page.getByTestId("chat-qa-invite").click();
@@ -87,6 +103,7 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
   await expect(
     inviteDialog.getByText("An invitation will be sent to this email address"),
   ).toBeVisible();
+  await page.screenshot({ path: join(screenshotDir, "chat-invite.png") });
 
   // Cancel closes invite dialog
   await page.getByTestId("chat-invite-cancel").click();
