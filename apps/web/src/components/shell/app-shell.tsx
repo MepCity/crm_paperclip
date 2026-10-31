@@ -2,11 +2,13 @@
 
 import { usePathname } from "next/navigation";
 import { type ReactNode, useEffect, useRef, useState } from "react";
+import type { CreateInvitationAction } from "@/components/members/invite-member-dialog";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { PreferenceProvider } from "@/lib/preferences";
+import { ChatBottomBar } from "./chat-bottom-bar";
 import { CreateRecordsMenu } from "./create-records";
 import { GlobalSearch } from "./global-search";
 import { navLinkIconClassName, shellNav } from "./nav";
@@ -20,11 +22,17 @@ export function AppShell({
   organizations,
   user,
   children,
+  inviteAction,
+  canInvite = false,
 }: {
   orgSlug: string;
   organizations: readonly ShellOrganization[];
   user: ShellUser;
   children: ReactNode;
+  /** Server action for org member invitations — forwarded to the chat panel. */
+  inviteAction?: CreateInvitationAction;
+  /** Whether the current user has the invite permission. */
+  canInvite?: boolean;
 }) {
   const t = useUiTranslations();
   const pathname = usePathname();
@@ -38,6 +46,16 @@ export function AppShell({
   const mainContent = useRef<HTMLElement>(null);
   const showControl = useRef<HTMLButtonElement>(null);
   const hideControl = useRef<HTMLButtonElement>(null);
+
+  // Compute initials for the chat panel header avatar
+  const initials =
+    user.name
+      .trim()
+      .split(/\s+/)
+      .slice(0, 2)
+      .map((part) => part[0])
+      .join("")
+      .toUpperCase() || "?";
   useEffect(() => {
     const media = window.matchMedia("(min-width: 48rem)");
     const update = () => setRailVisible(media.matches);
@@ -223,18 +241,11 @@ export function AppShell({
           data-shell-utilities
         >
           <div className="flex h-full items-center gap-6">
-            <Button variant="ghost" size="compact" laterModule="P3">
-              <Icons.pin aria-hidden className="size-4" />
-              {t("shell.pins")}
-            </Button>
-            <Button variant="ghost" size="compact" laterModule="P3">
-              <Icons.messageSquare aria-hidden className="size-4" />
-              {t("shell.chats")}
-            </Button>
-            <Button variant="ghost" size="compact" laterModule="P3">
-              <Icons.users aria-hidden className="size-4" />
-              {t("shell.people")}
-            </Button>
+            <ChatBottomBar
+              user={{ name: user.name, initials }}
+              inviteAction={inviteAction}
+              canInvite={canInvite}
+            />
           </div>
           <div className="flex h-full items-center gap-3">
             <Button
