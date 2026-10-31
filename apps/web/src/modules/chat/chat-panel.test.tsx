@@ -378,6 +378,60 @@ describe("ChatPanel", () => {
     });
   });
 
+  test("prevents duplicate submit and shows pending state during slow invite action", async () => {
+    const ds = createMockDataSource();
+    let resolveAction: (state: InvitationActionState) => void = () => {};
+    const inviteAction = vi.fn(
+      () =>
+        new Promise<InvitationActionState>((resolve) => {
+          resolveAction = resolve;
+        }),
+    );
+    const userEv = userEvent.setup();
+
+    render(
+      <ChatPanel
+        destination="chats"
+        user={user}
+        dataSource={ds}
+        inviteAction={inviteAction}
+        onClose={vi.fn()}
+        onDestinationChange={vi.fn()}
+      />,
+    );
+
+    await userEv.click(screen.getByTestId("chat-quick-actions-fab"));
+    await userEv.click(screen.getByTestId("chat-qa-invite"));
+
+    const dialog = screen.getByTestId("chat-invite-dialog");
+    const emailInput = within(dialog).getByRole("textbox", { name: "Email Address" });
+    await userEv.type(emailInput, "pending@example.test");
+
+    const submitBtn = within(dialog).getByRole("button", { name: "Send Invites" });
+    await userEv.click(submitBtn);
+
+    // Initial submission started
+    expect(inviteAction).toHaveBeenCalledTimes(1);
+
+    // Verify pending attribute on the submit button while promise is in-flight
+    await waitFor(() => {
+      expect(
+        submitBtn.hasAttribute("data-pending") || (submitBtn as HTMLButtonElement).disabled,
+      ).toBe(true);
+    });
+
+    // Attempt second submit while action is still in flight
+    await userEv.click(submitBtn);
+    expect(inviteAction).toHaveBeenCalledTimes(1);
+
+    // Resolve action
+    resolveAction({ status: "success", inviteUrl: "https://crm.local/invite/slow" });
+    await waitFor(() => {
+      expect(screen.getByText("Invitation sent successfully.")).toBeTruthy();
+    });
+    expect(inviteAction).toHaveBeenCalledTimes(1);
+  });
+
   test("search row contains advanced search button inside search box", () => {
     const ds = createMockDataSource();
     render(

@@ -48,9 +48,6 @@ export function InvitePeopleDialog({
         }
       }}
     >
-      <Button className="hidden" aria-hidden>
-        {t("chat.invitePeople")}
-      </Button>
       <Dialog aria-label={t("chat.invitePeople")} data-testid="chat-invite-dialog">
         {({ close }) => (
           <div>

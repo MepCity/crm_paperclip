@@ -103,6 +103,10 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
   await expect(
     inviteDialog.getByText("An invitation will be sent to this email address"),
   ).toBeVisible();
+
+  // Verify no extra trigger button is visible outside the dialog (P1 regression guard)
+  await expect(page.getByRole("button", { name: "Invite People" })).toHaveCount(0);
+
   await page.screenshot({ path: join(screenshotDir, "chat-invite.png") });
 
   // Cancel closes invite dialog

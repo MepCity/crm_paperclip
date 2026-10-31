@@ -171,8 +171,8 @@
   padding: 0 8px;
   font-size: var(--text-xs);
   font-weight: var(--font-weight-normal);
-  color: var(--color-text-muted);
-  background: transparent;
+  color: var(--color-text);
+  background: #f2f5f8;
   border: none;
   border-radius: 4px;
   cursor: pointer;
@@ -189,19 +189,19 @@
 }
 
 .chat-tab:hover {
-  background: var(--color-surface-hover);
+  background: #e5ebf1;
   color: var(--color-text);
 }
 
 .chat-tab-active {
-  background: var(--color-accent-blue);
-  color: #fff;
-  font-weight: var(--font-weight-semibold);
+  background: #daebf7;
+  color: #0a79cc;
+  font-weight: var(--font-weight-normal);
 }
 
 .chat-tab-active:hover {
-  background: var(--color-accent-blue);
-  color: #fff;
+  background: #daebf7;
+  color: #0a79cc;
 }
 
 .chat-tab-badge {

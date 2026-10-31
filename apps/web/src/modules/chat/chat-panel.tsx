@@ -321,12 +321,12 @@ export function ChatPanel({
               >
                 {contactCategory === "frequents" ? (
                   <HeartIcon
-                    className={`size-3.5 ${tab === "primary" ? "text-white" : "text-text-muted"}`}
+                    className={`size-3.5 ${tab === "primary" ? "text-current" : "text-text-muted"}`}
                     aria-hidden
                   />
                 ) : (
                   <Icons.clock
-                    className={`size-3.5 ${tab === "primary" ? "text-white" : "text-text-muted"}`}
+                    className={`size-3.5 ${tab === "primary" ? "text-current" : "text-text-muted"}`}
                     aria-hidden
                   />
                 )}
@@ -345,7 +345,7 @@ export function ChatPanel({
                 data-testid="chat-category-caret"
               >
                 <Icons.chevronDown
-                  className={`size-3 ${tab === "primary" ? "text-white" : "text-text-muted"}`}
+                  className={`size-3 ${tab === "primary" ? "text-current" : "text-text-muted"}`}
                   aria-hidden
                 />
               </button>
