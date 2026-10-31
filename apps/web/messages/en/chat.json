@@ -5,6 +5,7 @@
   "channels": "Channels",
   "threads": "Threads",
   "contacts": "Contacts",
+  "footerBadgeUnread": "{count} unread",
   "recent": "Recent",
   "unread": "Unread",
   "frequents": "Frequents",

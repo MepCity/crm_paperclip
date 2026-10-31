@@ -5,6 +5,7 @@
   "channels": "Kanallar",
   "threads": "Threads",
   "contacts": "Kişiler",
+  "footerBadgeUnread": "{count} okunmamış",
   "recent": "Son",
   "unread": "Okunmamış",
   "frequents": "Sık kullanılanlar",
