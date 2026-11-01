@@ -4,6 +4,9 @@ import { AUTH_NAVIGATION_TIMEOUT_MS, signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
+// Match reference CRM capture resolution: 1470x835 @ 2x = 2940x1670 px
+test.use({ viewport: { width: 1470, height: 835 }, deviceScaleFactor: 2 });
+
 test("chat bottom bar, panel destinations, empty states, quick actions and invite dialog work", async ({
   page,
 }) => {
@@ -153,7 +156,10 @@ test("two members of one organization chat live: send, unread, read, edit, delet
   const inviteUrl = (await inviteDialog.getByText(/\/invite\//).innerText()).trim();
   await inviteDialog.getByRole("button", { name: "Close" }).click();
 
-  const beaContext = await browser.newContext();
+  const beaContext = await browser.newContext({
+    viewport: { width: 1470, height: 835 },
+    deviceScaleFactor: 2,
+  });
   const bea = await beaContext.newPage();
   const beaErrors: string[] = [];
   bea.on("console", (message) => {
@@ -180,6 +186,7 @@ test("two members of one organization chat live: send, unread, read, edit, delet
     const beaRow = page.getByTestId("chat-contact-row").filter({ hasText: "Bea Member" });
     await expect(beaRow).toBeVisible({ timeout: 10_000 });
     await expect(beaRow.locator(".chat-presence-available")).toBeVisible({ timeout: 10_000 });
+    await page.screenshot({ path: join(screenshotDir, "chat-contacts-live.png") });
     await beaRow.click();
     await expect(page.getByTestId("chat-conversation-title")).toHaveText("Bea Member");
 
