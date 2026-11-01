@@ -91,13 +91,13 @@ Local side-by-side cropped composite images generated at 1:1 scale (620×1060 px
 
 Fresh application screenshots captured at full reference resolution (2940 × 1670 px) with synthetic test data are registered on Paperclip:
 
-- **Chat Recent Empty:** [/api/attachments/4e6a7efa-6ab7-446b-9fe0-29cb6586cb7b/content](/api/attachments/4e6a7efa-6ab7-446b-9fe0-29cb6586cb7b/content)
-- **Chat Unread Empty:** [/api/attachments/3db31a95-c2dc-4b08-8834-48a798c0d376/content](/api/attachments/3db31a95-c2dc-4b08-8834-48a798c0d376/content)
-- **Chat Contacts Empty:** [/api/attachments/db7a153a-6fad-47a6-b49d-f420c073dcda/content](/api/attachments/db7a153a-6fad-47a6-b49d-f420c073dcda/content)
-- **Chat Contact Categories Menu:** [/api/attachments/a7b177e3-e05f-4cfc-80ff-278cd82e0fec/content](/api/attachments/a7b177e3-e05f-4cfc-80ff-278cd82e0fec/content)
-- **Chat Quick Actions Overlay & Menu:** [/api/attachments/98c6d187-06ef-488e-9a7c-1e6c49297d14/content](/api/attachments/98c6d187-06ef-488e-9a7c-1e6c49297d14/content)
-- **Chat Live Conversation & Composer:** [/api/attachments/1657f764-0c72-451b-a045-36010cb5ac60/content](/api/attachments/1657f764-0c72-451b-a045-36010cb5ac60/content)
-- **Chat Contacts Live & Presence:** [/api/attachments/233023c0-bfd9-481c-9d33-1454b8167961/content](/api/attachments/233023c0-bfd9-481c-9d33-1454b8167961/content)
+- **Chat Recent Empty:** [/api/attachments/3080e303-bb90-4a8b-9c5b-ff12743780ab/content](/api/attachments/3080e303-bb90-4a8b-9c5b-ff12743780ab/content)
+- **Chat Unread Empty:** [/api/attachments/0d72a518-2e32-4cc4-9467-158a867cae67/content](/api/attachments/0d72a518-2e32-4cc4-9467-158a867cae67/content)
+- **Chat Contacts Empty:** [/api/attachments/60476409-be81-4974-a9e5-f380a866fa0b/content](/api/attachments/60476409-be81-4974-a9e5-f380a866fa0b/content)
+- **Chat Contact Categories Menu:** [/api/attachments/b1577b0b-f967-4569-8c6d-57867d4180db/content](/api/attachments/b1577b0b-f967-4569-8c6d-57867d4180db/content)
+- **Chat Quick Actions Overlay & Menu:** [/api/attachments/7068e565-9628-42cd-9546-162225e82411/content](/api/attachments/7068e565-9628-42cd-9546-162225e82411/content)
+- **Chat Live Conversation & Composer:** [/api/attachments/5dda92b5-cab5-4333-b9f4-767a1af5f9db/content](/api/attachments/5dda92b5-cab5-4333-b9f4-767a1af5f9db/content)
+- **Chat Contacts Live & Presence:** [/api/attachments/02deecca-71d6-4257-97f2-40ae2394bdf7/content](/api/attachments/02deecca-71d6-4257-97f2-40ae2394bdf7/content)
 
 ---
 
