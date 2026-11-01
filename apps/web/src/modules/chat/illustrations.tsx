@@ -12,10 +12,10 @@ import type { SVGProps } from "react";
 export function ChatEmptyIllustration(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      viewBox="0 0 120 100"
+      viewBox="8 13 104 74"
       fill="none"
       aria-hidden
-      className="mx-auto mb-4 size-24 text-text-muted opacity-50"
+      className="mx-auto h-[56px] w-auto text-text-muted opacity-40"
       {...props}
     >
       {/* Two overlapping speech-bubble rectangles */}
@@ -75,10 +75,10 @@ export function ChatEmptyIllustration(props: SVGProps<SVGSVGElement>) {
 export function ContactEmptyIllustration(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      viewBox="0 0 120 100"
+      viewBox="18 12 84 80"
       fill="none"
       aria-hidden
-      className="mx-auto mb-4 size-24 text-text-muted opacity-50"
+      className="mx-auto h-[66px] w-auto text-text-muted opacity-40"
       {...props}
     >
       {/* Head */}
@@ -98,10 +98,10 @@ export function ContactEmptyIllustration(props: SVGProps<SVGSVGElement>) {
 export function PinEmptyIllustration(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      viewBox="0 0 120 100"
+      viewBox="38 16 44 68"
       fill="none"
       aria-hidden
-      className="mx-auto mb-4 size-24 text-text-muted opacity-50"
+      className="mx-auto h-[60px] w-auto text-text-muted opacity-40"
       {...props}
     >
       {/* Pin shape */}
@@ -125,10 +125,10 @@ export function PinEmptyIllustration(props: SVGProps<SVGSVGElement>) {
 export function UnreadEmptyIllustration(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      viewBox="0 0 120 100"
+      viewBox="12 10 92 68"
       fill="none"
       aria-hidden
-      className="mx-auto mb-4 size-24 text-text-muted opacity-50"
+      className="mx-auto h-[52px] w-auto text-text-muted opacity-40"
       {...props}
     >
       <rect x="14" y="20" width="76" height="56" rx="10" stroke="currentColor" strokeWidth="2.5" />

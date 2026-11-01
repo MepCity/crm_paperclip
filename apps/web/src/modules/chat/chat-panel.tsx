@@ -475,7 +475,10 @@ export function ChatPanel({
                     onOpen={setOpenId}
                   />
                 ) : (
-                  <div className="chat-empty-state" data-testid="chat-unread-empty">
+                  <div
+                    className="chat-empty-state chat-empty-unread"
+                    data-testid="chat-unread-empty"
+                  >
                     <UnreadEmptyIllustration />
                     <p className="chat-empty-unread-text">{t("chat.emptyUnreadTitle")}</p>
                   </div>
@@ -504,7 +507,7 @@ export function ChatPanel({
                     />
                   )}
                   {destination === "chats" && chatRows.length === 0 && (
-                    <div className="chat-empty-state">
+                    <div className="chat-empty-state chat-empty-chats">
                       <ChatEmptyIllustration />
                       <p className="chat-empty-description">{t("chat.emptyChatsDescription")}</p>
                     </div>
@@ -517,7 +520,10 @@ export function ChatPanel({
                   {destination === "contacts" &&
                     visibleContacts.length === 0 &&
                     !showEmailInvite && (
-                      <div className="chat-empty-state" data-testid="chat-contacts-empty">
+                      <div
+                        className="chat-empty-state chat-empty-contacts"
+                        data-testid="chat-contacts-empty"
+                      >
                         <ContactEmptyIllustration />
                         <p className="chat-empty-description">
                           {t("chat.emptyContactsDescription")}
@@ -527,7 +533,10 @@ export function ChatPanel({
 
                   {/* My Pins empty state */}
                   {destination === "pins" && (
-                    <div className="chat-empty-state" data-testid="chat-pins-empty">
+                    <div
+                      className="chat-empty-state chat-empty-chats"
+                      data-testid="chat-pins-empty"
+                    >
                       <PinEmptyIllustration />
                       <p className="chat-empty-description">{t("chat.emptyPinsDescription")}</p>
                       {/* +Add Chats button (#17) */}
@@ -544,7 +553,10 @@ export function ChatPanel({
 
                   {/* Channels empty state */}
                   {destination === "channels" && (
-                    <div className="chat-empty-state" data-testid="chat-channels-empty">
+                    <div
+                      className="chat-empty-state chat-empty-chats"
+                      data-testid="chat-channels-empty"
+                    >
                       <ChatEmptyIllustration />
                       <p className="chat-empty-description">{t("chat.emptyChannelsDescription")}</p>
                     </div>
@@ -552,7 +564,10 @@ export function ChatPanel({
 
                   {/* Threads empty state */}
                   {destination === "threads" && (
-                    <div className="chat-empty-state" data-testid="chat-threads-empty">
+                    <div
+                      className="chat-empty-state chat-empty-chats"
+                      data-testid="chat-threads-empty"
+                    >
                       <ChatEmptyIllustration />
                       <p className="chat-empty-description">{t("chat.emptyThreadsDescription")}</p>
                     </div>
