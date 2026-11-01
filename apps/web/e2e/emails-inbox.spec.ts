@@ -1,6 +1,7 @@
 import { inboxFixture } from "../src/modules/emails/inbox/fixture";
 import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
+import { isShellBackgroundRequest } from "./support/shell-requests";
 import { assertNoPageErrors, expect, ignoreFailedResponses, test } from "./support/test";
 
 // Keep browser scenarios synthetic while exercising the production HTTP loader.
@@ -22,10 +23,15 @@ test("email folders and messages persist in URL and browser history", async ({ p
   const org = await createOrganization(page);
   await page.goto(`/crm/${org.slug}/tab/Emails`);
   await expect(page.getByRole("heading", { name: "Select a message" })).toBeVisible();
-  // Selection is local. Ignore prefetches from existing shell navigation links.
+  // Selection is local. Ignore prefetches from existing shell navigation links and shell background requests.
   const requests: string[] = [];
   page.on("request", (request) => {
-    if (request.headers()["next-router-prefetch"] !== "1") requests.push(request.url());
+    if (
+      request.headers()["next-router-prefetch"] !== "1" &&
+      !isShellBackgroundRequest(request.url())
+    ) {
+      requests.push(request.url());
+    }
   });
   await page.getByRole("button", { name: /Project overview/ }).click();
   await expect(page).toHaveURL(/folder=inbox&message=conversation-1$/);

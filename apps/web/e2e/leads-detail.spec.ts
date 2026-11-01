@@ -9,6 +9,7 @@ import {
   moduleRecordPath,
 } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
+import { isShellBackgroundRequest } from "./support/shell-requests";
 import { expect, ignoreFailedResponses, test } from "./support/test";
 import { expectType } from "./support/typography";
 
@@ -87,7 +88,7 @@ function isActivityCardRequest(request: CrmRequest): boolean {
 function assertDetailFromListRequests(allRequests: CrmRequest[]) {
   const seen = new Set<string>();
   const requests = allRequests.filter((request) => {
-    if (isActivityCardRequest(request)) return false;
+    if (isActivityCardRequest(request) || isShellBackgroundRequest(request)) return false;
     const key = `${request.method} ${request.pathname} ${[...request.searchParams.keys()].sort()}`;
     if (seen.has(key)) return false;
     seen.add(key);

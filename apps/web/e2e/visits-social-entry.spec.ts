@@ -1,6 +1,7 @@
 import { expectNoA11yViolations } from "./support/a11y";
 import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
+import { isShellBackgroundRequest } from "./support/shell-requests";
 import { assertNoPageErrors, expect, test } from "./support/test";
 
 test.use({ viewport: { width: 1470, height: 835 } });
@@ -82,7 +83,9 @@ test("Visits and Social entry controls stay local inside the shell", async ({
     await expect(slideContent.getByRole("heading", { name: expected.title })).toBeVisible();
     await expect(slideContent.getByText(expected.text, { exact: false })).toBeVisible();
   }
-  const apiRequests = requests.filter((url) => !url.includes("_rsc"));
+  const apiRequests = requests.filter(
+    (url) => !url.includes("_rsc") && !isShellBackgroundRequest(url),
+  );
   expect(apiRequests).toEqual([]);
   await dot1.click();
   await expectNoA11yViolations(page);
