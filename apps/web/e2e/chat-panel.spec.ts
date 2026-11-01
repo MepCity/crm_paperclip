@@ -40,7 +40,9 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
   await expect(panel.getByText("Available")).toBeVisible();
 
   // Chats empty state
-  await expect(panel.getByText("No conversations yet")).toBeVisible();
+  await expect(
+    panel.getByText("Start a conversation with your team members or create a channel."),
+  ).toBeVisible();
   await page.screenshot({ path: join(screenshotDir, "chat-chats.png") });
 
   // Switch to Unread tab
@@ -51,7 +53,9 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
 
   // Switch back to Recent tab
   await page.getByTestId("chat-tab-recent").click();
-  await expect(panel.getByText("No conversations yet")).toBeVisible();
+  await expect(
+    panel.getByText("Start a conversation with your team members or create a channel."),
+  ).toBeVisible();
 
   // 2. Switch to Pins
   await pinsFooter.click();
@@ -178,7 +182,9 @@ test("two members of one organization chat live: send, unread, read, edit, delet
 
     // Bea keeps her panel open on Chats so her sync runs at the fast rate.
     await bea.getByTestId("chat-footer-chats").click();
-    await expect(bea.getByText("No conversations yet")).toBeVisible();
+    await expect(
+      bea.getByText("Start a conversation with your team members or create a channel."),
+    ).toBeVisible();
 
     // Ada: Contacts lists Bea with an online dot; clicking opens the direct conversation.
     await page.reload();

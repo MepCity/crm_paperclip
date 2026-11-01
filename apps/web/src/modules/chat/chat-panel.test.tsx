@@ -131,7 +131,9 @@ describe("ChatPanel", () => {
       />,
     );
 
-    expect(screen.getByText("No conversations yet")).toBeTruthy();
+    expect(
+      screen.getByText("Start a conversation with your team members or create a channel."),
+    ).toBeTruthy();
     expect(screen.queryByTestId("chat-unread-empty")).toBeNull();
 
     // Click Unread tab
@@ -141,7 +143,9 @@ describe("ChatPanel", () => {
 
     // Click Recent tab
     await userEv.click(screen.getByTestId("chat-tab-recent"));
-    expect(screen.getByText("No conversations yet")).toBeTruthy();
+    expect(
+      screen.getByText("Start a conversation with your team members or create a channel."),
+    ).toBeTruthy();
     expect(screen.queryByTestId("chat-unread-empty")).toBeNull();
   });
 
@@ -160,7 +164,7 @@ describe("ChatPanel", () => {
     );
 
     expect(screen.getByTestId("chat-pins-empty")).toBeTruthy();
-    expect(screen.getByText("No pinned chats")).toBeTruthy();
+    expect(screen.getByText("Pin your favorite chats to keep them at hand.")).toBeTruthy();
     const addChatsBtn = screen.getByTestId("chat-add-chats");
     expect(addChatsBtn).toBeTruthy();
 
@@ -183,7 +187,9 @@ describe("ChatPanel", () => {
     );
 
     expect(screen.getByTestId("chat-contacts-empty")).toBeTruthy();
-    expect(screen.getByText("No contacts found")).toBeTruthy();
+    expect(
+      screen.getByText("Enter an email address in the search box to invite a new user."),
+    ).toBeTruthy();
 
     // Open category dropdown
     await userEv.click(screen.getByTestId("chat-category-caret"));
@@ -486,7 +492,9 @@ describe("ChatBottomBar", () => {
     // Click Chats
     await userEv.click(screen.getByTestId("chat-footer-chats"));
     expect(screen.getByTestId("chat-panel")).toBeTruthy();
-    expect(screen.getByText("No conversations yet")).toBeTruthy();
+    expect(
+      screen.getByText("Start a conversation with your team members or create a channel."),
+    ).toBeTruthy();
 
     // Clicking Chats again toggles it closed
     await userEv.click(screen.getByTestId("chat-footer-chats"));

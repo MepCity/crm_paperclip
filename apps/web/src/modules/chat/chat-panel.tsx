@@ -332,27 +332,25 @@ export function ChatPanel({
                 </button>
               </div>
               {/* @Mentions (#10) */}
-              <Button
-                variant="icon"
-                size="compact"
+              <button
+                type="button"
                 aria-label={t("chat.mentions")}
-                className="size-7"
+                className="chat-search-btn"
                 data-testid="chat-mentions-btn"
               >
                 <span className="text-sm font-semibold text-text-muted leading-none" aria-hidden>
                   @
                 </span>
-              </Button>
+              </button>
               {/* Starred (#11) */}
-              <Button
-                variant="icon"
-                size="compact"
+              <button
+                type="button"
                 aria-label={t("chat.starred")}
-                className="size-7"
+                className="chat-search-btn"
                 data-testid="chat-starred-btn"
               >
                 <StarOutlineIcon className="size-4 text-text-muted" aria-hidden />
-              </Button>
+              </button>
             </div>
 
             {/* === Tabs (#12 / #13) === */}
@@ -397,6 +395,42 @@ export function ChatPanel({
                       aria-hidden
                     />
                   </button>
+
+                  {/* Category dropdown menu for contacts */}
+                  {showCategoryMenu && (
+                    <div
+                      className="chat-contact-categories-menu"
+                      role="menu"
+                      data-testid="chat-contact-categories"
+                    >
+                      {(["frequents", "recent"] as ContactCategory[]).map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          role="menuitem"
+                          className={`chat-category-menu-item${contactCategory === c ? " active" : ""}`}
+                          onClick={() => {
+                            setContactCategory(c);
+                            setShowCategoryMenu(false);
+                            setTab("primary");
+                          }}
+                          data-testid={`chat-category-${c}`}
+                        >
+                          {c === "frequents" ? (
+                            <HeartIcon className="size-3.5" aria-hidden />
+                          ) : (
+                            <Icons.clock className="size-3.5" aria-hidden />
+                          )}
+                          <span className="flex-1 text-left">
+                            {t(`chat.${c}` as Parameters<typeof t>[0])}
+                          </span>
+                          {contactCategory === c && (
+                            <Icons.check className="size-3 text-accent-blue" aria-hidden />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
                 </div>
               ) : (
                 <button
@@ -431,40 +465,6 @@ export function ChatPanel({
               </button>
             </div>
 
-            {/* Category dropdown menu for contacts */}
-            {showCategoryMenu && destination === "contacts" && (
-              <div
-                className="absolute left-2 top-24 z-10 w-40 rounded-md border border-border bg-surface shadow-lg"
-                role="menu"
-                data-testid="chat-contact-categories"
-              >
-                {(["frequents", "recent"] as ContactCategory[]).map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    role="menuitem"
-                    className="flex w-full items-center gap-2 px-3 py-2 text-sm text-text hover:bg-surface-hover outline-none"
-                    onClick={() => {
-                      setContactCategory(c);
-                      setShowCategoryMenu(false);
-                      setTab("primary");
-                    }}
-                    data-testid={`chat-category-${c}`}
-                  >
-                    {c === "frequents" ? (
-                      <HeartIcon className="size-4 text-text-muted" aria-hidden />
-                    ) : (
-                      <Icons.clock className="size-4 text-text-muted" aria-hidden />
-                    )}
-                    {t(`chat.${c}` as Parameters<typeof t>[0])}
-                    {contactCategory === c && (
-                      <Icons.check className="ml-auto size-3 text-accent-blue" aria-hidden />
-                    )}
-                  </button>
-                ))}
-              </div>
-            )}
-
             {/* === Body (#14 empty states) === */}
             <div className="chat-body" role="tabpanel">
               {tab === "unread" ? (
@@ -477,7 +477,7 @@ export function ChatPanel({
                 ) : (
                   <div className="chat-empty-state" data-testid="chat-unread-empty">
                     <UnreadEmptyIllustration />
-                    <p className="chat-empty-title">{t("chat.emptyUnreadTitle")}</p>
+                    <p className="chat-empty-unread-text">{t("chat.emptyUnreadTitle")}</p>
                   </div>
                 )
               ) : (
@@ -506,7 +506,6 @@ export function ChatPanel({
                   {destination === "chats" && chatRows.length === 0 && (
                     <div className="chat-empty-state">
                       <ChatEmptyIllustration />
-                      <p className="chat-empty-title">{t("chat.emptyChatsTitle")}</p>
                       <p className="chat-empty-description">{t("chat.emptyChatsDescription")}</p>
                     </div>
                   )}
@@ -520,7 +519,6 @@ export function ChatPanel({
                     !showEmailInvite && (
                       <div className="chat-empty-state" data-testid="chat-contacts-empty">
                         <ContactEmptyIllustration />
-                        <p className="chat-empty-title">{t("chat.emptyContactsTitle")}</p>
                         <p className="chat-empty-description">
                           {t("chat.emptyContactsDescription")}
                         </p>
@@ -531,7 +529,6 @@ export function ChatPanel({
                   {destination === "pins" && (
                     <div className="chat-empty-state" data-testid="chat-pins-empty">
                       <PinEmptyIllustration />
-                      <p className="chat-empty-title">{t("chat.emptyPinsTitle")}</p>
                       <p className="chat-empty-description">{t("chat.emptyPinsDescription")}</p>
                       {/* +Add Chats button (#17) */}
                       <button
@@ -549,7 +546,6 @@ export function ChatPanel({
                   {destination === "channels" && (
                     <div className="chat-empty-state" data-testid="chat-channels-empty">
                       <ChatEmptyIllustration />
-                      <p className="chat-empty-title">{t("chat.emptyChannelsTitle")}</p>
                       <p className="chat-empty-description">{t("chat.emptyChannelsDescription")}</p>
                     </div>
                   )}
@@ -558,7 +554,6 @@ export function ChatPanel({
                   {destination === "threads" && (
                     <div className="chat-empty-state" data-testid="chat-threads-empty">
                       <ChatEmptyIllustration />
-                      <p className="chat-empty-title">{t("chat.emptyThreadsTitle")}</p>
                       <p className="chat-empty-description">{t("chat.emptyThreadsDescription")}</p>
                     </div>
                   )}
@@ -566,60 +561,115 @@ export function ChatPanel({
               )}
             </div>
 
-            {/* Quick Actions menu (#18–#22, #25) */}
+            {/* Quick Actions overlay & menu (#18–#28) */}
             {quickActionsOpen && (
-              <div className="chat-quick-actions-menu" data-testid="chat-quick-actions-menu">
-                <div className="chat-quick-actions-title">{t("chat.quickActions")}</div>
-                {/* Send a Direct Message (#20) */}
-                <button
-                  type="button"
-                  className="chat-quick-action-item"
-                  onClick={() => {
-                    setPicker("direct");
-                    setQuickActionsOpen(false);
-                  }}
-                  data-testid="chat-qa-direct"
-                >
-                  <MessagePlusIcon className="size-4" aria-hidden />
-                  {t("chat.sendDirectMessage")}
-                </button>
-                {/* Start a Group Conversation (#21) */}
-                <button
-                  type="button"
-                  className="chat-quick-action-item"
-                  onClick={() => {
-                    setPicker("group");
-                    setQuickActionsOpen(false);
-                  }}
-                  data-testid="chat-qa-group"
-                >
-                  <Icons.users className="size-4" aria-hidden />
-                  {t("chat.startGroupConversation")}
-                </button>
-                {/* Create a Channel (#25) */}
-                <button
-                  type="button"
-                  className="chat-quick-action-item"
-                  onClick={() => {
-                    setQuickActionsOpen(false);
-                  }}
-                  data-testid="chat-qa-channel"
-                >
-                  <HashIcon className="size-4" aria-hidden />
-                  {t("chat.createChannel")}
-                </button>
-                {/* Invite People (#22) — only when user has invite permission and inviteAction exists */}
-                {dataSource.canInvite && Boolean(inviteAction) && (
-                  <button
-                    type="button"
-                    className="chat-quick-action-item"
-                    onClick={() => openInvite()}
-                    data-testid="chat-qa-invite"
-                  >
-                    <Icons.userPlus className="size-4" aria-hidden />
-                    {t("chat.invitePeople")}
-                  </button>
-                )}
+              <div className="chat-quick-actions-overlay" data-testid="chat-quick-actions-overlay">
+                <div
+                  className="chat-quick-actions-backdrop"
+                  onClick={() => setQuickActionsOpen(false)}
+                  aria-hidden="true"
+                />
+                <div className="chat-quick-actions-card" data-testid="chat-quick-actions-menu">
+                  <div className="chat-quick-actions-header">
+                    <span className="chat-quick-actions-title">{t("chat.quickActions")}</span>
+                  </div>
+                  <div className="chat-quick-actions-list">
+                    {/* 1. Send a Direct Message (#20) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item"
+                      onClick={() => {
+                        setPicker("direct");
+                        setQuickActionsOpen(false);
+                      }}
+                      data-testid="chat-qa-direct"
+                    >
+                      <MessagePlusIcon className="size-4" aria-hidden />
+                      <span>{t("chat.sendDirectMessage")}</span>
+                    </button>
+                    {/* 2. Start a Group Conversation (#21) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item"
+                      onClick={() => {
+                        setPicker("group");
+                        setQuickActionsOpen(false);
+                      }}
+                      data-testid="chat-qa-group"
+                    >
+                      <Icons.users className="size-4" aria-hidden />
+                      <span>{t("chat.startGroupConversation")}</span>
+                    </button>
+                    {/* 3. Invite People (#22) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item"
+                      onClick={() => {
+                        setQuickActionsOpen(false);
+                        openInvite();
+                      }}
+                      data-testid="chat-qa-invite"
+                    >
+                      <Icons.userPlus className="size-4" aria-hidden />
+                      <span>{t("chat.invitePeople")}</span>
+                    </button>
+                    {/* 4. Make a Call (#23) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item"
+                      onClick={() => setQuickActionsOpen(false)}
+                      data-testid="chat-qa-call"
+                    >
+                      <Icons.phone className="size-4" aria-hidden />
+                      <span>{t("chat.makeCall")}</span>
+                    </button>
+
+                    {/* Notice banner (#24) */}
+                    <div className="chat-quick-action-notice">{t("chat.accessNotice")}</div>
+
+                    {/* Lower items (#25–#28) */}
+                    {/* 5. Create a Channel (#25) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item chat-quick-action-muted"
+                      onClick={() => setQuickActionsOpen(false)}
+                      data-testid="chat-qa-channel"
+                    >
+                      <HashIcon className="size-4" aria-hidden />
+                      <span>{t("chat.createChannel")}</span>
+                    </button>
+                    {/* 6. Meet Now (#26) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item chat-quick-action-muted"
+                      onClick={() => setQuickActionsOpen(false)}
+                      data-testid="chat-qa-meet-now"
+                    >
+                      <VideoIcon className="size-4" aria-hidden />
+                      <span>{t("chat.meetNow")}</span>
+                    </button>
+                    {/* 7. Schedule Meeting (#27) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item chat-quick-action-muted"
+                      onClick={() => setQuickActionsOpen(false)}
+                      data-testid="chat-qa-schedule-meeting"
+                    >
+                      <Icons.calendar className="size-4" aria-hidden />
+                      <span>{t("chat.scheduleMeeting")}</span>
+                    </button>
+                    {/* 8. Schedule Live Event (#28) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item chat-quick-action-muted"
+                      onClick={() => setQuickActionsOpen(false)}
+                      data-testid="chat-qa-live-event"
+                    >
+                      <BroadcastIcon className="size-4" aria-hidden />
+                      <span>{t("chat.scheduleLiveEvent")}</span>
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
 
@@ -734,6 +784,37 @@ function HashIcon(props: SVGProps<SVGSVGElement>) {
       <line x1="4" y1="15" x2="20" y2="15" />
       <line x1="10" y1="3" x2="8" y2="21" />
       <line x1="16" y1="3" x2="14" y2="21" />
+    </svg>
+  );
+}
+
+function VideoIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      aria-hidden="true"
+      {...props}
+    >
+      <polygon points="23 7 16 12 23 17 23 7" />
+      <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+    </svg>
+  );
+}
+
+function BroadcastIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M4.93 19.07a10 10 0 0 1 0-14.14M19.07 4.93a10 10 0 0 1 0 14.14M7.76 16.24a6 6 0 0 1 0-8.48M16.24 7.76a6 6 0 0 1 0 8.48M12 12h.01" />
     </svg>
   );
 }

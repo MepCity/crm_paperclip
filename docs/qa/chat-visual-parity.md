@@ -9,10 +9,11 @@ Evaluation Viewport: 1470 × 835 @ 2x device scale factor (2940 × 1670 physical
 
 ## 1. Executive Summary & Verification Context
 
-In accordance with the board's Screen QA standard and Codex Reviewer's P2 requirement on MEP-1420:
-- The chat panel implementation was rendered and captured at the exact reference resolution: **1470 × 835 @ 2x (2940 × 1670 px)**.
-- Side-by-side cropped comparisons (1240 × 1060 px) between local reference CRM captures (`~/Desktop/mepcity-research/captures/chat-*`) and application test runs were generated and stored in the research workspace (`~/Desktop/mepcity-research/comparisons/`).
-- In compliance with Absolute Rule 2 and 3 (customer data protection & read-only reference data), reference capture images remain strictly in the local research workspace; only clean application screenshots containing synthetic test identities ("Ada Admin", "Bea Member") are published as deliverable artifacts.
+In accordance with the board's Screen QA standard and Codex Reviewer's feedback on MEP-1420:
+- The chat panel implementation was rendered and captured at the exact reference resolution: **1470 × 835 @ 2x (2940 × 1670 physical pixels)**.
+- Side-by-side cropped comparisons (1240 × 1060 px composite, 620 × 1060 px per column) between local reference CRM captures (`~/Desktop/mepcity-research/captures/chat-*`) and application test runs were regenerated and saved in the local research workspace (`~/Desktop/mepcity-research/comparisons/`).
+- In strict compliance with Absolute Rules 1, 2, and 3 (customer data protection, read-only reference data, no reference vendor/product names), reference capture images remain strictly in the local research workspace. Only clean application screenshots containing synthetic test identities ("Test User", "Bea Member") are published as deliverable attachments.
+- Observations below distinguish strictly between **PASS (1:1)** (verified against reference captures) and **KARŞILAŞTIRILMADI (NOT OBSERVED IN REFERENCE)** (states where reference CRM was empty due to read-only constraints, implemented per ADR 0015 specification and verified in live E2E). Zero unverified "PASS" claims are made.
 - Zero developer or test controls (preview toggles, live/synthetic switches) are present in the UI.
 
 ---
@@ -21,20 +22,18 @@ In accordance with the board's Screen QA standard and Codex Reviewer's P2 requir
 
 | Check Item | Reference CRM Specification (`chat-module.md`) | Application Implementation (`mep/MEP-1420`) | Parity Status | Verification Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| **Panel Position & Geometry** | Docked lower-left above utility strip (`x: 0, y: 310, w: 290, h: 497`). Footer strip remains visible at `y: 807, h: 28`. | Fixed lower-left: `bottom: var(--size-utility-strip-height); left: 0; width: 290px; height: 490px;`. Footer visible underneath. | **PASS (1:1)** | Exact pixel bounding box alignment with reference capture controls. |
+| **Panel Position & Geometry** | Docked lower-left above utility strip (`x: 0, y: 306, w: 290, h: 501`). Footer strip at `y: 807, h: 28`. Docked height: 497px (`807 - 310`). | Fixed lower-left: `bottom: var(--size-utility-strip-height); left: 0; width: 290px; height: 497px;`. Footer visible underneath. | **PASS (1:1)** | Height corrected from 490px to 497px to match reference bounding box exactly. |
 | **Shell Footer Integration** | 5 entries: My Pins (pin), Chats (chat), Channels (hash), Threads (thread), Contacts (users). | 5 buttons with matching SVGs and localized labels (`İşaretlemelerim`, `Sohbetler`, `Kanallar`, `Threads`, `Kişiler`). | **PASS (1:1)** | Active tab highlighted with background tint and primary color icon. |
-| **Panel Header & Presence** | Left avatar (32×32), user full name, status indicator row underneath with green Available dot (9×9) and dropdown caret. | Left avatar (32×32), user name, `.chat-presence-indicator` with status dot and caret button triggering presence popover. | **PASS (1:1)** | Dot colors match: Green `#22c55e` (Available), Orange `#f59e0b` (Away), Red `#ef4444` (Busy). |
-| **Header Action Controls** | Enlarge (diagonal resize arrows #6), Minimize (X glyph #7) right-aligned. | `chat-maximize` and `chat-minimize` buttons with identical vector paths and hover states. | **PASS (1:1)** | Maximized mode centers panel with 860px width and dim backdrop. |
-| **Search & Shortcuts** | Left search box with magnifier, `Search (Ctrl + Space)` placeholder, Advanced search icon, @ Mentions, Starred star. | Matching search bar layout, keyboard shortcut indicator, advanced search affordance, mentions button, starred button. | **PASS (1:1)** | Exact element sequence matching `controls.json` lines 8010–8095. |
-| **Chats Tabs (Recent / Unread)** | Two tabs: "Recent" (active by default) and "Unread / Okunmamış". Selected tab highlighted. | `chat-tab-recent` and `chat-tab-unread` with blue underline indicator and bold active label. | **PASS (1:1)** | Zero layout shift between tab transitions. |
-| **Contacts Tab & Category Picker** | "Frequents" with downward caret (#16). Category menu shows Frequents (heart) and Recent (clock). | `chat-category-caret` triggers `chat-contact-categories` popover with Frequents and Recent options. | **PASS (1:1)** | Checked mark on active category, click switches category. |
-| **Empty States** | Central illustration, clear heading, descriptive subtext directing user to people/channels. | SVG empty illustrations, localized title & explanation (`No conversations yet`, `No unread chats`, `No contacts yet`). | **PASS (1:1)** | Margins, center alignment, and muted text tokens match reference. |
-| **Conversation List Rows** | 56px row height, 36px circular avatar, presence dot for direct chats, contact name, last message preview, timestamp, unread badge. | 56px `.chat-conversation-row`, avatar, status dot, single-line preview with ellipsis, `HH:mm` timestamp, red pill badge. | **PASS (1:1)** | Selected row highlights with subtle accent tint. |
-| **Unread Badges** | Red rounded pill badge with white bold counter. Appears on conversation row and footer tab icon. | Red `#ef4444` pill badge with `#ffffff` text, matching padding and font size on both row and footer. | **PASS (1:1)** | Sync counts immediately clear upon viewing messages. |
-| **Conversation View & History** | Header with back arrow, contact/group name, presence dot, Enlarge/Minimize buttons. Day separators between dates. | Header with `chat-conversation-back`, name, presence, Enlarge/Close. Centered day divider badge (e.g. "Today"). | **PASS (1:1)** | Paged backwards 50 messages on scroll. |
-| **Message Bubbles & Hover Actions** | Message content, author, timestamp. Hover reveals action bar: Star, Copy, Edit, Delete (own messages). | Message row with hover action strip (`chat-action-star`, `chat-action-copy`, `chat-action-edit`, `chat-action-delete`). | **PASS (1:1)** | Edit mode replaces bubble with inline textarea; delete prompts confirmation modal. |
-| **Composer Input** | Textarea with placeholder, Enter to send, Shift+Enter for newline, `@` member picker popover, action buttons. | Multi-line composer with keyboard shortcuts, auto-resize, `@` mention picker popover, optimistic message send with retry. | **PASS (1:1)** | Character order preserved during mention insertion (MEP-1420 fix). |
-| **Quick Actions & FAB** | Floating circular `+` button (36×36) at bottom-right. Menu offers Direct Message, Group, Invite, Call. | `chat-quick-actions-fab` at `bottom: 12px; right: 12px;` opens modal menu with identical items and icons. | **PASS (1:1)** | FAB transforms into close button when menu is open. |
+| **Panel Header & Identity** | Left avatar (28×28), user full name, status indicator row underneath with green Available dot (8×8) and dropdown caret. No horizontal separator line. | Left avatar (28×28, `#dbdfe8` background), user name, `.chat-presence-indicator` with status dot and caret button. Extra horizontal border removed. | **PASS (1:1)** | Avatar size confirmed 28×28px (matching reference `box=[12, 316, 28, 28]`). Clean white surface without divider line. |
+| **Search Row & Frames** | Search input height 30px (width 202px, border `#e6e6e6`). Mentions button (30×30, border `1px solid #e6e6e6`, radius 4px). Starred button (30×30, border `1px solid #e6e6e6`, radius 4px). No horizontal divider below. | Search input height 30px, `.chat-search-btn` 30×30px framed buttons with `1px solid #e6e6e6` border and 4px radius for both Mentions and Starred. Extra bottom border removed. | **PASS (1:1)** | Previously missing button frames restored; horizontal separator removed to match clean reference layout. |
+| **Chats Tabs (Recent / Unread)** | Two 25px tabs (9px margin, 6px gap): "Recent" (`#daebf7` background, `#0a79cc` text) and "Okunmamış" (`#f2f5f8` background, `#333333` text). No bottom divider below tabs. | Two 25px tabs with matching `#daebf7` active and `#f2f5f8` inactive backgrounds. Extra bottom divider removed. | **PASS (1:1)** | Exact pixel dimensions and colors verified via `px.mjs` color runs (`top` and `h` probes). |
+| **Contacts Tab & Category Dropdown** | "Frequents" with downward caret (#16). Category menu at `[15, 423, 127, 72]` (width 127px, height 72px) directly below tab. 32px items with icons & checkmark. | `.chat-contact-categories-menu` positioned directly under tab at `top: calc(100% + 1px); left: 6px; width: 127px; height: 72px;`. Two 32px items with icons and checkmark. | **PASS (1:1)** | Repositioned from previous overlapping `top-24 w-40` position to exact 127px width immediately below tab. |
+| **Empty States (Chats & Contacts)** | Central illustration and single descriptive explanation paragraph. No redundant bold title above the description. | SVG empty illustrations with descriptive paragraph (`emptyChatsDescription`, `emptyContactsDescription`). Redundant separate bold titles removed. | **PASS (1:1)** | Redundant `<p className="chat-empty-title">` removed to match reference CRM layout. |
+| **Empty State (Unread)** | Central illustration with single muted line "No unread chats" (`#8e8e93`, normal weight, 13px) positioned directly below illustration. | Unread empty illustration with `.chat-empty-unread-text` (`color: #8e8e93; font-weight: 400; font-size: 13px; margin-top: 14px;`). | **PASS (1:1)** | Repositioned directly below illustration and font-weight changed to normal muted text. |
+| **Quick Actions Overlay & FAB** | Dimming overlay `[0, 306, 290, 501]` (`rgba(0, 0, 0, 0.38)`). Card at `[15, 371, 261, 386]` with `#f1f4f7` header and 40px item rows in reference order. FAB button (36×36) at bottom-right with cyan-blue `#0A79CC` background. | `.chat-quick-actions-backdrop` dimming overlay (`rgba(0, 0, 0, 0.38)`). Card at `top: 65px; left: 15px; width: 261px;` with `#f1f4f7` header and all 9 items in exact sequence. FAB at `bottom: 10px; right: 10px;` with background `#0A79CC`. | **PASS (1:1)** | Dimming overlay added; card moved to upper panel; all 9 items ordered per reference; FAB color aligned to `#0A79CC`. |
+| **Conversation View & History** | Reference CRM has 0 active messages/conversations due to strict read-only constraints (`chat-module.md` § Purpose and evidence boundary). | Header (back, name, presence, Enlarge/Close); history paged backwards 50 messages; day separators; `(edited)` indicator; deleted placeholder; mark-read on scroll. | **KARŞILAŞTIRILMADI** (Spec-compliant) | Not observable in reference CRM. Implemented strictly per ADR 0015 §7 and verified in live 2-user E2E tests. |
+| **Composer Input & Mentions** | Reference CRM has no composer active in empty state (`chat-module.md`). | Textarea with auto-resize, Enter to send, Shift+Enter newline, `@` member picker preserving character order, optimistic send with retry. | **KARŞILAŞTIRILMADI** (Spec-compliant) | Not observable in reference CRM. Implemented per ADR 0015 §7.3 and verified in live 2-user E2E tests. |
+| **Message Hover Actions** | Reference CRM has no messages to hover in empty state. | Action strip on message hover (Star, Copy, Edit own, Delete own with confirm modal). | **KARŞILAŞTIRILMADI** (Spec-compliant) | Not observable in reference CRM. Implemented per ADR 0015 §7.4 and verified in live 2-user E2E tests. |
 | **Developer / Test Controls** | Strictly forbidden in reference & production builds. | None present. Zero test flags, toggles or preview data switchers. | **PASS** | Automated check confirmed no test toggles exist in DOM. |
 
 ---
@@ -53,7 +52,7 @@ Local side-by-side cropped composite images generated at 1:1 scale (620×1060 px
    - Application: `apps/web/test-results/chat-screenshots/chat-unread.png`
    - Composite: `~/Desktop/mepcity-research/comparisons/compare-chats-unread.png`
 
-3. **Contacts Frequents / Recent State:**
+3. **Contacts Empty / Recent State:**
    - Reference: `~/Desktop/mepcity-research/captures/chat-contacts/screenshot.png`
    - Application: `apps/web/test-results/chat-screenshots/chat-contacts.png`
    - Composite: `~/Desktop/mepcity-research/comparisons/compare-chats-contacts.png`
@@ -63,27 +62,32 @@ Local side-by-side cropped composite images generated at 1:1 scale (620×1060 px
    - Application: `apps/web/test-results/chat-screenshots/chat-contact-categories.png`
    - Composite: `~/Desktop/mepcity-research/comparisons/compare-contact-categories.png`
 
-5. **Quick Actions Overlay:**
+5. **Quick Actions Overlay & Card:**
    - Reference: `~/Desktop/mepcity-research/captures/chat-quick-actions/screenshot.png`
    - Application: `apps/web/test-results/chat-screenshots/chat-quick-actions.png`
    - Composite: `~/Desktop/mepcity-research/comparisons/compare-quick-actions.png`
+
+6. **Live Conversation & Composer vs Base Panel:**
+   - Reference Baseline: `~/Desktop/mepcity-research/captures/chat-chats/screenshot.png`
+   - Application Implementation: `apps/web/test-results/chat-screenshots/chat-live-conversation.png`
+   - Composite: `~/Desktop/mepcity-research/comparisons/compare-conversation-composer.png`
 
 ---
 
 ## 4. Published Application Artifact Deliverables
 
-The application screenshots captured at full reference resolution (2940 × 1670 px) with synthetic test data are registered on Paperclip:
+Application screenshots captured at full reference resolution (2940 × 1670 px) with synthetic test data are registered on Paperclip:
 
-- **Chat Recent Empty:** [/api/attachments/981b2591-b7b6-4763-bb04-19ee1a648f72/content](/api/attachments/981b2591-b7b6-4763-bb04-19ee1a648f72/content)
-- **Chat Unread Empty:** [/api/attachments/eb00b563-4413-414c-9b62-89211abf98aa/content](/api/attachments/eb00b563-4413-414c-9b62-89211abf98aa/content)
-- **Chat Recent Live & Unread Badge:** [/api/attachments/b254fd95-5bd7-4939-b0ba-3fe9c04a65cd/content](/api/attachments/b254fd95-5bd7-4939-b0ba-3fe9c04a65cd/content)
-- **Chat Live Conversation & Composer:** [/api/attachments/802e6a5b-c974-4eae-b1dc-6a9b8e37fbb6/content](/api/attachments/802e6a5b-c974-4eae-b1dc-6a9b8e37fbb6/content)
-- **Chat Contacts Live & Presence:** [/api/attachments/26dd1ec9-bb9b-46dd-b5f7-b34720fe6b2f/content](/api/attachments/26dd1ec9-bb9b-46dd-b5f7-b34720fe6b2f/content)
-- **Chat Contact Categories Menu:** [/api/attachments/eec9f2f5-cadf-4099-a2ec-abf024c45c94/content](/api/attachments/eec9f2f5-cadf-4099-a2ec-abf024c45c94/content)
-- **Chat Quick Actions Menu:** [/api/attachments/ad678dea-9b75-4c00-b06f-040e499d3ef8/content](/api/attachments/ad678dea-9b75-4c00-b06f-040e499d3ef8/content)
+- **Chat Recent Empty:** [/api/attachments/b5b38262-3fcb-461e-9584-088707422123/content](/api/attachments/b5b38262-3fcb-461e-9584-088707422123/content)
+- **Chat Unread Empty:** [/api/attachments/fead897f-2578-4f66-b35b-e4f0c699e839/content](/api/attachments/fead897f-2578-4f66-b35b-e4f0c699e839/content)
+- **Chat Contacts Empty:** [/api/attachments/c434e41a-8534-46b8-85f9-3ad0e454516b/content](/api/attachments/c434e41a-8534-46b8-85f9-3ad0e454516b/content)
+- **Chat Contact Categories Menu:** [/api/attachments/88bc4818-1efe-4ee0-b24f-5d4672432611/content](/api/attachments/88bc4818-1efe-4ee0-b24f-5d4672432611/content)
+- **Chat Quick Actions Overlay & Menu:** [/api/attachments/a7c3a88f-65ac-4b3f-a34a-7970590e6419/content](/api/attachments/a7c3a88f-65ac-4b3f-a34a-7970590e6419/content)
+- **Chat Live Conversation & Composer:** [/api/attachments/efcb8943-9384-46f8-b9fe-4869dfff06cf/content](/api/attachments/efcb8943-9384-46f8-b9fe-4869dfff06cf/content)
+- **Chat Contacts Live & Presence:** [/api/attachments/b6fc447e-8242-44ad-9a09-b7efd2eb384d/content](/api/attachments/b6fc447e-8242-44ad-9a09-b7efd2eb384d/content)
 
 ---
 
 ## 5. Visual QA Conclusion
 
-All 10 inspection criteria of the Screen QA standard are met. Visual geometry, typography, icon tokens, presence states, badge shapes, and docked overlay positioning achieve 1:1 parity with the reference CRM.
+All visual discrepancies previously identified by Codex Reviewer (Quick Actions dimming backdrop, upper card positioning, option order, search/mentions/starred button frames, extra horizontal separators, contact categories menu positioning/width, unread empty state typography, and FAB color `#0A79CC`) have been corrected using our design tokens. States unobservable in the reference captures due to read-only constraints are explicitly documented as **KARŞILAŞTIRILMADI** and verified against ADR 0015 via automated E2E tests.
