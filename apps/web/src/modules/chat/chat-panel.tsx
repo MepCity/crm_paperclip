@@ -4,7 +4,6 @@ import "./chat.css";
 
 import { type SVGProps, useCallback, useEffect, useRef, useState } from "react";
 import type { CreateInvitationAction } from "@/components/members/invite-member-dialog";
-import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { ContactList, ConversationList } from "./conversation-list";
@@ -241,27 +240,25 @@ export function ChatPanel({
 
           <div className="chat-header-actions">
             {/* Enlarge (#6) */}
-            <Button
-              variant="icon"
-              size="compact"
+            <button
+              type="button"
+              className="chat-header-btn"
               aria-label={t("chat.enlarge")}
-              onPress={() => setMaximized((v) => !v)}
-              className="size-7"
+              onClick={() => setMaximized((v) => !v)}
               data-testid="chat-maximize"
             >
-              <Icons.diagonalExpand className="size-4" aria-hidden />
-            </Button>
+              <Icons.diagonalExpand className="size-3.5" aria-hidden />
+            </button>
             {/* Minimize / close (#7) */}
-            <Button
-              variant="icon"
-              size="compact"
+            <button
+              type="button"
+              className="chat-header-btn"
               aria-label={t("chat.minimize")}
-              onPress={onClose}
-              className="size-7"
+              onClick={onClose}
               data-testid="chat-minimize"
             >
-              <Icons.close className="size-4" aria-hidden />
-            </Button>
+              <Icons.close className="size-3.5" aria-hidden />
+            </button>
           </div>
 
           {/* Presence menu */}
@@ -425,7 +422,7 @@ export function ChatPanel({
                             {t(`chat.${c}` as Parameters<typeof t>[0])}
                           </span>
                           {contactCategory === c && (
-                            <Icons.check className="size-3 text-accent-blue" aria-hidden />
+                            <Icons.check className="size-3 text-[#627282]" aria-hidden />
                           )}
                         </button>
                       ))}

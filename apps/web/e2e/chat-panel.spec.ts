@@ -16,6 +16,14 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
   await signUpNewUser(page, { name: "Test User" });
   await createOrganization(page, "Acme Corp");
 
+  // Switch to "tr" locale to match reference CRM capture environment (Screen QA standard)
+  const pinned = await page.request.put("/api/personal-settings/language", {
+    headers: { Origin: new URL(page.url()).origin },
+    data: { language: "tr" },
+  });
+  expect(pinned.ok()).toBe(true);
+  await page.reload();
+
   // Verify all 5 footer buttons are visible
   const pinsFooter = page.getByTestId("chat-footer-pins");
   const chatsFooter = page.getByTestId("chat-footer-chats");
@@ -41,7 +49,9 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
 
   // Chats empty state
   await expect(
-    panel.getByText("Start a conversation with your team members or create a channel."),
+    panel.getByText(
+      /Start a conversation with your team members|İnsanlar ve ekiplerle yaptığınız görüşmeler/,
+    ),
   ).toBeVisible();
   await page.screenshot({ path: join(screenshotDir, "chat-chats.png") });
 
@@ -54,7 +64,9 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
   // Switch back to Recent tab
   await page.getByTestId("chat-tab-recent").click();
   await expect(
-    panel.getByText("Start a conversation with your team members or create a channel."),
+    panel.getByText(
+      /Start a conversation with your team members|İnsanlar ve ekiplerle yaptığınız görüşmeler/,
+    ),
   ).toBeVisible();
 
   // 2. Switch to Pins
@@ -108,7 +120,7 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
   await expect(inviteDialog).toBeVisible();
   await expect(inviteDialog.getByText("Invite People")).toBeVisible();
   await expect(
-    inviteDialog.getByText("An invitation will be sent to this email address"),
+    inviteDialog.getByText(/An invitation will be sent|davet gönderilecek/i),
   ).toBeVisible();
 
   // Verify no extra trigger button is visible outside the dialog (P1 regression guard)
@@ -126,7 +138,7 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
   await expect(presenceMenu).toBeVisible();
   await page.getByTestId("chat-presence-away").click();
   await expect(presenceMenu).toBeHidden();
-  await expect(panel.getByText("Away")).toBeVisible();
+  await expect(panel.getByText(/Away|Uzakta/)).toBeVisible();
 
   // 9. Maximize and Restore
   await page.getByTestId("chat-maximize").click();

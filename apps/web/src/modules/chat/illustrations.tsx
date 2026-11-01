@@ -15,7 +15,7 @@ export function ChatEmptyIllustration(props: SVGProps<SVGSVGElement>) {
       viewBox="8 13 104 74"
       fill="none"
       aria-hidden
-      className="mx-auto h-[56px] w-auto text-text-muted opacity-40"
+      className="mx-auto h-[76px] w-auto text-text-muted opacity-40"
       {...props}
     >
       {/* Two overlapping speech-bubble rectangles */}
@@ -78,7 +78,7 @@ export function ContactEmptyIllustration(props: SVGProps<SVGSVGElement>) {
       viewBox="18 12 84 80"
       fill="none"
       aria-hidden
-      className="mx-auto h-[66px] w-auto text-text-muted opacity-40"
+      className="mx-auto h-[77px] w-auto text-text-muted opacity-40"
       {...props}
     >
       {/* Head */}
@@ -128,7 +128,7 @@ export function UnreadEmptyIllustration(props: SVGProps<SVGSVGElement>) {
       viewBox="12 10 92 68"
       fill="none"
       aria-hidden
-      className="mx-auto h-[52px] w-auto text-text-muted opacity-40"
+      className="mx-auto h-[50px] w-auto text-text-muted opacity-40"
       {...props}
     >
       <rect x="14" y="20" width="76" height="56" rx="10" stroke="currentColor" strokeWidth="2.5" />
