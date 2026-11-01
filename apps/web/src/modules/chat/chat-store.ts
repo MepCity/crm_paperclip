@@ -117,6 +117,16 @@ export function mergeSync(state: ChatState, response: ChatSyncResponse): ChatSta
   const messages = putMessages(state.messages, response.messages);
   const presence = { ...state.presence };
   for (const row of response.presence) presence[row.userId] = row.status;
+
+  let localRead = state.localRead;
+  for (const [convId, localSeq] of Object.entries(localRead)) {
+    const conv = conversations[convId];
+    if (conv?.lastReadSeq !== undefined && conv.lastReadSeq >= localSeq) {
+      if (localRead === state.localRead) localRead = { ...localRead };
+      delete localRead[convId];
+    }
+  }
+
   return {
     ...state,
     cursor: Math.max(state.cursor, response.cursor),
@@ -126,6 +136,7 @@ export function mergeSync(state: ChatState, response: ChatSyncResponse): ChatSta
     messages,
     presence,
     badges: response.badges,
+    localRead,
   };
 }
 
@@ -152,6 +163,76 @@ export function upsertMessage(state: ChatState, message: ChatMessageWire): ChatS
 export function setLocalRead(state: ChatState, conversationId: string, seq: number): ChatState {
   if ((state.localRead[conversationId] ?? 0) >= seq) return state;
   return { ...state, localRead: { ...state.localRead, [conversationId]: seq } };
+}
+
+/** Reverts an optimistic read if the network request fails and localRead has not advanced. */
+export function revertLocalRead(
+  state: ChatState,
+  conversationId: string,
+  failedSeq: number,
+  previousSeq?: number,
+): ChatState {
+  if ((state.localRead[conversationId] ?? 0) !== failedSeq) return state;
+  if (previousSeq === undefined) {
+    if (!(conversationId in state.localRead)) return state;
+    const { [conversationId]: _, ...rest } = state.localRead;
+    return { ...state, localRead: rest };
+  }
+  return { ...state, localRead: { ...state.localRead, [conversationId]: previousSeq } };
+}
+
+/** Confirms a server-acknowledged read sequence and cleans up optimistic local state. */
+export function confirmRead(
+  state: ChatState,
+  conversationId: string,
+  selfId: string,
+  seq: number,
+): ChatState {
+  const member = state.members[conversationId]?.[selfId];
+  const conv = state.conversations[conversationId];
+  if (!member && !conv) return state;
+
+  let nextMembers = state.members;
+  if (member && (member.lastReadSeq ?? 0) < seq) {
+    nextMembers = {
+      ...state.members,
+      [conversationId]: {
+        ...state.members[conversationId],
+        [selfId]: { ...member, lastReadSeq: seq },
+      },
+    };
+  }
+
+  let nextConversations = state.conversations;
+  if (conv && (conv.lastReadSeq ?? 0) < seq) {
+    nextConversations = {
+      ...state.conversations,
+      [conversationId]: { ...conv, lastReadSeq: seq },
+    };
+  }
+
+  let nextLocalRead = state.localRead;
+  if (conversationId in state.localRead && (state.localRead[conversationId] ?? 0) <= seq) {
+    const { [conversationId]: _, ...rest } = state.localRead;
+    nextLocalRead = rest;
+  }
+
+  return {
+    ...state,
+    members: nextMembers,
+    conversations: nextConversations,
+    localRead: nextLocalRead,
+  };
+}
+
+/** Highest sequence number confirmed by the server for self membership (ADR §3). */
+export function serverReadSeq(state: ChatState, selfId: string, conversationId: string): number {
+  const conversation = state.conversations[conversationId];
+  if (!conversation) return 0;
+  const member = state.members[conversationId]?.[selfId];
+  if (!member && !conversation.membershipRole) return 0;
+  if (member?.leftAt) return conversation.lastSeq;
+  return Math.max(member?.lastReadSeq ?? 0, conversation.lastReadSeq ?? 0);
 }
 
 export function addPending(state: ChatState, pending: PendingMessage): ChatState {

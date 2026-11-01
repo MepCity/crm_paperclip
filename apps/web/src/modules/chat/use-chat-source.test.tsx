@@ -357,4 +357,109 @@ describe("useChatSource writes", () => {
     expect(api.markRead).toHaveBeenCalledWith("c1", 2);
     expect(result.current.conversations[0]?.unreadCount).toBe(0);
   });
+
+  test("reverts optimistic local read on network failure and allows subsequent markRead retry", async () => {
+    const syncServerState = {
+      cursor: 5,
+      conversations: [
+        {
+          id: "c1",
+          kind: "direct" as const,
+          name: null,
+          visibility: null,
+          directKey: "k",
+          createdBy: SELF,
+          createdAt: NOW,
+          lastSeq: 3,
+          lastMessageAt: NOW,
+          archivedAt: null,
+          changedSeq: 5,
+          membershipRole: "member" as const,
+          lastReadSeq: 0,
+        },
+      ],
+      members: [
+        {
+          conversationId: "c1",
+          userId: SELF,
+          role: "member" as const,
+          joinedAt: NOW,
+          leftAt: null,
+          lastReadSeq: 0,
+          pinnedAt: null,
+          changedSeq: 5,
+        },
+      ],
+      messages: [wireMessage(1), wireMessage(2), wireMessage(3)],
+      badges: {
+        unreadChats: 1,
+        unreadThreads: 0,
+        unreadPins: 0,
+        unreadMentions: 0,
+        unreadTotal: 1,
+      },
+    };
+
+    const markRead = vi
+      .fn<ChatApi["markRead"]>()
+      .mockRejectedValueOnce(new Error("network error"))
+      .mockImplementationOnce(async () => {
+        const member = syncServerState.members[0];
+        if (member) member.lastReadSeq = 3;
+        const conv = syncServerState.conversations[0];
+        if (conv) conv.lastReadSeq = 3;
+        syncServerState.badges.unreadChats = 0;
+        syncServerState.badges.unreadTotal = 0;
+        syncServerState.cursor = 6;
+      });
+
+    const sync = vi.fn<ChatApi["sync"]>(async () => emptySync(syncServerState));
+
+    const api = fakeApi({ markRead, sync });
+    const { result } = setup(api);
+    await flush();
+
+    // 1. Initial state has 3 unread messages (server read = 0)
+    expect(result.current.conversations[0]?.unreadCount).toBe(3);
+    expect(result.current.counts?.chats).toBe(1);
+
+    // 2. First markRead call fails (network error)
+    await act(async () => {
+      result.current.markRead("c1");
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(markRead).toHaveBeenCalledTimes(1);
+    expect(markRead).toHaveBeenLastCalledWith("c1", 3);
+
+    // After failure, optimistic read is safely reverted: unread is restored to 3
+    expect(result.current.conversations[0]?.unreadCount).toBe(3);
+    expect(result.current.counts?.chats).toBe(1);
+
+    // 3. A sync round happens with server state unchanged
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(POLL_IDLE_MS);
+    });
+    expect(result.current.conversations[0]?.unreadCount).toBe(3);
+    expect(result.current.counts?.chats).toBe(1);
+
+    // 4. Second markRead call (e.g. re-opening chat or scrolling down)
+    await act(async () => {
+      result.current.markRead("c1");
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    // Crucial: markRead was NOT suppressed; it was called a 2nd time and succeeded!
+    expect(markRead).toHaveBeenCalledTimes(2);
+    expect(markRead).toHaveBeenLastCalledWith("c1", 3);
+
+    // After successful read acknowledgement, unread drops to 0 and server sync confirms 0 unread
+    expect(result.current.conversations[0]?.unreadCount).toBe(0);
+    expect(result.current.counts?.chats).toBe(0);
+
+    // 5. Subsequent calls for the same target do not spam the API
+    await act(async () => {
+      result.current.markRead("c1");
+      await vi.advanceTimersByTimeAsync(0);
+    });
+    expect(markRead).toHaveBeenCalledTimes(2);
+  });
 });

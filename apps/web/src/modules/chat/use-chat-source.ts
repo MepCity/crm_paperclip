@@ -19,15 +19,16 @@ import {
   newestSeq,
   oldestSeq,
   removePending,
+  revertLocalRead,
   selectContacts,
   selectConversations,
   selectCounts,
   selectMembers,
   selectMessages,
+  serverReadSeq,
   setContacts,
   setLocalRead,
   setPendingStatus,
-  unreadOf,
   upsertMessage,
 } from "./chat-store";
 import type { ChatDataSource, PresenceStatus } from "./data";
@@ -66,6 +67,7 @@ export function useChatSource({
   const inFlightRef = useRef(false);
   const againRef = useRef(false);
   const syncNowRef = useRef<() => void>(() => {});
+  const markReadInFlightRef = useRef<Record<string, number>>({});
 
   const update = useCallback((fn: (current: ChatState) => ChatState) => {
     stateRef.current = fn(stateRef.current);
@@ -173,12 +175,26 @@ export function useChatSource({
       const known = current.conversations[conversationId];
       const target = Math.max(seq, 0);
       if (!known || target === 0) return;
-      if (unreadOf(current, selfId, conversationId) === 0) return;
+      if (serverReadSeq(current, selfId, conversationId) >= target) return;
+      if ((markReadInFlightRef.current[conversationId] ?? 0) >= target) return;
+
+      const prevLocal = current.localRead[conversationId];
       update((s) => setLocalRead(s, conversationId, target));
+      markReadInFlightRef.current[conversationId] = target;
+
       void api
         .markRead(conversationId, target)
-        .then(() => syncNowRef.current())
-        .catch(() => {});
+        .then(() => {
+          syncNowRef.current();
+        })
+        .catch(() => {
+          update((s) => revertLocalRead(s, conversationId, target, prevLocal));
+        })
+        .finally(() => {
+          if (markReadInFlightRef.current[conversationId] === target) {
+            delete markReadInFlightRef.current[conversationId];
+          }
+        });
     },
     [api, selfId, update],
   );

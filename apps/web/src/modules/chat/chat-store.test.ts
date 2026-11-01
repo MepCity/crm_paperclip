@@ -6,13 +6,16 @@ import type {
   ChatSyncResponse,
 } from "@/lib/api/wire/chat";
 import {
+  confirmRead,
   createInitialState,
   mergeHistory,
   mergeSync,
   oldestSeq,
+  revertLocalRead,
   selectConversations,
   selectCounts,
   selectMessages,
+  serverReadSeq,
   setLocalRead,
   unreadOf,
 } from "./chat-store";
@@ -172,6 +175,30 @@ describe("unread math", () => {
     const read = setLocalRead(base, "c1", 5);
     expect(unreadOf(read, SELF, "c1")).toBe(0);
     expect(setLocalRead(read, "c1", 1).localRead.c1).toBe(5);
+  });
+
+  test("revertLocalRead restores previous value only if failedSeq matches", () => {
+    const read = setLocalRead(base, "c1", 5);
+    expect(revertLocalRead(read, "c1", 5, 2).localRead.c1).toBe(2);
+    expect(revertLocalRead(read, "c1", 5).localRead.c1).toBeUndefined();
+    // If localRead moved forward to 6, failed 5 does not revert 6
+    const advanced = setLocalRead(read, "c1", 6);
+    expect(revertLocalRead(advanced, "c1", 5).localRead.c1).toBe(6);
+  });
+
+  test("confirmRead updates member & conversation lastReadSeq and cleans up localRead", () => {
+    const read = setLocalRead(base, "c1", 5);
+    const confirmed = confirmRead(read, "c1", SELF, 5);
+    expect(serverReadSeq(confirmed, SELF, "c1")).toBe(5);
+    expect(confirmed.members.c1?.[SELF]?.lastReadSeq).toBe(5);
+    expect(confirmed.localRead.c1).toBeUndefined();
+    expect(unreadOf(confirmed, SELF, "c1")).toBe(0);
+  });
+
+  test("serverReadSeq returns server-confirmed seq and ignores optimistic localRead", () => {
+    expect(serverReadSeq(base, SELF, "c1")).toBe(2);
+    const read = setLocalRead(base, "c1", 5);
+    expect(serverReadSeq(read, SELF, "c1")).toBe(2);
   });
 
   test("a left or foreign conversation has no unread", () => {
