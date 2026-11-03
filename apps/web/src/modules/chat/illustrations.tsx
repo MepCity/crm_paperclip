@@ -12,61 +12,24 @@ import type { SVGProps } from "react";
 export function ChatEmptyIllustration(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      viewBox="8 13 104 74"
+      viewBox="0 0 80 80"
       fill="none"
       aria-hidden
-      className="mx-auto h-[76px] w-auto text-text-muted opacity-40"
+      className="mx-auto h-[54px] w-[54px]"
       {...props}
     >
-      {/* Two overlapping speech-bubble rectangles */}
-      <rect x="10" y="15" width="72" height="48" rx="10" stroke="currentColor" strokeWidth="2.5" />
-      <rect
-        x="38"
-        y="37"
-        width="72"
-        height="48"
-        rx="10"
-        fill="var(--color-surface)"
-        stroke="currentColor"
-        strokeWidth="2.5"
-      />
-      {/* Lines representing text */}
-      <line
-        x1="24"
-        y1="34"
-        x2="62"
-        y2="34"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <line
-        x1="24"
-        y1="44"
-        x2="54"
-        y2="44"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <line
-        x1="52"
-        y1="56"
-        x2="92"
-        y2="56"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <line
-        x1="52"
-        y1="66"
-        x2="84"
-        y2="66"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
+      <circle cx="40" cy="40" r="38" fill="#eceef1" />
+      <circle cx="40" cy="40" r="38" stroke="#f4f5f7" strokeWidth="2" />
+      <g fill="#dfe2e7">
+        <circle cx="24" cy="26" r="5" />
+        <circle cx="24" cy="40" r="5" />
+        <circle cx="24" cy="54" r="5" />
+      </g>
+      <g stroke="#dfe2e7" strokeWidth="4" strokeLinecap="round">
+        <line x1="35" y1="26" x2="58" y2="26" />
+        <line x1="35" y1="40" x2="58" y2="40" />
+        <line x1="35" y1="54" x2="50" y2="54" />
+      </g>
     </svg>
   );
 }
@@ -75,21 +38,24 @@ export function ChatEmptyIllustration(props: SVGProps<SVGSVGElement>) {
 export function ContactEmptyIllustration(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      viewBox="18 12 84 80"
+      viewBox="0 0 80 80"
       fill="none"
       aria-hidden
-      className="mx-auto h-[77px] w-auto text-text-muted opacity-40"
+      className="mx-auto h-[54px] w-[54px]"
       {...props}
     >
-      {/* Head */}
-      <circle cx="60" cy="32" r="18" stroke="currentColor" strokeWidth="2.5" />
-      {/* Body silhouette */}
-      <path
-        d="M20 90 C20 68 38 58 60 58 C82 58 100 68 100 90"
-        stroke="currentColor"
-        strokeWidth="2.5"
-        strokeLinecap="round"
-      />
+      <circle cx="40" cy="40" r="38" fill="#eceef1" />
+      <circle cx="40" cy="40" r="38" stroke="#f4f5f7" strokeWidth="2" />
+      <g fill="#dfe2e7">
+        <circle cx="24" cy="26" r="5" />
+        <circle cx="24" cy="40" r="5" />
+        <circle cx="24" cy="54" r="5" />
+      </g>
+      <g stroke="#dfe2e7" strokeWidth="4" strokeLinecap="round">
+        <line x1="35" y1="26" x2="58" y2="26" />
+        <line x1="35" y1="40" x2="58" y2="40" />
+        <line x1="35" y1="54" x2="50" y2="54" />
+      </g>
     </svg>
   );
 }
@@ -125,24 +91,47 @@ export function PinEmptyIllustration(props: SVGProps<SVGSVGElement>) {
 export function UnreadEmptyIllustration(props: SVGProps<SVGSVGElement>) {
   return (
     <svg
-      viewBox="12 10 92 68"
+      viewBox="0 0 110 70"
       fill="none"
       aria-hidden
-      className="mx-auto h-[50px] w-auto text-text-muted opacity-40"
+      className="mx-auto h-[46px] w-auto"
       {...props}
     >
-      <rect x="14" y="20" width="76" height="56" rx="10" stroke="currentColor" strokeWidth="2.5" />
-      {/* Envelope flap */}
+      <ellipse cx="55" cy="63" rx="46" ry="3" fill="#eef0f3" />
       <path
-        d="M14 30 L52 55 L90 30"
-        stroke="currentColor"
-        strokeWidth="2.5"
+        d="M10 14 Q10 6 18 6 H50 Q58 6 58 14 V32 Q58 40 50 40 H30 L20 48 L22 40 H18 Q10 40 10 32 Z"
+        fill="#f1f2f5"
+        stroke="#c9ccd3"
+        strokeWidth="2"
         strokeLinejoin="round"
       />
-      {/* Unread dot */}
-      <circle cx="90" cy="24" r="12" fill="var(--color-accent-blue)" />
-      <line x1="90" y1="19" x2="90" y2="27" stroke="white" strokeWidth="2" strokeLinecap="round" />
-      <circle cx="90" cy="31" r="1.5" fill="white" />
+      <circle cx="24" cy="23" r="3" fill="#d5d8de" />
+      <circle cx="35" cy="23" r="3" fill="#d5d8de" />
+      <path
+        d="M52 26 Q52 18 60 18 H92 Q100 18 100 26 V44 Q100 52 92 52 H88 L90 60 L78 52 H60 Q52 52 52 44 Z"
+        fill="#fff"
+        stroke="#c9ccd3"
+        strokeWidth="2"
+        strokeLinejoin="round"
+      />
+      <line
+        x1="64"
+        y1="30"
+        x2="88"
+        y2="30"
+        stroke="#3b8be8"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
+      <line
+        x1="64"
+        y1="40"
+        x2="82"
+        y2="40"
+        stroke="#3b8be8"
+        strokeWidth="3"
+        strokeLinecap="round"
+      />
     </svg>
   );
 }
