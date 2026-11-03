@@ -422,7 +422,7 @@ export function ChatPanel({
                             {t(`chat.${c}` as Parameters<typeof t>[0])}
                           </span>
                           {contactCategory === c && (
-                            <Icons.check className="size-3 text-[#627282]" aria-hidden />
+                            <Icons.check className="size-3.5 text-[#1a73e8]" aria-hidden />
                           )}
                         </button>
                       ))}
@@ -637,7 +637,19 @@ export function ChatPanel({
                     </button>
 
                     {/* Notice banner (#24) */}
-                    <div className="chat-quick-action-notice">{t("chat.accessNotice")}</div>
+                    <div className="chat-quick-action-notice">
+                      <span>{t("chat.accessNotice")}</span>
+                      <svg
+                        className="size-3"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        aria-hidden
+                      >
+                        <path d="M9 2h5v5M14 2 7.5 8.5M12 10v3.5H2.5V4H6" />
+                      </svg>
+                    </div>
 
                     {/* Lower items (#25–#28) */}
                     {/* 5. Create a Channel (#25) */}
