@@ -15,7 +15,7 @@ export function ChatEmptyIllustration(props: SVGProps<SVGSVGElement>) {
       viewBox="0 0 80 80"
       fill="none"
       aria-hidden
-      className="mx-auto h-[54px] w-[54px]"
+      className="mx-auto h-[80px] w-[80px]"
       {...props}
     >
       <circle cx="40" cy="40" r="38" fill="#eceef1" />
@@ -41,7 +41,7 @@ export function ContactEmptyIllustration(props: SVGProps<SVGSVGElement>) {
       viewBox="0 0 80 80"
       fill="none"
       aria-hidden
-      className="mx-auto h-[54px] w-[54px]"
+      className="mx-auto h-[80px] w-[80px]"
       {...props}
     >
       <circle cx="40" cy="40" r="38" fill="#eceef1" />
