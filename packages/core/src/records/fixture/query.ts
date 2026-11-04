@@ -317,6 +317,29 @@ function comparatorFits(
   );
 }
 
+const LINE_ITEM_PRODUCT = /^(Quoted_Items|Invoiced_Items)\.Product_Name$/;
+
+/** Adds the virtual "<line items>.Product_Name" filter fields of modules with line items. */
+export function withLineItemFilterFields(
+  fields: ReadonlyMap<string, FieldDefinition>,
+): ReadonlyMap<string, FieldDefinition> {
+  const out = new Map(fields);
+  for (const [name, field] of fields)
+    if (field.dataType === "subform")
+      out.set(`${name}.Product_Name`, {
+        apiName: `${name}.Product_Name`,
+        label: "Product Name",
+        dataType: "lookup",
+        required: false,
+        readOnly: true,
+        unique: false,
+        massUpdate: false,
+        views: { view: false, create: false, edit: false, quickCreate: false },
+        lookup: { module: "Products" },
+      });
+  return out;
+}
+
 export function validateCriteria(
   criteria: Criteria,
   fields: ReadonlyMap<string, FieldDefinition> = fieldByName,
@@ -488,6 +511,16 @@ export function matches(
   }
   // A leaf on a field absent from module metadata is published but does not constrain.
   if (!fields.has(criteria.field)) return true;
+  if (LINE_ITEM_PRODUCT.test(criteria.field)) {
+    const rows = record.fields[criteria.field.split(".")[0] as string];
+    const ids = (Array.isArray(rows) ? rows : []).flatMap((row) => {
+      const ref = (row as { Product_Name?: { id?: string } } | null)?.Product_Name;
+      return ref?.id ? [ref.id] : [];
+    });
+    const wanted = Array.isArray(criteria.value) ? criteria.value : [criteria.value];
+    const any = ids.some((id) => wanted.includes(id));
+    return criteria.comparator === "not_equal" ? !any : any;
+  }
   const raw = record.fields[criteria.field] ?? null;
   if (criteria.field === "Tag" && fields.get("Tag")?.acceptsJsonArray) {
     const tags = Array.isArray(raw) ? raw : [];
