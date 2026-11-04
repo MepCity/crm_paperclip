@@ -12,6 +12,7 @@ import type {
   ChatMemberWire,
   ChatMessageWire,
   ChatSyncResponse,
+  ChatThreadReadWire,
 } from "@/lib/api/wire/chat";
 import type {
   ChatContact,
@@ -39,6 +40,10 @@ export interface ChatState {
   members: Record<string, Record<string, ChatMemberWire>>;
   /** conversationId → messageId → top-level message. */
   messages: Record<string, Record<string, ChatMessageWire>>;
+  /** threadRootId → messageId → reply message. */
+  replies: Record<string, Record<string, ChatMessageWire>>;
+  /** threadRootId → thread read record. */
+  threadReads: Record<string, ChatThreadReadWire>;
   presence: Record<string, ChatContactWire["status"] | "invisible">;
   badges: ChatBadgesWire;
   /** Highest `seq` the user read locally, ahead of the next sync. */
@@ -50,15 +55,19 @@ export interface ChatState {
   pending: PendingMessage[];
   frequent: ChatContactWire[];
   recent: ChatContactWire[];
+  threadsList: ChatMessageWire[];
+  mentionsList: ChatMessageWire[];
+  starredList: ChatMessageWire[];
 }
 
 export const EMPTY_BADGES: ChatBadgesWire = {
   unreadChats: 0,
+  unreadChannels: 0,
   unreadThreads: 0,
   unreadPins: 0,
   unreadMentions: 0,
   unreadTotal: 0,
-};
+} as unknown as ChatBadgesWire;
 
 export function createInitialState(): ChatState {
   return {
@@ -67,6 +76,8 @@ export function createInitialState(): ChatState {
     conversations: {},
     members: {},
     messages: {},
+    replies: {},
+    threadReads: {},
     presence: {},
     badges: EMPTY_BADGES,
     localRead: {},
@@ -75,6 +86,9 @@ export function createInitialState(): ChatState {
     pending: [],
     frequent: [],
     recent: [],
+    threadsList: [],
+    mentionsList: [],
+    starredList: [],
   };
 }
 
@@ -100,6 +114,21 @@ function putMessages(
   return next;
 }
 
+function putReplies(
+  target: Record<string, Record<string, ChatMessageWire>>,
+  incoming: readonly ChatMessageWire[],
+): Record<string, Record<string, ChatMessageWire>> {
+  let next = target;
+  for (const message of incoming) {
+    if (!message.threadRootId) continue;
+    const bucket = next[message.threadRootId] ?? {};
+    const merged = newer(bucket[message.id], message);
+    if (merged === bucket[message.id]) continue;
+    next = { ...next, [message.threadRootId]: { ...bucket, [message.id]: merged } };
+  }
+  return next;
+}
+
 /** Merges one sync page into the store and advances the cursor. */
 export function mergeSync(state: ChatState, response: ChatSyncResponse): ChatState {
   let conversations = state.conversations;
@@ -115,6 +144,11 @@ export function mergeSync(state: ChatState, response: ChatSyncResponse): ChatSta
     };
   }
   const messages = putMessages(state.messages, response.messages);
+  const replies = putReplies(state.replies, response.messages);
+  const threadReads = { ...state.threadReads };
+  for (const row of response.threadReads ?? []) {
+    threadReads[row.threadRootId] = row;
+  }
   const presence = { ...state.presence };
   for (const row of response.presence) presence[row.userId] = row.status;
 
@@ -134,10 +168,36 @@ export function mergeSync(state: ChatState, response: ChatSyncResponse): ChatSta
     conversations,
     members,
     messages,
+    replies,
+    threadReads,
     presence,
     badges: response.badges,
     localRead,
   };
+}
+
+/** Merges replies for a thread root message. */
+export function mergeReplies(
+  state: ChatState,
+  _threadRootId: string,
+  rows: readonly ChatMessageWire[],
+): ChatState {
+  return {
+    ...state,
+    replies: putReplies(state.replies, rows),
+  };
+}
+
+export function setThreads(state: ChatState, rows: ChatMessageWire[]): ChatState {
+  return { ...state, threadsList: rows };
+}
+
+export function setMentions(state: ChatState, rows: ChatMessageWire[]): ChatState {
+  return { ...state, mentionsList: rows };
+}
+
+export function setStarred(state: ChatState, rows: ChatMessageWire[]): ChatState {
+  return { ...state, starredList: rows };
 }
 
 /** Merges a page of history (`GET …/messages`) and records whether more exists. */
@@ -314,10 +374,15 @@ export function selectConversations(state: ChatState, selfId: string): ChatConve
   for (const conversation of Object.values(state.conversations)) {
     if (conversation.archivedAt) continue;
     const member = state.members[conversation.id]?.[selfId];
-    if (conversation.kind === "channel" && !member && !conversation.membershipRole) continue;
-    if (member?.leftAt) continue;
+    const isMember = Boolean(member && !member.leftAt);
+    if (conversation.kind === "channel" && !isMember && conversation.visibility !== "public")
+      continue;
+    if (member?.leftAt && conversation.kind !== "channel") continue;
     const { title, peerId } = conversationTitle(state, selfId, conversation);
     const last = newestMessage(state, conversation.id);
+    const memberCount = Object.values(state.members[conversation.id] ?? {}).filter(
+      (m) => !m.leftAt,
+    ).length;
     rows.push({
       id: conversation.id,
       kind: conversation.kind,
@@ -326,6 +391,10 @@ export function selectConversations(state: ChatState, selfId: string): ChatConve
       presence: peerId ? shownPresence(state, peerId) : undefined,
       unreadCount: unreadOf(state, selfId, conversation.id),
       pinned: Boolean(member?.pinnedAt ?? conversation.pinnedAt),
+      visibility: conversation.visibility,
+      membershipRole: member?.role ?? conversation.membershipRole ?? null,
+      isMember,
+      memberCount: memberCount || undefined,
       lastMessage: last
         ? {
             text: last.deletedAt ? "" : last.body,
@@ -370,21 +439,60 @@ export function selectCounts(state: ChatState, selfId: string): ChatCounts {
   };
 }
 
-function toView(message: ChatMessageWire, state: ChatState): ChatMessageView {
+export function toView(message: ChatMessageWire, state: ChatState): ChatMessageView {
+  const conv = state.conversations[message.conversationId];
+  const readRow = state.threadReads[message.id];
+  const lastReply = message.lastReplyAt;
+  const isUnread =
+    (message.replyCount ?? 0) > 0 &&
+    Boolean(lastReply) &&
+    (!readRow?.lastReadAt || readRow.lastReadAt < (lastReply ?? ""));
   return {
     id: message.id,
+    conversationId: message.conversationId,
+    conversationTitle: conv?.name ?? (conv ? conversationTitle(state, "", conv).title : ""),
     seq: message.seq,
     authorId: message.authorUserId,
     authorName:
       message.authorName ?? memberName(state, message.conversationId, message.authorUserId),
     body: message.deletedAt ? "" : message.body,
-    mentions: message.mentions,
+    mentions: message.mentions ?? [],
     createdAt: message.createdAt,
     edited: Boolean(message.editedAt) && !message.deletedAt,
     deleted: Boolean(message.deletedAt),
     starred: Boolean(message.starred),
+    threadRootId: message.threadRootId,
+    replyCount: message.replyCount ?? 0,
+    lastReplyAt: message.lastReplyAt,
+    unread: isUnread,
     status: "sent",
   };
+}
+
+export function markThreadReadLocal(
+  state: ChatState,
+  threadRootId: string,
+  userId = "",
+): ChatState {
+  const readRow: ChatThreadReadWire = {
+    threadRootId,
+    userId,
+    lastReadAt: new Date().toISOString(),
+    changedSeq: 0,
+  };
+  return {
+    ...state,
+    threadReads: {
+      ...state.threadReads,
+      [threadRootId]: readRow,
+    },
+  };
+}
+
+export function selectReplies(state: ChatState, threadRootId: string): ChatMessageView[] {
+  return Object.values(state.replies[threadRootId] ?? {})
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .map((m) => toView(m, state));
 }
 
 /** Messages oldest first, optimistic ones after the confirmed ones. */
@@ -421,8 +529,12 @@ export function selectMembers(
   conversationId: string,
 ): ChatMemberView[] {
   return Object.values(state.members[conversationId] ?? {})
-    .filter((m) => m.userId !== selfId && !m.leftAt)
-    .map((m) => ({ id: m.userId, name: m.userName ?? m.userEmail ?? "" }));
+    .filter((m) => !m.leftAt && m.userId !== selfId)
+    .map((m) => ({
+      id: m.userId,
+      name: m.userName ?? m.userEmail ?? "",
+      role: m.role,
+    }));
 }
 
 export function selectContacts(state: ChatState, rows: ChatContactWire[]): ChatContact[] {
