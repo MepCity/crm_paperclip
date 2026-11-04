@@ -9,12 +9,15 @@
  */
 import { UnauthenticatedError } from "@crm/core/errors";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import type { ChatSearchFilters } from "@/lib/api/wire/chat";
 import { type ChatApi, createChatApi } from "./chat-api";
 import {
   addPending,
   type ChatState,
   createInitialState,
+  markThreadReadLocal,
   mergeHistory,
+  mergeReplies,
   mergeSync,
   newestSeq,
   oldestSeq,
@@ -25,10 +28,15 @@ import {
   selectCounts,
   selectMembers,
   selectMessages,
+  selectReplies,
   serverReadSeq,
   setContacts,
   setLocalRead,
+  setMentions,
   setPendingStatus,
+  setStarred,
+  setThreads,
+  toView,
   upsertMessage,
 } from "./chat-store";
 import type { ChatDataSource, PresenceStatus } from "./data";
@@ -340,6 +348,142 @@ export function useChatSource({
     [api, update],
   );
 
+  const createChannel = useCallback(
+    async (name: string, visibility: "public" | "private", memberUserIds?: string[]) =>
+      afterConversation(await api.createChannel(name, visibility, memberUserIds)),
+    [api, afterConversation],
+  );
+
+  const joinChannel = useCallback(
+    async (conversationId: string) => {
+      await api.addMember(conversationId, selfId, "member");
+      syncNowRef.current();
+    },
+    [api, selfId],
+  );
+
+  const leaveChannel = useCallback(
+    async (conversationId: string) => {
+      await api.removeMember(conversationId, selfId);
+      syncNowRef.current();
+    },
+    [api, selfId],
+  );
+
+  const archiveChannel = useCallback(
+    async (conversationId: string) => {
+      await api.updateConversation(conversationId, { archived: true });
+      syncNowRef.current();
+    },
+    [api],
+  );
+
+  const renameChannel = useCallback(
+    async (conversationId: string, name: string) => {
+      await api.updateConversation(conversationId, { name });
+      syncNowRef.current();
+    },
+    [api],
+  );
+
+  const addChannelMember = useCallback(
+    async (conversationId: string, userId: string) => {
+      await api.addMember(conversationId, userId, "member");
+      syncNowRef.current();
+    },
+    [api],
+  );
+
+  const removeChannelMember = useCallback(
+    async (conversationId: string, userId: string) => {
+      await api.removeMember(conversationId, userId);
+      syncNowRef.current();
+    },
+    [api],
+  );
+
+  const pinConversation = useCallback(
+    async (conversationId: string, pin: boolean) => {
+      await api.pin(conversationId, pin);
+      syncNowRef.current();
+    },
+    [api],
+  );
+
+  const loadReplies = useCallback(
+    async (messageId: string) => {
+      const rows = await api.replies(messageId);
+      update((s) => mergeReplies(s, messageId, rows));
+    },
+    [api, update],
+  );
+
+  const sendReply = useCallback(
+    async (messageId: string, body: string, mentions: string[] = []) => {
+      const reply = await api.postReply(messageId, { body, mentions });
+      update((s) => mergeReplies(s, messageId, [reply]));
+      syncNowRef.current();
+    },
+    [api, update],
+  );
+
+  const markThreadRead = useCallback(
+    async (messageId: string) => {
+      update((s) => markThreadReadLocal(s, messageId, selfId));
+      await api.markThreadRead(messageId);
+      syncNowRef.current();
+    },
+    [api, selfId, update],
+  );
+
+  const loadThreads = useCallback(async () => {
+    try {
+      const rows = await api.threads();
+      update((s) => setThreads(s, rows));
+    } catch {
+      // best effort
+    }
+  }, [api, update]);
+
+  const loadMentions = useCallback(async () => {
+    try {
+      const rows = await api.mentions();
+      update((s) => setMentions(s, rows));
+    } catch {
+      // best effort
+    }
+  }, [api, update]);
+
+  const markAllMentionsRead = useCallback(async () => {
+    const mentions = stateRef.current.mentionsList;
+    for (const m of mentions) {
+      if (m.seq) {
+        void api.markRead(m.conversationId, m.seq);
+      }
+    }
+    syncNowRef.current();
+  }, [api]);
+
+  const loadStarred = useCallback(async () => {
+    try {
+      const rows = await api.starred();
+      update((s) => setStarred(s, rows));
+    } catch {
+      // best effort
+    }
+  }, [api, update]);
+
+  const searchMessages = useCallback(
+    async (filters: ChatSearchFilters) => {
+      const res = await api.search(filters);
+      return {
+        messages: res.messages.map((m) => toView(m, stateRef.current)),
+        hasMore: res.hasMore,
+      };
+    },
+    [api],
+  );
+
   return useMemo<ChatDataSource>(() => {
     const counts = selectCounts(state, selfId);
     const directory = selectContacts(state, state.frequent);
@@ -373,6 +517,26 @@ export function useChatSource({
       deleteMessage,
       starMessage,
       setPanelOpen,
+      createChannel,
+      joinChannel,
+      leaveChannel,
+      archiveChannel,
+      renameChannel,
+      addChannelMember,
+      removeChannelMember,
+      pinConversation,
+      repliesOf: (messageId) => selectReplies(state, messageId),
+      loadReplies,
+      sendReply,
+      markThreadRead,
+      threads: state.threadsList.map((m) => toView(m, state)),
+      loadThreads,
+      mentions: state.mentionsList.map((m) => toView(m, state)),
+      loadMentions,
+      markAllMentionsRead,
+      starred: state.starredList.map((m) => toView(m, state)),
+      loadStarred,
+      searchMessages,
     };
   }, [
     state,
@@ -393,5 +557,21 @@ export function useChatSource({
     deleteMessage,
     starMessage,
     setPanelOpen,
+    createChannel,
+    joinChannel,
+    leaveChannel,
+    archiveChannel,
+    renameChannel,
+    addChannelMember,
+    removeChannelMember,
+    pinConversation,
+    loadReplies,
+    sendReply,
+    markThreadRead,
+    loadThreads,
+    loadMentions,
+    markAllMentionsRead,
+    loadStarred,
+    searchMessages,
   ]);
 }

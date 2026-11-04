@@ -47,6 +47,10 @@ export interface ChatConversation {
   presence?: ShownPresence;
   unreadCount: number;
   pinned: boolean;
+  visibility?: "public" | "private" | null;
+  membershipRole?: "owner" | "member" | null;
+  isMember?: boolean;
+  memberCount?: number;
   lastMessage?: {
     text: string;
     timestamp: string;
@@ -61,6 +65,8 @@ export interface ChatConversation {
 export interface ChatMessageView {
   /** Server id, or the clientId while the message is still pending. */
   id: string;
+  conversationId?: string;
+  conversationTitle?: string;
   seq: number | null;
   authorId: string;
   authorName: string;
@@ -70,6 +76,10 @@ export interface ChatMessageView {
   edited: boolean;
   deleted: boolean;
   starred: boolean;
+  threadRootId?: string | null;
+  replyCount?: number;
+  lastReplyAt?: string | null;
+  unread?: boolean;
   /** Local-only delivery state. */
   status: "sent" | "sending" | "failed";
 }
@@ -78,6 +88,7 @@ export interface ChatMessageView {
 export interface ChatMemberView {
   id: string;
   name: string;
+  role?: "owner" | "member";
 }
 
 /** The full data contract between the panel and its data provider. */
@@ -138,6 +149,43 @@ export interface ChatDataSource {
   starMessage(conversationId: string, messageId: string, star: boolean): Promise<void>;
   /** Tells the sync loop whether the panel is open (fast poll rate). */
   setPanelOpen(open: boolean): void;
+
+  /** Channel actions */
+  createChannel(
+    name: string,
+    visibility: "public" | "private",
+    memberUserIds?: string[],
+  ): Promise<string>;
+  joinChannel(conversationId: string): Promise<void>;
+  leaveChannel(conversationId: string): Promise<void>;
+  archiveChannel(conversationId: string): Promise<void>;
+  renameChannel(conversationId: string, name: string): Promise<void>;
+  addChannelMember(conversationId: string, userId: string): Promise<void>;
+  removeChannelMember(conversationId: string, userId: string): Promise<void>;
+
+  /** Pinning actions */
+  pinConversation(conversationId: string, pin: boolean): Promise<void>;
+
+  /** Thread actions */
+  repliesOf(messageId: string): ChatMessageView[];
+  loadReplies(messageId: string): Promise<void>;
+  sendReply(messageId: string, body: string, mentions?: string[]): Promise<void>;
+  markThreadRead(messageId: string): Promise<void>;
+  threads: ChatMessageView[];
+  loadThreads(): Promise<void>;
+
+  /** Mentions & Starred */
+  mentions: ChatMessageView[];
+  loadMentions(): Promise<void>;
+  markAllMentionsRead(): Promise<void>;
+  starred: ChatMessageView[];
+  loadStarred(): Promise<void>;
+
+  /** Advanced search */
+  searchMessages(filters: import("@/lib/api/wire/chat").ChatSearchFilters): Promise<{
+    messages: ChatMessageView[];
+    hasMore: boolean;
+  }>;
 }
 
 /**
@@ -163,6 +211,9 @@ export class EmptyChatDataSource implements ChatDataSource {
   directory: ChatContact[] = [];
   loaded = true;
   canInvite = false;
+  threads: ChatMessageView[] = [];
+  mentions: ChatMessageView[] = [];
+  starred: ChatMessageView[] = [];
 
   setPresence(status: PresenceStatus): void {
     if (this.currentPresence) {
@@ -196,4 +247,39 @@ export class EmptyChatDataSource implements ChatDataSource {
   async deleteMessage(_c: string, _id: string): Promise<void> {}
   async starMessage(_c: string, _id: string, _s: boolean): Promise<void> {}
   setPanelOpen(_open: boolean): void {}
+
+  async createChannel(
+    _name: string,
+    _visibility: "public" | "private",
+    _memberUserIds?: string[],
+  ): Promise<string> {
+    return "channel-1";
+  }
+  async joinChannel(_conversationId: string): Promise<void> {}
+  async leaveChannel(_conversationId: string): Promise<void> {}
+  async archiveChannel(_conversationId: string): Promise<void> {}
+  async renameChannel(_conversationId: string, _name: string): Promise<void> {}
+  async addChannelMember(_conversationId: string, _userId: string): Promise<void> {}
+  async removeChannelMember(_conversationId: string, _userId: string): Promise<void> {}
+
+  async pinConversation(_conversationId: string, _pin: boolean): Promise<void> {}
+
+  repliesOf(_messageId: string): ChatMessageView[] {
+    return [];
+  }
+  async loadReplies(_messageId: string): Promise<void> {}
+  async sendReply(_messageId: string, _body: string, _mentions?: string[]): Promise<void> {}
+  async markThreadRead(_messageId: string): Promise<void> {}
+  async loadThreads(): Promise<void> {}
+
+  async loadMentions(): Promise<void> {}
+  async markAllMentionsRead(): Promise<void> {}
+  async loadStarred(): Promise<void> {}
+
+  async searchMessages(_filters: import("@/lib/api/wire/chat").ChatSearchFilters): Promise<{
+    messages: ChatMessageView[];
+    hasMore: boolean;
+  }> {
+    return { messages: [], hasMore: false };
+  }
 }

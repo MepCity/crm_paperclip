@@ -266,3 +266,98 @@ test("two members of one organization chat live: send, unread, read, edit, delet
     await beaContext.close();
   }
 });
+
+test("channels, threads, pins, mentions, starred and advanced search dialogs work", async ({
+  page,
+}) => {
+  const screenshotDir = join(process.cwd(), "test-results", "chat-screenshots");
+  await mkdir(screenshotDir, { recursive: true });
+
+  await signUpNewUser(page, { name: "Channel Tester" });
+  await createOrganization(page, "Chat Features Org");
+
+  const panel = page.getByTestId("chat-panel");
+
+  // 1. Open channels destination
+  await page.getByTestId("chat-footer-channels").click();
+  await expect(panel).toBeVisible();
+  await expect(page.getByTestId("chat-channels-empty")).toBeVisible();
+
+  // Create channel from empty state button
+  await page.getByTestId("chat-create-channel-btn").click();
+  const createChannelDialog = page.getByTestId("chat-create-channel-dialog");
+  await expect(createChannelDialog).toBeVisible();
+
+  // Fill channel name and submit
+  await page.getByTestId("chat-channel-name-input").fill("general-discussion");
+  await page.getByTestId("chat-create-channel-submit").click();
+  await expect(createChannelDialog).toBeHidden();
+
+  // Conversation view for the new channel opens
+  await expect(page.getByTestId("chat-conversation")).toBeVisible();
+  await expect(page.getByTestId("chat-conversation-title")).toContainText("general-discussion");
+
+  // Send a root message in the channel
+  await page.getByTestId("chat-composer-input").fill("Root channel announcement");
+  await page.getByTestId("chat-composer-input").press("Enter");
+  const rootMsg = page.getByTestId("chat-message").filter({ hasText: "Root channel announcement" });
+  await expect(rootMsg).toBeVisible();
+
+  // Reply in thread
+  await rootMsg.hover();
+  await rootMsg.getByTestId("chat-action-reply").click();
+  const threadPane = page.getByTestId("chat-thread-pane");
+  await expect(threadPane).toBeVisible();
+  await expect(threadPane.getByText("Root channel announcement")).toBeVisible();
+
+  // Send reply in thread
+  await threadPane.getByRole("textbox").fill("First thread reply");
+  await threadPane.getByRole("textbox").press("Enter");
+  await expect(threadPane.getByText("First thread reply")).toBeVisible();
+
+  // Close thread pane
+  await threadPane.getByTestId("chat-thread-close").click();
+  await expect(threadPane).toBeHidden();
+
+  // Verify reply count under root message
+  await expect(rootMsg.getByTestId("chat-thread-trigger")).toContainText("1");
+
+  // Pin the channel from conversation header
+  await page.getByTestId("chat-conversation-pin").click();
+
+  // Back to list
+  await page.getByTestId("chat-conversation-back").click();
+
+  // Switch to My Pins: channel is listed with unpin button
+  await page.getByTestId("chat-footer-pins").click();
+  await expect(
+    page.getByTestId("chat-conversation-row").filter({ hasText: "general-discussion" }),
+  ).toBeVisible();
+  await expect(page.getByTestId("chat-conversation-unpin")).toBeVisible();
+
+  // Switch to Threads destination: the thread is listed
+  await page.getByTestId("chat-footer-threads").click();
+  await expect(page.getByTestId("chat-threads-list")).toBeVisible();
+  await expect(page.getByText("Root channel announcement")).toBeVisible();
+
+  // Open Mentions dialog
+  await page.getByTestId("chat-mentions-btn").click();
+  const mentionsDialog = page.getByTestId("chat-mentions");
+  await expect(mentionsDialog).toBeVisible();
+  await page.getByTestId("chat-mentions-close").click();
+  await expect(mentionsDialog).toBeHidden();
+
+  // Open Starred dialog
+  await page.getByTestId("chat-starred-btn").click();
+  const starredDialog = page.getByTestId("chat-starred");
+  await expect(starredDialog).toBeVisible();
+  await page.getByTestId("chat-starred-close").click();
+  await expect(starredDialog).toBeHidden();
+
+  // Open Advanced search dialog
+  await page.getByTestId("chat-advanced-search-btn").click();
+  const searchModal = page.getByTestId("chat-advanced-search");
+  await expect(searchModal).toBeVisible();
+  await page.getByTestId("chat-advanced-search-close").click();
+  await expect(searchModal).toBeHidden();
+});

@@ -14,10 +14,12 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Icons } from "@/components/ui/icon";
 import { useUiTranslations } from "@/i18n/client-provider";
-import { CopyIcon, PencilIcon, StarIcon, TrashIcon } from "./chat-icons";
+import { ChannelMembersDialog } from "./channel-members-dialog";
+import { CopyIcon, PencilIcon, StarIcon, ThreadsIcon, TrashIcon } from "./chat-icons";
 import { Composer } from "./composer";
 import type { ChatConversation, ChatDataSource, ChatMessageView, ShownPresence } from "./data";
 import { dayDiff, dayKey, extractMentions, initialsOf, linkify } from "./text";
+import { ThreadPane } from "./thread-pane";
 
 const BOTTOM_THRESHOLD = 24;
 
@@ -80,9 +82,17 @@ interface MessageRowProps {
   dataSource: ChatDataSource;
   conversationId: string;
   showAuthor: boolean;
+  onOpenThread?: (messageId: string) => void;
 }
 
-function MessageRow({ message, own, dataSource, conversationId, showAuthor }: MessageRowProps) {
+function MessageRow({
+  message,
+  own,
+  dataSource,
+  conversationId,
+  showAuthor,
+  onOpenThread,
+}: MessageRowProps) {
   const t = useUiTranslations();
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(message.body);
@@ -185,6 +195,21 @@ function MessageRow({ message, own, dataSource, conversationId, showAuthor }: Me
           {message.edited && <span className="chat-message-edited"> {t("chat.edited")}</span>}
         </p>
       )}
+      {Boolean(message.replyCount && message.replyCount > 0) && (
+        <button
+          type="button"
+          className="mt-1 flex items-center gap-1.5 text-[11px] font-semibold text-accent-blue hover:underline cursor-pointer"
+          onClick={() => onOpenThread?.(message.id)}
+          data-testid="chat-thread-trigger"
+        >
+          <span>{t("chat.repliesCount", { count: message.replyCount ?? 0 })}</span>
+          {message.lastReplyAt && (
+            <span className="text-text-muted font-normal">
+              ({formatMessageTime(message.lastReplyAt)})
+            </span>
+          )}
+        </button>
+      )}
       {message.status === "sending" && (
         <span className="chat-message-status">{t("chat.sending")}</span>
       )}
@@ -210,6 +235,17 @@ function MessageRow({ message, own, dataSource, conversationId, showAuthor }: Me
       )}
       {confirmed && !message.deleted && !editing && (
         <div className="chat-message-actions" role="toolbar" aria-label={t("chat.messageActions")}>
+          {onOpenThread && !message.threadRootId && (
+            <button
+              type="button"
+              className="chat-action"
+              aria-label={t("chat.replyInThread")}
+              onClick={() => onOpenThread(message.id)}
+              data-testid="chat-action-reply"
+            >
+              <ThreadsIcon className="size-3.5" />
+            </button>
+          )}
           <button
             type="button"
             className="chat-action"
@@ -299,6 +335,7 @@ function dayLabel(iso: string, t: ReturnType<typeof useUiTranslations>): string 
 export interface ConversationViewProps {
   dataSource: ChatDataSource;
   conversation: ChatConversation;
+  initialThreadRootId?: string | null;
   onBack(): void;
 }
 
@@ -307,12 +344,27 @@ export interface ConversationViewProps {
  * placeholder, mark read at the bottom) with the composer underneath.
  * Refs: MEP-1420, ADR 0015 §3, §7
  */
-export function ConversationView({ dataSource, conversation, onBack }: ConversationViewProps) {
+export function ConversationView({
+  dataSource,
+  conversation,
+  initialThreadRootId,
+  onBack,
+}: ConversationViewProps) {
   const t = useUiTranslations();
   const scrollRef = useRef<HTMLDivElement>(null);
   const stickRef = useRef(true);
   const prevHeightRef = useRef<number | null>(null);
   const [loadingOlder, setLoadingOlder] = useState(false);
+  const [activeThreadRootId, setActiveThreadRootId] = useState<string | null>(
+    initialThreadRootId ?? null,
+  );
+
+  useEffect(() => {
+    if (initialThreadRootId !== undefined) {
+      setActiveThreadRootId(initialThreadRootId);
+    }
+  }, [initialThreadRootId]);
+  const [showChannelSettings, setShowChannelSettings] = useState(false);
   const { id } = conversation;
   const { openConversation, markRead, loadOlder } = dataSource;
   const messages = dataSource.messagesOf(id);
@@ -392,6 +444,21 @@ export function ConversationView({ dataSource, conversation, onBack }: Conversat
     ? t(`chat.presence.${conversation.presence}` as Parameters<typeof t>[0])
     : null;
 
+  const activeThreadRoot = activeThreadRootId
+    ? messages.find((m) => m.id === activeThreadRootId)
+    : undefined;
+
+  if (activeThreadRootId && activeThreadRoot) {
+    return (
+      <ThreadPane
+        rootMessage={activeThreadRoot}
+        dataSource={dataSource}
+        conversationId={id}
+        onClose={() => setActiveThreadRootId(null)}
+      />
+    );
+  }
+
   return (
     <div className="chat-conversation" data-testid="chat-conversation">
       <div className="chat-conversation-header">
@@ -408,13 +475,41 @@ export function ConversationView({ dataSource, conversation, onBack }: Conversat
         <Avatar name={conversation.title} />
         <div className="chat-conversation-title-block">
           <div className="chat-conversation-title" data-testid="chat-conversation-title">
-            {conversation.title}
+            {conversation.kind === "channel" ? `#${conversation.title}` : conversation.title}
           </div>
           {presenceLabel && (
             <div className="chat-conversation-presence">
               <PresenceDot presence={conversation.presence ?? "offline"} />
               <span>{presenceLabel}</span>
             </div>
+          )}
+        </div>
+        <div className="flex items-center gap-1 ml-auto">
+          {/* Pin toggle button */}
+          <button
+            type="button"
+            className="chat-header-btn"
+            aria-label={conversation.pinned ? t("chat.unpin") : t("chat.pin")}
+            onClick={() => void dataSource.pinConversation(conversation.id, !conversation.pinned)}
+            data-testid={conversation.pinned ? "chat-conversation-unpin" : "chat-conversation-pin"}
+          >
+            <Icons.pin
+              className={`size-3.5 ${conversation.pinned ? "text-accent-blue" : "text-text-muted"}`}
+              aria-hidden
+            />
+          </button>
+
+          {/* Channel menu button */}
+          {conversation.kind === "channel" && (
+            <button
+              type="button"
+              className="chat-header-btn"
+              aria-label={t("chat.channelMembers")}
+              onClick={() => setShowChannelSettings(true)}
+              data-testid="chat-channel-menu"
+            >
+              <Icons.settingsSliders className="size-3.5 text-text-muted" aria-hidden />
+            </button>
           )}
         </div>
       </div>
@@ -456,6 +551,7 @@ export function ConversationView({ dataSource, conversation, onBack }: Conversat
                 dataSource={dataSource}
                 conversationId={id}
                 showAuthor={showAuthor}
+                onOpenThread={(messageId) => setActiveThreadRootId(messageId)}
               />
             </Fragment>
           ))}
@@ -468,6 +564,34 @@ export function ConversationView({ dataSource, conversation, onBack }: Conversat
           void dataSource.sendMessage(id, body, mentions);
         }}
       />
+
+      {showChannelSettings && (
+        <ChannelMembersDialog
+          conversation={conversation}
+          members={members}
+          directory={dataSource.directory}
+          selfId={dataSource.selfId}
+          isOpen={showChannelSettings}
+          onClose={() => setShowChannelSettings(false)}
+          onRename={async (newName) => {
+            await dataSource.renameChannel(conversation.id, newName);
+          }}
+          onAddMember={async (userId) => {
+            await dataSource.addChannelMember(conversation.id, userId);
+          }}
+          onRemoveMember={async (userId) => {
+            await dataSource.removeChannelMember(conversation.id, userId);
+          }}
+          onArchive={async () => {
+            await dataSource.archiveChannel(conversation.id);
+            onBack();
+          }}
+          onLeave={async () => {
+            await dataSource.leaveChannel(conversation.id);
+            onBack();
+          }}
+        />
+      )}
     </div>
   );
 }
