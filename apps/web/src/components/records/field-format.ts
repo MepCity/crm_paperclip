@@ -32,6 +32,10 @@ export function isFieldValueEmpty(field: FieldDefinition, value: FieldValue): bo
   if (value === null || value === "") return true;
   if (field.dataType === "boolean" && value === false) return true;
   if (field.dataType === "picklist" && typeof value === "string" && value === "") return true;
+  if (field.dataType === "multiselectpicklist") {
+    if (!Array.isArray(value) || value.length === 0) return true;
+    return false;
+  }
   if (field.dataType === "lookup") {
     if (typeof value !== "object" || value === null || !("id" in value)) return true;
     if (typeof value.name !== "string" || value.name.trim() === "") return true;
@@ -150,6 +154,16 @@ function valueText(
   if (field.dataType === "picklist" && typeof value === "string") {
     const option = field.picklist?.find((candidate) => candidate.storedValue === value);
     return option?.displayValue ?? value;
+  }
+
+  if (field.dataType === "multiselectpicklist" && Array.isArray(value)) {
+    if (value.length === 0) return null;
+    return value
+      .map((item) => {
+        const option = field.picklist?.find((candidate) => candidate.storedValue === item);
+        return option?.displayValue ?? String(item);
+      })
+      .join(", ");
   }
 
   if (field.dataType === "currency" && typeof value === "number") {

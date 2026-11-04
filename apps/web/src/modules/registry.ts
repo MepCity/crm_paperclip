@@ -7,6 +7,7 @@ import { contactsScreenDefinition } from "./contacts/definition";
 import { dealsScreenDefinition } from "./deals/definition";
 import { leadsScreenDefinition } from "./leads/definition";
 import { meetingsScreenDefinition } from "./meetings/definition";
+import { productsScreenDefinition } from "./products/definition";
 import { solutionsScreenDefinition } from "./solutions/definition";
 import { tasksScreenDefinition } from "./tasks/definition";
 import type { ModuleScreenDefinition } from "./types";
@@ -54,6 +55,7 @@ export function getModuleScreens(): readonly ModuleScreenDefinition[] {
       campaignsScreenDefinition,
       casesScreenDefinition,
       solutionsScreenDefinition,
+      productsScreenDefinition,
     ];
   }
   return cachedModuleScreens;

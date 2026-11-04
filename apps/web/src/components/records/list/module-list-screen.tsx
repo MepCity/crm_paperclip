@@ -25,6 +25,7 @@ import { supportsListPrint } from "@/components/records/print/print-modules";
 import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import type { ModuleKey } from "@/components/ui/later-module";
+import { Link } from "@/components/ui/link";
 import type { MenuAction } from "@/components/ui/menu";
 import { english, type MessageKey } from "@/i18n/catalogs";
 import { useUiTranslations } from "@/i18n/client-provider";
@@ -108,6 +109,13 @@ export interface ModuleListBoardProps {
   perPage: number;
 }
 
+export interface ModuleZeroStateConfig {
+  description: string;
+  createLabel?: string;
+  importLabel?: string;
+  importLaterModule?: ModuleKey;
+}
+
 export interface ModuleListScreenConfig {
   module: ModuleApiName;
   defaultPresentation?: "table" | "board";
@@ -129,6 +137,7 @@ export interface ModuleListScreenConfig {
   sortFieldLabels: readonly string[];
   linkFieldLabel: string;
   paths: ModuleListPaths;
+  zeroState?: ModuleZeroStateConfig;
   pinnedViews?: readonly string[];
   phoneLaterModule?: ModuleKey;
   linkWebsite?: boolean;
@@ -1126,6 +1135,30 @@ function ModuleListScreenLoaded({
               alphabet={{ value: letter, onChange: applyLetter }}
               wrapText={wrapText}
               emptyMessage={emptyMessage}
+              emptyContent={
+                config.zeroState && total === 0 && !hasActiveFilter && !letter && records.length === 0 ? (
+                  <div data-part="zero-state" className="flex flex-col items-center justify-center p-8 text-center">
+                    <p className="max-w-lg text-sm text-(--color-text-secondary) mb-6">
+                      {config.zeroState.description}
+                    </p>
+                    <div className="flex items-center justify-center gap-3">
+                      <Link
+                        href={config.paths.create(orgSlug, config.module)}
+                        className="inline-flex items-center justify-center h-8 px-4 text-xs font-semibold rounded bg-(--color-brand-primary) text-(--color-brand-foreground) hover:opacity-95"
+                      >
+                        {config.zeroState.createLabel ?? createLabel}
+                      </Link>
+                      <Link
+                        href={moduleImportPath(orgSlug, config.module)}
+                        laterModule={config.zeroState.importLaterModule}
+                        className="inline-flex items-center justify-center h-8 px-4 text-xs font-semibold rounded border border-(--color-panel-border) bg-(--color-surface) text-(--color-text-primary) hover:bg-(--color-surface-hover)"
+                      >
+                        {config.zeroState.importLabel ?? "Import"}
+                      </Link>
+                    </div>
+                  </div>
+                ) : undefined
+              }
               settings={
                 <ViewSettingsMenu
                   onManageColumns={() => setColumnsOpen(true)}
