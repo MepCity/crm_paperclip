@@ -11,7 +11,11 @@ import { generateFixtureSolutions } from "../solutions/seed";
 import { generateFixtureTasks } from "../tasks/seed";
 import { notesMetadata, notesParentModules } from "./metadata";
 
-const seedParentModules = notesParentModules;
+/** Quotes and Invoices accept notes but start without seeded ones. */
+const seedParentModules = notesParentModules.filter(
+  (module): module is Exclude<(typeof notesParentModules)[number], "Quotes" | "Invoices"> =>
+    module !== "Quotes" && module !== "Invoices",
+);
 
 const parentGenerators = {
   Leads: generateFixtureLeads,

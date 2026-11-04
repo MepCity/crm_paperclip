@@ -1,3 +1,6 @@
+import { attachmentsCard } from "../attachments-card";
+import { notesCardBody, openNotesComposer } from "../notes-card";
+import { parentActivitiesBody } from "../parent-activity-cards";
 import type { RelatedListDefinition, RelatedListRailChromeDefinition } from "../types";
 
 /**
@@ -17,6 +20,8 @@ export const quotesRelatedListRail: RelatedListRailChromeDefinition = {
 export const quotesRelatedLists: readonly RelatedListDefinition[] = [
   {
     id: "notes",
+    renderBody: notesCardBody("Quotes"),
+    railAction: { id: "notes-add", label: "Add", onAction: openNotesComposer },
     title: "Notes",
     moduleKey: "M2",
     order: 1,
@@ -25,6 +30,7 @@ export const quotesRelatedLists: readonly RelatedListDefinition[] = [
   },
   {
     id: "attachments",
+    renderCard: attachmentsCard("Quotes"),
     title: "Attachments",
     moduleKey: "M8",
     order: 2,
@@ -34,6 +40,7 @@ export const quotesRelatedLists: readonly RelatedListDefinition[] = [
   },
   {
     id: "open-activities",
+    renderBody: parentActivitiesBody("Quotes", "open"),
     title: "Open Activities",
     moduleKey: "M5",
     order: 3,
@@ -42,6 +49,7 @@ export const quotesRelatedLists: readonly RelatedListDefinition[] = [
   },
   {
     id: "closed-activities",
+    renderBody: parentActivitiesBody("Quotes", "closed"),
     title: "Closed Activities",
     moduleKey: "M5",
     order: 4,

@@ -1939,49 +1939,49 @@
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 848,
+    "line": 851,
     "column": 31,
     "hash": "2836cfca8acae68d"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 849,
+    "line": 852,
     "column": 33,
     "hash": "5a9133cebfab7531"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 855,
+    "line": 858,
     "column": 30,
     "hash": "75c4d64dd295ea85"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 858,
+    "line": 861,
     "column": 14,
     "hash": "fee59ce0ce197df2"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 861,
+    "line": 864,
     "column": 42,
     "hash": "d22a513c3f7305ec"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 862,
+    "line": 865,
     "column": 40,
     "hash": "97330d2cf2b46bb8"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 863,
+    "line": 866,
     "column": 32,
     "hash": "07c60b2f79382eb1"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 864,
+    "line": 867,
     "column": 34,
     "hash": "86a94a959b984925"
   },
@@ -6571,85 +6571,91 @@
   },
   {
     "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
-    "line": 12,
+    "line": 15,
     "column": 12,
     "hash": "9024c197d84940e4"
   },
   {
     "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
-    "line": 13,
+    "line": 16,
     "column": 39,
     "hash": "b8c42654c8ce61a0"
   },
   {
     "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
-    "line": 20,
+    "line": 24,
+    "column": 43,
+    "hash": "9fd728c66c9a256b"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
+    "line": 25,
     "column": 12,
     "hash": "8a7525b1492fb848"
   },
   {
     "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
-    "line": 28,
+    "line": 34,
     "column": 12,
     "hash": "634de114775082f0"
   },
   {
     "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
-    "line": 32,
+    "line": 38,
     "column": 44,
     "hash": "d406ade2958cb5b6"
   },
   {
     "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
-    "line": 37,
+    "line": 44,
     "column": 12,
     "hash": "c7634afcce2a39ab"
   },
   {
     "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
-    "line": 45,
+    "line": 53,
     "column": 12,
     "hash": "b51b3696ac1bb6d3"
   },
   {
     "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
-    "line": 53,
+    "line": 61,
     "column": 12,
     "hash": "373197624e9dd578"
   },
   {
     "file": "apps/web/src/modules/invoices/list-config.ts",
-    "line": 44,
+    "line": 47,
     "column": 37,
     "hash": "631916d1e0e8561f"
   },
   {
     "file": "apps/web/src/modules/invoices/list-config.ts",
-    "line": 45,
+    "line": 48,
     "column": 35,
     "hash": "530a52df6978414f"
   },
   {
     "file": "apps/web/src/modules/invoices/list-config.ts",
-    "line": 46,
+    "line": 49,
     "column": 35,
     "hash": "5a264945a25df60f"
   },
   {
     "file": "apps/web/src/modules/invoices/list-config.ts",
-    "line": 47,
+    "line": 50,
     "column": 28,
     "hash": "7a3cc33f849676fc"
   },
   {
     "file": "apps/web/src/modules/invoices/list-config.ts",
-    "line": 48,
+    "line": 51,
     "column": 30,
     "hash": "6f123ab799b991d1"
   },
   {
     "file": "apps/web/src/modules/invoices/list-config.ts",
-    "line": 49,
+    "line": 52,
     "column": 29,
     "hash": "1029a1a7a81b987e"
   },
@@ -7591,37 +7597,37 @@
   },
   {
     "file": "apps/web/src/modules/quotes/list-config.ts",
-    "line": 44,
+    "line": 47,
     "column": 37,
     "hash": "631916d1e0e8561f"
   },
   {
     "file": "apps/web/src/modules/quotes/list-config.ts",
-    "line": 45,
+    "line": 48,
     "column": 35,
     "hash": "530a52df6978414f"
   },
   {
     "file": "apps/web/src/modules/quotes/list-config.ts",
-    "line": 46,
+    "line": 49,
     "column": 35,
     "hash": "5a264945a25df60f"
   },
   {
     "file": "apps/web/src/modules/quotes/list-config.ts",
-    "line": 47,
+    "line": 50,
     "column": 28,
     "hash": "7a3cc33f849676fc"
   },
   {
     "file": "apps/web/src/modules/quotes/list-config.ts",
-    "line": 48,
+    "line": 51,
     "column": 30,
     "hash": "48137445114f2818"
   },
   {
     "file": "apps/web/src/modules/quotes/list-config.ts",
-    "line": 49,
+    "line": 52,
     "column": 29,
     "hash": "1029a1a7a81b987e"
   },
@@ -7651,49 +7657,55 @@
   },
   {
     "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
-    "line": 12,
+    "line": 15,
     "column": 12,
     "hash": "9024c197d84940e4"
   },
   {
     "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
-    "line": 13,
+    "line": 16,
     "column": 39,
     "hash": "b8c42654c8ce61a0"
   },
   {
     "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
-    "line": 20,
+    "line": 24,
+    "column": 43,
+    "hash": "9fd728c66c9a256b"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
+    "line": 25,
     "column": 12,
     "hash": "8a7525b1492fb848"
   },
   {
     "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
-    "line": 28,
+    "line": 34,
     "column": 12,
     "hash": "634de114775082f0"
   },
   {
     "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
-    "line": 32,
+    "line": 38,
     "column": 44,
     "hash": "d406ade2958cb5b6"
   },
   {
     "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
-    "line": 37,
+    "line": 44,
     "column": 12,
     "hash": "c7634afcce2a39ab"
   },
   {
     "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
-    "line": 45,
+    "line": 53,
     "column": 12,
     "hash": "b51b3696ac1bb6d3"
   },
   {
     "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
-    "line": 53,
+    "line": 61,
     "column": 12,
     "hash": "373197624e9dd578"
   },

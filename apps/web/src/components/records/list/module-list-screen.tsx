@@ -49,6 +49,7 @@ import { ListToolbar } from "./list-toolbar";
 import { MassUpdateDialog } from "./mass-update-dialog";
 import { massUpdateFieldsInLayoutOrder } from "./mass-update-fields";
 import { useCustomViewModal } from "./module-list-custom-view";
+import { ModuleListEmptyState } from "./module-list-empty-state";
 import type { RelatedModuleDraft } from "./related-module-filter-editor";
 import { SelectionBar } from "./selection-bar";
 import { SelectionTagsDialog } from "./selection-tags-dialog";
@@ -180,6 +181,8 @@ export interface ModuleListScreenConfig {
     currentUserId: string;
     items?: readonly MenuAction[];
   }) => ReactNode;
+  /** Whole-list empty state (no records, no filter/search): heading, text, Create and Import. */
+  emptyState?: { heading: string; text: string };
   quickCreate?: (props: {
     orgSlug: string;
     currentUserId: string;
@@ -1103,6 +1106,13 @@ function ModuleListScreenLoaded({
             />
           ) : boardProps ? (
             <RecordBoard {...boardProps} toolbar={undefined} />
+          ) : config.emptyState && records.length === 0 && total === 0 && !hasActiveFilter && !searchParams.get("search") ? (
+            <ModuleListEmptyState
+              heading={config.emptyState.heading}
+              text={config.emptyState.text}
+              onCreate={() => router.push(config.paths.create(orgSlug, config.module))}
+              onImport={() => router.push(moduleImportPath(orgSlug, config.module))}
+            />
           ) : (
             <RecordTable
               laterInventory={Boolean(config.inventory)}
