@@ -9,6 +9,7 @@ import {
   moduleTagsPath,
 } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
+import { isShellBackgroundRequest } from "./support/shell-requests";
 import { expect, ignoreFailedResponses, test } from "./support/test";
 import { exerciseTouchedFilter } from "./support/touched-filter";
 import { expectType } from "./support/typography";
@@ -215,7 +216,8 @@ async function openFilterRow(
 }
 
 function assertListDataRequests(requests: CrmRequest[]) {
-  for (const request of requests) {
+  const pageRequests = requests.filter((request) => !isShellBackgroundRequest(request));
+  for (const request of pageRequests) {
     expect(
       LIST_OPEN_DATA_REQUESTS.some((spec) => matchesListDataSpec(request, spec)),
       `Unexpected CRM data request: ${request.method} ${request.pathname}`,
@@ -223,7 +225,7 @@ function assertListDataRequests(requests: CrmRequest[]) {
   }
   for (const spec of LIST_OPEN_DATA_REQUESTS) {
     expect(
-      requests.some((request) => matchesListDataSpec(request, spec)),
+      pageRequests.some((request) => matchesListDataSpec(request, spec)),
       `Expected at least one request for ${spec.method} ${spec.path}`,
     ).toBe(true);
   }
@@ -1136,7 +1138,7 @@ test.describe("Leads list page", () => {
     const seen: CrmRequest[] = [];
     page.on("request", (request) => {
       const parsed = parseCrmRequest(request.url(), request.method());
-      if (parsed) seen.push(parsed);
+      if (parsed && !isShellBackgroundRequest(parsed)) seen.push(parsed);
     });
     await page.goto(moduleListDefaultPath(org.slug, LEADS_MODULE));
     await expect(page.getByRole("table", { name: "Records" })).toBeVisible();

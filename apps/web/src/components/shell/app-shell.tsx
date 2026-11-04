@@ -8,7 +8,7 @@ import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { PreferenceProvider } from "@/lib/preferences";
-import { ChatBottomBar } from "./chat-bottom-bar";
+import { LiveChatBottomBar } from "./chat-bottom-bar";
 import { CreateRecordsMenu } from "./create-records";
 import { GlobalSearch } from "./global-search";
 import { navLinkIconClassName, shellNav } from "./nav";
@@ -241,8 +241,9 @@ export function AppShell({
           data-shell-utilities
         >
           <div className="flex h-full items-center gap-6">
-            <ChatBottomBar
-              user={{ name: user.name, initials }}
+            <LiveChatBottomBar
+              orgSlug={orgSlug}
+              user={{ id: user.id, name: user.name, initials }}
               inviteAction={inviteAction}
               canInvite={canInvite}
             />

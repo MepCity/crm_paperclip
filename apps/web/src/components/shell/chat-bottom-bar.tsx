@@ -1,12 +1,13 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import type { CreateInvitationAction } from "@/components/members/invite-member-dialog";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { type ChatDestination, ChatPanel } from "@/modules/chat/chat-panel";
-import { EmptyChatDataSource } from "@/modules/chat/data";
+import { type ChatDataSource, EmptyChatDataSource } from "@/modules/chat/data";
+import { useChatSource } from "@/modules/chat/use-chat-source";
 
 /**
  * Bottom bar chat section with five entries plus the floating panel.
@@ -14,24 +15,66 @@ import { EmptyChatDataSource } from "@/modules/chat/data";
  * Spec: ADR 0015 §7.1, controls #1–#3.
  * Refs: MEP-1419
  */
+/** Live bottom bar: owns the sync loop for the signed-in user (ADR 0015 §2). */
+export function LiveChatBottomBar({
+  orgSlug,
+  user,
+  inviteAction,
+  canInvite = false,
+}: {
+  orgSlug: string;
+  user: { id: string; name: string; initials: string };
+  inviteAction?: CreateInvitationAction;
+  canInvite?: boolean;
+}) {
+  const dataSource = useChatSource({
+    orgSlug,
+    selfId: user.id,
+    selfName: user.name,
+    canInvite,
+  });
+  return (
+    <ChatBottomBar
+      user={user}
+      inviteAction={inviteAction}
+      canInvite={canInvite}
+      dataSource={dataSource}
+    />
+  );
+}
+
 export function ChatBottomBar({
   user,
   inviteAction,
   canInvite = false,
-  counts,
+  counts: countsOverride,
+  dataSource: dataSourceProp,
 }: {
   user: { name: string; initials: string };
   inviteAction?: CreateInvitationAction;
   canInvite?: boolean;
+  /** Static badge counts for tests; the data source's counts are used otherwise. */
   counts?: { chats?: number; channels?: number; threads?: number; pins?: number };
+  /** Live data source; an empty one is used when absent. */
+  dataSource?: ChatDataSource;
 }) {
   const t = useUiTranslations();
   const [open, setOpen] = useState(false);
   const [destination, setDestination] = useState<ChatDestination>("chats");
 
-  // Empty data source (MEP-1420 will replace)
-  const dataSource = new EmptyChatDataSource();
-  dataSource.canInvite = canInvite;
+  const fallback = useMemo(() => {
+    const empty = new EmptyChatDataSource();
+    empty.canInvite = canInvite;
+    return empty;
+  }, [canInvite]);
+  const dataSource = dataSourceProp ?? fallback;
+  const counts = countsOverride ?? dataSource.counts ?? undefined;
+  const { setPanelOpen } = dataSource;
+
+  useEffect(() => {
+    setPanelOpen(open);
+    return () => setPanelOpen(false);
+  }, [open, setPanelOpen]);
 
   function handleEntry(d: ChatDestination) {
     if (open && destination === d) {

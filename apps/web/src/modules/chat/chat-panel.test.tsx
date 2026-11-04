@@ -131,7 +131,9 @@ describe("ChatPanel", () => {
       />,
     );
 
-    expect(screen.getByText("No conversations yet")).toBeTruthy();
+    expect(
+      screen.getByText("Start a conversation with your team members or create a channel."),
+    ).toBeTruthy();
     expect(screen.queryByTestId("chat-unread-empty")).toBeNull();
 
     // Click Unread tab
@@ -141,13 +143,14 @@ describe("ChatPanel", () => {
 
     // Click Recent tab
     await userEv.click(screen.getByTestId("chat-tab-recent"));
-    expect(screen.getByText("No conversations yet")).toBeTruthy();
+    expect(
+      screen.getByText("Start a conversation with your team members or create a channel."),
+    ).toBeTruthy();
     expect(screen.queryByTestId("chat-unread-empty")).toBeNull();
   });
 
   test("renders My Pins empty state and handles +Add Chats", async () => {
     const ds = createMockDataSource();
-    const startDirectSpy = vi.spyOn(ds.actions, "startDirectMessage");
     const userEv = userEvent.setup();
 
     render(
@@ -161,12 +164,12 @@ describe("ChatPanel", () => {
     );
 
     expect(screen.getByTestId("chat-pins-empty")).toBeTruthy();
-    expect(screen.getByText("No pinned chats")).toBeTruthy();
+    expect(screen.getByText("Pin your favorite chats to keep them at hand.")).toBeTruthy();
     const addChatsBtn = screen.getByTestId("chat-add-chats");
     expect(addChatsBtn).toBeTruthy();
 
     await userEv.click(addChatsBtn);
-    expect(startDirectSpy).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("chat-picker-dialog")).toBeTruthy();
   });
 
   test("renders Contacts empty state and category dropdown", async () => {
@@ -184,7 +187,9 @@ describe("ChatPanel", () => {
     );
 
     expect(screen.getByTestId("chat-contacts-empty")).toBeTruthy();
-    expect(screen.getByText("No contacts found")).toBeTruthy();
+    expect(
+      screen.getByText("Enter an email address in the search box to invite a new user."),
+    ).toBeTruthy();
 
     // Open category dropdown
     await userEv.click(screen.getByTestId("chat-category-caret"));
@@ -230,11 +235,8 @@ describe("ChatPanel", () => {
     expect(screen.queryByTestId("chat-invite-dialog")).toBeNull();
   });
 
-  test("opens Quick Actions menu and calls action stubs", async () => {
+  test("opens Quick Actions menu and the member pickers", async () => {
     const ds = createMockDataSource();
-    const startDirectSpy = vi.spyOn(ds.actions, "startDirectMessage");
-    const startGroupSpy = vi.spyOn(ds.actions, "startGroupConversation");
-    const createChannelSpy = vi.spyOn(ds.actions, "createChannel");
     const userEv = userEvent.setup();
 
     render(
@@ -256,18 +258,23 @@ describe("ChatPanel", () => {
 
     // Direct message
     await userEv.click(screen.getByTestId("chat-qa-direct"));
-    expect(startDirectSpy).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("chat-picker-dialog")).toBeTruthy();
+    expect(screen.queryByTestId("chat-group-name")).toBeNull();
     expect(screen.queryByTestId("chat-quick-actions-menu")).toBeNull();
+    await userEv.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByTestId("chat-picker-dialog")).toBeNull());
 
     // Reopen and try group
     await userEv.click(fab);
     await userEv.click(screen.getByTestId("chat-qa-group"));
-    expect(startGroupSpy).toHaveBeenCalledTimes(1);
+    expect(screen.getByTestId("chat-group-name")).toBeTruthy();
+    await userEv.keyboard("{Escape}");
+    await waitFor(() => expect(screen.queryByTestId("chat-picker-dialog")).toBeNull());
 
     // Reopen and try channel
     await userEv.click(fab);
     await userEv.click(screen.getByTestId("chat-qa-channel"));
-    expect(createChannelSpy).toHaveBeenCalledTimes(1);
+    expect(screen.queryByTestId("chat-quick-actions-menu")).toBeNull();
   });
 
   test("submits Invite People dialog successfully", async () => {
@@ -485,7 +492,9 @@ describe("ChatBottomBar", () => {
     // Click Chats
     await userEv.click(screen.getByTestId("chat-footer-chats"));
     expect(screen.getByTestId("chat-panel")).toBeTruthy();
-    expect(screen.getByText("No conversations yet")).toBeTruthy();
+    expect(
+      screen.getByText("Start a conversation with your team members or create a channel."),
+    ).toBeTruthy();
 
     // Clicking Chats again toggles it closed
     await userEv.click(screen.getByTestId("chat-footer-chats"));

@@ -4,10 +4,11 @@ import "./chat.css";
 
 import { type SVGProps, useCallback, useEffect, useRef, useState } from "react";
 import type { CreateInvitationAction } from "@/components/members/invite-member-dialog";
-import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { useUiTranslations } from "@/i18n/client-provider";
-import type { ChatDataSource, PresenceStatus } from "./data";
+import { ContactList, ConversationList } from "./conversation-list";
+import { ConversationView } from "./conversation-view";
+import type { ChatConversation, ChatDataSource, PresenceStatus } from "./data";
 import {
   ChatEmptyIllustration,
   ContactEmptyIllustration,
@@ -15,6 +16,7 @@ import {
   UnreadEmptyIllustration,
 } from "./illustrations";
 import { InvitePeopleDialog } from "./invite-people-dialog";
+import { MemberPickerDialog, type PickerMode } from "./member-picker-dialog";
 
 /** Active destination (footer entry). */
 export type ChatDestination = "pins" | "chats" | "channels" | "threads" | "contacts";
@@ -62,11 +64,20 @@ export function ChatPanel({
   const [showInvite, setShowInvite] = useState(false);
   const [inviteEmail, setInviteEmail] = useState<string | undefined>(undefined);
   const [searchText, setSearchText] = useState("");
+  const [openId, setOpenId] = useState<string | null>(null);
+  const [picker, setPicker] = useState<PickerMode | null>(null);
   const searchRef = useRef<HTMLInputElement>(null);
+
+  // Follow the presence the data source reports (sync result or own change).
+  const reportedPresence = dataSource.currentPresence?.status;
+  useEffect(() => {
+    if (reportedPresence) setPresence(reportedPresence);
+  }, [reportedPresence]);
 
   // Reset tab and close menus when destination changes
   useEffect(() => {
     if (destination) {
+      setOpenId(null);
       setTab("primary");
       setSearchText("");
       setQuickActionsOpen(false);
@@ -124,6 +135,34 @@ export function ChatPanel({
 
   const contacts =
     contactCategory === "frequents" ? dataSource.frequentContacts : dataSource.recentContacts;
+
+  const needle = searchText.trim().toLowerCase();
+  // Only Chats lists conversations in this feature; Channels, Threads and My Pins
+  // stay empty states until their own issues land.
+  const chatRows = dataSource.conversations
+    .filter((c: ChatConversation) => destination === "chats" && c.kind !== "channel")
+    .filter((c) => !needle || c.title.toLowerCase().includes(needle));
+  const unreadRows = chatRows.filter((c) => c.unreadCount > 0);
+  const visibleContacts = contacts.filter(
+    (c) =>
+      !needle ||
+      c.name.toLowerCase().includes(needle) ||
+      (c.email ?? "").toLowerCase().includes(needle),
+  );
+  const openConversation = openId
+    ? dataSource.conversations.find((c) => c.id === openId)
+    : undefined;
+  const unreadTabCount = destination === "chats" ? (dataSource.counts?.chats ?? 0) : 0;
+
+  async function openContact(userId: string) {
+    try {
+      const id = await dataSource.openDirect(userId);
+      setOpenId(id);
+      setSearchText("");
+    } catch {
+      /* the list stays; the user can retry */
+    }
+  }
 
   const showEmailInvite =
     destination === "contacts" &&
@@ -201,27 +240,25 @@ export function ChatPanel({
 
           <div className="chat-header-actions">
             {/* Enlarge (#6) */}
-            <Button
-              variant="icon"
-              size="compact"
+            <button
+              type="button"
+              className="chat-header-btn"
               aria-label={t("chat.enlarge")}
-              onPress={() => setMaximized((v) => !v)}
-              className="size-7"
+              onClick={() => setMaximized((v) => !v)}
               data-testid="chat-maximize"
             >
-              <Icons.diagonalExpand className="size-4" aria-hidden />
-            </Button>
+              <Icons.diagonalExpand className="size-3.5" aria-hidden />
+            </button>
             {/* Minimize / close (#7) */}
-            <Button
-              variant="icon"
-              size="compact"
+            <button
+              type="button"
+              className="chat-header-btn"
               aria-label={t("chat.minimize")}
-              onPress={onClose}
-              className="size-7"
+              onClick={onClose}
               data-testid="chat-minimize"
             >
-              <Icons.close className="size-4" aria-hidden />
-            </Button>
+              <Icons.close className="size-3.5" aria-hidden />
+            </button>
           </div>
 
           {/* Presence menu */}
@@ -256,312 +293,444 @@ export function ChatPanel({
           )}
         </div>
 
-        {/* === Search row === */}
-        <div className="chat-search-row">
-          <div className="chat-search-field">
-            <Icons.filterSearch className="chat-search-icon" aria-hidden />
-            <input
-              ref={searchRef}
-              type="search"
-              className="chat-search-input"
-              placeholder={`${t("chat.search")} (Ctrl+Space)`}
-              aria-label={t("chat.search")}
-              value={searchText}
-              onChange={(e) => setSearchText(e.target.value)}
-              data-testid="chat-search"
-            />
-            {/* Advanced search (#9) inside search field */}
-            <button
-              type="button"
-              className="chat-search-advanced"
-              aria-label={t("chat.advancedSearch")}
-              data-testid="chat-advanced-search-btn"
-            >
-              <Icons.settingsSliders
-                className="size-3.5 text-text-muted hover:text-text"
-                aria-hidden
-              />
-            </button>
-          </div>
-          {/* @Mentions (#10) */}
-          <Button
-            variant="icon"
-            size="compact"
-            aria-label={t("chat.mentions")}
-            className="size-7"
-            data-testid="chat-mentions-btn"
-          >
-            <span className="text-sm font-semibold text-text-muted leading-none" aria-hidden>
-              @
-            </span>
-          </Button>
-          {/* Starred (#11) */}
-          <Button
-            variant="icon"
-            size="compact"
-            aria-label={t("chat.starred")}
-            className="size-7"
-            data-testid="chat-starred-btn"
-          >
-            <StarOutlineIcon className="size-4 text-text-muted" aria-hidden />
-          </Button>
-        </div>
-
-        {/* === Tabs (#12 / #13) === */}
-        <div className="chat-tabs" role="tablist">
-          {destination === "contacts" ? (
-            <div className="relative flex flex-1 items-center">
-              <button
-                type="button"
-                role="tab"
-                aria-selected={tab === "primary"}
-                className={`chat-tab w-full${tab === "primary" ? " chat-tab-active pr-7" : ""}`}
-                onClick={() => setTab("primary")}
-                data-testid={leftTabTestId}
-              >
-                {contactCategory === "frequents" ? (
-                  <HeartIcon
-                    className={`size-3.5 ${tab === "primary" ? "text-current" : "text-text-muted"}`}
-                    aria-hidden
-                  />
-                ) : (
-                  <Icons.clock
-                    className={`size-3.5 ${tab === "primary" ? "text-current" : "text-text-muted"}`}
-                    aria-hidden
-                  />
-                )}
-                {leftTabLabel}
-              </button>
-              <button
-                type="button"
-                className="absolute right-1 flex size-5 items-center justify-center rounded text-current hover:bg-black/10 outline-none"
-                aria-label={t("chat.contactCategories")}
-                aria-haspopup="true"
-                aria-expanded={showCategoryMenu}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  setShowCategoryMenu((v) => !v);
-                }}
-                data-testid="chat-category-caret"
-              >
-                <Icons.chevronDown
-                  className={`size-3 ${tab === "primary" ? "text-current" : "text-text-muted"}`}
-                  aria-hidden
+        {openConversation ? (
+          <ConversationView
+            dataSource={dataSource}
+            conversation={openConversation}
+            onBack={() => setOpenId(null)}
+          />
+        ) : (
+          <>
+            {/* === Search row === */}
+            <div className="chat-search-row">
+              <div className="chat-search-field">
+                <Icons.filterSearch className="chat-search-icon" aria-hidden />
+                <input
+                  ref={searchRef}
+                  type="search"
+                  className="chat-search-input"
+                  placeholder={`${t("chat.search")} (Ctrl+Space)`}
+                  aria-label={t("chat.search")}
+                  value={searchText}
+                  onChange={(e) => setSearchText(e.target.value)}
+                  data-testid="chat-search"
                 />
-              </button>
-            </div>
-          ) : (
-            <button
-              type="button"
-              role="tab"
-              aria-selected={tab === "primary"}
-              className={`chat-tab${tab === "primary" ? " chat-tab-active" : ""}`}
-              onClick={() => setTab("primary")}
-              data-testid={leftTabTestId}
-            >
-              {leftTabLabel}
-            </button>
-          )}
-
-          <button
-            type="button"
-            role="tab"
-            aria-selected={tab === "unread"}
-            className={`chat-tab${tab === "unread" ? " chat-tab-active" : ""}`}
-            onClick={() => setTab("unread")}
-            data-testid="chat-tab-unread"
-          >
-            {t("chat.unread")}
-          </button>
-        </div>
-
-        {/* Category dropdown menu for contacts */}
-        {showCategoryMenu && destination === "contacts" && (
-          <div
-            className="absolute left-2 top-24 z-10 w-40 rounded-md border border-border bg-surface shadow-lg"
-            role="menu"
-            data-testid="chat-contact-categories"
-          >
-            {(["frequents", "recent"] as ContactCategory[]).map((c) => (
-              <button
-                key={c}
-                type="button"
-                role="menuitem"
-                className="flex w-full items-center gap-2 px-3 py-2 text-sm text-text hover:bg-surface-hover outline-none"
-                onClick={() => {
-                  setContactCategory(c);
-                  setShowCategoryMenu(false);
-                  setTab("primary");
-                }}
-                data-testid={`chat-category-${c}`}
-              >
-                {c === "frequents" ? (
-                  <HeartIcon className="size-4 text-text-muted" aria-hidden />
-                ) : (
-                  <Icons.clock className="size-4 text-text-muted" aria-hidden />
-                )}
-                {t(`chat.${c}` as Parameters<typeof t>[0])}
-                {contactCategory === c && (
-                  <Icons.check className="ml-auto size-3 text-accent-blue" aria-hidden />
-                )}
-              </button>
-            ))}
-          </div>
-        )}
-
-        {/* === Body (#14 empty states) === */}
-        <div className="chat-body" role="tabpanel">
-          {tab === "unread" ? (
-            <div className="chat-empty-state" data-testid="chat-unread-empty">
-              <UnreadEmptyIllustration />
-              <p className="chat-empty-title">{t("chat.emptyUnreadTitle")}</p>
-            </div>
-          ) : (
-            <>
-              {/* Email invite row at top of contacts search */}
-              {showEmailInvite && (
+                {/* Advanced search (#9) inside search field */}
                 <button
                   type="button"
-                  className="chat-invite-row"
-                  onClick={() => openInvite(searchText.trim())}
-                  data-testid="chat-email-invite-row"
+                  className="chat-search-advanced"
+                  aria-label={t("chat.advancedSearch")}
+                  data-testid="chat-advanced-search-btn"
                 >
-                  <Icons.userPlus className="size-4" aria-hidden />
-                  {t("chat.inviteEmail", { email: searchText.trim() })}
+                  <Icons.settingsSliders
+                    className="size-3.5 text-text-muted hover:text-text"
+                    aria-hidden
+                  />
+                </button>
+              </div>
+              {/* @Mentions (#10) */}
+              <button
+                type="button"
+                aria-label={t("chat.mentions")}
+                className="chat-search-btn"
+                data-testid="chat-mentions-btn"
+              >
+                <span className="text-sm font-semibold text-text-muted leading-none" aria-hidden>
+                  @
+                </span>
+              </button>
+              {/* Starred (#11) */}
+              <button
+                type="button"
+                aria-label={t("chat.starred")}
+                className="chat-search-btn"
+                data-testid="chat-starred-btn"
+              >
+                <StarOutlineIcon className="size-4 text-text-muted" aria-hidden />
+              </button>
+            </div>
+
+            {/* === Tabs (#12 / #13) === */}
+            <div className="chat-tabs" role="tablist">
+              {destination === "contacts" ? (
+                <div className="relative flex flex-1 items-center">
+                  <button
+                    type="button"
+                    role="tab"
+                    aria-selected={tab === "primary"}
+                    className={`chat-tab w-full${tab === "primary" ? " chat-tab-active pr-7" : ""}`}
+                    onClick={() => setTab("primary")}
+                    data-testid={leftTabTestId}
+                  >
+                    {contactCategory === "frequents" ? (
+                      <HeartIcon
+                        className={`size-3.5 ${tab === "primary" ? "text-current" : "text-text-muted"}`}
+                        aria-hidden
+                      />
+                    ) : (
+                      <Icons.clock
+                        className={`size-3.5 ${tab === "primary" ? "text-current" : "text-text-muted"}`}
+                        aria-hidden
+                      />
+                    )}
+                    {leftTabLabel}
+                  </button>
+                  <button
+                    type="button"
+                    className="absolute right-1 flex size-5 items-center justify-center rounded text-current hover:bg-black/10 outline-none"
+                    aria-label={t("chat.contactCategories")}
+                    aria-haspopup="true"
+                    aria-expanded={showCategoryMenu}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setShowCategoryMenu((v) => !v);
+                    }}
+                    data-testid="chat-category-caret"
+                  >
+                    <Icons.chevronDown
+                      className={`size-3 ${tab === "primary" ? "text-current" : "text-text-muted"}`}
+                      aria-hidden
+                    />
+                  </button>
+
+                  {/* Category dropdown menu for contacts */}
+                  {showCategoryMenu && (
+                    <div
+                      className="chat-contact-categories-menu"
+                      role="menu"
+                      data-testid="chat-contact-categories"
+                    >
+                      {(["frequents", "recent"] as ContactCategory[]).map((c) => (
+                        <button
+                          key={c}
+                          type="button"
+                          role="menuitem"
+                          className={`chat-category-menu-item${contactCategory === c ? " active" : ""}`}
+                          onClick={() => {
+                            setContactCategory(c);
+                            setShowCategoryMenu(false);
+                            setTab("primary");
+                          }}
+                          data-testid={`chat-category-${c}`}
+                        >
+                          {c === "frequents" ? (
+                            <HeartIcon className="size-3.5" aria-hidden />
+                          ) : (
+                            <Icons.clock className="size-3.5" aria-hidden />
+                          )}
+                          <span className="flex-1 text-left">
+                            {t(`chat.${c}` as Parameters<typeof t>[0])}
+                          </span>
+                          {contactCategory === c && (
+                            <Icons.check className="size-3.5 text-[#1a73e8]" aria-hidden />
+                          )}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === "primary"}
+                  className={`chat-tab${tab === "primary" ? " chat-tab-active" : ""}`}
+                  onClick={() => setTab("primary")}
+                  data-testid={leftTabTestId}
+                >
+                  {leftTabLabel}
                 </button>
               )}
 
-              {/* Chats empty state */}
-              {destination === "chats" && (
-                <div className="chat-empty-state">
-                  <ChatEmptyIllustration />
-                  <p className="chat-empty-title">{t("chat.emptyChatsTitle")}</p>
-                  <p className="chat-empty-description">{t("chat.emptyChatsDescription")}</p>
-                </div>
-              )}
-
-              {/* Contacts empty state */}
-              {destination === "contacts" && contacts.length === 0 && !showEmailInvite && (
-                <div className="chat-empty-state" data-testid="chat-contacts-empty">
-                  <ContactEmptyIllustration />
-                  <p className="chat-empty-title">{t("chat.emptyContactsTitle")}</p>
-                  <p className="chat-empty-description">{t("chat.emptyContactsDescription")}</p>
-                </div>
-              )}
-
-              {/* My Pins empty state */}
-              {destination === "pins" && (
-                <div className="chat-empty-state" data-testid="chat-pins-empty">
-                  <PinEmptyIllustration />
-                  <p className="chat-empty-title">{t("chat.emptyPinsTitle")}</p>
-                  <p className="chat-empty-description">{t("chat.emptyPinsDescription")}</p>
-                  {/* +Add Chats button (#17) */}
-                  <button
-                    type="button"
-                    className="mt-4 rounded px-4 py-2 text-sm font-semibold text-accent-blue hover:bg-surface-hover outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-                    onClick={() => dataSource.actions.startDirectMessage()}
-                    data-testid="chat-add-chats"
-                  >
-                    {t("chat.addChats")}
-                  </button>
-                </div>
-              )}
-
-              {/* Channels empty state */}
-              {destination === "channels" && (
-                <div className="chat-empty-state" data-testid="chat-channels-empty">
-                  <ChatEmptyIllustration />
-                  <p className="chat-empty-title">{t("chat.emptyChannelsTitle")}</p>
-                  <p className="chat-empty-description">{t("chat.emptyChannelsDescription")}</p>
-                </div>
-              )}
-
-              {/* Threads empty state */}
-              {destination === "threads" && (
-                <div className="chat-empty-state" data-testid="chat-threads-empty">
-                  <ChatEmptyIllustration />
-                  <p className="chat-empty-title">{t("chat.emptyThreadsTitle")}</p>
-                  <p className="chat-empty-description">{t("chat.emptyThreadsDescription")}</p>
-                </div>
-              )}
-            </>
-          )}
-        </div>
-
-        {/* Quick Actions menu (#18–#22, #25) */}
-        {quickActionsOpen && (
-          <div className="chat-quick-actions-menu" data-testid="chat-quick-actions-menu">
-            <div className="chat-quick-actions-title">{t("chat.quickActions")}</div>
-            {/* Send a Direct Message (#20) */}
-            <button
-              type="button"
-              className="chat-quick-action-item"
-              onClick={() => {
-                dataSource.actions.startDirectMessage();
-                setQuickActionsOpen(false);
-              }}
-              data-testid="chat-qa-direct"
-            >
-              <MessagePlusIcon className="size-4" aria-hidden />
-              {t("chat.sendDirectMessage")}
-            </button>
-            {/* Start a Group Conversation (#21) */}
-            <button
-              type="button"
-              className="chat-quick-action-item"
-              onClick={() => {
-                dataSource.actions.startGroupConversation();
-                setQuickActionsOpen(false);
-              }}
-              data-testid="chat-qa-group"
-            >
-              <Icons.users className="size-4" aria-hidden />
-              {t("chat.startGroupConversation")}
-            </button>
-            {/* Create a Channel (#25) */}
-            <button
-              type="button"
-              className="chat-quick-action-item"
-              onClick={() => {
-                dataSource.actions.createChannel();
-                setQuickActionsOpen(false);
-              }}
-              data-testid="chat-qa-channel"
-            >
-              <HashIcon className="size-4" aria-hidden />
-              {t("chat.createChannel")}
-            </button>
-            {/* Invite People (#22) — only when user has invite permission and inviteAction exists */}
-            {dataSource.canInvite && Boolean(inviteAction) && (
               <button
                 type="button"
-                className="chat-quick-action-item"
-                onClick={() => openInvite()}
-                data-testid="chat-qa-invite"
+                role="tab"
+                aria-selected={tab === "unread"}
+                className={`chat-tab${tab === "unread" ? " chat-tab-active" : ""}`}
+                onClick={() => setTab("unread")}
+                data-testid="chat-tab-unread"
               >
-                <Icons.userPlus className="size-4" aria-hidden />
-                {t("chat.invitePeople")}
+                {t("chat.unread")}
+                {unreadTabCount > 0 && (
+                  <span className="chat-tab-badge ml-1" data-testid="chat-tab-unread-badge">
+                    <span className="sr-only">
+                      {t("chat.footerBadgeUnread", { count: unreadTabCount })}
+                    </span>
+                    <span aria-hidden="true">{unreadTabCount > 99 ? "99+" : unreadTabCount}</span>
+                  </span>
+                )}
               </button>
-            )}
-          </div>
-        )}
+            </div>
 
-        {/* === Quick Actions FAB (#15) — + turns to X when menu is open === */}
-        <button
-          type="button"
-          className="chat-quick-actions-fab"
-          aria-label={quickActionsOpen ? t("chat.closeQuickActions") : t("chat.quickActions")}
-          aria-expanded={quickActionsOpen}
-          onClick={() => setQuickActionsOpen((v) => !v)}
-          data-testid="chat-quick-actions-fab"
-        >
-          {quickActionsOpen ? (
-            <Icons.close className="size-4" aria-hidden />
-          ) : (
-            <Icons.plus className="size-4" aria-hidden />
-          )}
-        </button>
+            {/* === Body (#14 empty states) === */}
+            <div className="chat-body" role="tabpanel">
+              {tab === "unread" ? (
+                unreadRows.length > 0 ? (
+                  <ConversationList
+                    conversations={unreadRows}
+                    selfId={dataSource.selfId}
+                    onOpen={setOpenId}
+                  />
+                ) : (
+                  <div
+                    className="chat-empty-state chat-empty-unread"
+                    data-testid="chat-unread-empty"
+                  >
+                    <UnreadEmptyIllustration />
+                    <p className="chat-empty-unread-text">{t("chat.emptyUnreadTitle")}</p>
+                  </div>
+                )
+              ) : (
+                <>
+                  {/* Email invite row at top of contacts search */}
+                  {showEmailInvite && (
+                    <button
+                      type="button"
+                      className="chat-invite-row"
+                      onClick={() => openInvite(searchText.trim())}
+                      data-testid="chat-email-invite-row"
+                    >
+                      <Icons.userPlus className="size-4" aria-hidden />
+                      {t("chat.inviteEmail", { email: searchText.trim() })}
+                    </button>
+                  )}
+
+                  {/* Chats empty state */}
+                  {destination === "chats" && chatRows.length > 0 && (
+                    <ConversationList
+                      conversations={chatRows}
+                      selfId={dataSource.selfId}
+                      onOpen={setOpenId}
+                    />
+                  )}
+                  {destination === "chats" && chatRows.length === 0 && (
+                    <div className="chat-empty-state chat-empty-chats">
+                      <ChatEmptyIllustration />
+                      <p className="chat-empty-description">{t("chat.emptyChatsDescription")}</p>
+                    </div>
+                  )}
+
+                  {/* Contacts empty state */}
+                  {destination === "contacts" && visibleContacts.length > 0 && (
+                    <ContactList contacts={visibleContacts} onOpen={(id) => void openContact(id)} />
+                  )}
+                  {destination === "contacts" &&
+                    visibleContacts.length === 0 &&
+                    !showEmailInvite && (
+                      <div
+                        className="chat-empty-state chat-empty-contacts"
+                        data-testid="chat-contacts-empty"
+                      >
+                        <ContactEmptyIllustration />
+                        <p className="chat-empty-description">
+                          {t("chat.emptyContactsDescription")}
+                        </p>
+                      </div>
+                    )}
+
+                  {/* My Pins empty state */}
+                  {destination === "pins" && (
+                    <div
+                      className="chat-empty-state chat-empty-chats"
+                      data-testid="chat-pins-empty"
+                    >
+                      <PinEmptyIllustration />
+                      <p className="chat-empty-description">{t("chat.emptyPinsDescription")}</p>
+                      {/* +Add Chats button (#17) */}
+                      <button
+                        type="button"
+                        className="mt-4 rounded px-4 py-2 text-sm font-semibold text-accent-blue hover:bg-surface-hover outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
+                        onClick={() => setPicker("direct")}
+                        data-testid="chat-add-chats"
+                      >
+                        {t("chat.addChats")}
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Channels empty state */}
+                  {destination === "channels" && (
+                    <div
+                      className="chat-empty-state chat-empty-chats"
+                      data-testid="chat-channels-empty"
+                    >
+                      <ChatEmptyIllustration />
+                      <p className="chat-empty-description">{t("chat.emptyChannelsDescription")}</p>
+                    </div>
+                  )}
+
+                  {/* Threads empty state */}
+                  {destination === "threads" && (
+                    <div
+                      className="chat-empty-state chat-empty-chats"
+                      data-testid="chat-threads-empty"
+                    >
+                      <ChatEmptyIllustration />
+                      <p className="chat-empty-description">{t("chat.emptyThreadsDescription")}</p>
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+
+            {/* Quick Actions overlay & menu (#18–#28) */}
+            {quickActionsOpen && (
+              <div className="chat-quick-actions-overlay" data-testid="chat-quick-actions-overlay">
+                <div
+                  className="chat-quick-actions-backdrop"
+                  onClick={() => setQuickActionsOpen(false)}
+                  aria-hidden="true"
+                />
+                <div className="chat-quick-actions-card" data-testid="chat-quick-actions-menu">
+                  <div className="chat-quick-actions-header">
+                    <span className="chat-quick-actions-title">{t("chat.quickActions")}</span>
+                  </div>
+                  <div className="chat-quick-actions-list">
+                    {/* 1. Send a Direct Message (#20) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item"
+                      onClick={() => {
+                        setPicker("direct");
+                        setQuickActionsOpen(false);
+                      }}
+                      data-testid="chat-qa-direct"
+                    >
+                      <MessagePlusIcon className="size-4" aria-hidden />
+                      <span>{t("chat.sendDirectMessage")}</span>
+                    </button>
+                    {/* 2. Start a Group Conversation (#21) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item"
+                      onClick={() => {
+                        setPicker("group");
+                        setQuickActionsOpen(false);
+                      }}
+                      data-testid="chat-qa-group"
+                    >
+                      <Icons.users className="size-4" aria-hidden />
+                      <span>{t("chat.startGroupConversation")}</span>
+                    </button>
+                    {/* 3. Invite People (#22) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item"
+                      onClick={() => {
+                        setQuickActionsOpen(false);
+                        openInvite();
+                      }}
+                      data-testid="chat-qa-invite"
+                    >
+                      <Icons.userPlus className="size-4" aria-hidden />
+                      <span>{t("chat.invitePeople")}</span>
+                    </button>
+                    {/* 4. Make a Call (#23) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item"
+                      onClick={() => setQuickActionsOpen(false)}
+                      data-testid="chat-qa-call"
+                    >
+                      <Icons.phone className="size-4" aria-hidden />
+                      <span>{t("chat.makeCall")}</span>
+                    </button>
+
+                    {/* Notice banner (#24) */}
+                    <div className="chat-quick-action-notice">
+                      <span>{t("chat.accessNotice")}</span>
+                      <svg
+                        className="size-3"
+                        viewBox="0 0 16 16"
+                        fill="none"
+                        stroke="currentColor"
+                        strokeWidth="1.4"
+                        aria-hidden
+                      >
+                        <path d="M9 2h5v5M14 2 7.5 8.5M12 10v3.5H2.5V4H6" />
+                      </svg>
+                    </div>
+
+                    {/* Lower items (#25–#28) */}
+                    {/* 5. Create a Channel (#25) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item chat-quick-action-muted"
+                      onClick={() => setQuickActionsOpen(false)}
+                      data-testid="chat-qa-channel"
+                    >
+                      <HashIcon className="size-4" aria-hidden />
+                      <span>{t("chat.createChannel")}</span>
+                    </button>
+                    {/* 6. Meet Now (#26) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item chat-quick-action-muted"
+                      onClick={() => setQuickActionsOpen(false)}
+                      data-testid="chat-qa-meet-now"
+                    >
+                      <VideoIcon className="size-4" aria-hidden />
+                      <span>{t("chat.meetNow")}</span>
+                    </button>
+                    {/* 7. Schedule Meeting (#27) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item chat-quick-action-muted"
+                      onClick={() => setQuickActionsOpen(false)}
+                      data-testid="chat-qa-schedule-meeting"
+                    >
+                      <Icons.calendar className="size-4" aria-hidden />
+                      <span>{t("chat.scheduleMeeting")}</span>
+                    </button>
+                    {/* 8. Schedule Live Event (#28) */}
+                    <button
+                      type="button"
+                      className="chat-quick-action-item chat-quick-action-muted"
+                      onClick={() => setQuickActionsOpen(false)}
+                      data-testid="chat-qa-live-event"
+                    >
+                      <BroadcastIcon className="size-4" aria-hidden />
+                      <span>{t("chat.scheduleLiveEvent")}</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* === Quick Actions FAB (#15) — + turns to X when menu is open === */}
+            <button
+              type="button"
+              className="chat-quick-actions-fab"
+              aria-label={quickActionsOpen ? t("chat.closeQuickActions") : t("chat.quickActions")}
+              aria-expanded={quickActionsOpen}
+              onClick={() => setQuickActionsOpen((v) => !v)}
+              data-testid="chat-quick-actions-fab"
+            >
+              {quickActionsOpen ? (
+                <Icons.close className="size-4" aria-hidden />
+              ) : (
+                <Icons.plus className="size-4" aria-hidden />
+              )}
+            </button>
+          </>
+        )}
       </section>
+
+      {picker && (
+        <MemberPickerDialog
+          mode={picker}
+          directory={dataSource.directory}
+          onClose={() => setPicker(null)}
+          onSubmitDirect={async (userId) => {
+            const id = await dataSource.openDirect(userId);
+            setOpenId(id);
+          }}
+          onSubmitGroup={async (name, ids) => {
+            const id = await dataSource.createGroup(name, ids);
+            setOpenId(id);
+          }}
+        />
+      )}
 
       {/* Invite dialog */}
       {showInvite && inviteAction && (
@@ -639,6 +808,37 @@ function HashIcon(props: SVGProps<SVGSVGElement>) {
       <line x1="4" y1="15" x2="20" y2="15" />
       <line x1="10" y1="3" x2="8" y2="21" />
       <line x1="16" y1="3" x2="14" y2="21" />
+    </svg>
+  );
+}
+
+function VideoIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      aria-hidden="true"
+      {...props}
+    >
+      <polygon points="23 7 16 12 23 17 23 7" />
+      <rect x="1" y="5" width="15" height="14" rx="2" ry="2" />
+    </svg>
+  );
+}
+
+function BroadcastIcon(props: SVGProps<SVGSVGElement>) {
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      aria-hidden="true"
+      {...props}
+    >
+      <path d="M4.93 19.07a10 10 0 0 1 0-14.14M19.07 4.93a10 10 0 0 1 0 14.14M7.76 16.24a6 6 0 0 1 0-8.48M16.24 7.76a6 6 0 0 1 0 8.48M12 12h.01" />
     </svg>
   );
 }
