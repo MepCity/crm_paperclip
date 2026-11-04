@@ -42,6 +42,11 @@ export function schemaRecordService<T extends RecordService>(
     merge: (module, input, options) => run([module], options, () => service.merge(module, input)),
     deduplicate: (module, fields, options) =>
       run([module], options, () => service.deduplicate(module, fields)),
+    convertQuoteToInvoice: (id, options) =>
+      run(["Quotes", "Invoices"], options, () => {
+        if (!service.convertQuoteToInvoice) throw new Error("Quote conversion is not supported.");
+        return service.convertQuoteToInvoice(id);
+      }),
     convertLead: (id, original, options) => {
       const input = structuredClone(original);
       return run(

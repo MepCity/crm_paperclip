@@ -16,6 +16,23 @@ export {
   ValidationError,
 } from "./errors";
 export { checkHealth, type HealthReport } from "./health";
+export type {
+  DocumentTotals,
+  HeaderInput,
+  LineItemInput,
+  LineItemTotals,
+  LineTaxValue,
+  ProductForLine,
+} from "./records/line-items";
+export {
+  computeLineItemTotals,
+  MAX_LINE_ITEMS,
+  MIN_LINE_ITEMS,
+  productLineDefaults,
+} from "./records/line-items";
+export { roundMoneyTwoDecimals } from "./records/rounding";
+export type { TaxDefinition } from "./records/tax";
+export { findTax, listOrganisationTaxes, organisationTaxes, taxLabel } from "./records/tax";
 export {
   acceptInvitation,
   changeMemberRole,

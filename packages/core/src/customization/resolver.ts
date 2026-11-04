@@ -142,7 +142,8 @@ export function resolveEffectiveModule(
   const fields: CustomizationField[] = [];
   for (const field of byId.values()) {
     if (field.picklist) {
-      if (field.dataType !== "picklist") invalid("Picklist constraint on an unsupported type.");
+      if (field.dataType !== "picklist" && field.dataType !== "multiselectpicklist")
+        invalid("Picklist constraint on an unsupported type.");
       unique(
         field.picklist.map((option) => option.storedValue),
         "picklist value",

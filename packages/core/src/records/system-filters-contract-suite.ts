@@ -4,6 +4,7 @@ import { ValidationError } from "../errors";
 import type { OrgContext } from "../tenancy/types";
 import type { RecordData, RecordService, SystemFiltersValue } from "./contract";
 import type { RecordServiceContractModuleDefinition } from "./contract-suite-module";
+import { notesParentModules } from "./fixture/notes/metadata";
 
 export function describeSystemFiltersContract(
   name: string,
@@ -110,7 +111,8 @@ export function describeSystemFiltersContract(
       expect(locked.length).toBeGreaterThan(0);
       expect(await ids({ locked: { locked: false } })).not.toEqual(expect.arrayContaining(locked));
     });
-    it("matches related note additions without treating them as direct creation", async () => {
+    const notesIt = (notesParentModules as readonly string[]).includes(api) ? it : it.skip;
+    notesIt("matches related note additions without treating them as direct creation", async () => {
       instant = "2026-10-01T12:00:00Z";
       const notePeriod = { from: instant, to: period.to };
       const filter = {

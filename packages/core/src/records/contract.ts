@@ -27,7 +27,10 @@ export type FieldDataType =
   | "lookup"
   | "ownerlookup"
   | "profileimage"
-  | "multi_module_lookup";
+  | "multi_module_lookup"
+  /** Ordered inline rows owned by the parent record (ADR 0016 §2). */
+  | "subform"
+  | "multiselectpicklist";
 
 /** A reference to a record in one of the connected modules. */
 export type ModuleRecordReference = {
@@ -383,6 +386,8 @@ export interface RecordService {
     input: ConvertLeadInput,
     options?: RecordWriteOptions,
   ): Promise<ConvertLeadResult>;
+  /** Creates one invoice from a quote in one atomic write (ADR 0016 §7); returns the invoice id. */
+  convertQuoteToInvoice?(quoteId: string, options?: RecordWriteOptions): Promise<string>;
   deduplicate(
     module: ModuleApiName,
     fields: readonly string[],

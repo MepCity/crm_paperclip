@@ -1,0 +1,1 @@
+export { quotesViews } from "./metadata";

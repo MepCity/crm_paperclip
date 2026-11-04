@@ -538,3 +538,87 @@ export const solutionsRecordServiceContractModule: RecordServiceContractModuleDe
     ["No_of_comments", "one"],
   ],
 };
+
+const sampleLine = {
+  Product_Name: { module: "Products", id: "310000000000000000" },
+  Quantity: 2,
+  List_Price: 100,
+};
+
+export const productsRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Products",
+  singularLabel: "Product",
+  pluralLabel: "Products",
+  expectedFieldCount: 32,
+  buildMinimalValidInput: (extra = {}) => ({ Product_Name: "Example product", ...extra }),
+  systemFields: leadsSystemFields,
+  filterMarker: {
+    field: "Product_Name",
+    sample: "Contract sample",
+    updated: "Contract updated",
+    tenantOther: "Other tenant",
+  },
+  duplicatePermittedField: "Description",
+  optional: { massUpdateScenario: { field: "Product_Code", value: "P-MASS" } },
+  sortFields: ["Product_Name", "Unit_Price"],
+  expectedUniqueFields: [],
+  typeValidationCases: [
+    ["Product_Name", 1],
+    ["Locked__s", "true"],
+    ["Unit_Price", "ten"],
+  ],
+};
+
+export const quotesRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Quotes",
+  singularLabel: "Quote",
+  pluralLabel: "Quotes",
+  expectedFieldCount: 50,
+  buildMinimalValidInput: (extra = {}) => ({
+    Subject: "Example quote",
+    Quoted_Items: [sampleLine],
+    ...extra,
+  }),
+  systemFields: leadsSystemFields,
+  filterMarker: {
+    field: "Subject",
+    sample: "Contract sample",
+    updated: "Contract updated",
+    tenantOther: "Other tenant",
+  },
+  duplicatePermittedField: "Description",
+  sortFields: ["Subject", "Quote_Stage"],
+  expectedUniqueFields: [],
+  typeValidationCases: [
+    ["Subject", 1],
+    ["Locked__s", "true"],
+    ["Valid_Till", "tomorrow"],
+  ],
+};
+
+export const invoicesRecordServiceContractModule: RecordServiceContractModuleDefinition = {
+  apiName: "Invoices",
+  singularLabel: "Invoice",
+  pluralLabel: "Invoices",
+  expectedFieldCount: 53,
+  buildMinimalValidInput: (extra = {}) => ({
+    Subject: "Example invoice",
+    Invoiced_Items: [sampleLine],
+    ...extra,
+  }),
+  systemFields: leadsSystemFields,
+  filterMarker: {
+    field: "Subject",
+    sample: "Contract sample",
+    updated: "Contract updated",
+    tenantOther: "Other tenant",
+  },
+  duplicatePermittedField: "Description",
+  sortFields: ["Subject", "Status"],
+  expectedUniqueFields: [],
+  typeValidationCases: [
+    ["Subject", 1],
+    ["Locked__s", "true"],
+    ["Due_Date", "soon"],
+  ],
+};

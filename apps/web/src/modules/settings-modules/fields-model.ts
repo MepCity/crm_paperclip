@@ -103,6 +103,8 @@ export const TYPE_LABELS: Record<FieldDataType, string> = {
   ownerlookup: "Owner Lookup",
   profileimage: "Image",
   multi_module_lookup: "Multi-module Lookup",
+  subform: "Subform",
+  multiselectpicklist: "Multi-select Pick List",
 };
 
 export function fieldRowsFromMetadata(meta: ModuleMetadata): FieldRow[] {
