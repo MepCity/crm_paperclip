@@ -1,6 +1,7 @@
 import { cleanup, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { afterEach, describe, expect, test, vi } from "vitest";
+import { LanguageProvider } from "@/i18n/client-provider";
 import { render } from "@/test/render";
 import { AdvancedSearchDialog } from "./advanced-search-dialog";
 import { ChatPanel } from "./chat-panel";
@@ -11,10 +12,15 @@ import {
   type ChatMessageView,
   EmptyChatDataSource,
 } from "./data";
-import { MentionsDialog } from "./mentions-dialog";
+import { MemberPickerDialog } from "./member-picker-dialog";
+import { isBroadcastOnlyMention, MentionsDialog } from "./mentions-dialog";
 import { PinPickerDialog } from "./pin-picker-dialog";
 import { StarredDialog } from "./starred-dialog";
 import { ThreadPane } from "./thread-pane";
+
+vi.mock("next/navigation", () => ({
+  useRouter: () => ({ refresh: vi.fn(), push: vi.fn(), replace: vi.fn() }),
+}));
 
 afterEach(() => {
   cleanup();
@@ -430,5 +436,126 @@ describe("MEP-1421: Mentions, Starred & Advanced Search", () => {
     const resultItem = screen.getByTestId("chat-search-result-msg-1");
     await userEv.click(resultItem);
     expect(selectSpy).toHaveBeenCalledWith("conv-1", "msg-1");
+  });
+
+  describe("MEP-1433: Group picker instruction (#61) and Hide broadcast mentions checkbox (#36)", () => {
+    test("isBroadcastOnlyMention correctly identifies broadcast-only messages", () => {
+      expect(isBroadcastOnlyMention("Hello @all team")).toBe(true);
+      expect(isBroadcastOnlyMention("Hello @available members")).toBe(true);
+      expect(isBroadcastOnlyMention("@ALL: please check")).toBe(true);
+      expect(isBroadcastOnlyMention("Notice (@available)!")).toBe(true);
+      expect(isBroadcastOnlyMention("@all and @available")).toBe(true);
+
+      // Mixed broadcast and direct mention -> not broadcast only
+      expect(isBroadcastOnlyMention("Hello @all and @Alice")).toBe(false);
+      expect(isBroadcastOnlyMention("@available please ask @Bob")).toBe(false);
+
+      // Direct mention only -> not broadcast only
+      expect(isBroadcastOnlyMention("Hello @Alice")).toBe(false);
+      expect(isBroadcastOnlyMention("@Bob: ping")).toBe(false);
+
+      // No mentions or plain email
+      expect(isBroadcastOnlyMention("No mentions here")).toBe(false);
+      expect(isBroadcastOnlyMention("contact support@all.com")).toBe(false);
+      expect(isBroadcastOnlyMention("")).toBe(false);
+    });
+
+    test("MentionsDialog has Hide @all, @available checkbox that filters broadcast-only mentions", async () => {
+      const userEv = userEvent.setup();
+
+      const broadcastMsg: ChatMessageView = {
+        ...sampleMessage,
+        id: "msg-broadcast",
+        body: "Announcement to @all team members",
+      };
+      const directMsg: ChatMessageView = {
+        ...sampleMessage,
+        id: "msg-direct",
+        body: "Hey @Alice please check this report",
+      };
+      const mixedMsg: ChatMessageView = {
+        ...sampleMessage,
+        id: "msg-mixed",
+        body: "Hello @all and @Alice",
+      };
+
+      const result = render(
+        <MentionsDialog
+          isOpen={true}
+          mentions={[broadcastMsg, directMsg, mixedMsg]}
+          onClose={vi.fn()}
+          onMarkAllRead={vi.fn().mockResolvedValue(undefined)}
+          onGoToMessage={vi.fn()}
+        />,
+      );
+
+      // Checkbox should be present and unchecked by default
+      const checkbox = screen.getByTestId("chat-mentions-hide-broadcast") as HTMLInputElement;
+      expect(checkbox).toBeTruthy();
+      expect(checkbox.checked).toBe(false);
+
+      // All 3 messages visible initially
+      expect(screen.getByText("Announcement to @all team members")).toBeTruthy();
+      expect(screen.getByText("Hey @Alice please check this report")).toBeTruthy();
+      expect(screen.getByText("Hello @all and @Alice")).toBeTruthy();
+
+      // Check the checkbox -> broadcast-only message should be hidden, direct & mixed kept
+      await userEv.click(checkbox);
+      expect(checkbox.checked).toBe(true);
+
+      expect(screen.queryByText("Announcement to @all team members")).toBeNull();
+      expect(screen.getByText("Hey @Alice please check this report")).toBeTruthy();
+      expect(screen.getByText("Hello @all and @Alice")).toBeTruthy();
+
+      // Uncheck the checkbox -> broadcast message reappears
+      await userEv.click(checkbox);
+      expect(checkbox.checked).toBe(false);
+      expect(screen.getByText("Announcement to @all team members")).toBeTruthy();
+
+      result.unmount();
+    });
+
+    test("MemberPickerDialog displays instruction title in group mode for EN and TR", () => {
+      // English default
+      const enResult = render(
+        <MemberPickerDialog
+          mode="group"
+          directory={[]}
+          onSubmitDirect={vi.fn()}
+          onSubmitGroup={vi.fn()}
+          onClose={vi.fn()}
+        />,
+      );
+      expect(screen.getByText("Select users to create a group chat")).toBeTruthy();
+      enResult.unmount();
+
+      // Turkish locale
+      const trResult = render(
+        <LanguageProvider language="tr">
+          <MemberPickerDialog
+            mode="group"
+            directory={[]}
+            onSubmitDirect={vi.fn()}
+            onSubmitGroup={vi.fn()}
+            onClose={vi.fn()}
+          />
+        </LanguageProvider>,
+      );
+      expect(screen.getByText("Grup sohbeti oluşturmak için kullanıcı seçin")).toBeTruthy();
+      trResult.unmount();
+
+      // Direct mode title unchanged
+      const directResult = render(
+        <MemberPickerDialog
+          mode="direct"
+          directory={[]}
+          onSubmitDirect={vi.fn()}
+          onSubmitGroup={vi.fn()}
+          onClose={vi.fn()}
+        />,
+      );
+      expect(screen.getByText("Send a Direct Message")).toBeTruthy();
+      directResult.unmount();
+    });
   });
 });
