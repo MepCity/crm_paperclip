@@ -96,7 +96,7 @@ export function lineItemRules(itemsField: string): NonNullable<FixtureModuleHook
       return tax;
     });
     const num = (value: FieldValue): number | null => (typeof value === "number" ? value : null);
-    const allowEmpty = options?.allowEmptyLines === true || options?.sourceTimes !== undefined;
+    const allowEmpty = options?.allowEmptyLines === true;
     const totals = computeLineItemTotals(
       items,
       {

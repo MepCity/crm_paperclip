@@ -473,7 +473,7 @@ export function createFixtureRecordService(
     options?: RecordWriteOptions,
   ) => {
     const optional = bundle.optionalFields?.(fields);
-    const allowEmptyLines = options?.allowEmptyLines === true || options?.sourceTimes !== undefined;
+    const allowEmptyLines = options?.allowEmptyLines === true;
     return optional?.length || allowEmptyLines
       ? bundle.metadata.fields.map((f) => {
           if (allowEmptyLines && f.dataType === "subform") {
