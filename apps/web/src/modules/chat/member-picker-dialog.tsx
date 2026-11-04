@@ -51,7 +51,7 @@ export function MemberPickerDialog({
     );
   }, [directory, query]);
 
-  const title = mode === "direct" ? t("chat.sendDirectMessage") : t("chat.startGroupConversation");
+  const title = mode === "direct" ? t("chat.sendDirectMessage") : t("chat.selectUsersForGroup");
   const canCreate =
     name.trim().length > 0 &&
     selected.length >= GROUP_MIN_MEMBERS &&

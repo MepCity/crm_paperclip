@@ -132,6 +132,20 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
   await page.getByTestId("chat-invite-cancel").click();
   await expect(inviteDialog).toBeHidden();
 
+  // 7b. Open Group picker from Quick Actions (MEP-1433)
+  await page.getByTestId("chat-quick-actions-fab").click();
+  await page.getByTestId("chat-qa-group").click();
+  const groupPickerDialog = page.getByTestId("chat-picker-dialog");
+  await expect(groupPickerDialog).toBeVisible();
+  await expect(
+    groupPickerDialog.getByText(
+      /Select users to create a group chat|Grup sohbeti oluşturmak için kullanıcı seçin/i,
+    ),
+  ).toBeVisible();
+  await page.screenshot({ path: join(screenshotDir, "chat-group-picker.png") });
+  await page.keyboard.press("Escape");
+  await expect(groupPickerDialog).toBeHidden();
+
   // 8. Presence menu
   await page.getByTestId("chat-presence-trigger").click();
   const presenceMenu = page.getByTestId("chat-presence-menu");
@@ -468,6 +482,10 @@ test("channels, threads, pins, mentions, starred and advanced search dialogs wor
   await page.getByTestId("chat-mentions-btn").click();
   const mentionsDialog = page.getByTestId("chat-mentions");
   await expect(mentionsDialog).toBeVisible();
+  const hideBroadcastCheckbox = page.getByTestId("chat-mentions-hide-broadcast");
+  await expect(hideBroadcastCheckbox).toBeVisible();
+  await expect(hideBroadcastCheckbox).not.toBeChecked();
+  await page.screenshot({ path: join(screenshotDir, "chat-mentions.png") });
   await page.getByTestId("chat-mentions-close").click();
   await expect(mentionsDialog).toBeHidden();
 
