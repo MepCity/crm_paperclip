@@ -20,6 +20,8 @@ export const activityParentModules = new Set([
   "Deals",
   "Cases",
   "Solutions",
+  "Quotes",
+  "Invoices",
 ]);
 
 /** Shared parent identity matching for activity reads and cascading deletion. */

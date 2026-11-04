@@ -10,6 +10,8 @@ import { invoicesFilterGroups } from "./list-filters";
 export const INVOICES_LIST_CURRENCY_CODE = "TRY";
 export const INVOICES_EMPTY_HEADING = "Create Invoices";
 export const INVOICES_EMPTY_TEXT = "No Invoices found.";
+export const INVOICES_EMPTY_DESCRIPTION =
+  "Invoices are bills issued by a seller for goods or services at the time of delivery.";
 
 /** Interim: Sort By contents were not observable (empty reference list); field labels from metadata. */
 export const INVOICES_SORT_FIELD_LABELS = [
@@ -37,6 +39,7 @@ export const invoicesListPageConfig: ModuleListScreenConfig = {
   filterGroups: invoicesFilterGroups,
   sortFieldLabels: INVOICES_SORT_FIELD_LABELS,
   pinnedViews: ["All Invoices"],
+  emptyState: { heading: INVOICES_EMPTY_HEADING, text: INVOICES_EMPTY_DESCRIPTION },
   badgeColumn: false,
   selectionTags: true,
   inventory: {

@@ -10,7 +10,9 @@
     "retry": "Yeniden dene",
     "confirm": "Onayla",
     "saveAndNew": "Kaydet ve Yeni",
-    "add": "Ekle"
+    "add": "Ekle",
+    "create": "Oluştur",
+    "import": "İçe aktar"
   },
   "loading": "Yükleniyor",
   "error": "Bir hata oluştu. Lütfen yeniden deneyin.",

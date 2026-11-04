@@ -9,6 +9,8 @@ export const notesParentModules = [
   "Campaigns",
   "Cases",
   "Solutions",
+  "Quotes",
+  "Invoices",
   "Tasks",
   "Events",
   "Calls",

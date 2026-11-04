@@ -1,6 +1,7 @@
 import type { Page } from "@playwright/test";
 import { signUpNewUser } from "./support/auth";
 import { moduleListDefaultPath } from "./support/crm-paths";
+import { expectThreeLineTotals, fillThreeLines, money } from "./support/line-items";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
@@ -17,11 +18,6 @@ async function pickAccount(page: Page) {
   await expect(page.getByRole("dialog")).toHaveCount(0);
 }
 
-async function pickProduct(page: Page, row: number) {
-  await page.getByRole("textbox", { name: `Product Name ${row}` }).click();
-  await page.locator(".line-items__menu-item").first().click();
-}
-
 test("Quote create with lines, totals, detail, edit quantity", async ({ page }) => {
   await signUpNewUser(page);
   const org = await createOrganization(page);
@@ -35,29 +31,40 @@ test("Quote create with lines, totals, detail, edit quantity", async ({ page }) 
 
   await page.getByRole("textbox", { name: "Subject", exact: true }).fill("ZZ e2e Quote");
   await pickAccount(page);
-  for (const n of [1, 2]) {
-    await page.getByRole("button", { name: "Add row" }).click();
-    await pickProduct(page, n);
-    await page.getByLabel(`Quantity ${n}`).fill("2");
-    await page.getByLabel(`List Price ${n}`).fill("100");
-  }
-  // 2 lines x 200 = 400
-  await expect(page.locator('[data-total="grand"]')).toHaveText("400,00");
-  await page.getByRole("button", { name: "Discount 1", exact: true }).click();
-  await page.getByLabel("Discount 1 value").fill("10");
-  await page.getByRole("radio", { name: "Percent (%)" }).check();
-  await page.keyboard.press("Escape");
-  await expect(page.locator('[data-total="grand"]')).toHaveText("380,00");
+  await fillThreeLines(page);
+  await expectThreeLineTotals(page);
 
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Quotes/\\d+$`), {
     timeout: 60_000,
   });
-  await expect(page.locator('[data-total="grand"]')).toHaveText("380,00");
+  const grand = await expectThreeLineTotals(page);
 
   await page.getByRole("link", { name: "Edit", exact: true }).first().click();
   await page.getByLabel("Quantity 2").fill("3");
-  await expect(page.locator('[data-total="grand"]')).toHaveText("480,00");
+  await expect(page.locator('[data-total="grand"]')).toHaveText(money(grand + 100));
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.locator('[data-total="grand"]')).toHaveText("480,00", { timeout: 60_000 });
+  await expect(page.locator('[data-total="grand"]')).toHaveText(money(grand + 100), {
+    timeout: 60_000,
+  });
+});
+
+test("Quote detail related lists and Created Time column", async ({ page }) => {
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+  await page.goto(moduleListDefaultPath(org.slug, "Quotes"));
+  await page.getByRole("link", { name: "Create Quote", exact: true }).click();
+  await page.getByRole("textbox", { name: "Subject", exact: true }).fill("ZZ e2e Quote related");
+  await pickAccount(page);
+  await fillThreeLines(page);
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Quotes/\\d+$`), {
+    timeout: 60_000,
+  });
+  for (const title of ["Notes", "Attachments", "Open Activities", "Closed Activities", "Emails"]) {
+    await expect(page.getByText(title, { exact: true }).first()).toBeVisible();
+  }
+
+  await page.goto(moduleListDefaultPath(org.slug, "Quotes"));
+  await expect(page.getByRole("columnheader", { name: "Created Time" })).toBeVisible();
 });

@@ -10,7 +10,9 @@
     "retry": "Try again",
     "confirm": "Confirm",
     "saveAndNew": "Save and New",
-    "add": "Add"
+    "add": "Add",
+    "create": "Create",
+    "import": "Import"
   },
   "loading": "Loading",
   "error": "Something went wrong. Please try again.",

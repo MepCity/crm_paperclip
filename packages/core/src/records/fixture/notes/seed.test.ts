@@ -25,10 +25,13 @@ const generators = {
   Events: generateFixtureEvents,
   Calls: generateFixtureCalls,
 };
-const seedModules = notesParentModules;
+const seedModules = notesParentModules.filter(
+  (module): module is Exclude<(typeof notesParentModules)[number], "Quotes" | "Invoices"> =>
+    module !== "Quotes" && module !== "Invoices",
+);
 
 describe("Notes metadata and seed", () => {
-  it("supports all ten confirmed note parents", () => {
+  it("supports all twelve note parents", () => {
     expect(notesParentModules).toEqual([
       "Leads",
       "Contacts",
@@ -37,6 +40,8 @@ describe("Notes metadata and seed", () => {
       "Campaigns",
       "Cases",
       "Solutions",
+      "Quotes",
+      "Invoices",
       "Tasks",
       "Events",
       "Calls",
