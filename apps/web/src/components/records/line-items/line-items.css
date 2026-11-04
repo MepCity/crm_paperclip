@@ -1,0 +1,209 @@
+/* Shared line-item table + totals (quotes, invoices). Tokens only. */
+.line-items {
+  margin-block: var(--space-3);
+  width: 100%;
+}
+.line-items__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+}
+.line-items__table th {
+  padding: var(--space-2);
+  text-align: left;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-surface-hover);
+  white-space: nowrap;
+}
+.line-items__table td {
+  padding: var(--space-2);
+  border-bottom: 1px solid var(--color-row-separator);
+  vertical-align: top;
+}
+.line-items__num {
+  text-align: right;
+}
+.line-items__col-handle {
+  width: 4.5rem;
+  white-space: nowrap;
+}
+.line-items__col-serial {
+  width: 6rem;
+}
+.line-items__col-product {
+  min-width: 14rem;
+}
+.line-items__col-actions {
+  width: 2.5rem;
+}
+.line-items__calc {
+  padding-top: var(--space-3);
+}
+.line-items__input {
+  width: 100%;
+  box-sizing: border-box;
+  height: 2rem;
+  padding-inline: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--color-surface);
+  color: inherit;
+  font: inherit;
+}
+.line-items__input:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -1px;
+}
+.line-items__input[aria-invalid="true"] {
+  border-color: var(--color-danger, #d93025);
+}
+.line-items__input--num {
+  text-align: right;
+  min-width: 5rem;
+}
+.line-items__product {
+  position: relative;
+}
+.line-items__product-box {
+  position: relative;
+}
+.line-items__product-icon {
+  position: absolute;
+  right: 0.5rem;
+  top: 0.5rem;
+  width: 1rem;
+  height: 1rem;
+  color: var(--color-text-muted);
+  pointer-events: none;
+}
+.line-items__menu {
+  position: absolute;
+  z-index: 20;
+  left: 0;
+  right: 0;
+  max-height: 14rem;
+  overflow: auto;
+  margin: 2px 0 0;
+  padding: 0;
+  list-style: none;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 4px);
+  box-shadow: var(--shadow-lg, 0 4px 12px rgb(0 0 0 / 15%));
+}
+.line-items__menu-item {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  padding: var(--space-2);
+  border: 0;
+  background: none;
+  text-align: left;
+  cursor: pointer;
+  font: inherit;
+}
+.line-items__menu-item:hover,
+.line-items__menu-item:focus-visible {
+  background: var(--color-surface-hover);
+}
+.line-items__menu-meta,
+.line-items__menu-note {
+  color: var(--color-text-muted);
+}
+.line-items__menu-note {
+  padding: var(--space-2);
+}
+.line-items__popup-trigger {
+  min-width: 5rem;
+  height: 2rem;
+  padding-inline: var(--space-2);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm, 4px);
+  background: var(--color-surface);
+  text-align: right;
+  cursor: pointer;
+  font: inherit;
+  color: var(--color-primary);
+}
+.line-items__popup {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 12rem;
+}
+.line-items__popup-modes,
+.line-items__tax-list {
+  display: grid;
+  gap: var(--space-1);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.line-items__radio {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.line-items__reorder,
+.line-items__delete,
+.line-items__add {
+  border: 0;
+  background: none;
+  cursor: pointer;
+  font: inherit;
+  color: var(--color-text-muted);
+}
+.line-items__reorder:disabled,
+.line-items__delete:disabled {
+  opacity: 0.4;
+  cursor: default;
+}
+.line-items__handle {
+  display: none;
+}
+.line-items__delete-icon,
+.line-items__add-icon {
+  width: 1rem;
+  height: 1rem;
+}
+.line-items__add {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+  color: var(--color-primary);
+}
+.line-items__error {
+  margin: var(--space-1) 0 0;
+  color: var(--color-danger, #d93025);
+  font-size: var(--text-xs);
+}
+.line-items__totals {
+  margin: var(--space-4) 0 0 auto;
+  width: 22rem;
+  max-width: 100%;
+  display: grid;
+  gap: var(--space-1);
+}
+.line-items__totals > div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  padding-block: var(--space-1);
+}
+.line-items__totals dt {
+  color: var(--color-text-muted);
+}
+.line-items__totals dd {
+  margin: 0;
+  text-align: right;
+}
+.line-items__grand {
+  border-top: 1px solid var(--color-border);
+  font-weight: 600;
+}
+.line-items--readonly .line-items__table th {
+  background: none;
+}

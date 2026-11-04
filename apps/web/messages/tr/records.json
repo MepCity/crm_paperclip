@@ -99,7 +99,8 @@
     "requiredField": "Bu alan zorunludur.",
     "field": "Alan",
     "fieldRequired": "{field} boş bırakılamaz.",
-    "invalidField": "{field} için geçersiz değer."
+    "invalidField": "{field} için geçersiz değer.",
+    "multiselectNone": "-Yok-"
   },
   "notes": {
     "addNote": "Bir not ekleyin",

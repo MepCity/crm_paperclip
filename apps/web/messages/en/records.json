@@ -99,7 +99,8 @@
     "requiredField": "This field is required.",
     "field": "Field",
     "fieldRequired": "{field} cannot be empty.",
-    "invalidField": "Invalid value for {field}."
+    "invalidField": "Invalid value for {field}.",
+    "multiselectNone": "-None-"
   },
   "notes": {
     "addNote": "Add a note",

@@ -1189,7 +1189,7 @@
   },
   {
     "file": "apps/web/src/components/records/detail/details-card.tsx",
-    "line": 53,
+    "line": 55,
     "column": 18,
     "hash": "7819dbc001fb1015"
   },
@@ -1242,6 +1242,24 @@
     "hash": "47d2a515ef2f05b8"
   },
   {
+    "file": "apps/web/src/components/records/detail/related-invoices-card-body.tsx",
+    "line": 71,
+    "column": 83,
+    "hash": "47d2a515ef2f05b8"
+  },
+  {
+    "file": "apps/web/src/components/records/detail/related-invoices-card-body.tsx",
+    "line": 145,
+    "column": 12,
+    "hash": "a57b08a480b822a0"
+  },
+  {
+    "file": "apps/web/src/components/records/detail/related-invoices-card-body.tsx",
+    "line": 153,
+    "column": 12,
+    "hash": "1ff57a29d7c9d11b"
+  },
+  {
     "file": "apps/web/src/components/records/detail/related-list-card.tsx",
     "line": 227,
     "column": 45,
@@ -1258,6 +1276,24 @@
     "line": 401,
     "column": 45,
     "hash": "ca4067071fcf6185"
+  },
+  {
+    "file": "apps/web/src/components/records/detail/related-quotes-card-body.tsx",
+    "line": 72,
+    "column": 83,
+    "hash": "47d2a515ef2f05b8"
+  },
+  {
+    "file": "apps/web/src/components/records/detail/related-quotes-card-body.tsx",
+    "line": 146,
+    "column": 12,
+    "hash": "a57b08a480b822a0"
+  },
+  {
+    "file": "apps/web/src/components/records/detail/related-quotes-card-body.tsx",
+    "line": 154,
+    "column": 12,
+    "hash": "1ff57a29d7c9d11b"
   },
   {
     "file": "apps/web/src/components/records/detail/related-records-list-error.tsx",
@@ -1357,31 +1393,31 @@
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 134,
+    "line": 135,
     "column": 27,
     "hash": "6e11774990b553e6"
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 304,
+    "line": 305,
     "column": 72,
     "hash": "a424e33d90931d1e"
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 377,
+    "line": 378,
     "column": 72,
     "hash": "a424e33d90931d1e"
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 402,
+    "line": 403,
     "column": 22,
     "hash": "74d2d951a827ab7f"
   },
   {
     "file": "apps/web/src/components/records/form/field-input.tsx",
-    "line": 403,
+    "line": 404,
     "column": 76,
     "hash": "64ea62de2928a9ac"
   },
@@ -1474,6 +1510,216 @@
     "line": 626,
     "column": 16,
     "hash": "1ff57a29d7c9d11b"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 72,
+    "column": 52,
+    "hash": "14b1b3c5b1518800"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 73,
+    "column": 53,
+    "hash": "4e20fa596389d23f"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 74,
+    "column": 45,
+    "hash": "822bab8d41bca8d7"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 75,
+    "column": 45,
+    "hash": "d05ccbe7c62621c7"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 76,
+    "column": 45,
+    "hash": "49e96d7cdf58069c"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 77,
+    "column": 45,
+    "hash": "cb72ec985b5f3d75"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 78,
+    "column": 45,
+    "hash": "47e2886ee5d3fcab"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 79,
+    "column": 45,
+    "hash": "c9b3c38247f744e1"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 227,
+    "column": 68,
+    "hash": "1868a8dd78ad9594"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 230,
+    "column": 53,
+    "hash": "6bd6df68b5e9d5a5"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 232,
+    "column": 15,
+    "hash": "c937b39955e5d911"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 236,
+    "column": 15,
+    "hash": "cb72ec985b5f3d75"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 239,
+    "column": 21,
+    "hash": "cb72ec985b5f3d75"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 251,
+    "column": 15,
+    "hash": "47e2886ee5d3fcab"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 254,
+    "column": 21,
+    "hash": "47e2886ee5d3fcab"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 263,
+    "column": 15,
+    "hash": "c416069b7f61a4a6"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 269,
+    "column": 26,
+    "hash": "c416069b7f61a4a6"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-editor.tsx",
+    "line": 277,
+    "column": 15,
+    "hash": "20f3f9a87a9f694b"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-table.tsx",
+    "line": 27,
+    "column": 52,
+    "hash": "14b1b3c5b1518800"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-table.tsx",
+    "line": 28,
+    "column": 53,
+    "hash": "4e20fa596389d23f"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-table.tsx",
+    "line": 29,
+    "column": 45,
+    "hash": "822bab8d41bca8d7"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-table.tsx",
+    "line": 30,
+    "column": 45,
+    "hash": "d05ccbe7c62621c7"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-table.tsx",
+    "line": 31,
+    "column": 45,
+    "hash": "49e96d7cdf58069c"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-table.tsx",
+    "line": 32,
+    "column": 45,
+    "hash": "cb72ec985b5f3d75"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-table.tsx",
+    "line": 33,
+    "column": 45,
+    "hash": "47e2886ee5d3fcab"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-table.tsx",
+    "line": 34,
+    "column": 45,
+    "hash": "c9b3c38247f744e1"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-table.tsx",
+    "line": 56,
+    "column": 53,
+    "hash": "6bd6df68b5e9d5a5"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-table.tsx",
+    "line": 58,
+    "column": 15,
+    "hash": "c937b39955e5d911"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-table.tsx",
+    "line": 62,
+    "column": 15,
+    "hash": "cb72ec985b5f3d75"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-table.tsx",
+    "line": 66,
+    "column": 15,
+    "hash": "47e2886ee5d3fcab"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-table.tsx",
+    "line": 70,
+    "column": 15,
+    "hash": "c416069b7f61a4a6"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/line-item-table.tsx",
+    "line": 74,
+    "column": 15,
+    "hash": "20f3f9a87a9f694b"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/product-picker.tsx",
+    "line": 73,
+    "column": 23,
+    "hash": "c93bf45d3c0cb0c9"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/product-picker.tsx",
+    "line": 92,
+    "column": 50,
+    "hash": "ba3bbbe10d8bef66"
+  },
+  {
+    "file": "apps/web/src/components/records/line-items/product-picker.tsx",
+    "line": 94,
+    "column": 50,
+    "hash": "47b8f544affc419e"
   },
   {
     "file": "apps/web/src/components/records/list/activity-filter-editor.tsx",
@@ -1693,115 +1939,115 @@
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 839,
+    "line": 848,
     "column": 31,
     "hash": "2836cfca8acae68d"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 840,
+    "line": 849,
     "column": 33,
     "hash": "5a9133cebfab7531"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 846,
+    "line": 855,
     "column": 30,
     "hash": "75c4d64dd295ea85"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 849,
+    "line": 858,
     "column": 14,
     "hash": "fee59ce0ce197df2"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 852,
+    "line": 861,
     "column": 42,
     "hash": "d22a513c3f7305ec"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 853,
+    "line": 862,
     "column": 40,
     "hash": "97330d2cf2b46bb8"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 854,
+    "line": 863,
     "column": 32,
     "hash": "07c60b2f79382eb1"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 855,
+    "line": 864,
     "column": 34,
     "hash": "86a94a959b984925"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 173,
+    "line": 175,
     "column": 89,
     "hash": "47a84e92d5b225ee"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 193,
+    "line": 195,
     "column": 29,
     "hash": "a17599396adc6090"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 206,
+    "line": 208,
     "column": 45,
     "hash": "185d8ef0ae5ea9b8"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 271,
+    "line": 273,
     "column": 42,
     "hash": "8a7525b1492fb848"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 281,
+    "line": 283,
     "column": 42,
     "hash": "20d0af43d405945d"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 328,
+    "line": 330,
     "column": 38,
     "hash": "423d9be21c71ad1d"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 374,
+    "line": 376,
     "column": 40,
     "hash": "d6e645b7d2b2da64"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 461,
+    "line": 472,
     "column": 60,
     "hash": "cddeba5cfc9a05ad"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 465,
+    "line": 476,
     "column": 13,
     "hash": "cddeba5cfc9a05ad"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 468,
+    "line": 479,
     "column": 61,
     "hash": "5c4419a6999d2a7a"
   },
   {
     "file": "apps/web/src/components/records/list/record-table.tsx",
-    "line": 472,
+    "line": 483,
     "column": 13,
     "hash": "5c4419a6999d2a7a"
   },
@@ -6318,6 +6564,120 @@
     "hash": "608068d42981f9de"
   },
   {
+    "file": "apps/web/src/modules/invoices/definition.ts",
+    "line": 64,
+    "column": 16,
+    "hash": "b4b0d6b86e455ef3"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
+    "line": 12,
+    "column": 12,
+    "hash": "9024c197d84940e4"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
+    "line": 13,
+    "column": 39,
+    "hash": "b8c42654c8ce61a0"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
+    "line": 20,
+    "column": 12,
+    "hash": "8a7525b1492fb848"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
+    "line": 28,
+    "column": 12,
+    "hash": "634de114775082f0"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
+    "line": 32,
+    "column": 44,
+    "hash": "d406ade2958cb5b6"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
+    "line": 37,
+    "column": 12,
+    "hash": "c7634afcce2a39ab"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
+    "line": 45,
+    "column": 12,
+    "hash": "b51b3696ac1bb6d3"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/invoices-related-lists.ts",
+    "line": 53,
+    "column": 12,
+    "hash": "373197624e9dd578"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/list-config.ts",
+    "line": 44,
+    "column": 37,
+    "hash": "631916d1e0e8561f"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/list-config.ts",
+    "line": 45,
+    "column": 35,
+    "hash": "530a52df6978414f"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/list-config.ts",
+    "line": 46,
+    "column": 35,
+    "hash": "5a264945a25df60f"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/list-config.ts",
+    "line": 47,
+    "column": 28,
+    "hash": "7a3cc33f849676fc"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/list-config.ts",
+    "line": 48,
+    "column": 30,
+    "hash": "6f123ab799b991d1"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/list-config.ts",
+    "line": 49,
+    "column": 29,
+    "hash": "1029a1a7a81b987e"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/list-filters.ts",
+    "line": 74,
+    "column": 14,
+    "hash": "18cffea83fbcc0f5"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/list-filters.ts",
+    "line": 81,
+    "column": 35,
+    "hash": "8a7525b1492fb848"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/list-filters.ts",
+    "line": 82,
+    "column": 41,
+    "hash": "634de114775082f0"
+  },
+  {
+    "file": "apps/web/src/modules/invoices/list-filters.ts",
+    "line": 89,
+    "column": 14,
+    "hash": "d7a6dfbf48e1fd96"
+  },
+  {
     "file": "apps/web/src/modules/leads/definition.ts",
     "line": 55,
     "column": 23,
@@ -6988,6 +7348,354 @@
     "line": 133,
     "column": 27,
     "hash": "19766ed6ccb2f4a3"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-config.ts",
+    "line": 60,
+    "column": 18,
+    "hash": "772b53ef50442d18"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-config.ts",
+    "line": 67,
+    "column": 30,
+    "hash": "3f696ebb87cead1e"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-config.ts",
+    "line": 70,
+    "column": 37,
+    "hash": "631916d1e0e8561f"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-config.ts",
+    "line": 71,
+    "column": 35,
+    "hash": "530a52df6978414f"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-config.ts",
+    "line": 72,
+    "column": 35,
+    "hash": "5a264945a25df60f"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-config.ts",
+    "line": 73,
+    "column": 28,
+    "hash": "7a3cc33f849676fc"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-config.ts",
+    "line": 74,
+    "column": 30,
+    "hash": "f592e6a4db3c6638"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-config.ts",
+    "line": 75,
+    "column": 30,
+    "hash": "576cc7ac4a663760"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-config.ts",
+    "line": 76,
+    "column": 29,
+    "hash": "1fb76997e6bdc5e7"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-config.ts",
+    "line": 79,
+    "column": 16,
+    "hash": "1029a1a7a81b987e"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-config.ts",
+    "line": 82,
+    "column": 41,
+    "hash": "28ddd0ae2c86ee30"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-config.ts",
+    "line": 83,
+    "column": 40,
+    "hash": "97330d2cf2b46bb8"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-filters.ts",
+    "line": 63,
+    "column": 12,
+    "hash": "b73a5e2ca6458665"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-filters.ts",
+    "line": 88,
+    "column": 12,
+    "hash": "373197624e9dd578"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-filters.ts",
+    "line": 90,
+    "column": 12,
+    "hash": "bca705b63a3cf585"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-filters.ts",
+    "line": 121,
+    "column": 12,
+    "hash": "8a7525b1492fb848"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-filters.ts",
+    "line": 135,
+    "column": 12,
+    "hash": "b3a60e61a5233d05"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-filters.ts",
+    "line": 217,
+    "column": 14,
+    "hash": "18cffea83fbcc0f5"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-filters.ts",
+    "line": 242,
+    "column": 41,
+    "hash": "8a7525b1492fb848"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-filters.ts",
+    "line": 243,
+    "column": 47,
+    "hash": "634de114775082f0"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-filters.ts",
+    "line": 244,
+    "column": 41,
+    "hash": "b3a60e61a5233d05"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-filters.ts",
+    "line": 245,
+    "column": 42,
+    "hash": "bca705b63a3cf585"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-filters.ts",
+    "line": 246,
+    "column": 41,
+    "hash": "b73a5e2ca6458665"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-filters.ts",
+    "line": 254,
+    "column": 14,
+    "hash": "d7a6dfbf48e1fd96"
+  },
+  {
+    "file": "apps/web/src/modules/products/list-filters.ts",
+    "line": 269,
+    "column": 14,
+    "hash": "ae33b6f5a1d38103"
+  },
+  {
+    "file": "apps/web/src/modules/products/products-related-lists.ts",
+    "line": 15,
+    "column": 12,
+    "hash": "9024c197d84940e4"
+  },
+  {
+    "file": "apps/web/src/modules/products/products-related-lists.ts",
+    "line": 16,
+    "column": 39,
+    "hash": "b8c42654c8ce61a0"
+  },
+  {
+    "file": "apps/web/src/modules/products/products-related-lists.ts",
+    "line": 44,
+    "column": 43,
+    "hash": "3c41dd4a71018673"
+  },
+  {
+    "file": "apps/web/src/modules/products/products-related-lists.ts",
+    "line": 47,
+    "column": 14,
+    "hash": "c5276e27afba47df"
+  },
+  {
+    "file": "apps/web/src/modules/products/products-related-lists.ts",
+    "line": 54,
+    "column": 14,
+    "hash": "07548c2c6511d4d1"
+  },
+  {
+    "file": "apps/web/src/modules/products/products-related-lists.ts",
+    "line": 65,
+    "column": 12,
+    "hash": "2108240e6f54d4f4"
+  },
+  {
+    "file": "apps/web/src/modules/products/products-related-lists.ts",
+    "line": 73,
+    "column": 12,
+    "hash": "8a7525b1492fb848"
+  },
+  {
+    "file": "apps/web/src/modules/products/products-related-lists.ts",
+    "line": 81,
+    "column": 12,
+    "hash": "634de114775082f0"
+  },
+  {
+    "file": "apps/web/src/modules/products/products-related-lists.ts",
+    "line": 89,
+    "column": 12,
+    "hash": "c4d0dc51dc4857e6"
+  },
+  {
+    "file": "apps/web/src/modules/products/products-related-lists.ts",
+    "line": 98,
+    "column": 12,
+    "hash": "c7634afcce2a39ab"
+  },
+  {
+    "file": "apps/web/src/modules/products/products-related-lists.ts",
+    "line": 103,
+    "column": 31,
+    "hash": "c1dc92c680d9eae8"
+  },
+  {
+    "file": "apps/web/src/modules/products/products-related-lists.ts",
+    "line": 111,
+    "column": 12,
+    "hash": "b51b3696ac1bb6d3"
+  },
+  {
+    "file": "apps/web/src/modules/products/products-related-lists.ts",
+    "line": 127,
+    "column": 12,
+    "hash": "8dc37869d63b05bd"
+  },
+  {
+    "file": "apps/web/src/modules/products/products-related-lists.ts",
+    "line": 142,
+    "column": 12,
+    "hash": "b80355750958f901"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/definition.ts",
+    "line": 61,
+    "column": 16,
+    "hash": "b4b0d6b86e455ef3"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/list-config.ts",
+    "line": 44,
+    "column": 37,
+    "hash": "631916d1e0e8561f"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/list-config.ts",
+    "line": 45,
+    "column": 35,
+    "hash": "530a52df6978414f"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/list-config.ts",
+    "line": 46,
+    "column": 35,
+    "hash": "5a264945a25df60f"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/list-config.ts",
+    "line": 47,
+    "column": 28,
+    "hash": "7a3cc33f849676fc"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/list-config.ts",
+    "line": 48,
+    "column": 30,
+    "hash": "48137445114f2818"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/list-config.ts",
+    "line": 49,
+    "column": 29,
+    "hash": "1029a1a7a81b987e"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/list-filters.ts",
+    "line": 73,
+    "column": 14,
+    "hash": "18cffea83fbcc0f5"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/list-filters.ts",
+    "line": 80,
+    "column": 35,
+    "hash": "8a7525b1492fb848"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/list-filters.ts",
+    "line": 81,
+    "column": 41,
+    "hash": "634de114775082f0"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/list-filters.ts",
+    "line": 88,
+    "column": 14,
+    "hash": "d7a6dfbf48e1fd96"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
+    "line": 12,
+    "column": 12,
+    "hash": "9024c197d84940e4"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
+    "line": 13,
+    "column": 39,
+    "hash": "b8c42654c8ce61a0"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
+    "line": 20,
+    "column": 12,
+    "hash": "8a7525b1492fb848"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
+    "line": 28,
+    "column": 12,
+    "hash": "634de114775082f0"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
+    "line": 32,
+    "column": 44,
+    "hash": "d406ade2958cb5b6"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
+    "line": 37,
+    "column": 12,
+    "hash": "c7634afcce2a39ab"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
+    "line": 45,
+    "column": 12,
+    "hash": "b51b3696ac1bb6d3"
+  },
+  {
+    "file": "apps/web/src/modules/quotes/quotes-related-lists.ts",
+    "line": 53,
+    "column": 12,
+    "hash": "373197624e9dd578"
   },
   {
     "file": "apps/web/src/modules/settings-modules/fields-api.ts",

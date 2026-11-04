@@ -148,6 +148,8 @@ describe("shellNav", () => {
     ]);
     expect(teamspace?.links?.map((link) => link.id)).toEqual([
       "products",
+      "quotes",
+      "invoices",
       "solutions",
       "social",
       "cases",

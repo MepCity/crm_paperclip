@@ -48,6 +48,8 @@ test("The registry holds CRM and activity entries pointing at their create pages
     "Case",
     "Solution",
     "Product",
+    "Quote",
+    "Invoice",
   ]);
   expect(createRecordsNav[0]?.path("example")).toBe("/crm/example/tab/Leads/create");
   expect(createRecordsNav[1]?.path("example")).toBe("/crm/example/tab/Contacts/create");
@@ -105,7 +107,7 @@ test("The Lead row links to the Create Lead page", async () => {
   const dialog = await openMenu(user);
   const row = within(dialog).getByRole("link", { name: "Lead" });
   expect(row.getAttribute("href")).toBe("/crm/example/tab/Leads/create");
-  expect(within(dialog).getAllByRole("link")).toHaveLength(11);
+  expect(within(dialog).getAllByRole("link")).toHaveLength(13);
 });
 
 test("Choosing a row closes the menu", async () => {
@@ -137,6 +139,8 @@ test("The search box filters rows by label and leaves the list empty on no match
     "Case",
     "Solution",
     "Product",
+    "Quote",
+    "Invoice",
   ]);
   await user.type(search, "CON");
   expect(within(dialog).getByRole("link", { name: "Contact" })).toBeTruthy();
