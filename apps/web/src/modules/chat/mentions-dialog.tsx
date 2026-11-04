@@ -68,7 +68,7 @@ export function MentionsDialog({
           <div className="flex items-center gap-2">
             <button
               type="button"
-              className="text-xs text-accent-blue hover:underline font-medium"
+              className="text-xs text-accent-blue hover:underline font-semibold"
               onClick={() => void onMarkAllRead()}
               data-testid="chat-mentions-mark-all-read"
             >

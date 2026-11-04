@@ -189,7 +189,7 @@ export function AdvancedSearchDialog({
               <span className="font-semibold text-text">{t("chat.filterOptions")}</span>
               <button
                 type="button"
-                className="text-accent-blue hover:underline font-medium"
+                className="text-accent-blue hover:underline font-semibold"
                 onClick={handleClearAll}
                 data-testid="chat-search-clear-all"
               >
@@ -201,7 +201,7 @@ export function AdvancedSearchDialog({
             <div>
               <label
                 htmlFor="chat-search-filter-from-select"
-                className="block font-medium text-text mb-1"
+                className="block font-semibold text-text mb-1"
               >
                 {t("chat.fromUser")}
               </label>
@@ -225,7 +225,7 @@ export function AdvancedSearchDialog({
             <div>
               <label
                 htmlFor="chat-search-filter-in-select"
-                className="block font-medium text-text mb-1"
+                className="block font-semibold text-text mb-1"
               >
                 {t("chat.inConversation")}
               </label>
@@ -249,7 +249,7 @@ export function AdvancedSearchDialog({
             <div>
               <label
                 htmlFor="chat-search-filter-date-select"
-                className="block font-medium text-text mb-1"
+                className="block font-semibold text-text mb-1"
               >
                 {t("chat.date")}
               </label>
@@ -269,7 +269,7 @@ export function AdvancedSearchDialog({
 
             {/* Conversation type checkboxes (#49) */}
             <div>
-              <span className="block font-medium text-text mb-1.5">
+              <span className="block font-semibold text-text mb-1.5">
                 {t("chat.conversationType")}
               </span>
               <div className="space-y-1.5 pl-1">
@@ -305,7 +305,7 @@ export function AdvancedSearchDialog({
 
             {/* Message contains checkboxes (#53) */}
             <div>
-              <span className="block font-medium text-text mb-1.5">
+              <span className="block font-semibold text-text mb-1.5">
                 {t("chat.messageContains")}
               </span>
               <div className="space-y-1.5 pl-1">

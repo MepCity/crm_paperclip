@@ -641,7 +641,7 @@ export function ChatPanel({
                   pinnedRows.length > 0 ? (
                     <div>
                       <div className="flex items-center justify-between px-3 py-1.5 border-b border-border bg-surface-subtle">
-                        <span className="text-xs font-medium text-text-muted">
+                        <span className="text-xs font-semibold text-text-muted">
                           {t("chat.pinned")}
                         </span>
                         <button
@@ -718,7 +718,7 @@ export function ChatPanel({
                       data-testid="chat-channels-empty"
                     >
                       <ChatEmptyIllustration />
-                      <p className="chat-empty-title font-medium text-sm text-text">
+                      <p className="chat-empty-title font-semibold text-sm text-text">
                         {t("chat.emptyChannelsTitle")}
                       </p>
                       <p className="chat-empty-description">{t("chat.emptyChannelsDescription")}</p>
@@ -800,9 +800,7 @@ export function ChatPanel({
                                 </span>
                               )}
                             </span>
-                            <span className="text-sm font-medium text-text truncate">
-                              {th.body}
-                            </span>
+                            <span className="text-sm text-text truncate">{th.body}</span>
                             <span className="text-xs text-accent-blue mt-0.5">
                               {t("chat.repliesCount", { count: th.replyCount ?? 0 })}
                             </span>

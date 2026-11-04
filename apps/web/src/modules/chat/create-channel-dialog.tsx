@@ -211,7 +211,7 @@ export function CreateChannelDialog({
                         onChange={() => toggleUser(person.id)}
                         data-testid={`chat-channel-member-check-${person.id}`}
                       />
-                      <span className="font-medium text-text">{person.name}</span>
+                      <span className="font-semibold text-text">{person.name}</span>
                     </label>
                   );
                 })}

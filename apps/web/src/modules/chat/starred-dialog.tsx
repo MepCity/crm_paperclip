@@ -89,7 +89,7 @@ export function StarredDialog({
                   <div className="flex items-center justify-end gap-3 text-xs">
                     <button
                       type="button"
-                      className="text-text-muted hover:text-red-500 font-medium"
+                      className="text-text-muted hover:text-red-500 font-semibold"
                       onClick={() => {
                         if (m.conversationId) {
                           void onUnstar(m.conversationId, m.id);

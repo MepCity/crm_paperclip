@@ -110,7 +110,7 @@ export function PinPickerDialog({ conversations, isOpen, onClose, onPin }: PinPi
                 <span className="text-text-muted font-mono">
                   {c.kind === "channel" ? "#" : "@"}
                 </span>
-                <span className="font-medium text-text truncate">{c.title}</span>
+                <span className="font-semibold text-text truncate">{c.title}</span>
               </div>
               <span className="text-[11px] font-semibold text-accent-blue">{t("chat.pin")}</span>
             </button>

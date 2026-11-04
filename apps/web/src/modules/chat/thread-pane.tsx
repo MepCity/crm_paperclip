@@ -67,7 +67,7 @@ export function ThreadPane({ rootMessage, dataSource, conversationId, onClose }:
         {/* Separator */}
         <div className="flex items-center gap-2 my-2">
           <div className="flex-1 border-t border-border" />
-          <span className="text-[11px] font-medium text-text-muted">
+          <span className="text-[11px] font-semibold text-text-muted">
             {t("chat.repliesCount", { count: replies.length })}
           </span>
           <div className="flex-1 border-t border-border" />

@@ -126,7 +126,7 @@ export function ChannelMembersDialog({
                 {!renaming && (
                   <button
                     type="button"
-                    className="text-accent-blue hover:underline font-medium"
+                    className="text-accent-blue hover:underline font-semibold"
                     onClick={() => setRenaming(true)}
                     data-testid="chat-channel-rename-btn"
                   >
@@ -174,7 +174,7 @@ export function ChannelMembersDialog({
               {isOwner && !adding && availableToAdd.length > 0 && (
                 <button
                   type="button"
-                  className="text-accent-blue hover:underline font-medium"
+                  className="text-accent-blue hover:underline font-semibold"
                   onClick={() => setAdding(true)}
                   data-testid="chat-channel-add-member-btn"
                 >
@@ -220,7 +220,7 @@ export function ChannelMembersDialog({
 
             <div className="rounded border border-border divide-y divide-border max-h-48 overflow-y-auto">
               <div className="flex items-center justify-between px-3 py-2 text-xs">
-                <span className="font-medium text-text">
+                <span className="font-semibold text-text">
                   {t("chat.you")} ({isOwner ? "Owner" : "Member"})
                 </span>
               </div>
