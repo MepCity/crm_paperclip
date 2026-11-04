@@ -25,6 +25,8 @@ const dataType = z.enum([
   "ownerlookup",
   "profileimage",
   "multi_module_lookup",
+  "subform",
+  "multiselectpicklist",
 ]);
 const flags = z.strictObject({
   view: z.boolean(),

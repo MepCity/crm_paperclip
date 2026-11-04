@@ -1,0 +1,1047 @@
+{
+  "fields": [
+    {
+      "apiName": "Billing_Latitude",
+      "label": "Billing Address - Latitude",
+      "dataType": "double",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 50
+    },
+    {
+      "apiName": "Billing_Longitude",
+      "label": "Billing Address - Longitude",
+      "dataType": "double",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 50
+    },
+    {
+      "apiName": "Shipping_Latitude",
+      "label": "Shipping Address - Latitude",
+      "dataType": "double",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 50
+    },
+    {
+      "apiName": "Shipping_Longitude",
+      "label": "Shipping Address - Longitude",
+      "dataType": "double",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 50
+    },
+    {
+      "apiName": "Quote_Number",
+      "label": "Quote Number",
+      "dataType": "autonumber",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Subject",
+      "label": "Subject",
+      "dataType": "text",
+      "required": true,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": true,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Deal_Name",
+      "label": "Deal Name",
+      "dataType": "lookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120,
+      "lookup": {
+        "module": "Deals"
+      }
+    },
+    {
+      "apiName": "Quote_Stage",
+      "label": "Quote Stage",
+      "dataType": "picklist",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": true,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Valid_Till",
+      "label": "Valid Until",
+      "dataType": "date",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 20
+    },
+    {
+      "apiName": "Team",
+      "label": "Team",
+      "dataType": "text",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Contact_Name",
+      "label": "Contact Name",
+      "dataType": "lookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120,
+      "lookup": {
+        "module": "Contacts"
+      }
+    },
+    {
+      "apiName": "Carrier",
+      "label": "Carrier",
+      "dataType": "picklist",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Account_Name",
+      "label": "Account Name",
+      "dataType": "lookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": true,
+        "create": true
+      },
+      "maxLength": 120,
+      "lookup": {
+        "module": "Accounts"
+      }
+    },
+    {
+      "apiName": "Owner",
+      "label": "Quote Owner",
+      "dataType": "ownerlookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Created_By",
+      "label": "Created By",
+      "dataType": "ownerlookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Modified_By",
+      "label": "Modified By",
+      "dataType": "ownerlookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Created_Time",
+      "label": "Created Time",
+      "dataType": "datetime",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Modified_Time",
+      "label": "Modified Time",
+      "dataType": "datetime",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Sub_Total",
+      "label": "Sub Total",
+      "dataType": "currency",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 16
+    },
+    {
+      "apiName": "Tax",
+      "label": "Tax",
+      "dataType": "currency",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 16
+    },
+    {
+      "apiName": "Adjustment",
+      "label": "Adjustment",
+      "dataType": "currency",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 16
+    },
+    {
+      "apiName": "Grand_Total",
+      "label": "Grand Total",
+      "dataType": "currency",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 16
+    },
+    {
+      "apiName": "Terms_and_Conditions",
+      "label": "Terms and Conditions",
+      "dataType": "textarea",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 32000
+    },
+    {
+      "apiName": "Description",
+      "label": "Description",
+      "dataType": "textarea",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 32000
+    },
+    {
+      "apiName": "Discount",
+      "label": "Discount",
+      "dataType": "currency",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 16
+    },
+    {
+      "apiName": "Tag",
+      "label": "Tag",
+      "dataType": "text",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 2000
+    },
+    {
+      "apiName": "Quoted_Items",
+      "label": "Quoted Items",
+      "dataType": "subform",
+      "required": true,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      }
+    },
+    {
+      "apiName": "id",
+      "label": "Record Id",
+      "dataType": "bigint",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 18
+    },
+    {
+      "apiName": "Locked__s",
+      "label": "Locked",
+      "dataType": "boolean",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": false,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 5
+    },
+    {
+      "apiName": "Last_Activity_Time",
+      "label": "Last Activity Time",
+      "dataType": "datetime",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Billing_Address",
+      "label": "Billing Address",
+      "dataType": "textarea",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 2000
+    },
+    {
+      "apiName": "Billing_Country",
+      "label": "Billing Address - Country / Region",
+      "dataType": "picklist",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Billing_Flat_House_No_Building_Apartment_Name",
+      "label": "Billing Address - Flat / House No./ Building / Apartment Name",
+      "dataType": "text",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 255
+    },
+    {
+      "apiName": "Billing_Street",
+      "label": "Billing Address - Street Address",
+      "dataType": "text",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 255
+    },
+    {
+      "apiName": "Billing_City",
+      "label": "Billing Address - City",
+      "dataType": "text",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 255
+    },
+    {
+      "apiName": "Billing_State",
+      "label": "Billing Address - State / Province",
+      "dataType": "picklist",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Billing_Code",
+      "label": "Billing Address - Zip / Postal Code",
+      "dataType": "text",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 255
+    },
+    {
+      "apiName": "Billing_Coordinates",
+      "label": "Billing Address - Coordinates",
+      "dataType": "textarea",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 255
+    },
+    {
+      "apiName": "Shipping_Address",
+      "label": "Shipping Address",
+      "dataType": "textarea",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 2000
+    },
+    {
+      "apiName": "Shipping_Country",
+      "label": "Shipping Address - Country / Region",
+      "dataType": "picklist",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Shipping_Flat_House_No_Building_Apartment_Name",
+      "label": "Shipping Address - Flat / House No./ Building / Apartment Name",
+      "dataType": "text",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 255
+    },
+    {
+      "apiName": "Shipping_Street",
+      "label": "Shipping Address - Street Address",
+      "dataType": "text",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 255
+    },
+    {
+      "apiName": "Shipping_City",
+      "label": "Shipping Address - City",
+      "dataType": "text",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 255
+    },
+    {
+      "apiName": "Shipping_State",
+      "label": "Shipping Address - State / Province",
+      "dataType": "picklist",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Shipping_Code",
+      "label": "Shipping Address - Zip / Postal Code",
+      "dataType": "text",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 255
+    },
+    {
+      "apiName": "Shipping_Coordinates",
+      "label": "Shipping Address - Coordinates",
+      "dataType": "textarea",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 255
+    },
+    {
+      "apiName": "nearby_distance__s",
+      "label": "Distance",
+      "dataType": "double",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": false,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 16
+    },
+    {
+      "apiName": "Connected_To__s",
+      "label": "Connected To",
+      "dataType": "multi_module_lookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Discount_Percentage",
+      "label": "Discount Percentage",
+      "dataType": "double",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": false,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      }
+    },
+    {
+      "apiName": "Header_Tax",
+      "label": "Header Tax",
+      "dataType": "multiselectpicklist",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": false,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "acceptsJsonArray": true
+    }
+  ],
+  "layout": [
+    {
+      "label": "Quote Information",
+      "columnCount": 2,
+      "columns": [
+        [
+          "Owner",
+          "Subject",
+          "Quote_Stage",
+          "Team",
+          "Carrier",
+          "Created_By",
+          "Created_Time",
+          "Tag",
+          "Last_Activity_Time"
+        ],
+        [
+          "Quote_Number",
+          "Deal_Name",
+          "Valid_Till",
+          "Contact_Name",
+          "Account_Name",
+          "Modified_By",
+          "Modified_Time",
+          "id",
+          "Connected_To__s"
+        ]
+      ],
+      "fields": [
+        "Owner",
+        "Quote_Number",
+        "Subject",
+        "Deal_Name",
+        "Quote_Stage",
+        "Valid_Till",
+        "Team",
+        "Contact_Name",
+        "Carrier",
+        "Account_Name",
+        "Created_By",
+        "Modified_By",
+        "Created_Time",
+        "Modified_Time",
+        "Tag",
+        "id",
+        "Last_Activity_Time",
+        "Connected_To__s"
+      ]
+    },
+    {
+      "label": "Address Information",
+      "columnCount": 2,
+      "columns": [
+        [
+          "Billing_Address",
+          "Billing_Coordinates",
+          "Billing_Flat_House_No_Building_Apartment_Name",
+          "Billing_Longitude",
+          "Billing_Street",
+          "Shipping_Address",
+          "Shipping_Coordinates",
+          "Shipping_Flat_House_No_Building_Apartment_Name",
+          "Shipping_Longitude",
+          "Shipping_Street"
+        ],
+        [
+          "Billing_City",
+          "Billing_Country",
+          "Billing_Latitude",
+          "Billing_State",
+          "Billing_Code",
+          "Shipping_City",
+          "Shipping_Country",
+          "Shipping_Latitude",
+          "Shipping_State",
+          "Shipping_Code"
+        ]
+      ],
+      "fields": [
+        "Billing_Address",
+        "Billing_City",
+        "Billing_Coordinates",
+        "Billing_Country",
+        "Billing_Flat_House_No_Building_Apartment_Name",
+        "Billing_Latitude",
+        "Billing_Longitude",
+        "Billing_State",
+        "Billing_Street",
+        "Billing_Code",
+        "Shipping_Address",
+        "Shipping_City",
+        "Shipping_Coordinates",
+        "Shipping_Country",
+        "Shipping_Flat_House_No_Building_Apartment_Name",
+        "Shipping_Latitude",
+        "Shipping_Longitude",
+        "Shipping_State",
+        "Shipping_Street",
+        "Shipping_Code"
+      ]
+    },
+    {
+      "label": "Quoted Items",
+      "columnCount": 1,
+      "columns": [["Quoted_Items", "Sub_Total", "Discount", "Tax", "Adjustment", "Grand_Total"]],
+      "fields": ["Quoted_Items", "Sub_Total", "Discount", "Tax", "Adjustment", "Grand_Total"]
+    },
+    {
+      "label": "Terms and Conditions",
+      "columnCount": 1,
+      "columns": [["Terms_and_Conditions"]],
+      "fields": ["Terms_and_Conditions"]
+    },
+    {
+      "label": "Description Information",
+      "columnCount": 1,
+      "columns": [["Description"]],
+      "fields": ["Description"]
+    }
+  ],
+  "picklists": {
+    "Quote_Stage": [
+      {
+        "displayValue": "Draft",
+        "storedValue": "Draft"
+      },
+      {
+        "displayValue": "Negotiation",
+        "storedValue": "Negotiation"
+      },
+      {
+        "displayValue": "Delivered",
+        "storedValue": "Delivered"
+      },
+      {
+        "displayValue": "On Hold",
+        "storedValue": "On Hold"
+      },
+      {
+        "displayValue": "Confirmed",
+        "storedValue": "Confirmed"
+      },
+      {
+        "displayValue": "Closed Won",
+        "storedValue": "Closed Won"
+      },
+      {
+        "displayValue": "Closed Lost",
+        "storedValue": "Closed Lost"
+      }
+    ],
+    "Carrier": [
+      {
+        "displayValue": "FedEX",
+        "storedValue": "FedEX"
+      },
+      {
+        "displayValue": "UPS",
+        "storedValue": "UPS"
+      },
+      {
+        "displayValue": "USPS",
+        "storedValue": "USPS"
+      },
+      {
+        "displayValue": "DHL",
+        "storedValue": "DHL"
+      },
+      {
+        "displayValue": "BlueDart",
+        "storedValue": "BlueDart"
+      }
+    ]
+  },
+  "views": [
+    {
+      "id": "all-locked-quotes",
+      "name": "All Locked Quotes",
+      "systemDefined": true,
+      "isDefault": false,
+      "columns": [
+        "Subject",
+        "Quote_Stage",
+        "Grand_Total",
+        "Deal_Name",
+        "Contact_Name",
+        "Account_Name",
+        "Owner"
+      ],
+      "criteria": {
+        "field": "Locked__s",
+        "comparator": "equal",
+        "value": true
+      },
+      "sort": null
+    },
+    {
+      "id": "all-quotes",
+      "name": "All Quotes",
+      "systemDefined": true,
+      "isDefault": true,
+      "columns": [
+        "Subject",
+        "Quote_Stage",
+        "Grand_Total",
+        "Deal_Name",
+        "Contact_Name",
+        "Account_Name",
+        "Owner"
+      ],
+      "criteria": null,
+      "sort": null
+    },
+    {
+      "id": "my-quotes",
+      "name": "My Quotes",
+      "systemDefined": true,
+      "isDefault": false,
+      "columns": [
+        "Subject",
+        "Quote_Stage",
+        "Grand_Total",
+        "Deal_Name",
+        "Contact_Name",
+        "Account_Name"
+      ],
+      "criteria": {
+        "field": "Owner",
+        "comparator": "equal",
+        "value": {
+          "token": "CURRENTUSER"
+        }
+      },
+      "sort": null
+    }
+  ]
+}

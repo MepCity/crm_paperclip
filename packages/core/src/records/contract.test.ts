@@ -25,12 +25,21 @@ describe("record port type boundary", () => {
   it("exports types without loading a runtime service", () => {
     expect(Object.keys(records).sort()).toEqual([
       "KANBAN_HEADER_STYLES",
+      "MAX_LINE_ITEMS",
+      "MIN_LINE_ITEMS",
       "baselineFieldId",
       "baselineLayoutId",
       "campaignMemberStatuses",
+      "computeLineItemTotals",
+      "findTax",
       "isJsonArray",
       "isJsonObject",
+      "listOrganisationTaxes",
       "lookupTargetModules",
+      "organisationTaxes",
+      "productLineDefaults",
+      "roundMoneyTwoDecimals",
+      "taxLabel",
     ]);
   });
 

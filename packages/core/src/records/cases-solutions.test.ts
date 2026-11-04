@@ -132,11 +132,14 @@ for (const [module, title, size, build, table] of [
       fail = false;
       expect((await service.create(module, build())).fields[number]).toBe(String(size + 1));
     });
-    it("preserves unregistered Products references", async () => {
+    it("resolves registered Products references", async () => {
       const service = make();
-      const product = { module: "Products", id: "synthetic-product" };
+      const product = { module: "Products", id: "310000000000000000" };
       const row = await service.create(module, build({ Product_Name: product }));
-      expect((await service.get(module, row.id)).fields.Product_Name).toEqual(product);
+      expect((await service.get(module, row.id)).fields.Product_Name).toEqual({
+        ...product,
+        name: "Product 001",
+      });
     });
     it("resolves activity, note and attachment parent lookups to the registered module", async () => {
       const service = make();
