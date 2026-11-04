@@ -5,7 +5,9 @@ import { campaignsRelatedLists } from "./campaigns/campaigns-related-lists";
 import { casesRelatedLists } from "./cases/cases-related-lists";
 import { contactsRelatedLists } from "./contacts/contacts-related-lists";
 import { dealsRelatedLists } from "./deals/deals-related-lists";
+import { invoicesRelatedLists } from "./invoices/invoices-related-lists";
 import { createLeadsRelatedLists } from "./leads/leads-related-lists";
+import { quotesRelatedLists } from "./quotes/quotes-related-lists";
 import { solutionsRelatedLists } from "./solutions/solutions-related-lists";
 import type { RelatedListDefinition } from "./types";
 
@@ -19,6 +21,8 @@ describe("attachments card contract", () => {
       Campaigns: campaignsRelatedLists,
       Cases: casesRelatedLists,
       Solutions: solutionsRelatedLists,
+      Quotes: quotesRelatedLists,
+      Invoices: invoicesRelatedLists,
     };
 
     for (const module of ATTACHMENT_CARD_MODULES) {
