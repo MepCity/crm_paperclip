@@ -5,8 +5,10 @@ import { campaignsScreenDefinition } from "./campaigns/definition";
 import { casesScreenDefinition } from "./cases/definition";
 import { contactsScreenDefinition } from "./contacts/definition";
 import { dealsScreenDefinition } from "./deals/definition";
+import { invoicesScreenDefinition } from "./invoices/definition";
 import { leadsScreenDefinition } from "./leads/definition";
 import { meetingsScreenDefinition } from "./meetings/definition";
+import { quotesScreenDefinition } from "./quotes/definition";
 import { solutionsScreenDefinition } from "./solutions/definition";
 import { tasksScreenDefinition } from "./tasks/definition";
 import type { ModuleScreenDefinition } from "./types";
@@ -54,6 +56,8 @@ export function getModuleScreens(): readonly ModuleScreenDefinition[] {
       campaignsScreenDefinition,
       casesScreenDefinition,
       solutionsScreenDefinition,
+      quotesScreenDefinition,
+      invoicesScreenDefinition,
     ];
   }
   return cachedModuleScreens;

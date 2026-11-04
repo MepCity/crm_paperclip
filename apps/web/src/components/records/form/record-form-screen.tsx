@@ -25,6 +25,14 @@ import {
   dateTimePartsToIso,
   isoToDateTimeParts,
 } from "@/lib/records/datetime-parts";
+import {
+  headerFromValues,
+  LINE_ITEM_HEADER_FIELDS,
+  LineItemsField,
+  pickLineItemExtras,
+  rowsFromValue,
+  validateLineItems,
+} from "../line-items";
 import { buildCloneInput } from "./build-clone-input";
 import {
   AddressFieldGroups,
@@ -275,8 +283,14 @@ function LoadedRecordForm({
     intent === "clone" && sourceRecord ? buildCloneInput(metadata, sourceRecord.fields) : undefined;
   const [baseline] = useState(() =>
     intent === "edit"
-      ? initialFormValues(fields, sourceRecord?.fields)
-      : initialFormValues(fields, cloneSeed ?? config.createPrefill),
+      ? {
+          ...initialFormValues(fields, sourceRecord?.fields),
+          ...pickLineItemExtras(sourceRecord?.fields),
+        }
+      : {
+          ...initialFormValues(fields, cloneSeed ?? config.createPrefill),
+          ...pickLineItemExtras(cloneSeed),
+        },
   );
   const [values, setValues] = useState(() =>
     intent === "create" && !cloneSeed
@@ -403,6 +417,24 @@ function LoadedRecordForm({
     return map;
   }, [rules]);
 
+  const subformField = fields.find((field) => field.dataType === "subform");
+  function headerPayload(current: Record<string, FieldValue | undefined>) {
+    return {
+      Discount: current.Discount ?? 0,
+      Adjustment: current.Adjustment ?? 0,
+    } as Record<string, FieldValue>;
+  }
+  function changeMany(writes: Record<string, unknown>) {
+    setValues((previous) => ({ ...previous, ...(writes as Record<string, FieldValue>) }));
+    setErrors((previous) => {
+      const next = { ...previous };
+      for (const key of Object.keys(next))
+        if (subformField && key.startsWith(subformField.apiName)) delete next[key];
+      for (const key of Object.keys(writes)) delete next[key];
+      return next;
+    });
+  }
+
   function change(name: string, value: FieldValue) {
     const field = byName.get(name);
     const clears =
@@ -462,6 +494,14 @@ function LoadedRecordForm({
       messages,
       (apiName) => labelsByField.get(apiName) ?? apiName,
     );
+    if (subformField) {
+      const lineErrors = validateLineItems(
+        rowsFromValue(values[subformField.apiName]),
+        headerFromValues(values),
+      );
+      for (const [key, message] of Object.entries(lineErrors))
+        checked[`${subformField.apiName}${key}`] = message;
+    }
     if (Object.keys(checked).length === 0) return true;
     errorFocusPending.current = true;
     setErrors(checked);
@@ -506,7 +546,9 @@ function LoadedRecordForm({
         values,
         editing ? baseline : undefined,
       );
-      const input = payload;
+      const input = subformField
+        ? { ...payload, ...pickLineItemExtras(values), ...headerPayload(values) }
+        : payload;
       const saved = editing
         ? await update.mutateAsync({ id: editing.id, input })
         : await create.mutateAsync(input);
@@ -549,6 +591,21 @@ function LoadedRecordForm({
       rules.labelOverrides?.[field.apiName] ?? (parent ? addressLabel(field, parent) : field.label),
     );
     const id = `record-form-${field.apiName}`;
+    if (subformField && LINE_ITEM_HEADER_FIELDS.includes(field.apiName)) return null;
+    if (field.dataType === "subform") {
+      return (
+        <div key={field.apiName} data-form-field={field.apiName} data-form-type="subform">
+          <LineItemsField
+            field={field.apiName}
+            title={field.label}
+            values={values}
+            disabled={saving}
+            errors={errors}
+            onChange={changeMany}
+          />
+        </div>
+      );
+    }
     if (field.dataType === "profileimage") {
       if (!config.profileImageLaterModule) {
         return (

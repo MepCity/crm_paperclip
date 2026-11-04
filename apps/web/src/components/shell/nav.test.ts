@@ -146,7 +146,13 @@ describe("shellNav", () => {
       "documents",
       "campaigns",
     ]);
-    expect(teamspace?.links?.map((link) => link.id)).toEqual(["solutions", "social", "cases"]);
+    expect(teamspace?.links?.map((link) => link.id)).toEqual([
+      "quotes",
+      "invoices",
+      "solutions",
+      "social",
+      "cases",
+    ]);
   });
 
   it("lists the full reference order of ungrouped rows with Solutions before Cases", () => {
