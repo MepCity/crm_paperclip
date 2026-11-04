@@ -1,0 +1,1 @@
+export { productsViews } from "./metadata";

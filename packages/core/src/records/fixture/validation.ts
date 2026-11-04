@@ -91,7 +91,9 @@ export function validateInput(
     if (
       field.required &&
       (!partial || present) &&
-      (value == null || (typeof value === "string" && !value.trim()))
+      (value == null ||
+        (typeof value === "string" && !value.trim()) ||
+        (field.dataType === "subform" && Array.isArray(value) && value.length === 0))
     ) {
       mandatory = true;
       errors[field.apiName] = ["This field is required."];
@@ -110,7 +112,9 @@ export function validateInput(
         field.picklist &&
         !OPEN_PICKLIST_FIELDS.has(field.apiName) &&
         value !== null &&
-        !field.picklist.some((option) => option.storedValue === value)
+        !(Array.isArray(value)
+          ? value.every((item) => field.picklist?.some((option) => option.storedValue === item))
+          : field.picklist.some((option) => option.storedValue === value))
       )
         errors[field.apiName] = ["Choose a listed option."];
     }

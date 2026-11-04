@@ -1,0 +1,1 @@
+export { quotesPicklists } from "./metadata";
