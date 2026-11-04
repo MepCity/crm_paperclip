@@ -2,7 +2,7 @@
 
 import type { FormatOptions } from "@crm/core/format";
 import type { FieldDefinition, FieldValue } from "@crm/core/records";
-import { useState } from "react";
+import { type ReactNode, useState } from "react";
 import { useUiTranslations } from "@/i18n/client-provider";
 import "./detail-cards.css";
 import { DetailFieldRow } from "./detail-field-row";
@@ -20,6 +20,8 @@ export type DetailFieldEntry = {
 export type DetailSection = {
   title: string;
   fields: readonly DetailFieldEntry[];
+  /** Replaces the field rows, e.g. the read-only line-item table. */
+  node?: ReactNode;
 };
 
 export interface DetailsCardProps {
@@ -71,12 +73,14 @@ export function DetailsCard({
               data-detail-section={section.title}
             >
               <h3 className="detail-section-title">{section.title}</h3>
-              <SectionFields
-                fields={section.fields}
-                ownerNames={ownerNames}
-                format={format}
-                onEdit={onEdit}
-              />
+              {section.node ?? (
+                <SectionFields
+                  fields={section.fields}
+                  ownerNames={ownerNames}
+                  format={format}
+                  onEdit={onEdit}
+                />
+              )}
             </div>
           ))}
         </div>
