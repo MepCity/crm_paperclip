@@ -991,11 +991,12 @@
       "columns": [
         "Subject",
         "Quote_Stage",
-        "Grand_Total",
-        "Deal_Name",
-        "Contact_Name",
         "Account_Name",
-        "Owner"
+        "Contact_Name",
+        "Deal_Name",
+        "Grand_Total",
+        "Owner",
+        "Created_Time"
       ],
       "criteria": {
         "field": "Locked__s",
@@ -1012,11 +1013,12 @@
       "columns": [
         "Subject",
         "Quote_Stage",
-        "Grand_Total",
-        "Deal_Name",
-        "Contact_Name",
         "Account_Name",
-        "Owner"
+        "Contact_Name",
+        "Deal_Name",
+        "Grand_Total",
+        "Owner",
+        "Created_Time"
       ],
       "criteria": null,
       "sort": null
@@ -1029,10 +1031,11 @@
       "columns": [
         "Subject",
         "Quote_Stage",
-        "Grand_Total",
-        "Deal_Name",
+        "Account_Name",
         "Contact_Name",
-        "Account_Name"
+        "Deal_Name",
+        "Grand_Total",
+        "Created_Time"
       ],
       "criteria": {
         "field": "Owner",

@@ -11,6 +11,8 @@ export const ATTACHMENT_CARD_MODULES = [
   "Campaigns",
   "Cases",
   "Solutions",
+  "Quotes",
+  "Invoices",
 ] as const;
 
 /** API parents include additional record modules and Notes (composer), without mounting cards. */

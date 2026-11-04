@@ -1018,7 +1018,8 @@
         "Grand_Total",
         "Contact_Name",
         "Account_Name",
-        "Owner"
+        "Owner",
+        "Created_Time"
       ],
       "criteria": null,
       "sort": null
@@ -1035,7 +1036,8 @@
         "Grand_Total",
         "Contact_Name",
         "Account_Name",
-        "Owner"
+        "Owner",
+        "Created_Time"
       ],
       "criteria": {
         "field": "Locked__s",
@@ -1055,7 +1057,8 @@
         "Invoice_Date",
         "Grand_Total",
         "Contact_Name",
-        "Account_Name"
+        "Account_Name",
+        "Created_Time"
       ],
       "criteria": {
         "field": "Owner",
