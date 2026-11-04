@@ -104,7 +104,7 @@ Through `operationRoute`; writes call `getCustomizationService(ctx)` which enfor
 | `v2.2/mail/messages/[id]/links` POST, DELETE | link/unlink mail to CRM record | S + owner |
 | `v2.2/mail/messages/[id]/sharing` PATCH | sharing | S + owner |
 
-### 2.10 Server actions (RSC, `"use server"`) — 17 exported actions
+### 2.10 Server actions (RSC, `"use server"`) — 14 exported actions + 2 inline
 | Symbol | Op | Guard |
 |---|---|---|
 | `apps/web/src/app/orgs/new/actions.ts` `createOrganizationAction` | create org | session only |
@@ -137,9 +137,9 @@ Automation (`packages/core/src/automation/memory.ts`: workflow rules, assignment
 | Chat | 19 | ~32 | S + participant (O) |
 | Documents | 3 | 3 | S + capability stub |
 | Mail | 5 | 7 | S + mailbox owner (O) |
-| Server actions | 6 files | 17 + 2 inline | 4 admin, rest S/session |
+| Server actions | 6 files | 14 + 2 inline | 4 admin, rest S/session |
 | Worker jobs | 2 | 2 | tenant re-check only |
-| **Total** | **76 files incl. non-`route.ts` wrappers; 72 `route.ts`** | | |
+| **Total** | **72 `route.ts` files** | | |
 Unguarded beyond S (no module/record/field/owner/admin check): all of Records, Tags/Bin, Attachments, Import/Export (seam only), shared-view writes, Dashboards/Reports actions, settings pages — roughly **60 handlers / 80 method bindings**.
 
 ## 3. Choke points
