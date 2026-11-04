@@ -15,6 +15,30 @@ export interface MentionsDialogProps {
   onGoToMessage: (conversationId: string, messageId: string) => void;
 }
 
+/**
+ * Returns true if the message mentions ONLY broadcast groups (@all or @available)
+ * without any direct @Name mentions.
+ */
+export function isBroadcastOnlyMention(body: string): boolean {
+  if (!body) return false;
+  const matches = Array.from(body.matchAll(/(?:^|[\s([{"'])@([^\s,.:;!?)}\]"']+)/g));
+  if (matches.length === 0) return false;
+
+  let hasBroadcast = false;
+  let hasDirect = false;
+
+  for (const match of matches) {
+    const tag = match[1]?.toLowerCase();
+    if (tag === "all" || tag === "available") {
+      hasBroadcast = true;
+    } else {
+      hasDirect = true;
+    }
+  }
+
+  return hasBroadcast && !hasDirect;
+}
+
 export function MentionsDialog({
   mentions,
   isOpen,
@@ -24,6 +48,7 @@ export function MentionsDialog({
 }: MentionsDialogProps) {
   const t = useUiTranslations();
   const [showUnreadOnly, setShowUnreadOnly] = useState(false);
+  const [hideBroadcast, setHideBroadcast] = useState(false);
 
   useEffect(() => {
     function onKeyDown(e: KeyboardEvent) {
@@ -36,7 +61,11 @@ export function MentionsDialog({
 
   if (!isOpen) return null;
 
-  const visible = showUnreadOnly ? mentions.filter((m) => m.status === "sent") : mentions;
+  const visible = mentions.filter((m) => {
+    if (showUnreadOnly && m.status !== "sent") return false;
+    if (hideBroadcast && isBroadcastOnlyMention(m.body)) return false;
+    return true;
+  });
 
   return (
     <div
@@ -47,14 +76,24 @@ export function MentionsDialog({
       data-testid="chat-mentions"
     >
       <div
-        className="flex max-h-[85vh] w-full max-w-lg flex-col rounded-lg border border-border bg-surface shadow-2xl"
+        className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-lg border border-border bg-surface shadow-2xl"
         data-testid="chat-mentions-dialog"
       >
         {/* Header (#35–#39) */}
-        <div className="flex items-center justify-between border-b border-border px-5 py-3">
-          <div className="flex items-center gap-3">
-            <h2 className="text-sm font-semibold text-text">{t("chat.mentions")}</h2>
-            <label className="flex items-center gap-1.5 text-xs text-text-muted cursor-pointer">
+        <div className="flex items-center justify-between border-b border-border px-5 py-3 gap-3">
+          <div className="flex items-center gap-3 min-w-0 flex-wrap">
+            <h2 className="text-sm font-semibold text-text shrink-0">{t("chat.mentions")}</h2>
+            <label className="flex items-center gap-1.5 text-xs text-text-muted cursor-pointer whitespace-nowrap">
+              <input
+                type="checkbox"
+                checked={hideBroadcast}
+                onChange={(e) => setHideBroadcast(e.target.checked)}
+                className="size-3.5"
+                data-testid="chat-mentions-hide-broadcast"
+              />
+              <span>{t("chat.hideBroadcastMentions")}</span>
+            </label>
+            <label className="flex items-center gap-1.5 text-xs text-text-muted cursor-pointer whitespace-nowrap">
               <input
                 type="checkbox"
                 checked={showUnreadOnly}
