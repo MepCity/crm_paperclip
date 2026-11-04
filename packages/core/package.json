@@ -16,6 +16,8 @@
     "./attachments": "./src/attachments/index.ts",
     "./attachments/modules": "./src/attachments/modules.ts",
     "./records": "./src/records/index.ts",
+    "./records/line-items": "./src/records/line-items.ts",
+    "./records/tax": "./src/records/tax.ts",
     "./records/campaigns": "./src/records/campaigns.ts",
     "./records/note-html": "./src/records/note-html.ts",
     "./records/activities": "./src/records/activities.ts",
