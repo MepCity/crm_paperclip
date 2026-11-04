@@ -71,13 +71,25 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
 
   // Search row action buttons: Mentions, Starred, Advanced Search
   await page.getByTestId("chat-mentions-btn").click();
+  const mentionsDialog = page.getByTestId("chat-mentions");
+  await expect(mentionsDialog).toBeVisible();
   await page.screenshot({ path: join(screenshotDir, "chat-mentions.png") });
+  await page.getByTestId("chat-mentions-close").click();
+  await expect(mentionsDialog).toBeHidden();
 
   await page.getByTestId("chat-starred-btn").click();
+  const starredDialog = page.getByTestId("chat-starred");
+  await expect(starredDialog).toBeVisible();
   await page.screenshot({ path: join(screenshotDir, "chat-starred.png") });
+  await page.getByTestId("chat-starred-close").click();
+  await expect(starredDialog).toBeHidden();
 
   await page.getByTestId("chat-advanced-search-btn").click();
+  const advancedSearchDialog = page.getByTestId("chat-advanced-search");
+  await expect(advancedSearchDialog).toBeVisible();
   await page.screenshot({ path: join(screenshotDir, "chat-advanced-search.png") });
+  await page.getByTestId("chat-advanced-search-close").click();
+  await expect(advancedSearchDialog).toBeHidden();
 
   // 2. Switch to Pins
   await pinsFooter.click();
@@ -87,10 +99,10 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
 
   // Add Chats button opens picker dialog
   await page.getByTestId("chat-add-chats").click();
-  const pinPicker = page.getByTestId("chat-picker-dialog");
+  const pinPicker = page.getByTestId("chat-pin-picker");
   await expect(pinPicker).toBeVisible();
   await page.screenshot({ path: join(screenshotDir, "chat-pin-picker.png") });
-  await page.getByRole("button", { name: "Kapat" }).click();
+  await page.getByTestId("chat-pin-picker-close").click();
   await expect(pinPicker).toBeHidden();
 
   // 3. Switch to Channels
@@ -279,10 +291,10 @@ test("two members of one organization chat live: send, unread, read, edit, delet
     await expect(page.getByTestId("chat-composer-input")).toHaveValue(/@Bea Member/);
     await page.getByTestId("chat-composer-input").fill("");
 
-    // Verify hover actions: copy exists, reply-in-thread is unobserved/missing
+    // Verify hover actions: copy exists, reply-in-thread is now visible (MEP-1421)
     await beaReplyMessage.hover();
     await expect(beaReplyMessage.getByTestId("chat-action-copy")).toBeVisible();
-    await expect(page.locator("[data-testid='chat-action-reply']")).toHaveCount(0);
+    await expect(beaReplyMessage.getByTestId("chat-action-reply")).toBeVisible();
 
     // Ada edits her message; Bea sees the new text with the edited marker.
     const adaMessage = page.getByTestId("chat-message").filter({ hasText: "Hello Bea" });
@@ -309,6 +321,105 @@ test("two members of one organization chat live: send, unread, read, edit, delet
     await expect(page.getByTestId("chat-contact-row").locator(".chat-presence-busy")).toBeVisible({
       timeout: 10_000,
     });
+
+    // --- Two-user flow verifications for CTO review (Flows 7, 8, 9, 11, 12) ---
+    // Flow 7: Channels: Ada creates a public channel
+    await page.getByTestId("chat-footer-channels").click();
+    await page.getByTestId("chat-create-channel-btn").click();
+    await page.getByTestId("chat-channel-name-input").fill("qa-collab");
+    await page.getByTestId("chat-create-channel-submit").click();
+    await expect(page.getByTestId("chat-conversation-title")).toContainText("qa-collab");
+
+    // Ada sends a root message in qa-collab
+    await page.getByTestId("chat-composer-input").fill("Root channel announcement for team");
+    await page.getByTestId("chat-composer-input").press("Enter");
+    const rootMessage = page
+      .getByTestId("chat-message")
+      .filter({ hasText: "Root channel announcement for team" });
+    await expect(rootMessage).toBeVisible();
+
+    // Bea joins qa-collab from browse channels
+    await bea.getByTestId("chat-footer-channels").click();
+    await bea.getByTestId("chat-tab-browse-channels").click();
+    const joinBtn = bea.getByTestId("chat-channel-join").first();
+    await expect(joinBtn).toBeVisible({ timeout: 10_000 });
+    await joinBtn.click();
+    await expect(bea.getByTestId("chat-conversation-title")).toContainText("qa-collab");
+
+    // Flow 8: Thread reply: Bea replies in thread to Ada's root message
+    const beaRootMessage = bea
+      .getByTestId("chat-message")
+      .filter({ hasText: "Root channel announcement for team" });
+    await beaRootMessage.hover();
+    await beaRootMessage.getByTestId("chat-action-reply").click();
+    const beaThreadPane = bea.getByTestId("chat-thread-pane");
+    await expect(beaThreadPane).toBeVisible();
+    await beaThreadPane.getByRole("textbox").fill("Bea reply in thread");
+    await beaThreadPane.getByRole("textbox").press("Enter");
+    await expect(beaThreadPane.getByText("Bea reply in thread")).toBeVisible();
+    await beaThreadPane.getByTestId("chat-thread-close").click();
+    await expect(beaThreadPane).toBeHidden();
+
+    // Ada sees thread reply count
+    await expect(rootMessage.getByTestId("chat-thread-trigger")).toContainText("1", {
+      timeout: 10_000,
+    });
+    await rootMessage.getByTestId("chat-thread-trigger").click();
+    const adaThreadPane = page.getByTestId("chat-thread-pane");
+    await expect(adaThreadPane).toBeVisible();
+    await expect(adaThreadPane.getByText("Bea reply in thread")).toBeVisible();
+    await adaThreadPane.getByTestId("chat-thread-close").click();
+
+    // Flow 9: Pin: Ada pins qa-collab, verifies it in My Pins, then unpins it
+    await page.getByTestId("chat-conversation-pin").click();
+    await page.getByTestId("chat-conversation-back").click();
+    await page.getByTestId("chat-footer-pins").click();
+    await expect(
+      page.getByTestId("chat-conversation-row").filter({ hasText: "qa-collab" }),
+    ).toBeVisible();
+    const unpinBtn = page.getByTestId("chat-conversation-unpin").first();
+    await unpinBtn.click();
+    await page.getByTestId("chat-footer-channels").click();
+
+    // Flow 11: Mentions window: Ada mentions Bea in a message
+    await page.getByTestId("chat-conversation-row").filter({ hasText: "qa-collab" }).click();
+    await page.getByTestId("chat-composer-input").fill("@Bea Member notice this mention");
+    await page.getByTestId("chat-composer-input").press("Enter");
+    await expect(
+      page.getByTestId("chat-message").filter({ hasText: "notice this mention" }),
+    ).toBeVisible();
+
+    // Bea returns to list view, opens Mentions dialog and sees the mention
+    await bea.getByTestId("chat-conversation-back").click();
+    await bea.getByTestId("chat-mentions-btn").click();
+    const beaMentionsDialog = bea.getByTestId("chat-mentions");
+    await expect(beaMentionsDialog).toBeVisible();
+    await expect(beaMentionsDialog.getByText("notice this mention")).toBeVisible({
+      timeout: 10_000,
+    });
+    await bea.getByTestId("chat-mentions-mark-all-read").click();
+    await bea.getByTestId("chat-mentions-close").click();
+    await expect(beaMentionsDialog).toBeHidden();
+
+    // Flow 12: Advanced search: Bea searches for "notice this mention"
+    await bea.getByTestId("chat-advanced-search-btn").click();
+    const beaSearchDialog = bea.getByTestId("chat-advanced-search");
+    await expect(beaSearchDialog).toBeVisible();
+    await bea.getByTestId("chat-advanced-search-input").fill("notice this mention");
+    await bea.getByTestId("chat-advanced-search-input").press("Enter");
+    await expect(beaSearchDialog.getByText("notice this mention")).toBeVisible({
+      timeout: 10_000,
+    });
+    await bea.getByTestId("chat-advanced-search-close").click();
+    await expect(beaSearchDialog).toBeHidden();
+
+    // Flow 7 (leave): Bea re-enters qa-collab and leaves it
+    await bea.getByTestId("chat-tab-channels").click();
+    await bea.getByTestId("chat-conversation-row").filter({ hasText: "qa-collab" }).first().click();
+    bea.on("dialog", (d) => d.accept());
+    await bea.getByTestId("chat-channel-menu").click();
+    await bea.getByTestId("chat-channel-leave-btn").click();
+    await expect(bea.getByTestId("chat-conversation")).toHaveCount(0);
 
     expect(beaErrors).toEqual([]);
   } finally {
