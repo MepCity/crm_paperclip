@@ -69,11 +69,29 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
     ),
   ).toBeVisible();
 
+  // Search row action buttons: Mentions, Starred, Advanced Search
+  await page.getByTestId("chat-mentions-btn").click();
+  await page.screenshot({ path: join(screenshotDir, "chat-mentions.png") });
+
+  await page.getByTestId("chat-starred-btn").click();
+  await page.screenshot({ path: join(screenshotDir, "chat-starred.png") });
+
+  await page.getByTestId("chat-advanced-search-btn").click();
+  await page.screenshot({ path: join(screenshotDir, "chat-advanced-search.png") });
+
   // 2. Switch to Pins
   await pinsFooter.click();
   await expect(page.getByTestId("chat-pins-empty")).toBeVisible();
   await expect(page.getByTestId("chat-add-chats")).toBeVisible();
   await page.screenshot({ path: join(screenshotDir, "chat-pins.png") });
+
+  // Add Chats button opens picker dialog
+  await page.getByTestId("chat-add-chats").click();
+  const pinPicker = page.getByTestId("chat-picker-dialog");
+  await expect(pinPicker).toBeVisible();
+  await page.screenshot({ path: join(screenshotDir, "chat-pin-picker.png") });
+  await page.getByRole("button", { name: "Kapat" }).click();
+  await expect(pinPicker).toBeHidden();
 
   // 3. Switch to Channels
   await channelsFooter.click();
@@ -114,7 +132,16 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
   await expect(page.getByTestId("chat-qa-invite")).toBeVisible();
   await page.screenshot({ path: join(screenshotDir, "chat-quick-actions.png") });
 
+  // Start Group Conversation dialog (#61-#64)
+  await page.getByTestId("chat-qa-group").click();
+  const groupDialog = page.getByTestId("chat-picker-dialog");
+  await expect(groupDialog).toBeVisible();
+  await page.screenshot({ path: join(screenshotDir, "chat-group-start.png") });
+  await page.getByRole("button", { name: "Kapat" }).click();
+  await expect(groupDialog).toBeHidden();
+
   // 7. Open Invite Dialog from Quick Actions
+  await page.getByTestId("chat-quick-actions-fab").click();
   await page.getByTestId("chat-qa-invite").click();
   const inviteDialog = page.getByTestId("chat-invite-dialog");
   await expect(inviteDialog).toBeVisible();
@@ -128,9 +155,10 @@ test("chat bottom bar, panel destinations, empty states, quick actions and invit
 
   await page.screenshot({ path: join(screenshotDir, "chat-invite.png") });
 
-  // Cancel closes invite dialog
+  // Cancel closes invite dialog (#33 / chat-invite-cancel)
   await page.getByTestId("chat-invite-cancel").click();
   await expect(inviteDialog).toBeHidden();
+  await page.screenshot({ path: join(screenshotDir, "chat-invite-cancel.png") });
 
   // 8. Presence menu
   await page.getByTestId("chat-presence-trigger").click();
@@ -234,6 +262,27 @@ test("two members of one organization chat live: send, unread, read, edit, delet
     await expect(page.getByTestId("chat-message").filter({ hasText: "Hi Ada" })).toBeVisible({
       timeout: 5_000,
     });
+
+    // Star/unstar flow
+    const beaReplyMessage = page.getByTestId("chat-message").filter({ hasText: "Hi Ada" });
+    await beaReplyMessage.hover();
+    const starBtn = beaReplyMessage.getByTestId("chat-action-star");
+    await expect(starBtn).toBeVisible();
+    await starBtn.click();
+    await expect(starBtn).toHaveAttribute("aria-pressed", "true");
+    await starBtn.click();
+    await expect(starBtn).toHaveAttribute("aria-pressed", "false");
+
+    // Mentions in composer flow
+    await page.getByTestId("chat-composer-input").fill("@Bea");
+    await page.getByTestId("chat-composer-input").press("Enter");
+    await expect(page.getByTestId("chat-composer-input")).toHaveValue(/@Bea Member/);
+    await page.getByTestId("chat-composer-input").fill("");
+
+    // Verify hover actions: copy exists, reply-in-thread is unobserved/missing
+    await beaReplyMessage.hover();
+    await expect(beaReplyMessage.getByTestId("chat-action-copy")).toBeVisible();
+    await expect(page.locator("[data-testid='chat-action-reply']")).toHaveCount(0);
 
     // Ada edits her message; Bea sees the new text with the edited marker.
     const adaMessage = page.getByTestId("chat-message").filter({ hasText: "Hello Bea" });
