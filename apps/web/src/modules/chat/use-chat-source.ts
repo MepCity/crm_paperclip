@@ -333,15 +333,25 @@ export function useChatSource({
   const starMessage = useCallback(
     async (conversationId: string, messageId: string, star: boolean) => {
       const existing = stateRef.current.messages[conversationId]?.[messageId];
+      const previousStarred = stateRef.current.starredList;
       if (existing) {
         update((s) =>
           upsertMessage(s, { ...existing, starred: star, changedSeq: existing.changedSeq }),
+        );
+      }
+      if (!star) {
+        update((s) =>
+          setStarred(
+            s,
+            s.starredList.filter((m) => m.id !== messageId),
+          ),
         );
       }
       try {
         await api.star(messageId, star);
       } catch (error) {
         if (existing) update((s) => upsertMessage(s, existing));
+        if (!star) update((s) => setStarred(s, previousStarred));
         throw error;
       }
     },

@@ -462,4 +462,45 @@ describe("useChatSource writes", () => {
     });
     expect(markRead).toHaveBeenCalledTimes(2);
   });
+
+  test("starMessage updates starred list reactively and rolls back on failure", async () => {
+    const starMock = vi
+      .fn<ChatApi["star"]>()
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error("star error"));
+
+    const api = fakeApi({
+      starred: vi.fn(async () => [wireMessage(1, "starred msg")]),
+      star: starMock,
+    });
+    const { result } = setup(api);
+    await flush();
+
+    // 1. Initially load starred
+    await act(async () => {
+      await result.current.loadStarred();
+    });
+    expect(result.current.starred).toHaveLength(1);
+    expect(result.current.starred[0]?.id).toBe("m1");
+
+    // 2. Unstar m1 successfully -> immediately removed from starred list
+    await act(async () => {
+      await result.current.starMessage("c1", "m1", false);
+    });
+    expect(starMock).toHaveBeenCalledWith("m1", false);
+    expect(result.current.starred).toHaveLength(0);
+
+    // 3. Reload starred for rollback test
+    await act(async () => {
+      await result.current.loadStarred();
+    });
+    expect(result.current.starred).toHaveLength(1);
+
+    // 4. Failed unstar rolls back starred list
+    await act(async () => {
+      await expect(result.current.starMessage("c1", "m1", false)).rejects.toThrow("star error");
+    });
+    expect(result.current.starred).toHaveLength(1);
+    expect(result.current.starred[0]?.id).toBe("m1");
+  });
 });
