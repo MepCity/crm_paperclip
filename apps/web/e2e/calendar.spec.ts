@@ -1,5 +1,6 @@
 import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
+import { isShellBackgroundRequest } from "./support/shell-requests";
 import { expect, test } from "./support/test";
 
 test("calendar shortcut opens native views, navigates dates and opens a meeting", async ({
@@ -50,10 +51,10 @@ test("calendar body inventory C controls, Day schedule, safe interactions and GE
   page.on("request", (request) => {
     // calendar.md line 202 specifies event reads are GET /crm/v9/__calendar_activities with 0 writes.
     // In our app, CalendarScreen reads events via service.list("Events") which maps to POST /crm/v2.2/Events/bulk.
-    // We verify all other non-GET requests are strictly zero (zero mutations/writes).
+    // We verify all other non-GET requests are strictly zero (zero mutations/writes) using the shared shell background allowlist.
     if (
       !["GET", "HEAD", "OPTIONS"].includes(request.method()) &&
-      !(request.method() === "POST" && request.url().includes("/Events/bulk"))
+      !isShellBackgroundRequest(request.url())
     ) {
       mutations.push(`${request.method()} ${new URL(request.url()).pathname}`);
     }

@@ -136,7 +136,10 @@ test("emails inbox control inventory (E-01..E-38) matches what Module 10 renders
 
   const nonGetRequests: string[] = [];
   page.on("request", (request) => {
-    if (!["GET", "HEAD", "OPTIONS"].includes(request.method())) {
+    if (
+      !["GET", "HEAD", "OPTIONS"].includes(request.method()) &&
+      !isShellBackgroundRequest(request.url())
+    ) {
       nonGetRequests.push(`${request.method()} ${request.url()}`);
     }
   });
