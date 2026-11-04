@@ -149,6 +149,9 @@ export const COMPLETED_MODULE_PREFIXES = [
 export const ALLOWED_NEW_EXEMPTION_PREFIXES = [
   "apps/web/src/modules/visits/",
   "apps/web/src/modules/social/",
+  "apps/web/src/modules/quotes/",
+  "apps/web/src/modules/invoices/",
+  "apps/web/src/components/records/line-items/",
 ];
 
 export function filterUnauthorizedExemptions(
