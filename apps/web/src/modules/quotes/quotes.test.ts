@@ -1,6 +1,7 @@
 import type { FieldDefinition, ModuleMetadata, RecordData } from "@crm/core/records";
-import { expect, test } from "vitest";
+import { expect, test, vi } from "vitest";
 import { getModuleScreens } from "../registry";
+import type { HeaderConfirmRequest } from "../types";
 import { quotesScreenDefinition } from "./definition";
 import { quotesListPageConfig } from "./list-config";
 import { buildQuotesFilterGroups } from "./list-filters";
@@ -106,4 +107,40 @@ test("related lists are limited to features with a backing implementation", () =
     "Closed Activities",
     "Emails",
   ]);
+});
+
+test("header commands include convert with invoice menu, print preview, and edit", async () => {
+  const record: RecordData = { id: "q1", fields: { Subject: "Quote 1" } };
+  let confirmedRequest: HeaderConfirmRequest | null = null;
+  const navigate = vi.fn();
+  const convertQuoteToInvoice = vi.fn().mockResolvedValue("inv-99");
+
+  const commands = quotesScreenDefinition.detail.buildHeaderCommands?.(record, {
+    editHref: "/crm/test/tab/Quotes/q1/edit",
+    printHref: "/crm/test/tab/Quotes/q1/print",
+    orgSlug: "test",
+    navigate,
+    confirm: (req) => {
+      confirmedRequest = req;
+    },
+    save: vi.fn(),
+    convertQuoteToInvoice,
+  });
+
+  expect(commands).toBeDefined();
+  expect(commands?.map((c) => c.id)).toEqual(["convert", "print-preview", "edit"]);
+  const convertCommand = commands?.find((c) => c.id === "convert");
+  expect(convertCommand?.menu).toHaveLength(1);
+  expect(convertCommand?.menu?.[0]?.label).toBe("Invoice");
+
+  convertCommand?.menu?.[0]?.onAction();
+  const request = confirmedRequest as unknown as HeaderConfirmRequest;
+  expect(request).toMatchObject({
+    title: "Convert Quote",
+    confirmLabel: "Convert",
+  });
+
+  await request.onConfirm();
+  expect(convertQuoteToInvoice).toHaveBeenCalled();
+  expect(navigate).toHaveBeenCalledWith("/crm/test/tab/Invoices/inv-99");
 });

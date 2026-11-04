@@ -266,8 +266,14 @@ export const operations = {
     method: "POST",
     path: "/crm/v2.2/{module}/{recordId}/actions/convert",
     async run({ records }, input) {
-      await records.getModule(moduleOf(input));
-      if (moduleOf(input) !== "Leads") invalid("module", "Only leads can be converted.");
+      const module = moduleOf(input);
+      await records.getModule(module);
+      if (module === "Quotes") {
+        if (!records.convertQuoteToInvoice) invalid("module", "Quote conversion is not supported.");
+        const invoiceId = await records.convertQuoteToInvoice(recordIdOf(input));
+        return ok({ id: invoiceId });
+      }
+      if (module !== "Leads") invalid("module", "Only leads can be converted.");
       const body = object(await bodyOf(input), "convert");
       const [account, contact, deal] = await Promise.all([
         convertTarget(records, "Accounts", body.account, "account"),

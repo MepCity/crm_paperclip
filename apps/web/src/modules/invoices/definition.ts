@@ -45,6 +45,19 @@ export const invoicesScreenDefinition: ModuleScreenDefinition = {
     header: invoicesRecordHeaderIdentity,
     hasPortrait: false,
     recordNavigation: true,
+    buildHeaderCommands: (_record, { editHref, printHref }) => [
+      ...(printHref
+        ? [
+            {
+              id: "print-preview",
+              label: "Print Preview",
+              variant: "secondary" as const,
+              href: printHref,
+            },
+          ]
+        : []),
+      { id: "edit", label: "Edit", variant: "secondary" as const, href: editHref },
+    ],
     businessCard: buildInvoicesBusinessCardFields,
     sections: buildInvoicesDetailSections,
     inlineEditable: isInvoiceInlineEditable,

@@ -79,3 +79,31 @@ export function openCaseCreateWithAccountName(
   });
   navigate(moduleCreatePath(orgSlug, "Cases"));
 }
+
+export function openQuoteCreateWithAccountName(
+  orgSlug: string,
+  account: Pick<RecordData, "id" | "fields">,
+  navigate: (path: string) => void,
+): void {
+  writeRecordCreatePrefill(orgSlug, {
+    module: "Quotes",
+    fields: {
+      Account_Name: accountNameLookupFromRecord(account.id, account.fields),
+    },
+  });
+  navigate(moduleCreatePath(orgSlug, "Quotes"));
+}
+
+export function openInvoiceCreateWithAccountName(
+  orgSlug: string,
+  account: Pick<RecordData, "id" | "fields">,
+  navigate: (path: string) => void,
+): void {
+  writeRecordCreatePrefill(orgSlug, {
+    module: "Invoices",
+    fields: {
+      Account_Name: accountNameLookupFromRecord(account.id, account.fields),
+    },
+  });
+  navigate(moduleCreatePath(orgSlug, "Invoices"));
+}

@@ -470,17 +470,22 @@ export function createFixtureRecordService(
   const relaxRequired = (
     bundle: FixtureModuleBundle,
     fields: Readonly<Record<string, FieldValue>>,
+    options?: RecordWriteOptions,
   ) => {
     const optional = bundle.optionalFields?.(fields);
-    return optional?.length
-      ? bundle.metadata.fields.map((f) =>
-          optional.includes(f.apiName) &&
-          moduleBundle(bundle.metadata.apiName).metadata.fields.find(
-            (base) => base.apiName === f.apiName,
-          )?.required === f.required
+    const allowEmptyLines = options?.allowEmptyLines === true || options?.sourceTimes !== undefined;
+    return optional?.length || allowEmptyLines
+      ? bundle.metadata.fields.map((f) => {
+          if (allowEmptyLines && f.dataType === "subform") {
+            return { ...f, required: false };
+          }
+          return optional?.includes(f.apiName) &&
+            moduleBundle(bundle.metadata.apiName).metadata.fields.find(
+              (base) => base.apiName === f.apiName,
+            )?.required === f.required
             ? { ...f, required: false }
-            : f,
-        )
+            : f;
+        })
       : bundle.metadata.fields;
   };
   const validateReferences = (module: string, input: RecordInput) => {
@@ -860,7 +865,7 @@ export function createFixtureRecordService(
   const insertRecord = (
     module: string,
     normalized: Record<string, FieldValue>,
-    sourceTimes?: RecordWriteOptions["sourceTimes"],
+    options?: RecordWriteOptions,
   ): RecordData => {
     const bundle = bundleFor(module);
     const moduleState = moduleStore(module);
@@ -877,12 +882,13 @@ export function createFixtureRecordService(
       Created_By: ctx.userId,
       Modified_By: ctx.userId,
     });
+    const sourceTimes = options?.sourceTimes;
     if (sourceTimes?.createdTime && "Created_Time" in fields)
       fields.Created_Time = sourceTimes.createdTime;
     if (sourceTimes?.modifiedTime && "Modified_Time" in fields)
       fields.Modified_Time = sourceTimes.modifiedTime;
     if (bundle.autoNumberField) assignAutoNumber(moduleState, bundle.autoNumberField, fields);
-    bundle.applyRules?.(fields, normalized, undefined, hookContext);
+    bundle.applyRules?.(fields, normalized, undefined, hookContext, options);
     assertNoteParentVisible(module, fields);
     fields[bundle.displayNameField] = bundle.fullName(fields);
     const record = { id, fields };
@@ -1533,11 +1539,16 @@ export function createFixtureRecordService(
         bundle,
         normalizeInput(input, stringFields, bundle.metadata.fields),
       );
-      validateInput(normalized, false, relaxRequired(bundle, normalized), bundle.managedFields);
+      validateInput(
+        normalized,
+        false,
+        relaxRequired(bundle, normalized, options),
+        bundle.managedFields,
+      );
       validateReferences(module, normalized);
       await validateOwner(normalized);
       return atomic({ module, mechanism: "create" }, () =>
-        insertRecord(module, normalized, options?.sourceTimes),
+        insertRecord(module, normalized, options),
       );
     },
     async update(module, id, input, options) {
@@ -1553,7 +1564,7 @@ export function createFixtureRecordService(
       validateInput(
         normalized,
         true,
-        relaxRequired(bundle, { ...recordFor(module, id).fields, ...normalized }),
+        relaxRequired(bundle, { ...recordFor(module, id).fields, ...normalized }, options),
         bundle.managedFields,
       );
       validateReferences(module, normalized);
@@ -1568,7 +1579,7 @@ export function createFixtureRecordService(
           Modified_By: ctx.userId,
           Modified_Time: options?.sourceTimes?.modifiedTime ?? clock().toISOString(),
         };
-        bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext);
+        bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext, options);
         fields[bundle.displayNameField] = bundle.fullName(fields);
         const updated = { id, fields };
         const moduleState = moduleStore(module);

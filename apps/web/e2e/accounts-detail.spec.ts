@@ -531,6 +531,46 @@ test.describe("Accounts record detail", () => {
     );
     ignoreFailedResponses(pageErrors, [400]);
   });
+  test("Quotes and Invoices cards render with columns and New button pre-filling Account Name", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+
+    // Quotes related card
+    const quotes = page.locator("#related-list-quotes");
+    await quotes.scrollIntoViewIfNeeded();
+    await expect(quotes).toBeVisible();
+    await expect(quotes.getByRole("heading", { name: "Quotes" })).toBeVisible();
+    await expect(quotes.getByRole("button", { name: "New" })).toBeVisible();
+
+    // Invoices related card
+    const invoices = page.locator("#related-list-invoices");
+    await invoices.scrollIntoViewIfNeeded();
+    await expect(invoices).toBeVisible();
+    await expect(invoices.getByRole("heading", { name: "Invoices" })).toBeVisible();
+    await expect(invoices.getByRole("button", { name: "New" })).toBeVisible();
+
+    // Click New Quote from card -> create quote prefilling Account Name
+    await quotes.getByRole("button", { name: "New" }).click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, "Quotes"));
+    await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+      "Account 001",
+    );
+
+    // Return to account and click New Invoice from card -> create invoice prefilling Account Name
+    await page.goto(moduleRecordPath(org.slug, ACCOUNTS_TAB, PRIMARY_ACCOUNT_ID));
+    await invoices.scrollIntoViewIfNeeded();
+    await invoices.getByRole("button", { name: "New" }).click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, "Invoices"));
+    await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+      "Account 001",
+    );
+
+    ignoreFailedResponses(pageErrors, [400]);
+  });
 });
 
 type Box = { x: number; y: number; width: number; height: number };

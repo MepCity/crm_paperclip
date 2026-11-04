@@ -23,12 +23,14 @@ const INVOICES_CARD_COLUMNS = [
 export interface RelatedInvoicesCardBodyProps {
   managerRecord: RecordData;
   filterField?: string;
+  columns?: readonly string[];
   invoiceRecordPath: (recordId: RecordId) => string;
 }
 
 export function RelatedInvoicesCardBody({
   managerRecord,
   filterField = "Invoiced_Items.Product_Name",
+  columns: columnsProp,
   invoiceRecordPath,
 }: RelatedInvoicesCardBodyProps) {
   const recordLabel = useRecordLabel();
@@ -86,9 +88,10 @@ export function RelatedInvoicesCardBody({
     );
   }
 
-  const columns = INVOICES_CARD_COLUMNS.map((apiName) => fieldsByName.get(apiName)).filter(
-    (field): field is NonNullable<typeof field> => field !== undefined,
-  );
+  const columnNames = columnsProp ?? INVOICES_CARD_COLUMNS;
+  const columns = columnNames
+    .map((apiName) => fieldsByName.get(apiName))
+    .filter((field): field is NonNullable<typeof field> => field !== undefined);
 
   return (
     <div className="overflow-x-auto">
