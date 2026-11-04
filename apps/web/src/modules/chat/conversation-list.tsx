@@ -1,5 +1,6 @@
 "use client";
 
+import { Icons } from "@/components/ui/icon";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { Avatar, formatMessageTime } from "./conversation-view";
 import type { ChatContact, ChatConversation } from "./data";
@@ -7,7 +8,7 @@ import { dayDiff } from "./text";
 
 const shortDate = new Intl.DateTimeFormat(undefined, { day: "numeric", month: "short" });
 
-function listTime(iso: string): string {
+export function listTime(iso: string): string {
   return dayDiff(iso) === 0 ? formatMessageTime(iso) : shortDate.format(new Date(iso));
 }
 
@@ -15,10 +16,12 @@ export function ConversationList({
   conversations,
   selfId,
   onOpen,
+  onUnpin,
 }: {
   conversations: readonly ChatConversation[];
   selfId: string;
   onOpen(id: string): void;
+  onUnpin?(id: string): void;
 }) {
   const t = useUiTranslations();
   return (
@@ -31,10 +34,10 @@ export function ConversationList({
             : `${last.authorId === selfId ? t("chat.youPrefix") : conversation.kind === "direct" ? "" : `${last.authorName}: `}${last.text}`
           : "";
         return (
-          <li key={conversation.id}>
+          <li key={conversation.id} className="relative flex items-center">
             <button
               type="button"
-              className={`chat-row${conversation.unreadCount > 0 ? " chat-row-unread" : ""}`}
+              className={`chat-row flex-1${conversation.unreadCount > 0 ? " chat-row-unread" : ""}${onUnpin ? " pr-8" : ""}`}
               onClick={() => onOpen(conversation.id)}
               data-testid="chat-conversation-row"
             >
@@ -57,6 +60,21 @@ export function ConversationList({
                 )}
               </span>
             </button>
+            {onUnpin && (
+              <button
+                type="button"
+                className="absolute right-2 chat-unpin-btn p-1 text-text-muted hover:text-text rounded hover:bg-surface-hover outline-none"
+                aria-label={t("chat.unpin")}
+                title={t("chat.unpin")}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onUnpin(conversation.id);
+                }}
+                data-testid="chat-conversation-unpin"
+              >
+                <Icons.pin className="size-3.5 text-accent-blue" aria-hidden />
+              </button>
+            )}
           </li>
         );
       })}

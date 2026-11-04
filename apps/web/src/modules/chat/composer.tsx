@@ -14,6 +14,7 @@ export interface ComposerProps {
   /** Called with the trimmed body and the resolved mention ids. */
   onSend(body: string, mentions: string[]): void;
   disabled?: boolean;
+  placeholder?: string;
 }
 
 /**
@@ -21,7 +22,7 @@ export interface ComposerProps {
  * `@` opens a member picker that fills `mentions`.
  * Refs: MEP-1420
  */
-export function Composer({ members, onSend, disabled }: ComposerProps) {
+export function Composer({ members, onSend, disabled, placeholder }: ComposerProps) {
   const t = useUiTranslations();
   const [text, setText] = useState("");
   const [caret, setCaret] = useState(0);
@@ -133,7 +134,7 @@ export function Composer({ members, onSend, disabled }: ComposerProps) {
         rows={1}
         maxLength={MAX_LENGTH}
         value={text}
-        placeholder={t("chat.composerPlaceholder")}
+        placeholder={placeholder ?? t("chat.composerPlaceholder")}
         aria-label={t("chat.composerLabel")}
         disabled={disabled}
         onChange={(e) => {

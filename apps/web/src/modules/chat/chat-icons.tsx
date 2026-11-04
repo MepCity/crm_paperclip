@@ -53,3 +53,26 @@ export function CopyIcon(props: SVGProps<SVGSVGElement>) {
     </>,
   );
 }
+
+export function ThreadsIcon(props: SVGProps<SVGSVGElement>) {
+  return base(
+    props,
+    <>
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z" />
+      <path d="M9 10h6" />
+      <path d="M9 14h4" />
+    </>,
+  );
+}
+
+export function HashIcon(props: SVGProps<SVGSVGElement>) {
+  return base(
+    props,
+    <>
+      <line x1="4" y1="9" x2="20" y2="9" />
+      <line x1="4" y1="15" x2="20" y2="15" />
+      <line x1="10" y1="3" x2="8" y2="21" />
+      <line x1="16" y1="3" x2="14" y2="21" />
+    </>,
+  );
+}

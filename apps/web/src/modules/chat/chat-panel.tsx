@@ -6,8 +6,10 @@ import { type SVGProps, useCallback, useEffect, useRef, useState } from "react";
 import type { CreateInvitationAction } from "@/components/members/invite-member-dialog";
 import { Icons } from "@/components/ui/icon";
 import { useUiTranslations } from "@/i18n/client-provider";
-import { ContactList, ConversationList } from "./conversation-list";
-import { ConversationView } from "./conversation-view";
+import { AdvancedSearchDialog } from "./advanced-search-dialog";
+import { ContactList, ConversationList, listTime } from "./conversation-list";
+import { Avatar, ConversationView } from "./conversation-view";
+import { CreateChannelDialog } from "./create-channel-dialog";
 import type { ChatConversation, ChatDataSource, PresenceStatus } from "./data";
 import {
   ChatEmptyIllustration,
@@ -17,6 +19,9 @@ import {
 } from "./illustrations";
 import { InvitePeopleDialog } from "./invite-people-dialog";
 import { MemberPickerDialog, type PickerMode } from "./member-picker-dialog";
+import { MentionsDialog } from "./mentions-dialog";
+import { PinPickerDialog } from "./pin-picker-dialog";
+import { StarredDialog } from "./starred-dialog";
 
 /** Active destination (footer entry). */
 export type ChatDestination = "pins" | "chats" | "channels" | "threads" | "contacts";
@@ -38,8 +43,8 @@ interface ChatPanelProps {
 /**
  * Chat panel shell — overlay above the lower-left content area.
  * Spec controls #4–#17, states: chat-shell, chat-chats, chat-unread,
- * chat-contacts, chat-pins, chat-quick-actions.
- * Refs: MEP-1419, ADR 0015 §7
+ * chat-contacts, chat-pins, chat-channels, chat-threads, chat-quick-actions.
+ * Refs: MEP-1419, MEP-1421, ADR 0015 §7
  */
 export function ChatPanel({
   destination,
@@ -65,7 +70,13 @@ export function ChatPanel({
   const [inviteEmail, setInviteEmail] = useState<string | undefined>(undefined);
   const [searchText, setSearchText] = useState("");
   const [openId, setOpenId] = useState<string | null>(null);
+  const [openThreadRootId, setOpenThreadRootId] = useState<string | null>(null);
   const [picker, setPicker] = useState<PickerMode | null>(null);
+  const [showCreateChannel, setShowCreateChannel] = useState(false);
+  const [showPinPicker, setShowPinPicker] = useState(false);
+  const [showMentions, setShowMentions] = useState(false);
+  const [showStarred, setShowStarred] = useState(false);
+  const [showAdvancedSearch, setShowAdvancedSearch] = useState(false);
   const searchRef = useRef<HTMLInputElement>(null);
 
   // Follow the presence the data source reports (sync result or own change).
@@ -78,12 +89,20 @@ export function ChatPanel({
   useEffect(() => {
     if (destination) {
       setOpenId(null);
+      setOpenThreadRootId(null);
       setTab("primary");
       setSearchText("");
       setQuickActionsOpen(false);
       setShowCategoryMenu(false);
     }
   }, [destination]);
+
+  // Load threads when destination is threads
+  useEffect(() => {
+    if (destination === "threads") {
+      void dataSource.loadThreads();
+    }
+  }, [destination, dataSource]);
 
   // Ctrl+Space or Cmd+Space focuses the search box (#8)
   useEffect(() => {
@@ -123,6 +142,22 @@ export function ChatPanel({
     });
   }, []);
 
+  const handleNavigateToMessage = useCallback(
+    (conversationId: string, messageId: string) => {
+      setShowMentions(false);
+      setShowStarred(false);
+      setShowAdvancedSearch(false);
+      const msg = dataSource.messagesOf(conversationId).find((m) => m.id === messageId);
+      if (msg?.threadRootId) {
+        setOpenThreadRootId(msg.threadRootId);
+      } else {
+        setOpenThreadRootId(null);
+      }
+      setOpenId(conversationId);
+    },
+    [dataSource],
+  );
+
   function presenceLabel(s: PresenceStatus | null) {
     if (!s) return t("chat.available");
     return t(`chat.presence.${s}` as Parameters<typeof t>[0]);
@@ -137,26 +172,67 @@ export function ChatPanel({
     contactCategory === "frequents" ? dataSource.frequentContacts : dataSource.recentContacts;
 
   const needle = searchText.trim().toLowerCase();
-  // Only Chats lists conversations in this feature; Channels, Threads and My Pins
-  // stay empty states until their own issues land.
+
+  // Chats rows
   const chatRows = dataSource.conversations
     .filter((c: ChatConversation) => destination === "chats" && c.kind !== "channel")
     .filter((c) => !needle || c.title.toLowerCase().includes(needle));
-  const unreadRows = chatRows.filter((c) => c.unreadCount > 0);
+  const unreadChatRows = chatRows.filter((c) => c.unreadCount > 0);
+
+  // Contacts rows
   const visibleContacts = contacts.filter(
     (c) =>
       !needle ||
       c.name.toLowerCase().includes(needle) ||
       (c.email ?? "").toLowerCase().includes(needle),
   );
+
+  // Pinned rows
+  const pinnedRows = dataSource.conversations
+    .filter((c: ChatConversation) => Boolean(c.pinned))
+    .filter((c) => !needle || c.title.toLowerCase().includes(needle));
+  const unreadPinnedRows = pinnedRows.filter((c) => c.unreadCount > 0);
+
+  // Channel rows
+  const myChannels = dataSource.conversations
+    .filter((c: ChatConversation) => c.kind === "channel" && c.isMember !== false)
+    .filter((c) => !needle || c.title.toLowerCase().includes(needle));
+  const browseChannels = dataSource.conversations
+    .filter(
+      (c: ChatConversation) => c.kind === "channel" && !c.isMember && c.visibility === "public",
+    )
+    .filter((c) => !needle || c.title.toLowerCase().includes(needle));
+
+  // Thread rows
+  const threadItems = dataSource.threads.filter(
+    (th) =>
+      !needle ||
+      th.body.toLowerCase().includes(needle) ||
+      (th.conversationTitle ?? "").toLowerCase().includes(needle),
+  );
+  const unreadThreads = threadItems.filter((th) => th.unread);
+
   const openConversation = openId
     ? dataSource.conversations.find((c) => c.id === openId)
     : undefined;
-  const unreadTabCount = destination === "chats" ? (dataSource.counts?.chats ?? 0) : 0;
+
+  const unreadTabCount = (() => {
+    switch (destination) {
+      case "chats":
+        return dataSource.counts?.chats ?? unreadChatRows.length;
+      case "pins":
+        return unreadPinnedRows.length;
+      case "threads":
+        return dataSource.threads.filter((th) => th.unread).length;
+      default:
+        return 0;
+    }
+  })();
 
   async function openContact(userId: string) {
     try {
       const id = await dataSource.openDirect(userId);
+      setOpenThreadRootId(null);
       setOpenId(id);
       setSearchText("");
     } catch {
@@ -179,7 +255,7 @@ export function ChatPanel({
       case "pins":
         return t("chat.myPins");
       case "channels":
-        return t("chat.channels");
+        return t("chat.myChannels");
       case "threads":
         return t("chat.threads");
     }
@@ -297,7 +373,11 @@ export function ChatPanel({
           <ConversationView
             dataSource={dataSource}
             conversation={openConversation}
-            onBack={() => setOpenId(null)}
+            initialThreadRootId={openThreadRootId}
+            onBack={() => {
+              setOpenId(null);
+              setOpenThreadRootId(null);
+            }}
           />
         ) : (
           <>
@@ -320,6 +400,7 @@ export function ChatPanel({
                   type="button"
                   className="chat-search-advanced"
                   aria-label={t("chat.advancedSearch")}
+                  onClick={() => setShowAdvancedSearch(true)}
                   data-testid="chat-advanced-search-btn"
                 >
                   <Icons.settingsSliders
@@ -333,6 +414,10 @@ export function ChatPanel({
                 type="button"
                 aria-label={t("chat.mentions")}
                 className="chat-search-btn"
+                onClick={() => {
+                  void dataSource.loadMentions();
+                  setShowMentions(true);
+                }}
                 data-testid="chat-mentions-btn"
               >
                 <span className="text-sm font-semibold text-text-muted leading-none" aria-hidden>
@@ -344,6 +429,10 @@ export function ChatPanel({
                 type="button"
                 aria-label={t("chat.starred")}
                 className="chat-search-btn"
+                onClick={() => {
+                  void dataSource.loadStarred();
+                  setShowStarred(true);
+                }}
                 data-testid="chat-starred-btn"
               >
                 <StarOutlineIcon className="size-4 text-text-muted" aria-hidden />
@@ -442,34 +531,67 @@ export function ChatPanel({
                 </button>
               )}
 
-              <button
-                type="button"
-                role="tab"
-                aria-selected={tab === "unread"}
-                className={`chat-tab${tab === "unread" ? " chat-tab-active" : ""}`}
-                onClick={() => setTab("unread")}
-                data-testid="chat-tab-unread"
-              >
-                {t("chat.unread")}
-                {unreadTabCount > 0 && (
-                  <span className="chat-tab-badge ml-1" data-testid="chat-tab-unread-badge">
-                    <span className="sr-only">
-                      {t("chat.footerBadgeUnread", { count: unreadTabCount })}
+              {destination === "channels" ? (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === "unread"}
+                  className={`chat-tab${tab === "unread" ? " chat-tab-active" : ""}`}
+                  onClick={() => setTab("unread")}
+                  data-testid="chat-tab-browse-channels"
+                >
+                  {t("chat.browseChannels")}
+                </button>
+              ) : (
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={tab === "unread"}
+                  className={`chat-tab${tab === "unread" ? " chat-tab-active" : ""}`}
+                  onClick={() => setTab("unread")}
+                  data-testid="chat-tab-unread"
+                >
+                  {t("chat.unread")}
+                  {unreadTabCount > 0 && (
+                    <span className="chat-tab-badge ml-1" data-testid="chat-tab-unread-badge">
+                      <span className="sr-only">
+                        {t("chat.footerBadgeUnread", { count: unreadTabCount })}
+                      </span>
+                      <span aria-hidden="true">{unreadTabCount > 99 ? "99+" : unreadTabCount}</span>
                     </span>
-                    <span aria-hidden="true">{unreadTabCount > 99 ? "99+" : unreadTabCount}</span>
-                  </span>
-                )}
-              </button>
+                  )}
+                </button>
+              )}
             </div>
 
-            {/* === Body (#14 empty states) === */}
+            {/* === Body === */}
             <div className="chat-body" role="tabpanel">
-              {tab === "unread" ? (
-                unreadRows.length > 0 ? (
+              {/* === Destination: Chats === */}
+              {destination === "chats" &&
+                (tab === "primary" ? (
+                  chatRows.length > 0 ? (
+                    <ConversationList
+                      conversations={chatRows}
+                      selfId={dataSource.selfId}
+                      onOpen={(id) => {
+                        setOpenThreadRootId(null);
+                        setOpenId(id);
+                      }}
+                    />
+                  ) : (
+                    <div className="chat-empty-state chat-empty-chats">
+                      <ChatEmptyIllustration />
+                      <p className="chat-empty-description">{t("chat.emptyChatsDescription")}</p>
+                    </div>
+                  )
+                ) : unreadChatRows.length > 0 ? (
                   <ConversationList
-                    conversations={unreadRows}
+                    conversations={unreadChatRows}
                     selfId={dataSource.selfId}
-                    onOpen={setOpenId}
+                    onOpen={(id) => {
+                      setOpenThreadRootId(null);
+                      setOpenId(id);
+                    }}
                   />
                 ) : (
                   <div
@@ -479,10 +601,11 @@ export function ChatPanel({
                     <UnreadEmptyIllustration />
                     <p className="chat-empty-unread-text">{t("chat.emptyUnreadTitle")}</p>
                   </div>
-                )
-              ) : (
+                ))}
+
+              {/* === Destination: Contacts === */}
+              {destination === "contacts" && (
                 <>
-                  {/* Email invite row at top of contacts search */}
                   {showEmailInvite && (
                     <button
                       type="button"
@@ -494,28 +617,9 @@ export function ChatPanel({
                       {t("chat.inviteEmail", { email: searchText.trim() })}
                     </button>
                   )}
-
-                  {/* Chats empty state */}
-                  {destination === "chats" && chatRows.length > 0 && (
-                    <ConversationList
-                      conversations={chatRows}
-                      selfId={dataSource.selfId}
-                      onOpen={setOpenId}
-                    />
-                  )}
-                  {destination === "chats" && chatRows.length === 0 && (
-                    <div className="chat-empty-state chat-empty-chats">
-                      <ChatEmptyIllustration />
-                      <p className="chat-empty-description">{t("chat.emptyChatsDescription")}</p>
-                    </div>
-                  )}
-
-                  {/* Contacts empty state */}
-                  {destination === "contacts" && visibleContacts.length > 0 && (
+                  {visibleContacts.length > 0 ? (
                     <ContactList contacts={visibleContacts} onOpen={(id) => void openContact(id)} />
-                  )}
-                  {destination === "contacts" &&
-                    visibleContacts.length === 0 &&
+                  ) : (
                     !showEmailInvite && (
                       <div
                         className="chat-empty-state chat-empty-contacts"
@@ -526,51 +630,209 @@ export function ChatPanel({
                           {t("chat.emptyContactsDescription")}
                         </p>
                       </div>
-                    )}
+                    )
+                  )}
+                </>
+              )}
 
-                  {/* My Pins empty state */}
-                  {destination === "pins" && (
+              {/* === Destination: Pins === */}
+              {destination === "pins" &&
+                (tab === "primary" ? (
+                  pinnedRows.length > 0 ? (
+                    <div>
+                      <div className="flex items-center justify-between px-3 py-1.5 border-b border-border bg-surface-subtle">
+                        <span className="text-xs font-medium text-text-muted">
+                          {t("chat.pinned")}
+                        </span>
+                        <button
+                          type="button"
+                          className="text-xs font-semibold text-accent-blue hover:underline outline-none"
+                          onClick={() => setShowPinPicker(true)}
+                          data-testid="chat-add-pin-btn"
+                        >
+                          + {t("chat.addChats")}
+                        </button>
+                      </div>
+                      <ConversationList
+                        conversations={pinnedRows}
+                        selfId={dataSource.selfId}
+                        onOpen={(id) => {
+                          setOpenThreadRootId(null);
+                          setOpenId(id);
+                        }}
+                        onUnpin={(id) => void dataSource.pinConversation(id, false)}
+                      />
+                    </div>
+                  ) : (
                     <div
                       className="chat-empty-state chat-empty-chats"
                       data-testid="chat-pins-empty"
                     >
                       <PinEmptyIllustration />
                       <p className="chat-empty-description">{t("chat.emptyPinsDescription")}</p>
-                      {/* +Add Chats button (#17) */}
                       <button
                         type="button"
                         className="mt-4 rounded px-4 py-2 text-sm font-semibold text-accent-blue hover:bg-surface-hover outline-none focus-visible:ring-2 focus-visible:ring-focus-ring"
-                        onClick={() => setPicker("direct")}
+                        onClick={() => setShowPinPicker(true)}
                         data-testid="chat-add-chats"
                       >
                         {t("chat.addChats")}
                       </button>
                     </div>
-                  )}
+                  )
+                ) : unreadPinnedRows.length > 0 ? (
+                  <ConversationList
+                    conversations={unreadPinnedRows}
+                    selfId={dataSource.selfId}
+                    onOpen={(id) => {
+                      setOpenThreadRootId(null);
+                      setOpenId(id);
+                    }}
+                    onUnpin={(id) => void dataSource.pinConversation(id, false)}
+                  />
+                ) : (
+                  <div
+                    className="chat-empty-state chat-empty-unread"
+                    data-testid="chat-unread-empty"
+                  >
+                    <UnreadEmptyIllustration />
+                    <p className="chat-empty-unread-text">{t("chat.emptyUnreadTitle")}</p>
+                  </div>
+                ))}
 
-                  {/* Channels empty state */}
-                  {destination === "channels" && (
+              {/* === Destination: Channels === */}
+              {destination === "channels" &&
+                (tab === "primary" ? (
+                  myChannels.length > 0 ? (
+                    <ConversationList
+                      conversations={myChannels}
+                      selfId={dataSource.selfId}
+                      onOpen={(id) => {
+                        setOpenThreadRootId(null);
+                        setOpenId(id);
+                      }}
+                    />
+                  ) : (
                     <div
                       className="chat-empty-state chat-empty-chats"
                       data-testid="chat-channels-empty"
                     >
                       <ChatEmptyIllustration />
+                      <p className="chat-empty-title font-medium text-sm text-text">
+                        {t("chat.emptyChannelsTitle")}
+                      </p>
                       <p className="chat-empty-description">{t("chat.emptyChannelsDescription")}</p>
+                      <button
+                        type="button"
+                        className="mt-4 rounded px-4 py-2 text-sm font-semibold text-accent-blue hover:bg-surface-hover outline-none"
+                        onClick={() => setShowCreateChannel(true)}
+                        data-testid="chat-create-channel-btn"
+                      >
+                        {t("chat.createChannel")}
+                      </button>
                     </div>
-                  )}
+                  )
+                ) : browseChannels.length > 0 ? (
+                  <ul className="chat-list" data-testid="chat-browse-channel-list">
+                    {browseChannels.map((c) => (
+                      <li key={c.id}>
+                        <div
+                          className="chat-row flex items-center justify-between"
+                          data-testid={`chat-browse-channel-${c.id}`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <div className="flex size-8 shrink-0 items-center justify-center rounded-full bg-surface-subtle text-text-muted">
+                              <HashIcon className="size-4" aria-hidden />
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="chat-row-title truncate">{c.title}</div>
+                              <div className="chat-row-preview text-xs text-text-muted">
+                                {t("chat.memberCount", { count: c.memberCount ?? 1 })}
+                              </div>
+                            </div>
+                          </div>
+                          <button
+                            type="button"
+                            className="rounded bg-accent-blue px-3 py-1 text-xs font-semibold text-white hover:bg-accent-blue/90 outline-none"
+                            onClick={async () => {
+                              await dataSource.joinChannel(c.id);
+                              setOpenThreadRootId(null);
+                              setOpenId(c.id);
+                            }}
+                            data-testid="chat-channel-join"
+                          >
+                            {t("chat.join")}
+                          </button>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <div className="chat-empty-state" data-testid="chat-browse-empty">
+                    <p className="chat-empty-description">{t("chat.noBrowseChannels")}</p>
+                  </div>
+                ))}
 
-                  {/* Threads empty state */}
-                  {destination === "threads" && (
-                    <div
-                      className="chat-empty-state chat-empty-chats"
-                      data-testid="chat-threads-empty"
-                    >
-                      <ChatEmptyIllustration />
-                      <p className="chat-empty-description">{t("chat.emptyThreadsDescription")}</p>
-                    </div>
-                  )}
-                </>
-              )}
+              {/* === Destination: Threads === */}
+              {destination === "threads" &&
+                ((tab === "primary" ? threadItems : unreadThreads).length > 0 ? (
+                  <ul className="chat-list" data-testid="chat-threads-list">
+                    {(tab === "primary" ? threadItems : unreadThreads).map((th) => (
+                      <li key={th.id}>
+                        <button
+                          type="button"
+                          className={`chat-row${th.unread ? " chat-row-unread" : ""}`}
+                          onClick={() => {
+                            setOpenThreadRootId(th.id);
+                            setOpenId(th.conversationId ?? null);
+                          }}
+                          data-testid={`chat-thread-${th.id}`}
+                        >
+                          <Avatar name={th.authorName} />
+                          <span className="chat-row-main">
+                            <span className="flex items-center justify-between">
+                              <span className="chat-row-title text-xs text-text-muted font-normal">
+                                {th.conversationTitle ? `#${th.conversationTitle}` : th.authorName}
+                              </span>
+                              {th.lastReplyAt && (
+                                <span className="chat-row-time text-[11px] text-text-muted">
+                                  {listTime(th.lastReplyAt)}
+                                </span>
+                              )}
+                            </span>
+                            <span className="text-sm font-medium text-text truncate">
+                              {th.body}
+                            </span>
+                            <span className="text-xs text-accent-blue mt-0.5">
+                              {t("chat.repliesCount", { count: th.replyCount ?? 0 })}
+                            </span>
+                          </span>
+                          {th.unread && (
+                            <span className="chat-row-side self-center">
+                              <span className="size-2 rounded-full bg-accent-blue" aria-hidden />
+                            </span>
+                          )}
+                        </button>
+                      </li>
+                    ))}
+                  </ul>
+                ) : tab === "primary" ? (
+                  <div
+                    className="chat-empty-state chat-empty-chats"
+                    data-testid="chat-threads-empty"
+                  >
+                    <ChatEmptyIllustration />
+                    <p className="chat-empty-description">{t("chat.emptyThreadsDescription")}</p>
+                  </div>
+                ) : (
+                  <div
+                    className="chat-empty-state chat-empty-unread"
+                    data-testid="chat-unread-empty"
+                  >
+                    <UnreadEmptyIllustration />
+                    <p className="chat-empty-unread-text">{t("chat.emptyUnreadTitle")}</p>
+                  </div>
+                ))}
             </div>
 
             {/* Quick Actions overlay & menu (#18–#28) */}
@@ -655,8 +917,11 @@ export function ChatPanel({
                     {/* 5. Create a Channel (#25) */}
                     <button
                       type="button"
-                      className="chat-quick-action-item chat-quick-action-muted"
-                      onClick={() => setQuickActionsOpen(false)}
+                      className="chat-quick-action-item"
+                      onClick={() => {
+                        setQuickActionsOpen(false);
+                        setShowCreateChannel(true);
+                      }}
                       data-testid="chat-qa-channel"
                     >
                       <HashIcon className="size-4" aria-hidden />
@@ -723,12 +988,81 @@ export function ChatPanel({
           onClose={() => setPicker(null)}
           onSubmitDirect={async (userId) => {
             const id = await dataSource.openDirect(userId);
+            setOpenThreadRootId(null);
             setOpenId(id);
           }}
           onSubmitGroup={async (name, ids) => {
             const id = await dataSource.createGroup(name, ids);
+            setOpenThreadRootId(null);
             setOpenId(id);
           }}
+        />
+      )}
+
+      {/* Create Channel Dialog */}
+      {showCreateChannel && (
+        <CreateChannelDialog
+          isOpen={showCreateChannel}
+          directory={dataSource.directory}
+          onClose={() => setShowCreateChannel(false)}
+          onSubmit={async (name, visibility, members) => {
+            const id = await dataSource.createChannel(name, visibility, members);
+            setShowCreateChannel(false);
+            if (id) {
+              setOpenThreadRootId(null);
+              setOpenId(id);
+            }
+          }}
+        />
+      )}
+
+      {/* Pin Picker Dialog */}
+      {showPinPicker && (
+        <PinPickerDialog
+          isOpen={showPinPicker}
+          conversations={dataSource.conversations}
+          onClose={() => setShowPinPicker(false)}
+          onPin={async (conversationId) => {
+            await dataSource.pinConversation(conversationId, true);
+          }}
+        />
+      )}
+
+      {/* Mentions Dialog */}
+      {showMentions && (
+        <MentionsDialog
+          isOpen={showMentions}
+          mentions={dataSource.mentions}
+          onClose={() => setShowMentions(false)}
+          onMarkAllRead={async () => {
+            await dataSource.markAllMentionsRead();
+          }}
+          onGoToMessage={handleNavigateToMessage}
+        />
+      )}
+
+      {/* Starred Dialog */}
+      {showStarred && (
+        <StarredDialog
+          isOpen={showStarred}
+          starred={dataSource.starred}
+          onClose={() => setShowStarred(false)}
+          onUnstar={async (conversationId, messageId) => {
+            await dataSource.starMessage(conversationId, messageId, false);
+          }}
+          onGoToMessage={handleNavigateToMessage}
+        />
+      )}
+
+      {/* Advanced Search Dialog */}
+      {showAdvancedSearch && (
+        <AdvancedSearchDialog
+          isOpen={showAdvancedSearch}
+          conversations={dataSource.conversations}
+          directory={dataSource.directory}
+          onClose={() => setShowAdvancedSearch(false)}
+          onSearch={(filters) => dataSource.searchMessages(filters)}
+          onSelectResult={handleNavigateToMessage}
         />
       )}
 
