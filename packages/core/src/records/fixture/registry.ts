@@ -40,10 +40,20 @@ import { eventsMetadata } from "./events/metadata";
 import { fullName as eventsFullName, generateFixtureEvents } from "./events/seed";
 import { eventsViews } from "./events/views";
 import type { FixtureModuleHooks } from "./hooks";
+import { invoicesMetadata } from "./invoices/metadata";
+import { generateFixtureInvoices, fullName as invoicesFullName } from "./invoices/seed";
+import { invoicesViews } from "./invoices/views";
+import { lineItemIgnoredFields, lineItemRules } from "./line-item-rules";
 import { leadsMetadata } from "./metadata";
 import { notesHooks, removeNotesForParents, transferNotesToMaster } from "./notes/hooks";
 import { notesMetadata } from "./notes/metadata";
 import { generateFixtureNotes } from "./notes/seed";
+import { productsMetadata } from "./products/metadata";
+import { generateFixtureProducts, fullName as productsFullName } from "./products/seed";
+import { productsViews } from "./products/views";
+import { quotesMetadata } from "./quotes/metadata";
+import { generateFixtureQuotes, fullName as quotesFullName } from "./quotes/seed";
+import { quotesViews } from "./quotes/views";
 import { generateFixtureLeads, fullName as leadsFullName } from "./seed";
 import { solutionsMetadata } from "./solutions/metadata";
 import { generateFixtureSolutions, fullName as solutionsFullName } from "./solutions/seed";
@@ -57,6 +67,8 @@ import { leadsViews } from "./views";
 
 export interface FixtureModuleBundle extends FixtureModuleHooks {
   autoNumberField?: string;
+  /** Server-computed fields whose client-sent values are dropped instead of rejected. */
+  ignoredInputFields?: ReadonlySet<string>;
   readOnly?: boolean;
   /** Related-list records remain available to CRUD, but not discovery surfaces. */
   childModule?: boolean;
@@ -116,7 +128,52 @@ function parentMergeHook(module: string): NonNullable<FixtureModuleHooks["transf
   };
 }
 
+const documentBundle = (
+  module: "Quotes" | "Invoices",
+  itemsField: string,
+  numberField: string,
+  base: bigint,
+): FixtureModuleBundle => ({
+  autoNumberField: numberField,
+  ignoredInputFields: lineItemIgnoredFields,
+  applyRules: lineItemRules(itemsField),
+  afterDelete: parentDeleteHook(module),
+  transferMergedRecords: parentMergeHook(module),
+  metadata: module === "Quotes" ? quotesMetadata : invoicesMetadata,
+  views: module === "Quotes" ? quotesViews : invoicesViews,
+  displayNameField: "Subject",
+  fullName: module === "Quotes" ? quotesFullName : invoicesFullName,
+  generateSeed: module === "Quotes" ? generateFixtureQuotes : generateFixtureInvoices,
+  managedFields: new Set(
+    [...contactsManaged].filter((field) => field !== "Full_Name").concat(numberField),
+  ),
+  searchFields: ["Subject", numberField],
+  initialNextId: base,
+  createDefaults: (stamp) => ({ Locked__s: false, Created_Time: stamp, Modified_Time: stamp }),
+});
+
 const moduleBundles: Readonly<Record<string, FixtureModuleBundle>> = {
+  Products: {
+    afterDelete: parentDeleteHook("Products"),
+    transferMergedRecords: parentMergeHook("Products"),
+    metadata: productsMetadata,
+    views: productsViews,
+    displayNameField: "Product_Name",
+    fullName: productsFullName,
+    generateSeed: generateFixtureProducts,
+    managedFields: new Set([...contactsManaged].filter((field) => field !== "Full_Name")),
+    searchFields: ["Product_Name", "Product_Code"],
+    initialNextId: 320000000000000000n,
+    createDefaults: (stamp) => ({
+      Locked__s: false,
+      Product_Active: true,
+      Taxable: false,
+      Created_Time: stamp,
+      Modified_Time: stamp,
+    }),
+  },
+  Quotes: documentBundle("Quotes", "Quoted_Items", "Quote_Number", 340000000000000000n),
+  Invoices: documentBundle("Invoices", "Invoiced_Items", "Invoice_Number", 360000000000000000n),
   Solutions: {
     autoNumberField: "Solution_Number",
     afterDelete: parentDeleteHook("Solutions"),

@@ -851,3 +851,56 @@ Interim/open questions:
   following the existing shared saved-view policy.
 - Layout-required Question/Answer do not change Solutions' module-level required
   fields; the record contract follows the exported system_mandatory flags.
+
+## Products, Quotes and Invoices
+
+ADR 0016. `Products` (32 exported fields), `Quotes` (50) and `Invoices` (53) are
+fixture modules like Cases, built from sanitized export tables
+(`fixture/<module>/export-table.json`). Our two internal extensions
+(`Discount_Percentage`, `Header_Tax`) are published but hidden from every surface.
+`Sales_Order`, `Vendor_Name` and `Price_Book_Name` stay in metadata as unregistered
+Phase-2 references with all view flags off. Seeds: 30 products (IDs from
+310000000000000000; create range 320…), 40 quotes (330…/340…), 30 invoices
+(350…/360…), linked to seeded Accounts, Contacts and Deals, covering every picklist
+value; `Quote_Number` / `Invoice_Number` use the interim auto-number helper.
+System views are those of the export (All / My / All Locked; Products also Active
+and Unread).
+
+### Subform field family
+
+`dataType: "subform"` (`Quoted_Items`, `Invoiced_Items`) holds an ordered array of
+rows inline on the parent. Create/update replace the whole array; rows sent back
+with their `id` keep it. 1–200 rows are required. Row validation (required product,
+`Quantity > 0` with at most 2 decimals, `List_Price >= 0`, discount bounds, listed
+taxes, existing products) runs in the module's `applyRules`; errors are keyed
+`Quoted_Items[i].Field`. `multiselectpicklist` (`Products.Tax`, `Header_Tax`) is an
+array of stored picklist values.
+
+### Calculation
+
+`computeLineItemTotals(items, header, itemsField)` (exported from `@crm/core` and
+`@crm/core/records`) implements ADR 0016 §3 with `roundMoneyTwoDecimals` at every
+step. The service recomputes `Sub_Total`, `Tax`, `Grand_Total`, the header
+`Discount` (percent mode when `Discount_Percentage` is set) and every row formula on
+each write, and drops client-sent `Sub_Total`, `Tax`, `Grand_Total` (and row
+formula values) instead of rejecting them.
+
+### Taxes, products, conversion
+
+`listOrganisationTaxes()` / `organisationTaxes` return the read-only organisation
+taxes (`Sales Tax 0 %`, `Vat 20 %`); `taxLabel` renders `Name - P %`.
+`productLineDefaults(product, currentRow)` fills a line from a product (§6). The
+lookup shows only active products: filter `Product_Active equal true` (the
+"Active Products" view). `service.convertQuoteToInvoice(quoteId)` creates the
+invoice in one atomic write and returns its id (§7); the quote is untouched.
+
+### Related lists
+
+List/count filters on `Account_Name`, `Contact_Name` and `Deal_Name` (Quotes also
+`Deal_Name`, Invoices `Deal_Name__s`) provide the Account/Contact/Deal related
+lists. The virtual filter field `Quoted_Items.Product_Name` /
+`Invoiced_Items.Product_Name` (`equal` / `not_equal`, product id or id array) lists
+the documents that contain a product.
+
+Open: importing quotes/invoices without lines (ADR §9) is not implemented here;
+create always requires at least one line.

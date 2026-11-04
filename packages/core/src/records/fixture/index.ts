@@ -70,7 +70,14 @@ import type { FixtureHookContext, FixtureModuleStore } from "./hooks";
 import { createFixtureKanbanViews } from "./kanban-views";
 import { readFixtureModuleProjection } from "./metadata-projection";
 import { notesParentModules } from "./notes/metadata";
-import { DEFAULT_LIST_SORT, matches, matchesSearch, sortRecords, validateCriteria } from "./query";
+import {
+  DEFAULT_LIST_SORT,
+  matches,
+  matchesSearch,
+  sortRecords,
+  validateCriteria,
+  withLineItemFilterFields,
+} from "./query";
 import { type DeletionManifest, fixtureRecycleBinService, retainDeletion } from "./recycle-bin";
 import { type FixtureReferenceModule, resolveRecordReferences } from "./references";
 import { type FixtureModuleBundle, fixtureModules } from "./registry";
@@ -146,6 +153,16 @@ const normalizeInput = (
   );
 };
 
+const dropIgnored = (
+  bundle: { ignoredInputFields?: ReadonlySet<string> },
+  input: RecordInput,
+): RecordInput =>
+  bundle.ignoredInputFields
+    ? Object.fromEntries(
+        Object.entries(input).filter(([name]) => !bundle.ignoredInputFields?.has(name)),
+      )
+    : input;
+
 export interface FixtureRecordServiceOptions extends FixtureHistoryPermissions {
   customization?: CustomizationPort;
   /** Internal ephemeral schema integration; shared by every service for this organization. */
@@ -170,6 +187,7 @@ export function createFixtureRecordService(
   context: OrgContext,
   options?: FixtureRecordServiceOptions,
 ): RecordService &
+  Required<Pick<RecordService, "convertQuoteToInvoice">> &
   ModuleMetadataReader & {
     readonly attachmentLifecycle: ReturnType<typeof fixtureAttachmentLifecycle>;
     readonly history: RecordHistoryService;
@@ -585,7 +603,9 @@ export function createFixtureRecordService(
         )
       : [];
     const view = applyView ? viewFor(module, query.viewId) : undefined;
-    const fieldMap = new Map(bundle.metadata.fields.map((field) => [field.apiName, field]));
+    const fieldMap = withLineItemFilterFields(
+      new Map(bundle.metadata.fields.map((field) => [field.apiName, field])),
+    );
     if (query.filters) validateCriteria(query.filters, fieldMap);
     if (query.activityFilter !== undefined) {
       validateActivityFilter(query.activityFilter);
@@ -1154,7 +1174,52 @@ export function createFixtureRecordService(
       },
     );
   };
+  /** ADR 0016 §7: one atomic write; returns the new invoice id. The quote is not changed. */
+  const convertQuoteToInvoice = async (quoteId: string): Promise<string> => {
+    assertModuleWritable("Invoices");
+    const quote = recordFor("Quotes", quoteId);
+    const q = quote.fields;
+    const copied = [
+      "Subject",
+      "Account_Name",
+      "Contact_Name",
+      "Owner",
+      "Terms_and_Conditions",
+      "Description",
+      "Discount",
+      "Discount_Percentage",
+      "Header_Tax",
+      "Adjustment",
+      ...[
+        "Flat_House_No_Building_Apartment_Name",
+        "Street",
+        "City",
+        "State",
+        "Country",
+        "Code",
+        "Latitude",
+        "Longitude",
+      ].flatMap((part) => [`Billing_${part}`, `Shipping_${part}`]),
+    ];
+    const input: Record<string, FieldValue> = {};
+    for (const name of copied) if (q[name] != null) input[name] = copy(q[name]);
+    if (q.Deal_Name != null) input.Deal_Name__s = copy(q.Deal_Name);
+    input.Status = "Created";
+    input.Invoice_Date = clock().toISOString().slice(0, 10);
+    const rows = Array.isArray(q.Quoted_Items) ? q.Quoted_Items : [];
+    // Rows drop their ids and every computed value; the rules recompute them.
+    input.Invoiced_Items = rows.map((row) => {
+      const { id: _id, ...rest } = row as Record<string, FieldValue>;
+      return copy(rest);
+    });
+    validateReferences("Invoices", input);
+    return atomic(
+      { module: "Invoices", mechanism: "convert_quote" },
+      () => insertRecord("Invoices", input).id,
+    );
+  };
   const service: RecordService &
+    Required<Pick<RecordService, "convertQuoteToInvoice">> &
     ModuleMetadataReader & {
       attachmentLifecycle: typeof attachmentLifecycle;
       history: RecordHistoryService;
@@ -1162,6 +1227,7 @@ export function createFixtureRecordService(
       recycleBin: RecycleBinService;
     } = {
     convertLead,
+    convertQuoteToInvoice,
     attachmentLifecycle: {
       ...attachmentLifecycle,
       publish(id, data) {
@@ -1463,7 +1529,10 @@ export function createFixtureRecordService(
       assertSourceTimes(options?.sourceTimes);
       const bundle = bundleFor(module);
       const stringFields = stringFieldNames(bundle);
-      const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
+      const normalized = dropIgnored(
+        bundle,
+        normalizeInput(input, stringFields, bundle.metadata.fields),
+      );
       validateInput(normalized, false, relaxRequired(bundle, normalized), bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
@@ -1477,7 +1546,10 @@ export function createFixtureRecordService(
       const bundle = bundleFor(module);
       recordFor(module, id);
       const stringFields = stringFieldNames(bundle);
-      const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
+      const normalized = dropIgnored(
+        bundle,
+        normalizeInput(input, stringFields, bundle.metadata.fields),
+      );
       validateInput(
         normalized,
         true,

@@ -21,6 +21,7 @@ export function fixtureMetadataBaselines(): ModuleBaseline[] {
       "Campaigns",
       "Cases",
       "Solutions",
+      "Products",
     ].includes(module)
       ? ["Common_Status"]
       : module === "Events"

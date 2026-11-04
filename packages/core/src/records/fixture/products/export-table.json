@@ -1,0 +1,790 @@
+{
+  "fields": [
+    {
+      "apiName": "Owner",
+      "label": "Product Owner",
+      "dataType": "ownerlookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Product_Name",
+      "label": "Product Name",
+      "dataType": "text",
+      "required": true,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": true,
+        "create": true
+      },
+      "maxLength": 255
+    },
+    {
+      "apiName": "Product_Code",
+      "label": "Product Code",
+      "dataType": "text",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": true,
+        "create": true
+      },
+      "maxLength": 255
+    },
+    {
+      "apiName": "Vendor_Name",
+      "label": "Vendor Name",
+      "dataType": "lookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": false,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120,
+      "lookup": {
+        "module": "Vendors"
+      }
+    },
+    {
+      "apiName": "Product_Active",
+      "label": "Product Active",
+      "dataType": "boolean",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 5
+    },
+    {
+      "apiName": "Manufacturer",
+      "label": "Manufacturer",
+      "dataType": "picklist",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Product_Category",
+      "label": "Product Category",
+      "dataType": "picklist",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Sales_Start_Date",
+      "label": "Sales Start Date",
+      "dataType": "date",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 20
+    },
+    {
+      "apiName": "Sales_End_Date",
+      "label": "Sales End Date",
+      "dataType": "date",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 20
+    },
+    {
+      "apiName": "Support_Start_Date",
+      "label": "Support Start Date",
+      "dataType": "date",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 20
+    },
+    {
+      "apiName": "Support_Expiry_Date",
+      "label": "Support End Date",
+      "dataType": "date",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 20
+    },
+    {
+      "apiName": "Created_By",
+      "label": "Created By",
+      "dataType": "ownerlookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Modified_By",
+      "label": "Modified By",
+      "dataType": "ownerlookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Created_Time",
+      "label": "Created Time",
+      "dataType": "datetime",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Modified_Time",
+      "label": "Modified Time",
+      "dataType": "datetime",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Unit_Price",
+      "label": "Unit Price",
+      "dataType": "currency",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": true,
+        "create": true
+      },
+      "maxLength": 16
+    },
+    {
+      "apiName": "Commission_Rate",
+      "label": "Commission Rate",
+      "dataType": "currency",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 16
+    },
+    {
+      "apiName": "Tax",
+      "label": "Tax",
+      "dataType": "multiselectpicklist",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": true,
+        "create": true
+      },
+      "maxLength": 1000
+    },
+    {
+      "apiName": "Usage_Unit",
+      "label": "Usage Unit",
+      "dataType": "picklist",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Qty_Ordered",
+      "label": "Qty Ordered",
+      "dataType": "double",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 9
+    },
+    {
+      "apiName": "Qty_in_Stock",
+      "label": "Quantity in Stock",
+      "dataType": "double",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 9
+    },
+    {
+      "apiName": "Reorder_Level",
+      "label": "Reorder Level",
+      "dataType": "double",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 9
+    },
+    {
+      "apiName": "Handler",
+      "label": "Handler",
+      "dataType": "ownerlookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Qty_in_Demand",
+      "label": "Quantity in Demand",
+      "dataType": "double",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 9
+    },
+    {
+      "apiName": "Description",
+      "label": "Description",
+      "dataType": "textarea",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 32000
+    },
+    {
+      "apiName": "Taxable",
+      "label": "Taxable",
+      "dataType": "boolean",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": true,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": true,
+        "create": true
+      },
+      "maxLength": 5
+    },
+    {
+      "apiName": "Tag",
+      "label": "Tag",
+      "dataType": "text",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 2000
+    },
+    {
+      "apiName": "Record_Image",
+      "label": "Product Image",
+      "dataType": "profileimage",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": true,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 255
+    },
+    {
+      "apiName": "id",
+      "label": "Record Id",
+      "dataType": "bigint",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 18
+    },
+    {
+      "apiName": "Locked__s",
+      "label": "Locked",
+      "dataType": "boolean",
+      "required": false,
+      "readOnly": true,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": false,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 5
+    },
+    {
+      "apiName": "Last_Activity_Time",
+      "label": "Last Activity Time",
+      "dataType": "datetime",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": false
+      },
+      "maxLength": 120
+    },
+    {
+      "apiName": "Connected_To__s",
+      "label": "Connected To",
+      "dataType": "multi_module_lookup",
+      "required": false,
+      "readOnly": false,
+      "unique": false,
+      "massUpdate": false,
+      "views": {
+        "view": true,
+        "edit": false,
+        "quickCreate": false,
+        "create": true
+      },
+      "maxLength": 120
+    }
+  ],
+  "layout": [
+    {
+      "label": "Product Image",
+      "columnCount": 1,
+      "columns": [["Record_Image"]],
+      "fields": ["Record_Image"]
+    },
+    {
+      "label": "Product Information",
+      "columnCount": 2,
+      "columns": [
+        [
+          "Owner",
+          "Product_Code",
+          "Product_Active",
+          "Product_Category",
+          "Sales_End_Date",
+          "Support_Expiry_Date",
+          "Modified_By",
+          "Modified_Time",
+          "id",
+          "Connected_To__s"
+        ],
+        [
+          "Product_Name",
+          "Vendor_Name",
+          "Manufacturer",
+          "Sales_Start_Date",
+          "Support_Start_Date",
+          "Created_By",
+          "Created_Time",
+          "Tag",
+          "Last_Activity_Time"
+        ]
+      ],
+      "fields": [
+        "Owner",
+        "Product_Name",
+        "Product_Code",
+        "Vendor_Name",
+        "Product_Active",
+        "Manufacturer",
+        "Product_Category",
+        "Sales_Start_Date",
+        "Sales_End_Date",
+        "Support_Start_Date",
+        "Support_Expiry_Date",
+        "Created_By",
+        "Modified_By",
+        "Created_Time",
+        "Modified_Time",
+        "Tag",
+        "id",
+        "Last_Activity_Time",
+        "Connected_To__s"
+      ]
+    },
+    {
+      "label": "Price Information",
+      "columnCount": 2,
+      "columns": [["Unit_Price", "Tax"], ["Commission_Rate", "Taxable"]],
+      "fields": ["Unit_Price", "Commission_Rate", "Tax", "Taxable"]
+    },
+    {
+      "label": "Stock Information",
+      "columnCount": 2,
+      "columns": [
+        ["Usage_Unit", "Qty_in_Stock", "Handler"],
+        ["Qty_Ordered", "Reorder_Level", "Qty_in_Demand"]
+      ],
+      "fields": [
+        "Usage_Unit",
+        "Qty_Ordered",
+        "Qty_in_Stock",
+        "Reorder_Level",
+        "Handler",
+        "Qty_in_Demand"
+      ]
+    },
+    {
+      "label": "Description Information",
+      "columnCount": 1,
+      "columns": [["Description"]],
+      "fields": ["Description"]
+    }
+  ],
+  "picklists": {
+    "Manufacturer": [
+      {
+        "displayValue": "-None-",
+        "storedValue": "-None-"
+      },
+      {
+        "displayValue": "AltvetPet Inc.",
+        "storedValue": "AltvetPet Inc."
+      },
+      {
+        "displayValue": "LexPon Inc.",
+        "storedValue": "LexPon Inc."
+      },
+      {
+        "displayValue": "MetBeat Corp.",
+        "storedValue": "MetBeat Corp."
+      }
+    ],
+    "Product_Category": [
+      {
+        "displayValue": "-None-",
+        "storedValue": "-None-"
+      },
+      {
+        "displayValue": "Hardware",
+        "storedValue": "Hardware"
+      },
+      {
+        "displayValue": "Software",
+        "storedValue": "Software"
+      },
+      {
+        "displayValue": "CRM Applications",
+        "storedValue": "CRM Applications"
+      }
+    ],
+    "Tax": [
+      {
+        "displayValue": "Sales Tax - 0.0 %",
+        "storedValue": "Sales Tax - 0.0 %"
+      },
+      {
+        "displayValue": "Vat - 0.0 %",
+        "storedValue": "Vat - 0.0 %"
+      }
+    ],
+    "Usage_Unit": [
+      {
+        "displayValue": "Box",
+        "storedValue": "Box"
+      },
+      {
+        "displayValue": "Carton",
+        "storedValue": "Carton"
+      },
+      {
+        "displayValue": "Dozen",
+        "storedValue": "Dozen"
+      },
+      {
+        "displayValue": "Each",
+        "storedValue": "Each"
+      },
+      {
+        "displayValue": "Hour(s)",
+        "storedValue": "Hours"
+      },
+      {
+        "displayValue": "Impressions",
+        "storedValue": "Impressions"
+      },
+      {
+        "displayValue": "Lb",
+        "storedValue": "Lb"
+      },
+      {
+        "displayValue": "M",
+        "storedValue": "M"
+      },
+      {
+        "displayValue": "Pack",
+        "storedValue": "Pack"
+      },
+      {
+        "displayValue": "Pages",
+        "storedValue": "Pages"
+      },
+      {
+        "displayValue": "Pieces",
+        "storedValue": "Pieces"
+      },
+      {
+        "displayValue": "Quantity",
+        "storedValue": "Quantity"
+      },
+      {
+        "displayValue": "Reams",
+        "storedValue": "Reams"
+      },
+      {
+        "displayValue": "Sheet",
+        "storedValue": "Sheet"
+      },
+      {
+        "displayValue": "Spiral Binder",
+        "storedValue": "Spiral Binder"
+      },
+      {
+        "displayValue": "Square Feet",
+        "storedValue": "Sq Ft"
+      }
+    ]
+  },
+  "views": [
+    {
+      "id": "active-products",
+      "name": "Active Products",
+      "systemDefined": true,
+      "isDefault": false,
+      "columns": [
+        "Product_Name",
+        "Product_Code",
+        "Product_Category",
+        "Support_Expiry_Date",
+        "Owner"
+      ],
+      "criteria": {
+        "field": "Product_Active",
+        "comparator": "equal",
+        "value": true
+      },
+      "sort": null
+    },
+    {
+      "id": "all-locked-products",
+      "name": "All Locked Products",
+      "systemDefined": true,
+      "isDefault": false,
+      "columns": ["Product_Name", "Product_Code", "Product_Active", "Owner"],
+      "criteria": {
+        "field": "Locked__s",
+        "comparator": "equal",
+        "value": true
+      },
+      "sort": null
+    },
+    {
+      "id": "all-products",
+      "name": "All Products",
+      "systemDefined": true,
+      "isDefault": true,
+      "columns": ["Product_Name", "Product_Code", "Product_Active", "Owner"],
+      "criteria": null,
+      "sort": null
+    },
+    {
+      "id": "my-products",
+      "name": "My Products",
+      "systemDefined": true,
+      "isDefault": false,
+      "columns": ["Product_Name", "Product_Code", "Product_Active", "Product_Category"],
+      "criteria": {
+        "field": "Owner",
+        "comparator": "equal",
+        "value": {
+          "token": "CURRENTUSER"
+        }
+      },
+      "sort": null
+    },
+    {
+      "id": "unread-products",
+      "name": "Unread Products",
+      "systemDefined": true,
+      "isDefault": false,
+      "columns": ["Product_Name", "Product_Code", "Product_Active", "Product_Category", "Owner"],
+      "criteria": {
+        "field": "Common_Status",
+        "comparator": "not_contains",
+        "value": "v"
+      },
+      "sort": null
+    }
+  ]
+}
