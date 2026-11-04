@@ -641,7 +641,8 @@
       "Meetings": "Toplantıları Dışa Aktar",
       "Calls": "Aramaları Dışa Aktar",
       "Solutions": "Çözümleri Dışa Aktar",
-      "Cases": "Servis Dosyalarını Dışa Aktar"
+      "Cases": "Servis Dosyalarını Dışa Aktar",
+      "Products": "Ürünleri Dışa Aktar"
     },
     "importItem": {
       "Leads": "Müşteri Adaylarını İçe Aktar",
@@ -654,7 +655,8 @@
       "Meetings": "Toplantıları İçe Aktar",
       "Calls": "Aramaları İçe Aktar",
       "Solutions": "Çözümleri İçe Aktar",
-      "Cases": "Servis Dosyalarını İçe Aktar"
+      "Cases": "Servis Dosyalarını İçe Aktar",
+      "Products": "Ürünleri İçe Aktar"
     },
     "undoTitle": "İçe Aktarmayı Geri Al",
     "undoMessage": "Bu içe aktarmayla eklenen {count} kayıt silinecek. Güncellenen kayıtlar değişmez. Bu işlem geri alınamaz.",

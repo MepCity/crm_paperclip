@@ -54,3 +54,28 @@ test("date renders the calendar day with the shared formatter and no clock", () 
     kind: "empty",
   });
 });
+
+test("multiselectpicklist formats options as comma-separated labels and empty arrays as empty", () => {
+  const field = {
+    apiName: "Tax",
+    label: "Tax",
+    dataType: "multiselectpicklist" as const,
+    required: false,
+    readOnly: false,
+    massUpdate: false,
+    unique: false,
+    views: { view: true, create: true, edit: true, quickCreate: false },
+    picklist: [
+      { storedValue: "Sales Tax", displayValue: "Sales Tax - 0 %" },
+      { storedValue: "Vat", displayValue: "Vat - 20 %" },
+    ],
+  };
+  const empty = formatFieldValue(field, [], {}, format);
+  expect(empty).toEqual({ kind: "empty" });
+
+  const single = formatFieldValue(field, ["Vat"], {}, format);
+  expect(single).toEqual({ kind: "text", text: "Vat - 20 %" });
+
+  const multi = formatFieldValue(field, ["Sales Tax", "Vat"], {}, format);
+  expect(multi).toEqual({ kind: "text", text: "Sales Tax - 0 %, Vat - 20 %" });
+});

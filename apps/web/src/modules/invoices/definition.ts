@@ -33,7 +33,7 @@ export const invoicesScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Invoice",
   pluralLabel: "Invoices",
   pageTitle: "Invoices",
-  navigation: { id: "invoices", icon: Icons.store, group: "flat" },
+  navigation: { id: "invoices", icon: Icons.file, group: "flat" },
   list: invoicesListPageConfig,
   listCurrencyCode: INVOICES_LIST_CURRENCY_CODE,
   searchColumns: ["Subject", "Invoice_Number", "Status", "Owner"],

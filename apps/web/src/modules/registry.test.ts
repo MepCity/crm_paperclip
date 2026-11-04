@@ -4,6 +4,7 @@ import { callsScreenDefinition } from "./calls/definition";
 import { dealsScreenDefinition } from "./deals/definition";
 import { leadsScreenDefinition } from "./leads/definition";
 import { meetingsScreenDefinition } from "./meetings/definition";
+import { productsScreenDefinition } from "./products/definition";
 import { getModuleScreens, resolveModuleScreen } from "./registry";
 import { tasksScreenDefinition } from "./tasks/definition";
 
@@ -19,6 +20,7 @@ test("the shipped modules is registered", () => {
     "Campaigns",
     "Cases",
     "Solutions",
+    "Products",
     "Quotes",
     "Invoices",
   ]);
@@ -28,6 +30,7 @@ test("the shipped modules is registered", () => {
   expect(resolveModuleScreen("Tasks")).toBe(tasksScreenDefinition);
   expect(resolveModuleScreen("Meetings")).toBe(meetingsScreenDefinition);
   expect(resolveModuleScreen("Calls")).toBe(callsScreenDefinition);
+  expect(resolveModuleScreen("Products")).toBe(productsScreenDefinition);
   expect(resolveModuleScreen("Unknown")).toBeUndefined();
 });
 
