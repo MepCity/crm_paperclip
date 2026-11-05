@@ -22,6 +22,14 @@ export const chatTableContracts: readonly TableContract[] = [
   { name: "chat_presence", privileges: ["SELECT", "INSERT", "UPDATE"] },
 ];
 
+export const feedTableContracts: readonly TableContract[] = [
+  { name: "feed_posts", privileges: ["SELECT", "INSERT", "UPDATE"] },
+  { name: "feed_comments", privileges: ["SELECT", "INSERT", "UPDATE"] },
+  { name: "feed_likes", privileges: ["SELECT", "INSERT", "DELETE"] },
+  { name: "feed_mentions", privileges: ["SELECT", "INSERT", "DELETE"] },
+  { name: "feed_follows", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+];
+
 const identityTables = new Set([
   "users",
   "accounts",
