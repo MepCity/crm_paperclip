@@ -63,7 +63,10 @@ test("filters list system rows and field rows", () => {
 test("form rules keep the line-item section for the shared editor", () => {
   expect(quotesFormRules.requiredFields).toContain("Account_Name");
   expect(quotesFormRules.omittedSections).toBeUndefined();
-  expect((quotesFormRules.defaultValues as () => unknown)()).toEqual({ Quote_Stage: "Draft" });
+  expect((quotesFormRules.defaultValues as () => unknown)()).toEqual({
+    Quote_Stage: "Draft",
+    Carrier: "FedEX",
+  });
 });
 
 test("detail sections skip the subform field", () => {
