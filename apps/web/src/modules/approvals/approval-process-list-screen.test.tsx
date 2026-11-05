@@ -27,7 +27,8 @@ describe("ApprovalProcessListScreen", () => {
     render(<ApprovalProcessListScreen orgSlug="test-org" />);
 
     await screen.findByText("Onay işlemi yapılandırmanız yok");
-    expect(screen.getAllByRole("link", { name: "+ Onay İşlemi Ekle" }).length).toBeGreaterThan(0);
+    expect(screen.getAllByRole("link", { name: "+ Onay İşlemi Ekle" })).toHaveLength(1);
+    expect(screen.queryByText("Eylemler")).toBeNull();
   });
 
   it("renders table with approval processes and handles reorder dialog", async () => {

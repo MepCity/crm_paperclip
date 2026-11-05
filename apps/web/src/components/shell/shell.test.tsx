@@ -138,7 +138,7 @@ test("Navigation groups collapse and expand with mouse and keyboard", async () =
 
 test("Default navigation renders Leads, Contacts, Accounts, Deals, Tasks, Meetings and Calls (under Activities) and omits empty groups", () => {
   render(<Navigation orgSlug="example" />);
-  expect(screen.getAllByRole("link")).toHaveLength(21);
+  expect(screen.getAllByRole("link")).toHaveLength(22);
   expect(screen.getByRole("link", { name: "Workqueue" }).getAttribute("href")).toBe(
     "/crm/example/workqueue",
   );
@@ -320,10 +320,10 @@ test("Settings navigation marks only the current page with fill and bold", () =>
 
   const members = classes(screen.getByRole("link", { name: "Members" }));
   const general = classes(screen.getByRole("link", { name: "General" }));
-  expect(members.has("bg-surface-hover")).toBe(true);
+  expect(members.has("bg-primary-subtle")).toBe(true);
   expect(members.has("font-semibold")).toBe(true);
   expect(members.has("text-text-muted")).toBe(false);
-  expect(general.has("bg-surface-hover")).toBe(false);
+  expect(general.has("bg-primary-subtle")).toBe(false);
   expect(general.has("font-semibold")).toBe(false);
   expect(general.has("text-text-muted")).toBe(true);
   expect(general.has("data-hovered:bg-surface-hover")).toBe(true);
@@ -335,9 +335,9 @@ test("Settings navigation marks only the current page with fill and bold", () =>
   navigation.path = "/crm/example/settings";
   view.rerender(<SettingsNavigation orgSlug="example" />);
   const activeGeneral = classes(screen.getByRole("link", { name: "General" }));
-  expect(activeGeneral.has("bg-surface-hover")).toBe(true);
+  expect(activeGeneral.has("bg-primary-subtle")).toBe(true);
   expect(activeGeneral.has("font-semibold")).toBe(true);
-  expect(classes(screen.getByRole("link", { name: "Members" })).has("bg-surface-hover")).toBe(
+  expect(classes(screen.getByRole("link", { name: "Members" })).has("bg-primary-subtle")).toBe(
     false,
   );
 });

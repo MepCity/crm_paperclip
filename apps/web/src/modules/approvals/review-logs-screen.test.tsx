@@ -54,6 +54,7 @@ describe("ReviewLogsScreen", () => {
     const backLink = screen.getByRole("link", { name: "Gözden geçirilecek kayıtlara dön" });
     expect(backLink.getAttribute("href")).toBe("/crm/test-org/tab/Approvals");
 
+    expect(backLink.querySelector("svg")).toBeNull();
     await waitFor(() => {
       expect(api.fetchHistoryMeta).toHaveBeenCalledWith("test-org", "review");
       expect(api.fetchHistory).toHaveBeenCalled();

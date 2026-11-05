@@ -110,6 +110,29 @@ describe("MyJobsScreen", () => {
     expect(screen.getByText("Büyük Fırsat Doğrulama")).toBeTruthy();
   });
 
+  it("shows the review logs link only on the Reviews tab and marks the selected tab bold", async () => {
+    const user = userEvent.setup();
+    render(<MyJobsScreen orgSlug="test-org" />);
+
+    expect(screen.getByRole("link", { name: "Gözden Geçirme Günlükleri" })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: /İncelemeler/ }).className).toContain("font-bold");
+
+    await user.click(screen.getByRole("tab", { name: /onaylar/i }));
+    expect(screen.queryByRole("link", { name: "Gözden Geçirme Günlükleri" })).toBeNull();
+  });
+
+  it("status menu has a search box, left check mark and no placeholder", async () => {
+    const user = userEvent.setup();
+    render(<MyJobsScreen orgSlug="test-org" />);
+
+    await user.click(screen.getByRole("button", { name: /Tüm Durum/ }));
+    const search = screen.getByRole("textbox", { name: "Ara" });
+    expect(search.getAttribute("placeholder")).toBeNull();
+    await user.type(search, "Reddedildi");
+    expect(screen.getByRole("button", { name: "Reddedildi" })).toBeTruthy();
+    expect(screen.queryByRole("button", { name: "İnceleme Sürüyor" })).toBeNull();
+  });
+
   it("switches to Blueprint tab and shows empty state", async () => {
     const user = userEvent.setup();
     render(<MyJobsScreen orgSlug="test-org" />);
