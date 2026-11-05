@@ -44,12 +44,12 @@ export const QUOTES_FORM_INFORMATION_COLUMNS = [
 ] as const;
 
 export function buildQuotesFormDefaults(): Record<string, FieldValue> {
-  return { Quote_Stage: "Draft" };
+  return { Quote_Stage: "Draft", Carrier: "FedEX" };
 }
 
 /**
  * Quote create / edit form rules. Subject and Account Name are required; Owner defaults to the
- * signed-in user; Quote Stage defaults to Draft. No "Edit page layout" link (no inventory chrome);
+ * signed-in user; Quote Stage defaults to Draft; Carrier to FedEX. No "Edit page layout" link (no inventory chrome);
  * Save / Save and New / Cancel come from the shared shell.
  */
 export const quotesFormRules: FormRules = {

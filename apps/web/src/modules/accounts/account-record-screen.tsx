@@ -17,6 +17,8 @@ import {
   openCaseCreateWithAccountName,
   openContactCreateWithAccountName,
   openDealCreateWithAccountName,
+  openInvoiceCreateWithAccountName,
+  openQuoteCreateWithAccountName,
 } from "./accounts-record-create";
 import { createAccountsRelatedLists } from "./accounts-related-lists";
 export type AccountRecordScreenProps = Omit<RecordDetailScreenProps, "buildRelatedLists">;
@@ -85,6 +87,10 @@ export function AccountRecordScreen({ definition, ...props }: AccountRecordScree
           },
           onDealsNew: () =>
             openDealCreateWithAccountName(props.orgSlug, record, (path) => router.push(path)),
+          onQuotesNew: () =>
+            openQuoteCreateWithAccountName(props.orgSlug, record, (path) => router.push(path)),
+          onInvoicesNew: () =>
+            openInvoiceCreateWithAccountName(props.orgSlug, record, (path) => router.push(path)),
         },
       }),
     [badges, props.orgSlug, router],

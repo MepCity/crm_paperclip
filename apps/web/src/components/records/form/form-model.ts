@@ -99,6 +99,9 @@ export function normalizeFormValue(
 ): FieldValue {
   if (value === undefined || value === "" || (field.dataType === "picklist" && value === "-None-"))
     return null;
+  if (field.dataType === "multiselectpicklist" && Array.isArray(value) && value.length === 0) {
+    return null;
+  }
   // A `bigint` value is digit text from the service to the payload: a JavaScript number would round
   // a long integer away. A blank entry clears the field, and text is trimmed so retyping the same
   // digits is not read as a change. Anything that is not text is left untouched for `form-validation`

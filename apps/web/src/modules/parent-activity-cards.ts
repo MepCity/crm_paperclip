@@ -11,6 +11,7 @@ export function parentActivitiesBody(
     | "Deals"
     | "Campaigns"
     | "Cases"
+    | "Products"
     | "Quotes"
     | "Invoices",
   variant: "open" | "closed",

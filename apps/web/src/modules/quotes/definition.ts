@@ -1,4 +1,6 @@
 import { Icons } from "@/components/ui/icon";
+import { toast } from "@/components/ui/toast";
+import { moduleRecordPath } from "@/lib/crm-paths";
 import { buildAccountsRecordMoreMenuGroups } from "../accounts/accounts-record-more-options";
 import {
   ACCOUNTS_TIMELINE_MODULE_OPTIONS,
@@ -42,6 +44,52 @@ export const quotesScreenDefinition: ModuleScreenDefinition = {
     header: quotesRecordHeaderIdentity,
     hasPortrait: false,
     recordNavigation: true,
+    buildHeaderCommands: (
+      _record,
+      { editHref, printHref, orgSlug, navigate, confirm, convertQuoteToInvoice },
+    ) => [
+      {
+        id: "convert",
+        label: "Convert",
+        variant: "secondary" as const,
+        menu: [
+          {
+            id: "convert-invoice",
+            label: "Invoice",
+            onAction: () => {
+              confirm({
+                title: "Convert Quote",
+                message: "Are you sure you want to convert this Quote to an Invoice?",
+                confirmLabel: "Convert",
+                onConfirm: async () => {
+                  try {
+                    if (!convertQuoteToInvoice)
+                      throw new Error("Quote conversion is not supported.");
+                    const invoiceId = await convertQuoteToInvoice();
+                    navigate(moduleRecordPath(orgSlug ?? "", "Invoices", invoiceId));
+                  } catch (error) {
+                    const message = error instanceof Error ? error.message : "Conversion failed";
+                    toast({ variant: "danger", title: "Conversion failed", message });
+                    throw error;
+                  }
+                },
+              });
+            },
+          },
+        ],
+      },
+      ...(printHref
+        ? [
+            {
+              id: "print-preview",
+              label: "Print Preview",
+              variant: "secondary" as const,
+              href: printHref,
+            },
+          ]
+        : []),
+      { id: "edit", label: "Edit", variant: "secondary" as const, href: editHref },
+    ],
     businessCard: buildQuotesBusinessCardFields,
     sections: buildQuotesDetailSections,
     inlineEditable: isQuoteInlineEditable,

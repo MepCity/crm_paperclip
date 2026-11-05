@@ -87,6 +87,61 @@
   font-weight: var(--font-weight-semibold);
 }
 
+.print-page__doc-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-top: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.print-page__doc-org {
+  font-size: var(--text-xl);
+  font-weight: var(--font-weight-bold);
+  color: var(--color-text);
+}
+
+.print-page__doc-meta {
+  text-align: right;
+}
+
+.print-page__doc-num {
+  font-size: var(--text-lg);
+  font-weight: var(--font-weight-semibold);
+}
+
+.print-page__addresses {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 32px;
+  margin-top: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.print-page__totals {
+  display: flex;
+  justify-content: flex-end;
+  margin-top: 20px;
+}
+
+.print-page__totals-table {
+  width: 340px;
+  border-collapse: collapse;
+}
+
+.print-page__totals-table td {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.print-page__terms {
+  margin-top: 24px;
+  padding-top: 16px;
+  border-top: 1px solid var(--color-border);
+}
+
 @media print {
   body * {
     visibility: hidden;

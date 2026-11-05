@@ -225,3 +225,14 @@ describe("transfer error codes", () => {
     expect(decoded).toMatchObject({ code: "duplicate_header", name: "AppError" });
   });
 });
+
+describe("approval lock error", () => {
+  it("is a 409 with its own wire code and round-trips", async () => {
+    const { RecordLockedForApprovalError } = await import("@crm/core/errors");
+    const encoded = encodeError(new RecordLockedForApprovalError());
+    expect(encoded.status).toBe(409);
+    expect(encoded.body.code).toBe("record_locked_for_approval");
+    const decoded = decodeError(encoded.status, encoded.body);
+    expect((decoded as { code?: string }).code).toBe("record_locked_for_approval");
+  });
+});

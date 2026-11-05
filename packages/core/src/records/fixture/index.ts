@@ -47,6 +47,7 @@ import {
 import { roundMoneyTwoDecimals } from "../rounding";
 import { matchesSystemFilters, validateSystemFilters } from "../system-filters";
 import type { TagService } from "../tags";
+import type { RecordWriteObserver } from "../write-observer";
 import {
   attachmentParent,
   attachmentUltimateParent,
@@ -175,6 +176,8 @@ export interface FixtureRecordServiceOptions extends FixtureHistoryPermissions {
   now?: () => Date;
   /** Live membership source; defaults to authorized contexts opened in this fixture org. */
   listMemberIds?: () => Promise<readonly string[]>;
+  /** Approval lock and submission observer (ADR 0018 §5). Omitted for system writes. */
+  writeObserver?: RecordWriteObserver;
 }
 
 function moduleBundle(module: string): FixtureModuleBundle {
@@ -470,17 +473,22 @@ export function createFixtureRecordService(
   const relaxRequired = (
     bundle: FixtureModuleBundle,
     fields: Readonly<Record<string, FieldValue>>,
+    options?: RecordWriteOptions,
   ) => {
     const optional = bundle.optionalFields?.(fields);
-    return optional?.length
-      ? bundle.metadata.fields.map((f) =>
-          optional.includes(f.apiName) &&
-          moduleBundle(bundle.metadata.apiName).metadata.fields.find(
-            (base) => base.apiName === f.apiName,
-          )?.required === f.required
+    const allowEmptyLines = options?.allowEmptyLines === true;
+    return optional?.length || allowEmptyLines
+      ? bundle.metadata.fields.map((f) => {
+          if (allowEmptyLines && f.dataType === "subform") {
+            return { ...f, required: false };
+          }
+          return optional?.includes(f.apiName) &&
+            moduleBundle(bundle.metadata.apiName).metadata.fields.find(
+              (base) => base.apiName === f.apiName,
+            )?.required === f.required
             ? { ...f, required: false }
-            : f,
-        )
+            : f;
+        })
       : bundle.metadata.fields;
   };
   const validateReferences = (module: string, input: RecordInput) => {
@@ -501,6 +509,30 @@ export function createFixtureRecordService(
   const hookContext: FixtureHookContext = {
     moduleStore: hookModuleStore,
     registeredModules: Object.keys(fixtureModules),
+  };
+  const observer = options?.writeObserver;
+  const assertUnlocked = async (
+    module: string,
+    ids: readonly string[],
+    operation: "update" | "delete",
+  ) => {
+    if (observer) await observer.assertEditable({ module, ids, operation });
+  };
+  /** Imports carry source times and never submit approvals; the observer must not fail a write. */
+  const publishWrite = async (
+    module: string,
+    kind: "create" | "edit",
+    record: RecordData,
+    previous: RecordData | undefined,
+    writeOptions?: RecordWriteOptions,
+  ) => {
+    if (!observer || writeOptions?.sourceTimes || writeOptions?.allowEmptyLines) return;
+    try {
+      const label = String(record.fields[bundleFor(module).displayNameField] ?? "");
+      await observer.afterWrite({ module, kind, record: copy(record), previous, label });
+    } catch (error) {
+      console.error("Record write observer failed", error);
+    }
   };
   const assertWritable = (record: RecordData, operation: "update" | "delete" = "update") => {
     if (record.fields.Locked__s === true)
@@ -856,11 +888,25 @@ export function createFixtureRecordService(
       }
     });
 
+  const batchWithObserver = async (
+    module: string,
+    ids: readonly string[],
+    input: RecordInput,
+    mechanism: string,
+  ) => {
+    const unique = [...new Set(ids)];
+    await assertUnlocked(module, unique, "update");
+    const previous = observer ? unique.map((id) => copy(recordFor(module, id))) : [];
+    writeBatch(module, ids, input, mechanism);
+    for (const before of previous)
+      await publishWrite(module, "edit", copy(recordFor(module, before.id)), before);
+  };
+
   /** Synchronous insert shared by create and the conversion coordinator; callers validate first. */
   const insertRecord = (
     module: string,
     normalized: Record<string, FieldValue>,
-    sourceTimes?: RecordWriteOptions["sourceTimes"],
+    options?: RecordWriteOptions,
   ): RecordData => {
     const bundle = bundleFor(module);
     const moduleState = moduleStore(module);
@@ -877,12 +923,17 @@ export function createFixtureRecordService(
       Created_By: ctx.userId,
       Modified_By: ctx.userId,
     });
+    const sourceTimes = options?.sourceTimes;
     if (sourceTimes?.createdTime && "Created_Time" in fields)
       fields.Created_Time = sourceTimes.createdTime;
     if (sourceTimes?.modifiedTime && "Modified_Time" in fields)
       fields.Modified_Time = sourceTimes.modifiedTime;
     if (bundle.autoNumberField) assignAutoNumber(moduleState, bundle.autoNumberField, fields);
-    bundle.applyRules?.(fields, normalized, undefined, hookContext);
+    if (options !== undefined) {
+      bundle.applyRules?.(fields, normalized, undefined, hookContext, options);
+    } else {
+      bundle.applyRules?.(fields, normalized, undefined, hookContext);
+    }
     assertNoteParentVisible(module, fields);
     fields[bundle.displayNameField] = bundle.fullName(fields);
     const record = { id, fields };
@@ -1533,12 +1584,19 @@ export function createFixtureRecordService(
         bundle,
         normalizeInput(input, stringFields, bundle.metadata.fields),
       );
-      validateInput(normalized, false, relaxRequired(bundle, normalized), bundle.managedFields);
+      validateInput(
+        normalized,
+        false,
+        relaxRequired(bundle, normalized, options),
+        bundle.managedFields,
+      );
       validateReferences(module, normalized);
       await validateOwner(normalized);
-      return atomic({ module, mechanism: "create" }, () =>
-        insertRecord(module, normalized, options?.sourceTimes),
+      const created = atomic({ module, mechanism: "create" }, () =>
+        insertRecord(module, normalized, options),
       );
+      await publishWrite(module, "create", created, undefined, options);
+      return created;
     },
     async update(module, id, input, options) {
       assertModuleWritable(module);
@@ -1553,12 +1611,14 @@ export function createFixtureRecordService(
       validateInput(
         normalized,
         true,
-        relaxRequired(bundle, { ...recordFor(module, id).fields, ...normalized }),
+        relaxRequired(bundle, { ...recordFor(module, id).fields, ...normalized }, options),
         bundle.managedFields,
       );
       validateReferences(module, normalized);
       await validateOwner(normalized);
-      return atomic({ module, mechanism: "update" }, () => {
+      await assertUnlocked(module, [id], "update");
+      const previous = copy(recordFor(module, id));
+      const updatedRecord = atomic({ module, mechanism: "update" }, () => {
         // Membership resolution may yield; preserve intervening partial writes/deletes.
         const record = recordFor(module, id);
         assertWritable(record);
@@ -1568,7 +1628,11 @@ export function createFixtureRecordService(
           Modified_By: ctx.userId,
           Modified_Time: options?.sourceTimes?.modifiedTime ?? clock().toISOString(),
         };
-        bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext);
+        if (options !== undefined) {
+          bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext, options);
+        } else {
+          bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext);
+        }
         fields[bundle.displayNameField] = bundle.fullName(fields);
         const updated = { id, fields };
         const moduleState = moduleStore(module);
@@ -1580,6 +1644,8 @@ export function createFixtureRecordService(
         moduleState.records.set(id, updated);
         return copy(resolveRead(module, updated));
       });
+      await publishWrite(module, "edit", updatedRecord, previous, options);
+      return updatedRecord;
     },
     async massUpdate(module, ids, input) {
       assertModuleWritable(module);
@@ -1597,7 +1663,7 @@ export function createFixtureRecordService(
       validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
-      writeBatch(module, targets, normalized, "mass_update");
+      await batchWithObserver(module, targets, normalized, "mass_update");
     },
     async changeOwner(module, ids, ownerId) {
       assertModuleWritable(module);
@@ -1607,7 +1673,7 @@ export function createFixtureRecordService(
       const input = { Owner: ownerId };
       validateInput(input, true, bundle.metadata.fields, bundle.managedFields);
       await validateOwner(input);
-      writeBatch(module, targets, input, "change_owner");
+      await batchWithObserver(module, targets, input, "change_owner");
     },
     async delete(module, ids) {
       assertModuleWritable(module);
@@ -1615,6 +1681,7 @@ export function createFixtureRecordService(
       validateIds(ids);
       const records = [...new Set(ids)].map((id) => recordFor(module, id));
       for (const record of records) assertWritable(record, "delete");
+      await assertUnlocked(module, [...new Set(ids)], "delete");
       const operationId = randomUUID();
       atomic({ module, mechanism: "delete", operationId }, () => {
         for (const record of records) {

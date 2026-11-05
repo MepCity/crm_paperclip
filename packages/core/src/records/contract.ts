@@ -302,6 +302,8 @@ export interface RecordWriteOptions {
    * `createdTime` applies to create, `modifiedTime` to create and update.
    */
   sourceTimes?: { createdTime?: string; modifiedTime?: string };
+  /** Allows imported quotes or invoices to be stored without line items (ADR 0016 §9). */
+  allowEmptyLines?: boolean;
 }
 
 export type RecordInput = Readonly<Record<string, FieldValue>>;

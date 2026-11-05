@@ -19,7 +19,11 @@ import { moduleRecordPath } from "@/lib/crm-paths";
 import { useParentActivityBadges } from "@/lib/records/use-parent-activities";
 import { DealsContactPersonSummary } from "./deals-contact-person-summary";
 import { DealsNextActionSummary } from "./deals-next-action-summary";
-import { openCaseCreateWithDeal } from "./deals-record-create";
+import {
+  openCaseCreateWithDeal,
+  openInvoiceCreateWithDeal,
+  openQuoteCreateWithDeal,
+} from "./deals-record-create";
 import { createDealsRelatedLists } from "./deals-related-lists";
 import { DealsSalesSummary } from "./deals-sales-summary";
 import { DealsStageOverview } from "./deals-stage-overview";
@@ -90,6 +94,9 @@ export function DealRecordScreen({
         badges,
         handlers: {
           onCasesNew: () => openCaseCreateWithDeal(orgSlug, record, (path) => router.push(path)),
+          onQuotesNew: () => openQuoteCreateWithDeal(orgSlug, record, (path) => router.push(path)),
+          onInvoicesNew: () =>
+            openInvoiceCreateWithDeal(orgSlug, record, (path) => router.push(path)),
         },
       }),
     [badges, orgSlug, router],

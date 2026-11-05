@@ -3,11 +3,14 @@ import type { z } from "zod";
 export type ErrorCode =
   | "unauthenticated"
   | "forbidden"
+  | "permission_denied"
+  | "field_forbidden"
   | "not_found"
   | "schema_stale"
   | "conflict"
   | "validation"
   | "record_locked"
+  | "record_locked_for_approval"
   | "file_too_large"
   | "too_many_columns"
   | "too_many_rows"
@@ -58,8 +61,12 @@ export class UnauthenticatedError extends AppError {
 export class ForbiddenError extends AppError {
   override name = "ForbiddenError";
 
-  constructor(message = "You do not have permission to do this.") {
-    super("forbidden", message);
+  /** `permission_denied`: profile lacks the action; `field_forbidden`: hidden/read-only field. */
+  constructor(
+    message = "You do not have permission to do this.",
+    code: "forbidden" | "permission_denied" | "field_forbidden" = "forbidden",
+  ) {
+    super(code, message);
   }
 }
 
@@ -84,6 +91,14 @@ export class RecordLockedError extends AppError {
 
   constructor(message = "Cannot update record that is not approved yet") {
     super("record_locked", message);
+  }
+}
+
+export class RecordLockedForApprovalError extends AppError {
+  override name = "RecordLockedForApprovalError";
+
+  constructor(message = "This record is locked while an approval is pending.") {
+    super("record_locked_for_approval", message);
   }
 }
 

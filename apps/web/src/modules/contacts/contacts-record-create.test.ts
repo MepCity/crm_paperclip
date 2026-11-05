@@ -3,6 +3,8 @@ import { readRecordCreatePrefill } from "@/lib/records/record-create-prefill";
 import {
   openContactCreateWithReportingTo,
   openDealCreateWithContact,
+  openInvoiceCreateWithContact,
+  openQuoteCreateWithContact,
 } from "./contacts-record-create";
 
 describe("openContactCreateWithReportingTo", () => {
@@ -83,5 +85,51 @@ describe("openDealCreateWithContact", () => {
     openDealCreateWithContact("acme", { id: "con-1", fields: { Account_Name: null } }, navigate);
     const prefill = readRecordCreatePrefill("acme", "Deals");
     expect(prefill && "Account_Name" in prefill.fields).toBe(false);
+  });
+
+  it("stores Contact_Name and Account_Name prefill and navigates to Quotes create", () => {
+    const navigate = vi.fn();
+    openQuoteCreateWithContact(
+      "acme",
+      {
+        id: "con-1",
+        fields: {
+          Full_Name: "Sample Person",
+          Account_Name: { module: "Accounts", id: "acc-7", name: "Acme Corp" },
+        },
+      },
+      navigate,
+    );
+    expect(navigate).toHaveBeenCalledWith("/crm/acme/tab/Quotes/create");
+    const prefill = readRecordCreatePrefill("acme", "Quotes");
+    expect(prefill?.fields.Account_Name).toMatchObject({ module: "Accounts", id: "acc-7" });
+    expect(prefill?.fields.Contact_Name).toMatchObject({
+      module: "Contacts",
+      id: "con-1",
+      name: "Sample Person",
+    });
+  });
+
+  it("stores Contact_Name and Account_Name prefill and navigates to Invoices create", () => {
+    const navigate = vi.fn();
+    openInvoiceCreateWithContact(
+      "acme",
+      {
+        id: "con-1",
+        fields: {
+          Full_Name: "Sample Person",
+          Account_Name: { module: "Accounts", id: "acc-7", name: "Acme Corp" },
+        },
+      },
+      navigate,
+    );
+    expect(navigate).toHaveBeenCalledWith("/crm/acme/tab/Invoices/create");
+    const prefill = readRecordCreatePrefill("acme", "Invoices");
+    expect(prefill?.fields.Account_Name).toMatchObject({ module: "Accounts", id: "acc-7" });
+    expect(prefill?.fields.Contact_Name).toMatchObject({
+      module: "Contacts",
+      id: "con-1",
+      name: "Sample Person",
+    });
   });
 });
