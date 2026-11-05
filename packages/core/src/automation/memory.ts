@@ -1,3 +1,4 @@
+import { type AccessLoader, adminPermitted } from "../access-gate";
 import type { OrgContext } from "../tenancy/types";
 import type { AutomationPort, AutomationRule, ReadFailure, ReadResult, RuleSummary } from "./types";
 
@@ -10,6 +11,8 @@ export type MemoryAutomationOptions = {
   withheld?: ReadonlySet<string>;
   /** Test hook: force an outcome for every read. */
   inject?: (op: "list" | "get") => ReadFailure | null;
+  /** Profile source for non-administrator members (`admin.manageAutomation`, ADR 0017 §7.3). */
+  access?: AccessLoader;
 };
 
 const fail = <T>(code: ReadFailure["code"]): ReadResult<T> => ({ ok: false, error: { code } });
@@ -48,7 +51,8 @@ export function createMemoryAutomationPort(options: MemoryAutomationOptions = {}
     async list(ctx, query) {
       const injected = options.inject?.("list");
       if (injected) return { ok: false, error: injected };
-      if (ctx.role !== "admin") return fail("forbidden");
+      if (!(await adminPermitted(ctx, "manageAutomation", options.access)))
+        return fail("forbidden");
       if (
         !Number.isInteger(query.limit) ||
         query.limit < 1 ||
@@ -86,7 +90,8 @@ export function createMemoryAutomationPort(options: MemoryAutomationOptions = {}
     async get(ctx, query) {
       const injected = options.inject?.("get");
       if (injected) return { ok: false, error: injected };
-      if (ctx.role !== "admin") return fail("forbidden");
+      if (!(await adminPermitted(ctx, "manageAutomation", options.access)))
+        return fail("forbidden");
       const rule = visible(ctx, query.kind).find((r) => r.id === query.id);
       return rule ? { ok: true, value: clone(rule) } : fail("not_found");
     },

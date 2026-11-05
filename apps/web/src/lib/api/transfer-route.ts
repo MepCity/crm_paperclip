@@ -34,6 +34,10 @@ export function getTransferService(): TransferService {
                 : can(snapshot, module, "delete") || lists.admin.dataManagement;
       if (!allowed) throw new ForbiddenError(undefined, "permission_denied");
     },
+    canManageAll: async (ctx) => {
+      const snapshot = await getAccessSnapshot(ctx);
+      return snapshot.profileKind === "administrator" || snapshot.permissions.admin.dataManagement;
+    },
     locale: transferLocale,
     // No per-user zone setting exists yet; the app formats and imports in the default zone.
     timeZone: () => DEFAULT_TIME_ZONE,

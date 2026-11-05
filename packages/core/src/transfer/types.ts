@@ -157,6 +157,11 @@ export interface TransferDependencies {
   records: RecordServiceFactory;
   /** Must check current membership and module action permission; throws on denial. */
   authorize: (ctx: OrgContext, module: TransferModule, action: TransferAction) => Promise<void>;
+  /**
+   * `admin.dataManagement` (ADR 0017 §7.3): history, undo and downloads of other members'
+   * jobs. Omitted means members only see their own jobs.
+   */
+  canManageAll?: (ctx: OrgContext) => Promise<boolean>;
   /** Must return only current members of ctx.orgId. Used for attribution and owner resolution. */
   listActors: (ctx: OrgContext) => Promise<readonly Actor[]>;
   /** Resolves the caller's interface language; omitted means English. */

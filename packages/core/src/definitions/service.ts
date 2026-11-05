@@ -1,4 +1,5 @@
 import { z } from "zod";
+import { adminPermitted } from "../access-gate";
 import type { AssignmentRule, ReadResult } from "../automation/types";
 import type { FieldDefinition } from "../records/contract";
 import type { OrgContext } from "../tenancy/types";
@@ -151,8 +152,8 @@ export function createDefinitionPorts(deps: DefinitionDependencies): {
   organizationAddresses: OrganizationAddressPort;
 } {
   const { repository: repo } = deps;
-  const admin = (ctx: OrgContext) => {
-    if (ctx.role !== "admin") reject("forbidden");
+  const admin = async (ctx: OrgContext) => {
+    if (!(await adminPermitted(ctx, "manageAutomation", deps.access))) reject("forbidden");
   };
   const writer = async (ctx: OrgContext) => {
     if (ctx.role !== "admin" && !(await deps.canManageReports(ctx))) reject("forbidden");
@@ -215,12 +216,12 @@ export function createDefinitionPorts(deps: DefinitionDependencies): {
   const organizationAddresses: OrganizationAddressPort = {
     list: (ctx) =>
       safe(async () => {
-        admin(ctx);
+        await admin(ctx);
         return (await repo.list(ctx, "organization_email_addresses")) as OrganizationAddress[];
       }),
     add: (ctx, input, options) =>
       safe(async () => {
-        admin(ctx);
+        await admin(ctx);
         const k = parse(key, options?.idempotencyKey);
         const previous = await repo.getByIdempotencyKey(ctx, "organization_email_addresses", k);
         if (previous) return previous as OrganizationAddress;
@@ -235,7 +236,7 @@ export function createDefinitionPorts(deps: DefinitionDependencies): {
   const automation: AssignmentDefinitionPort = {
     createAssignmentShell: (ctx, input, options) =>
       safe(async () => {
-        admin(ctx);
+        await admin(ctx);
         const k = parse(key, options?.idempotencyKey);
         const previous = await repo.getByIdempotencyKey(ctx, "assignment_shells", k);
         if (previous) return previous as AssignmentRule;
@@ -244,7 +245,8 @@ export function createDefinitionPorts(deps: DefinitionDependencies): {
         return (await repo.create(ctx, "assignment_shells", data, k)) as AssignmentRule;
       }),
     async list(ctx, query) {
-      if (ctx.role !== "admin") return { ok: false, error: { code: "forbidden" } };
+      if (!(await adminPermitted(ctx, "manageAutomation", deps.access)))
+        return { ok: false, error: { code: "forbidden" } };
       if (!Number.isInteger(query.limit) || query.limit < 1 || query.limit > 100)
         return { ok: false, error: { code: "invalid_query" } };
       let after = "";
@@ -291,7 +293,8 @@ export function createDefinitionPorts(deps: DefinitionDependencies): {
       return result.ok ? result : { ok: false, error: { code: "unavailable" } };
     },
     async get(ctx, query): Promise<ReadResult<AssignmentRule>> {
-      if (ctx.role !== "admin") return { ok: false, error: { code: "forbidden" } };
+      if (!(await adminPermitted(ctx, "manageAutomation", deps.access)))
+        return { ok: false, error: { code: "forbidden" } };
       if (query.kind !== "assignment" || !uuid.safeParse(query.id).success)
         return { ok: false, error: { code: "not_found" } };
       const result = await safe(

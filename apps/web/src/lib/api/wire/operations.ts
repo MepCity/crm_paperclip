@@ -319,7 +319,9 @@ export const operations = {
       return ok({
         modules: [encodeModule(metadata)],
         revision: metadata.revision,
-        ...(customization ? { capabilities: customization().capabilities(moduleOf(input)) } : {}),
+        ...(customization
+          ? { capabilities: (await customization().prepare()).capabilities(moduleOf(input)) }
+          : {}),
       });
     },
   },

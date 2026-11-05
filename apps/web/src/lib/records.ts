@@ -30,10 +30,14 @@ export function getRecordService(ctx: OrgContext): RecordService & ModuleMetadat
 export function getRecordHistoryService(ctx: OrgContext): RecordHistoryService {
   return createFixtureRecordHistoryService(ctx, {
     schema: getCustomizationCoordinator(),
+    access: () => getAccessSnapshot(ctx),
     listMemberIds: async () => (await listMembers(ctx)).map((member) => member.userId),
   });
 }
 
 export function getTagService(ctx: OrgContext): TagService {
-  return createFixtureTagService(ctx, { schema: getCustomizationCoordinator() });
+  return createFixtureTagService(ctx, {
+    schema: getCustomizationCoordinator(),
+    access: () => getAccessSnapshot(ctx),
+  });
 }
