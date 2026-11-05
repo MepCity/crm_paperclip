@@ -3,6 +3,8 @@ import type { z } from "zod";
 export type ErrorCode =
   | "unauthenticated"
   | "forbidden"
+  | "permission_denied"
+  | "field_forbidden"
   | "not_found"
   | "schema_stale"
   | "conflict"
@@ -59,8 +61,12 @@ export class UnauthenticatedError extends AppError {
 export class ForbiddenError extends AppError {
   override name = "ForbiddenError";
 
-  constructor(message = "You do not have permission to do this.") {
-    super("forbidden", message);
+  /** `permission_denied`: profile lacks the action; `field_forbidden`: hidden/read-only field. */
+  constructor(
+    message = "You do not have permission to do this.",
+    code: "forbidden" | "permission_denied" | "field_forbidden" = "forbidden",
+  ) {
+    super(code, message);
   }
 }
 
