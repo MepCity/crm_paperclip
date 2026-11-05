@@ -1,6 +1,9 @@
 import { listMembers } from "@crm/core";
 import { notFound } from "next/navigation";
+import { AccessDenied } from "@/components/shell/access-denied";
 import { PageTitle } from "@/components/shell/page-title";
+import { requireActionPermission } from "@/lib/access/action-guard";
+import { canViewFeature } from "@/lib/access/settings-gate";
 import { getRecordService } from "@/lib/records";
 import { requireOrgContext } from "@/lib/session";
 import { createRecordReportsPort } from "@/modules/reports/record-port";
@@ -15,6 +18,7 @@ export default async function ReportPage({
 }) {
   const { orgSlug, reportId } = await params;
   const ctx = await requireOrgContext(orgSlug);
+  if (!(await canViewFeature(ctx, "reports"))) return <AccessDenied />;
   const members = await listMembers(ctx);
   const port = createRecordReportsPort(getRecordService(ctx), {
     ownerNames: new Map(members.map((member) => [member.userId, member.name])),
@@ -25,6 +29,7 @@ export default async function ReportPage({
   async function getReport(id: string) {
     "use server";
     const innerCtx = await requireOrgContext(orgSlug);
+    await requireActionPermission(innerCtx, { feature: "reports", action: "view" });
     const innerMembers = await listMembers(innerCtx);
     return createRecordReportsPort(getRecordService(innerCtx), {
       ownerNames: new Map(innerMembers.map((member) => [member.userId, member.name])),
@@ -34,6 +39,7 @@ export default async function ReportPage({
   async function listReports() {
     "use server";
     const innerCtx = await requireOrgContext(orgSlug);
+    await requireActionPermission(innerCtx, { feature: "reports", action: "view" });
     const innerMembers = await listMembers(innerCtx);
     return createRecordReportsPort(getRecordService(innerCtx), {
       ownerNames: new Map(innerMembers.map((member) => [member.userId, member.name])),

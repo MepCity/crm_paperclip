@@ -1,6 +1,9 @@
 import { listMembers } from "@crm/core";
+import { AccessDenied } from "@/components/shell/access-denied";
 import { PageTitle } from "@/components/shell/page-title";
 import { getUiTranslations } from "@/i18n/request";
+import { requireActionPermission } from "@/lib/access/action-guard";
+import { canViewFeature } from "@/lib/access/settings-gate";
 import { getRecordService } from "@/lib/records";
 import { requireOrgContext } from "@/lib/session";
 import { AnalyticsScreen } from "@/modules/analytics/analytics-screen";
@@ -10,10 +13,12 @@ export const metadata = { title: "Analytics" };
 
 export default async function DashboardsPage({ params }: { params: Promise<{ orgSlug: string }> }) {
   const { orgSlug } = await params;
-  await requireOrgContext(orgSlug);
+  if (!(await canViewFeature(await requireOrgContext(orgSlug), "analytics")))
+    return <AccessDenied />;
   async function getDashboard() {
     "use server";
     const ctx = await requireOrgContext(orgSlug);
+    await requireActionPermission(ctx, { feature: "analytics", action: "view" });
     const members = await listMembers(ctx);
     return createRecordAnalyticsPort(getRecordService(ctx), {
       ownerNames: new Map(members.map((member) => [member.userId, member.name])),

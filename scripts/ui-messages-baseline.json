@@ -73,7 +73,7 @@
   },
   {
     "file": "apps/web/src/app/crm/[orgSlug]/tab/Dashboards/page.tsx",
-    "line": 9,
+    "line": 12,
     "column": 34,
     "hash": "94c116ee118a7299"
   },
@@ -97,13 +97,13 @@
   },
   {
     "file": "apps/web/src/app/crm/[orgSlug]/tab/Reports/[reportId]/page.tsx",
-    "line": 9,
+    "line": 12,
     "column": 34,
     "hash": "b6ce788d9786917c"
   },
   {
     "file": "apps/web/src/app/crm/[orgSlug]/tab/Reports/page.tsx",
-    "line": 8,
+    "line": 10,
     "column": 34,
     "hash": "dacca3cba3f346a4"
   },
