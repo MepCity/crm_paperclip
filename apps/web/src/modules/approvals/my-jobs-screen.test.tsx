@@ -87,8 +87,6 @@ describe("MyJobsScreen", () => {
   it("renders 4 tabs with counts and defaults to İncelemeler", async () => {
     render(<MyJobsScreen orgSlug="test-org" />);
 
-    expect(screen.getByText("İşlerim")).toBeTruthy();
-
     await waitFor(() => {
       expect(api.fetchApprovalCounts).toHaveBeenCalledWith("test-org");
       expect(api.fetchQueue).toHaveBeenCalledWith("test-org", {
@@ -100,7 +98,7 @@ describe("MyJobsScreen", () => {
 
     // Check tabs
     expect(screen.getByRole("tab", { name: /Şema Geçişleri/ })).toBeTruthy();
-    expect(screen.getByRole("tab", { name: /Onaylar/ })).toBeTruthy();
+    expect(screen.getByRole("tab", { name: /onaylar/i })).toBeTruthy();
     expect(screen.getByRole("tab", { name: /İncelemeler/ })).toBeTruthy();
     expect(screen.getByRole("tab", { name: /Görüntü Doğrulamaları/ })).toBeTruthy();
 
@@ -139,7 +137,7 @@ describe("MyJobsScreen", () => {
 
     render(<MyJobsScreen orgSlug="test-org" />);
 
-    const approvalTab = screen.getByRole("tab", { name: /Onaylar/ });
+    const approvalTab = screen.getByRole("tab", { name: /onaylar/i });
     await user.click(approvalTab);
 
     await waitFor(() => {

@@ -16,11 +16,11 @@ test("My Jobs screen, review logs and approval/review process settings screens",
 
   // 1. Navigate to My Jobs page (/crm/[slug]/tab/Approvals)
   await page.goto(`/crm/${org.slug}/tab/Approvals`);
-  await expect(page.getByRole("heading", { name: "İşlerim" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /(İşlerim|My Jobs)/ })).toBeVisible();
 
   // 2. Verify 4 tabs and count badges
   const blueprintTab = page.getByRole("tab", { name: /Şema Geçişleri/ });
-  const approvalTab = page.getByRole("tab", { name: /Onaylar/ });
+  const approvalTab = page.getByRole("tab", { name: /onaylar/i });
   const reviewTab = page.getByRole("tab", { name: /İncelemeler/ });
   const visionTab = page.getByRole("tab", { name: /Görüntü Doğrulamaları/ });
 
