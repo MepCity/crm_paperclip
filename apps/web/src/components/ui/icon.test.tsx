@@ -47,6 +47,7 @@ const expectedIcons = [
   "settings",
   "users",
   "bell",
+  "newspaper",
   "store",
   "applications",
   "help",

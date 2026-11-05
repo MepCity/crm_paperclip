@@ -181,3 +181,8 @@ export function usePreference<T extends PreferenceValue>(
 
   return [value, setValue];
 }
+
+/** The signed-in user of the surrounding preference scope, or null outside the app shell. */
+export function useCurrentUserId(): string | null {
+  return useContext(PreferenceContext)?.userId ?? null;
+}
