@@ -7,6 +7,8 @@ export type OrgContext = {
   orgName: string;
   userId: string;
   role: OrgRole;
+  /** `access_versions.version` read with the membership row (ADR 0017 §5); null if not visible. */
+  accessVersion?: number | null;
 };
 export type Organization = typeof schema.organizations.$inferSelect;
 export type Invitation = {

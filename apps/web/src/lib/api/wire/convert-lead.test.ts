@@ -91,4 +91,23 @@ describe("convert lead operation", () => {
       name: "ValidationError",
     });
   });
+
+  it("converts a quote to an invoice", async () => {
+    const product = (
+      await deps.records.list("Products", { viewId: "all-products", page: 1, perPage: 10 })
+    ).records[0];
+    if (!product) throw new Error("Product fixture required");
+    const quote = await deps.records.create("Quotes", {
+      Subject: "Test Quote",
+      Quoted_Items: [
+        { Product_Name: { module: "Products", id: product.id }, Quantity: 1, List_Price: 100 },
+      ],
+    });
+    const result = await run(quote.id, {}, "Quotes");
+    expect(result.status).toBe(200);
+    const body = result.body as { id: string };
+    expect(body.id).toBeTruthy();
+    const invoice = await deps.records.get("Invoices", body.id);
+    expect(invoice.fields.Subject).toBe("Test Quote");
+  });
 });

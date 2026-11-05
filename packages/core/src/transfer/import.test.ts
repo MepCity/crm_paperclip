@@ -659,6 +659,169 @@ describe("importRows", () => {
     expect(missing.counts.errors).toBe(1);
     expect(missing.rows[0]).toMatchObject({ code: "not_found", field: "Email" });
   });
+
+  it("excludes subform line item fields from writable fields", async () => {
+    const quotesMeta = await records.getModule("Quotes");
+    const quotedItemsField = quotesMeta.fields.find((f) => f.apiName === "Quoted_Items");
+    expect(quotedItemsField).toBeDefined();
+    if (!quotedItemsField) throw new Error("Missing Quoted_Items field");
+    expect(writable(quotedItemsField)).toBe(false);
+
+    const invoicesMeta = await records.getModule("Invoices");
+    const invoicedItemsField = invoicesMeta.fields.find((f) => f.apiName === "Invoiced_Items");
+    expect(invoicedItemsField).toBeDefined();
+    if (!invoicedItemsField) throw new Error("Missing Invoiced_Items field");
+    expect(writable(invoicedItemsField)).toBe(false);
+  });
+
+  it("imports a Quote without line items with zero totals", async () => {
+    const metadata = await records.getModule("Quotes");
+    const quoteUpload: Upload = {
+      id: "u-quotes",
+      userId: ctx.userId,
+      module: "Quotes",
+      fileName: "quotes.csv",
+      charset: "UTF-8",
+      headers: ["Subject"],
+      rows: [["CSV Imported Quote"]],
+      at: 0,
+    };
+    const quoteSettings: ImportSettings = {
+      mode: "add",
+      ignoreEmptyOnUpdate: false,
+      mapping: [{ column: 0, field: "Subject" }],
+      defaults: [],
+    };
+    const job: ImportJob = {
+      id: "j-quote",
+      module: "Quotes",
+      fileName: "quotes.csv",
+      createdBy: { id: ctx.userId, name: "Example User" },
+      createdAt: "2026-01-01T00:00:00.000Z",
+      status: "completed",
+      counts: { created: 0, updated: 0, skipped: 0, errors: 0 },
+      undoable: false,
+      rows: [],
+    };
+    const matchField = validateMapping(metadata, "Quotes", quoteUpload, quoteSettings);
+    await importRows(ctx, records, deps, quoteUpload, quoteSettings, metadata, matchField, job);
+    expect(job.counts).toEqual({ created: 1, updated: 0, skipped: 0, errors: 0 });
+
+    const list = await records.list("Quotes", {
+      viewId: "all-quotes",
+      page: 1,
+      perPage: 10,
+      filters: { field: "Subject", comparator: "equal", value: "CSV Imported Quote" },
+    });
+    expect(list.records.length).toBe(1);
+    const createdQuote = list.records[0];
+    if (!createdQuote) throw new Error("Quote record not created");
+    expect(createdQuote.fields.Sub_Total).toBe(0);
+    expect(createdQuote.fields.Grand_Total).toBe(0);
+    expect(createdQuote.fields.Tax).toBe(0);
+    expect(createdQuote.fields.Discount).toBe(0);
+  });
+
+  it("updates a Product by matching Product_Name", async () => {
+    const metadata = await records.getModule("Products");
+    const productUpload: Upload = {
+      id: "u-prod",
+      userId: ctx.userId,
+      module: "Products",
+      fileName: "products.csv",
+      charset: "UTF-8",
+      headers: ["Product Name", "Product Code"],
+      rows: [["Widget X", "WX-01"]],
+      at: 0,
+    };
+    const addSettings: ImportSettings = {
+      mode: "add",
+      ignoreEmptyOnUpdate: false,
+      mapping: [
+        { column: 0, field: "Product_Name" },
+        { column: 1, field: "Product_Code" },
+      ],
+      defaults: [],
+    };
+    const addJob: ImportJob = {
+      id: "j-prod-1",
+      module: "Products",
+      fileName: "products.csv",
+      createdBy: { id: ctx.userId, name: "Example User" },
+      createdAt: "2026-01-01T00:00:00.000Z",
+      status: "completed",
+      counts: { created: 0, updated: 0, skipped: 0, errors: 0 },
+      undoable: false,
+      rows: [],
+    };
+    const matchFieldAdd = validateMapping(metadata, "Products", productUpload, addSettings);
+    expect(matchFieldAdd).toBe("Product_Name");
+    await importRows(
+      ctx,
+      records,
+      deps,
+      productUpload,
+      addSettings,
+      metadata,
+      matchFieldAdd,
+      addJob,
+    );
+    expect(addJob.counts.created).toBe(1);
+
+    const updateUpload: Upload = {
+      id: "u-prod-update",
+      userId: ctx.userId,
+      module: "Products",
+      fileName: "products_update.csv",
+      charset: "UTF-8",
+      headers: ["Product Name", "Product Code"],
+      rows: [["Widget X", "WX-02"]],
+      at: 0,
+    };
+    const updateSettings: ImportSettings = {
+      mode: "update",
+      ignoreEmptyOnUpdate: false,
+      mapping: [
+        { column: 0, field: "Product_Name" },
+        { column: 1, field: "Product_Code" },
+      ],
+      defaults: [],
+    };
+    const updateJob: ImportJob = {
+      id: "j-prod-2",
+      module: "Products",
+      fileName: "products_update.csv",
+      createdBy: { id: ctx.userId, name: "Example User" },
+      createdAt: "2026-01-01T00:00:00.000Z",
+      status: "completed",
+      counts: { created: 0, updated: 0, skipped: 0, errors: 0 },
+      undoable: false,
+      rows: [],
+    };
+    const matchFieldUpdate = validateMapping(metadata, "Products", updateUpload, updateSettings);
+    expect(matchFieldUpdate).toBe("Product_Name");
+    await importRows(
+      ctx,
+      records,
+      deps,
+      updateUpload,
+      updateSettings,
+      metadata,
+      matchFieldUpdate,
+      updateJob,
+    );
+    expect(updateJob.counts.updated).toBe(1);
+
+    const list = await records.list("Products", {
+      viewId: "all-products",
+      page: 1,
+      perPage: 10,
+      filters: { field: "Product_Name", comparator: "equal", value: "Widget X" },
+    });
+    const updatedProd = list.records[0];
+    if (!updatedProd) throw new Error("Product record not found");
+    expect(updatedProd.fields.Product_Code).toBe("WX-02");
+  });
 });
 
 describe("source timestamps", () => {

@@ -107,3 +107,17 @@ test("related lists are limited to features with a backing implementation", () =
     "Emails",
   ]);
 });
+
+test("header commands include print preview and edit", () => {
+  const record: RecordData = { id: "inv1", fields: { Subject: "Invoice 1" } };
+  const commands = invoicesScreenDefinition.detail.buildHeaderCommands?.(record, {
+    editHref: "/crm/test/tab/Invoices/inv1/edit",
+    printHref: "/crm/test/tab/Invoices/inv1/print",
+    navigate: () => {},
+    confirm: () => {},
+    save: async () => {},
+  });
+
+  expect(commands).toBeDefined();
+  expect(commands?.map((c) => c.id)).toEqual(["print-preview", "edit"]);
+});

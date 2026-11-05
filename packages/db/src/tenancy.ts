@@ -13,6 +13,18 @@ export const definitionTableContracts: readonly TableContract[] = [
   { name: "organization_email_addresses", privileges: ["SELECT", "INSERT"] },
 ];
 
+export const accessTableContracts: readonly TableContract[] = [
+  { name: "access_profiles", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "access_field_permissions", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "access_roles", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "access_groups", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "access_group_members", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "access_module_defaults", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "access_sharing_rules", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "member_access", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "access_versions", privileges: ["SELECT", "INSERT", "UPDATE"] },
+];
+
 export const chatTableContracts: readonly TableContract[] = [
   { name: "chat_conversations", privileges: ["SELECT", "INSERT", "UPDATE"] },
   { name: "chat_members", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
@@ -80,7 +92,7 @@ export async function assertRuntimeCatalog(
   )
     unsafe();
 
-  const installed = [...definitionTableContracts, ...chatTableContracts];
+  const installed = [...definitionTableContracts, ...chatTableContracts, ...accessTableContracts];
   tables = [...installed.filter((base) => !tables.some((t) => t.name === base.name)), ...tables];
   const contracts = new Map(tables.map((table) => [table.name, table]));
   if (contracts.size !== tables.length || tables.some((table) => identityTables.has(table.name)))

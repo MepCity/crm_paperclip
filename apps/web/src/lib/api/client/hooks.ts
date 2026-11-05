@@ -303,6 +303,22 @@ export function useConvertLead() {
   });
 }
 
+export function useConvertQuoteToInvoice() {
+  const orgSlug = useOrgSlug();
+  const service = useClientRecordService();
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: ({ quoteId }: { quoteId: RecordId }) => {
+      if (!service.convertQuoteToInvoice) throw new Error("Quote conversion is not supported.");
+      return service.convertQuoteToInvoice(quoteId);
+    },
+    onSuccess: (invoiceId, { quoteId }) => {
+      invalidateModuleLists(queryClient, orgSlug, "Quotes", quoteId);
+      invalidateModuleLists(queryClient, orgSlug, "Invoices", invoiceId);
+    },
+  });
+}
+
 /** Duplicate groups of a module for one to three match fields. */
 export function useDuplicateGroups(
   module: ModuleApiName,

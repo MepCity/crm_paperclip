@@ -3,6 +3,8 @@ import { AccountContactsCardBody } from "@/components/records/detail/account-con
 import { AccountMemberAccountsCardBody } from "@/components/records/detail/account-member-accounts-card-body";
 import { RelatedCasesCardBody } from "@/components/records/detail/related-cases-card-body";
 import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
+import { RelatedInvoicesCardBody } from "@/components/records/detail/related-invoices-card-body";
+import { RelatedQuotesCardBody } from "@/components/records/detail/related-quotes-card-body";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
 import { emailsCard } from "../emails/record-card";
@@ -25,6 +27,8 @@ export interface AccountsRelatedListHandlers {
   onDealsAssign?: () => void;
   onDealsNew?: () => void;
   onCasesNew?: () => void;
+  onQuotesNew?: () => void;
+  onInvoicesNew?: () => void;
 }
 
 export interface AccountsRelatedListRailDefinition {
@@ -412,9 +416,18 @@ export function createAccountsRelatedLists(
           id: "new-quote",
           label: "New",
           type: "button",
-          moduleKey: "P2",
+          onAction: handlers.onQuotesNew,
         },
       ],
+      renderBody: ({ record, recordPath }) =>
+        record
+          ? createElement(RelatedQuotesCardBody, {
+              managerRecord: record,
+              filterField: "Account_Name",
+              columns: ["Subject", "Quote_Stage", "Grand_Total", "Owner"],
+              quoteRecordPath: (id) => recordPath("Quotes", id),
+            })
+          : null,
       emptyStateText: "No records found",
     },
     {
@@ -461,9 +474,18 @@ export function createAccountsRelatedLists(
           id: "new-invoice",
           label: "New",
           type: "button",
-          moduleKey: "P2",
+          onAction: handlers.onInvoicesNew,
         },
       ],
+      renderBody: ({ record, recordPath }) =>
+        record
+          ? createElement(RelatedInvoicesCardBody, {
+              managerRecord: record,
+              filterField: "Account_Name",
+              columns: ["Subject", "Status", "Grand_Total", "Owner"],
+              invoiceRecordPath: (id) => recordPath("Invoices", id),
+            })
+          : null,
       emptyStateText: "No records found",
     },
     {

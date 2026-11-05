@@ -6,6 +6,8 @@ import {
   openAccountCreateWithParentAccount,
   openContactCreateWithAccountName,
   openDealCreateWithAccountName,
+  openInvoiceCreateWithAccountName,
+  openQuoteCreateWithAccountName,
 } from "./accounts-record-create";
 
 function makeStorage(): Storage {
@@ -209,5 +211,33 @@ describe("Org scoping", () => {
 
     expect(readRecordCreatePrefill(orgB, "Deals")).not.toBeNull();
     expect(readRecordCreatePrefill(orgA, "Deals")).toBeNull();
+  });
+
+  it("writes prefill and navigates to Quotes create with Account_Name", () => {
+    const navigate = vi.fn();
+    const org = "acme";
+    const account = { id: "acc-1", fields: { Account_Name: "Acme Corp" } };
+
+    openQuoteCreateWithAccountName(org, account, navigate);
+
+    expect(navigate).toHaveBeenCalledWith(moduleCreatePath(org, "Quotes"));
+    const prefill = readRecordCreatePrefill(org, "Quotes");
+    expect(prefill?.fields).toEqual({
+      Account_Name: { module: "Accounts", id: "acc-1", name: "Acme Corp" },
+    });
+  });
+
+  it("writes prefill and navigates to Invoices create with Account_Name", () => {
+    const navigate = vi.fn();
+    const org = "acme";
+    const account = { id: "acc-1", fields: { Account_Name: "Acme Corp" } };
+
+    openInvoiceCreateWithAccountName(org, account, navigate);
+
+    expect(navigate).toHaveBeenCalledWith(moduleCreatePath(org, "Invoices"));
+    const prefill = readRecordCreatePrefill(org, "Invoices");
+    expect(prefill?.fields).toEqual({
+      Account_Name: { module: "Accounts", id: "acc-1", name: "Acme Corp" },
+    });
   });
 });

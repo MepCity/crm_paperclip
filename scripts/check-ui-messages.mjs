@@ -155,6 +155,7 @@ export const ALLOWED_NEW_EXEMPTION_PREFIXES = [
   "apps/web/src/components/records/detail/related-quotes-card-body",
   "apps/web/src/components/records/detail/related-invoices-card-body",
   "apps/web/src/components/records/line-items/",
+  "apps/web/src/components/records/print/",
 ];
 
 export function filterUnauthorizedExemptions(
