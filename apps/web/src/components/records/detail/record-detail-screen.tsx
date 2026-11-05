@@ -54,6 +54,7 @@ import {
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
 import { openActivityCreate } from "@/modules/activity-add-new";
+import { hasRecordFeed, RecordFeedTab, useFollowMenuGroup } from "@/modules/feeds/use-record-feed";
 import { resolveModuleLaterKey, resolveModuleScreenByApiName } from "@/modules/registry";
 import type {
   HeaderConfirmRequest,
@@ -173,6 +174,7 @@ export function RecordDetailScreen({
   const moduleQuery = useModule(moduleApiName);
   const recordQuery = useRecord(moduleApiName, recordId);
   const usersQuery = useUsers();
+  const followGroup = useFollowMenuGroup(orgSlug, definition.apiName, recordId);
   const homeCurrencyQuery = useHomeCurrency({ enabled: Boolean(rules.headerCurrency) });
   const viewsQuery = useViews(moduleApiName, { enabled: viewsQueryEnabled });
 
@@ -657,7 +659,7 @@ export function RecordDetailScreen({
                   label,
                 };
               })}
-            menuGroups={moreMenuGroups
+            menuGroups={[...moreMenuGroups, ...(followGroup ? [followGroup] : [])]
               .map((group) => ({
                 ...group,
                 items: group.items.filter((item) => !hiddenActionIds.has(item.id)),
@@ -694,6 +696,21 @@ export function RecordDetailScreen({
           { id: "overview", label: t("records.detail.overview"), content: overview },
           ...(showTimeline
             ? [{ id: "timeline", label: t("records.detail.timeline"), content: timeline }]
+            : []),
+          ...(hasRecordFeed(definition.apiName)
+            ? [
+                {
+                  id: "feeds",
+                  label: t("feeds.tab"),
+                  content: (
+                    <RecordFeedTab
+                      orgSlug={orgSlug}
+                      module={definition.apiName}
+                      recordId={recordId}
+                    />
+                  ),
+                },
+              ]
             : []),
         ]}
         relatedRailVisible={railVisible && !activityLayout}

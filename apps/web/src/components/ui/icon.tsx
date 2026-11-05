@@ -35,6 +35,7 @@ import {
   Megaphone,
   MessageSquare,
   Minus,
+  Newspaper,
   Package,
   PanelLeftClose,
   PanelLeftOpen,
@@ -509,6 +510,7 @@ function RecordLookupIcon({ module, ...props }: SVGProps<SVGSVGElement> & { modu
 export const Icons = {
   activity: thin(Activity),
   messageSquare: thin(MessageSquare),
+  newspaper: thin(Newspaper),
   envelope: thin(Mail),
   phone: thin(Phone),
   recordLookup: RecordLookupIcon,
