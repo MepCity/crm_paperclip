@@ -1,5 +1,7 @@
 import { type Icon, Icons } from "@/components/ui/icon";
+import { english } from "@/i18n/catalogs";
 import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
+import { shellPageTitle } from "@/lib/shell-page-title";
 import { getModuleScreens } from "@/modules/registry";
 
 /** Pinned-link icon accent tokens from the design system (`tokens.css`). */
@@ -115,7 +117,7 @@ function flatNavLinks(): NavLink[] {
     },
     {
       id: "my-jobs",
-      label: "My Jobs",
+      label: shellPageTitle.myJobs,
       icon: Icons.briefcase,
       href: (slug) => moduleTabPath(slug, "Approvals"),
       activePrefix: (slug) => moduleTabPath(slug, "Approvals"),
@@ -315,7 +317,7 @@ export const settingsNav: readonly NavLink[] = [
   },
   {
     id: "approval-processes",
-    label: "Approval Processes",
+    label: english.shell["approval-processes"],
     icon: Icons.settings,
     href: (slug) => `/crm/${slug}/settings/approval-processes`,
     activePrefix: (slug) => `/crm/${slug}/settings/approval-processes`,
@@ -324,7 +326,7 @@ export const settingsNav: readonly NavLink[] = [
   },
   {
     id: "review-processes",
-    label: "Review Processes",
+    label: english.shell["review-processes"],
     icon: Icons.settings,
     href: (slug) => `/crm/${slug}/settings/review-processes`,
     activePrefix: (slug) => `/crm/${slug}/settings/review-processes`,
