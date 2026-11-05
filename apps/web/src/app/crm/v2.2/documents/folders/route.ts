@@ -3,6 +3,9 @@ import { getDocumentsService } from "@/server/documents/service";
 
 export const dynamic = "force-dynamic";
 
-export const GET = apiRoute(async ({ ctx }) => ({
-  data: await getDocumentsService(ctx).listFolders(),
-}));
+export const GET = apiRoute(
+  async ({ ctx }) => ({
+    data: await getDocumentsService(ctx).listFolders(),
+  }),
+  { permission: { feature: "documents", action: "view" } },
+);

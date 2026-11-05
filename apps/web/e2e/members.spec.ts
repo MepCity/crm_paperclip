@@ -83,34 +83,21 @@ test("two people join through an invitation and manage membership", async ({ pag
     await expect(bea.getByRole("button", { name: "Role for Ada Admin" })).toBeVisible();
     await expect(bea.getByRole("button", { name: "Remove Ada Admin" })).toBeVisible();
 
+    // The organization owner (Ada) keeps the Administrator profile and cannot be removed.
     await page.getByRole("button", { name: "Role for Ada Admin" }).click();
     await page.getByRole("option", { name: "Member", exact: true }).click();
-    await expect(page.getByRole("button", { name: "Invite member" })).toHaveCount(0);
+    const warnings = page.getByRole("main").getByRole("alert");
+    await expect(warnings).toHaveCount(1);
+    await expect(warnings).toContainText("The organization owner cannot be changed.");
+    await expect(page.getByRole("button", { name: "Role for Ada Admin" })).toContainText("Admin");
 
     await bea.reload();
-    const warnings = bea.getByRole("main").getByRole("alert");
-    await bea.getByRole("button", { name: "Role for Bea Member" }).click();
-    await bea.getByRole("option", { name: "Member", exact: true }).click();
-    await expect(warnings).toHaveCount(1);
-    await expect(warnings).toContainText("An organization must have an admin.");
-    await expect(bea.getByRole("button", { name: "Role for Bea Member" })).toContainText("Admin");
-
-    await bea.getByRole("button", { name: "Remove Bea Member" }).click();
-    await bea.getByRole("alertdialog").getByRole("button", { name: "Remove" }).click();
-    await expect(warnings).toHaveCount(1);
-    await expect(warnings).toContainText("An organization must have an admin.");
-    await expect(bea.getByRole("row").filter({ hasText: beaEmail })).toBeVisible();
-
     await bea.getByRole("button", { name: "Remove Ada Admin" }).click();
     await bea.getByRole("alertdialog").getByRole("button", { name: "Remove" }).click();
-    await expect(bea.getByRole("row").filter({ hasText: ada.email })).toHaveCount(0);
-    const removed = await page.context().newPage();
-    try {
-      await removed.goto(`/crm/${organization.slug}`);
-      await expect(removed.getByRole("heading", { name: "404 - Not Found" })).toBeVisible();
-    } finally {
-      await removed.close();
-    }
+    const beaWarnings = bea.getByRole("main").getByRole("alert");
+    await expect(beaWarnings).toHaveCount(1);
+    await expect(beaWarnings).toContainText("The organization owner cannot be changed.");
+    await expect(bea.getByRole("row").filter({ hasText: ada.email })).toBeVisible();
 
     const revokedEmail = `revoked-${crypto.randomUUID()}@example.test`;
     const revokedUrl = await inviteMember(bea, revokedEmail);

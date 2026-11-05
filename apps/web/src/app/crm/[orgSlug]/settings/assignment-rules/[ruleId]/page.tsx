@@ -1,5 +1,5 @@
 import { PageTitle } from "@/components/shell/page-title";
-import { requireOrgContext } from "@/lib/session";
+import { requireSettingsOrg } from "@/lib/access/settings-gate";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import { AssignmentRuleDetail } from "@/modules/assignment-rules/assignment-rule-detail";
 import { createAutomationPort } from "@/modules/automation/port";
@@ -12,7 +12,7 @@ export default async function AssignmentRuleDetailPage({
   params: Promise<{ orgSlug: string; ruleId: string }>;
 }) {
   const { orgSlug, ruleId } = await params;
-  const ctx = await requireOrgContext(orgSlug);
+  const ctx = await requireSettingsOrg(orgSlug, "manageAutomation");
   const result = await createAutomationPort().get(ctx, { kind: "assignment", id: ruleId });
   return (
     <>

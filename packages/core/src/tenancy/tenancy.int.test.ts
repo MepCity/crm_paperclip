@@ -181,6 +181,18 @@ describe("members and isolation", () => {
     expect((await listMembers(ctx)).filter((row) => row.role === "admin")).toHaveLength(1);
   });
 
+  it("never demotes or removes the organization owner, even for another admin", async () => {
+    const { ctx, admin } = await createTestOrganization();
+    const other = await addTestMember(ctx, "admin");
+    await expect(
+      changeMemberRole(other.ctx, { userId: admin.user.id, role: "member" }),
+    ).rejects.toBeInstanceOf(ConflictError);
+    await expect(removeMember(other.ctx, { userId: admin.user.id })).rejects.toBeInstanceOf(
+      ConflictError,
+    );
+    expect((await listMembers(ctx)).filter((row) => row.role === "admin")).toHaveLength(2);
+  });
+
   it("preserves an admin when two admins concurrently demote each other", async () => {
     const { ctx, admin } = await createTestOrganization();
     const other = await addTestMember(ctx, "admin");
