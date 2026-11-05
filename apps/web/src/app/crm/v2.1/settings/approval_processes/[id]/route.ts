@@ -5,19 +5,23 @@ import { getApprovals } from "@/lib/approvals";
 
 export const dynamic = "force-dynamic";
 
-export const GET = apiRoute<{ id: string }>(async ({ ctx, params }) =>
-  getApprovals().processes.get(ctx, "approval", params.id),
+export const GET = apiRoute<{ id: string }>(
+  async ({ ctx, params }) => getApprovals().processes.get(ctx, "approval", params.id),
+  { permission: { admin: "manageAutomation" } },
 );
 
-export const PATCH = apiRoute<{ id: string }>(async ({ ctx, params, request }) =>
-  getApprovals().processes.update(
-    ctx,
-    "approval",
-    params.id,
-    await parseBody(request, updateProcessSchema),
-  ),
+export const PATCH = apiRoute<{ id: string }>(
+  async ({ ctx, params, request }) =>
+    getApprovals().processes.update(
+      ctx,
+      "approval",
+      params.id,
+      await parseBody(request, updateProcessSchema),
+    ),
+  { permission: { admin: "manageAutomation" } },
 );
 
-export const DELETE = apiRoute<{ id: string }>(async ({ ctx, params }) =>
-  getApprovals().processes.remove(ctx, "approval", params.id),
+export const DELETE = apiRoute<{ id: string }>(
+  async ({ ctx, params }) => getApprovals().processes.remove(ctx, "approval", params.id),
+  { permission: { admin: "manageAutomation" } },
 );

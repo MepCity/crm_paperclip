@@ -1,4 +1,5 @@
 import { listOrganizationsForUser } from "@crm/core";
+import { getAccessSnapshot } from "@crm/core/access";
 import type { ReactNode } from "react";
 import { AppShell } from "@/components/shell/app-shell";
 import { FormatProvider } from "@/lib/format-context";
@@ -21,8 +22,10 @@ export default async function OrganizationLayout({
   const format = await loadOrganizationFormat();
   // Bind the invite action to the current org slug for client-side use in the chat panel.
   const boundInviteAction = createInvitationAction.bind(null, orgSlug);
-  // Admin role (and above) may invite people.
-  const canInvite = org.role === "admin";
+  // `admin.userManagement` (ADR 0017 §7.3) may invite people.
+  const access = await getAccessSnapshot(org);
+  const canInvite =
+    access.profileKind === "administrator" || access.permissions.admin.userManagement;
   return (
     <AppShell
       orgSlug={orgSlug}

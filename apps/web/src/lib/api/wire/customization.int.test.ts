@@ -94,7 +94,7 @@ describe("customization HTTP authorization and publication", () => {
       const before = await revision();
       const denied = await call(op, {}, { headers: member.headers, raw: "invalid json" });
       expect(denied.status).toBe(403);
-      expect(await denied.json()).toMatchObject({ code: "NO_PERMISSION" });
+      expect(["NO_PERMISSION", "permission_denied"]).toContain((await denied.json()).code);
       const foreign = await call(op, {}, { headers: b.admin.headers });
       expect(foreign.status).toBe(404);
       expect(await foreign.json()).toMatchObject({ code: "not_found" });

@@ -43,7 +43,9 @@ async function expectError(response: Response, status: number) {
 describe("apiRoute", () => {
   let orgA: Organization;
   let orgB: Organization;
-  const handler = apiRoute<{ module: string }>(async ({ ctx }) => ({ orgId: ctx.orgId }));
+  const handler = apiRoute<{ module: string }>(async ({ ctx }) => ({ orgId: ctx.orgId }), {
+    permission: { memberOnly: "test" },
+  });
 
   beforeAll(async () => {
     orgA = await createTestOrganization();
@@ -140,7 +142,7 @@ describe("apiRoute", () => {
   });
 
   it("returns 204 with an empty body when the handler returns null", async () => {
-    const empty = apiRoute(async () => null);
+    const empty = apiRoute(async () => null, { permission: { memberOnly: "test" } });
     const response = await call(empty, {
       origin: appOrigin,
       cookie: cookieOf(orgA),
@@ -153,7 +155,9 @@ describe("apiRoute", () => {
   });
 
   it("normalizes missing static-route params to an empty object", async () => {
-    const staticHandler = apiRoute(async ({ params, query }) => ({ params, query }));
+    const staticHandler = apiRoute(async ({ params, query }) => ({ params, query }), {
+      permission: { memberOnly: "test" },
+    });
     const response = await staticHandler(
       new Request(`${appOrigin}/crm/v2.2/settings/fields?module=Leads`, {
         headers: { cookie: cookieOf(orgA), "X-CRM-ORG": orgA.org.slug },
@@ -166,9 +170,12 @@ describe("apiRoute", () => {
 
   it("hides an unexpected handler error behind a fixed 500", async () => {
     const errorSpy = vi.spyOn(console, "error").mockImplementation(() => {});
-    const failing = apiRoute(async () => {
-      throw new Error("postgres password=secret-internal");
-    });
+    const failing = apiRoute(
+      async () => {
+        throw new Error("postgres password=secret-internal");
+      },
+      { permission: { memberOnly: "test" } },
+    );
     try {
       const response = await call(failing, {
         origin: appOrigin,

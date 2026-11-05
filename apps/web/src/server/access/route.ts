@@ -22,7 +22,7 @@ export async function jsonBody(request: Request): Promise<Record<string, unknown
 export function accessRoute(
   handler: (input: ApiHandlerInput<Record<string, string>>) => Promise<unknown>,
 ) {
-  return apiRoute<Record<string, string>>(handler);
+  return apiRoute<Record<string, string>>(handler, { permission: { admin: "userManagement" } });
 }
 
 /** Sharing-rule body (snake_case wire) to the service input. */

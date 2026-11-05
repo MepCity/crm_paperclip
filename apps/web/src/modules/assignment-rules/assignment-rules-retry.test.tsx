@@ -8,6 +8,10 @@ const ctx = { orgId: "o", orgSlug: "synthetic", orgName: "S", userId: "u", role:
 const memory = createMemoryAutomationPort({ fixtures: { o: syntheticAssignmentRules } });
 const list = vi.fn();
 
+vi.mock("@crm/core/access", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@crm/core/access")>()),
+  getAccessSnapshot: vi.fn(async () => ({ profileKind: "administrator" })),
+}));
 vi.mock("@/lib/session", () => ({
   requireOrgContext: async () => ctx,
   getSession: async () => ({ user: { id: ctx.userId } }),

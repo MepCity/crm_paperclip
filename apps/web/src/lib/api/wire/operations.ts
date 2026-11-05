@@ -39,6 +39,8 @@ import type { WireMember } from "./types";
 export type OperationDeps = {
   records: RecordService & ModuleMetadataReader;
   members: () => Promise<readonly WireMember[]>;
+  /** User ids the actor may pick as owner (`onlyListSubordinates`); undefined/null = everyone. */
+  pickableUserIds?: () => Promise<ReadonlySet<string> | null>;
   customization?: () => CustomizationService;
 };
 export type OperationRequest = {
@@ -444,13 +446,16 @@ export const operations = {
   users: {
     method: "GET",
     path: "/crm/v9/users",
-    async run({ members }, input) {
+    async run({ members, pickableUserIds }, input) {
+      const pickable = (await pickableUserIds?.()) ?? null;
       return collection(
-        (await members()).map((member) => ({
-          id: member.userId,
-          full_name: member.name,
-          email: member.email,
-        })),
+        (await members())
+          .filter((member) => !pickable || pickable.has(member.userId))
+          .map((member) => ({
+            id: member.userId,
+            full_name: member.name,
+            email: member.email,
+          })),
         "users",
         input,
         200,

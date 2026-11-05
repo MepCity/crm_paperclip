@@ -18,4 +18,5 @@ export const GET = apiRoute<{ module: string; recordId: string }>(
     });
     return encodeTimelinesPage(page, query);
   },
+  { permission: { allOf: [{ module: "$module", action: "view" }, { tool: "recordTimeline" }] } },
 );
