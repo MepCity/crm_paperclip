@@ -33,7 +33,7 @@ export const invoicesScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Invoice",
   pluralLabel: "Invoices",
   pageTitle: "Invoices",
-  navigation: { id: "invoices", icon: Icons.store, group: "flat" },
+  navigation: { id: "invoices", icon: Icons.file, group: "flat" },
   list: invoicesListPageConfig,
   listCurrencyCode: INVOICES_LIST_CURRENCY_CODE,
   searchColumns: ["Subject", "Invoice_Number", "Status", "Owner"],
@@ -45,6 +45,19 @@ export const invoicesScreenDefinition: ModuleScreenDefinition = {
     header: invoicesRecordHeaderIdentity,
     hasPortrait: false,
     recordNavigation: true,
+    buildHeaderCommands: (_record, { editHref, printHref }) => [
+      ...(printHref
+        ? [
+            {
+              id: "print-preview",
+              label: "Print Preview",
+              variant: "secondary" as const,
+              href: printHref,
+            },
+          ]
+        : []),
+      { id: "edit", label: "Edit", variant: "secondary" as const, href: editHref },
+    ],
     businessCard: buildInvoicesBusinessCardFields,
     sections: buildInvoicesDetailSections,
     inlineEditable: isInvoiceInlineEditable,

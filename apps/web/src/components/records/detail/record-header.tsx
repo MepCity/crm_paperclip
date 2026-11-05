@@ -25,7 +25,15 @@ export type RecordCommand = {
   splitLabel?: string;
   /** Rows the split segment opens as a menu; without them the segment is a plain button. */
   splitMenu?: readonly { id: string; label: string; onAction: () => void }[];
-} & ({ href: string; onPress?: never } | { href?: never; onPress?: () => void });
+} & (
+  | { href: string; onPress?: never; menu?: never }
+  | { href?: never; onPress?: () => void; menu?: never }
+  | {
+      href?: never;
+      onPress?: never;
+      menu: readonly { id: string; label: string; onAction: () => void }[];
+    }
+);
 export interface RecordMenuGroup {
   id: string;
   items: readonly (Omit<MenuAction, "onAction"> & { onAction?: () => void })[];
@@ -191,6 +199,36 @@ export function RecordHeader({
       <div data-record-commands className="flex shrink-0 items-center gap-(--size-button-gap)">
         {commands.map((command) => {
           const variant = command.variant === "primary" ? "recordPrimary" : "recordSecondary";
+          if (command.menu) {
+            return (
+              <MenuTrigger key={command.id}>
+                <Button
+                  variant={variant}
+                  size="record"
+                  isDisabled={command.isDisabled}
+                  laterModule={command.laterModule}
+                  className="inline-flex items-center gap-1"
+                >
+                  <span>{command.label}</span>
+                  <Icons.chevronDown aria-hidden className="h-4 w-4" />
+                </Button>
+                <Menu appearance="record" aria-label={command.label}>
+                  <MenuGroup>
+                    {command.menu.map((item) => (
+                      <MenuItem
+                        key={item.id}
+                        id={item.id}
+                        appearance="record"
+                        onAction={item.onAction}
+                      >
+                        {item.label}
+                      </MenuItem>
+                    ))}
+                  </MenuGroup>
+                </Menu>
+              </MenuTrigger>
+            );
+          }
           if (command.splitLabel) {
             return (
               <div key={command.id} data-record-split className="flex items-center">

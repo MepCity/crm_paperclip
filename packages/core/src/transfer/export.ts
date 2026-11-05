@@ -20,8 +20,10 @@ export function exportFields(
   fields: readonly FieldDefinition[],
   request: ExportRequest,
 ): FieldDefinition[] {
-  // The identifier is always emitted once as the first column.
-  const allowed = fields.filter((field) => field.apiName !== "id" && field.views.view);
+  // The identifier is always emitted once as the first column. Subforms (e.g. line items) are not part of CSV.
+  const allowed = fields.filter(
+    (field) => field.apiName !== "id" && field.views.view && field.dataType !== "subform",
+  );
   const selected =
     request.fields === "all"
       ? []

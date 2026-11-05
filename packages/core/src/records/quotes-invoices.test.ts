@@ -249,4 +249,26 @@ describe("Quotes and Invoices", () => {
     for (const record of byProduct.records)
       expect(JSON.stringify(record.fields.Quoted_Items)).toContain("310000000000000000");
   }, 30_000);
+  it("allows creating a quote or invoice without lines when allowEmptyLines is true", async () => {
+    const service = make();
+    const quote = await service.create(
+      "Quotes",
+      { Subject: "Imported Quote" },
+      { allowEmptyLines: true },
+    );
+    expect(quote.fields.Subject).toBe("Imported Quote");
+    expect(quote.fields.Quoted_Items).toEqual([]);
+    expect(quote.fields.Sub_Total).toBe(0);
+    expect(quote.fields.Grand_Total).toBe(0);
+
+    const invoice = await service.create(
+      "Invoices",
+      { Subject: "Imported Invoice" },
+      { allowEmptyLines: true },
+    );
+    expect(invoice.fields.Subject).toBe("Imported Invoice");
+    expect(invoice.fields.Invoiced_Items).toEqual([]);
+    expect(invoice.fields.Sub_Total).toBe(0);
+    expect(invoice.fields.Grand_Total).toBe(0);
+  });
 });

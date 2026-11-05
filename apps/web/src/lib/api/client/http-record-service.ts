@@ -343,6 +343,13 @@ export function createHttpRecordService({
         { method: operations.convertLead.method, body: { account, contact, deal } },
       )) as ConvertLeadResult;
     },
+    async convertQuoteToInvoice(quoteId) {
+      const result = (await request(
+        operationPath(operations.convertLead, { module: "Quotes", recordId: quoteId }),
+        { method: operations.convertLead.method },
+      )) as { id: string };
+      return result.id;
+    },
     async deduplicate(module, fields) {
       return (await request(operationPath(operations.deduplicate, { module }), {
         method: operations.deduplicate.method,

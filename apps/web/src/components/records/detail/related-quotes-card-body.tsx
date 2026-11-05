@@ -24,12 +24,14 @@ const QUOTES_CARD_COLUMNS = [
 export interface RelatedQuotesCardBodyProps {
   managerRecord: RecordData;
   filterField?: string;
+  columns?: readonly string[];
   quoteRecordPath: (recordId: RecordId) => string;
 }
 
 export function RelatedQuotesCardBody({
   managerRecord,
   filterField = "Quoted_Items.Product_Name",
+  columns: columnsProp,
   quoteRecordPath,
 }: RelatedQuotesCardBodyProps) {
   const recordLabel = useRecordLabel();
@@ -87,9 +89,10 @@ export function RelatedQuotesCardBody({
     );
   }
 
-  const columns = QUOTES_CARD_COLUMNS.map((apiName) => fieldsByName.get(apiName)).filter(
-    (field): field is NonNullable<typeof field> => field !== undefined,
-  );
+  const columnNames = columnsProp ?? QUOTES_CARD_COLUMNS;
+  const columns = columnNames
+    .map((apiName) => fieldsByName.get(apiName))
+    .filter((field): field is NonNullable<typeof field> => field !== undefined);
 
   return (
     <div className="overflow-x-auto">

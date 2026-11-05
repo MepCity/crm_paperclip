@@ -531,6 +531,106 @@ test.describe("Accounts record detail", () => {
     );
     ignoreFailedResponses(pageErrors, [400]);
   });
+  test("Quotes and Invoices cards render with columns, list records and row click opens detail", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+
+    // Quotes related card
+    const quotes = page.locator("#related-list-quotes");
+    await quotes.scrollIntoViewIfNeeded();
+    await expect(quotes).toBeVisible();
+    await expect(quotes.getByRole("heading", { name: "Quotes" })).toBeVisible();
+    await expect(quotes.getByRole("button", { name: "New" })).toBeVisible();
+    await expect(quotes.getByRole("table")).toBeVisible();
+    await expect(quotes.getByRole("columnheader", { name: "Subject" })).toBeVisible();
+    await expect(quotes.getByRole("columnheader", { name: "Quote Stage" })).toBeVisible();
+    await expect(quotes.getByRole("columnheader", { name: "Grand Total" })).toBeVisible();
+    await expect(quotes.getByRole("columnheader", { name: "Quote Owner" })).toBeVisible();
+
+    const quoteLink = quotes.getByRole("link", { name: "Quote 1", exact: true });
+    await expect(quoteLink).toBeVisible();
+    await quoteLink.click();
+    await expect(page).toHaveURL(moduleRecordPath(org.slug, "Quotes", "330000000000000000"));
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+
+    // Invoices related card
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const invoices = page.locator("#related-list-invoices");
+    await invoices.scrollIntoViewIfNeeded();
+    await expect(invoices).toBeVisible();
+    await expect(invoices.getByRole("heading", { name: "Invoices" })).toBeVisible();
+    await expect(invoices.getByRole("button", { name: "New" })).toBeVisible();
+    await expect(invoices.getByRole("table")).toBeVisible();
+    await expect(invoices.getByRole("columnheader", { name: "Subject" })).toBeVisible();
+    await expect(invoices.getByRole("columnheader", { name: "Status" })).toBeVisible();
+    await expect(invoices.getByRole("columnheader", { name: "Grand Total" })).toBeVisible();
+    await expect(invoices.getByRole("columnheader", { name: "Invoice Owner" })).toBeVisible();
+
+    const invoiceLink = invoices.getByRole("link", { name: "Invoice 1", exact: true });
+    await expect(invoiceLink).toBeVisible();
+    await invoiceLink.click();
+    await expect(page).toHaveURL(moduleRecordPath(org.slug, "Invoices", "350000000000000000"));
+    await expect(page.locator("[data-record-frame]")).toBeVisible();
+
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Quotes and Invoices cards New button opens create form pre-filling Account Name", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+
+    // Quotes related card
+    const quotes = page.locator("#related-list-quotes");
+    await quotes.scrollIntoViewIfNeeded();
+    await expect(quotes.getByRole("button", { name: "New" })).toBeVisible();
+    await quotes.getByRole("button", { name: "New" }).click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, "Quotes"));
+    await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+      "Account 001",
+    );
+
+    // Return to account and click New Invoice from card -> create invoice prefilling Account Name
+    await openAccountDetail(page, org.slug, PRIMARY_ACCOUNT_ID);
+    const invoices = page.locator("#related-list-invoices");
+    await invoices.scrollIntoViewIfNeeded();
+    await expect(invoices.getByRole("button", { name: "New" })).toBeVisible();
+    await invoices.getByRole("button", { name: "New" }).click();
+    await expect(page).toHaveURL(moduleCreatePath(org.slug, "Invoices"));
+    await expect(page.getByRole("textbox", { name: "Account Name", exact: true })).toHaveValue(
+      "Account 001",
+    );
+
+    ignoreFailedResponses(pageErrors, [400]);
+  });
+
+  test("Quotes and Invoices cards empty state on account without records", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    await openAccountDetail(page, org.slug, EMPTY_RELATED_ACCOUNT_ID);
+
+    const quotes = page.locator("#related-list-quotes");
+    await quotes.scrollIntoViewIfNeeded();
+    await expect(quotes.getByText("No records found")).toBeVisible();
+    await expect(quotes.getByRole("table")).toHaveCount(0);
+
+    const invoices = page.locator("#related-list-invoices");
+    await invoices.scrollIntoViewIfNeeded();
+    await expect(invoices.getByText("No records found")).toBeVisible();
+    await expect(invoices.getByRole("table")).toHaveCount(0);
+
+    ignoreFailedResponses(pageErrors, [400]);
+  });
 });
 
 type Box = { x: number; y: number; width: number; height: number };

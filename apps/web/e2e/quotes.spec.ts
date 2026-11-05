@@ -47,6 +47,36 @@ test("Quote create with lines, totals, detail, edit quantity", async ({ page }) 
   await expect(page.locator('[data-total="grand"]')).toHaveText(money(grand + 100), {
     timeout: 60_000,
   });
+
+  // Print preview for Quote
+  await page.getByRole("link", { name: "Print Preview" }).first().click();
+  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Quotes/\\d+/print$`));
+  await expect(page.locator(".print-page")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Print" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Close" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "ZZ e2e Quote" })).toBeVisible();
+  await page.getByRole("button", { name: "Close" }).click();
+  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Quotes/\\d+$`));
+
+  // Convert Quote to Invoice
+  await page.getByRole("button", { name: "Convert" }).first().click();
+  await page.getByRole("menuitem", { name: "Invoice" }).click();
+  const convertDialog = page.getByRole("alertdialog");
+  await expect(convertDialog.getByRole("heading", { name: "Convert Quote" })).toBeVisible();
+  await convertDialog.getByRole("button", { name: "Convert" }).click();
+
+  // Redirected to new Invoice
+  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Invoices/\\d+$`), {
+    timeout: 60_000,
+  });
+  await expect(page.getByRole("heading", { name: "ZZ e2e Quote" })).toBeVisible();
+  await expect(page.locator('[data-total="grand"]')).toHaveText(money(grand + 100));
+
+  // Print preview for Invoice
+  await page.getByRole("link", { name: "Print Preview" }).first().click();
+  await expect(page).toHaveURL(new RegExp(`/crm/${org.slug}/tab/Invoices/\\d+/print$`));
+  await expect(page.locator(".print-page")).toBeVisible();
+  await expect(page.getByRole("heading", { name: "ZZ e2e Quote" })).toBeVisible();
 });
 
 test("Quote detail related lists and Created Time column", async ({ page }) => {

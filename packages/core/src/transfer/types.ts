@@ -12,6 +12,9 @@ export const IMPORT_MODULES = [
   "Calls",
   "Solutions",
   "Cases",
+  "Products",
+  "Quotes",
+  "Invoices",
 ] as const;
 export const TRANSFER_MODULES = IMPORT_MODULES;
 export type TransferModule = (typeof TRANSFER_MODULES)[number];

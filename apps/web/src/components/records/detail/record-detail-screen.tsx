@@ -16,7 +16,7 @@ import { DetailsCard } from "@/components/records/detail/details-card";
 import { LastUpdateLabel } from "@/components/records/detail/last-update-label";
 import { NumericDatesProvider } from "@/components/records/detail/numeric-dates-context";
 import { RECORD_DETAIL_RAIL_VISIBLE_KEY } from "@/components/records/detail/record-detail-rail";
-import { RecordHeader } from "@/components/records/detail/record-header";
+import { type RecordCommand, RecordHeader } from "@/components/records/detail/record-header";
 import { RecordPageFrame } from "@/components/records/detail/record-page-frame";
 import { RecordRailToggle } from "@/components/records/detail/record-rail-toggle";
 import { TimelineSurface } from "@/components/records/detail/timeline";
@@ -32,6 +32,7 @@ import { useUiTranslations } from "@/i18n/client-provider";
 import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { useRecordLabel } from "@/i18n/record-labels";
 import {
+  useConvertQuoteToInvoice,
   useDeleteRecords,
   useHomeCurrency,
   useModule,
@@ -165,6 +166,7 @@ export function RecordDetailScreen({
   const [deleteError, setDeleteError] = useState<string | null>(null);
   const updateRecord = useUpdateRecord(moduleApiName);
   const deleteRecords = useDeleteRecords(moduleApiName);
+  const convertQuoteToInvoiceMutation = useConvertQuoteToInvoice();
   const listContext = useModuleListContext(orgSlug, moduleApiName);
   const viewsQueryEnabled = listContext === null;
   const moduleQuery = useModule(moduleApiName);
@@ -596,12 +598,16 @@ export function RecordDetailScreen({
             commands={(rules.buildHeaderCommands
               ? rules.buildHeaderCommands(displayRecord, {
                   editHref: paths.edit(orgSlug, definition.tab, recordId),
+                  printHref: moduleRecordPrintPath(orgSlug, definition.tab, recordId),
+                  orgSlug,
                   save: persistRecord,
                   navigate: (href) => router.push(href),
                   confirm: (request) => {
                     setHeaderConfirmError(null);
                     setHeaderConfirm(request);
                   },
+                  convertQuoteToInvoice: () =>
+                    convertQuoteToInvoiceMutation.mutateAsync({ quoteId: recordId }),
                 })
               : [
                   ...(rules.headerCommands ?? []),
@@ -612,7 +618,20 @@ export function RecordDetailScreen({
                     href: paths.edit(orgSlug, definition.tab, recordId),
                   },
                 ]
-            ).map((command) => ({ ...command, label: recordLabel(command.label) }))}
+            ).map((command): RecordCommand => {
+              const label = recordLabel(command.label);
+              if (command.menu) {
+                return {
+                  ...command,
+                  label,
+                  menu: command.menu.map((item) => ({ ...item, label: recordLabel(item.label) })),
+                };
+              }
+              return {
+                ...command,
+                label,
+              };
+            })}
             menuGroups={moreMenuGroups.map((group) => ({
               ...group,
               items: group.items.map((item) => ({ ...item, label: recordLabel(item.label) })),

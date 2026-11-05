@@ -2,6 +2,8 @@ import { createElement } from "react";
 import { ContactRolesCardBody } from "@/components/records/detail/contact-roles-card-body";
 import { DealStageHistoryCardBody } from "@/components/records/detail/deal-stage-history-card-body";
 import { RelatedCasesCardBody } from "@/components/records/detail/related-cases-card-body";
+import { RelatedInvoicesCardBody } from "@/components/records/detail/related-invoices-card-body";
+import { RelatedQuotesCardBody } from "@/components/records/detail/related-quotes-card-body";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
 import { emailsCard } from "../emails/record-card";
@@ -28,6 +30,8 @@ export type DealsRelatedListBadges = {
 
 export type DealsRelatedListHandlers = {
   onCasesNew?: () => void;
+  onQuotesNew?: () => void;
+  onInvoicesNew?: () => void;
 };
 
 export type CreateDealsRelatedListsOptions = {
@@ -314,9 +318,18 @@ export function createDealsRelatedLists(
           id: "new-quote",
           label: "New",
           type: "button",
-          moduleKey: "P2",
+          onAction: handlers.onQuotesNew,
         },
       ],
+      renderBody: ({ record, recordPath }) =>
+        record
+          ? createElement(RelatedQuotesCardBody, {
+              managerRecord: record,
+              filterField: "Deal_Name",
+              columns: ["Subject", "Quote_Stage", "Grand_Total", "Owner"],
+              quoteRecordPath: (id) => recordPath("Quotes", id),
+            })
+          : null,
       emptyStateText: "No records found",
     },
     {
@@ -474,9 +487,18 @@ export function createDealsRelatedLists(
           id: "new-invoice",
           label: "New",
           type: "button",
-          moduleKey: "P2",
+          onAction: handlers.onInvoicesNew,
         },
       ],
+      renderBody: ({ record, recordPath }) =>
+        record
+          ? createElement(RelatedInvoicesCardBody, {
+              managerRecord: record,
+              filterField: "Deal_Name__s",
+              columns: ["Subject", "Status", "Grand_Total", "Owner"],
+              invoiceRecordPath: (id) => recordPath("Invoices", id),
+            })
+          : null,
       emptyStateText: "No records found",
     },
   ];

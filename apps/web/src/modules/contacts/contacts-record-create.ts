@@ -89,3 +89,43 @@ export function openCaseCreateWithContact(
   });
   navigate(moduleCreatePath(orgSlug, "Cases"));
 }
+
+export function openQuoteCreateWithContact(
+  orgSlug: string,
+  contact: Pick<RecordData, "id" | "fields">,
+  navigate: (path: string) => void,
+): void {
+  const account = accountLookupOfContact(contact.fields);
+  writeRecordCreatePrefill(orgSlug, {
+    module: "Quotes",
+    fields: {
+      Contact_Name: {
+        module: "Contacts",
+        id: contact.id,
+        name: contactDisplayName(contact.fields),
+      },
+      ...(account ? { Account_Name: account } : {}),
+    },
+  });
+  navigate(moduleCreatePath(orgSlug, "Quotes"));
+}
+
+export function openInvoiceCreateWithContact(
+  orgSlug: string,
+  contact: Pick<RecordData, "id" | "fields">,
+  navigate: (path: string) => void,
+): void {
+  const account = accountLookupOfContact(contact.fields);
+  writeRecordCreatePrefill(orgSlug, {
+    module: "Invoices",
+    fields: {
+      Contact_Name: {
+        module: "Contacts",
+        id: contact.id,
+        name: contactDisplayName(contact.fields),
+      },
+      ...(account ? { Account_Name: account } : {}),
+    },
+  });
+  navigate(moduleCreatePath(orgSlug, "Invoices"));
+}
