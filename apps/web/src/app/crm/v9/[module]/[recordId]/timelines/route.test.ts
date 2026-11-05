@@ -13,6 +13,10 @@ const ctx: OrgContext = {
 const state = { session: true as boolean };
 const records = createFixtureRecordService(ctx);
 
+vi.mock("@crm/core/access", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@crm/core/access")>()),
+  getAccessSnapshot: vi.fn(async () => ({ profileKind: "administrator" })),
+}));
 vi.mock("@crm/core", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@crm/core")>()),
   getSession: vi.fn(async () => (state.session ? { user: { id: ctx.userId } } : null)),
