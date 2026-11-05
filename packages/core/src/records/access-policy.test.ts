@@ -95,4 +95,70 @@ describe("RecordAccessPolicy on the fixture record service (ADR 0017 §11.3)", (
       await owner.count("Leads", { viewId: "all-leads" }),
     );
   });
+
+  describe("service matrix", () => {
+    const mine = async (service: ReturnType<typeof viewer>, n: number) => {
+      const ids: string[] = [];
+      for (let i = 0; i < n; i++)
+        ids.push(
+          (await service.create("Leads", { Last_Name: `Matrix ${i}`, Company: "MatrixCo" })).id,
+        );
+      return ids;
+    };
+
+    it("gives one identical visible id set on list, count, summarize and search", async () => {
+      const service = viewer(snapshotFor("viewer", { hidden: ["Description"] }));
+      const before = (await service.list("Leads", { ...query, perPage: 100 })).records.length;
+      const ids = [...(await mine(service, 3))].sort();
+      expect(before).toBeGreaterThanOrEqual(0);
+      const list = await service.list("Leads", { ...query, perPage: 50 });
+      expect(list.records.map((r) => r.id).sort()).toEqual(ids);
+      expect(await service.count("Leads", { viewId: "all-leads" })).toBe(ids.length);
+      const groups = await service.summarize("Leads", { viewId: "all-leads", groupBy: "Lead_Source" });
+      expect(groups.reduce((sum, g) => sum + g.count, 0)).toBe(ids.length);
+      const found = await service.search({ text: "Matrix", modules: ["Leads"] });
+      expect(found.flatMap((g) => g.records.map((r) => r.id)).sort()).toEqual(ids);
+      expect(found.reduce((sum, g) => sum + g.total, 0)).toBe(ids.length);
+    });
+
+    it("does not leak a hidden field through aggregates", async () => {
+      const service = viewer(snapshotFor("viewer", { hidden: ["Lead_Source"] }));
+      await mine(service, 1);
+      await expect(service.summarize("Leads", { viewId: "all-leads", groupBy: "Lead_Source" })).rejects.toBeInstanceOf(
+        ForbiddenError,
+      );
+    });
+
+    it("refuses writes to hidden fields and flags partial access with $access", async () => {
+      const service = viewer(snapshotFor("viewer", { hidden: ["Description"] }));
+      await expect(
+        service.create("Leads", { Last_Name: "X", Company: "Y", Description: "z" }),
+      ).rejects.toBeInstanceOf(ForbiddenError);
+      const readOnly = viewer(snapshotFor("viewer", { defaults: "public_read" }));
+      const row = (await readOnly.list("Leads", { ...query, perPage: 100 })).records.find(
+        (r) => r.fields.Owner === "owner",
+      );
+      expect(row?.$access).toBe("read");
+      const own = viewer(snapshotFor("viewer"));
+      const [id] = await mine(own, 1);
+      expect((await own.get("Leads", id ?? "")).$access).toBeUndefined();
+    });
+
+    it("makes notes follow the parent record level", async () => {
+      const seeded = (await owner.list("Leads", { ...query, perPage: 100 })).records.find(
+        (r) => r.fields.Owner === "owner",
+      );
+      const note = await owner.create("Notes", {
+        Parent_Id: { module: "Leads", id: seeded?.id ?? "" },
+        Note_Content: "private note",
+      });
+      const stranger = viewer(snapshotFor("viewer"));
+      await expect(stranger.get("Notes", note.id)).rejects.toBeInstanceOf(NotFoundError);
+      const reader = viewer(snapshotFor("viewer", { defaults: "public_read" }));
+      expect((await reader.get("Notes", note.id)).id).toBe(note.id);
+      await expect(reader.update("Notes", note.id, { Note_Content: "x" })).rejects.toBeInstanceOf(
+        ForbiddenError,
+      );
+    });
+  });
 });
