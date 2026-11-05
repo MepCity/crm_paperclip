@@ -6,9 +6,11 @@ import { SettingsNavigation } from "@/components/shell/settings-navigation";
 
 export function SettingsLayoutClient({
   orgSlug,
+  canManageAccess,
   children,
 }: {
   orgSlug: string;
+  canManageAccess: boolean;
   children: ReactNode;
 }) {
   const pathname = usePathname();
@@ -26,7 +28,7 @@ export function SettingsLayoutClient({
 
   return (
     <div className="flex flex-col gap-6 p-6 md:flex-row">
-      <SettingsNavigation orgSlug={orgSlug} />
+      <SettingsNavigation orgSlug={orgSlug} canManageAccess={canManageAccess} />
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   );
