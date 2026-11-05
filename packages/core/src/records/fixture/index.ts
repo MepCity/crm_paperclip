@@ -11,6 +11,11 @@ import {
 } from "../../errors";
 import type { OrgContext } from "../../tenancy/types";
 import {
+  createRecordAccessChecker,
+  type RecordAccessChecker,
+  type RecordAccessSource,
+} from "../access-policy";
+import {
   activityDate,
   activityParentIds,
   activityParentModules,
@@ -164,6 +169,11 @@ const dropIgnored = (
     : input;
 
 export interface FixtureRecordServiceOptions extends FixtureHistoryPermissions {
+  /**
+   * Record access policy source (ADR 0017 §6): applied in the single candidate-selection step
+   * and on get/write. Absent = system actor (automation, worker, tests).
+   */
+  access?: RecordAccessSource;
   customization?: CustomizationPort;
   /** Internal ephemeral schema integration; shared by every service for this organization. */
   schema?: InMemorySchemaCoordinator;
@@ -427,6 +437,25 @@ export function createFixtureRecordService(
     if (module === "Notes" && !noteParentVisible(fields))
       throw new NotFoundError("Record not found.");
   };
+  let checkerPromise: Promise<RecordAccessChecker | undefined> | undefined;
+  const accessFor = () =>
+    // One snapshot per service instance (one request); undefined = system actor.
+    (checkerPromise ??= options?.access
+      ? options.access().then(createRecordAccessChecker)
+      : Promise.resolve(undefined));
+  const assertRecordLevel = async (
+    module: string,
+    ids: readonly string[],
+    operation: "read" | "edit" | "delete",
+  ) => {
+    const acc = await accessFor();
+    if (!acc) return;
+    // Atomic (§4.6): every selected record must pass; invisible ids count as missing.
+    for (const id of ids) {
+      const record = moduleStore(module).records.get(id);
+      if (record) acc.assert(module, record.fields, operation);
+    }
+  };
   const recordFor = (module: string, id: string) => {
     const record = moduleStore(module).records.get(id);
     if (!record) throw new NotFoundError("Record not found.");
@@ -587,6 +616,8 @@ export function createFixtureRecordService(
     now = clock(),
   ) => {
     const bundle = bundleFor(module);
+    const acc = await accessFor();
+    acc?.assertCriteria(module, query.filters);
     if (query.systemFilters !== undefined)
       validateSystemFilters(query.systemFilters, {
         module,
@@ -653,6 +684,7 @@ export function createFixtureRecordService(
     const storedRows = [...moduleStore(module).records.values()];
     bundle.orderRows?.(storedRows);
     return storedRows
+      .filter((record) => !acc || acc.visible(module, record.fields))
       .filter((record) => module !== "Notes" || noteParentVisible(record.fields))
       .filter((record) => module !== "Attachments" || record.fields.$state === "ready")
       .filter(
@@ -671,7 +703,8 @@ export function createFixtureRecordService(
           (!campaignMembers || campaignMembers.has(record.id)) &&
           (!query.activityFilter ||
             matchesActivityFilter(activities?.get(record.id) ?? [], query.activityFilter, now)),
-      );
+      )
+      .map((record) => (acc ? acc.project(module, record) : record));
   };
   const validateIds = (ids: readonly string[]) => {
     if (ids.length < 1 || ids.length > 500)
@@ -1462,6 +1495,7 @@ export function createFixtureRecordService(
       const fieldMap = new Map(bundle.metadata.fields.map((field) => [field.apiName, field]));
       const applied = query.sort ?? view.sort ?? DEFAULT_LIST_SORT;
       const now = clock();
+      (await accessFor())?.assertCriteria(module, undefined, applied);
       const rows = sortRecords(await matching(module, query, true, now), applied, fieldMap);
       const start = (query.page - 1) * query.perPage;
       const activities = query.includeActivitySummary ? linkedActivities(module, now) : undefined;
@@ -1496,6 +1530,7 @@ export function createFixtureRecordService(
       return (await matching(module, query)).length;
     },
     async summarize(module, query) {
+      (await accessFor())?.assertCriteria(module, query.filters, undefined, query.groupBy);
       const metadata = bundleFor(module).metadata;
       const groupField = metadata.fields.find((field) => field.apiName === query.groupBy);
       if (groupField?.dataType !== "picklist")
@@ -1530,9 +1565,12 @@ export function createFixtureRecordService(
     },
     async get(module, id) {
       const record = recordFor(module, id);
+      await assertRecordLevel(module, [id], "read");
       if (module === "Attachments" && record.fields.$state !== "ready")
         throw new NotFoundError("Record not found.");
-      return copy(resolveRead(module, record));
+      const resolved = resolveRead(module, record);
+      const acc = await accessFor();
+      return copy(acc ? acc.project(module, resolved) : resolved);
     },
     async create(module, input, options) {
       assertModuleWritable(module);
@@ -1557,6 +1595,7 @@ export function createFixtureRecordService(
     },
     async update(module, id, input, options) {
       assertModuleWritable(module);
+      await assertRecordLevel(module, [id], "edit");
       assertSourceTimes(options?.sourceTimes);
       const bundle = bundleFor(module);
       recordFor(module, id);
@@ -1605,6 +1644,7 @@ export function createFixtureRecordService(
       const bundle = bundleFor(module);
       const targets = [...ids];
       validateIds(targets);
+      await assertRecordLevel(module, targets, "edit");
       const stringFields = stringFieldNames(bundle);
       const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
       const names = Object.keys(normalized);
@@ -1623,6 +1663,7 @@ export function createFixtureRecordService(
       const bundle = bundleFor(module);
       const targets = [...ids];
       validateIds(targets);
+      await assertRecordLevel(module, targets, "edit");
       const input = { Owner: ownerId };
       validateInput(input, true, bundle.metadata.fields, bundle.managedFields);
       await validateOwner(input);
@@ -1630,6 +1671,7 @@ export function createFixtureRecordService(
     },
     async delete(module, ids) {
       assertModuleWritable(module);
+      await assertRecordLevel(module, ids, "delete");
       moduleExists(module);
       validateIds(ids);
       const records = [...new Set(ids)].map((id) => recordFor(module, id));
