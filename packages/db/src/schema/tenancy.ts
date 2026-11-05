@@ -20,6 +20,7 @@ export const organizations = pgTable(
     id: id(),
     name: text("name").notNull(),
     slug: text("slug").notNull(),
+    ownerUserId: uuid("owner_user_id").references(() => users.id, { onDelete: "restrict" }),
     createdAt: createdAt(),
     updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
   },
@@ -56,6 +57,8 @@ export const invitations = pgTable(
     role: text("role").notNull(),
     tokenHash: text("token_hash").notNull(),
     expiresAt: timestamp("expires_at", { withTimezone: true }).notNull(),
+    profileId: uuid("profile_id"),
+    roleId: uuid("role_id"),
     invitedBy: uuid("invited_by")
       .notNull()
       .references(() => users.id, { onDelete: "restrict" }),

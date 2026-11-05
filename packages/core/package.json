@@ -6,6 +6,7 @@
   "exports": {
     ".": "./src/index.ts",
     "./customization": "./src/customization/index.ts",
+    "./access": "./src/access/index.ts",
     "./records/fixture/metadata-projection": "./src/records/fixture/metadata-projection.ts",
     "./errors": "./src/errors.ts",
     "./feeds": "./src/feeds/index.ts",

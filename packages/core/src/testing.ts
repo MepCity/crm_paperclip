@@ -1,5 +1,9 @@
 import { randomBytes } from "node:crypto";
+import { schema } from "@crm/db";
+import { and, eq } from "drizzle-orm";
+import { bumpAccessVersion } from "./access/seed";
 import { getSession, handleAuthRequest, type SessionUser } from "./auth";
+import { getDb } from "./database";
 import {
   acceptInvitation,
   createInvitation,
@@ -48,4 +52,73 @@ export async function addTestMember(ctx: OrgContext, role: "admin" | "member") {
   const { token } = await createInvitation(ctx, { email: user.email, role });
   await acceptInvitation(user, { token });
   return { user, headers, ctx: await requireOrgContext(headers, ctx.orgSlug) };
+}
+
+/**
+ * Adds a member with an explicit access profile and role (ADR 0017 fixtures). Both default to
+ * the seeded Standard profile in the Manager role.
+ */
+export async function addAccessTestMember(
+  ctx: OrgContext,
+  options: { profile?: "administrator" | "standard" | string; role?: string } = {},
+) {
+  const { user, headers } = await createTestUser();
+  await assignAccess(ctx.orgSlug, user.id, options);
+  return { user, headers, ctx: await requireOrgContext(headers, ctx.orgSlug) };
+}
+
+async function assignAccess(
+  orgSlug: string,
+  userId: string,
+  options: { profile?: string; role?: string },
+) {
+  await getDb().transaction(async (tx) => {
+    const [org] = await tx
+      .select({ id: schema.organizations.id })
+      .from(schema.organizations)
+      .where(eq(schema.organizations.slug, orgSlug));
+    if (!org) throw new Error("Unknown organization");
+    const profileName = options.profile ?? "standard";
+    const [profile] = await tx
+      .select({ id: schema.accessProfiles.id, kind: schema.accessProfiles.kind })
+      .from(schema.accessProfiles)
+      .where(
+        and(
+          eq(schema.accessProfiles.organizationId, org.id),
+          profileName === "administrator" || profileName === "standard"
+            ? eq(schema.accessProfiles.kind, profileName)
+            : eq(schema.accessProfiles.id, profileName),
+        ),
+      );
+    const [role] = await tx
+      .select({ id: schema.accessRoles.id })
+      .from(schema.accessRoles)
+      .where(
+        and(
+          eq(schema.accessRoles.organizationId, org.id),
+          eq(schema.accessRoles.name, options.role ?? "Manager"),
+        ),
+      );
+    if (!profile || !role) throw new Error("Missing seeded profile or role");
+    await tx.insert(schema.memberships).values({
+      organizationId: org.id,
+      userId,
+      role: profile.kind === "administrator" ? "admin" : "member",
+    });
+    await tx
+      .insert(schema.memberAccess)
+      .values({ organizationId: org.id, userId, profileId: profile.id, roleId: role.id });
+    await bumpAccessVersion(tx, org.id);
+  });
+}
+
+/**
+ * E2E fixture: a user with the Standard profile in the Manager role, joined straight to an
+ * existing organisation by slug (no invitation). Sign in with the returned email and password.
+ */
+export async function createStandardManagerUser(orgSlug: string) {
+  const password = randomBytes(12).toString("hex");
+  const { user } = await createTestUser({ name: "Standard Manager", password });
+  await assignAccess(orgSlug, user.id, { profile: "standard", role: "Manager" });
+  return { email: user.email, password, userId: user.id };
 }
