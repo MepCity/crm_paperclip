@@ -1,21 +1,28 @@
 "use client";
 
-import { Building2, Database, MessagesSquare, Settings, Workflow } from "lucide-react";
+import { Building2, Database, MessagesSquare, Settings, ShieldCheck, Workflow } from "lucide-react";
 import { usePathname } from "next/navigation";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useSettingsLabel } from "@/i18n/settings-labels";
 import { useShellLabel } from "@/i18n/shell-labels";
-import { isNavLinkActive, settingsNav } from "./nav";
+import { isNavLinkActive, settingsNavFor } from "./nav";
 
 const itemClasses = "inline-flex rounded-md px-3 py-2 text-md";
 
-export function SettingsNavigation({ orgSlug }: { orgSlug: string }) {
+export function SettingsNavigation({
+  orgSlug,
+  canManageAccess = true,
+}: {
+  orgSlug: string;
+  canManageAccess?: boolean;
+}) {
   const t = useUiTranslations();
   const copy = useSettingsLabel();
   const label = useShellLabel();
   const pathname = usePathname();
+  const visibleLinks = settingsNavFor(canManageAccess);
   return (
     <nav aria-label={t("shell.settingsNavigation")} className="flex shrink-0 flex-col gap-1">
       <Link
@@ -25,9 +32,9 @@ export function SettingsNavigation({ orgSlug }: { orgSlug: string }) {
         <Icons.arrowLeft className="size-4 shrink-0" aria-hidden />
         <span>{t("shell.setupHome")}</span>
       </Link>
-      {settingsNav.map((link, index) => {
+      {visibleLinks.map((link, index) => {
         const active = isNavLinkActive(link, orgSlug, pathname);
-        const heading = link.group && link.group !== settingsNav[index - 1]?.group;
+        const heading = link.group && link.group !== visibleLinks[index - 1]?.group;
         const Icon =
           (
             {
@@ -36,6 +43,8 @@ export function SettingsNavigation({ orgSlug }: { orgSlug: string }) {
               "Data Administration": Database,
               Customization: Settings,
               Automation: Workflow,
+              "Process Management": Workflow,
+              "Users and Control": ShieldCheck,
             } as Record<string, typeof Building2>
           )[link.group ?? ""] ?? Settings;
         return [

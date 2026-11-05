@@ -34,7 +34,7 @@ function NavigationLink({
   const linkRef = useRef<HTMLAnchorElement>(null);
 
   useEffect(() => {
-    if (active && link.id === "social" && linkRef.current) {
+    if (active && (link.id === "social" || link.id === "my-jobs") && linkRef.current) {
       linkRef.current.scrollIntoView?.({ block: "center", inline: "nearest" });
     }
   }, [active, link.id]);

@@ -1,6 +1,10 @@
 import { type Icon, Icons } from "@/components/ui/icon";
+import { english } from "@/i18n/catalogs";
 import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
+import { shellPageTitle } from "@/lib/shell-page-title";
+import { FEEDS_LABEL } from "@/modules/feeds/feeds-labels";
 import { getModuleScreens } from "@/modules/registry";
+import { accessSettingsNav } from "@/modules/settings-access/nav";
 
 /** Pinned-link icon accent tokens from the design system (`tokens.css`). */
 export type NavLinkIconAccentToken =
@@ -42,6 +46,8 @@ export interface NavLink {
   iconAccentToken?: NavLinkIconAccentToken;
   /** Settings navigation heading shown above the first link of each group. */
   group?: string;
+  /** Settings link shown only to viewers with `admin.userManagement`. */
+  requiresUserManagement?: boolean;
 }
 
 export interface NavGroup {
@@ -76,6 +82,7 @@ export const flatNavOrder: readonly string[] = [
   "sales-orders",
   "solutions",
   "social",
+  "feeds",
   "forecasts",
   "purchase-orders",
   "vendors",
@@ -111,6 +118,22 @@ function flatNavLinks(): NavLink[] {
       icon: Icons.messageSquare,
       href: (slug) => moduleTabPath(slug, "Social"),
       activePrefix: (slug) => moduleTabPath(slug, "Social"),
+      match: "prefix",
+    },
+    {
+      id: "my-jobs",
+      label: shellPageTitle.myJobs,
+      icon: Icons.briefcase,
+      href: (slug) => moduleTabPath(slug, "Approvals"),
+      activePrefix: (slug) => moduleTabPath(slug, "Approvals"),
+      match: "prefix",
+    },
+    {
+      id: "feeds",
+      label: FEEDS_LABEL,
+      icon: Icons.newspaper,
+      href: (slug) => moduleTabPath(slug, "Feeds"),
+      activePrefix: (slug) => moduleTabPath(slug, "Feeds"),
       match: "prefix",
     },
   ];
@@ -305,7 +328,34 @@ export const settingsNav: readonly NavLink[] = [
     match: "exact",
     group: "Automation",
   },
+  {
+    id: "approval-processes",
+    label: english.shell["approval-processes"],
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/approval-processes`,
+    activePrefix: (slug) => `/crm/${slug}/settings/approval-processes`,
+    match: "prefix",
+    group: "Process Management",
+  },
+  {
+    id: "review-processes",
+    label: english.shell["review-processes"],
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/review-processes`,
+    activePrefix: (slug) => `/crm/${slug}/settings/review-processes`,
+    match: "prefix",
+    group: "Process Management",
+  },
 ];
+
+export { accessSettingsNav } from "@/modules/settings-access/nav";
+
+/** The settings navigation for a viewer: access links only with `admin.userManagement`. */
+export function settingsNavFor(canManageAccess: boolean): readonly NavLink[] {
+  if (!canManageAccess) return settingsNav;
+  const at = settingsNav.findIndex((link) => link.group !== "General");
+  return [...settingsNav.slice(0, at), ...accessSettingsNav, ...settingsNav.slice(at)];
+}
 
 /**
  * One row of the top-bar `Create Records` menu. Rows carry no icon: the spec measures the same

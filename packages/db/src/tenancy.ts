@@ -34,6 +34,14 @@ export const chatTableContracts: readonly TableContract[] = [
   { name: "chat_presence", privileges: ["SELECT", "INSERT", "UPDATE"] },
 ];
 
+export const feedTableContracts: readonly TableContract[] = [
+  { name: "feed_posts", privileges: ["SELECT", "INSERT", "UPDATE"] },
+  { name: "feed_comments", privileges: ["SELECT", "INSERT", "UPDATE"] },
+  { name: "feed_likes", privileges: ["SELECT", "INSERT", "DELETE"] },
+  { name: "feed_mentions", privileges: ["SELECT", "INSERT", "DELETE"] },
+  { name: "feed_follows", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+];
+
 export const approvalTableContracts: readonly TableContract[] = [
   { name: "approval_processes", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
   { name: "approval_requests", privileges: ["SELECT", "INSERT", "UPDATE"] },
@@ -105,6 +113,7 @@ export async function assertRuntimeCatalog(
     ...chatTableContracts,
     ...accessTableContracts,
     ...approvalTableContracts,
+    ...feedTableContracts,
   ];
   tables = [...installed.filter((base) => !tables.some((t) => t.name === base.name)), ...tables];
   const contracts = new Map(tables.map((table) => [table.name, table]));

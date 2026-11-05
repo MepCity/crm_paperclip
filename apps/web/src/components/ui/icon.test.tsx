@@ -47,6 +47,7 @@ const expectedIcons = [
   "settings",
   "users",
   "bell",
+  "newspaper",
   "store",
   "applications",
   "help",
@@ -105,6 +106,7 @@ const expectedIcons = [
   "wallet",
   "ticket",
   "bookUser",
+  "briefcase",
 ] as const;
 
 test("Icons exposes every icon the primitives need", () => {
