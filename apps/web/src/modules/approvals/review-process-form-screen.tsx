@@ -319,7 +319,7 @@ export function ReviewProcessFormScreen({ orgSlug, processId }: ReviewProcessFor
           <div>
             <label
               htmlFor="rev-proc-role"
-              className="block text-xs font-medium text-text-muted mb-1"
+              className="block text-xs font-semibold text-text-muted mb-1"
             >
               İnceleyici Rolü (örn: admin)
             </label>

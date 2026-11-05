@@ -121,7 +121,7 @@ export function ReviewLogsScreen({ orgSlug }: ReviewLogsScreenProps) {
         <h1 className="text-xl font-bold text-text">Gözden Geçirme Geçmişi</h1>
         <Link
           href={`/crm/${orgSlug}/tab/Approvals`}
-          className="text-sm font-medium text-primary hover:underline inline-flex items-center gap-1.5"
+          className="text-sm font-semibold text-primary hover:underline inline-flex items-center gap-1.5"
         >
           <Icons.arrowLeft className="size-4" />
           <span>Gözden geçirilecek kayıtlara dön</span>
@@ -361,7 +361,7 @@ export function ReviewLogsScreen({ orgSlug }: ReviewLogsScreenProps) {
                 </tr>
               ) : items.length === 0 ? (
                 <tr>
-                  <td colSpan={8} className="py-20 text-center text-text-muted font-medium">
+                  <td colSpan={8} className="py-20 text-center text-text-muted font-semibold">
                     Görüntülenecek kayıt yok
                   </td>
                 </tr>
@@ -372,7 +372,7 @@ export function ReviewLogsScreen({ orgSlug }: ReviewLogsScreenProps) {
                     <td className="px-4 py-3 text-text-muted">{item.module}</td>
                     <td className="px-4 py-3 text-text">{item.processName}</td>
                     <td className="px-4 py-3 text-text-muted">Adım {item.step}</td>
-                    <td className="px-4 py-3 font-medium text-text">
+                    <td className="px-4 py-3 font-semibold text-text">
                       {ACTION_LABELS[item.action] ?? item.action}
                     </td>
                     <td className="px-4 py-3 text-text-muted">{item.actor?.name ?? "Sistem"}</td>

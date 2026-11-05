@@ -126,7 +126,7 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
             role="tab"
             aria-selected={activeTab === "blueprint"}
             onClick={() => handleTabChange("blueprint")}
-            className={`flex items-center gap-2 h-full text-sm font-medium transition-colors border-b-2 -mb-px outline-none cursor-pointer ${
+            className={`flex items-center gap-2 h-full text-sm font-semibold transition-colors border-b-2 -mb-px outline-none cursor-pointer ${
               activeTab === "blueprint"
                 ? "border-primary text-primary font-semibold"
                 : "border-transparent text-text-muted hover:text-text"
@@ -134,7 +134,7 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
           >
             <span>Şema Geçişleri</span>
             <span
-              className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-medium rounded-full border ${
+              className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-semibold rounded-full border ${
                 activeTab === "blueprint"
                   ? "border-primary/40 text-primary bg-primary/10"
                   : "border-border text-text-muted bg-surface-secondary/50"
@@ -150,7 +150,7 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
             role="tab"
             aria-selected={activeTab === "approval"}
             onClick={() => handleTabChange("approval")}
-            className={`flex items-center gap-2 h-full text-sm font-medium transition-colors border-b-2 -mb-px outline-none cursor-pointer ${
+            className={`flex items-center gap-2 h-full text-sm font-semibold transition-colors border-b-2 -mb-px outline-none cursor-pointer ${
               activeTab === "approval"
                 ? "border-primary text-primary font-semibold"
                 : "border-transparent text-text-muted hover:text-text"
@@ -158,7 +158,7 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
           >
             <span>onaylar</span>
             <span
-              className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-medium rounded-full border ${
+              className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-semibold rounded-full border ${
                 activeTab === "approval"
                   ? "border-primary/40 text-primary bg-primary/10"
                   : "border-border text-text-muted bg-surface-secondary/50"
@@ -174,7 +174,7 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
             role="tab"
             aria-selected={activeTab === "review"}
             onClick={() => handleTabChange("review")}
-            className={`flex items-center gap-2 h-full text-sm font-medium transition-colors border-b-2 -mb-px outline-none cursor-pointer ${
+            className={`flex items-center gap-2 h-full text-sm font-semibold transition-colors border-b-2 -mb-px outline-none cursor-pointer ${
               activeTab === "review"
                 ? "border-primary text-primary font-semibold"
                 : "border-transparent text-text-muted hover:text-text"
@@ -182,7 +182,7 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
           >
             <span>İncelemeler</span>
             <span
-              className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-medium rounded-full border ${
+              className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-semibold rounded-full border ${
                 activeTab === "review"
                   ? "border-primary/40 text-primary bg-primary/10"
                   : "border-border text-text-muted bg-surface-secondary/50"
@@ -198,7 +198,7 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
             role="tab"
             aria-selected={activeTab === "image_validation"}
             onClick={() => handleTabChange("image_validation")}
-            className={`flex items-center gap-2 h-full text-sm font-medium transition-colors border-b-2 -mb-px outline-none cursor-pointer ${
+            className={`flex items-center gap-2 h-full text-sm font-semibold transition-colors border-b-2 -mb-px outline-none cursor-pointer ${
               activeTab === "image_validation"
                 ? "border-primary text-primary font-semibold"
                 : "border-transparent text-text-muted hover:text-text"
@@ -206,7 +206,7 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
           >
             <span>Görüntü Doğrulamaları</span>
             <span
-              className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-medium rounded-full border ${
+              className={`inline-flex items-center justify-center min-w-5 h-5 px-1.5 text-xs font-semibold rounded-full border ${
                 activeTab === "image_validation"
                   ? "border-primary/40 text-primary bg-primary/10"
                   : "border-border text-text-muted bg-surface-secondary/50"
@@ -220,7 +220,7 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
         {/* Link: Gözden Geçirme Günlükleri */}
         <Link
           href={`/crm/${orgSlug}/tab/Approvals/history`}
-          className="text-xs font-medium text-primary hover:underline inline-flex items-center gap-1"
+          className="text-xs font-semibold text-primary hover:underline inline-flex items-center gap-1"
         >
           <span>Gözden Geçirme Günlükleri</span>
         </Link>
@@ -239,21 +239,21 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
           {activeTab === "review" && (
             <div className="overflow-x-auto min-h-[300px]">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-border bg-surface-secondary/50 text-sm font-medium text-text-muted">
+                <thead className="border-b border-border bg-surface-secondary/50 text-sm font-semibold text-text-muted">
                   <tr>
-                    <th className="px-4 h-10 font-medium text-text-muted">Kayıt Adı</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">
+                    <th className="px-4 h-10 font-semibold text-text-muted">Kayıt Adı</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">
                       Gözden Geçirilecek Alan Sayısı
                     </th>
                     {/* Status dropdown filter */}
-                    <th className="px-4 h-10 font-medium text-text-muted relative">
+                    <th className="px-4 h-10 font-semibold text-text-muted relative">
                       <button
                         type="button"
                         onClick={() => {
                           setStatusDropdownOpen((v) => !v);
                           setModuleDropdownOpen(false);
                         }}
-                        className="inline-flex items-center gap-1 font-medium text-text hover:text-primary transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 font-semibold text-text hover:text-primary transition-colors cursor-pointer"
                       >
                         <span>{activeStatusLabel}</span>
                         <Icons.chevronDown
@@ -283,18 +283,18 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
                         </div>
                       )}
                     </th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Oluşturan</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Gönderme Tarihi</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">İşlem Adı</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Oluşturan</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Gönderme Tarihi</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">İşlem Adı</th>
                     {/* Module dropdown filter */}
-                    <th className="px-4 h-10 font-medium text-text-muted relative">
+                    <th className="px-4 h-10 font-semibold text-text-muted relative">
                       <button
                         type="button"
                         onClick={() => {
                           setModuleDropdownOpen((v) => !v);
                           setStatusDropdownOpen(false);
                         }}
-                        className="inline-flex items-center gap-1 font-medium text-text hover:text-primary transition-colors cursor-pointer"
+                        className="inline-flex items-center gap-1 font-semibold text-text hover:text-primary transition-colors cursor-pointer"
                       >
                         <span>{activeModuleLabel}</span>
                         <Icons.chevronDown
@@ -335,7 +335,7 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
                         </div>
                       )}
                     </th>
-                    <th className="px-4 h-10 font-medium text-text-muted text-right">Düzen</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted text-right">Düzen</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -365,7 +365,7 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
                         <td className="px-4 py-3 font-semibold text-text">{item.recordLabel}</td>
                         <td className="px-4 py-3 text-text-muted">1</td>
                         <td className="px-4 py-3">
-                          <span className="inline-flex rounded px-2 py-0.5 text-xs font-medium bg-surface-secondary text-text">
+                          <span className="inline-flex rounded px-2 py-0.5 text-xs font-semibold bg-surface-secondary text-text">
                             {item.status}
                           </span>
                         </td>
@@ -390,15 +390,15 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
           {activeTab === "approval" && (
             <div className="overflow-x-auto min-h-[300px]">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-border bg-surface-secondary/50 text-sm font-medium text-text-muted">
+                <thead className="border-b border-border bg-surface-secondary/50 text-sm font-semibold text-text-muted">
                   <tr>
-                    <th className="px-4 h-10 font-medium text-text-muted">Kayıt Adı</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Modül</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">İşlem Adı</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Adım</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Gönderen</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Gönderme Tarihi</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Durum</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Kayıt Adı</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Modül</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">İşlem Adı</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Adım</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Gönderen</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Gönderme Tarihi</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Durum</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -453,14 +453,14 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
           {activeTab === "blueprint" && (
             <div className="overflow-x-auto min-h-[300px]">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-border bg-surface-secondary/50 text-sm font-medium text-text-muted">
+                <thead className="border-b border-border bg-surface-secondary/50 text-sm font-semibold text-text-muted">
                   <tr>
-                    <th className="px-4 h-10 font-medium text-text-muted">Kayıt Adı</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Tüm Modüller ▾</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Tüm Sahipler ▾</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Tümü ▾</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Şema</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Eylemler</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Kayıt Adı</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Tüm Modüller ▾</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Tüm Sahipler ▾</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Tümü ▾</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Şema</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Eylemler</th>
                   </tr>
                 </thead>
                 <tbody>
@@ -481,15 +481,17 @@ export function MyJobsScreen({ orgSlug }: MyJobsScreenProps) {
           {activeTab === "image_validation" && (
             <div className="overflow-x-auto min-h-[300px]">
               <table className="w-full text-left text-sm">
-                <thead className="border-b border-border bg-surface-secondary/50 text-sm font-medium text-text-muted">
+                <thead className="border-b border-border bg-surface-secondary/50 text-sm font-semibold text-text-muted">
                   <tr>
-                    <th className="px-4 h-10 font-medium text-text-muted">Kayıt Adı</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Tüm Modüller ▾</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Oluşturan:</th>
-                    <th className="px-4 h-10 font-medium text-text-muted">
+                    <th className="px-4 h-10 font-semibold text-text-muted">Kayıt Adı</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Tüm Modüller ▾</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">Oluşturan:</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">
                       Hata Durumundaki Eylem
                     </th>
-                    <th className="px-4 h-10 font-medium text-text-muted">Bekleyen Resim Sayısı</th>
+                    <th className="px-4 h-10 font-semibold text-text-muted">
+                      Bekleyen Resim Sayısı
+                    </th>
                   </tr>
                 </thead>
                 <tbody>

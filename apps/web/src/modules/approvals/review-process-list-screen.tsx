@@ -77,7 +77,7 @@ export function ReviewProcessListScreen({ orgSlug }: ReviewProcessListScreenProp
           <h1 className="text-xl font-bold text-text">Gözden Geçirme Süreci</h1>
           <button
             type="button"
-            className="text-xs text-primary hover:underline font-medium inline-flex items-center gap-1"
+            className="text-xs text-primary hover:underline font-semibold inline-flex items-center gap-1"
           >
             <Icons.help className="size-3.5" />
             <span>Yardım</span>
@@ -164,7 +164,7 @@ export function ReviewProcessListScreen({ orgSlug }: ReviewProcessListScreenProp
                         onChange={() => handleToggleActive(p)}
                         aria-label={`${p.name} durumunu değiştir`}
                       />
-                      <span className="text-xs text-text-muted font-medium">
+                      <span className="text-xs text-text-muted font-semibold">
                         {p.active ? "Aktif" : "Etkin Değil"}
                       </span>
                     </div>

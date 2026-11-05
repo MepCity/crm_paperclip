@@ -212,7 +212,7 @@ export function ItemDetailPanel({ orgSlug, approvalId, onClose, onDecided }: Ite
                   </span>
                   <Link
                     href={`/crm/${orgSlug}/${detail.request.module}/${detail.request.recordId}`}
-                    className="text-xs text-primary hover:underline font-medium"
+                    className="text-xs text-primary hover:underline font-semibold"
                   >
                     Kayıt Sayfasına Git →
                   </Link>
@@ -223,21 +223,21 @@ export function ItemDetailPanel({ orgSlug, approvalId, onClose, onDecided }: Ite
                 <div className="grid grid-cols-2 gap-2 text-sm pt-2 border-t border-border/50">
                   <div>
                     <span className="text-xs text-text-muted block">Gönderen:</span>
-                    <span className="font-medium text-text">{detail.request.submitter.name}</span>
+                    <span className="font-semibold text-text">{detail.request.submitter.name}</span>
                   </div>
                   <div>
                     <span className="text-xs text-text-muted block">Gönderme Tarihi:</span>
-                    <span className="font-medium text-text">
+                    <span className="font-semibold text-text">
                       {new Date(detail.request.submittedAt).toLocaleString("tr-TR")}
                     </span>
                   </div>
                   <div>
                     <span className="text-xs text-text-muted block">İşlem:</span>
-                    <span className="font-medium text-text">{detail.request.processName}</span>
+                    <span className="font-semibold text-text">{detail.request.processName}</span>
                   </div>
                   <div>
                     <span className="text-xs text-text-muted block">Mevcut Adım:</span>
-                    <span className="font-medium text-text">
+                    <span className="font-semibold text-text">
                       {detail.request.step} / {detail.request.stepCount} ({detail.request.stepName})
                     </span>
                   </div>
@@ -255,7 +255,7 @@ export function ItemDetailPanel({ orgSlug, approvalId, onClose, onDecided }: Ite
                         .map(([key, val]) => (
                           <div key={key} className="truncate">
                             <span className="text-text-muted">{key}: </span>
-                            <span className="font-medium text-text">
+                            <span className="font-semibold text-text">
                               {val === null || val === undefined
                                 ? "-"
                                 : typeof val === "object"
@@ -301,7 +301,7 @@ export function ItemDetailPanel({ orgSlug, approvalId, onClose, onDecided }: Ite
                             >
                               {isPast ? <Icons.check className="size-3.5" /> : st.step}
                             </span>
-                            <span className="font-medium text-sm text-text">{st.name}</span>
+                            <span className="font-semibold text-sm text-text">{st.name}</span>
                           </div>
                           <span className="text-xs text-text-muted">
                             {st.rule === "any"
@@ -317,9 +317,9 @@ export function ItemDetailPanel({ orgSlug, approvalId, onClose, onDecided }: Ite
                               key={appr.id}
                               className="flex items-center justify-between text-xs"
                             >
-                              <span className="text-text font-medium">{appr.name}</span>
+                              <span className="text-text font-semibold">{appr.name}</span>
                               <span
-                                className={`rounded px-1.5 py-0.5 font-medium ${
+                                className={`rounded px-1.5 py-0.5 font-semibold ${
                                   appr.state === "approved"
                                     ? "bg-emerald-100 text-emerald-800"
                                     : appr.state === "rejected"
@@ -370,7 +370,7 @@ export function ItemDetailPanel({ orgSlug, approvalId, onClose, onDecided }: Ite
                           {act.target && (
                             <p className="text-text-muted">
                               Hedef:{" "}
-                              <span className="text-text font-medium">{act.target.name}</span>
+                              <span className="text-text font-semibold">{act.target.name}</span>
                             </p>
                           )}
                           {act.comment && (

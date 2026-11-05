@@ -384,7 +384,7 @@ export function ApprovalProcessListScreen({ orgSlug }: ApprovalProcessListScreen
                           onChange={() => handleToggleActive(p)}
                           aria-label={`${p.name} durumunu değiştir`}
                         />
-                        <span className="text-xs text-text-muted font-medium">
+                        <span className="text-xs text-text-muted font-semibold">
                           {p.active ? "Aktif" : "Etkin Değil"}
                         </span>
                       </div>

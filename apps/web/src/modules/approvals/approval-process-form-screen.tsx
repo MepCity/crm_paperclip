@@ -345,7 +345,7 @@ export function ApprovalProcessFormScreen({ orgSlug, processId }: ApprovalProces
         </h2>
         <div className="space-y-3">
           <div className="flex items-center gap-6">
-            <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-text">
+            <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-text">
               <input
                 type="radio"
                 name="criteriaKind"
@@ -355,7 +355,7 @@ export function ApprovalProcessFormScreen({ orgSlug, processId }: ApprovalProces
               />
               <span>Tüm Kayıtlar (Kriter Yok)</span>
             </label>
-            <label className="flex items-center gap-2 cursor-pointer text-sm font-medium text-text">
+            <label className="flex items-center gap-2 cursor-pointer text-sm font-semibold text-text">
               <input
                 type="radio"
                 name="criteriaKind"
@@ -435,7 +435,7 @@ export function ApprovalProcessFormScreen({ orgSlug, processId }: ApprovalProces
                 <div>
                   <label
                     htmlFor={`step-name-${idx}`}
-                    className="block text-xs font-medium text-text-muted mb-1"
+                    className="block text-xs font-semibold text-text-muted mb-1"
                   >
                     Adım Adı
                   </label>
@@ -452,7 +452,7 @@ export function ApprovalProcessFormScreen({ orgSlug, processId }: ApprovalProces
                 <div>
                   <label
                     htmlFor={`step-kind-${idx}`}
-                    className="block text-xs font-medium text-text-muted mb-1"
+                    className="block text-xs font-semibold text-text-muted mb-1"
                   >
                     Onaylayan Türü
                   </label>
@@ -476,7 +476,7 @@ export function ApprovalProcessFormScreen({ orgSlug, processId }: ApprovalProces
                 <div>
                   <label
                     htmlFor={`step-rule-${idx}`}
-                    className="block text-xs font-medium text-text-muted mb-1"
+                    className="block text-xs font-semibold text-text-muted mb-1"
                   >
                     Onay Kuralı
                   </label>
@@ -496,7 +496,7 @@ export function ApprovalProcessFormScreen({ orgSlug, processId }: ApprovalProces
                 <div>
                   <label
                     htmlFor={`step-roles-${idx}`}
-                    className="block text-xs font-medium text-text-muted mb-1"
+                    className="block text-xs font-semibold text-text-muted mb-1"
                   >
                     Rol Seçin (örn: admin)
                   </label>
@@ -525,7 +525,7 @@ export function ApprovalProcessFormScreen({ orgSlug, processId }: ApprovalProces
                 <div>
                   <label
                     htmlFor={`step-users-${idx}`}
-                    className="block text-xs font-medium text-text-muted mb-1"
+                    className="block text-xs font-semibold text-text-muted mb-1"
                   >
                     Kullanıcı Seçin
                   </label>
@@ -567,7 +567,7 @@ export function ApprovalProcessFormScreen({ orgSlug, processId }: ApprovalProces
               <button
                 type="button"
                 onClick={handleAddOnApproveAction}
-                className="text-xs text-primary hover:underline font-medium"
+                className="text-xs text-primary hover:underline font-semibold"
               >
                 + Ekle
               </button>
@@ -621,7 +621,7 @@ export function ApprovalProcessFormScreen({ orgSlug, processId }: ApprovalProces
               <button
                 type="button"
                 onClick={handleAddOnRejectAction}
-                className="text-xs text-primary hover:underline font-medium"
+                className="text-xs text-primary hover:underline font-semibold"
               >
                 + Ekle
               </button>
