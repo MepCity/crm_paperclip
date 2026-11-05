@@ -7,7 +7,10 @@ import { addTestMember, createTestOrganization } from "../testing";
 import { type FeedDeps, getFeedService } from "./service";
 import type { FeedNotification } from "./types";
 
-function depsFor(ctx: OrgContext, notified?: FeedNotification[]): FeedDeps {
+function depsFor(
+  ctx: OrgContext,
+  notified?: FeedNotification[],
+): FeedDeps & { records: ReturnType<typeof createFixtureRecordService> } {
   const records = createFixtureRecordService(ctx);
   return {
     records,
@@ -22,7 +25,7 @@ function depsFor(ctx: OrgContext, notified?: FeedNotification[]): FeedDeps {
   };
 }
 
-async function newDeal(ctx: OrgContext, deps: FeedDeps, name = "Feed Deal") {
+async function newDeal(ctx: OrgContext, deps: ReturnType<typeof depsFor>, name = "Feed Deal") {
   void ctx;
   const account = await deps.records.create("Accounts", { Account_Name: "Feed Account" });
   const stage = "Qualification";
