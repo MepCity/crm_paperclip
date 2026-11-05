@@ -148,7 +148,6 @@ export const COMPLETED_MODULE_PREFIXES = [
 
 export const ALLOWED_NEW_EXEMPTION_PREFIXES = [
   "apps/web/src/modules/settings-access/",
-  "apps/web/src/components/shell/nav.ts",
   "apps/web/src/components/members/",
   "apps/web/src/app/crm/[orgSlug]/settings/members/",
   "apps/web/src/modules/visits/",

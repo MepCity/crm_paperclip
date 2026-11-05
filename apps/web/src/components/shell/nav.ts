@@ -1,6 +1,7 @@
 import { type Icon, Icons } from "@/components/ui/icon";
 import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
 import { getModuleScreens } from "@/modules/registry";
+import { accessSettingsNav } from "@/modules/settings-access/nav";
 
 /** Pinned-link icon accent tokens from the design system (`tokens.css`). */
 export type NavLinkIconAccentToken =
@@ -309,59 +310,7 @@ export const settingsNav: readonly NavLink[] = [
   },
 ];
 
-/** Access settings links (ADR 0017 §9), shown after the General group to viewers who may manage access. */
-export const accessSettingsNav: readonly NavLink[] = [
-  {
-    id: "profiles",
-    label: "Profiles",
-    icon: Icons.settings,
-    href: (slug) => `/crm/${slug}/settings/profiles`,
-    activePrefix: (slug) => `/crm/${slug}/settings/profiles`,
-    match: "prefix",
-    group: "Users and Control",
-    requiresUserManagement: true,
-  },
-  {
-    id: "roles",
-    label: "Roles",
-    icon: Icons.settings,
-    href: (slug) => `/crm/${slug}/settings/roles`,
-    activePrefix: (slug) => `/crm/${slug}/settings/roles`,
-    match: "prefix",
-    group: "Users and Control",
-    requiresUserManagement: true,
-  },
-  {
-    id: "groups",
-    label: "Groups",
-    icon: Icons.settings,
-    href: (slug) => `/crm/${slug}/settings/groups`,
-    activePrefix: (slug) => `/crm/${slug}/settings/groups`,
-    match: "prefix",
-    group: "Users and Control",
-    requiresUserManagement: true,
-  },
-  {
-    id: "data-sharing",
-    label: "Data Sharing",
-    icon: Icons.settings,
-    href: (slug) => `/crm/${slug}/settings/data-sharing`,
-    activePrefix: (slug) => `/crm/${slug}/settings/data-sharing`,
-    match: "prefix",
-    group: "Users and Control",
-    requiresUserManagement: true,
-  },
-  {
-    id: "field-permissions",
-    label: "Field Permissions",
-    icon: Icons.settings,
-    href: (slug) => `/crm/${slug}/settings/field-permissions`,
-    activePrefix: (slug) => `/crm/${slug}/settings/field-permissions`,
-    match: "prefix",
-    group: "Users and Control",
-    requiresUserManagement: true,
-  },
-];
+export { accessSettingsNav } from "@/modules/settings-access/nav";
 
 /** The settings navigation for a viewer: access links only with `admin.userManagement`. */
 export function settingsNavFor(canManageAccess: boolean): readonly NavLink[] {
