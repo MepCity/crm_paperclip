@@ -61,6 +61,13 @@
     {
       "idx": 8,
       "version": "7",
+      "when": 1793486400000,
+      "tag": "0008_access_control",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "7",
       "when": 1793700000000,
       "tag": "0009_approvals_notifications",
       "breakpoints": true

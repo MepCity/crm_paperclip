@@ -46,19 +46,26 @@ export const INVOICES_FORM_INFORMATION_COLUMNS = [
   ["Excise_Duty", "Sales_Commission", "Status", "Account_Name", "Contact_Name"],
 ] as const;
 
+/** Today as `YYYY-MM-DD` in the user's local time zone (the form model's date shape). */
+function localToday(now = new Date()): string {
+  const pad = (n: number) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
 export function buildInvoicesFormDefaults(): Record<string, FieldValue> {
-  return { Status: "Created" };
+  return { Status: "Created", Invoice_Date: localToday() };
 }
 
 /**
  * Invoice create / edit form rules. Subject and Account Name are required; Owner defaults to the
- * signed-in user; Status defaults to Created. No "Edit page layout" link (no inventory chrome);
+ * signed-in user; Status defaults to Created; Invoice Date to today. No "Edit page layout" link (no inventory chrome);
  * Save / Save and New / Cancel come from the shared shell.
  */
 export const invoicesFormRules: FormRules = {
   owner: "Owner",
   initialFocus: "Owner",
   requiredFields: ["Subject", "Account_Name"],
+  currencies: ["Sales_Commission"],
   fallbackColumns: {
     "Invoice Information": INVOICES_FORM_INFORMATION_COLUMNS,
   },
