@@ -440,9 +440,12 @@ export function createFixtureRecordService(
       throw new NotFoundError("Record not found.");
   };
   const childLevel: ChildLevelResolver = (module, fields, levelOf) => {
-    if (module !== "Notes" && module !== "Attachments") return undefined;
+    if (!["Notes", "Attachments", "Contact_Roles", "Campaign_Members"].includes(module))
+      return undefined;
     let parent: { module: string; id: string } | undefined;
     if (module === "Notes") parent = attachmentParent(fields.Parent_Id);
+    else if (module === "Contact_Roles") parent = attachmentParent(fields.Deal);
+    else if (module === "Campaign_Members") parent = attachmentParent(fields.Campaign);
     else {
       try {
         parent = attachmentUltimateParent(fields as RecordData["fields"], hookContext);

@@ -80,6 +80,7 @@ function requestModule(module: string, request: PermissionRequest): string {
 /** Case-insensitive match of a request module (`leads`) to its catalogue name (`Leads`). */
 export function canonicalModule(value: string): string {
   const lower = value.toLowerCase();
+  if (lower === "events") return "Meetings";
   const all = [
     ...CHILD_MODULES,
     "Leads",

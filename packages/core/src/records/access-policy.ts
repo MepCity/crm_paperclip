@@ -58,6 +58,9 @@ export interface RecordAccessChecker {
   project<T extends { fields: Record<string, FieldValue> }>(module: string, record: T): T;
 }
 
+/** The record store calls Meetings "Events"; the catalogue and snapshot use "Meetings". */
+const catalogueName = (module: string) => (module === "Events" ? "Meetings" : module);
+
 function ownerOf(fields: Readonly<Record<string, FieldValue>>): string | null {
   const owner = fields.Owner;
   if (typeof owner === "string") return owner;
@@ -82,9 +85,10 @@ export function createRecordAccessChecker(
 ): RecordAccessChecker {
   const hiddenCache = new Map<string, ReadonlySet<string>>();
   const readOnlyCache = new Map<string, ReadonlySet<string>>();
-  const collect = (module: string, mode: "hidden" | "read_only") => {
+  const collect = (rawModule: string, mode: "hidden" | "read_only") => {
+    const module = catalogueName(rawModule);
     const found = new Set<string>();
-    for (const field of snapshot.fieldAccess.get(module)?.keys() ?? [])
+    for (const field of snapshot.fieldAccess?.get(module)?.keys() ?? [])
       if (fieldAccess(snapshot, module, field) === mode) found.add(field);
     return found;
   };
@@ -92,8 +96,8 @@ export function createRecordAccessChecker(
     // Child modules (Notes, Attachments) follow their parent record (ADR 0017 §4.3 item 5).
     const child = resolveChild?.(module, fields, level);
     if (child) return child;
-    if (!isCatalogueModule(module)) return "read_write_delete";
-    return recordLevel(snapshot, module, ownerOf(fields));
+    if (!isCatalogueModule(catalogueName(module))) return "read_write_delete";
+    return recordLevel(snapshot, catalogueName(module), ownerOf(fields));
   };
   const checker: RecordAccessChecker = {
     level,
@@ -103,11 +107,13 @@ export function createRecordAccessChecker(
       if (have === "none") throw new NotFoundError("Record not found.");
       if (!levelAllows(have, operation)) throw new ForbiddenError(undefined, "permission_denied");
     },
-    can: (module, action) => can(snapshot, module, action),
+    can: (module, action) => can(snapshot, catalogueName(module), action),
     admin: (name) => snapshot.profileKind === "administrator" || snapshot.permissions.admin[name],
     tool(name, module) {
       if (snapshot.profileKind === "administrator") return true;
-      return (snapshot.permissions.tools[name] as readonly string[]).includes(module);
+      return (snapshot.permissions.tools[name] as readonly string[]).includes(
+        catalogueName(module),
+      );
     },
     assertWrite(module, input, stored) {
       const hidden = checker.hiddenFields(module);
@@ -153,7 +159,8 @@ export function createRecordAccessChecker(
     project(module, record) {
       const hidden = checker.hiddenFields(module);
       const have = level(module, record.fields);
-      const $access = have === "none" ? undefined : have;
+      // Absent `$access` means full access (administrators see exactly what they saw before).
+      const $access = have === "none" || have === "read_write_delete" ? undefined : have;
       const fields =
         hidden.size === 0
           ? record.fields

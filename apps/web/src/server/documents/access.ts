@@ -16,6 +16,7 @@ export const documentsAccessSource: DocumentsAccessSource = {
 };
 
 export async function canReadDocuments(ctx: OrgContext): Promise<boolean> {
-  if (ctx.role !== "admin" && ctx.role !== "member") return false;
+  if (ctx.role === "admin") return true;
+  if (ctx.role !== "member") return false;
   return (await documentsAccessSource.documentsEnabled(ctx)) === true;
 }

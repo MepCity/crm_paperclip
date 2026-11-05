@@ -1,8 +1,8 @@
 import { schema } from "@crm/db";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
-import { bumpAccessVersion, rootRoleId, systemProfileId } from "../access/seed";
 import { buildAccessSnapshot } from "../access/evaluate";
+import { bumpAccessVersion, rootRoleId, systemProfileId } from "../access/seed";
 import { loadAccessData } from "../access/store";
 import { requireUser, type SessionUser } from "../auth";
 import { getDb } from "../database";
