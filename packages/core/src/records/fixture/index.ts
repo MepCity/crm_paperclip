@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { childRecordLevel } from "../../access";
 import { ATTACHMENT_PARENT_MODULES } from "../../attachments/modules";
 import type { CustomizationPort } from "../../customization";
 import type { InMemorySchemaCoordinator } from "../../customization/coordinator";
@@ -11,6 +12,7 @@ import {
 } from "../../errors";
 import type { OrgContext } from "../../tenancy/types";
 import {
+  type ChildLevelResolver,
   createRecordAccessChecker,
   type RecordAccessChecker,
   type RecordAccessSource,
@@ -437,11 +439,29 @@ export function createFixtureRecordService(
     if (module === "Notes" && !noteParentVisible(fields))
       throw new NotFoundError("Record not found.");
   };
+  const childLevel: ChildLevelResolver = (module, fields, levelOf) => {
+    if (module !== "Notes" && module !== "Attachments") return undefined;
+    let parent: { module: string; id: string } | undefined;
+    if (module === "Notes") parent = attachmentParent(fields.Parent_Id);
+    else {
+      try {
+        parent = attachmentUltimateParent(fields as RecordData["fields"], hookContext);
+      } catch {
+        return "none";
+      }
+    }
+    const parentRecord = parent && moduleStore(parent.module).records.get(parent.id);
+    if (!parent || !parentRecord) return "none";
+    const author = fields.Created_By;
+    const authorId =
+      typeof author === "string" ? author : isJsonObject(author) ? author.id : undefined;
+    return childRecordLevel(levelOf(parent.module, parentRecord.fields), authorId === ctx.userId);
+  };
   let checkerPromise: Promise<RecordAccessChecker | undefined> | undefined;
   const accessFor = () =>
     // One snapshot per service instance (one request); undefined = system actor.
     (checkerPromise ??= options?.access
-      ? options.access().then(createRecordAccessChecker)
+      ? options.access().then((snapshot) => createRecordAccessChecker(snapshot, childLevel))
       : Promise.resolve(undefined));
   const assertRecordLevel = async (
     module: string,
@@ -943,6 +963,14 @@ export function createFixtureRecordService(
     const bundle = bundleFor(module);
     if (bundle.childModule) throw new ForbiddenError("Child modules do not support merge.");
     const ids = [...input.duplicateIds];
+    const mergeAccess = await accessFor();
+    if (mergeAccess) {
+      // ADR 0017 §4.7: findAndMerge + RW on the master + RWD on the others.
+      if (!mergeAccess.tool("findAndMerge", module))
+        throw new ForbiddenError(undefined, "permission_denied");
+      await assertRecordLevel(module, [input.masterId], "edit");
+      await assertRecordLevel(module, ids, "delete");
+    }
     if (
       ids.length < 1 ||
       ids.length > 2 ||
@@ -1061,6 +1089,23 @@ export function createFixtureRecordService(
   const convertLead = async (leadId: string, input: ConvertLeadInput) => {
     assertModuleWritable("Leads");
     const sourceLead = recordFor("Leads", leadId);
+    const convertAccess = await accessFor();
+    if (convertAccess) {
+      // ADR 0017 §4.7: tools.convert + RW on the lead + create on created / read on reused targets.
+      if (!convertAccess.tool("convert", "Leads"))
+        throw new ForbiddenError(undefined, "permission_denied");
+      await assertRecordLevel("Leads", [leadId], "edit");
+      for (const [targetModule, target] of [
+        ["Accounts", input.account],
+        ["Contacts", input.contact],
+        ["Deals", input.deal],
+      ] as const) {
+        if (!target) continue;
+        if ("reuseId" in target) await assertRecordLevel(targetModule, [target.reuseId], "read");
+        else if (!convertAccess.can(targetModule, "create"))
+          throw new ForbiddenError(undefined, "permission_denied");
+      }
+    }
     if (!input.contact)
       throw new ValidationError({ contact: ["Choose or create a contact to convert into."] });
     const targets = [
@@ -1339,7 +1384,9 @@ export function createFixtureRecordService(
     async deduplicate(module, fields) {
       assertModuleWritable(module);
       moduleExists(module);
-      if (ctx.role !== "admin") throw new ForbiddenError();
+      const dedupAccess = await accessFor();
+      if (dedupAccess ? !dedupAccess.tool("findAndMerge", module) : ctx.role !== "admin")
+        throw new ForbiddenError(undefined, "permission_denied");
       if (state.deduplicating.has(module))
         throw new ConflictError("Deduplication is already running for this module.");
       state.deduplicating.add(module);
@@ -1589,6 +1636,8 @@ export function createFixtureRecordService(
       );
       validateReferences(module, normalized);
       await validateOwner(normalized);
+      const writer = await accessFor();
+      writer?.assertWrite(module, normalized);
       return atomic({ module, mechanism: "create" }, () =>
         insertRecord(module, normalized, options),
       );
@@ -1612,6 +1661,7 @@ export function createFixtureRecordService(
       );
       validateReferences(module, normalized);
       await validateOwner(normalized);
+      (await accessFor())?.assertWrite(module, normalized, recordFor(module, id).fields);
       return atomic({ module, mechanism: "update" }, () => {
         // Membership resolution may yield; preserve intervening partial writes/deletes.
         const record = recordFor(module, id);
@@ -1656,6 +1706,10 @@ export function createFixtureRecordService(
       validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
+      const writer = await accessFor();
+      if (writer && !writer.tool("massUpdate", module))
+        throw new ForbiddenError(undefined, "permission_denied");
+      writer?.assertWrite(module, normalized);
       writeBatch(module, targets, normalized, "mass_update");
     },
     async changeOwner(module, ids, ownerId) {
@@ -1667,6 +1721,10 @@ export function createFixtureRecordService(
       const input = { Owner: ownerId };
       validateInput(input, true, bundle.metadata.fields, bundle.managedFields);
       await validateOwner(input);
+      const writer = await accessFor();
+      if (writer && !writer.tool("changeOwner", module))
+        throw new ForbiddenError(undefined, "permission_denied");
+      writer?.assertWrite(module, input);
       writeBatch(module, targets, input, "change_owner");
     },
     async delete(module, ids) {

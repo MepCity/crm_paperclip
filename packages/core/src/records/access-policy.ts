@@ -1,14 +1,18 @@
 import {
   type AccessLevel,
   type AccessSnapshot,
+  can,
   fieldAccess,
   isCatalogueModule,
   levelAllows,
+  type ModuleAction,
   type RecordOperation,
   recordLevel,
 } from "../access";
 import { ForbiddenError, NotFoundError } from "../errors";
 import type { Criteria, FieldValue, SortSpec } from "./contract";
+
+export type ModuleTool = "convert" | "findAndMerge" | "changeOwner" | "massUpdate" | "massDelete";
 
 /** Loads the viewer's access snapshot lazily (the fixture service is built synchronously). */
 export type RecordAccessSource = () => Promise<AccessSnapshot>;
@@ -24,6 +28,16 @@ export interface RecordAccessChecker {
     module: string,
     fields: Readonly<Record<string, FieldValue>>,
     operation: RecordOperation,
+  ): void;
+  /** Profile gate for a module action (ADR 0017 §4.1). */
+  can(module: string, action: ModuleAction): boolean;
+  /** Module-list tool permission (`tools.convert`, `tools.findAndMerge`, ...). */
+  tool(name: ModuleTool, module: string): boolean;
+  /** Hidden fields are refused; read-only fields only when the value changes (403 `field_forbidden`). */
+  assertWrite(
+    module: string,
+    input: Readonly<Record<string, FieldValue>>,
+    stored?: Readonly<Record<string, FieldValue>>,
   ): void;
   hiddenFields(module: string): ReadonlySet<string>;
   readOnlyFields(module: string): ReadonlySet<string>;
@@ -41,7 +55,20 @@ function ownerOf(fields: Readonly<Record<string, FieldValue>>): string | null {
   return null;
 }
 
-export function createRecordAccessChecker(snapshot: AccessSnapshot): RecordAccessChecker {
+/**
+ * Resolves the level of a child record (Notes, Attachments) from its parent. `levelOf` is the
+ * checker's own recursive level function; return `undefined` for modules that are not children.
+ */
+export type ChildLevelResolver = (
+  module: string,
+  fields: Readonly<Record<string, FieldValue>>,
+  levelOf: (module: string, fields: Readonly<Record<string, FieldValue>>) => AccessLevel,
+) => AccessLevel | undefined;
+
+export function createRecordAccessChecker(
+  snapshot: AccessSnapshot,
+  resolveChild?: ChildLevelResolver,
+): RecordAccessChecker {
   const hiddenCache = new Map<string, ReadonlySet<string>>();
   const readOnlyCache = new Map<string, ReadonlySet<string>>();
   const collect = (module: string, mode: "hidden" | "read_only") => {
@@ -51,8 +78,9 @@ export function createRecordAccessChecker(snapshot: AccessSnapshot): RecordAcces
     return found;
   };
   const level: RecordAccessChecker["level"] = (module, fields) => {
-    // Child modules (Notes, Attachments, line items) follow their parent record; the parent
-    // check happens where the parent is resolved, so they pass here.
+    // Child modules (Notes, Attachments) follow their parent record (ADR 0017 §4.3 item 5).
+    const child = resolveChild?.(module, fields, level);
+    if (child) return child;
     if (!isCatalogueModule(module)) return "read_write_delete";
     return recordLevel(snapshot, module, ownerOf(fields));
   };
@@ -64,14 +92,35 @@ export function createRecordAccessChecker(snapshot: AccessSnapshot): RecordAcces
       if (have === "none") throw new NotFoundError("Record not found.");
       if (!levelAllows(have, operation)) throw new ForbiddenError(undefined, "permission_denied");
     },
+    can: (module, action) => can(snapshot, module, action),
+    tool(name, module) {
+      if (snapshot.profileKind === "administrator") return true;
+      return (snapshot.permissions.tools[name] as readonly string[]).includes(module);
+    },
+    assertWrite(module, input, stored) {
+      const hidden = checker.hiddenFields(module);
+      const readOnly = checker.readOnlyFields(module);
+      for (const [name, value] of Object.entries(input)) {
+        if (hidden.has(name)) throw new ForbiddenError(undefined, "field_forbidden");
+        if (
+          readOnly.has(name) &&
+          JSON.stringify(value ?? null) !== JSON.stringify(stored?.[name] ?? null)
+        )
+          throw new ForbiddenError(undefined, "field_forbidden");
+      }
+    },
     hiddenFields(module) {
-      let set = hiddenCache.get(module);
-      if (!set) hiddenCache.set(module, (set = collect(module, "hidden")));
+      const cached = hiddenCache.get(module);
+      if (cached) return cached;
+      const set = collect(module, "hidden");
+      hiddenCache.set(module, set);
       return set;
     },
     readOnlyFields(module) {
-      let set = readOnlyCache.get(module);
-      if (!set) readOnlyCache.set(module, (set = collect(module, "read_only")));
+      const cached = readOnlyCache.get(module);
+      if (cached) return cached;
+      const set = collect(module, "read_only");
+      readOnlyCache.set(module, set);
       return set;
     },
     assertCriteria(module, criteria, sort, groupBy) {
@@ -91,11 +140,13 @@ export function createRecordAccessChecker(snapshot: AccessSnapshot): RecordAcces
     },
     project(module, record) {
       const hidden = checker.hiddenFields(module);
-      if (hidden.size === 0) return record;
-      const fields = Object.fromEntries(
-        Object.entries(record.fields).filter(([name]) => !hidden.has(name)),
-      );
-      return { ...record, fields };
+      const have = level(module, record.fields);
+      const $access = have === "none" ? undefined : have;
+      const fields =
+        hidden.size === 0
+          ? record.fields
+          : Object.fromEntries(Object.entries(record.fields).filter(([name]) => !hidden.has(name)));
+      return $access ? { ...record, fields, $access } : { ...record, fields };
     },
   };
   return checker;
