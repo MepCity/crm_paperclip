@@ -16,6 +16,7 @@ function mutation(
       const service = customization?.();
       if (!service) throw new ForbiddenError();
       // Permission is checked before reading or decoding caller-supplied JSON.
+      await service.prepare();
       service.assertAllowed();
       const module = input.params?.module ?? input.query.module ?? invalid("module");
       const result = await service.execute(

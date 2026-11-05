@@ -14,6 +14,7 @@ export function getApprovals(): ApprovalService {
   return getApprovalService({
     systemRecords: (ctx: OrgContext) =>
       createFixtureRecordService(ctx, {
+        system: true,
         schema: getCustomizationCoordinator(),
         listMemberIds: async () => (await listMembers(ctx)).map((member) => member.userId),
       }),

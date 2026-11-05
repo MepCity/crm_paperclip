@@ -1,4 +1,5 @@
 import type { OrgContext } from "@crm/core";
+import { getAccessSnapshot } from "@crm/core/access";
 import { CustomizationService, InMemorySchemaCoordinator } from "@crm/core/customization";
 import { fixtureCustomizationPort } from "@crm/core/records/fixture/metadata-projection";
 
@@ -18,5 +19,11 @@ export function getCustomizationCoordinator(): InMemorySchemaCoordinator | undef
   return runtime.__crmCustomizationCoordinator;
 }
 export function getCustomizationService(ctx: OrgContext): CustomizationService {
-  return new CustomizationService(ctx, fixtureCustomizationPort(), customizationEditingEnabled());
+  return new CustomizationService(
+    ctx,
+    fixtureCustomizationPort(),
+    customizationEditingEnabled(),
+    undefined,
+    getAccessSnapshot,
+  );
 }

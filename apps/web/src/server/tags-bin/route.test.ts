@@ -14,10 +14,29 @@ import { DELETE as deleteTag, PUT as updateTag } from "@/app/crm/v2.2/settings/t
 import { POST as createTag, GET as listTags } from "@/app/crm/v2.2/settings/tags/route";
 
 const auth = vi.hoisted(() => ({ contexts: new Map<string, OrgContext>() }));
-vi.mock("@crm/core/access", async (importOriginal) => ({
-  ...(await importOriginal<typeof import("@crm/core/access")>()),
-  getAccessSnapshot: vi.fn(async () => ({ profileKind: "administrator" })),
-}));
+vi.mock("@crm/core/access", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@crm/core/access")>();
+  return {
+    ...actual,
+    // Members hold the Standard profile (no `admin.dataManagement`), admins bypass.
+    getAccessSnapshot: vi.fn(async (ctx: OrgContext) =>
+      ctx.role === "admin"
+        ? { profileKind: "administrator" }
+        : actual.buildAccessSnapshot({
+            orgId: ctx.orgId,
+            userId: ctx.userId,
+            version: 1,
+            profile: { id: "p", kind: "standard", permissions: actual.standardPermissions() },
+            fieldRows: [],
+            roles: [{ id: "r", name: "CEO", parentRoleId: null, shareWithPeers: false }],
+            members: [{ userId: ctx.userId, roleId: "r", profileId: "p" }],
+            groupMembers: [],
+            defaults: [{ module: "Leads", level: "public_read_write_delete" }],
+            rules: [],
+          }),
+    ),
+  };
+});
 vi.mock("@crm/core", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@crm/core")>();
   return {

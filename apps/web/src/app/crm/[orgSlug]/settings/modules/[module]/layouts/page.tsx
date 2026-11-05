@@ -22,7 +22,7 @@ export default async function ModuleLayoutsPage({
   if (!isAllowedSettingsModule(name)) notFound();
 
   let editor: LayoutEditorData | undefined;
-  if (getCustomizationService(ctx).capabilities(name).layouts) {
+  if ((await getCustomizationService(ctx).prepare()).capabilities(name).layouts) {
     const effective = await fixtureCustomizationPort().readEffective(ctx.orgId, name);
     const layout = effective.layouts[0];
     if (layout) {

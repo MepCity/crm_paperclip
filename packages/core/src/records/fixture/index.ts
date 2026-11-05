@@ -175,9 +175,12 @@ const dropIgnored = (
 export interface FixtureRecordServiceOptions extends FixtureHistoryPermissions {
   /**
    * Record access policy source (ADR 0017 §6): applied in the single candidate-selection step
-   * and on get/write. Absent = system actor (automation, worker, tests).
+   * and on get/write. Without it the service acts as the organisation system actor (§4.8),
+   * which production callers must request explicitly with `system: true`.
    */
   access?: RecordAccessSource;
+  /** Marks an intentional system actor (automation, worker, approval write-back). */
+  system?: boolean;
   customization?: CustomizationPort;
   /** Internal ephemeral schema integration; shared by every service for this organization. */
   schema?: InMemorySchemaCoordinator;
@@ -470,6 +473,15 @@ export function createFixtureRecordService(
     (checkerPromise ??= options?.access
       ? options.access().then((snapshot) => createRecordAccessChecker(snapshot, childLevel))
       : Promise.resolve(undefined));
+  // The history reader's permission hooks are synchronous; the guard below resolves the access
+  // checker before every read so the timeline follows the same record and field rules (§4.5).
+  let historyAccess: RecordAccessChecker | undefined;
+  const guardedHistory = (inner: RecordHistoryService): RecordHistoryService => ({
+    async list(module, recordId, query) {
+      historyAccess = await accessFor();
+      return inner.list(module, recordId, query);
+    },
+  });
   const assertRecordLevel = async (
     module: string,
     ids: readonly string[],
@@ -1122,6 +1134,11 @@ export function createFixtureRecordService(
   ): Promise<readonly DuplicateGroup[]> => {
     const bundle = bundleFor(module);
     if (bundle.childModule) return [];
+    // A hidden field must not be usable as a duplicate-match key (ADR 0017 §4.5).
+    const dupAccess = await accessFor();
+    for (const field of fields)
+      if (dupAccess?.hiddenFields(module).has(field))
+        throw new ForbiddenError(undefined, "field_forbidden");
     return copy(
       duplicateGroups(
         await matching(module, { viewId: "" }, false),
@@ -1374,57 +1391,64 @@ export function createFixtureRecordService(
     },
     tags,
     recycleBin,
-    history: fixtureHistoryReader(
-      ctx,
-      () => fixtureHistoryStore(state.history),
-      () => state.sequence,
-      (module, id) => {
-        recordFor(module, id);
-      },
-      (module) => Object.hasOwn(fixtureModules, module),
-      {
-        canReadRecord: options?.canReadRecord,
-        canReadField: (module, apiName) =>
-          bundleFor(module).metadata.fields.some((field) => field.apiName === apiName) &&
-          (options?.canReadField?.(module, apiName) ?? true),
-      },
-      state.cursors,
-      (event) => {
-        if (event.kind === "note_added") {
-          const note = state.modules.get("Notes")?.records.get(event.subject.recordId);
-          if (!note || !noteParentVisible(note.fields)) return null;
-          return {
-            ...(options?.canReadField?.("Notes", "Note_Title") !== false &&
-            typeof note.fields.Note_Title === "string"
-              ? { name: note.fields.Note_Title }
-              : {}),
-            payload: {
-              body:
-                options?.canReadField?.("Notes", "Note_Content") !== false
-                  ? String(note.fields.Note_Content ?? "")
-                  : "",
-            },
-          };
-        }
-        if (["attachment_added", "attachment_deleted"].includes(event.kind)) {
-          const noteId = event.payload?.noteId;
-          if (typeof noteId === "string") {
-            const note = state.modules.get("Notes")?.records.get(noteId);
-            if (
-              !note ||
-              !noteParentVisible(note.fields) ||
-              options?.canReadRecord?.("Notes", noteId) === false
-            )
-              return null;
+    history: guardedHistory(
+      fixtureHistoryReader(
+        ctx,
+        () => fixtureHistoryStore(state.history),
+        () => state.sequence,
+        (module, id) => {
+          recordFor(module, id);
+        },
+        (module) => Object.hasOwn(fixtureModules, module),
+        {
+          canReadRecord: (module, id) => {
+            if (options?.canReadRecord?.(module, id) === false) return false;
+            const stored = state.modules.get(module)?.records.get(id);
+            return !historyAccess || !stored || historyAccess.visible(module, stored.fields);
+          },
+          canReadField: (module, apiName) =>
+            bundleFor(module).metadata.fields.some((field) => field.apiName === apiName) &&
+            (options?.canReadField?.(module, apiName) ?? true) &&
+            !historyAccess?.hiddenFields(module).has(apiName),
+        },
+        state.cursors,
+        (event) => {
+          if (event.kind === "note_added") {
+            const note = state.modules.get("Notes")?.records.get(event.subject.recordId);
+            if (!note || !noteParentVisible(note.fields)) return null;
+            return {
+              ...(options?.canReadField?.("Notes", "Note_Title") !== false &&
+              typeof note.fields.Note_Title === "string"
+                ? { name: note.fields.Note_Title }
+                : {}),
+              payload: {
+                body:
+                  options?.canReadField?.("Notes", "Note_Content") !== false
+                    ? String(note.fields.Note_Content ?? "")
+                    : "",
+              },
+            };
           }
-        }
-        if (
-          ["attachment_added", "attachment_deleted"].includes(event.kind) &&
-          options?.canReadField?.("Attachments", "File_Name") !== false
-        )
-          return { name: event.subject.name ?? undefined, payload: null };
-        return { payload: null };
-      },
+          if (["attachment_added", "attachment_deleted"].includes(event.kind)) {
+            const noteId = event.payload?.noteId;
+            if (typeof noteId === "string") {
+              const note = state.modules.get("Notes")?.records.get(noteId);
+              if (
+                !note ||
+                !noteParentVisible(note.fields) ||
+                options?.canReadRecord?.("Notes", noteId) === false
+              )
+                return null;
+            }
+          }
+          if (
+            ["attachment_added", "attachment_deleted"].includes(event.kind) &&
+            options?.canReadField?.("Attachments", "File_Name") !== false
+          )
+            return { name: event.subject.name ?? undefined, payload: null };
+          return { payload: null };
+        },
+      ),
     ),
     merge,
     findDuplicateGroups,
@@ -1432,6 +1456,7 @@ export function createFixtureRecordService(
       assertModuleWritable(module);
       moduleExists(module);
       const dedupAccess = await accessFor();
+      // Without an access source only the administrator membership may deduplicate (fail-closed).
       if (dedupAccess ? !dedupAccess.tool("findAndMerge", module) : ctx.role !== "admin")
         throw new ForbiddenError(undefined, "permission_denied");
       if (state.deduplicating.has(module))
@@ -1808,6 +1833,12 @@ export function createFixtureRecordService(
     async delete(module, ids) {
       assertModuleWritable(module);
       await assertRecordLevel(module, ids, "delete");
+      // Deleting more than one record at once is the mass-delete tool (ADR 0017 §3, §4.6).
+      if (new Set(ids).size > 1) {
+        const deleter = await accessFor();
+        if (deleter && !deleter.tool("massDelete", module))
+          throw new ForbiddenError(undefined, "permission_denied");
+      }
       moduleExists(module);
       validateIds(ids);
       const records = [...new Set(ids)].map((id) => recordFor(module, id));

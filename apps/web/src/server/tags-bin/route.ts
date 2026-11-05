@@ -1,4 +1,5 @@
 import { listMembers } from "@crm/core";
+import { getAccessSnapshot } from "@crm/core/access";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import type { PermissionSpec } from "@/lib/access/route-permission";
 import { TAGS_BIN_PERMISSIONS } from "@/lib/api/route-permissions";
@@ -34,6 +35,7 @@ export function tagsBinRoute(operation: TagsBinOperation) {
   return apiRoute<Record<string, string>>(
     async ({ ctx, request, params, query }) => {
       const { tags, recycleBin } = createFixtureRecordService(ctx, {
+        access: () => getAccessSnapshot(ctx),
         listMemberIds: async () => (await listMembers(ctx)).map((member) => member.userId),
       });
       if (operation === "bin") {
