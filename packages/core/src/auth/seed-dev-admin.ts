@@ -1,6 +1,7 @@
 import { type Database, eq, schema, sql } from "@crm/db";
 import { hashPassword, verifyPassword } from "better-auth/crypto";
 import { and } from "drizzle-orm";
+import { seedDemoApprovals } from "../approvals/seed";
 import { insertOrganization } from "../tenancy/create-organization";
 import { DEV_ADMIN_EMAIL, isDevLoginEnabled } from "./dev-login";
 
@@ -49,5 +50,10 @@ export async function seedDevAdmin(
     if (!membership) {
       await insertOrganization(tx, user, { name: "Development CRM", slug: "dev-admin" });
     }
+    const [home] = await tx
+      .select()
+      .from(schema.memberships)
+      .where(eq(schema.memberships.userId, user.id));
+    if (home) await seedDemoApprovals(tx, { orgId: home.organizationId, adminUserId: user.id });
   });
 }
