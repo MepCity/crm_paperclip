@@ -141,25 +141,22 @@ function TreeNode({
   const open = expanded.has(node.id);
   return (
     <li>
-      <div className="flex items-center gap-2 py-1">
+      <div className="relative flex items-center gap-2 py-1.5">
         {children.length > 0 ? (
-          <Button
-            variant="ghost"
-            size="sm"
+          <button
+            type="button"
+            className="flex size-5 shrink-0 cursor-pointer items-center justify-center rounded-sm border border-border bg-surface text-xs leading-none text-text-muted"
             aria-label={`${open ? "Collapse" : "Expand"} ${node.name}`}
             aria-expanded={open}
-            onPress={() => toggle(node.id)}
+            onClick={() => toggle(node.id)}
           >
             {open ? "–" : "+"}
-          </Button>
-        ) : (
-          <span className="inline-block w-8" />
-        )}
+          </button>
+        ) : null}
         <Link href={`/crm/${orgSlug}/settings/roles/${node.id}`}>{node.name}</Link>
-        <span className="text-xs text-text-muted">{node.memberCount} user(s)</span>
       </div>
       {open && children.length > 0 ? (
-        <ul className="ml-6 border-l border-dashed border-border pl-2">
+        <ul className="ml-2.5 border-l border-dashed border-border pl-6">
           {children.map((child) => (
             <TreeNode
               key={child.id}
@@ -179,7 +176,7 @@ function TreeNode({
 export function RolesScreen({ orgSlug, orgName }: { orgSlug: string; orgName: string }) {
   const api = useMemo(() => createAccessClient(orgSlug), [orgSlug]);
   const router = useRouter();
-  const [state, reload] = useLoad(api.listRoles);
+  const [state] = useLoad(api.listRoles);
   const [expanded, setExpanded] = useState<ReadonlySet<string>>(new Set());
   const [initial, setInitial] = useState(false);
   if (state.status === "ready" && !initial) {
@@ -224,9 +221,6 @@ export function RolesScreen({ orgSlug, orgName }: { orgSlug: string; orgName: st
             </Button>
             <Button variant="ghost" size="sm" onPress={() => setExpanded(new Set())}>
               Collapse All
-            </Button>
-            <Button variant="ghost" size="sm" onPress={reload}>
-              Refresh
             </Button>
           </div>
           <Card>
