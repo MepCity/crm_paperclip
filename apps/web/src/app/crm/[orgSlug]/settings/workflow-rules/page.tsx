@@ -1,6 +1,6 @@
 import { PageTitle } from "@/components/shell/page-title";
 import { getUiTranslations } from "@/i18n/request";
-import { requireOrgContext } from "@/lib/session";
+import { requireSettingsOrg } from "@/lib/access/settings-gate";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import { createAutomationPort } from "@/modules/automation/port";
 import { readWorkflowRules } from "@/modules/workflow-rules/reads";
@@ -16,7 +16,7 @@ export default async function WorkflowRulesPage({
   searchParams: Promise<{ module?: string; cursor?: string }>;
 }) {
   const { orgSlug } = await params;
-  const ctx = await requireOrgContext(orgSlug);
+  const ctx = await requireSettingsOrg(orgSlug, "manageAutomation");
   const { module, cursor } = await searchParams;
   const { result, triggerResults } = await readWorkflowRules(createAutomationPort(), ctx, {
     ...(module && module !== "all" ? { module } : {}),

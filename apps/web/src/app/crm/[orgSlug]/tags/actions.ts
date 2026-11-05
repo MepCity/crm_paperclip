@@ -2,6 +2,7 @@
 
 import type { Tag } from "@crm/core/records";
 import { revalidatePath } from "next/cache";
+import { declareActionExempt, requireActionPermission } from "@/lib/access/action-guard";
 import { toActionState } from "@/lib/action";
 import { getTagService } from "@/lib/records";
 import { requireOrgContext } from "@/lib/session";
@@ -19,6 +20,7 @@ export async function readRecordTagsAction(
 ): Promise<RecordTagResult> {
   const ctx = await requireOrgContext(orgSlug);
   try {
+    await requireActionPermission(ctx, { module, action: "view" });
     const service = getTagService(ctx);
     const tags = await service.listRecordTags(module, recordId);
     return { status: "success", tags, catalogue: await service.listTags(module) };
@@ -37,6 +39,7 @@ export async function saveRecordTagsAction(
 ): Promise<RecordTagResult> {
   const ctx = await requireOrgContext(orgSlug);
   try {
+    await requireActionPermission(ctx, { allOf: [{ tool: "tags" }, { module, action: "edit" }] });
     const service = getTagService(ctx);
     // Check record visibility, write permission and lock before creating catalogue entries.
     await service.addTags(module, recordId, []);
@@ -68,6 +71,7 @@ export async function removeRecordTagAction(
 ): Promise<RecordTagResult> {
   const ctx = await requireOrgContext(orgSlug);
   try {
+    await requireActionPermission(ctx, { allOf: [{ tool: "tags" }, { module, action: "edit" }] });
     const service = getTagService(ctx);
     await service.removeTags(module, recordId, [tagId]);
     revalidatePath(`/crm/${orgSlug}/tab/${module}/${recordId}`);
@@ -93,6 +97,7 @@ export async function readTagCatalogueAction(
 ): Promise<TagCatalogueResult> {
   const ctx = await requireOrgContext(orgSlug);
   try {
+    await requireActionPermission(ctx, { module, action: "view" });
     const tags = await getTagService(ctx).listTags(module);
     // ADR 0007 T2/T7: all four supported modules are writable for authenticated
     // members in the current adapter; no administrator-only grant is inferred.
@@ -119,6 +124,7 @@ export async function mutateTagCatalogueAction(
 ): Promise<TagCatalogueResult> {
   const ctx = await requireOrgContext(orgSlug);
   try {
+    await requireActionPermission(ctx, { admin: "moduleCustomization" });
     const service = getTagService(ctx);
     if (mutation.kind === "create") await service.createTag(module, { name: mutation.name });
     else if (mutation.kind === "rename")

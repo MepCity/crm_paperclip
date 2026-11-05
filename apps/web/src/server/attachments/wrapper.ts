@@ -1,4 +1,5 @@
 import { getSession, listMembers, parseEnv, requireOrgContext } from "@crm/core";
+import { getAccessSnapshot } from "@crm/core/access";
 import { createUploadBatchRegistry, LocalDiskBlobStore } from "@crm/core/attachments";
 import {
   ForbiddenError,
@@ -7,6 +8,7 @@ import {
   ValidationError,
 } from "@crm/core/errors";
 import { createFixtureAttachmentLifecycle } from "@crm/core/records/fixture";
+import { assertRoutePermission } from "@/lib/access/route-permission";
 import { encodeError } from "@/lib/api/wire/errors";
 import { getRecordService } from "@/lib/records";
 import { type AttachmentParams, handleAttachmentRequest } from "./http";
@@ -32,6 +34,20 @@ export function attachmentRoute() {
         throw new ValidationError({ organization: ["An organization header is required."] });
       const ctx = await requireOrgContext(request.headers, orgSlug);
       const params = (await context.params) as AttachmentParams;
+      const method = request.method.toUpperCase();
+      assertRoutePermission(
+        await getAccessSnapshot(ctx),
+        {
+          allOf: [
+            {
+              feature: "attachments",
+              action: method === "GET" ? "view" : method === "DELETE" ? "delete" : "create",
+            },
+            { module: "$module", action: "view" },
+          ],
+        },
+        { params: params as unknown as Record<string, string>, method },
+      );
       return await handleAttachmentRequest(
         {
           ctx,

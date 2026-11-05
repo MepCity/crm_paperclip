@@ -127,6 +127,8 @@ export interface RecordData {
   id: RecordId;
   /** Keys are field API names, including owner and creation/modification fields. */
   fields: Readonly<Record<string, FieldValue>>;
+  /** Viewer's record access level (ADR 0017 §8); only present when access control applies. */
+  $access?: "read" | "read_write" | "read_write_delete";
 }
 
 /** Saved-view wire literals plus interim filter-panel comparators. */

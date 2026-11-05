@@ -32,8 +32,9 @@ export default async function OrganizationLayout({
   );
   // Bind the invite action to the current org slug for client-side use in the chat panel.
   const boundInviteAction = createInvitationAction.bind(null, orgSlug);
-  // Admin role (and above) may invite people.
-  const canInvite = org.role === "admin";
+  // `admin.userManagement` (ADR 0017 §7.3) may invite people.
+  const canInvite =
+    snapshot.profileKind === "administrator" || snapshot.permissions.admin.userManagement;
   return (
     <PermissionsProvider permissions={permissions}>
       <AppShell
