@@ -43,8 +43,8 @@ export function SettingsNavigation({
               "Data Administration": Database,
               Customization: Settings,
               Automation: Workflow,
-              "Users and Control": ShieldCheck,
               "Process Management": Workflow,
+              "Users and Control": ShieldCheck,
             } as Record<string, typeof Building2>
           )[link.group ?? ""] ?? Settings;
         return [
