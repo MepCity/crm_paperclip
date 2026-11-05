@@ -153,6 +153,7 @@ describe("shellNav", () => {
       "solutions",
       "social",
       "cases",
+      "my-jobs",
     ]);
   });
 
@@ -236,6 +237,8 @@ describe("settingsNav", () => {
       "modules-and-fields",
       "workflow-rules",
       "assignment-rules",
+      "approval-processes",
+      "review-processes",
     ]);
     const [general, members] = settingsNav;
     const calendarBooking = settingsNav.find((link) => link.id === "calendar-booking");

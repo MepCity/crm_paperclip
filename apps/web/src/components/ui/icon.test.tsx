@@ -105,6 +105,7 @@ const expectedIcons = [
   "wallet",
   "ticket",
   "bookUser",
+  "briefcase",
 ] as const;
 
 test("Icons exposes every icon the primitives need", () => {

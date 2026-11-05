@@ -113,6 +113,14 @@ function flatNavLinks(): NavLink[] {
       activePrefix: (slug) => moduleTabPath(slug, "Social"),
       match: "prefix",
     },
+    {
+      id: "my-jobs",
+      label: "My Jobs",
+      icon: Icons.briefcase,
+      href: (slug) => moduleTabPath(slug, "Approvals"),
+      activePrefix: (slug) => moduleTabPath(slug, "Approvals"),
+      match: "prefix",
+    },
   ];
   return entries.sort((a, b) => rank(a.id) - rank(b.id));
 }
@@ -304,6 +312,24 @@ export const settingsNav: readonly NavLink[] = [
     href: (slug) => `/crm/${slug}/settings/assignment-rules`,
     match: "exact",
     group: "Automation",
+  },
+  {
+    id: "approval-processes",
+    label: "Approval Processes",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/approval-processes`,
+    activePrefix: (slug) => `/crm/${slug}/settings/approval-processes`,
+    match: "prefix",
+    group: "Process Management",
+  },
+  {
+    id: "review-processes",
+    label: "Review Processes",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/review-processes`,
+    activePrefix: (slug) => `/crm/${slug}/settings/review-processes`,
+    match: "prefix",
+    group: "Process Management",
   },
 ];
 

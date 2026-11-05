@@ -36,6 +36,7 @@ export function SettingsNavigation({ orgSlug }: { orgSlug: string }) {
               "Data Administration": Database,
               Customization: Settings,
               Automation: Workflow,
+              "Process Management": Workflow,
             } as Record<string, typeof Building2>
           )[link.group ?? ""] ?? Settings;
         return [

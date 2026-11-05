@@ -7,6 +7,7 @@ import {
   isAppError,
   NotFoundError,
   RecordLockedError,
+  RecordLockedForApprovalError,
   SchemaStaleError,
   UnauthenticatedError,
   ValidationError,
@@ -204,6 +205,8 @@ function restore(parsed: ParsedBody, status: number): AppError | UnexpectedApiEr
       return new ConflictError(parsed.message);
     case "record_locked":
       return new RecordLockedError(parsed.message);
+    case "record_locked_for_approval":
+      return new RecordLockedForApprovalError(parsed.message);
     case "validation": {
       const fieldErrors = readFieldErrors(parsed.details);
       if (!fieldErrors) return new UnexpectedApiError(status);

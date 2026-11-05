@@ -2,6 +2,7 @@ import {
   ConflictError,
   ForbiddenError,
   NotFoundError,
+  RecordLockedForApprovalError,
   UnauthenticatedError,
   ValidationError,
 } from "@crm/core/errors";
@@ -43,6 +44,11 @@ test("formSaveBannerMessage returns app messages and generic text for unknown fa
   expect(formSaveBannerMessage(new ConflictError("Duplicate lead."))).toBe("Duplicate lead.");
   expect(formSaveBannerMessage(new ForbiddenError("Denied."))).toBe("Denied.");
   expect(formSaveBannerMessage(new NotFoundError("Missing."))).toBe("Missing.");
+  expect(
+    formSaveBannerMessage(
+      new RecordLockedForApprovalError("This record is locked while an approval is pending."),
+    ),
+  ).toBe("This record is locked while an approval is pending.");
   expect(formSaveBannerMessage(new ValidationError({ Email: ["Taken."] }))).toBeNull();
   expect(formSaveBannerMessage(new UnauthenticatedError())).toBeNull();
   expect(formSaveBannerMessage(new UnexpectedApiError(502))).toBe(FORM_SAVE_GENERIC_ERROR_MESSAGE);
