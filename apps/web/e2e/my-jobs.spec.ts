@@ -44,7 +44,12 @@ test("My Jobs screen, review logs and approval/review process settings screens",
   await expect(page.getByRole("columnheader", { name: "Bekleyen Resim Sayısı" })).toBeVisible();
   await expect(page.getByText("Bekleyen onay yok")).toBeVisible();
 
-  // 5. Navigate to Review Logs page
+  // 5. The review logs link only shows on the Reviews tab
+  await expect(page.getByRole("link", { name: "Gözden Geçirme Günlükleri" })).toHaveCount(0);
+  await reviewTab.click();
+  await expect(reviewTab).toHaveAttribute("aria-selected", "true");
+
+  // Navigate to Review Logs page
   const historyLink = page.getByRole("link", { name: "Gözden Geçirme Günlükleri" });
   await historyLink.click();
   await expect(page).toHaveURL(`/crm/${org.slug}/tab/Approvals/history`);
@@ -62,7 +67,7 @@ test("My Jobs screen, review logs and approval/review process settings screens",
 
   // 7. Navigate to Settings > Gözden Geçirme Süreçleri
   await page.goto(`/crm/${org.slug}/settings/review-processes`);
-  await expect(page.getByRole("heading", { name: "Gözden Geçirme Süreci" })).toBeVisible();
+  await expect(page.getByRole("heading", { name: "Gözden Geçirme Süreçleri" })).toBeVisible();
 
   // Check §4.2 empty state
   await expect(
