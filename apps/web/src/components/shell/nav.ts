@@ -1,6 +1,7 @@
 import type { ClientPermissions } from "@crm/core/access";
 import { type Icon, Icons } from "@/components/ui/icon";
 import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
+import { FEEDS_LABEL } from "@/modules/feeds/feeds-labels";
 import { getModuleScreens } from "@/modules/registry";
 import { accessSettingsNav } from "@/modules/settings-access/nav";
 
@@ -104,6 +105,7 @@ export const flatNavOrder: readonly string[] = [
   "sales-orders",
   "solutions",
   "social",
+  "feeds",
   "forecasts",
   "purchase-orders",
   "vendors",
@@ -140,6 +142,14 @@ function flatNavLinks(): NavLink[] {
       icon: Icons.messageSquare,
       href: (slug) => moduleTabPath(slug, "Social"),
       activePrefix: (slug) => moduleTabPath(slug, "Social"),
+      match: "prefix",
+    },
+    {
+      id: "feeds",
+      label: FEEDS_LABEL,
+      icon: Icons.newspaper,
+      href: (slug) => moduleTabPath(slug, "Feeds"),
+      activePrefix: (slug) => moduleTabPath(slug, "Feeds"),
       match: "prefix",
     },
   ];

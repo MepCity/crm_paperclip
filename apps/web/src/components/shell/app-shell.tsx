@@ -13,6 +13,7 @@ import { CreateRecordsMenu } from "./create-records";
 import { GlobalSearch } from "./global-search";
 import { navLinkIconClassName, shellNav } from "./nav";
 import { Navigation } from "./navigation";
+import { NotificationBell } from "./notification-bell";
 import { OrganizationSwitcher, type ShellOrganization } from "./organization-switcher";
 import { PageTitleContext } from "./page-title";
 import { type ShellUser, UserMenu } from "./user-menu";
@@ -177,15 +178,7 @@ export function AppShell({
               >
                 <Icons.sparkles className="size-(--size-topbar-icon)" aria-hidden />
               </Button>
-              <Button
-                variant="icon"
-                size="compact"
-                aria-label={t("shell.notifications")}
-                laterModule="P3"
-                className="size-(--size-topbar-control-pitch)"
-              >
-                <Icons.bell className="size-(--size-topbar-icon)" aria-hidden />
-              </Button>
+              <NotificationBell orgSlug={orgSlug} />
               <Link
                 variant="icon"
                 aria-label={t("shell.calendar")}
