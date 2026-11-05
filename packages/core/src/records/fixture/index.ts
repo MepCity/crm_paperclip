@@ -888,7 +888,11 @@ export function createFixtureRecordService(
     if (sourceTimes?.modifiedTime && "Modified_Time" in fields)
       fields.Modified_Time = sourceTimes.modifiedTime;
     if (bundle.autoNumberField) assignAutoNumber(moduleState, bundle.autoNumberField, fields);
-    bundle.applyRules?.(fields, normalized, undefined, hookContext, options);
+    if (options !== undefined) {
+      bundle.applyRules?.(fields, normalized, undefined, hookContext, options);
+    } else {
+      bundle.applyRules?.(fields, normalized, undefined, hookContext);
+    }
     assertNoteParentVisible(module, fields);
     fields[bundle.displayNameField] = bundle.fullName(fields);
     const record = { id, fields };
@@ -1579,7 +1583,11 @@ export function createFixtureRecordService(
           Modified_By: ctx.userId,
           Modified_Time: options?.sourceTimes?.modifiedTime ?? clock().toISOString(),
         };
-        bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext, options);
+        if (options !== undefined) {
+          bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext, options);
+        } else {
+          bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext);
+        }
         fields[bundle.displayNameField] = bundle.fullName(fields);
         const updated = { id, fields };
         const moduleState = moduleStore(module);
