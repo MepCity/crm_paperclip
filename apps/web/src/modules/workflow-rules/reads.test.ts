@@ -1,6 +1,6 @@
 import type { AutomationPort } from "@crm/core/automation";
 import type { OrgContext } from "@crm/core/records";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createAutomationPort } from "../automation/port";
 import { leadWelcomeRule } from "../automation/synthetic-workflow-fixture";
 import { readWorkflowRule, readWorkflowRules } from "./reads";
@@ -12,6 +12,18 @@ const ctx: OrgContext = {
   userId: "admin",
   role: "admin",
 };
+
+// Non-administrators resolve their profile; a Standard profile carries no `admin.*` key.
+vi.mock("@crm/core/access", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@crm/core/access")>();
+  return {
+    ...actual,
+    getAccessSnapshot: async () => ({
+      profileKind: "standard",
+      permissions: actual.standardPermissions(),
+    }),
+  };
+});
 
 describe("server workflow reads", () => {
   it("returns synthetic workflows only for opted-in organizations", async () => {
