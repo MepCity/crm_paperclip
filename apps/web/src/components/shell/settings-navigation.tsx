@@ -63,7 +63,7 @@ export function SettingsNavigation({
             aria-current={active ? "page" : undefined}
             className={
               active
-                ? `${itemClasses} bg-primary-subtle font-semibold text-primary`
+                ? `${itemClasses} bg-primary-subtle font-semibold text-primary-hover`
                 : `${itemClasses} text-text-muted data-hovered:bg-surface-hover`
             }
           >
