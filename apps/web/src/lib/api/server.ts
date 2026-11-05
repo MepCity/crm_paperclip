@@ -1,10 +1,12 @@
 import { getSession, type OrgContext, parseEnv, requireOrgContext } from "@crm/core";
+import { getAccessSnapshot } from "@crm/core/access";
 import {
   ForbiddenError,
   isAppError,
   UnauthenticatedError,
   ValidationError,
 } from "@crm/core/errors";
+import { assertRoutePermission, type PermissionSpec } from "@/lib/access/route-permission";
 import { encodeError } from "./wire/errors";
 
 export type ApiHandlerInput<Params extends Record<string, string>> = {
@@ -28,6 +30,7 @@ const NO_STORE = { "Cache-Control": "no-store" };
  * 2. A session must exist.
  * 3. The `X-CRM-ORG` header must be present.
  * 4. `requireOrgContext` must resolve that organization for this session.
+ * 5. The declared `permission` must pass the profile gate (403 `permission_denied`).
  *
  * A returned `Response` (CSV downloads) is passed through as is; it sets its own headers.
  * `null` becomes 204 with no body. Any other return value becomes 200 JSON.
@@ -37,7 +40,7 @@ const NO_STORE = { "Cache-Control": "no-store" };
  */
 export function apiRoute<Params extends Record<string, string>>(
   handler: ApiHandler<Params>,
-  options: { orgFromQuery?: boolean } = {},
+  options: { permission: PermissionSpec; orgFromQuery?: boolean },
 ) {
   return async (request: Request, context: { params?: Promise<Params> }): Promise<Response> => {
     try {
@@ -53,7 +56,19 @@ export function apiRoute<Params extends Record<string, string>>(
       }
       const ctx = await requireOrgContext(request.headers, orgSlug);
       const params = (await context.params) ?? ({} as Params);
-      const result = await handler({ ctx, request, params, query: readQuery(request) });
+      const query = readQuery(request);
+      // Profile gate (ADR 0017 §7.1): declared per entry point, runs before the handler.
+      const spec = options.permission;
+      const resolved =
+        typeof spec === "function" ? spec({ params, query, method: request.method }) : spec;
+      if (!("public" in resolved) && !("memberOnly" in resolved)) {
+        assertRoutePermission(await getAccessSnapshot(ctx), resolved, {
+          params,
+          query,
+          method: request.method,
+        });
+      }
+      const result = await handler({ ctx, request, params, query });
       if (result instanceof Response) return result;
       if (result === null) return new Response(null, { status: 204, headers: NO_STORE });
       return Response.json(result, { status: 200, headers: NO_STORE });

@@ -12,6 +12,10 @@ const session = vi.hoisted(() => ({
     role: "admin" as const,
   },
 }));
+vi.mock("@crm/core/access", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@crm/core/access")>()),
+  getAccessSnapshot: vi.fn(async () => ({ profileKind: "administrator" })),
+}));
 vi.mock("@/lib/session", () => ({ requireOrgContext: vi.fn(async () => session.ctx) }));
 vi.mock("next/cache", () => ({ revalidatePath: vi.fn() }));
 

@@ -3,4 +3,8 @@ import { getApprovals } from "@/lib/approvals";
 
 export const dynamic = "force-dynamic";
 
-export const GET = apiRoute(async ({ ctx }) => getApprovals().historyMeta(ctx));
+export const GET = apiRoute(async ({ ctx }) => getApprovals().historyMeta(ctx), {
+  permission: {
+    memberOnly: "Scoped to the signed-in actor by the service (approvals and notifications).",
+  },
+});

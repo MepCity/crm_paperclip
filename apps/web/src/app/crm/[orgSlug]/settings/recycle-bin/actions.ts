@@ -7,6 +7,7 @@ import type {
   BinReadResult,
   BinSearch,
 } from "@/components/records/recycle-bin/contracts";
+import { declareActionExempt, requireActionPermission } from "@/lib/access/action-guard";
 import { toActionState } from "@/lib/action";
 import { getRecycleBinService } from "@/lib/recycle-bin";
 import { requireOrgContext } from "@/lib/session";
@@ -19,6 +20,9 @@ export async function listRecycleBinAction(
 ): Promise<BinReadResult> {
   const context = await requireOrgContext(orgSlug);
   try {
+    await requireActionPermission(context, {
+      memberOnly: "Lists the entries the actor deleted; the service widens it with dataManagement.",
+    });
     if (search.nameOperator !== "contains" || search.deletedByOperator !== "contains")
       throw new ValidationError({ search: ["Choose a supported search operator."] });
     if (!search.date && search.time && search.time !== "01:00")
@@ -49,6 +53,12 @@ export async function mutateRecycleBinAction(
 ): Promise<BinMutationResult> {
   const context = await requireOrgContext(orgSlug);
   try {
+    await requireActionPermission(
+      context,
+      action === "restore"
+        ? { memberOnly: "The service checks delete on the original module and the deleter." }
+        : { admin: "dataManagement" },
+    );
     if (!Array.isArray(ids) || ids.some((id) => typeof id !== "string" || !id))
       throw new ValidationError({ selection: ["Choose valid records."] });
     const service = getRecycleBinService(context);

@@ -1,7 +1,9 @@
 import { schema } from "@crm/db";
-import { and, eq, gt, isNull, ne, sql } from "drizzle-orm";
+import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
+import { buildAccessSnapshot } from "../access/evaluate";
 import { bumpAccessVersion, rootRoleId, systemProfileId } from "../access/seed";
+import { loadAccessData } from "../access/store";
 import { requireUser, type SessionUser } from "../auth";
 import { getDb } from "../database";
 import {
@@ -128,7 +130,6 @@ export async function withOrg<T>(
 }
 
 async function requireCurrentAdmin(tx: Transaction, ctx: OrgContext): Promise<void> {
-  if (ctx.role !== "admin") throw new ForbiddenError();
   const [row] = await tx
     .select({ role: schema.memberships.role })
     .from(schema.memberships)
@@ -138,7 +139,13 @@ async function requireCurrentAdmin(tx: Transaction, ctx: OrgContext): Promise<vo
         eq(schema.memberships.userId, ctx.userId),
       ),
     );
-  if (row?.role !== "admin") throw new ForbiddenError();
+  if (row?.role === "admin") return;
+  // ADR 0017 §7.3: a profile with `admin.userManagement` manages members too.
+  if (row) {
+    const snapshot = buildAccessSnapshot(await loadAccessData(tx, ctx.orgId, ctx.userId));
+    if (snapshot.permissions.admin.userManagement) return;
+  }
+  throw new ForbiddenError(undefined, "permission_denied");
 }
 
 async function requireCurrentMember(tx: Transaction, ctx: OrgContext): Promise<void> {
@@ -196,31 +203,13 @@ async function preserveAdmin(tx: Transaction, ctx: OrgContext, targetRole: strin
   if ((count?.total ?? 0) <= 1) throw new ConflictError("An organization must have an admin.");
 }
 
-// Legacy admin flows may demote or remove the owner; ownership then moves to the
-// earliest remaining admin so the organization never ends up ownerless.
-async function handOverOwnership(tx: Transaction, ctx: OrgContext, userId: string): Promise<void> {
+// The organization owner (ADR 0017 §2) always keeps the Administrator profile and cannot be removed.
+async function assertNotOwner(tx: Transaction, ctx: OrgContext, userId: string): Promise<void> {
   const [org] = await tx
     .select({ owner: schema.organizations.ownerUserId })
     .from(schema.organizations)
     .where(eq(schema.organizations.id, ctx.orgId));
-  if (org?.owner !== userId) return;
-  const [next] = await tx
-    .select({ userId: schema.memberships.userId })
-    .from(schema.memberships)
-    .where(
-      and(
-        eq(schema.memberships.organizationId, ctx.orgId),
-        eq(schema.memberships.role, "admin"),
-        ne(schema.memberships.userId, userId),
-      ),
-    )
-    .orderBy(schema.memberships.createdAt)
-    .limit(1);
-  if (!next) throw new ConflictError("An organization must have an admin.");
-  await tx
-    .update(schema.organizations)
-    .set({ ownerUserId: next.userId })
-    .where(eq(schema.organizations.id, ctx.orgId));
+  if (org?.owner === userId) throw new ConflictError("The organization owner cannot be changed.");
 }
 
 export async function changeMemberRole(
@@ -242,8 +231,8 @@ export async function changeMemberRole(
       );
     if (!target) throw new NotFoundError();
     if (target.role === "admin" && values.role !== "admin") {
+      await assertNotOwner(tx, ctx, values.userId);
       await preserveAdmin(tx, ctx, target.role);
-      await handOverOwnership(tx, ctx, values.userId);
     }
     await tx
       .update(schema.memberships)
@@ -254,22 +243,24 @@ export async function changeMemberRole(
           eq(schema.memberships.userId, values.userId),
         ),
       );
-    // Keep the compatibility column and the access profile in step (ADR 0017 §2).
-    await tx
-      .update(schema.memberAccess)
-      .set({
-        profileId: await systemProfileId(
-          tx,
-          ctx.orgId,
-          values.role === "admin" ? "administrator" : "standard",
-        ),
-      })
-      .where(
-        and(
-          eq(schema.memberAccess.organizationId, ctx.orgId),
-          eq(schema.memberAccess.userId, values.userId),
-        ),
-      );
+    // Keep the compatibility column and the access profile in step (ADR 0017 §2), only when
+    // the admin/member side changes; a custom profile must survive member -> member.
+    if ((target.role === "admin") !== (values.role === "admin"))
+      await tx
+        .update(schema.memberAccess)
+        .set({
+          profileId: await systemProfileId(
+            tx,
+            ctx.orgId,
+            values.role === "admin" ? "administrator" : "standard",
+          ),
+        })
+        .where(
+          and(
+            eq(schema.memberAccess.organizationId, ctx.orgId),
+            eq(schema.memberAccess.userId, values.userId),
+          ),
+        );
     await bumpAccessVersion(tx, ctx.orgId);
   });
 }
@@ -289,8 +280,8 @@ export async function removeMember(ctx: OrgContext, input: { userId: string }): 
         ),
       );
     if (!target) throw new NotFoundError();
+    await assertNotOwner(tx, ctx, values.userId);
     await preserveAdmin(tx, ctx, target.role);
-    await handOverOwnership(tx, ctx, values.userId);
     await bumpAccessVersion(tx, ctx.orgId);
     await tx
       .delete(schema.memberships)

@@ -219,7 +219,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
     },
     async runExport(ctx, request) {
       const createdBy = await actor(ctx);
-      await deps.authorize(ctx, request.module, "read");
+      await deps.authorize(ctx, request.module, "export");
       const records = deps.records(ctx);
       const metadata = await records.getModule(request.module);
       const fields = exportFields(metadata.fields, request);
@@ -250,7 +250,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
           locale,
           actors: await deps.listActors(ctx),
         });
-        await deps.authorize(ctx, request.module, "read");
+        await deps.authorize(ctx, request.module, "export");
         entry.body = result.body;
         job.scope = result.scope;
         job.rowCount = result.rowCount;
@@ -268,7 +268,7 @@ export function createTransferService(deps: TransferDependencies): TransferServi
     async downloadExport(ctx, id) {
       await actor(ctx);
       const entry = stored(state(ctx).exports, id);
-      await deps.authorize(ctx, entry.job.module, "read");
+      await deps.authorize(ctx, entry.job.module, "export");
       const metadata = await deps.records(ctx).getModule(entry.job.module);
       exportFields(metadata.fields, {
         module: entry.job.module,

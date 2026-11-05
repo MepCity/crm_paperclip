@@ -122,7 +122,7 @@ export interface TransferService {
   sampleCsv(ctx: OrgContext, module: TransferModule): Promise<{ fileName: string; body: string }>;
 }
 
-export type TransferAction = "read" | "create" | "update" | "delete";
+export type TransferAction = "read" | "export" | "create" | "update" | "delete";
 export interface TransferLimits {
   fileBytes: number;
   columns: number;

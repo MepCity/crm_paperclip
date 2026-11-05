@@ -19,6 +19,10 @@ vi.mock("@crm/core", async (importOriginal) => ({
   listMembers: vi.fn(async () => members),
   createTransferService: (opts: typeof options) => createTransferService(opts),
 }));
+vi.mock("@crm/core/access", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@crm/core/access")>()),
+  getAccessSnapshot: vi.fn(async () => ({ profileKind: "administrator" })),
+}));
 vi.mock("@/lib/records", () => ({ getRecordService: vi.fn() }));
 
 import { ForbiddenError, ValidationError } from "@crm/core/errors";
@@ -66,10 +70,13 @@ describe("transferRoute", () => {
 
   it("runs the operation with the transfer service and returns 200 JSON", async () => {
     const run = vi.fn(async () => ({ ok: true }));
-    const response = await transferRoute({ run } as unknown as TransferOperation)(
-      get("/x", { "X-CRM-ORG": "acme" }),
-      { params: Promise.resolve({}) },
-    );
+    const response = await transferRoute({
+      run,
+      method: "GET",
+      path: "/crm/v9/settings/imports",
+    } as unknown as TransferOperation)(get("/x", { "X-CRM-ORG": "acme" }), {
+      params: Promise.resolve({}),
+    });
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({ ok: true });
     expect((run.mock.calls[0] as unknown[])[0]).toBe(service);
@@ -79,21 +86,31 @@ describe("transferRoute", () => {
     const run = vi.fn(async () => {
       throw new ValidationError({ file: ["Invalid"] });
     });
-    const response = await transferRoute({ run } as unknown as TransferOperation)(
-      get("/x", { "X-CRM-ORG": "acme" }),
-      { params: Promise.resolve({}) },
-    );
+    const response = await transferRoute({
+      run,
+      method: "GET",
+      path: "/crm/v9/settings/imports",
+    } as unknown as TransferOperation)(get("/x", { "X-CRM-ORG": "acme" }), {
+      params: Promise.resolve({}),
+    });
     expect(response.status).toBe(400);
     expect((await response.json()).status).toBe("error");
   });
 
   it("requires the org header unless orgFromQuery is set", async () => {
     const run = vi.fn(async () => ({ ok: true }));
-    const route = transferRoute({ run } as unknown as TransferOperation);
+    const route = transferRoute({
+      run,
+      method: "GET",
+      path: "/crm/v9/settings/imports",
+    } as unknown as TransferOperation);
     expect((await route(get("/x?org=acme"), { params: Promise.resolve({}) })).status).toBe(400);
-    const viaQuery = transferRoute({ run } as unknown as TransferOperation, {
-      orgFromQuery: true,
-    });
+    const viaQuery = transferRoute(
+      { run, method: "GET", path: "/crm/v9/settings/imports" } as unknown as TransferOperation,
+      {
+        orgFromQuery: true,
+      },
+    );
     expect((await viaQuery(get("/x?org=acme"), { params: Promise.resolve({}) })).status).toBe(200);
   });
 });

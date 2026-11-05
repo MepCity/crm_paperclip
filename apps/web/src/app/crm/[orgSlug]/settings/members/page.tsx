@@ -1,5 +1,5 @@
 import { listInvitations, listMembers } from "@crm/core";
-import { listMemberAccess, listProfiles, listRoles } from "@crm/core/access";
+import { getAccessSnapshot, listMemberAccess, listProfiles, listRoles } from "@crm/core/access";
 import { formatDate } from "@crm/core/format";
 import { InvitationsTable } from "@/components/members/invitations-table";
 import { InviteMemberDialog } from "@/components/members/invite-member-dialog";
@@ -25,7 +25,9 @@ export default async function MembersSettingsPage({
 }) {
   const { orgSlug } = await params;
   const org = await requireOrgContext(orgSlug);
-  const canManage = org.role === "admin";
+  const access = await getAccessSnapshot(org);
+  const canManage =
+    access.profileKind === "administrator" || access.permissions.admin.userManagement;
   const [members, invitations] = await Promise.all([
     listMembers(org),
     canManage ? listInvitations(org) : Promise.resolve([]),

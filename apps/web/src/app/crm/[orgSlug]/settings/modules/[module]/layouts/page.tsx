@@ -2,8 +2,8 @@ import { schemaRevision } from "@crm/core/customization";
 import { fixtureCustomizationPort } from "@crm/core/records/fixture/metadata-projection";
 import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/shell/page-title";
+import { requireSettingsOrg } from "@/lib/access/settings-gate";
 import { getCustomizationService } from "@/lib/customization";
-import { requireOrgContext } from "@/lib/session";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import { isAllowedSettingsModule } from "@/modules/settings-modules/fields-model";
 import { defaultLayoutRow, type LayoutEditorData } from "@/modules/settings-modules/layouts-model";
@@ -17,7 +17,7 @@ export default async function ModuleLayoutsPage({
   params: Promise<{ orgSlug: string; module: string }>;
 }) {
   const { orgSlug, module } = await params;
-  const ctx = await requireOrgContext(orgSlug);
+  const ctx = await requireSettingsOrg(orgSlug, "moduleCustomization");
   const name = decodeURIComponent(module);
   if (!isAllowedSettingsModule(name)) notFound();
 

@@ -14,6 +14,10 @@ import { DELETE as deleteTag, PUT as updateTag } from "@/app/crm/v2.2/settings/t
 import { POST as createTag, GET as listTags } from "@/app/crm/v2.2/settings/tags/route";
 
 const auth = vi.hoisted(() => ({ contexts: new Map<string, OrgContext>() }));
+vi.mock("@crm/core/access", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@crm/core/access")>()),
+  getAccessSnapshot: vi.fn(async () => ({ profileKind: "administrator" })),
+}));
 vi.mock("@crm/core", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@crm/core")>();
   return {

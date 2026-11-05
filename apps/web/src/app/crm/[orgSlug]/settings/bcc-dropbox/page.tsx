@@ -1,6 +1,6 @@
 import { PageTitle } from "@/components/shell/page-title";
 import { getUiTranslations } from "@/i18n/request";
-import { requireOrgContext } from "@/lib/session";
+import { requireSettingsOrg } from "@/lib/access/settings-gate";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import { EmailSettingsScreen } from "@/modules/email-settings/email-settings-screen";
 
@@ -8,7 +8,7 @@ export const metadata = shellPageMetadata(shellPageTitle.settings);
 
 export default async function BccDropboxPage({ params }: { params: Promise<{ orgSlug: string }> }) {
   const { orgSlug } = await params;
-  await requireOrgContext(orgSlug);
+  await requireSettingsOrg(orgSlug, "emailSettings");
   const t = await getUiTranslations();
   return (
     <>

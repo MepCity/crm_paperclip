@@ -1,5 +1,5 @@
 import { redirect } from "next/navigation";
-import { requireOrgContext } from "@/lib/session";
+import { requireSettingsOrg } from "@/lib/access/settings-gate";
 
 export default async function EmailConfigurationPage({
   params,
@@ -7,6 +7,6 @@ export default async function EmailConfigurationPage({
   params: Promise<{ orgSlug: string }>;
 }) {
   const { orgSlug } = await params;
-  await requireOrgContext(orgSlug);
+  await requireSettingsOrg(orgSlug, "emailSettings");
   redirect(`/crm/${orgSlug}/settings/email-configuration/email-compose-settings`);
 }
