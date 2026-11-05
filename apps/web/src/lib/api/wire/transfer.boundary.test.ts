@@ -20,6 +20,9 @@ describe("transfer browser boundary", () => {
       "Calls",
       "Solutions",
       "Cases",
+      "Products",
+      "Quotes",
+      "Invoices",
     ]);
     expect(transferOperations.runImport.path).toBe("/crm/v2.2/{module}/actions/import");
   });

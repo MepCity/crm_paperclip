@@ -8,6 +8,7 @@ import { NotFoundMessage } from "@/components/shell/not-found-message";
 import { useModule, useRecord, useUsers } from "@/lib/api/client/hooks";
 import { useFormat } from "@/lib/format-context";
 import type { ModuleScreenDefinition } from "@/modules/types";
+import { InventoryRecordPrint } from "./inventory-record-print";
 import { PrintToolbar } from "./print-toolbar";
 import "./print-page.css";
 
@@ -47,6 +48,17 @@ export function RecordPrintScreen({
   const record = recordQuery.data;
   if (!module || !record || usersQuery.data === undefined) {
     return <div className="print-page" aria-hidden="true" />;
+  }
+
+  if (definition.apiName === "Quotes" || definition.apiName === "Invoices") {
+    return (
+      <InventoryRecordPrint
+        orgSlug={orgSlug}
+        definition={definition}
+        record={record}
+        orgFormat={orgFormat}
+      />
+    );
   }
 
   const { title } = definition.detail.header(record, { orgSlug });

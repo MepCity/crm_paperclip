@@ -82,6 +82,9 @@ describe("constants and paths", () => {
       "Calls",
       "Solutions",
       "Cases",
+      "Products",
+      "Quotes",
+      "Invoices",
     ]);
     expect(TRANSFER_FILE_BYTES).toBe(25_000_000);
   });

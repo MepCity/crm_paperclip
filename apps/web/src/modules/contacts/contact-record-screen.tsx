@@ -15,6 +15,8 @@ import {
   openCaseCreateWithContact,
   openContactCreateWithReportingTo,
   openDealCreateWithContact,
+  openInvoiceCreateWithContact,
+  openQuoteCreateWithContact,
 } from "./contacts-record-create";
 import { createContactsRelatedLists } from "./contacts-related-lists";
 
@@ -59,6 +61,10 @@ export function ContactRecordScreen({ definition, ...props }: ContactRecordScree
             openCaseCreateWithContact(props.orgSlug, record, (path) => router.push(path)),
           onDealsNew: () =>
             openDealCreateWithContact(props.orgSlug, record, (path) => router.push(path)),
+          onQuotesNew: () =>
+            openQuoteCreateWithContact(props.orgSlug, record, (path) => router.push(path)),
+          onInvoicesNew: () =>
+            openInvoiceCreateWithContact(props.orgSlug, record, (path) => router.push(path)),
           onAddCampaigns: campaigns.onAdd,
         },
         { deals: dealsBadge, campaigns: campaigns.badge, ...activityBadges },

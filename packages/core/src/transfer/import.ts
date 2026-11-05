@@ -32,6 +32,9 @@ export const defaultMatch: Record<TransferModule, string> = {
   Calls: "id",
   Solutions: "id",
   Cases: "id",
+  Products: "Product_Name",
+  Quotes: "Subject",
+  Invoices: "Subject",
 };
 const managed = new Set([
   "id",
@@ -42,7 +45,10 @@ const managed = new Set([
   "Locked__s",
 ]);
 export const writable = (field: FieldDefinition) =>
-  !field.readOnly && !managed.has(field.apiName) && (field.views.create || field.views.edit);
+  !field.readOnly &&
+  !managed.has(field.apiName) &&
+  field.dataType !== "subform" &&
+  (field.views.create || field.views.edit);
 const TIME_FIELDS = new Set(["Created_Time", "Modified_Time"]);
 /** Writable fields plus the two system timestamps, which an import may carry over. */
 export const importable = (field: FieldDefinition) =>
@@ -636,12 +642,16 @@ export async function importRows(
           } else throw error;
         }
       }
+      const allowEmptyLines =
+        upload.module === "Quotes" || upload.module === "Invoices" ? true : undefined;
       const options =
         settings.expectedRevision === undefined &&
-        sourceTimes.createdTime === undefined &&
-        sourceTimes.modifiedTime === undefined
+        !sourceTimes.createdTime &&
+        !sourceTimes.modifiedTime &&
+        !allowEmptyLines
           ? undefined
           : {
+              ...(allowEmptyLines ? { allowEmptyLines: true } : {}),
               ...(settings.expectedRevision === undefined
                 ? {}
                 : { expectedRevision: settings.expectedRevision }),

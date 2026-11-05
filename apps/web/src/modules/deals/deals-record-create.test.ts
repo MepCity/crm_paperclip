@@ -1,7 +1,11 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { moduleCreatePath } from "@/lib/crm-paths";
 import { writeRecordCreatePrefill } from "@/lib/records/record-create-prefill";
-import { openCaseCreateWithDeal } from "./deals-record-create";
+import {
+  openCaseCreateWithDeal,
+  openInvoiceCreateWithDeal,
+  openQuoteCreateWithDeal,
+} from "./deals-record-create";
 
 vi.mock("@/lib/records/record-create-prefill", () => ({
   writeRecordCreatePrefill: vi.fn(),
@@ -307,6 +311,62 @@ describe("openCaseCreateWithDeal", () => {
       );
 
       expect(callSequence).toEqual(["writeRecordCreatePrefill", "navigate"]);
+    });
+  });
+
+  describe("openQuoteCreateWithDeal", () => {
+    it("prefills Deal_Name, Account_Name, Contact_Name for Quotes and navigates", () => {
+      const navigate = vi.fn();
+      openQuoteCreateWithDeal(
+        "test-org",
+        {
+          id: "deal-101",
+          fields: {
+            Deal_Name: "Big Deal",
+            Account_Name: { module: "Accounts", id: "acc-1", name: "Account 1" },
+            Contact_Name: { module: "Contacts", id: "con-1", name: "Contact 1" },
+          },
+        },
+        navigate,
+      );
+
+      expect(writeRecordCreatePrefill).toHaveBeenCalledWith("test-org", {
+        module: "Quotes",
+        fields: {
+          Deal_Name: { module: "Deals", id: "deal-101", name: "Big Deal" },
+          Account_Name: { module: "Accounts", id: "acc-1", name: "Account 1" },
+          Contact_Name: { module: "Contacts", id: "con-1", name: "Contact 1" },
+        },
+      });
+      expect(navigate).toHaveBeenCalledWith("/crm/test-org/tab/Quotes/create");
+    });
+  });
+
+  describe("openInvoiceCreateWithDeal", () => {
+    it("prefills Deal_Name__s, Account_Name, Contact_Name for Invoices and navigates", () => {
+      const navigate = vi.fn();
+      openInvoiceCreateWithDeal(
+        "test-org",
+        {
+          id: "deal-101",
+          fields: {
+            Deal_Name: "Big Deal",
+            Account_Name: { module: "Accounts", id: "acc-1", name: "Account 1" },
+            Contact_Name: { module: "Contacts", id: "con-1", name: "Contact 1" },
+          },
+        },
+        navigate,
+      );
+
+      expect(writeRecordCreatePrefill).toHaveBeenCalledWith("test-org", {
+        module: "Invoices",
+        fields: {
+          Deal_Name__s: { module: "Deals", id: "deal-101", name: "Big Deal" },
+          Account_Name: { module: "Accounts", id: "acc-1", name: "Account 1" },
+          Contact_Name: { module: "Contacts", id: "con-1", name: "Contact 1" },
+        },
+      });
+      expect(navigate).toHaveBeenCalledWith("/crm/test-org/tab/Invoices/create");
     });
   });
 });

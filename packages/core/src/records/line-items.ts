@@ -77,13 +77,17 @@ export function computeLineItemTotals(
   items: readonly LineItemInput[],
   header: HeaderInput = {},
   itemsField = "Quoted_Items",
+  options: { allowEmpty?: boolean } = {},
 ): DocumentTotals {
   const errors: Record<string, string[]> = {};
   const fail = (key: string, message: string) => {
     errors[key] = [message];
   };
-  if (items.length < MIN_LINE_ITEMS || items.length > MAX_LINE_ITEMS)
+  const allowEmpty = options.allowEmpty === true;
+  if (!allowEmpty && (items.length < MIN_LINE_ITEMS || items.length > MAX_LINE_ITEMS))
     fail(itemsField, `Add between ${MIN_LINE_ITEMS} and ${MAX_LINE_ITEMS} line items.`);
+  else if (allowEmpty && items.length > MAX_LINE_ITEMS)
+    fail(itemsField, `Add between 0 and ${MAX_LINE_ITEMS} line items.`);
   const lines = items.map((item, index): LineItemTotals => {
     const key = (field: string) => `${itemsField}[${index}].${field}`;
     if (!item.Product_Name) fail(key("Product_Name"), "This field is required.");
