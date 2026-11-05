@@ -128,7 +128,9 @@ describe("read-path matrix (ADR 0017 §11.3)", () => {
     );
     await forbidden(service.count("Leads", { viewId: "all-leads", filters: hidden }));
     await forbidden(service.summarize("Leads", { viewId: "all-leads", groupBy: "Lead_Source" }));
-    await forbidden(service.summarize("Leads", { viewId: "all-leads", filters: hidden, groupBy: "Company" }));
+    await forbidden(
+      service.summarize("Leads", { viewId: "all-leads", filters: hidden, groupBy: "Company" }),
+    );
     await forbidden(service.findDuplicateGroups("Leads", ["Lead_Source"]));
     expect(s.standardIds.length).toBeGreaterThan(0);
   });

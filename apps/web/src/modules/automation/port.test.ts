@@ -1,6 +1,18 @@
 import type { OrgContext } from "@crm/core/records";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import { createAutomationPort } from "./port";
+
+// Non-administrators resolve their profile; a Standard profile carries no `admin.*` key.
+vi.mock("@crm/core/access", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@crm/core/access")>();
+  return {
+    ...actual,
+    getAccessSnapshot: async () => ({
+      profileKind: "standard",
+      permissions: actual.standardPermissions(),
+    }),
+  };
+});
 
 const ctx: OrgContext = {
   orgId: "synthetic-org",
