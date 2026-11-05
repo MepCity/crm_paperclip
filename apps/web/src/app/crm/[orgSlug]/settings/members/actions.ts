@@ -29,7 +29,8 @@ function readRole(formData: FormData): OrgRole {
 }
 
 function revalidateMembers(orgSlug: string) {
-  revalidatePath(`/crm/${orgSlug}/settings/members`);
+  revalidatePath(`/crm/${orgSlug}/settings/users`);
+  revalidatePath(`/crm/${orgSlug}/settings/activate-users`);
 }
 
 function invitationLink(token: string): string {

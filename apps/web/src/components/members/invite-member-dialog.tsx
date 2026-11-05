@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { type ReactNode, useActionState, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { Form, SubmitButton } from "@/components/ui/form";
@@ -28,13 +28,16 @@ const DEFAULT_CHOICE: AccessChoice = { id: "default", name: "Default" };
 export function InviteMemberDialog({
   action,
   accessOptions,
+  trigger,
 }: {
   action: CreateInvitationAction;
   accessOptions?: InviteAccessOptions;
+  /** Replaces the default "Invite member" button (the Users page uses a "New User" split). */
+  trigger?: ReactNode;
 }) {
   return (
     <DialogTrigger>
-      <Button>Invite member</Button>
+      {trigger ?? <Button>Invite member</Button>}
       <Dialog title="Invite member">
         {({ close }) => (
           <InviteMemberForm action={action} onClose={close} accessOptions={accessOptions} />
