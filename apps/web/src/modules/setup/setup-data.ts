@@ -168,8 +168,16 @@ export const setupCategories: readonly SetupCategory[] = [
     icon: GitBranch,
     items: [
       { id: "blueprint", label: "Blueprint", disabled: true },
-      { id: "approval-processes", label: "Approval Processes", disabled: true },
-      { id: "review-processes", label: "Review Processes", disabled: true },
+      {
+        id: "approval-processes",
+        label: "Approval Processes",
+        href: (slug) => `/crm/${slug}/settings/approval-processes`,
+      },
+      {
+        id: "review-processes",
+        label: "Review Processes",
+        href: (slug) => `/crm/${slug}/settings/review-processes`,
+      },
       { id: "connected-workflow", label: "Connected Workflow", disabled: true, badge: "sparkles" },
     ],
   },
