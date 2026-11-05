@@ -86,19 +86,19 @@ export function InventoryRecordPrint({ definition, record, orgFormat }: Inventor
           </div>
           {validTill && (
             <div className="mt-1 text-sm text-text-muted">
-              <span className="font-medium">Valid Till: </span>
+              <span className="font-semibold">Valid Till: </span>
               {validTill}
             </div>
           )}
           {invoiceDate && (
             <div className="mt-1 text-sm text-text-muted">
-              <span className="font-medium">Invoice Date: </span>
+              <span className="font-semibold">Invoice Date: </span>
               {invoiceDate}
             </div>
           )}
           {dueDate && (
             <div className="text-sm text-text-muted">
-              <span className="font-medium">Due Date: </span>
+              <span className="font-semibold">Due Date: </span>
               {dueDate}
             </div>
           )}
