@@ -1,4 +1,5 @@
 import { listInvitations, listMembers } from "@crm/core";
+import { listMemberAccess, listProfiles, listRoles } from "@crm/core/access";
 import { formatDate } from "@crm/core/format";
 import { InvitationsTable } from "@/components/members/invitations-table";
 import { InviteMemberDialog } from "@/components/members/invite-member-dialog";
@@ -30,6 +31,11 @@ export default async function MembersSettingsPage({
     canManage ? listInvitations(org) : Promise.resolve([]),
   ]);
 
+  const accessData = canManage
+    ? await Promise.all([listProfiles(org), listRoles(org), listMemberAccess(org)]).catch(
+        () => null,
+      )
+    : null;
   const orgFormat = await loadOrganizationFormat();
   return (
     <>
@@ -38,7 +44,17 @@ export default async function MembersSettingsPage({
         description="People in this organization."
         actions={
           canManage ? (
-            <InviteMemberDialog action={createInvitationAction.bind(null, orgSlug)} />
+            <InviteMemberDialog
+              action={createInvitationAction.bind(null, orgSlug)}
+              accessOptions={
+                accessData
+                  ? {
+                      profiles: accessData[0].map(({ id, name }) => ({ id, name })),
+                      roles: accessData[1].map(({ id, name }) => ({ id, name })),
+                    }
+                  : undefined
+              }
+            />
           ) : null
         }
       />
@@ -52,6 +68,21 @@ export default async function MembersSettingsPage({
         }))}
         currentUserId={org.userId}
         canManage={canManage}
+        access={
+          accessData
+            ? {
+                orgSlug,
+                profiles: accessData[0].map(({ id, name }) => ({ id, name })),
+                roles: accessData[1].map(({ id, name }) => ({ id, name })),
+                byUser: Object.fromEntries(
+                  accessData[2].map((m) => [
+                    m.userId,
+                    { profileId: m.profileId, roleId: m.roleId, isOwner: m.isOwner },
+                  ]),
+                ),
+              }
+            : undefined
+        }
         onChangeRole={changeMemberRoleAction.bind(null, orgSlug)}
         onRemove={removeMemberAction.bind(null, orgSlug)}
       />

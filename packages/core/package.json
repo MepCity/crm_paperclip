@@ -7,6 +7,7 @@
     ".": "./src/index.ts",
     "./customization": "./src/customization/index.ts",
     "./access": "./src/access/index.ts",
+    "./access/catalogue": "./src/access/catalogue.ts",
     "./records/fixture/metadata-projection": "./src/records/fixture/metadata-projection.ts",
     "./errors": "./src/errors.ts",
     "./format": "./src/format/index.ts",

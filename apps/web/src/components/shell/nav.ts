@@ -42,6 +42,8 @@ export interface NavLink {
   iconAccentToken?: NavLinkIconAccentToken;
   /** Settings navigation heading shown above the first link of each group. */
   group?: string;
+  /** Settings link shown only to viewers with `admin.userManagement`. */
+  requiresUserManagement?: boolean;
 }
 
 export interface NavGroup {
@@ -254,6 +256,56 @@ export const settingsNav: readonly NavLink[] = [
     href: (slug) => `/crm/${slug}/settings/calendar-booking`,
     match: "exact",
     group: "General",
+  },
+  {
+    id: "profiles",
+    label: "Profiles",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/profiles`,
+    activePrefix: (slug) => `/crm/${slug}/settings/profiles`,
+    match: "prefix",
+    group: "Users and Control",
+    requiresUserManagement: true,
+  },
+  {
+    id: "roles",
+    label: "Roles",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/roles`,
+    activePrefix: (slug) => `/crm/${slug}/settings/roles`,
+    match: "prefix",
+    group: "Users and Control",
+    requiresUserManagement: true,
+  },
+  {
+    id: "groups",
+    label: "Groups",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/groups`,
+    activePrefix: (slug) => `/crm/${slug}/settings/groups`,
+    match: "prefix",
+    group: "Users and Control",
+    requiresUserManagement: true,
+  },
+  {
+    id: "data-sharing",
+    label: "Data Sharing",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/data-sharing`,
+    activePrefix: (slug) => `/crm/${slug}/settings/data-sharing`,
+    match: "prefix",
+    group: "Users and Control",
+    requiresUserManagement: true,
+  },
+  {
+    id: "field-permissions",
+    label: "Field Permissions",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/field-permissions`,
+    activePrefix: (slug) => `/crm/${slug}/settings/field-permissions`,
+    match: "prefix",
+    group: "Users and Control",
+    requiresUserManagement: true,
   },
   {
     id: "email",
