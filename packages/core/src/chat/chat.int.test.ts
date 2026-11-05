@@ -4,7 +4,7 @@ import { describe, expect, it } from "vitest";
 import { NotFoundError } from "../errors";
 import { withOrg } from "../tenancy";
 import { addTestMember, createTestOrganization } from "../testing";
-import { getChatService } from "./service";
+import { getChatService, lockChatChanges } from "./service";
 
 describe("chat backend integration", () => {
   it("enforces RLS cross-tenant isolation", async () => {
@@ -153,6 +153,61 @@ describe("chat backend integration", () => {
 
     const updatedConv = await chat.getConversation(ctx, channel.id);
     expect(updatedConv.lastSeq).toBe(5);
+  });
+
+  it("never moves the sync cursor past a change that is still uncommitted", async () => {
+    const chat = getChatService();
+    const { ctx } = await createTestOrganization();
+    const channel = await chat.createConversation(ctx, {
+      kind: "channel",
+      name: "Cursor Race",
+      visibility: "public",
+    });
+    // The later change comes from another member, so it touches no row the
+    // pin holds and could commit first.
+    const other = await addTestMember(ctx, "member");
+    await chat.addMember(ctx, channel.id, { userId: other.user.id });
+    const base = await chat.sync(ctx, 0);
+
+    // An in-flight writer: it holds the change-feed lock and has taken its
+    // seq for the pin, but has not committed yet.
+    let releaseWriter: () => void = () => {};
+    const writerMayCommit = new Promise<void>((resolve) => {
+      releaseWriter = resolve;
+    });
+    let writerHasSeq: () => void = () => {};
+    const writerReady = new Promise<void>((resolve) => {
+      writerHasSeq = resolve;
+    });
+    const writer = withOrg(ctx, async (tx) => {
+      await lockChatChanges(tx, ctx.orgId, "write");
+      await tx.execute(
+        sql`UPDATE chat_members SET pinned_at = now(), changed_seq = nextval('chat_change_seq')
+        WHERE organization_id = ${ctx.orgId} AND conversation_id = ${channel.id}
+          AND user_id = ${ctx.userId}`,
+      );
+      writerHasSeq();
+      await writerMayCommit;
+    });
+    await writerReady;
+
+    // A later change and a sync start while the pin is still uncommitted.
+    const post = chat.postMessage(other.ctx, channel.id, { body: "after the pin" });
+    const sync = chat.sync(ctx, base.cursor);
+    await new Promise((resolve) => setTimeout(resolve, 200));
+    releaseWriter();
+    await writer;
+    await post;
+    const first = await sync;
+    const second = await chat.sync(ctx, first.cursor);
+
+    const delivered = [...first.members, ...second.members].filter(
+      (m) => m.conversationId === channel.id && m.userId === ctx.userId,
+    );
+    expect(delivered.some((m) => m.pinnedAt !== null)).toBe(true);
+    expect([...first.messages, ...second.messages].some((m) => m.body === "after the pin")).toBe(
+      true,
+    );
   });
 
   it("returns only visible changes in sync and correctly computes badges", async () => {

@@ -2,7 +2,7 @@ import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import { ForbiddenError, NotFoundError, ValidationError } from "../errors";
 import { withOrg } from "../tenancy";
-import type { OrgContext } from "../tenancy/types";
+import type { OrgContext, Transaction } from "../tenancy/types";
 import type {
   ChatBadges,
   ChatChannelVisibility,
@@ -24,6 +24,51 @@ import type {
   UpdateConversationParams,
   UpdateMessageParams,
 } from "./types";
+
+/**
+ * Advisory-lock class for the per-organization chat change feed. The second
+ * key is `hashtext(organization_id)`; a hash collision only serializes more.
+ */
+export const CHAT_CHANGES_LOCK_CLASS = 1472;
+
+/**
+ * Takes the organization's chat change-feed lock for the rest of the
+ * transaction: exclusive for writers, shared for `sync`.
+ *
+ * `changed_seq` values come from one sequence at write time, but
+ * transactions commit in any order. Without this lock a sync could return a
+ * change with seq N+1 while the change with seq N was still uncommitted; the
+ * client cursor then moves past N and that change (a pin, a message, a read
+ * mark) is never delivered. Writers holding the lock exclusively commit in
+ * seq order, and the shared lock gives the sync's READ COMMITTED statements
+ * one consistent view of the feed.
+ */
+export async function lockChatChanges(
+  tx: Transaction,
+  orgId: string,
+  mode: "write" | "read",
+): Promise<void> {
+  if (mode === "write") {
+    await tx.execute(
+      sql`SELECT pg_advisory_xact_lock(${CHAT_CHANGES_LOCK_CLASS}, hashtext(${orgId}))`,
+    );
+  } else {
+    await tx.execute(
+      sql`SELECT pg_advisory_xact_lock_shared(${CHAT_CHANGES_LOCK_CLASS}, hashtext(${orgId}))`,
+    );
+  }
+}
+
+function withChatChanges<T>(
+  ctx: OrgContext,
+  mode: "write" | "read",
+  work: (tx: Transaction) => Promise<T>,
+): Promise<T> {
+  return withOrg(ctx, async (tx) => {
+    await lockChatChanges(tx, ctx.orgId, mode);
+    return work(tx);
+  });
+}
 
 function toDate(val: unknown): Date {
   return val instanceof Date ? val : new Date(String(val));
@@ -122,7 +167,7 @@ export class ChatService {
     ctx: OrgContext,
     input: CreateConversationParams,
   ): Promise<ChatConversation> {
-    return withOrg(ctx, async (tx) => {
+    return withChatChanges(ctx, "write", async (tx) => {
       if (input.clientId) {
         const existing = await tx.execute(
           sql`SELECT * FROM chat_conversations WHERE organization_id = ${ctx.orgId} AND id = ${input.clientId}`,
@@ -336,7 +381,7 @@ export class ChatService {
     conversationId: string,
     input: UpdateConversationParams,
   ): Promise<ChatConversation> {
-    return withOrg(ctx, async (tx) => {
+    return withChatChanges(ctx, "write", async (tx) => {
       const conv = await this.getConversation(ctx, conversationId);
 
       if (conv.kind === "direct") {
@@ -380,7 +425,7 @@ export class ChatService {
     conversationId: string,
     input: { userId: string; role?: ChatMemberRole },
   ): Promise<ChatMember> {
-    return withOrg(ctx, async (tx) => {
+    return withChatChanges(ctx, "write", async (tx) => {
       const conv = await this.getConversation(ctx, conversationId);
       if (conv.kind === "direct") {
         throw new ForbiddenError("Cannot add members to a direct conversation.");
@@ -434,7 +479,7 @@ export class ChatService {
   }
 
   async removeMember(ctx: OrgContext, conversationId: string, targetUserId: string): Promise<void> {
-    return withOrg(ctx, async (tx) => {
+    return withChatChanges(ctx, "write", async (tx) => {
       const conv = await this.getConversation(ctx, conversationId);
       if (conv.kind === "direct") {
         throw new ForbiddenError("Cannot remove members from a direct conversation.");
@@ -471,7 +516,7 @@ export class ChatService {
   }
 
   async markConversationRead(ctx: OrgContext, conversationId: string, seq: number): Promise<void> {
-    return withOrg(ctx, async (tx) => {
+    return withChatChanges(ctx, "write", async (tx) => {
       const res = await tx.execute(
         sql`UPDATE chat_members
         SET last_read_seq = GREATEST(last_read_seq, ${seq}),
@@ -490,7 +535,7 @@ export class ChatService {
   }
 
   async pinConversation(ctx: OrgContext, conversationId: string, pin: boolean): Promise<void> {
-    return withOrg(ctx, async (tx) => {
+    return withChatChanges(ctx, "write", async (tx) => {
       const res = await tx.execute(
         sql`UPDATE chat_members
         SET pinned_at = ${pin ? sql`now()` : sql`NULL`},
@@ -513,7 +558,7 @@ export class ChatService {
     conversationId: string,
     input: PostMessageParams,
   ): Promise<ChatMessage> {
-    return withOrg(ctx, async (tx) => {
+    return withChatChanges(ctx, "write", async (tx) => {
       if (input.clientId) {
         const existing = await tx.execute(
           sql`SELECT m.*, u.name as author_name
@@ -640,7 +685,7 @@ export class ChatService {
     messageId: string,
     input: UpdateMessageParams,
   ): Promise<ChatMessage> {
-    return withOrg(ctx, async (tx) => {
+    return withChatChanges(ctx, "write", async (tx) => {
       const msgCheck = await tx.execute(
         sql`SELECT m.*, c.kind, c.visibility FROM chat_messages m
         JOIN chat_conversations c ON c.id = m.conversation_id AND c.organization_id = m.organization_id
@@ -705,7 +750,7 @@ export class ChatService {
   }
 
   async deleteMessage(ctx: OrgContext, messageId: string): Promise<void> {
-    return withOrg(ctx, async (tx) => {
+    return withChatChanges(ctx, "write", async (tx) => {
       const msgCheck = await tx.execute(
         sql`SELECT m.*, c.kind FROM chat_messages m
         JOIN chat_conversations c ON c.id = m.conversation_id AND c.organization_id = m.organization_id
@@ -746,7 +791,7 @@ export class ChatService {
     messageId: string,
     input: PostReplyParams,
   ): Promise<ChatMessage> {
-    return withOrg(ctx, async (tx) => {
+    return withChatChanges(ctx, "write", async (tx) => {
       if (input.clientId) {
         const existing = await tx.execute(
           sql`SELECT m.*, u.name as author_name
@@ -858,7 +903,7 @@ export class ChatService {
   }
 
   async markThreadRead(ctx: OrgContext, messageId: string): Promise<void> {
-    return withOrg(ctx, async (tx) => {
+    return withChatChanges(ctx, "write", async (tx) => {
       const rootCheck = await tx.execute(
         sql`SELECT conversation_id FROM chat_messages
         WHERE organization_id = ${ctx.orgId} AND id = ${messageId} AND thread_root_id IS NULL`,
@@ -1047,7 +1092,7 @@ export class ChatService {
   }
 
   async sync(ctx: OrgContext, cursor: number): Promise<ChatSyncResult> {
-    return withOrg(ctx, async (tx) => {
+    return withChatChanges(ctx, "read", async (tx) => {
       // 1. Throttled presence update (every 15s)
       const presRes = await tx.execute(
         sql`SELECT status, last_seen_at FROM chat_presence
