@@ -82,7 +82,7 @@ The arrow flips up while open. Review states therefore: pending → in progress 
 Dropdown under "Tüm Modüller" (opens right-aligned): search box, then "Tüm Modüller" (checked) followed by module names (observed: Müşteri Adayları, Kişiler, Firmalar, Satış Fırsatları, Ürünler, Teklifler, …; list scrolls). Single select; the module set is the modules that can carry a review process.
 
 ### 3.4 Blueprint tab (S-J4a, `mep1452-myjobs-blueprint-tab`)
-Header columns/filters: "Kayıt Adı", "Tüm Modüller ▾", "Tüm Sahipler ▾" (owner), "Tümü ▾" (a third filter, values not opened). List call `GET …/Approvals?type=blueprint&per_page=10&page=1` (204, empty). No empty-state text was captured.
+Header columns/filters: "Kayıt Adı", "Tüm Modüller ▾", "Tüm Sahipler ▾" (owner), "Tümü ▾" (a third filter, values not opened), "Şema", "Eylemler". Empty state "Bekleyen onay yok". List call `GET …/Approvals?type=blueprint&per_page=10&page=1` (204, empty).
 
 ### 3.5 Image validations tab (S-J4b, `mep1452-myjobs-imagevalid-tab`)
 Columns: "Kayıt Adı", "Tüm Modüller ▾", "Oluşturan:", "Hata Durumundaki Eylem", "Bekleyen Resim Sayısı". Empty state "Bekleyen onay yok". Calls: `GET …/settings/zia/visions` and `…/visions/approvals/actions/total_records?page=1&per_page=10` (both 204). The reference logged a client error while parsing the empty visions response (empty-state robustness bug in the reference; do not replicate).
