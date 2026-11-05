@@ -127,6 +127,8 @@ export interface RecordData {
   id: RecordId;
   /** Keys are field API names, including owner and creation/modification fields. */
   fields: Readonly<Record<string, FieldValue>>;
+  /** Viewer's record access level (ADR 0017 §8); only present when access control applies. */
+  $access?: "read" | "read_write" | "read_write_delete";
 }
 
 /** Saved-view wire literals plus interim filter-panel comparators. */
@@ -302,6 +304,8 @@ export interface RecordWriteOptions {
    * `createdTime` applies to create, `modifiedTime` to create and update.
    */
   sourceTimes?: { createdTime?: string; modifiedTime?: string };
+  /** Allows imported quotes or invoices to be stored without line items (ADR 0016 §9). */
+  allowEmptyLines?: boolean;
 }
 
 export type RecordInput = Readonly<Record<string, FieldValue>>;

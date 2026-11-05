@@ -12,6 +12,9 @@ export const IMPORT_MODULES = [
   "Calls",
   "Solutions",
   "Cases",
+  "Products",
+  "Quotes",
+  "Invoices",
 ] as const;
 export const TRANSFER_MODULES = IMPORT_MODULES;
 export type TransferModule = (typeof TRANSFER_MODULES)[number];
@@ -119,7 +122,7 @@ export interface TransferService {
   sampleCsv(ctx: OrgContext, module: TransferModule): Promise<{ fileName: string; body: string }>;
 }
 
-export type TransferAction = "read" | "create" | "update" | "delete";
+export type TransferAction = "read" | "export" | "create" | "update" | "delete";
 export interface TransferLimits {
   fileBytes: number;
   columns: number;

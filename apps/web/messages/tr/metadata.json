@@ -47,6 +47,10 @@
     "Solutions": {
       "singular": "Çözüm",
       "plural": "Çözümler"
+    },
+    "Products": {
+      "singular": "Ürün",
+      "plural": "Ürünler"
     }
   },
   "fields": {

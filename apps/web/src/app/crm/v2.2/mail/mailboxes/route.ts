@@ -4,24 +4,27 @@ import { listConnectedMailboxes } from "@/server/mail/mailboxes";
 
 export const dynamic = "force-dynamic";
 
-export const GET = apiRoute(async ({ ctx, request }) => {
-  const session = await getSession(request.headers);
-  let email = session?.user?.email?.trim();
-  let name = session?.user?.name?.trim();
+export const GET = apiRoute(
+  async ({ ctx, request }) => {
+    const session = await getSession(request.headers);
+    let email = session?.user?.email?.trim();
+    let name = session?.user?.name?.trim();
 
-  if (!email) {
-    try {
-      const members = await listMembers(ctx);
-      const member = members.find((m) => m.userId === ctx.userId);
-      if (member?.email) {
-        email = member.email.trim();
-        name = member.name?.trim() || name;
+    if (!email) {
+      try {
+        const members = await listMembers(ctx);
+        const member = members.find((m) => m.userId === ctx.userId);
+        if (member?.email) {
+          email = member.email.trim();
+          name = member.name?.trim() || name;
+        }
+      } catch {
+        // Allow fake-only tests without real or mocked membership tables to run cleanly.
       }
-    } catch {
-      // Allow fake-only tests without real or mocked membership tables to run cleanly.
     }
-  }
 
-  const data = await listConnectedMailboxes(ctx, { email, name });
-  return { data };
-});
+    const data = await listConnectedMailboxes(ctx, { email, name });
+    return { data };
+  },
+  { permission: { memberOnly: "Mailbox ownership rules apply in the mail service (ADR 0009)." } },
+);

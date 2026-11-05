@@ -238,9 +238,12 @@ export interface ModuleScreenDefinition {
       record: RecordData,
       actions: {
         editHref: string;
+        printHref?: string;
+        orgSlug?: string;
         save: (input: RecordInput) => Promise<void>;
         navigate: (href: string) => void;
         confirm: (request: HeaderConfirmRequest) => void;
+        convertQuoteToInvoice?: () => Promise<string>;
       },
     ) => readonly RecordCommand[];
     /** Extra card rendered between the business card and the details card. */

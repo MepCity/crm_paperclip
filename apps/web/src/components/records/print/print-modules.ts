@@ -9,6 +9,8 @@ export const PRINT_PREVIEW_MODULES: readonly ModuleApiName[] = [
   "Contacts",
   "Accounts",
   "Deals",
+  "Quotes",
+  "Invoices",
 ];
 
 /** List "Print Default view": the reference Deals list shows no Print View entry. */

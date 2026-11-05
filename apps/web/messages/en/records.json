@@ -99,7 +99,8 @@
     "requiredField": "This field is required.",
     "field": "Field",
     "fieldRequired": "{field} cannot be empty.",
-    "invalidField": "Invalid value for {field}."
+    "invalidField": "Invalid value for {field}.",
+    "multiselectNone": "-None-"
   },
   "notes": {
     "addNote": "Add a note",
@@ -641,7 +642,8 @@
       "Meetings": "Export Meetings",
       "Calls": "Export Calls",
       "Solutions": "Export Solutions",
-      "Cases": "Export Cases"
+      "Cases": "Export Cases",
+      "Products": "Export Products"
     },
     "importItem": {
       "Leads": "Import Leads",
@@ -654,7 +656,8 @@
       "Meetings": "Import Meetings",
       "Calls": "Import Calls",
       "Solutions": "Import Solutions",
-      "Cases": "Import Cases"
+      "Cases": "Import Cases",
+      "Products": "Import Products"
     },
     "undoTitle": "Undo Import",
     "undoMessage": "This will delete the {count} records added by this import. Updated records are not changed. This cannot be reversed.",

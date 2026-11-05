@@ -39,6 +39,8 @@ import type { WireMember } from "./types";
 export type OperationDeps = {
   records: RecordService & ModuleMetadataReader;
   members: () => Promise<readonly WireMember[]>;
+  /** User ids the actor may pick as owner (`onlyListSubordinates`); undefined/null = everyone. */
+  pickableUserIds?: () => Promise<ReadonlySet<string> | null>;
   customization?: () => CustomizationService;
 };
 export type OperationRequest = {
@@ -266,8 +268,14 @@ export const operations = {
     method: "POST",
     path: "/crm/v2.2/{module}/{recordId}/actions/convert",
     async run({ records }, input) {
-      await records.getModule(moduleOf(input));
-      if (moduleOf(input) !== "Leads") invalid("module", "Only leads can be converted.");
+      const module = moduleOf(input);
+      await records.getModule(module);
+      if (module === "Quotes") {
+        if (!records.convertQuoteToInvoice) invalid("module", "Quote conversion is not supported.");
+        const invoiceId = await records.convertQuoteToInvoice(recordIdOf(input));
+        return ok({ id: invoiceId });
+      }
+      if (module !== "Leads") invalid("module", "Only leads can be converted.");
       const body = object(await bodyOf(input), "convert");
       const [account, contact, deal] = await Promise.all([
         convertTarget(records, "Accounts", body.account, "account"),
@@ -438,13 +446,16 @@ export const operations = {
   users: {
     method: "GET",
     path: "/crm/v9/users",
-    async run({ members }, input) {
+    async run({ members, pickableUserIds }, input) {
+      const pickable = (await pickableUserIds?.()) ?? null;
       return collection(
-        (await members()).map((member) => ({
-          id: member.userId,
-          full_name: member.name,
-          email: member.email,
-        })),
+        (await members())
+          .filter((member) => !pickable || pickable.has(member.userId))
+          .map((member) => ({
+            id: member.userId,
+            full_name: member.name,
+            email: member.email,
+          })),
         "users",
         input,
         200,

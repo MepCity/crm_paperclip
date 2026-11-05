@@ -147,11 +147,18 @@ export const COMPLETED_MODULE_PREFIXES = [
 ];
 
 export const ALLOWED_NEW_EXEMPTION_PREFIXES = [
+  "apps/web/src/modules/settings-access/",
+  "apps/web/src/components/members/",
+  "apps/web/src/app/crm/[orgSlug]/settings/members/",
   "apps/web/src/modules/visits/",
   "apps/web/src/modules/social/",
   "apps/web/src/modules/quotes/",
   "apps/web/src/modules/invoices/",
+  "apps/web/src/modules/products/",
+  "apps/web/src/components/records/detail/related-quotes-card-body",
+  "apps/web/src/components/records/detail/related-invoices-card-body",
   "apps/web/src/components/records/line-items/",
+  "apps/web/src/components/records/print/",
 ];
 
 export function filterUnauthorizedExemptions(

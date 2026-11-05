@@ -65,12 +65,10 @@ describe("AdvancedSearchFilterPanel", () => {
     expect(contactsCheckbox.checked).toBe(true);
     expect(accountsCheckbox.checked).toBe(false);
 
-    // Later module (Products) is rendered with laterModule key and disabled
+    // Products is a registered module now: enabled and not marked as a later module
     const productsCheckbox = getCheckbox("Products");
-    expect(
-      productsCheckbox.disabled || productsCheckbox.getAttribute("aria-disabled") === "true",
-    ).toBe(true);
-    expect(productsCheckbox.getAttribute("data-later-module")).toBe("P2");
+    expect(productsCheckbox.disabled).toBe(false);
+    expect(productsCheckbox.getAttribute("data-later-module")).toBeNull();
 
     // System filter fields section
     expect(screen.getByRole("heading", { name: "Filter By Fields" })).toBeTruthy();

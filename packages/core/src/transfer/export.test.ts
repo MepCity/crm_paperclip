@@ -306,4 +306,21 @@ describe("exportRecords", () => {
       }),
     ).resolves.toEqual({ body, rowCount: 0, scope: "Selected records" });
   });
+
+  it("excludes subform line items from Quotes and Invoices export fields", async () => {
+    const records = createFixtureRecordService({
+      orgId: randomUUID(),
+      orgSlug: "export-test",
+      orgName: "Example",
+      userId: "example-user",
+      role: "admin",
+    });
+    const quotesMeta = await records.getModule("Quotes");
+    const quoteFields = exportFields(quotesMeta.fields, { module: "Quotes", fields: "all" });
+    expect(quoteFields.some((f) => f.apiName === "Quoted_Items")).toBe(false);
+
+    const invoicesMeta = await records.getModule("Invoices");
+    const invoiceFields = exportFields(invoicesMeta.fields, { module: "Invoices", fields: "all" });
+    expect(invoiceFields.some((f) => f.apiName === "Invoiced_Items")).toBe(false);
+  });
 });

@@ -1,4 +1,4 @@
-import type { FieldValue, RecordData, RecordInput } from "../contract";
+import type { FieldValue, RecordData, RecordInput, RecordWriteOptions } from "../contract";
 
 import type { Tag } from "../tags";
 
@@ -26,6 +26,7 @@ export interface FixtureModuleHooks {
     input: RecordInput,
     previous: Readonly<Record<string, FieldValue>> | undefined,
     ctx: FixtureHookContext,
+    options?: RecordWriteOptions,
   ) => void;
   /** Required fields that may stay empty for this record's field values. */
   optionalFields?: (fields: Readonly<Record<string, FieldValue>>) => readonly string[];

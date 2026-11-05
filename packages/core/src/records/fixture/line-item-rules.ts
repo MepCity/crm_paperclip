@@ -70,7 +70,7 @@ function toItem(
  * products, and recomputes every formula field from scratch on each write.
  */
 export function lineItemRules(itemsField: string): NonNullable<FixtureModuleHooks["applyRules"]> {
-  return (fields, _input, previous, ctx) => {
+  return (fields, _input, previous, ctx, options) => {
     const raw = fields[itemsField];
     const rows: readonly unknown[] = Array.isArray(raw) ? raw : [];
     const products = ctx.moduleStore("Products").records;
@@ -96,6 +96,7 @@ export function lineItemRules(itemsField: string): NonNullable<FixtureModuleHook
       return tax;
     });
     const num = (value: FieldValue): number | null => (typeof value === "number" ? value : null);
+    const allowEmpty = options?.allowEmptyLines === true;
     const totals = computeLineItemTotals(
       items,
       {
@@ -105,6 +106,7 @@ export function lineItemRules(itemsField: string): NonNullable<FixtureModuleHook
         Adjustment: num(fields.Adjustment ?? null),
       },
       itemsField,
+      { allowEmpty },
     );
     const used = new Set<string>();
     fields[itemsField] = totals.lines.map((line, index) => {

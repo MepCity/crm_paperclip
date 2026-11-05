@@ -47,6 +47,10 @@
     "Solutions": {
       "singular": "Solution",
       "plural": "Solutions"
+    },
+    "Products": {
+      "singular": "Product",
+      "plural": "Products"
     }
   },
   "fields": {

@@ -6,6 +6,8 @@
   "exports": {
     ".": "./src/index.ts",
     "./customization": "./src/customization/index.ts",
+    "./access": "./src/access/index.ts",
+    "./access/catalogue": "./src/access/catalogue.ts",
     "./records/fixture/metadata-projection": "./src/records/fixture/metadata-projection.ts",
     "./errors": "./src/errors.ts",
     "./format": "./src/format/index.ts",
@@ -40,7 +42,10 @@
     "./mail/recipient-list": "./src/mail/recipient-list.ts",
     "./mail/recipient-policy": "./src/mail/recipient-policy.ts",
     "./definitions": "./src/definitions/index.ts",
-    "./chat": "./src/chat/index.ts"
+    "./chat": "./src/chat/index.ts",
+    "./approvals": "./src/approvals/index.ts",
+    "./notifications": "./src/notifications/index.ts",
+    "./records/write-observer": "./src/records/write-observer.ts"
   },
   "dependencies": {
     "@crm/db": "workspace:*",

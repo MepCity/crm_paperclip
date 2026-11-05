@@ -41,7 +41,7 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
   const filterPanel = page.getByRole("complementary", { name: "Search filter panel" });
   await expect(filterPanel).toBeVisible();
 
-  // Registered CRM and activity modules are active; Products remains a later module.
+  // Registered CRM and activity modules are active; Products is registered too.
   const accountsCheckbox = filterPanel.getByRole("checkbox", { name: "Accounts" });
   await expect(accountsCheckbox).toBeVisible();
   await expect(accountsCheckbox).toBeChecked();
@@ -52,14 +52,9 @@ test("Advanced Search Results page renders cards, filters, columns dialog and na
     await expect(checkbox).toBeChecked();
     await expect(checkbox).not.toHaveAttribute("data-later-module");
   }
-  await expect(filterPanel.getByRole("checkbox", { name: "Products" })).toHaveAttribute(
+  await expect(filterPanel.getByRole("checkbox", { name: "Products" })).not.toHaveAttribute(
     "data-later-module",
-    "P2",
   );
-
-  const productsCheckbox = filterPanel.getByRole("checkbox", { name: "Products" });
-  await expect(productsCheckbox).toBeVisible();
-  await expect(productsCheckbox).toHaveAttribute("data-later-module", "P2");
 
   // Test Manage Columns Dialog on Leads card
   const manageColumnsBtn = page.getByRole("button", { name: "Manage Leads columns" });
@@ -112,10 +107,10 @@ test("Tasks, Meetings and Calls module filters are enabled; later-module product
     await expect(cb).toBeChecked();
   }
 
-  // Later-module products stays deferred
+  // Products is registered: active, not a later module
   const productsCheckbox = filterPanel.getByRole("checkbox", { name: "Products" });
   await expect(productsCheckbox).toBeVisible();
-  await expect(productsCheckbox).toHaveAttribute("data-later-module", "P2");
+  await expect(productsCheckbox).not.toHaveAttribute("data-later-module", /.+/);
 });
 
 test("Meetings module filter (S-31.6) is enabled and lists a matching meeting", async ({

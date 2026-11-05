@@ -48,3 +48,7 @@ Agents do not wait on the lock to repeat what CI already covers: GitHub CI runs 
 The default wait budget fits under the merge bot's 45-minute `verify` ceiling (`check` + unit tests + wait + build + Playwright); raise it only if the full pipeline still stays below that limit.
 
 Playwright assertions use a **30s** default expect timeout (`playwright.config.ts`). Per-call timeouts in specs (for example `{ timeout: 50 }`) are unchanged.
+
+## Permission fixtures
+
+`createStandardManagerUser(orgSlug)` from `@crm/core/testing` joins a new user to an existing organisation with the **Standard** profile in the **Manager** role (seeded with every organisation). It returns `{ email, password, userId }`; sign in with them through the form. The organisation creator stays Administrator in the CEO role, so existing specs are unchanged. Use it for the permission specs (`access-*.spec.ts`) only.

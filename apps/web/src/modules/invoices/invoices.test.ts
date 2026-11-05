@@ -62,7 +62,10 @@ test("filters list system rows and field rows", () => {
 test("form rules keep the line-item section for the shared editor", () => {
   expect(invoicesFormRules.requiredFields).toContain("Account_Name");
   expect(invoicesFormRules.omittedSections).toBeUndefined();
-  expect((invoicesFormRules.defaultValues as () => unknown)()).toEqual({ Status: "Created" });
+  const defaults = (invoicesFormRules.defaultValues as () => Record<string, unknown>)();
+  expect(defaults.Status).toBe("Created");
+  expect(defaults.Invoice_Date).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  expect(invoicesFormRules.currencies).toContain("Sales_Commission");
 });
 
 test("detail sections skip the subform field", () => {
@@ -106,4 +109,18 @@ test("related lists are limited to features with a backing implementation", () =
     "Closed Activities",
     "Emails",
   ]);
+});
+
+test("header commands include print preview and edit", () => {
+  const record: RecordData = { id: "inv1", fields: { Subject: "Invoice 1" } };
+  const commands = invoicesScreenDefinition.detail.buildHeaderCommands?.(record, {
+    editHref: "/crm/test/tab/Invoices/inv1/edit",
+    printHref: "/crm/test/tab/Invoices/inv1/print",
+    navigate: () => {},
+    confirm: () => {},
+    save: async () => {},
+  });
+
+  expect(commands).toBeDefined();
+  expect(commands?.map((c) => c.id)).toEqual(["print-preview", "edit"]);
 });

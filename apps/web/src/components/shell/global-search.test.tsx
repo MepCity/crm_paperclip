@@ -108,9 +108,7 @@ test("module search filters choices, future modules stay inert and Contacts rest
   const menu = await screen.findByRole("dialog", { name: "Search Modules" });
 
   const products = within(menu).getByRole("button", { name: "Products" });
-  expect(products.getAttribute("data-later-module")).toBe("P2");
-  await user.click(products);
-  expect(screen.getByRole("dialog", { name: "Search Modules" })).toBeTruthy();
+  expect(products.getAttribute("data-later-module")).toBeNull();
 
   const meetings = within(menu).getByRole("button", { name: "Meetings" });
   expect(meetings.getAttribute("data-later-module")).toBeNull();

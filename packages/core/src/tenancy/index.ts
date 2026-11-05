@@ -1,6 +1,9 @@
 import { schema } from "@crm/db";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
+import { buildAccessSnapshot } from "../access/evaluate";
+import { bumpAccessVersion, rootRoleId, systemProfileId } from "../access/seed";
+import { loadAccessData } from "../access/store";
 import { requireUser, type SessionUser } from "../auth";
 import { getDb } from "../database";
 import {
@@ -93,9 +96,17 @@ export async function requireOrgContext(headers: Headers, orgSlug: string): Prom
   const user = await requireUser(headers);
   if (!slugInput.safeParse(orgSlug).success) throw missingOrg();
   const [row] = await getDb()
-    .select({ org: schema.organizations, role: schema.memberships.role })
+    .select({
+      org: schema.organizations,
+      role: schema.memberships.role,
+      accessVersion: schema.accessVersions.version,
+    })
     .from(schema.organizations)
     .innerJoin(schema.memberships, eq(schema.memberships.organizationId, schema.organizations.id))
+    .leftJoin(
+      schema.accessVersions,
+      eq(schema.accessVersions.organizationId, schema.organizations.id),
+    )
     .where(and(eq(schema.organizations.slug, orgSlug), eq(schema.memberships.userId, user.id)));
   if (!row) throw missingOrg();
   return {
@@ -104,6 +115,7 @@ export async function requireOrgContext(headers: Headers, orgSlug: string): Prom
     orgName: row.org.name,
     userId: user.id,
     role: row.role as OrgRole,
+    accessVersion: row.accessVersion ?? null,
   };
 }
 
@@ -118,7 +130,6 @@ export async function withOrg<T>(
 }
 
 async function requireCurrentAdmin(tx: Transaction, ctx: OrgContext): Promise<void> {
-  if (ctx.role !== "admin") throw new ForbiddenError();
   const [row] = await tx
     .select({ role: schema.memberships.role })
     .from(schema.memberships)
@@ -128,7 +139,13 @@ async function requireCurrentAdmin(tx: Transaction, ctx: OrgContext): Promise<vo
         eq(schema.memberships.userId, ctx.userId),
       ),
     );
-  if (row?.role !== "admin") throw new ForbiddenError();
+  if (row?.role === "admin") return;
+  // ADR 0017 §7.3: a profile with `admin.userManagement` manages members too.
+  if (row) {
+    const snapshot = buildAccessSnapshot(await loadAccessData(tx, ctx.orgId, ctx.userId));
+    if (snapshot.permissions.admin.userManagement) return;
+  }
+  throw new ForbiddenError(undefined, "permission_denied");
 }
 
 async function requireCurrentMember(tx: Transaction, ctx: OrgContext): Promise<void> {
@@ -186,6 +203,15 @@ async function preserveAdmin(tx: Transaction, ctx: OrgContext, targetRole: strin
   if ((count?.total ?? 0) <= 1) throw new ConflictError("An organization must have an admin.");
 }
 
+// The organization owner (ADR 0017 §2) always keeps the Administrator profile and cannot be removed.
+async function assertNotOwner(tx: Transaction, ctx: OrgContext, userId: string): Promise<void> {
+  const [org] = await tx
+    .select({ owner: schema.organizations.ownerUserId })
+    .from(schema.organizations)
+    .where(eq(schema.organizations.id, ctx.orgId));
+  if (org?.owner === userId) throw new ConflictError("The organization owner cannot be changed.");
+}
+
 export async function changeMemberRole(
   ctx: OrgContext,
   input: { userId: string; role: OrgRole },
@@ -204,8 +230,10 @@ export async function changeMemberRole(
         ),
       );
     if (!target) throw new NotFoundError();
-    if (target.role === "admin" && values.role !== "admin")
+    if (target.role === "admin" && values.role !== "admin") {
+      await assertNotOwner(tx, ctx, values.userId);
       await preserveAdmin(tx, ctx, target.role);
+    }
     await tx
       .update(schema.memberships)
       .set({ role: values.role })
@@ -215,6 +243,25 @@ export async function changeMemberRole(
           eq(schema.memberships.userId, values.userId),
         ),
       );
+    // Keep the compatibility column and the access profile in step (ADR 0017 §2), only when
+    // the admin/member side changes; a custom profile must survive member -> member.
+    if ((target.role === "admin") !== (values.role === "admin"))
+      await tx
+        .update(schema.memberAccess)
+        .set({
+          profileId: await systemProfileId(
+            tx,
+            ctx.orgId,
+            values.role === "admin" ? "administrator" : "standard",
+          ),
+        })
+        .where(
+          and(
+            eq(schema.memberAccess.organizationId, ctx.orgId),
+            eq(schema.memberAccess.userId, values.userId),
+          ),
+        );
+    await bumpAccessVersion(tx, ctx.orgId);
   });
 }
 
@@ -233,7 +280,9 @@ export async function removeMember(ctx: OrgContext, input: { userId: string }): 
         ),
       );
     if (!target) throw new NotFoundError();
+    await assertNotOwner(tx, ctx, values.userId);
     await preserveAdmin(tx, ctx, target.role);
+    await bumpAccessVersion(tx, ctx.orgId);
     await tx
       .delete(schema.memberships)
       .where(
@@ -245,7 +294,12 @@ export async function removeMember(ctx: OrgContext, input: { userId: string }): 
   });
 }
 
-const inviteInput = z.object({ email: emailInput, role: roleInput });
+const inviteInput = z.object({
+  email: emailInput,
+  role: roleInput,
+  profileId: uuidInput.optional(),
+  roleId: uuidInput.optional(),
+});
 const invitationColumns = {
   id: schema.invitations.id,
   organizationId: schema.invitations.organizationId,
@@ -284,7 +338,7 @@ function toInvitation(row: {
 
 export async function createInvitation(
   ctx: OrgContext,
-  input: { email: string; role: OrgRole },
+  input: { email: string; role: OrgRole; profileId?: string; roleId?: string },
 ): Promise<{ invitation: Invitation; token: string }> {
   const values = parseInput(inviteInput, input);
   return withOrg(ctx, async (tx) => {
@@ -309,13 +363,41 @@ export async function createInvitation(
           pending(now),
         ),
       );
+    let legacyRole: OrgRole = values.role;
+    if (values.profileId) {
+      const [profile] = await tx
+        .select({ kind: schema.accessProfiles.kind })
+        .from(schema.accessProfiles)
+        .where(
+          and(
+            eq(schema.accessProfiles.organizationId, ctx.orgId),
+            eq(schema.accessProfiles.id, values.profileId),
+          ),
+        );
+      if (!profile) throw new ValidationError({ profileId: ["Choose an existing profile."] });
+      legacyRole = profile.kind === "administrator" ? "admin" : "member";
+    }
+    if (values.roleId) {
+      const [role] = await tx
+        .select({ id: schema.accessRoles.id })
+        .from(schema.accessRoles)
+        .where(
+          and(
+            eq(schema.accessRoles.organizationId, ctx.orgId),
+            eq(schema.accessRoles.id, values.roleId),
+          ),
+        );
+      if (!role) throw new ValidationError({ roleId: ["Choose an existing role."] });
+    }
     const { token, hash } = createInvitationToken();
     const [row] = await tx
       .insert(schema.invitations)
       .values({
         organizationId: ctx.orgId,
         email: values.email,
-        role: values.role,
+        role: legacyRole,
+        profileId: values.profileId ?? null,
+        roleId: values.roleId ?? null,
         tokenHash: hash,
         expiresAt: new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000),
         invitedBy: ctx.userId,
@@ -437,9 +519,21 @@ export async function acceptInvitation(
         ),
       );
     if (existing) throw new ConflictError("You are already a member.");
+    const profileId =
+      invitation.profileId ??
+      (await systemProfileId(
+        tx,
+        ctx.orgId,
+        invitation.role === "admin" ? "administrator" : "standard",
+      ));
+    const roleId = invitation.roleId ?? (await rootRoleId(tx, ctx.orgId));
     await tx
       .insert(schema.memberships)
       .values({ organizationId: ctx.orgId, userId: user.id, role: invitation.role });
+    await tx
+      .insert(schema.memberAccess)
+      .values({ organizationId: ctx.orgId, userId: user.id, profileId, roleId });
+    await bumpAccessVersion(tx, ctx.orgId);
     await tx
       .update(schema.invitations)
       .set({ acceptedAt: new Date() })
