@@ -2,6 +2,7 @@ import { createTransferService, listMembers, type TransferService } from "@crm/c
 import { ForbiddenError } from "@crm/core/errors";
 import { DEFAULT_TIME_ZONE } from "@/lib/locale";
 import { getRecordService } from "@/lib/records";
+import { operationPermission } from "./route-permissions";
 import { apiRoute } from "./server";
 import { transferLocale } from "./transfer-locale";
 import type { TransferOperation } from "./wire/transfer";
@@ -31,8 +32,8 @@ export function transferRoute(
   operation: TransferOperation,
   options: { orgFromQuery?: boolean } = {},
 ) {
-  return apiRoute<Record<string, string>>(
-    (input) => operation.run(getTransferService(), input),
-    options,
-  );
+  return apiRoute<Record<string, string>>((input) => operation.run(getTransferService(), input), {
+    ...options,
+    permission: operationPermission(operation.method, operation.path),
+  });
 }
