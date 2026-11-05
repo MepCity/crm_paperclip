@@ -888,7 +888,7 @@ describe.each(["Solutions", "Cases"] as const)("%s export and import", (module) 
     const all = await s.service.runExport(s.ctx, { module, fields: "all" });
     expect(all.status).toBe("completed");
     expect(all.rowCount).toBeGreaterThanOrEqual(1);
-    expect(s.authorize).toHaveBeenCalledWith(s.ctx, module, "read");
+    expect(s.authorize).toHaveBeenCalledWith(s.ctx, module, "export");
   });
   it("offers import preview, execution and a sample file", async () => {
     const s = setup();

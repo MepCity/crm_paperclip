@@ -11,6 +11,13 @@ vi.mock("@crm/core", async (importOriginal) => ({
   requireOrgContext: vi.fn(async () => ctx),
   listMembers: vi.fn(async () => members),
 }));
+vi.mock("@crm/core/access", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("@crm/core/access")>();
+  return {
+    ...actual,
+    getAccessSnapshot: vi.fn(async () => ({ profileKind: "administrator" })),
+  };
+});
 vi.mock("@/lib/records", () => ({ getRecordService: vi.fn(() => records) }));
 
 import { getSession } from "@crm/core";
@@ -33,7 +40,11 @@ describe("operationRoute", () => {
 
   it("runs the operation with scoped services and returns its body as 200 JSON", async () => {
     const run = vi.fn(async () => ({ body: { count: 3 } }));
-    const response = await operationRoute({ run } as unknown as Operation)(post(), {
+    const response = await operationRoute({
+      run,
+      method: "POST",
+      path: "/crm/v2.2/{module}/actions/count",
+    } as unknown as Operation)(post(), {
       params: Promise.resolve({}),
     });
     expect(response.status).toBe(200);
@@ -52,7 +63,11 @@ describe("operationRoute", () => {
     "rejects %s before creating record services",
     async (module) => {
       const run = vi.fn();
-      const response = await operationRoute({ run } as unknown as Operation)(post(), {
+      const response = await operationRoute({
+        run,
+        method: "POST",
+        path: "/crm/v2.2/{module}/actions/count",
+      } as unknown as Operation)(post(), {
         params: Promise.resolve({ module }),
       });
       expect(response.status).toBe(404);
@@ -66,7 +81,11 @@ describe("operationRoute", () => {
     const run = vi.fn(async () => {
       throw new ValidationError({ name: ["Required"] });
     });
-    const response = await operationRoute({ run } as unknown as Operation)(post(), {
+    const response = await operationRoute({
+      run,
+      method: "POST",
+      path: "/crm/v2.2/{module}/actions/count",
+    } as unknown as Operation)(post(), {
       params: Promise.resolve({}),
     });
     expect(response.status).toBe(400);
@@ -105,10 +124,11 @@ describe("operationRoute", () => {
 
   it("rejects a missing organization header before running the operation", async () => {
     const run = vi.fn();
-    const response = await operationRoute({ run } as unknown as Operation)(
-      post({ Origin: origin }),
-      { params: Promise.resolve({}) },
-    );
+    const response = await operationRoute({
+      run,
+      method: "POST",
+      path: "/crm/v2.2/{module}/actions/count",
+    } as unknown as Operation)(post({ Origin: origin }), { params: Promise.resolve({}) });
     expect(response.status).toBe(400);
     expect(run).not.toHaveBeenCalled();
   });
@@ -116,7 +136,11 @@ describe("operationRoute", () => {
   it("rejects an unauthenticated request with 401", async () => {
     vi.mocked(getSession).mockResolvedValueOnce(null);
     const run = vi.fn();
-    const response = await operationRoute({ run } as unknown as Operation)(post(), {
+    const response = await operationRoute({
+      run,
+      method: "POST",
+      path: "/crm/v2.2/{module}/actions/count",
+    } as unknown as Operation)(post(), {
       params: Promise.resolve({}),
     });
     expect(response.status).toBe(401);

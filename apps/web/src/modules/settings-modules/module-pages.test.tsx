@@ -6,6 +6,10 @@ const notFoundMock = vi.fn(() => {
   throw new Error("NEXT_NOT_FOUND");
 });
 
+vi.mock("@crm/core/access", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@crm/core/access")>()),
+  getAccessSnapshot: vi.fn(async () => ({ profileKind: "administrator" })),
+}));
 vi.mock("next/navigation", () => ({
   notFound: () => notFoundMock(),
   useRouter: () => ({ refresh: vi.fn() }),

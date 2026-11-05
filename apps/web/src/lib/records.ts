@@ -1,4 +1,5 @@
 import { listMembers } from "@crm/core";
+import { getAccessSnapshot } from "@crm/core/access";
 import type {
   ModuleMetadataReader,
   OrgContext,
@@ -19,6 +20,7 @@ import { getCustomizationCoordinator } from "./customization";
 export function getRecordService(ctx: OrgContext): RecordService & ModuleMetadataReader {
   return createFixtureRecordService(ctx, {
     schema: getCustomizationCoordinator(),
+    access: () => getAccessSnapshot(ctx),
     listMemberIds: async () => (await listMembers(ctx)).map((member) => member.userId),
     writeObserver: getApprovals().writeObserver(ctx),
   });

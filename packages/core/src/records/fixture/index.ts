@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { childRecordLevel } from "../../access/evaluate";
 import { ATTACHMENT_PARENT_MODULES } from "../../attachments/modules";
 import type { CustomizationPort } from "../../customization";
 import type { InMemorySchemaCoordinator } from "../../customization/coordinator";
@@ -10,6 +11,12 @@ import {
   ValidationError,
 } from "../../errors";
 import type { OrgContext } from "../../tenancy/types";
+import {
+  type ChildLevelResolver,
+  createRecordAccessChecker,
+  type RecordAccessChecker,
+  type RecordAccessSource,
+} from "../access-policy";
 import {
   activityDate,
   activityParentIds,
@@ -165,6 +172,11 @@ const dropIgnored = (
     : input;
 
 export interface FixtureRecordServiceOptions extends FixtureHistoryPermissions {
+  /**
+   * Record access policy source (ADR 0017 §6): applied in the single candidate-selection step
+   * and on get/write. Absent = system actor (automation, worker, tests).
+   */
+  access?: RecordAccessSource;
   customization?: CustomizationPort;
   /** Internal ephemeral schema integration; shared by every service for this organization. */
   schema?: InMemorySchemaCoordinator;
@@ -430,6 +442,46 @@ export function createFixtureRecordService(
     if (module === "Notes" && !noteParentVisible(fields))
       throw new NotFoundError("Record not found.");
   };
+  const childLevel: ChildLevelResolver = (module, fields, levelOf) => {
+    if (!["Notes", "Attachments", "Contact_Roles", "Campaign_Members"].includes(module))
+      return undefined;
+    let parent: { module: string; id: string } | undefined;
+    if (module === "Notes") parent = attachmentParent(fields.Parent_Id);
+    else if (module === "Contact_Roles") parent = attachmentParent(fields.Deal);
+    else if (module === "Campaign_Members") parent = attachmentParent(fields.Campaign);
+    else {
+      try {
+        parent = attachmentUltimateParent(fields as RecordData["fields"], hookContext);
+      } catch {
+        return "none";
+      }
+    }
+    const parentRecord = parent && moduleStore(parent.module).records.get(parent.id);
+    if (!parent || !parentRecord) return "none";
+    const author = fields.Created_By;
+    const authorId =
+      typeof author === "string" ? author : isJsonObject(author) ? author.id : undefined;
+    return childRecordLevel(levelOf(parent.module, parentRecord.fields), authorId === ctx.userId);
+  };
+  let checkerPromise: Promise<RecordAccessChecker | undefined> | undefined;
+  const accessFor = () =>
+    // One snapshot per service instance (one request); undefined = system actor.
+    (checkerPromise ??= options?.access
+      ? options.access().then((snapshot) => createRecordAccessChecker(snapshot, childLevel))
+      : Promise.resolve(undefined));
+  const assertRecordLevel = async (
+    module: string,
+    ids: readonly string[],
+    operation: "read" | "edit" | "delete",
+  ) => {
+    const acc = await accessFor();
+    if (!acc) return;
+    // Atomic (§4.6): every selected record must pass; invisible ids count as missing.
+    for (const id of ids) {
+      const record = moduleStore(module).records.get(id);
+      if (record) acc.assert(module, record.fields, operation);
+    }
+  };
   const recordFor = (module: string, id: string) => {
     const record = moduleStore(module).records.get(id);
     if (!record) throw new NotFoundError("Record not found.");
@@ -614,6 +666,8 @@ export function createFixtureRecordService(
     now = clock(),
   ) => {
     const bundle = bundleFor(module);
+    const acc = await accessFor();
+    acc?.assertCriteria(module, query.filters);
     if (query.systemFilters !== undefined)
       validateSystemFilters(query.systemFilters, {
         module,
@@ -680,6 +734,7 @@ export function createFixtureRecordService(
     const storedRows = [...moduleStore(module).records.values()];
     bundle.orderRows?.(storedRows);
     return storedRows
+      .filter((record) => !acc || acc.visible(module, record.fields))
       .filter((record) => module !== "Notes" || noteParentVisible(record.fields))
       .filter((record) => module !== "Attachments" || record.fields.$state === "ready")
       .filter(
@@ -698,7 +753,8 @@ export function createFixtureRecordService(
           (!campaignMembers || campaignMembers.has(record.id)) &&
           (!query.activityFilter ||
             matchesActivityFilter(activities?.get(record.id) ?? [], query.activityFilter, now)),
-      );
+      )
+      .map((record) => (acc ? acc.project(module, record) : record));
   };
   const validateIds = (ids: readonly string[]) => {
     if (ids.length < 1 || ids.length > 500)
@@ -815,6 +871,7 @@ export function createFixtureRecordService(
   const recycleBin = fixtureRecycleBinService({
     ...recycleDependencies,
     atomic,
+    access: accessFor,
     async validateOwners(records) {
       const members = options?.listMemberIds ? await options.listMemberIds() : [...state.memberIds];
       for (const record of records) {
@@ -951,6 +1008,14 @@ export function createFixtureRecordService(
     const bundle = bundleFor(module);
     if (bundle.childModule) throw new ForbiddenError("Child modules do not support merge.");
     const ids = [...input.duplicateIds];
+    const mergeAccess = await accessFor();
+    if (mergeAccess) {
+      // ADR 0017 §4.7: findAndMerge + RW on the master + RWD on the others.
+      if (!mergeAccess.tool("findAndMerge", module))
+        throw new ForbiddenError(undefined, "permission_denied");
+      await assertRecordLevel(module, [input.masterId], "edit");
+      await assertRecordLevel(module, ids, "delete");
+    }
     if (
       ids.length < 1 ||
       ids.length > 2 ||
@@ -1069,6 +1134,23 @@ export function createFixtureRecordService(
   const convertLead = async (leadId: string, input: ConvertLeadInput) => {
     assertModuleWritable("Leads");
     const sourceLead = recordFor("Leads", leadId);
+    const convertAccess = await accessFor();
+    if (convertAccess) {
+      // ADR 0017 §4.7: tools.convert + RW on the lead + create on created / read on reused targets.
+      if (!convertAccess.tool("convert", "Leads"))
+        throw new ForbiddenError(undefined, "permission_denied");
+      await assertRecordLevel("Leads", [leadId], "edit");
+      for (const [targetModule, target] of [
+        ["Accounts", input.account],
+        ["Contacts", input.contact],
+        ["Deals", input.deal],
+      ] as const) {
+        if (!target) continue;
+        if ("reuseId" in target) await assertRecordLevel(targetModule, [target.reuseId], "read");
+        else if (!convertAccess.can(targetModule, "create"))
+          throw new ForbiddenError(undefined, "permission_denied");
+      }
+    }
     if (!input.contact)
       throw new ValidationError({ contact: ["Choose or create a contact to convert into."] });
     const targets = [
@@ -1347,7 +1429,9 @@ export function createFixtureRecordService(
     async deduplicate(module, fields) {
       assertModuleWritable(module);
       moduleExists(module);
-      if (ctx.role !== "admin") throw new ForbiddenError();
+      const dedupAccess = await accessFor();
+      if (dedupAccess ? !dedupAccess.tool("findAndMerge", module) : ctx.role !== "admin")
+        throw new ForbiddenError(undefined, "permission_denied");
       if (state.deduplicating.has(module))
         throw new ConflictError("Deduplication is already running for this module.");
       state.deduplicating.add(module);
@@ -1503,6 +1587,7 @@ export function createFixtureRecordService(
       const fieldMap = new Map(bundle.metadata.fields.map((field) => [field.apiName, field]));
       const applied = query.sort ?? view.sort ?? DEFAULT_LIST_SORT;
       const now = clock();
+      (await accessFor())?.assertCriteria(module, undefined, applied);
       const rows = sortRecords(await matching(module, query, true, now), applied, fieldMap);
       const start = (query.page - 1) * query.perPage;
       const activities = query.includeActivitySummary ? linkedActivities(module, now) : undefined;
@@ -1537,6 +1622,7 @@ export function createFixtureRecordService(
       return (await matching(module, query)).length;
     },
     async summarize(module, query) {
+      (await accessFor())?.assertCriteria(module, query.filters, undefined, query.groupBy);
       const metadata = bundleFor(module).metadata;
       const groupField = metadata.fields.find((field) => field.apiName === query.groupBy);
       if (groupField?.dataType !== "picklist")
@@ -1571,9 +1657,12 @@ export function createFixtureRecordService(
     },
     async get(module, id) {
       const record = recordFor(module, id);
+      await assertRecordLevel(module, [id], "read");
       if (module === "Attachments" && record.fields.$state !== "ready")
         throw new NotFoundError("Record not found.");
-      return copy(resolveRead(module, record));
+      const resolved = resolveRead(module, record);
+      const acc = await accessFor();
+      return copy(acc ? acc.project(module, resolved) : resolved);
     },
     async create(module, input, options) {
       assertModuleWritable(module);
@@ -1592,6 +1681,8 @@ export function createFixtureRecordService(
       );
       validateReferences(module, normalized);
       await validateOwner(normalized);
+      const writer = await accessFor();
+      writer?.assertWrite(module, normalized);
       const created = atomic({ module, mechanism: "create" }, () =>
         insertRecord(module, normalized, options),
       );
@@ -1600,6 +1691,7 @@ export function createFixtureRecordService(
     },
     async update(module, id, input, options) {
       assertModuleWritable(module);
+      await assertRecordLevel(module, [id], "edit");
       assertSourceTimes(options?.sourceTimes);
       const bundle = bundleFor(module);
       recordFor(module, id);
@@ -1616,6 +1708,7 @@ export function createFixtureRecordService(
       );
       validateReferences(module, normalized);
       await validateOwner(normalized);
+      (await accessFor())?.assertWrite(module, normalized, recordFor(module, id).fields);
       await assertUnlocked(module, [id], "update");
       const previous = copy(recordFor(module, id));
       const updatedRecord = atomic({ module, mechanism: "update" }, () => {
@@ -1652,6 +1745,7 @@ export function createFixtureRecordService(
       const bundle = bundleFor(module);
       const targets = [...ids];
       validateIds(targets);
+      await assertRecordLevel(module, targets, "edit");
       const stringFields = stringFieldNames(bundle);
       const normalized = normalizeInput(input, stringFields, bundle.metadata.fields);
       const names = Object.keys(normalized);
@@ -1663,6 +1757,10 @@ export function createFixtureRecordService(
       validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
+      const writer = await accessFor();
+      if (writer && !writer.tool("massUpdate", module))
+        throw new ForbiddenError(undefined, "permission_denied");
+      writer?.assertWrite(module, normalized);
       await batchWithObserver(module, targets, normalized, "mass_update");
     },
     async changeOwner(module, ids, ownerId) {
@@ -1670,13 +1768,19 @@ export function createFixtureRecordService(
       const bundle = bundleFor(module);
       const targets = [...ids];
       validateIds(targets);
+      await assertRecordLevel(module, targets, "edit");
       const input = { Owner: ownerId };
       validateInput(input, true, bundle.metadata.fields, bundle.managedFields);
       await validateOwner(input);
+      const writer = await accessFor();
+      if (writer && !writer.tool("changeOwner", module))
+        throw new ForbiddenError(undefined, "permission_denied");
+      writer?.assertWrite(module, input);
       await batchWithObserver(module, targets, input, "change_owner");
     },
     async delete(module, ids) {
       assertModuleWritable(module);
+      await assertRecordLevel(module, ids, "delete");
       moduleExists(module);
       validateIds(ids);
       const records = [...new Set(ids)].map((id) => recordFor(module, id));

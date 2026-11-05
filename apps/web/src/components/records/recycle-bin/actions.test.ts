@@ -17,6 +17,10 @@ const mocks = vi.hoisted(() => ({
   purge: vi.fn(),
   empty: vi.fn(),
 }));
+vi.mock("@crm/core/access", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@crm/core/access")>()),
+  getAccessSnapshot: vi.fn(async () => ({ profileKind: "administrator" })),
+}));
 vi.mock("@/lib/session", () => ({ requireOrgContext: mocks.session }));
 vi.mock("@/lib/recycle-bin", () => ({ getRecycleBinService: mocks.service }));
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidate }));

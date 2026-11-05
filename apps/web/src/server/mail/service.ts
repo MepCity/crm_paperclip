@@ -2,7 +2,7 @@ import type { OrgContext } from "@crm/core";
 import { NotFoundError } from "@crm/core/errors";
 import { createMailService, type MailServiceOptions } from "@crm/core/mail/service";
 import type { MailParticipant, MailRecordModule } from "@crm/core/mail/types";
-import { createFixtureRecordService } from "@crm/core/records/fixture";
+import { getRecordService } from "@/lib/records";
 import type { EmailConversation, EmailFolder } from "@/modules/emails/inbox/view-model";
 import { getMailState } from "./state";
 
@@ -18,7 +18,7 @@ async function fixtureSource(ctx: OrgContext): Promise<MailReadSource> {
     recordAddressLookup: { findByAddress: async () => [] },
     async canReadRecord(actor, module, id) {
       try {
-        await createFixtureRecordService(actor).get(
+        await getRecordService(actor).get(
           { leads: "Leads", contacts: "Contacts", accounts: "Accounts", deals: "Deals" }[module] as
             | "Leads"
             | "Contacts"
