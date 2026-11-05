@@ -94,15 +94,7 @@ export function ProfilesScreen({ orgSlug }: { orgSlug: string }) {
   const [search, setSearch] = useState("");
 
   return (
-    <Screen
-      state={state}
-      title="Profiles"
-      actions={
-        state.status === "ready" ? (
-          <CloneProfileDialog orgSlug={orgSlug} profiles={state.data} label="New Profile" />
-        ) : null
-      }
-    >
+    <Screen state={state} title="Profiles">
       {(profiles) => {
         const shown = profiles.filter((p) =>
           p.name.toLowerCase().includes(search.trim().toLowerCase()),
@@ -113,7 +105,20 @@ export function ProfilesScreen({ orgSlug }: { orgSlug: string }) {
               A profile is a set of permissions that decides what a user can do. A new profile is a
               copy of an existing one that you then edit.
             </HelpText>
-            <TextField label="Search" variant="search" value={search} onChange={setSearch} />
+            {/* Reference layout: a visible search box on the left, New Profile on the right. */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="w-60">
+                <TextField
+                  label="Search"
+                  placeholder="Search"
+                  hideLabel
+                  variant="filter-search"
+                  value={search}
+                  onChange={setSearch}
+                />
+              </div>
+              <CloneProfileDialog orgSlug={orgSlug} profiles={profiles} label="New Profile" />
+            </div>
             <Card>
               <CardContent>
                 <Table>
