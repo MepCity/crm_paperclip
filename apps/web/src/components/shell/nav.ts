@@ -1,6 +1,8 @@
 import type { ClientPermissions } from "@crm/core/access";
 import { type Icon, Icons } from "@/components/ui/icon";
+import { english } from "@/i18n/catalogs";
 import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
+import { shellPageTitle } from "@/lib/shell-page-title";
 import { FEEDS_LABEL } from "@/modules/feeds/feeds-labels";
 import { getModuleScreens } from "@/modules/registry";
 import { accessSettingsNav } from "@/modules/settings-access/nav";
@@ -142,6 +144,14 @@ function flatNavLinks(): NavLink[] {
       icon: Icons.messageSquare,
       href: (slug) => moduleTabPath(slug, "Social"),
       activePrefix: (slug) => moduleTabPath(slug, "Social"),
+      match: "prefix",
+    },
+    {
+      id: "my-jobs",
+      label: shellPageTitle.myJobs,
+      icon: Icons.briefcase,
+      href: (slug) => moduleTabPath(slug, "Approvals"),
+      activePrefix: (slug) => moduleTabPath(slug, "Approvals"),
       match: "prefix",
     },
     {
@@ -346,6 +356,24 @@ export const settingsNav: readonly NavLink[] = [
     href: (slug) => `/crm/${slug}/settings/assignment-rules`,
     match: "exact",
     group: "Automation",
+  },
+  {
+    id: "approval-processes",
+    label: english.shell["approval-processes"],
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/approval-processes`,
+    activePrefix: (slug) => `/crm/${slug}/settings/approval-processes`,
+    match: "prefix",
+    group: "Process Management",
+  },
+  {
+    id: "review-processes",
+    label: english.shell["review-processes"],
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/review-processes`,
+    activePrefix: (slug) => `/crm/${slug}/settings/review-processes`,
+    match: "prefix",
+    group: "Process Management",
   },
 ];
 

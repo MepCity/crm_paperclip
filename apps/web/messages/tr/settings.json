@@ -178,6 +178,7 @@
     "dataAdministration": "Veri Yönetimi",
     "customization": "Özelleştirme",
     "automation": "Otomasyon",
+    "processManagement": "İşlem Yönetimi",
     "orgId": "Kuruluş Kimliği"
   },
   "homeCurrencyQuestion": "Yerel para biriminizi {currency} olarak ayarlamak istiyor musunuz? Yerel para biriminizi onayladıktan sonra değiştiremezsiniz.",
