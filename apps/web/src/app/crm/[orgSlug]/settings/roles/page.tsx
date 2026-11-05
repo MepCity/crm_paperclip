@@ -1,0 +1,20 @@
+import { PageTitle } from "@/components/shell/page-title";
+import { requireOrgContext } from "@/lib/session";
+import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
+import { RolesScreen } from "@/modules/settings-access/roles-screen";
+import { AccessPage } from "@/server/access/page-gate";
+
+export const metadata = shellPageMetadata(shellPageTitle.settings);
+
+export default async function RolesPage({ params }: { params: Promise<{ orgSlug: string }> }) {
+  const { orgSlug } = await params;
+  const org = await requireOrgContext(orgSlug);
+  return (
+    <>
+      <PageTitle title={shellPageTitle.settings} />
+      <AccessPage orgSlug={orgSlug}>
+        <RolesScreen orgSlug={orgSlug} orgName={org.orgName} />
+      </AccessPage>
+    </>
+  );
+}

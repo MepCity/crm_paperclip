@@ -2,6 +2,7 @@ import type { ClientPermissions } from "@crm/core/access";
 import { type Icon, Icons } from "@/components/ui/icon";
 import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
 import { getModuleScreens } from "@/modules/registry";
+import { accessSettingsNav } from "@/modules/settings-access/nav";
 
 /** Pinned-link icon accent tokens from the design system (`tokens.css`). */
 export type NavLinkIconAccentToken =
@@ -47,6 +48,8 @@ export interface NavLink {
   module?: string;
   /** Feature area with a `view` flag; hidden when the profile cannot view it. */
   feature?: "reports" | "analytics" | "documents";
+  /** Settings link shown only to viewers with `admin.userManagement`. */
+  requiresUserManagement?: boolean;
 }
 
 /** Settings links hidden without this administrator permission (ADR 0017 §8). */
@@ -335,6 +338,15 @@ export const settingsNav: readonly NavLink[] = [
     group: "Automation",
   },
 ];
+
+export { accessSettingsNav } from "@/modules/settings-access/nav";
+
+/** The settings navigation for a viewer: access links only with `admin.userManagement`. */
+export function settingsNavFor(canManageAccess: boolean): readonly NavLink[] {
+  if (!canManageAccess) return settingsNav;
+  const at = settingsNav.findIndex((link) => link.group !== "General");
+  return [...settingsNav.slice(0, at), ...accessSettingsNav, ...settingsNav.slice(at)];
+}
 
 /**
  * One row of the top-bar `Create Records` menu. Rows carry no icon: the spec measures the same
