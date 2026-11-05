@@ -322,36 +322,48 @@ export class ChatService {
   }
 
   async getConversation(ctx: OrgContext, conversationId: string): Promise<ChatConversation> {
-    return withOrg(ctx, async (tx) => {
-      const res = await tx.execute(
-        sql`SELECT c.*,
-          m.role as membership_role,
-          m.last_read_seq,
-          m.pinned_at,
-          m.left_at,
-          GREATEST(c.last_seq - COALESCE(m.last_read_seq, 0), 0) as unread_count
-        FROM chat_conversations c
-        LEFT JOIN chat_members m
-          ON m.organization_id = c.organization_id
-          AND m.conversation_id = c.id
-          AND m.user_id = ${ctx.userId}
-        WHERE c.organization_id = ${ctx.orgId} AND c.id = ${conversationId}`,
-      );
+    return withOrg(ctx, (tx) => this.loadConversation(tx, ctx, conversationId));
+  }
 
-      if (res.rows.length === 0) {
-        throw new NotFoundError();
-      }
+  /**
+   * Reads a conversation inside the caller's transaction. Writers must use
+   * this instead of `getConversation`: a writer holds the change-feed lock and
+   * its pool connection, so opening a second transaction could wait for a
+   * pool connection held by a `sync` that waits for the lock (pool deadlock).
+   */
+  private async loadConversation(
+    tx: Transaction,
+    ctx: OrgContext,
+    conversationId: string,
+  ): Promise<ChatConversation> {
+    const res = await tx.execute(
+      sql`SELECT c.*,
+        m.role as membership_role,
+        m.last_read_seq,
+        m.pinned_at,
+        m.left_at,
+        GREATEST(c.last_seq - COALESCE(m.last_read_seq, 0), 0) as unread_count
+      FROM chat_conversations c
+      LEFT JOIN chat_members m
+        ON m.organization_id = c.organization_id
+        AND m.conversation_id = c.id
+        AND m.user_id = ${ctx.userId}
+      WHERE c.organization_id = ${ctx.orgId} AND c.id = ${conversationId}`,
+    );
 
-      const row = res.rows[0] as Record<string, unknown>;
-      const isPublicChannel = row.kind === "channel" && row.visibility === "public";
-      const isCurrentMember = row.membership_role && row.left_at === null;
+    if (res.rows.length === 0) {
+      throw new NotFoundError();
+    }
 
-      if (!isPublicChannel && !isCurrentMember) {
-        throw new NotFoundError();
-      }
+    const row = res.rows[0] as Record<string, unknown>;
+    const isPublicChannel = row.kind === "channel" && row.visibility === "public";
+    const isCurrentMember = row.membership_role && row.left_at === null;
 
-      return mapConversation(row);
-    });
+    if (!isPublicChannel && !isCurrentMember) {
+      throw new NotFoundError();
+    }
+
+    return mapConversation(row);
   }
 
   async listConversations(ctx: OrgContext): Promise<ChatConversation[]> {
@@ -382,7 +394,7 @@ export class ChatService {
     input: UpdateConversationParams,
   ): Promise<ChatConversation> {
     return withChatChanges(ctx, "write", async (tx) => {
-      const conv = await this.getConversation(ctx, conversationId);
+      const conv = await this.loadConversation(tx, ctx, conversationId);
 
       if (conv.kind === "direct") {
         throw new ForbiddenError("Direct conversations cannot be updated.");
@@ -426,7 +438,7 @@ export class ChatService {
     input: { userId: string; role?: ChatMemberRole },
   ): Promise<ChatMember> {
     return withChatChanges(ctx, "write", async (tx) => {
-      const conv = await this.getConversation(ctx, conversationId);
+      const conv = await this.loadConversation(tx, ctx, conversationId);
       if (conv.kind === "direct") {
         throw new ForbiddenError("Cannot add members to a direct conversation.");
       }
@@ -480,7 +492,7 @@ export class ChatService {
 
   async removeMember(ctx: OrgContext, conversationId: string, targetUserId: string): Promise<void> {
     return withChatChanges(ctx, "write", async (tx) => {
-      const conv = await this.getConversation(ctx, conversationId);
+      const conv = await this.loadConversation(tx, ctx, conversationId);
       if (conv.kind === "direct") {
         throw new ForbiddenError("Cannot remove members from a direct conversation.");
       }
@@ -643,7 +655,7 @@ export class ChatService {
   ): Promise<{ messages: ChatMessage[]; hasMore: boolean }> {
     return withOrg(ctx, async (tx) => {
       // Access check
-      await this.getConversation(ctx, conversationId);
+      await this.loadConversation(tx, ctx, conversationId);
 
       const limit = Math.min(Math.max(options.limit ?? 50, 1), 100);
       const conditions: ReturnType<typeof sql>[] = [
@@ -882,7 +894,7 @@ export class ChatService {
         throw new NotFoundError();
       }
 
-      await this.getConversation(ctx, String(rootCheck.rows[0]?.conversation_id));
+      await this.loadConversation(tx, ctx, String(rootCheck.rows[0]?.conversation_id));
 
       const res = await tx.execute(
         sql`SELECT m.*, u.name as author_name,
@@ -912,7 +924,7 @@ export class ChatService {
         throw new NotFoundError();
       }
 
-      await this.getConversation(ctx, String(rootCheck.rows[0]?.conversation_id));
+      await this.loadConversation(tx, ctx, String(rootCheck.rows[0]?.conversation_id));
 
       await tx.execute(
         sql`INSERT INTO chat_thread_reads (
@@ -936,7 +948,7 @@ export class ChatService {
         throw new NotFoundError();
       }
 
-      await this.getConversation(ctx, String(msgCheck.rows[0]?.conversation_id));
+      await this.loadConversation(tx, ctx, String(msgCheck.rows[0]?.conversation_id));
 
       if (star) {
         await tx.execute(
