@@ -76,6 +76,7 @@ export const flatNavOrder: readonly string[] = [
   "sales-orders",
   "solutions",
   "social",
+  "feeds",
   "forecasts",
   "purchase-orders",
   "vendors",
@@ -111,6 +112,14 @@ function flatNavLinks(): NavLink[] {
       icon: Icons.messageSquare,
       href: (slug) => moduleTabPath(slug, "Social"),
       activePrefix: (slug) => moduleTabPath(slug, "Social"),
+      match: "prefix",
+    },
+    {
+      id: "feeds",
+      label: "Feeds",
+      icon: Icons.newspaper,
+      href: (slug) => moduleTabPath(slug, "Feeds"),
+      activePrefix: (slug) => moduleTabPath(slug, "Feeds"),
       match: "prefix",
     },
   ];

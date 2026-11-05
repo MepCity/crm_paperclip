@@ -152,6 +152,7 @@ describe("shellNav", () => {
       "invoices",
       "solutions",
       "social",
+      "feeds",
       "cases",
     ]);
   });
@@ -166,6 +167,7 @@ describe("shellNav", () => {
       "sales-orders",
       "solutions",
       "social",
+      "feeds",
       "forecasts",
       "purchase-orders",
       "vendors",
