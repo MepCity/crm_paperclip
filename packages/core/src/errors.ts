@@ -10,6 +10,7 @@ export type ErrorCode =
   | "conflict"
   | "validation"
   | "record_locked"
+  | "record_locked_for_approval"
   | "file_too_large"
   | "too_many_columns"
   | "too_many_rows"
@@ -90,6 +91,14 @@ export class RecordLockedError extends AppError {
 
   constructor(message = "Cannot update record that is not approved yet") {
     super("record_locked", message);
+  }
+}
+
+export class RecordLockedForApprovalError extends AppError {
+  override name = "RecordLockedForApprovalError";
+
+  constructor(message = "This record is locked while an approval is pending.") {
+    super("record_locked_for_approval", message);
   }
 }
 
