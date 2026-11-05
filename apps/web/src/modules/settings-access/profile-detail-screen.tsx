@@ -271,7 +271,7 @@ function ProfileBody({
   const [editing, setEditing] = useState(false);
   const [perms, setPerms] = useState<Perms>(profile.permissions);
   const [name, setName] = useState(profile.name);
-  const [description, setDescription] = useState(profile.description);
+  const [description, setDescription] = useState(profile.description ?? "");
   const [error, setError] = useState<string | null>(null);
   const [saved, setSaved] = useState(false);
   const [busy, setBusy] = useState(false);
