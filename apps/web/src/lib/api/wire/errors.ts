@@ -17,6 +17,8 @@ const STATUS_BY_CODE = {
   validation: 400,
   unauthenticated: 401,
   forbidden: 403,
+  permission_denied: 403,
+  field_forbidden: 403,
   not_found: 404,
   conflict: 400,
   record_locked: 400,
@@ -52,6 +54,8 @@ const WIRE_CODES = {
   schema_stale: "SCHEMA_REVISION_MISMATCH",
   unauthenticated: "AUTHENTICATION_FAILURE",
   forbidden: "NO_PERMISSION",
+  permission_denied: "permission_denied",
+  field_forbidden: "field_forbidden",
   not_found: "not_found",
   conflict: "DUPLICATE_DATA",
   record_locked: "RECORD_LOCKED",
@@ -188,6 +192,10 @@ function restore(parsed: ParsedBody, status: number): AppError | UnexpectedApiEr
       return new UnauthenticatedError(parsed.message);
     case "forbidden":
       return new ForbiddenError(parsed.message);
+    case "permission_denied":
+      return new ForbiddenError(parsed.message, "permission_denied");
+    case "field_forbidden":
+      return new ForbiddenError(parsed.message, "field_forbidden");
     case "not_found":
       return new NotFoundError(parsed.message);
     case "conflict":
