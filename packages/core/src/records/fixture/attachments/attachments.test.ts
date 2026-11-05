@@ -70,6 +70,8 @@ describe("Attachments record contract", () => {
       "Campaigns",
       "Cases",
       "Solutions",
+      "Quotes",
+      "Invoices",
     ]);
     expect(attachmentParentModules).toEqual(
       expect.arrayContaining(["Tasks", "Events", "Campaigns", "Cases", "Solutions"]),

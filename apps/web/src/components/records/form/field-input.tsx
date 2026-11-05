@@ -452,7 +452,7 @@ export function FieldInput({
       return (
         <MultiSelect
           label={field.label}
-          placeholder="-None-"
+          placeholder={t("records.form.multiselectNone")}
           options={opts}
           value={selected}
           onChange={(next) => onChange(next.length === 0 ? null : next)}

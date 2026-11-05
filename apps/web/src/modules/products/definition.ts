@@ -29,7 +29,7 @@ export const productsScreenDefinition: ModuleScreenDefinition = {
   singularLabel: "Product",
   pluralLabel: "Products",
   pageTitle: "Products",
-  navigation: { id: "products", icon: Icons.store, group: "flat" },
+  navigation: { id: "products", icon: Icons.package, group: "flat" },
   list: productsListPageConfig,
   listCurrencyCode: PRODUCTS_LIST_CURRENCY_CODE,
   searchColumns: ["Product_Name", "Product_Code", "Manufacturer", "Product_Category", "Owner"],
