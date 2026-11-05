@@ -7,12 +7,12 @@ import { FeedList } from "./feed-list";
 
 const FILTERS: readonly {
   id: FeedFilter;
-  label: "feeds.filterAll" | "feeds.filterFollowed" | "feeds.filterMine";
+  labelKey: "feeds.filterAll" | "feeds.filterFollowed" | "feeds.filterMine";
   empty: "feeds.empty" | "feeds.emptyFollowed" | "feeds.emptyMine";
 }[] = [
-  { id: "all", label: "feeds.filterAll", empty: "feeds.empty" },
-  { id: "followed", label: "feeds.filterFollowed", empty: "feeds.emptyFollowed" },
-  { id: "mine", label: "feeds.filterMine", empty: "feeds.emptyMine" },
+  { id: "all", labelKey: "feeds.filterAll", empty: "feeds.empty" },
+  { id: "followed", labelKey: "feeds.filterFollowed", empty: "feeds.emptyFollowed" },
+  { id: "mine", labelKey: "feeds.filterMine", empty: "feeds.emptyMine" },
 ];
 const MODULES = ["Leads", "Contacts", "Accounts", "Deals"] as const;
 
@@ -52,7 +52,7 @@ export function FeedsScreen({ orgSlug, userId }: { orgSlug: string; userId: stri
             className={`rounded-md px-3 py-1 text-md ${f.id === active.id ? "bg-surface-hover font-semibold" : ""}`}
             onClick={() => update({ filter: f.id })}
           >
-            {t(f.label)}
+            {t(f.labelKey)}
           </button>
         ))}
         <select

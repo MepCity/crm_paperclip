@@ -1,5 +1,6 @@
 import { type Icon, Icons } from "@/components/ui/icon";
 import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
+import { FEEDS_LABEL } from "@/modules/feeds/feeds-labels";
 import { getModuleScreens } from "@/modules/registry";
 
 /** Pinned-link icon accent tokens from the design system (`tokens.css`). */
@@ -116,7 +117,7 @@ function flatNavLinks(): NavLink[] {
     },
     {
       id: "feeds",
-      label: "Feeds",
+      label: FEEDS_LABEL,
       icon: Icons.newspaper,
       href: (slug) => moduleTabPath(slug, "Feeds"),
       activePrefix: (slug) => moduleTabPath(slug, "Feeds"),
