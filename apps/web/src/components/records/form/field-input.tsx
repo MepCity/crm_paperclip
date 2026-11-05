@@ -14,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Icons } from "@/components/ui/icon";
 import { laterModuleProps, type ModuleKey, useLaterModule } from "@/components/ui/later-module";
+import { MultiSelect } from "@/components/ui/multi-select";
 import { NumberField } from "@/components/ui/number-field";
 import { Popover, PopoverTrigger } from "@/components/ui/popover";
 import { RecordChoice } from "@/components/ui/record-choice";
@@ -442,6 +443,22 @@ export function FieldInput({
           inline={inline}
         />
       );
+    case "multiselectpicklist": {
+      const selected = Array.isArray(value) ? (value as string[]) : [];
+      const opts = (options ?? field.picklist ?? []).map((opt) => ({
+        id: opt.storedValue,
+        label: opt.displayValue,
+      }));
+      return (
+        <MultiSelect
+          label={field.label}
+          placeholder={t("records.form.multiselectNone")}
+          options={opts}
+          value={selected}
+          onChange={(next) => onChange(next.length === 0 ? null : next)}
+        />
+      );
+    }
     case "ownerlookup": {
       const ownerOptions = users.map((user) => ({
         value: user.id,

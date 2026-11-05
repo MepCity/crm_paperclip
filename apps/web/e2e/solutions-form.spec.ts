@@ -125,16 +125,15 @@ test("required markers, locked Solution Number, owner focus, Status picklist, an
   expect(statusOptions).toEqual(["-None-", "Draft", "Reviewed", "Duplicate"]);
   await page.keyboard.press("Escape");
 
-  // SF-11 & SF-12: Product Name is P2 laterModule and its button blocks dialogs
+  // SF-11 & SF-12: Products is a registered module, so the Product Name lookup is live
   const productField = page.locator('[data-form-field="Product_Name"]');
   await expect(productField).toBeVisible();
   const productInput = productField.locator("input");
-  expect(productInput).toBeDisabled();
-  expect(await productInput.getAttribute("data-later-module")).toBe("P2");
+  expect(await productInput.getAttribute("data-later-module")).toBeNull();
   const productLookupBtn = productField.getByRole("button", { name: /Open Product Name lookup/i });
-  expect(await productLookupBtn.getAttribute("data-later-module")).toBe("P2");
-  await productLookupBtn.click({ force: true });
-  await expect(page.getByRole("dialog")).toHaveCount(0);
+  expect(await productLookupBtn.getAttribute("data-later-module")).toBeNull();
+  await productLookupBtn.click();
+  await expect(page.getByRole("dialog")).toHaveCount(1);
 });
 
 test("creates with all fields and arrives at the record route", async ({ page }) => {

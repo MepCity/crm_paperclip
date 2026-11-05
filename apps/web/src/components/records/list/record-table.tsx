@@ -47,6 +47,7 @@ export interface RecordTableProps {
   /** When set, cell text wraps and the row grows. Otherwise the cell truncates. */
   wrapText: boolean;
   emptyMessage: string;
+  emptyContent?: ReactNode;
   /** Header slot for the 40px View Settings cell. Empty in this delivery. */
   settings?: ReactNode;
   /** User id → display name. See `CellValue`. */
@@ -121,6 +122,7 @@ export function RecordTable({
   alphabet,
   wrapText,
   emptyMessage,
+  emptyContent,
   settings,
   ownerNames,
   format,
@@ -388,12 +390,21 @@ export function RecordTable({
         </table>
       </section>
       {empty ? (
-        <div
-          data-part="empty"
-          className="border-b border-b-row-separator bg-surface pt-(--size-list-empty-offset) pb-(--size-list-row-pad) text-center text-sm text-text-empty leading-(--size-list-line-height)"
-        >
-          {emptyMessage}
-        </div>
+        emptyContent ? (
+          <div
+            data-part="empty"
+            className="border-b border-b-row-separator bg-surface p-12 text-center"
+          >
+            {emptyContent}
+          </div>
+        ) : (
+          <div
+            data-part="empty"
+            className="border-b border-b-row-separator bg-surface pt-(--size-list-empty-offset) pb-(--size-list-row-pad) text-center text-sm text-text-empty leading-(--size-list-line-height)"
+          >
+            {emptyMessage}
+          </div>
+        )
       ) : null}
       <div
         data-part="settings"
