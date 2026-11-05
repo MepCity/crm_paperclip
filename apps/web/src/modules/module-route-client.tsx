@@ -9,6 +9,8 @@ import { MergeDuplicatesScreen } from "@/components/records/merge/merge-duplicat
 import { ListPrintScreen } from "@/components/records/print/list-print-screen";
 import { RecordPrintScreen } from "@/components/records/print/record-print-screen";
 import { ManageTagsClient } from "@/components/records/tags/manage-tags-client";
+import { AccessDenied } from "@/components/shell/access-denied";
+import { usePermissions } from "@/lib/access";
 import {
   moduleListDefaultPath,
   moduleRecordClonePath,
@@ -35,6 +37,24 @@ export type ModuleRouteKind =
   | "print"
   | "print-list";
 
+const routePermission: Record<
+  ModuleRouteKind,
+  "view" | "create" | "edit" | "convert" | "merge" | "print"
+> = {
+  list: "view",
+  detail: "view",
+  create: "create",
+  clone: "create",
+  edit: "edit",
+  convert: "convert",
+  merge: "merge",
+  deduplicate: "merge",
+  tags: "view",
+  drafts: "create",
+  print: "print",
+  "print-list": "print",
+};
+
 export function ModuleRouteClient({
   moduleTab,
   kind,
@@ -57,6 +77,16 @@ export function ModuleRouteClient({
   const definition = resolveModuleScreen(moduleTab);
   if (!definition) throw new Error("Unknown module screen.");
   const router = useRouter();
+  const permissions = usePermissions();
+  const moduleFlags = permissions?.modules[definition.apiName];
+  if (
+    permissions &&
+    moduleFlags &&
+    (!moduleFlags.view ||
+      !moduleFlags[routePermission[kind]] ||
+      (kind === "tags" && !permissions.tools.tags))
+  )
+    return <AccessDenied />;
   if (kind === "tags") {
     const listHref = moduleListDefaultPath(orgSlug, definition.tab);
     return (

@@ -57,7 +57,7 @@ export type AccessData = {
   orgId: string;
   userId: string;
   version: number;
-  profile: { id: string; kind: ProfileKind; permissions: ProfilePermissions };
+  profile: { id: string; name?: string; kind: ProfileKind; permissions: ProfilePermissions };
   fieldRows: readonly AccessFieldRow[];
   roles: readonly AccessRoleRow[];
   members: readonly AccessMemberRow[];
@@ -72,6 +72,7 @@ export type AccessSnapshot = {
   userId: string;
   version: number;
   profileId: string;
+  profileName?: string;
   profileKind: ProfileKind;
   permissions: ProfilePermissions;
   fieldAccess: ReadonlyMap<string, ReadonlyMap<string, FieldAccessMode>>;

@@ -6,8 +6,10 @@ import { Disclosure } from "@/components/ui/disclosure";
 import { Link } from "@/components/ui/link";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useShellLabel } from "@/i18n/shell-labels";
+import { usePermissions } from "@/lib/access";
 import {
   isNavLinkActive,
+  isNavLinkAllowed,
   type NavConfig,
   type NavLink,
   navLinkIconClassName,
@@ -67,10 +69,17 @@ export function Navigation({
   const label = useShellLabel();
   const t = useUiTranslations();
   const pathname = usePathname();
+  const permissions = usePermissions();
+  const allowed = (links: readonly NavLink[]) =>
+    links.filter((link) => isNavLinkAllowed(link, permissions));
+  const topLinks = allowed(config.links);
   const sections = config.sections
     .map((section) => ({
       ...section,
-      groups: section.groups.filter((group) => group.links.length > 0),
+      groups: section.groups
+        .map((group) => ({ ...group, links: allowed(group.links) }))
+        .filter((group) => group.links.length > 0),
+      links: section.links ? allowed(section.links) : section.links,
     }))
     .filter((section) => section.groups.length > 0 || (section.links?.length ?? 0) > 0);
   return (
@@ -78,7 +87,7 @@ export function Navigation({
       <div
         className={`${sections.length ? "min-h-(--size-rail-pinned-region)" : ""} flex flex-col gap-(--size-rail-row-gap) px-(--size-rail-inset) pt-(--size-rail-nav-start)`}
       >
-        {config.links.map((link) => (
+        {topLinks.map((link) => (
           <NavigationLink key={link.id} link={link} orgSlug={orgSlug} pathname={pathname} />
         ))}
       </div>

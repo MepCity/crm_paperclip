@@ -7,7 +7,8 @@ import { Link } from "@/components/ui/link";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useSettingsLabel } from "@/i18n/settings-labels";
 import { useShellLabel } from "@/i18n/shell-labels";
-import { isNavLinkActive, settingsNav } from "./nav";
+import { usePermissions } from "@/lib/access";
+import { isNavLinkActive, isNavLinkAllowed, settingsNav } from "./nav";
 
 const itemClasses = "inline-flex rounded-md px-3 py-2 text-md";
 
@@ -16,6 +17,8 @@ export function SettingsNavigation({ orgSlug }: { orgSlug: string }) {
   const copy = useSettingsLabel();
   const label = useShellLabel();
   const pathname = usePathname();
+  const permissions = usePermissions();
+  const links = settingsNav.filter((link) => isNavLinkAllowed(link, permissions));
   return (
     <nav aria-label={t("shell.settingsNavigation")} className="flex shrink-0 flex-col gap-1">
       <Link
@@ -25,9 +28,9 @@ export function SettingsNavigation({ orgSlug }: { orgSlug: string }) {
         <Icons.arrowLeft className="size-4 shrink-0" aria-hidden />
         <span>{t("shell.setupHome")}</span>
       </Link>
-      {settingsNav.map((link, index) => {
+      {links.map((link, index) => {
         const active = isNavLinkActive(link, orgSlug, pathname);
-        const heading = link.group && link.group !== settingsNav[index - 1]?.group;
+        const heading = link.group && link.group !== links[index - 1]?.group;
         const Icon =
           (
             {

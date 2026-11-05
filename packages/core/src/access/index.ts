@@ -1,5 +1,6 @@
 export * from "./admin";
 export * from "./catalogue";
+export * from "./client";
 export * from "./context";
 export * from "./evaluate";
 export * from "./groups";

@@ -129,6 +129,7 @@ export async function loadAccessData(
     version: versionRow?.version ?? 0,
     profile: {
       id: profile.id,
+      name: profile.name,
       kind: profile.kind as ProfileKind,
       permissions: parseStoredPermissions(profile.permissions),
     },
