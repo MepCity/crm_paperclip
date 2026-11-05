@@ -145,7 +145,11 @@ test("administrator manages profiles, roles, groups and sharing", async ({
     "Sales Rep",
   );
   // Change the member's access role through the row control.
+  const saved = page.waitForResponse(
+    (res) => res.url().includes("/member_access/") && res.request().method() === "PUT",
+  );
   await pick(page, row, /Access role of Rita Rep/, "Manager");
+  await saved;
   await page.reload();
   await expect(
     page.getByRole("row", { name: /Rita Rep/ }).getByRole("button", { name: /Access role of/ }),
