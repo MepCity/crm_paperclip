@@ -19,6 +19,11 @@ function readField(formData: FormData, name: string): string {
   return typeof value === "string" ? value : "";
 }
 
+function readChoice(formData: FormData, name: string): string | undefined {
+  const value = readField(formData, name);
+  return value && value !== "default" ? value : undefined;
+}
+
 function readRole(formData: FormData): OrgRole {
   return readField(formData, "role") as OrgRole;
 }
@@ -77,6 +82,8 @@ export async function createInvitationAction(
     const created = await createInvitation(org, {
       email: readField(formData, "email"),
       role: readRole(formData),
+      profileId: readChoice(formData, "profileId"),
+      roleId: readChoice(formData, "accessRoleId"),
     });
     token = created.token;
   } catch (error) {

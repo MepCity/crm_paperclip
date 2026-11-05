@@ -17,12 +17,28 @@ export type CreateInvitationAction = (
 
 const initialInvitationState: InvitationActionState = { status: "idle" };
 
-export function InviteMemberDialog({ action }: { action: CreateInvitationAction }) {
+export type AccessChoice = { id: string; name: string };
+export type InviteAccessOptions = {
+  profiles: readonly AccessChoice[];
+  roles: readonly AccessChoice[];
+};
+
+const DEFAULT_CHOICE: AccessChoice = { id: "default", name: "Default" };
+
+export function InviteMemberDialog({
+  action,
+  accessOptions,
+}: {
+  action: CreateInvitationAction;
+  accessOptions?: InviteAccessOptions;
+}) {
   return (
     <DialogTrigger>
       <Button>Invite member</Button>
       <Dialog title="Invite member">
-        {({ close }) => <InviteMemberForm action={action} onClose={close} />}
+        {({ close }) => (
+          <InviteMemberForm action={action} onClose={close} accessOptions={accessOptions} />
+        )}
       </Dialog>
     </DialogTrigger>
   );
@@ -31,9 +47,11 @@ export function InviteMemberDialog({ action }: { action: CreateInvitationAction 
 function InviteMemberForm({
   action,
   onClose,
+  accessOptions,
 }: {
   action: CreateInvitationAction;
   onClose: () => void;
+  accessOptions?: InviteAccessOptions;
 }) {
   const [state, formAction] = useActionState(action, initialInvitationState);
 
@@ -49,6 +67,26 @@ function InviteMemberForm({
       <Select name="role" label="Role" items={MEMBER_ROLES} defaultSelectedKey="member" isRequired>
         {(item) => <SelectItem id={item.id}>{item.label}</SelectItem>}
       </Select>
+      {accessOptions ? (
+        <>
+          <Select
+            name="profileId"
+            label="Profile"
+            items={[DEFAULT_CHOICE, ...accessOptions.profiles]}
+            defaultSelectedKey="default"
+          >
+            {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
+          </Select>
+          <Select
+            name="accessRoleId"
+            label="Access role"
+            items={[DEFAULT_CHOICE, ...accessOptions.roles]}
+            defaultSelectedKey="default"
+          >
+            {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
+          </Select>
+        </>
+      ) : null}
       <SubmitButton>Create invitation</SubmitButton>
     </Form>
   );
