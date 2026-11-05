@@ -35,5 +35,12 @@
   "converted": "{record} kaydını dönüştürdü",
   "changedField": "{field}: {from} → {to}",
   "emptyValue": "boş",
-  "onRecord": "{record} kaydında"
+  "onRecord": "{record} kaydında",
+  "bellMention": "{actor} sizi bir gönderide andı",
+  "bellComment": "{actor} gönderinize yorum yaptı",
+  "bellLike": "{actor} gönderinizi beğendi",
+  "bellFollowedUpdate": "{actor} takip ettiğiniz bir kaydı güncelledi",
+  "bellEmpty": "Yeni bildirim yok",
+  "bellError": "Bildirimler yüklenemedi",
+  "bellUnavailable": "Bu öğe artık kullanılamıyor"
 }

@@ -35,5 +35,12 @@
   "converted": "converted {record}",
   "changedField": "{field}: {from} → {to}",
   "emptyValue": "empty",
-  "onRecord": "on {record}"
+  "onRecord": "on {record}",
+  "bellMention": "{actor} mentioned you in a post",
+  "bellComment": "{actor} commented on your post",
+  "bellLike": "{actor} liked your post",
+  "bellFollowedUpdate": "{actor} updated a record you follow",
+  "bellEmpty": "No new notifications",
+  "bellError": "Notifications could not be loaded",
+  "bellUnavailable": "This item is no longer available"
 }
