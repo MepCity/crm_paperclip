@@ -44,7 +44,9 @@ test("Quote create with lines, totals, detail, edit quantity", async ({ page }) 
   await page.getByLabel("Quantity 2").fill("3");
   await expect(page.locator('[data-total="grand"]')).toHaveText(money(grand + 100));
   await page.getByRole("button", { name: "Save", exact: true }).click();
-  await expect(page.locator('[data-total="grand"]')).toHaveText(money(grand + 100), { timeout: 60_000 });
+  await expect(page.locator('[data-total="grand"]')).toHaveText(money(grand + 100), {
+    timeout: 60_000,
+  });
 
   // Print preview for Quote
   await page.getByRole("link", { name: "Print Preview" }).first().click();
