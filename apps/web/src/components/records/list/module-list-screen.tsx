@@ -937,6 +937,7 @@ function ModuleListScreenLoaded({
             withSearchParams(config.paths.customList(orgSlug, config.module, id), params),
           );
         }}
+        hideViewManagement={!allow.manageViews}
         onNewView={allow.manageViews ? onNewView : undefined}
         onEditView={allow.manageViews ? onEditView : undefined}
       />

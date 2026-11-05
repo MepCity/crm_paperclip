@@ -16,11 +16,13 @@ export interface ViewTabStripProps {
   /** Draws a Search box above Public Views that filters the rows by name (Tasks only). */
   searchable?: boolean;
   hideEmptyCreatedGroup?: boolean;
+  /** Manage-views permission is off: the New/Manage entries are not rendered (ADR 0017 §8). */
+  hideViewManagement?: boolean;
   onNewView?: () => void; onEditView?: (id: string) => void; onManageViews?: () => void;
 }
 
 // biome-ignore format: preserve line numbers
-export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searchable, hideEmptyCreatedGroup, onNewView, onEditView, onManageViews }: ViewTabStripProps) {
+export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searchable, hideEmptyCreatedGroup, hideViewManagement, onNewView, onEditView, onManageViews }: ViewTabStripProps) {
   const t = useUiTranslations(); const [createdOpen, setCreatedOpen] = useState(true); const [publicOpen, setPublicOpen] = useState(true), [query, setQuery] = useState("");
   // biome-ignore format: preserve line numbers
   const itemNewProps = onNewView ? { onAction: onNewView } : { laterModule: "M11" as const };
@@ -133,13 +135,17 @@ export function ViewTabStrip({ viewName, views, onViewChange, pinnedViews, searc
               : null}
             <MenuDivider />
             <MenuItem id="dropdown">{t("records.chrome.showAsDropdown")}</MenuItem>
-            <MenuDivider />
-            <MenuItem id="new" {...itemNewProps}>
-              {t("records.chrome.newView")}
-            </MenuItem>
-            <MenuItem id="manage"     {...mgrProps}>
-              {t("records.chrome.manageViews")}
-            </MenuItem>
+            {hideViewManagement ? null : <MenuDivider />}
+            {hideViewManagement ? null : (
+              <MenuItem id="new" {...itemNewProps}>
+                {t("records.chrome.newView")}
+              </MenuItem>
+            )}
+            {hideViewManagement ? null : (
+              <MenuItem id="manage" {...mgrProps}>
+                {t("records.chrome.manageViews")}
+              </MenuItem>
+            )}
             {onEditView ? (
               <MenuItem
                 id="edit"

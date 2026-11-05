@@ -17,6 +17,7 @@ import {
   type RecordAccessChecker,
   type RecordAccessSource,
 } from "../access-policy";
+import { projectMetadataForViewer, projectViewForViewer } from "../access-projection";
 import {
   activityDate,
   activityParentIds,
@@ -688,7 +689,8 @@ export function createFixtureRecordService(
             options?.canReadRecord?.(event.subject.module, event.subject.recordId) !== false,
         )
       : [];
-    const view = applyView ? viewFor(module, query.viewId) : undefined;
+    const rawView = applyView ? viewFor(module, query.viewId) : undefined;
+    const view = rawView && acc ? projectViewForViewer(rawView, acc.hiddenFields(module)) : rawView;
     const fieldMap = withLineItemFilterFields(
       new Map(bundle.metadata.fields.map((field) => [field.apiName, field])),
     );
@@ -1554,24 +1556,48 @@ export function createFixtureRecordService(
     },
     async getModuleProjection(module) {
       bundleFor(module);
-      return readFixtureModuleProjection(
+      const projection = await readFixtureModuleProjection(
         ctx.orgId,
         module,
         schema?.metadata ?? options?.customization,
       );
+      const acc = await accessFor();
+      if (!acc) return projection;
+      const hidden = acc.hiddenFields(module);
+      return {
+        ...projectMetadataForViewer(projection, { hidden, readOnly: acc.readOnlyFields(module) }),
+        views: projection.views.map((view) => projectViewForViewer(view, hidden)),
+      };
     },
     async getModule(module) {
-      return copy(bundleFor(module).metadata);
+      const acc = await accessFor();
+      const metadata = bundleFor(module).metadata;
+      return copy(
+        acc
+          ? projectMetadataForViewer(metadata, {
+              hidden: acc.hiddenFields(module),
+              readOnly: acc.readOnlyFields(module),
+            })
+          : metadata,
+      );
     },
     async listViews(module) {
-      return copy(bundleFor(module).views);
+      const acc = await accessFor();
+      const views = bundleFor(module).views;
+      return copy(
+        acc ? views.map((v) => projectViewForViewer(v, acc.hiddenFields(module))) : views,
+      );
     },
     async getView(module, id) {
-      return copy(viewFor(module, id));
+      const acc = await accessFor();
+      const view = viewFor(module, id);
+      return copy(acc ? projectViewForViewer(view, acc.hiddenFields(module)) : view);
     },
     async list(module, query) {
       const bundle = bundleFor(module);
-      const view = viewFor(module, query.viewId);
+      const viewAcc = await accessFor();
+      const rawView = viewFor(module, query.viewId);
+      const view = viewAcc ? projectViewForViewer(rawView, viewAcc.hiddenFields(module)) : rawView;
       const errors: Record<string, string[]> = {};
       if (!Number.isSafeInteger(query.page) || query.page < 1)
         errors.page = ["Choose a positive integer page."];
@@ -1687,7 +1713,7 @@ export function createFixtureRecordService(
         insertRecord(module, normalized, options),
       );
       await publishWrite(module, "create", created, undefined, options);
-      return created;
+      return writer ? writer.project(module, created) : created;
     },
     async update(module, id, input, options) {
       assertModuleWritable(module);
@@ -1738,7 +1764,8 @@ export function createFixtureRecordService(
         return copy(resolveRead(module, updated));
       });
       await publishWrite(module, "edit", updatedRecord, previous, options);
-      return updatedRecord;
+      const viewer = await accessFor();
+      return viewer ? viewer.project(module, updatedRecord) : updatedRecord;
     },
     async massUpdate(module, ids, input) {
       assertModuleWritable(module);
