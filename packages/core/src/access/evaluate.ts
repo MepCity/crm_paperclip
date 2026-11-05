@@ -156,6 +156,21 @@ function subjectUsers(
   id: string,
   data: AccessData,
   usersByRole: ReadonlyMap<string, readonly string[]>,
+  memo: Map<string, Set<string>>,
+): Set<string> {
+  const key = `${kind}:${id}`;
+  const cached = memo.get(key);
+  if (cached) return cached;
+  const resolved = resolveSubject(kind, id, data, usersByRole);
+  memo.set(key, resolved);
+  return resolved;
+}
+
+function resolveSubject(
+  kind: SubjectKind,
+  id: string,
+  data: AccessData,
+  usersByRole: ReadonlyMap<string, readonly string[]>,
 ): Set<string> {
   if (kind === "group") return resolveGroupUsers(id, data.groupMembers, data.roles, usersByRole);
   const users = new Set(usersByRole.get(id) ?? []);
@@ -203,6 +218,7 @@ export function buildAccessSnapshot(data: AccessData): AccessSnapshot {
   for (const u of subordinateUserIds) base.set(u, "read_write_delete");
   for (const u of peerIds) base.set(u, "read_write_delete");
 
+  const memo = new Map<string, Set<string>>();
   const ownerLevelsByModule = new Map<string, Map<string, AccessLevel>>();
   const rulesByModule = new Map<string, (typeof data.rules)[number][]>();
   for (const rule of data.rules) {
@@ -218,9 +234,9 @@ export function buildAccessSnapshot(data: AccessData): AccessSnapshot {
   for (const module of modules) {
     const levels = new Map(base);
     for (const rule of rulesByModule.get(module) ?? []) {
-      const targets = subjectUsers(rule.targetKind, rule.targetId, data, usersByRole);
+      const targets = subjectUsers(rule.targetKind, rule.targetId, data, usersByRole, memo);
       if (!targets.has(data.userId)) continue;
-      for (const owner of subjectUsers(rule.sourceKind, rule.sourceId, data, usersByRole)) {
+      for (const owner of subjectUsers(rule.sourceKind, rule.sourceId, data, usersByRole, memo)) {
         levels.set(owner, maxLevel(levels.get(owner) ?? "none", rule.level));
       }
     }
