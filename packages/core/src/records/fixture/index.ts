@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import { childRecordLevel } from "../../access";
+import { childRecordLevel } from "../../access/evaluate";
 import { ATTACHMENT_PARENT_MODULES } from "../../attachments/modules";
 import type { CustomizationPort } from "../../customization";
 import type { InMemorySchemaCoordinator } from "../../customization/coordinator";

@@ -1,14 +1,6 @@
-import {
-  type AccessLevel,
-  type AccessSnapshot,
-  can,
-  fieldAccess,
-  isCatalogueModule,
-  levelAllows,
-  type ModuleAction,
-  type RecordOperation,
-  recordLevel,
-} from "../access";
+import { isCatalogueModule } from "../access/catalogue";
+import { can, fieldAccess, levelAllows, recordLevel } from "../access/evaluate";
+import type { AccessLevel, AccessSnapshot, ModuleAction, RecordOperation } from "../access/types";
 import { ForbiddenError, NotFoundError } from "../errors";
 import type { Criteria, FieldValue, SortSpec } from "./contract";
 

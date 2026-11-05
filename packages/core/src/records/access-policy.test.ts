@@ -114,7 +114,10 @@ describe("RecordAccessPolicy on the fixture record service (ADR 0017 §11.3)", (
       const list = await service.list("Leads", { ...query, perPage: 50 });
       expect(list.records.map((r) => r.id).sort()).toEqual(ids);
       expect(await service.count("Leads", { viewId: "all-leads" })).toBe(ids.length);
-      const groups = await service.summarize("Leads", { viewId: "all-leads", groupBy: "Lead_Source" });
+      const groups = await service.summarize("Leads", {
+        viewId: "all-leads",
+        groupBy: "Lead_Source",
+      });
       expect(groups.reduce((sum, g) => sum + g.count, 0)).toBe(ids.length);
       const found = await service.search({ text: "Matrix", modules: ["Leads"] });
       expect(found.flatMap((g) => g.records.map((r) => r.id)).sort()).toEqual(ids);
@@ -124,9 +127,9 @@ describe("RecordAccessPolicy on the fixture record service (ADR 0017 §11.3)", (
     it("does not leak a hidden field through aggregates", async () => {
       const service = viewer(snapshotFor("viewer", { hidden: ["Lead_Source"] }));
       await mine(service, 1);
-      await expect(service.summarize("Leads", { viewId: "all-leads", groupBy: "Lead_Source" })).rejects.toBeInstanceOf(
-        ForbiddenError,
-      );
+      await expect(
+        service.summarize("Leads", { viewId: "all-leads", groupBy: "Lead_Source" }),
+      ).rejects.toBeInstanceOf(ForbiddenError);
     });
 
     it("refuses writes to hidden fields and flags partial access with $access", async () => {

@@ -1,12 +1,13 @@
 import { listInvitations, listMembers } from "@crm/core";
+import { getAccessSnapshot } from "@crm/core/access";
 import { formatDate } from "@crm/core/format";
 import { InvitationsTable } from "@/components/members/invitations-table";
 import { InviteMemberDialog } from "@/components/members/invite-member-dialog";
 import { MembersTable } from "@/components/members/members-table";
 import { PageHeader } from "@/components/shell/page-header";
 import { PageTitle } from "@/components/shell/page-title";
-import { requireSettingsOrg } from "@/lib/access/settings-gate";
 import { loadOrganizationFormat } from "@/lib/format-settings";
+import { requireOrgContext } from "@/lib/session";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import {
   changeMemberRoleAction,
@@ -23,8 +24,10 @@ export default async function MembersSettingsPage({
   params: Promise<{ orgSlug: string }>;
 }) {
   const { orgSlug } = await params;
-  const org = await requireSettingsOrg(orgSlug, "userManagement");
-  const canManage = true; // gated by `requireSettingsOrg` (admin.userManagement)
+  const org = await requireOrgContext(orgSlug);
+  const access = await getAccessSnapshot(org);
+  const canManage =
+    access.profileKind === "administrator" || access.permissions.admin.userManagement;
   const [members, invitations] = await Promise.all([
     listMembers(org),
     canManage ? listInvitations(org) : Promise.resolve([]),
