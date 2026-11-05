@@ -2,6 +2,7 @@ import { type Icon, Icons } from "@/components/ui/icon";
 import { english } from "@/i18n/catalogs";
 import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
 import { shellPageTitle } from "@/lib/shell-page-title";
+import { FEEDS_LABEL } from "@/modules/feeds/feeds-labels";
 import { getModuleScreens } from "@/modules/registry";
 
 /** Pinned-link icon accent tokens from the design system (`tokens.css`). */
@@ -78,6 +79,7 @@ export const flatNavOrder: readonly string[] = [
   "sales-orders",
   "solutions",
   "social",
+  "feeds",
   "forecasts",
   "purchase-orders",
   "vendors",
@@ -121,6 +123,14 @@ function flatNavLinks(): NavLink[] {
       icon: Icons.briefcase,
       href: (slug) => moduleTabPath(slug, "Approvals"),
       activePrefix: (slug) => moduleTabPath(slug, "Approvals"),
+      match: "prefix",
+    },
+    {
+      id: "feeds",
+      label: FEEDS_LABEL,
+      icon: Icons.newspaper,
+      href: (slug) => moduleTabPath(slug, "Feeds"),
+      activePrefix: (slug) => moduleTabPath(slug, "Feeds"),
       match: "prefix",
     },
   ];

@@ -28,6 +28,7 @@ it("applies tenancy after auth and skips both on a second run", async () => {
       "0007_chat.sql",
       "0008_access_control.sql",
       "0009_approvals_notifications.sql",
+      "0010_feeds.sql",
     ]);
     expect(await runMigrations(url)).toEqual({ applied: [], skipped: first.applied });
     const client = new pg.Client({ connectionString: url });
