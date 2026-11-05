@@ -2,6 +2,10 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 const ctx = { orgId: "org-1", orgSlug: "acme", orgName: "Acme", userId: "user-1", role: "admin" };
 
+vi.mock("@crm/core/access", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@crm/core/access")>()),
+  getAccessSnapshot: vi.fn(async () => ({ profileKind: "administrator" })),
+}));
 vi.mock("@crm/core", async (importOriginal) => ({
   ...(await importOriginal<typeof import("@crm/core")>()),
   getSession: vi.fn(async () => ({ user: { id: "user-1" } })),
