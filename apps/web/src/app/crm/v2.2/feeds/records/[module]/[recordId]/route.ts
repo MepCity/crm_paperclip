@@ -11,4 +11,9 @@ export const GET = apiRoute<{ module: string; recordId: string }>(
     if (!parsed.success) throw new ValidationError({ query: ["Invalid feed query."] });
     return getFeedService(ctx).listForRecord(params.module, params.recordId, parsed.data);
   },
+  {
+    permission: {
+      memberOnly: "Scoped to the signed-in actor; the feed service applies record visibility.",
+    },
+  },
 );
