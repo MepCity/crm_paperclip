@@ -220,7 +220,13 @@ function ProfileFields({
       {fixed ? (
         <Alert variant="info">The Administrator profile always has full field access.</Alert>
       ) : null}
-      <div className="overflow-x-auto rounded-lg border border-border">
+      <section
+        aria-label="Field permissions table"
+        // A scrollable region must be reachable from the keyboard (axe scrollable-region-focusable).
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: the region scrolls sideways on narrow screens.
+        tabIndex={0}
+        className="overflow-x-auto rounded-lg border border-border focus-visible:outline-2 focus-visible:outline-focus-ring"
+      >
         <table className="w-full min-w-[40rem] text-md" data-testid="field-permissions">
           <thead>
             <tr className="border-b-2 border-border text-left">
@@ -261,7 +267,7 @@ function ProfileFields({
             })}
           </tbody>
         </table>
-      </div>
+      </section>
       {fixed ? null : (
         <div className="sticky bottom-0 flex gap-2 border-t border-border bg-surface py-3">
           <Button onPress={save} isPending={busy} isDisabled={!dirty}>

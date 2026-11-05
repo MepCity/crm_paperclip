@@ -9685,25 +9685,31 @@
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 227,
+    "line": 224,
+    "column": 20,
+    "hash": "2d4b87972ac23045"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
+    "line": 233,
     "column": 55,
     "hash": "616f48c1db195b6f"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 244,
+    "line": 250,
     "column": 73,
     "hash": "89db19f651b18285"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 267,
+    "line": 273,
     "column": 71,
     "hash": "1509f561f2416598"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 277,
+    "line": 283,
     "column": 12,
     "hash": "19766ed6ccb2f4a3"
   },

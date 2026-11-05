@@ -72,7 +72,9 @@ test("administrator manages profiles, roles, groups and sharing", async ({
     page.getByRole("button", { name: "Leads actions: View, Create, Edit", exact: true }),
   ).toBeVisible();
   // The module toggle switches the whole module off and on.
-  await page.getByRole("switch", { name: "Campaigns", exact: true }).click();
+  // The switch input is visually hidden, so it is operated from the keyboard.
+  await page.getByRole("switch", { name: "Campaigns", exact: true }).focus();
+  await page.keyboard.press("Space");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByText("Profile saved.")).toBeVisible();
   await page.reload();
