@@ -6,6 +6,7 @@ import {
   BarChart3,
   Bell,
   BookUser,
+  Briefcase,
   Building2,
   Calendar,
   Check,
@@ -35,6 +36,7 @@ import {
   Megaphone,
   MessageSquare,
   Minus,
+  Newspaper,
   Package,
   PanelLeftClose,
   PanelLeftOpen,
@@ -507,8 +509,10 @@ function RecordLookupIcon({ module, ...props }: SVGProps<SVGSVGElement> & { modu
 }
 
 export const Icons = {
+  briefcase: thin(Briefcase),
   activity: thin(Activity),
   messageSquare: thin(MessageSquare),
+  newspaper: thin(Newspaper),
   envelope: thin(Mail),
   phone: thin(Phone),
   recordLookup: RecordLookupIcon,

@@ -44,6 +44,7 @@ export function SettingsNavigation({
               Customization: Settings,
               Automation: Workflow,
               "Users and Control": ShieldCheck,
+              "Process Management": Workflow,
             } as Record<string, typeof Building2>
           )[link.group ?? ""] ?? Settings;
         return [

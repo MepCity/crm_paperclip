@@ -1,6 +1,7 @@
 import { createTranslator } from "next-intl";
 import chatEn from "../../messages/en/chat.json";
 import commonEn from "../../messages/en/common.json";
+import feedsEn from "../../messages/en/feeds.json";
 import metadataEn from "../../messages/en/metadata.json";
 import modulesEn from "../../messages/en/modules.json";
 import recordsEn from "../../messages/en/records.json";
@@ -8,6 +9,7 @@ import settingsEn from "../../messages/en/settings.json";
 import shellEn from "../../messages/en/shell.json";
 import chatTr from "../../messages/tr/chat.json";
 import commonTr from "../../messages/tr/common.json";
+import feedsTr from "../../messages/tr/feeds.json";
 import metadataTr from "../../messages/tr/metadata.json";
 import modulesTr from "../../messages/tr/modules.json";
 import recordsTr from "../../messages/tr/records.json";
@@ -23,6 +25,7 @@ export const english = {
   records: recordsEn,
   modules: modulesEn,
   chat: chatEn,
+  feeds: feedsEn,
 };
 export const turkish = {
   common: commonTr,
@@ -32,6 +35,7 @@ export const turkish = {
   records: recordsTr,
   modules: modulesTr,
   chat: chatTr,
+  feeds: feedsTr,
 };
 export type Messages = typeof english;
 type Paths<T> = {
