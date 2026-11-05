@@ -42,6 +42,7 @@ export function OrganizationAddresses({
       ? actions.list()
       : fetch(`/api/definitions/${encodeURIComponent(orgSlug ?? "")}/organization-addresses`, {
           cache: "no-store",
+          headers: { "X-CRM-ORG": orgSlug ?? "" },
         }).then((response): Promise<DefinitionResult<readonly OrganizationAddress[]>> => {
           if (!response.ok) throw new Error("Unavailable");
           return response.json();

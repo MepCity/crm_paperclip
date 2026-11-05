@@ -1,8 +1,16 @@
+import { ForbiddenError } from "@crm/core/errors";
 import { beforeEach, expect, it, vi } from "vitest";
-import { addOrganizationAddress, createAssignment, saveReport } from "./actions";
+import {
+  addOrganizationAddress,
+  createAssignment,
+  reportFields,
+  runReport,
+  saveReport,
+} from "./actions";
 
-const { requireContext, ports, create, update, add, shell } = vi.hoisted(() => ({
+const { requireContext, permission, ports, create, update, add, shell } = vi.hoisted(() => ({
   requireContext: vi.fn(),
+  permission: vi.fn(),
   ports: vi.fn(),
   create: vi.fn(),
   update: vi.fn(),
@@ -10,6 +18,7 @@ const { requireContext, ports, create, update, add, shell } = vi.hoisted(() => (
   shell: vi.fn(),
 }));
 vi.mock("@/lib/session", () => ({ requireOrgContext: requireContext }));
+vi.mock("@/lib/access/action-guard", () => ({ requireActionPermission: permission }));
 vi.mock("./ports", () => ({ definitionPorts: ports, definitionMetadata: vi.fn() }));
 const ctx = { orgId: "server-tenant", userId: "server-actor", role: "admin" };
 const input = {
@@ -23,6 +32,7 @@ const input = {
 beforeEach(() => {
   vi.clearAllMocks();
   requireContext.mockResolvedValue(ctx);
+  permission.mockResolvedValue(undefined);
   ports.mockResolvedValue({
     reports: { create, update },
     organizationAddresses: { add },
@@ -66,4 +76,39 @@ it("does not access persistence when membership authentication fails", async () 
     createAssignment("foreign-org", { module: "Leads", name: "Shell", description: "" }, "retry"),
   ).rejects.toThrow("Unauthenticated");
   expect(ports).not.toHaveBeenCalled();
+});
+it("checks the profile permission of each action before touching persistence", async () => {
+  permission.mockRejectedValue(new ForbiddenError(undefined, "permission_denied"));
+  const denied = { ok: false, error: { code: "forbidden" } };
+  expect(await saveReport("selected-org", input, { idempotencyKey: "retry" })).toEqual(denied);
+  expect(
+    await createAssignment(
+      "selected-org",
+      { module: "Leads", name: "Shell", description: "" },
+      "k",
+    ),
+  ).toEqual(denied);
+  expect(
+    await addOrganizationAddress(
+      "selected-org",
+      { displayName: "S", address: "s@example.test" },
+      "k",
+    ),
+  ).toEqual(denied);
+  expect(await reportFields("selected-org", "Leads")).toEqual(denied);
+  expect(await runReport("selected-org", input)).toEqual(denied);
+  expect(ports).not.toHaveBeenCalled();
+  expect(permission.mock.calls.map(([, declared]) => declared)).toEqual([
+    { feature: "reports", action: "manage" },
+    { admin: "manageAutomation" },
+    { admin: "emailSettings" },
+    { feature: "reports", action: "manage" },
+    { feature: "reports", action: "view" },
+  ]);
+});
+it("does not swallow non-permission failures of the profile gate", async () => {
+  permission.mockRejectedValue(new Error("snapshot unavailable"));
+  await expect(saveReport("selected-org", input, { idempotencyKey: "retry" })).rejects.toThrow(
+    "snapshot unavailable",
+  );
 });
