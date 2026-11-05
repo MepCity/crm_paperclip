@@ -41,6 +41,7 @@ const routes = {
   search: () => import("@/app/crm/v2.2/actions/search/route"),
   timelines: () => import("@/app/crm/v9/[module]/[recordId]/timelines/route"),
   recycleBin: () => import("@/app/crm/v2.2/settings/recycle_bin/route"),
+  feeds: () => import("@/app/crm/v2.2/feeds/route"),
   feedRecord: () => import("@/app/crm/v2.2/feeds/records/[module]/[recordId]/route"),
   users: () => import("@/app/crm/v9/users/route"),
   profiles: () => import("@/app/crm/v9/settings/profiles/route"),
@@ -325,6 +326,23 @@ describe("access security probe (MEP-1468)", () => {
       });
       expect(convert.status).toBe(404);
     }
+
+    // The record feed shows the admin's Email change event: the hidden value must not appear.
+    const recordFeed = await call(
+      "feedRecord",
+      rep,
+      "GET",
+      `/crm/v2.2/feeds/records/Leads/${ids.rep}`,
+      {
+        params: { module: "Leads", recordId: ids.rep },
+      },
+    );
+    expect(recordFeed.status).toBe(200);
+    expect(recordFeed.text).toContain("fields_updated");
+    expectNoLeak(recordFeed, "record feed");
+    const wall = await call("feeds", rep, "GET", "/crm/v2.2/feeds");
+    expect(wall.status).toBe(200);
+    expectNoLeak(wall, "feeds wall");
 
     const timeline = await call(
       "timelines",
