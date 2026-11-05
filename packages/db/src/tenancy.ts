@@ -22,6 +22,14 @@ export const chatTableContracts: readonly TableContract[] = [
   { name: "chat_presence", privileges: ["SELECT", "INSERT", "UPDATE"] },
 ];
 
+export const approvalTableContracts: readonly TableContract[] = [
+  { name: "approval_processes", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "approval_requests", privileges: ["SELECT", "INSERT", "UPDATE"] },
+  { name: "approval_request_approvers", privileges: ["SELECT", "INSERT", "UPDATE"] },
+  { name: "approval_actions", privileges: ["SELECT", "INSERT"] },
+  { name: "notifications", privileges: ["SELECT", "INSERT", "UPDATE"] },
+];
+
 const identityTables = new Set([
   "users",
   "accounts",
@@ -80,7 +88,7 @@ export async function assertRuntimeCatalog(
   )
     unsafe();
 
-  const installed = [...definitionTableContracts, ...chatTableContracts];
+  const installed = [...definitionTableContracts, ...chatTableContracts, ...approvalTableContracts];
   tables = [...installed.filter((base) => !tables.some((t) => t.name === base.name)), ...tables];
   const contracts = new Map(tables.map((table) => [table.name, table]));
   if (contracts.size !== tables.length || tables.some((table) => identityTables.has(table.name)))

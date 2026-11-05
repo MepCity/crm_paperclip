@@ -12,6 +12,7 @@ import {
   createFixtureTagService,
 } from "@crm/core/records/fixture";
 
+import { getApprovals } from "./approvals";
 import { getCustomizationCoordinator } from "./customization";
 
 /** The single application adapter selection point for record data. */
@@ -19,6 +20,7 @@ export function getRecordService(ctx: OrgContext): RecordService & ModuleMetadat
   return createFixtureRecordService(ctx, {
     schema: getCustomizationCoordinator(),
     listMemberIds: async () => (await listMembers(ctx)).map((member) => member.userId),
+    writeObserver: getApprovals().writeObserver(ctx),
   });
 }
 
