@@ -10,6 +10,7 @@
 export const SHELL_BACKGROUND_PATH_PATTERNS: readonly RegExp[] = [
   /^\/crm\/v[\d.]+\/chat\/(sync|contacts|presence)/,
   /^\/crm\/v[\d.]+\/Events\/bulk$/,
+  /^\/crm\/v[\d.]+\/notifications\/unseen_count$/,
 ];
 
 export function isShellBackgroundRequest(

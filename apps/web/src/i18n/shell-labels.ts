@@ -26,6 +26,7 @@ const keys: Record<string, keyof typeof english.shell> = {
   documents: "documents",
   visits: "visits",
   social: "social",
+  feeds: "feeds",
   general: "general",
   members: "members",
   "personal-settings": "personal-settings",
