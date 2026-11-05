@@ -113,6 +113,7 @@ export async function assertRuntimeCatalog(
     ...chatTableContracts,
     ...accessTableContracts,
     ...approvalTableContracts,
+    ...feedTableContracts,
   ];
   tables = [...installed.filter((base) => !tables.some((t) => t.name === base.name)), ...tables];
   const contracts = new Map(tables.map((table) => [table.name, table]));
