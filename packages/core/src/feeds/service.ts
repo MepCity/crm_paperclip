@@ -142,7 +142,7 @@ export class FeedService {
 
   private async users(tx: Transaction, ids: readonly string[]): Promise<Map<string, FeedUser>> {
     const out = new Map<string, FeedUser>();
-    const unique = [...new Set(ids)];
+    const unique = [...new Set(ids)].filter(isUuid);
     if (unique.length === 0) return out;
     const res = await tx.execute(
       sql`SELECT u.id, u.name FROM users u
