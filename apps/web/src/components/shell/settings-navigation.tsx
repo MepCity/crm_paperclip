@@ -7,7 +7,7 @@ import { Link } from "@/components/ui/link";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useSettingsLabel } from "@/i18n/settings-labels";
 import { useShellLabel } from "@/i18n/shell-labels";
-import { isNavLinkActive, settingsNav } from "./nav";
+import { isNavLinkActive, settingsNavFor } from "./nav";
 
 const itemClasses = "inline-flex rounded-md px-3 py-2 text-md";
 
@@ -22,9 +22,7 @@ export function SettingsNavigation({
   const copy = useSettingsLabel();
   const label = useShellLabel();
   const pathname = usePathname();
-  const visibleLinks = settingsNav.filter(
-    (link) => canManageAccess || !link.requiresUserManagement,
-  );
+  const visibleLinks = settingsNavFor(canManageAccess);
   return (
     <nav aria-label={t("shell.settingsNavigation")} className="flex shrink-0 flex-col gap-1">
       <Link

@@ -258,56 +258,6 @@ export const settingsNav: readonly NavLink[] = [
     group: "General",
   },
   {
-    id: "profiles",
-    label: "Profiles",
-    icon: Icons.settings,
-    href: (slug) => `/crm/${slug}/settings/profiles`,
-    activePrefix: (slug) => `/crm/${slug}/settings/profiles`,
-    match: "prefix",
-    group: "Users and Control",
-    requiresUserManagement: true,
-  },
-  {
-    id: "roles",
-    label: "Roles",
-    icon: Icons.settings,
-    href: (slug) => `/crm/${slug}/settings/roles`,
-    activePrefix: (slug) => `/crm/${slug}/settings/roles`,
-    match: "prefix",
-    group: "Users and Control",
-    requiresUserManagement: true,
-  },
-  {
-    id: "groups",
-    label: "Groups",
-    icon: Icons.settings,
-    href: (slug) => `/crm/${slug}/settings/groups`,
-    activePrefix: (slug) => `/crm/${slug}/settings/groups`,
-    match: "prefix",
-    group: "Users and Control",
-    requiresUserManagement: true,
-  },
-  {
-    id: "data-sharing",
-    label: "Data Sharing",
-    icon: Icons.settings,
-    href: (slug) => `/crm/${slug}/settings/data-sharing`,
-    activePrefix: (slug) => `/crm/${slug}/settings/data-sharing`,
-    match: "prefix",
-    group: "Users and Control",
-    requiresUserManagement: true,
-  },
-  {
-    id: "field-permissions",
-    label: "Field Permissions",
-    icon: Icons.settings,
-    href: (slug) => `/crm/${slug}/settings/field-permissions`,
-    activePrefix: (slug) => `/crm/${slug}/settings/field-permissions`,
-    match: "prefix",
-    group: "Users and Control",
-    requiresUserManagement: true,
-  },
-  {
     id: "email",
     label: "Email",
     icon: Icons.settings,
@@ -358,6 +308,67 @@ export const settingsNav: readonly NavLink[] = [
     group: "Automation",
   },
 ];
+
+/** Access settings links (ADR 0017 §9), shown after the General group to viewers who may manage access. */
+export const accessSettingsNav: readonly NavLink[] = [
+  {
+    id: "profiles",
+    label: "Profiles",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/profiles`,
+    activePrefix: (slug) => `/crm/${slug}/settings/profiles`,
+    match: "prefix",
+    group: "Users and Control",
+    requiresUserManagement: true,
+  },
+  {
+    id: "roles",
+    label: "Roles",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/roles`,
+    activePrefix: (slug) => `/crm/${slug}/settings/roles`,
+    match: "prefix",
+    group: "Users and Control",
+    requiresUserManagement: true,
+  },
+  {
+    id: "groups",
+    label: "Groups",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/groups`,
+    activePrefix: (slug) => `/crm/${slug}/settings/groups`,
+    match: "prefix",
+    group: "Users and Control",
+    requiresUserManagement: true,
+  },
+  {
+    id: "data-sharing",
+    label: "Data Sharing",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/data-sharing`,
+    activePrefix: (slug) => `/crm/${slug}/settings/data-sharing`,
+    match: "prefix",
+    group: "Users and Control",
+    requiresUserManagement: true,
+  },
+  {
+    id: "field-permissions",
+    label: "Field Permissions",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/field-permissions`,
+    activePrefix: (slug) => `/crm/${slug}/settings/field-permissions`,
+    match: "prefix",
+    group: "Users and Control",
+    requiresUserManagement: true,
+  },
+];
+
+/** The settings navigation for a viewer: access links only with `admin.userManagement`. */
+export function settingsNavFor(canManageAccess: boolean): readonly NavLink[] {
+  if (!canManageAccess) return settingsNav;
+  const at = settingsNav.findIndex((link) => link.group !== "General");
+  return [...settingsNav.slice(0, at), ...accessSettingsNav, ...settingsNav.slice(at)];
+}
 
 /**
  * One row of the top-bar `Create Records` menu. Rows carry no icon: the spec measures the same
