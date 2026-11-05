@@ -1389,7 +1389,25 @@ export function createFixtureRecordService(
         );
       },
     },
-    tags,
+    // Tagging a record is a record write (ADR 0017 §7.3): invisible → 404, read-only → 403.
+    tags: {
+      ...tags,
+      async addTags(module, recordId, ids) {
+        recordFor(module, recordId);
+        await assertRecordLevel(module, [recordId], "edit");
+        return tags.addTags(module, recordId, ids);
+      },
+      async removeTags(module, recordId, ids) {
+        recordFor(module, recordId);
+        await assertRecordLevel(module, [recordId], "edit");
+        return tags.removeTags(module, recordId, ids);
+      },
+      async listRecordTags(module, recordId) {
+        recordFor(module, recordId);
+        await assertRecordLevel(module, [recordId], "read");
+        return tags.listRecordTags(module, recordId);
+      },
+    },
     recycleBin,
     history: guardedHistory(
       fixtureHistoryReader(
@@ -1521,11 +1539,15 @@ export function createFixtureRecordService(
       if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(perPage) || perPage < 1)
         throw new ValidationError({ page: ["Choose positive integer paging values."] });
       const groups = [];
+      const acc = await accessFor();
       for (const module of new Set(
         query.modules ?? Object.keys(fixtureModules).filter((name) => !bundleFor(name).readOnly),
       )) {
         const bundle = bundleFor(module);
         if (bundle.childModule) continue;
+        // Global search spans modules, so the route gate cannot check them: a module the
+        // profile cannot view contributes nothing (ADR 0017 §4.1, MEP-1468).
+        if (acc && !acc.can(module, "view")) continue;
         if (
           query.fields?.some(
             (name) => !bundle.metadata.fields.some((field) => field.apiName === name),
@@ -1556,7 +1578,9 @@ export function createFixtureRecordService(
               : {
                   id: record.id,
                   fields: Object.fromEntries(
-                    query.fields.map((name) => [name, record.fields[name] ?? null]),
+                    query.fields
+                      .filter((name) => !acc?.hiddenFields(module).has(name))
+                      .map((name) => [name, record.fields[name] ?? null]),
                   ),
                 },
           ),
@@ -1656,10 +1680,13 @@ export function createFixtureRecordService(
             : {
                 id: record.id,
                 fields: Object.fromEntries(
-                  ["id", ...query.fields].map((name) => [
-                    name,
-                    name === "id" ? record.id : (record.fields[name] ?? null),
-                  ]),
+                  // A requested hidden field is dropped, never echoed as null (ADR 0017 §4.5).
+                  ["id", ...query.fields]
+                    .filter((name) => !viewAcc?.hiddenFields(module).has(name))
+                    .map((name) => [
+                      name,
+                      name === "id" ? record.id : (record.fields[name] ?? null),
+                    ]),
                 ),
               },
         ),
