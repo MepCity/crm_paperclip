@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { ForbiddenError, NotFoundError, ValidationError } from "../../errors";
 import type { OrgContext } from "../../tenancy/types";
+import type { RecordAccessChecker } from "../access-policy";
 import type { RecordData } from "../contract";
 import type { RecycleBinEntry, RecycleBinQuery, RecycleBinService } from "../recycle-bin";
 import { attachmentParent } from "./attachments/hooks";
@@ -24,6 +25,8 @@ interface Dependencies {
   atomic: <T>(operation: FixtureHistoryOperation, write: () => T) => T;
   validate: (module: string, record: RecordData) => void;
   validateOwners: (records: readonly RecordData[]) => Promise<void>;
+  /** Access decisions of ADR 0017 §7.3; `undefined` = system actor (legacy admin rule). */
+  access?: () => Promise<RecordAccessChecker | undefined>;
 }
 
 /** Move canonical rows into the deleted partition; the manifest contains references only. */
@@ -101,8 +104,15 @@ function deletedOnRange(value: RecycleBinQuery["deletedOn"]): [number, number] |
 
 export function fixtureRecycleBinService(deps: Dependencies): RecycleBinService {
   const { context: ctx, now, manifests, moduleStore, bundle, atomic } = deps;
+  // `dataManagement` (or the legacy admin role without an access source), resolved per call.
+  let manager = ctx.role === "admin";
+  let checker: RecordAccessChecker | undefined;
+  const refresh = async () => {
+    checker = await deps.access?.();
+    if (checker) manager = checker.admin("dataManagement");
+  };
   const visible = (manifest: DeletionManifest) =>
-    (ctx.role === "admin" || manifest.entry.deletedBy === ctx.userId) &&
+    (manager || manifest.entry.deletedBy === ctx.userId) &&
     Date.parse(manifest.entry.expiresAt) > now().getTime();
   const selection = (ids: readonly string[]) =>
     [...new Set(ids)].map((id) => {
@@ -111,7 +121,7 @@ export function fixtureRecycleBinService(deps: Dependencies): RecycleBinService 
       return manifest;
     });
   const admin = () => {
-    if (ctx.role !== "admin") throw new ForbiddenError();
+    if (!manager) throw new ForbiddenError(undefined, "permission_denied");
   };
   const purge = (ids: readonly string[]) => {
     admin();
@@ -153,6 +163,7 @@ export function fixtureRecycleBinService(deps: Dependencies): RecycleBinService 
   };
   return {
     async list(query = {}) {
+      await refresh();
       if (query.module !== undefined) bundle(query.module);
       const page = query.page ?? 1;
       const perPage = query.perPage ?? 30;
@@ -186,7 +197,13 @@ export function fixtureRecycleBinService(deps: Dependencies): RecycleBinService 
       });
     },
     async restore(ids) {
+      await refresh();
       const selected = selection(ids);
+      // ADR 0017 §7.3: `delete` on the original module (the bin lists only own deletions otherwise).
+      if (checker)
+        for (const manifest of selected)
+          if (!manager && !checker.can(manifest.entry.module, "delete"))
+            throw new ForbiddenError(undefined, "permission_denied");
       if (!selected.length) return;
       await deps.validateOwners(
         selected.flatMap((manifest) =>
@@ -263,9 +280,11 @@ export function fixtureRecycleBinService(deps: Dependencies): RecycleBinService 
       });
     },
     async purge(ids) {
+      await refresh();
       purge(ids);
     },
     async empty() {
+      await refresh();
       admin();
       purge([...manifests().values()].filter(visible).map((item) => item.entry.id));
     },

@@ -1,4 +1,5 @@
 import { listMembers } from "@crm/core";
+import { getAccessSnapshot } from "@crm/core/access";
 import { NotFoundError } from "@crm/core/errors";
 import { getCustomizationService } from "@/lib/customization";
 import { getRecordService } from "@/lib/records";
@@ -16,6 +17,15 @@ export function operationRoute(operation: Operation) {
           {
             records: getRecordService(input.ctx),
             members: () => listMembers(input.ctx),
+            pickableUserIds: async () => {
+              const snapshot = await getAccessSnapshot(input.ctx);
+              if (
+                snapshot.profileKind === "administrator" ||
+                !snapshot.permissions.tools.onlyListSubordinates
+              )
+                return null;
+              return new Set([snapshot.userId, ...snapshot.subordinateUserIds]);
+            },
             customization: () => getCustomizationService(input.ctx),
           },
           input,

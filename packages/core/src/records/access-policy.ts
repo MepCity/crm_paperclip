@@ -12,6 +12,15 @@ import {
 import { ForbiddenError, NotFoundError } from "../errors";
 import type { Criteria, FieldValue, SortSpec } from "./contract";
 
+export type AdminKey =
+  | "userManagement"
+  | "moduleCustomization"
+  | "manageCurrencies"
+  | "customizeHome"
+  | "manageAutomation"
+  | "manageTemplates"
+  | "emailSettings"
+  | "dataManagement";
 export type ModuleTool = "convert" | "findAndMerge" | "changeOwner" | "massUpdate" | "massDelete";
 
 /** Loads the viewer's access snapshot lazily (the fixture service is built synchronously). */
@@ -31,6 +40,8 @@ export interface RecordAccessChecker {
   ): void;
   /** Profile gate for a module action (ADR 0017 §4.1). */
   can(module: string, action: ModuleAction): boolean;
+  /** Organisation-level administration key (`admin.dataManagement`, ...). */
+  admin(name: AdminKey): boolean;
   /** Module-list tool permission (`tools.convert`, `tools.findAndMerge`, ...). */
   tool(name: ModuleTool, module: string): boolean;
   /** Hidden fields are refused; read-only fields only when the value changes (403 `field_forbidden`). */
@@ -93,6 +104,7 @@ export function createRecordAccessChecker(
       if (!levelAllows(have, operation)) throw new ForbiddenError(undefined, "permission_denied");
     },
     can: (module, action) => can(snapshot, module, action),
+    admin: (name) => snapshot.profileKind === "administrator" || snapshot.permissions.admin[name],
     tool(name, module) {
       if (snapshot.profileKind === "administrator") return true;
       return (snapshot.permissions.tools[name] as readonly string[]).includes(module);

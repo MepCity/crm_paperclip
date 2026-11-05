@@ -1,4 +1,5 @@
 import type { OrgContext } from "@crm/core";
+import { getAccessSnapshot } from "@crm/core/access";
 
 /** CRM capability step of ADR 0008 §2 (Addendum A). Re-evaluated on every read. */
 export interface DocumentsAccessSource {
@@ -6,13 +7,15 @@ export interface DocumentsAccessSource {
   documentsEnabled(ctx: OrgContext): boolean | Promise<boolean>;
 }
 
-/** Interim source: no profile store yet, every organization member is enabled. */
+/** Profile source (ADR 0017 §7.3): `features.documents.view` of the actor's profile. */
 export const documentsAccessSource: DocumentsAccessSource = {
-  documentsEnabled: () => true,
+  documentsEnabled: async (ctx) => {
+    const snapshot = await getAccessSnapshot(ctx);
+    return snapshot.profileKind === "administrator" || snapshot.permissions.features.documents.view;
+  },
 };
 
 export async function canReadDocuments(ctx: OrgContext): Promise<boolean> {
-  if (ctx.role === "admin") return true;
-  if (ctx.role !== "member") return false;
+  if (ctx.role !== "admin" && ctx.role !== "member") return false;
   return (await documentsAccessSource.documentsEnabled(ctx)) === true;
 }

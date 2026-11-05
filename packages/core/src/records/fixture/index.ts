@@ -841,6 +841,7 @@ export function createFixtureRecordService(
   const recycleBin = fixtureRecycleBinService({
     ...recycleDependencies,
     atomic,
+    access: accessFor,
     async validateOwners(records) {
       const members = options?.listMemberIds ? await options.listMemberIds() : [...state.memberIds];
       for (const record of records) {

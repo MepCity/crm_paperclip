@@ -1,6 +1,6 @@
 import { PageTitle } from "@/components/shell/page-title";
 import { getUiTranslations } from "@/i18n/request";
-import { requireOrgContext } from "@/lib/session";
+import { requireSettingsOrg } from "@/lib/access/settings-gate";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import { AssignmentRulesScreen } from "@/modules/assignment-rules/assignment-rules-screen";
 import { createAutomationPort } from "@/modules/automation/port";
@@ -16,7 +16,7 @@ export default async function AssignmentRulesPage({
 }) {
   const { orgSlug } = await params;
   const { module, cursor } = await searchParams;
-  const ctx = await requireOrgContext(orgSlug);
+  const ctx = await requireSettingsOrg(orgSlug, "manageAutomation");
   const result = await createAutomationPort().list(ctx, {
     kind: "assignment",
     ...(module ? { module } : {}),

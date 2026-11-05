@@ -2,6 +2,8 @@ import { schema } from "@crm/db";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
 import { bumpAccessVersion, rootRoleId, systemProfileId } from "../access/seed";
+import { buildAccessSnapshot } from "../access/evaluate";
+import { loadAccessData } from "../access/store";
 import { requireUser, type SessionUser } from "../auth";
 import { getDb } from "../database";
 import {
@@ -128,7 +130,6 @@ export async function withOrg<T>(
 }
 
 async function requireCurrentAdmin(tx: Transaction, ctx: OrgContext): Promise<void> {
-  if (ctx.role !== "admin") throw new ForbiddenError();
   const [row] = await tx
     .select({ role: schema.memberships.role })
     .from(schema.memberships)
@@ -138,7 +139,13 @@ async function requireCurrentAdmin(tx: Transaction, ctx: OrgContext): Promise<vo
         eq(schema.memberships.userId, ctx.userId),
       ),
     );
-  if (row?.role !== "admin") throw new ForbiddenError();
+  if (row?.role === "admin") return;
+  // ADR 0017 §7.3: a profile with `admin.userManagement` manages members too.
+  if (row) {
+    const snapshot = buildAccessSnapshot(await loadAccessData(tx, ctx.orgId, ctx.userId));
+    if (snapshot.permissions.admin.userManagement) return;
+  }
+  throw new ForbiddenError(undefined, "permission_denied");
 }
 
 async function requireCurrentMember(tx: Transaction, ctx: OrgContext): Promise<void> {

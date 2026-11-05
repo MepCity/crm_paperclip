@@ -1,5 +1,5 @@
 import { PageTitle } from "@/components/shell/page-title";
-import { requireOrgContext } from "@/lib/session";
+import { requireSettingsOrg } from "@/lib/access/settings-gate";
 import { shellPageMetadata, shellPageTitle } from "@/lib/shell-page-title";
 import { createAutomationPort } from "@/modules/automation/port";
 import { readWorkflowRule } from "@/modules/workflow-rules/reads";
@@ -13,7 +13,7 @@ export default async function WorkflowRuleDetailPage({
   params: Promise<{ orgSlug: string; ruleId: string }>;
 }) {
   const { orgSlug, ruleId } = await params;
-  const ctx = await requireOrgContext(orgSlug);
+  const ctx = await requireSettingsOrg(orgSlug, "manageAutomation");
   const result = await readWorkflowRule(createAutomationPort(), ctx, ruleId);
 
   return (
