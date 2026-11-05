@@ -244,7 +244,7 @@ export function ProfileDetailScreen({
     <Screen state={state} title="Profile">
       {({ profile, all }) => (
         <ProfileBody
-          key={`${profile.id}:${profile.updatedAt}`}
+          key={profile.id}
           orgSlug={orgSlug}
           profile={profile}
           all={all}
@@ -291,10 +291,13 @@ function ProfileBody({
     setBusy(true);
     setError(null);
     try {
-      await api.updateProfile(profile.id, {
+      const updated = await api.updateProfile(profile.id, {
         ...(system ? {} : { name, description }),
         permissions: perms,
       });
+      setName(updated.name);
+      setDescription(updated.description ?? "");
+      setPerms(updated.permissions);
       setSaved(true);
       setEditing(false);
       reload();
@@ -327,7 +330,17 @@ function ProfileBody({
           </Link>
           {profile.kind === "administrator" ? null : editing ? (
             <>
-              <Button variant="secondary" onPress={() => reload()} isDisabled={busy}>
+              <Button
+                variant="secondary"
+                onPress={() => {
+                  setName(profile.name);
+                  setDescription(profile.description ?? "");
+                  setPerms(profile.permissions);
+                  setError(null);
+                  setEditing(false);
+                }}
+                isDisabled={busy}
+              >
                 Cancel
               </Button>
               <Button onPress={save} isPending={busy}>
@@ -335,7 +348,14 @@ function ProfileBody({
               </Button>
             </>
           ) : (
-            <Button variant="secondary" onPress={() => setEditing(true)}>
+            <Button
+              variant="secondary"
+              onPress={() => {
+                setSaved(false);
+                setError(null);
+                setEditing(true);
+              }}
+            >
               Edit
             </Button>
           )}
