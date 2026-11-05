@@ -25,8 +25,14 @@ test("wall: post, comment, like, filters and empty states", async ({ page }) => 
   const org = await createOrganization(page, "Feed Corp");
   await page.goto(`/crm/${org.slug}/tab/Feeds`);
 
-  await page.getByRole("textbox").first().fill("Hello wall");
-  await page.getByRole("button", { name: "Post", exact: true }).click();
+  const composer = page.getByRole("textbox").first();
+  const postButton = page.getByRole("button", { name: "Post", exact: true });
+  // A fill before hydration can be reset by React; retry until the controlled value sticks.
+  await expect(async () => {
+    await composer.fill("Hello wall");
+    await expect(postButton).toBeEnabled({ timeout: 1000 });
+  }).toPass({ timeout: 15000 });
+  await postButton.click();
   const card = page.locator('[data-feed-item="post"]').first();
   await expect(card.getByText("Hello wall")).toBeVisible();
 
