@@ -1,5 +1,8 @@
 import { notFound } from "next/navigation";
+import { AccessDenied } from "@/components/shell/access-denied";
 import { PageTitle } from "@/components/shell/page-title";
+import { requireActionPermission } from "@/lib/access/action-guard";
+import { canViewFeature } from "@/lib/access/settings-gate";
 import { persistentReportsPort } from "@/lib/definitions/reports";
 import { requireOrgContext } from "@/lib/session";
 import { ReportDetailScreen } from "@/modules/reports/report-detail-screen";
@@ -13,6 +16,7 @@ export default async function ReportPage({
 }) {
   const { orgSlug, reportId } = await params;
   const ctx = await requireOrgContext(orgSlug);
+  if (!(await canViewFeature(ctx, "reports"))) return <AccessDenied />;
   const port = await persistentReportsPort(ctx);
   const report = await port.getReport(reportId);
   if (!report) notFound();
@@ -20,12 +24,14 @@ export default async function ReportPage({
   async function getReport(id: string) {
     "use server";
     const innerCtx = await requireOrgContext(orgSlug);
+    await requireActionPermission(innerCtx, { feature: "reports", action: "view" });
     return (await persistentReportsPort(innerCtx)).getReport(id);
   }
 
   async function listReports() {
     "use server";
     const innerCtx = await requireOrgContext(orgSlug);
+    await requireActionPermission(innerCtx, { feature: "reports", action: "view" });
     return (await persistentReportsPort(innerCtx)).listReports();
   }
 

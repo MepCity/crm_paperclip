@@ -17,6 +17,7 @@ import {
   type RecordAccessChecker,
   type RecordAccessSource,
 } from "../access-policy";
+import { projectMetadataForViewer, projectViewForViewer } from "../access-projection";
 import {
   activityDate,
   activityParentIds,
@@ -700,7 +701,8 @@ export function createFixtureRecordService(
             options?.canReadRecord?.(event.subject.module, event.subject.recordId) !== false,
         )
       : [];
-    const view = applyView ? viewFor(module, query.viewId) : undefined;
+    const rawView = applyView ? viewFor(module, query.viewId) : undefined;
+    const view = rawView && acc ? projectViewForViewer(rawView, acc.hiddenFields(module)) : rawView;
     const fieldMap = withLineItemFilterFields(
       new Map(bundle.metadata.fields.map((field) => [field.apiName, field])),
     );
@@ -1387,7 +1389,25 @@ export function createFixtureRecordService(
         );
       },
     },
-    tags,
+    // Tagging a record is a record write (ADR 0017 §7.3): invisible → 404, read-only → 403.
+    tags: {
+      ...tags,
+      async addTags(module, recordId, ids) {
+        recordFor(module, recordId);
+        await assertRecordLevel(module, [recordId], "edit");
+        return tags.addTags(module, recordId, ids);
+      },
+      async removeTags(module, recordId, ids) {
+        recordFor(module, recordId);
+        await assertRecordLevel(module, [recordId], "edit");
+        return tags.removeTags(module, recordId, ids);
+      },
+      async listRecordTags(module, recordId) {
+        recordFor(module, recordId);
+        await assertRecordLevel(module, [recordId], "read");
+        return tags.listRecordTags(module, recordId);
+      },
+    },
     recycleBin,
     history: guardedHistory(
       fixtureHistoryReader(
@@ -1519,11 +1539,15 @@ export function createFixtureRecordService(
       if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(perPage) || perPage < 1)
         throw new ValidationError({ page: ["Choose positive integer paging values."] });
       const groups = [];
+      const acc = await accessFor();
       for (const module of new Set(
         query.modules ?? Object.keys(fixtureModules).filter((name) => !bundleFor(name).readOnly),
       )) {
         const bundle = bundleFor(module);
         if (bundle.childModule) continue;
+        // Global search spans modules, so the route gate cannot check them: a module the
+        // profile cannot view contributes nothing (ADR 0017 §4.1, MEP-1468).
+        if (acc && !acc.can(module, "view")) continue;
         if (
           query.fields?.some(
             (name) => !bundle.metadata.fields.some((field) => field.apiName === name),
@@ -1554,7 +1578,9 @@ export function createFixtureRecordService(
               : {
                   id: record.id,
                   fields: Object.fromEntries(
-                    query.fields.map((name) => [name, record.fields[name] ?? null]),
+                    query.fields
+                      .filter((name) => !acc?.hiddenFields(module).has(name))
+                      .map((name) => [name, record.fields[name] ?? null]),
                   ),
                 },
           ),
@@ -1579,24 +1605,48 @@ export function createFixtureRecordService(
     },
     async getModuleProjection(module) {
       bundleFor(module);
-      return readFixtureModuleProjection(
+      const projection = await readFixtureModuleProjection(
         ctx.orgId,
         module,
         schema?.metadata ?? options?.customization,
       );
+      const acc = await accessFor();
+      if (!acc) return projection;
+      const hidden = acc.hiddenFields(module);
+      return {
+        ...projectMetadataForViewer(projection, { hidden, readOnly: acc.readOnlyFields(module) }),
+        views: projection.views.map((view) => projectViewForViewer(view, hidden)),
+      };
     },
     async getModule(module) {
-      return copy(bundleFor(module).metadata);
+      const acc = await accessFor();
+      const metadata = bundleFor(module).metadata;
+      return copy(
+        acc
+          ? projectMetadataForViewer(metadata, {
+              hidden: acc.hiddenFields(module),
+              readOnly: acc.readOnlyFields(module),
+            })
+          : metadata,
+      );
     },
     async listViews(module) {
-      return copy(bundleFor(module).views);
+      const acc = await accessFor();
+      const views = bundleFor(module).views;
+      return copy(
+        acc ? views.map((v) => projectViewForViewer(v, acc.hiddenFields(module))) : views,
+      );
     },
     async getView(module, id) {
-      return copy(viewFor(module, id));
+      const acc = await accessFor();
+      const view = viewFor(module, id);
+      return copy(acc ? projectViewForViewer(view, acc.hiddenFields(module)) : view);
     },
     async list(module, query) {
       const bundle = bundleFor(module);
-      const view = viewFor(module, query.viewId);
+      const viewAcc = await accessFor();
+      const rawView = viewFor(module, query.viewId);
+      const view = viewAcc ? projectViewForViewer(rawView, viewAcc.hiddenFields(module)) : rawView;
       const errors: Record<string, string[]> = {};
       if (!Number.isSafeInteger(query.page) || query.page < 1)
         errors.page = ["Choose a positive integer page."];
@@ -1630,10 +1680,13 @@ export function createFixtureRecordService(
             : {
                 id: record.id,
                 fields: Object.fromEntries(
-                  ["id", ...query.fields].map((name) => [
-                    name,
-                    name === "id" ? record.id : (record.fields[name] ?? null),
-                  ]),
+                  // A requested hidden field is dropped, never echoed as null (ADR 0017 §4.5).
+                  ["id", ...query.fields]
+                    .filter((name) => !viewAcc?.hiddenFields(module).has(name))
+                    .map((name) => [
+                      name,
+                      name === "id" ? record.id : (record.fields[name] ?? null),
+                    ]),
                 ),
               },
         ),
@@ -1712,7 +1765,7 @@ export function createFixtureRecordService(
         insertRecord(module, normalized, options),
       );
       await publishWrite(module, "create", created, undefined, options);
-      return created;
+      return writer ? writer.project(module, created) : created;
     },
     async update(module, id, input, options) {
       assertModuleWritable(module);
@@ -1763,7 +1816,8 @@ export function createFixtureRecordService(
         return copy(resolveRead(module, updated));
       });
       await publishWrite(module, "edit", updatedRecord, previous, options);
-      return updatedRecord;
+      const viewer = await accessFor();
+      return viewer ? viewer.project(module, updatedRecord) : updatedRecord;
     },
     async massUpdate(module, ids, input) {
       assertModuleWritable(module);

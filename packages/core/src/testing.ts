@@ -116,9 +116,9 @@ async function assignAccess(
  * E2E fixture: a user with the Standard profile in the Manager role, joined straight to an
  * existing organisation by slug (no invitation). Sign in with the returned email and password.
  */
-export async function createStandardManagerUser(orgSlug: string) {
+export async function createStandardManagerUser(orgSlug: string, role = "Manager") {
   const password = randomBytes(12).toString("hex");
   const { user } = await createTestUser({ name: "Standard Manager", password });
-  await assignAccess(orgSlug, user.id, { profile: "standard", role: "Manager" });
+  await assignAccess(orgSlug, user.id, { profile: "standard", role });
   return { email: user.email, password, userId: user.id };
 }

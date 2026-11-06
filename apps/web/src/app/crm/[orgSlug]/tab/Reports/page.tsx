@@ -1,5 +1,7 @@
+import { AccessDenied } from "@/components/shell/access-denied";
 import { PageTitle } from "@/components/shell/page-title";
 import { getUiTranslations } from "@/i18n/request";
+import { canViewFeature } from "@/lib/access/settings-gate";
 import { reportFields, runReport, saveReport } from "@/lib/definitions/actions";
 import { persistentReportsPort } from "@/lib/definitions/reports";
 import { requireOrgContext } from "@/lib/session";
@@ -10,6 +12,7 @@ export const metadata = { title: "Reports" };
 export default async function ReportsPage({ params }: { params: Promise<{ orgSlug: string }> }) {
   const { orgSlug } = await params;
   const ctx = await requireOrgContext(orgSlug);
+  if (!(await canViewFeature(ctx, "reports"))) return <AccessDenied />;
   const port = await persistentReportsPort(ctx);
   let initialReports: Awaited<ReturnType<typeof port.listReports>> | undefined;
   try {

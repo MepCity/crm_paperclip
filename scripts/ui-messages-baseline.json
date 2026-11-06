@@ -67,7 +67,7 @@
   },
   {
     "file": "apps/web/src/app/crm/[orgSlug]/tab/Dashboards/page.tsx",
-    "line": 9,
+    "line": 12,
     "column": 34,
     "hash": "94c116ee118a7299"
   },
@@ -91,13 +91,13 @@
   },
   {
     "file": "apps/web/src/app/crm/[orgSlug]/tab/Reports/[reportId]/page.tsx",
-    "line": 7,
+    "line": 10,
     "column": 34,
     "hash": "b6ce788d9786917c"
   },
   {
     "file": "apps/web/src/app/crm/[orgSlug]/tab/Reports/page.tsx",
-    "line": 8,
+    "line": 10,
     "column": 34,
     "hash": "dacca3cba3f346a4"
   },
@@ -10255,55 +10255,61 @@
   },
   {
     "file": "apps/web/src/modules/settings-access/profiles-screen.tsx",
-    "line": 118,
-    "column": 13,
+    "line": 116,
+    "column": 33,
     "hash": "535e52e4a2616ebe"
   },
   {
     "file": "apps/web/src/modules/settings-access/profiles-screen.tsx",
-    "line": 121,
-    "column": 77,
-    "hash": "cfeed6691c4defed"
-  },
-  {
-    "file": "apps/web/src/modules/settings-access/profiles-screen.tsx",
-    "line": 131,
+    "line": 123,
     "column": 23,
     "hash": "c5998e334fbe9340"
   },
   {
     "file": "apps/web/src/modules/settings-access/profiles-screen.tsx",
-    "line": 135,
-    "column": 30,
+    "line": 131,
+    "column": 25,
     "hash": "49c266baaaa70981"
   },
   {
     "file": "apps/web/src/modules/settings-access/profiles-screen.tsx",
-    "line": 141,
+    "line": 132,
+    "column": 31,
+    "hash": "49c266baaaa70981"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profiles-screen.tsx",
+    "line": 139,
+    "column": 79,
+    "hash": "cfeed6691c4defed"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profiles-screen.tsx",
+    "line": 146,
     "column": 34,
     "hash": "a423b47777783386"
   },
   {
     "file": "apps/web/src/modules/settings-access/profiles-screen.tsx",
-    "line": 142,
+    "line": 147,
     "column": 34,
     "hash": "12702be6831b9518"
   },
   {
     "file": "apps/web/src/modules/settings-access/profiles-screen.tsx",
-    "line": 143,
+    "line": 148,
     "column": 34,
     "hash": "dfd60b9aa5ca29f4"
   },
   {
     "file": "apps/web/src/modules/settings-access/profiles-screen.tsx",
-    "line": 144,
+    "line": 149,
     "column": 34,
     "hash": "6015680f13679068"
   },
   {
     "file": "apps/web/src/modules/settings-access/profiles-screen.tsx",
-    "line": 147,
+    "line": 152,
     "column": 59,
     "hash": "c5233e0c72c84e6b"
   },
