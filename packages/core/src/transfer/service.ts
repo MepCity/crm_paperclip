@@ -48,6 +48,11 @@ export function createTransferService(deps: TransferDependencies): TransferServi
     if (!member) throw new ForbiddenError();
     return copy(member);
   };
+  /** Own jobs only, unless the actor holds `admin.dataManagement`; others' jobs read as missing. */
+  const scopeOf = async (ctx: OrgContext) => {
+    const all = (await deps.canManageAll?.(ctx)) === true;
+    return (job: { createdBy: Actor }) => all || job.createdBy.id === ctx.userId;
+  };
   const authorizeImport = async (
     ctx: OrgContext,
     module: TransferModule,
@@ -185,15 +190,21 @@ export function createTransferService(deps: TransferDependencies): TransferServi
     },
     async listImports(ctx) {
       await actor(ctx);
-      return newest([...state(ctx).imports.values()].map((entry) => entry.job));
+      const mine = await scopeOf(ctx);
+      return newest(
+        [...state(ctx).imports.values()].filter((entry) => mine(entry.job)).map((e) => e.job),
+      );
     },
     async getImport(ctx, id) {
       await actor(ctx);
-      return copy(stored(state(ctx).imports, id).job);
+      const entry = stored(state(ctx).imports, id);
+      if (!(await scopeOf(ctx))(entry.job)) throw new NotFoundError();
+      return copy(entry.job);
     },
     async undoImport(ctx, id) {
       await actor(ctx);
       const entry = stored(state(ctx).imports, id);
+      if (!(await scopeOf(ctx))(entry.job)) throw new NotFoundError();
       if (!entry.job.undoable) throw new AppError("not_undoable", "This import cannot be undone.");
       await deps.authorize(ctx, entry.job.module, "delete");
       if (!entry.job.undoable) throw new AppError("not_undoable", "This import cannot be undone.");
@@ -263,11 +274,15 @@ export function createTransferService(deps: TransferDependencies): TransferServi
     },
     async listExports(ctx) {
       await actor(ctx);
-      return newest([...state(ctx).exports.values()].map((entry) => entry.job));
+      const mine = await scopeOf(ctx);
+      return newest(
+        [...state(ctx).exports.values()].filter((entry) => mine(entry.job)).map((e) => e.job),
+      );
     },
     async downloadExport(ctx, id) {
       await actor(ctx);
       const entry = stored(state(ctx).exports, id);
+      if (!(await scopeOf(ctx))(entry.job)) throw new NotFoundError();
       await deps.authorize(ctx, entry.job.module, "export");
       const metadata = await deps.records(ctx).getModule(entry.job.module);
       exportFields(metadata.fields, {

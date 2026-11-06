@@ -4,9 +4,10 @@ import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
-// MEP-211: the members screen is the narrowest table case in the app, so it shows what a data
-// table does when its columns do not fit. Their overflow has to stay inside the table's own
-// scroll container: the document must never get a horizontal range.
+// MEP-211: a wide settings table shows what a data table does when its columns do not fit. Their
+// overflow has to stay inside the table's own scroll container: the document must never get a
+// horizontal range. Since MEP-1473 the Users page is a list + detail split (no table), so the
+// table case is the field permissions screen and the Users page is checked for its own fit.
 const NARROW = { width: 390, height: 844 };
 const WIDE = { width: 1470, height: 835 };
 const MEMBER_NAME = "Test User";
@@ -60,22 +61,41 @@ async function measure(page: Page) {
   return { tables, ...doc };
 }
 
-async function openMembersScreen(page: Page): Promise<void> {
+async function openMembersScreen(page: Page): Promise<string> {
   const organization = await createOrganization(page);
-  await page.goto(`/crm/${organization.slug}/settings/members`);
-  await expect(page.getByRole("link", { name: "Members" })).toHaveAttribute("aria-current", "page");
+  await page.goto(`/crm/${organization.slug}/settings/users`);
+  await expect(page.getByRole("link", { name: "Users", exact: true }).first()).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await page.getByRole("button", { name: "Edit user" }).click();
   await expect(page.getByRole("button", { name: `Role for ${MEMBER_NAME}` })).toBeVisible();
+  return organization.slug;
+}
+
+async function openFieldPermissions(page: Page, slug: string): Promise<void> {
+  await page.goto(`/crm/${slug}/settings/field-permissions`);
+  await expect(page.getByTestId("field-permissions")).toBeVisible();
 }
 
 test.describe("members screen on a narrow screen", () => {
   test.use({ viewport: NARROW });
 
+  let slug = "";
   test.beforeEach(async ({ page }) => {
     await signUpNewUser(page, testUser());
-    await openMembersScreen(page);
+    slug = await openMembersScreen(page);
+  });
+
+  test("the users split view keeps the document at the viewport width", async ({ page }) => {
+    const measured = await measure(page);
+    expect(measured.innerWidth).toBe(NARROW.width);
+    expect(measured.scrollWidth).toBeLessThanOrEqual(measured.innerWidth);
+    await expectNoA11yViolations(page);
   });
 
   test("a wide table scrolls inside its own container and the page stays put", async ({ page }) => {
+    await openFieldPermissions(page, slug);
     const first = await measure(page);
     expect(first.tables.length).toBeGreaterThan(0);
     expect(first.innerWidth).toBe(NARROW.width);
@@ -83,8 +103,8 @@ test.describe("members screen on a narrow screen", () => {
     // The document gets no horizontal range from the tables.
     expect(first.scrollWidth).toBeLessThanOrEqual(first.innerWidth);
 
-    // The members table is wider than the space left of it, so the checks below prove
-    // containment instead of a screen that happens to fit.
+    // The field permissions table is wider than the space left of it, so the checks below
+    // prove containment instead of a screen that happens to fit.
     const members = first.tables[0] as TableMetrics;
     expect(members.contentWidth).toBeGreaterThan(members.containerWidth);
     // What does not fit stays reachable through the container's own scroll.
@@ -145,11 +165,14 @@ test.describe("members screen on a desktop screen", () => {
 
   test("the tables fill the content column without scrolling sideways", async ({ page }) => {
     await signUpNewUser(page, testUser());
-    await openMembersScreen(page);
+    const slug = await openMembersScreen(page);
+    expect((await measure(page)).scrollWidth).toBeLessThanOrEqual(WIDE.width);
+    await openFieldPermissions(page, slug);
 
     const measured = await measure(page);
     expect(measured.innerWidth).toBe(WIDE.width);
     expect(measured.scrollWidth).toBeLessThanOrEqual(measured.innerWidth);
+    expect(measured.tables.length).toBeGreaterThan(0);
     for (const table of measured.tables) {
       expect(table.contentWidth).toBe(table.containerWidth);
       expect(table.scrolledTo).toBe(0);

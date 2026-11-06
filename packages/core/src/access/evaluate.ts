@@ -248,6 +248,7 @@ export function buildAccessSnapshot(data: AccessData): AccessSnapshot {
     userId: data.userId,
     version: data.version,
     profileId: data.profile.id,
+    profileName: data.profile.name,
     profileKind: data.profile.kind,
     permissions: data.profile.permissions,
     fieldAccess,

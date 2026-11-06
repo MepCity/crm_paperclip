@@ -19,6 +19,8 @@
   "empty": "No records found",
   "selected": "{count, plural, one {# record selected} other {# records selected}}",
   "notFound": "The requested page could not be found.",
+  "accessDenied": "You do not have permission to view this page.",
+  "accessDeniedTitle": "Access denied",
   "pageError": "The page could not be loaded. Please try again.",
   "errorTitle": "Something went wrong!",
   "errorShort": "Something went wrong.",

@@ -1,7 +1,10 @@
 import type { NavLink } from "@/components/shell/nav";
 import { Icons } from "@/components/ui/icon";
 
-/** Access settings links (ADR 0017 §9). */
+/**
+ * Access settings links (ADR 0017 §9). As in the reference, Groups is a tab of the Users page and
+ * Data Sharing Settings a tab of "Roles and Sharing", so neither has its own menu entry.
+ */
 export const accessSettingsNav: readonly NavLink[] = [
   {
     id: "profiles",
@@ -15,30 +18,11 @@ export const accessSettingsNav: readonly NavLink[] = [
   },
   {
     id: "roles",
-    label: "Roles",
+    label: "Roles and Sharing",
     icon: Icons.settings,
     href: (slug) => `/crm/${slug}/settings/roles`,
     activePrefix: (slug) => `/crm/${slug}/settings/roles`,
-    match: "prefix",
-    group: "Users and Control",
-    requiresUserManagement: true,
-  },
-  {
-    id: "groups",
-    label: "Groups",
-    icon: Icons.settings,
-    href: (slug) => `/crm/${slug}/settings/groups`,
-    activePrefix: (slug) => `/crm/${slug}/settings/groups`,
-    match: "prefix",
-    group: "Users and Control",
-    requiresUserManagement: true,
-  },
-  {
-    id: "data-sharing",
-    label: "Data Sharing",
-    icon: Icons.settings,
-    href: (slug) => `/crm/${slug}/settings/data-sharing`,
-    activePrefix: (slug) => `/crm/${slug}/settings/data-sharing`,
+    alsoActive: (slug) => [`/crm/${slug}/settings/data-sharing`],
     match: "prefix",
     group: "Users and Control",
     requiresUserManagement: true,

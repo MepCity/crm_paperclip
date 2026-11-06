@@ -74,6 +74,20 @@ describe("permission registry (ADR 0017 §11.2)", () => {
     expect(offenders).toEqual([]);
   });
 
+  it("every inline server action checks or explicitly exempts its permission", () => {
+    // Inline `"use server"` functions inside pages are callable endpoints too (MEP-1468).
+    const offenders: string[] = [];
+    for (const file of walk(srcDir, (f) => /\.(ts|tsx)$/.test(f) && !/\.test\./.test(f))) {
+      const source = readFileSync(file, "utf8");
+      const bodies = source.split(/^\s+["']use server["'];?$/m).slice(1);
+      for (const body of bodies) {
+        const head = body.split(/^\s{2}(?:async )?function |^\s{2}return /m)[0] ?? body;
+        if (!/requireActionPermission\(|declareActionExempt\(/.test(head)) offenders.push(file);
+      }
+    }
+    expect(offenders).toEqual([]);
+  });
+
   it("every wire operation has a declared permission", () => {
     const missing: string[] = [];
     for (const op of [...Object.values(operations), ...Object.values(transferOperations)]) {

@@ -4,7 +4,6 @@ import type { ProfileSummary } from "@crm/core/access";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { Alert } from "@/components/ui/alert";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
@@ -88,21 +87,33 @@ export function CloneProfileDialog({
   );
 }
 
+const DESCRIPTION_LIMIT = 30;
+
+/** Long descriptions are cut with an ellipsis and a "More" link that reveals the rest. */
+function ProfileDescription({ text }: { text: string }) {
+  const [open, setOpen] = useState(false);
+  if (text.length <= DESCRIPTION_LIMIT) return <>{text}</>;
+  return (
+    <span className="flex flex-col items-start">
+      <span>{open ? text : `${text.slice(0, DESCRIPTION_LIMIT).trimEnd()}...`}</span>
+      <button
+        type="button"
+        className="cursor-pointer text-primary hover:underline"
+        onClick={() => setOpen((v) => !v)}
+      >
+        {open ? "Less" : "More"}
+      </button>
+    </span>
+  );
+}
+
 export function ProfilesScreen({ orgSlug }: { orgSlug: string }) {
   const api = useMemo(() => createAccessClient(orgSlug), [orgSlug]);
   const [state] = useLoad(api.listProfiles);
   const [search, setSearch] = useState("");
 
   return (
-    <Screen
-      state={state}
-      title="Profiles"
-      actions={
-        state.status === "ready" ? (
-          <CloneProfileDialog orgSlug={orgSlug} profiles={state.data} label="New Profile" />
-        ) : null
-      }
-    >
+    <Screen state={state} title="Profiles">
       {(profiles) => {
         const shown = profiles.filter((p) =>
           p.name.toLowerCase().includes(search.trim().toLowerCase()),
@@ -113,7 +124,20 @@ export function ProfilesScreen({ orgSlug }: { orgSlug: string }) {
               A profile is a set of permissions that decides what a user can do. A new profile is a
               copy of an existing one that you then edit.
             </HelpText>
-            <TextField label="Search" variant="search" value={search} onChange={setSearch} />
+            {/* Reference layout: a visible search box on the left, New Profile on the right. */}
+            <div className="flex items-center justify-between gap-4">
+              <div className="w-60">
+                <TextField
+                  label="Search"
+                  placeholder="Search"
+                  hideLabel
+                  variant="filter-search"
+                  value={search}
+                  onChange={setSearch}
+                />
+              </div>
+              <CloneProfileDialog orgSlug={orgSlug} profiles={profiles} label="New Profile" />
+            </div>
             <Card>
               <CardContent>
                 <Table>
@@ -121,24 +145,23 @@ export function ProfilesScreen({ orgSlug }: { orgSlug: string }) {
                     <TableRow>
                       <TableHead>Profile Name</TableHead>
                       <TableHead>Profile Description</TableHead>
-                      <TableHead>Users</TableHead>
-                      <TableHead>Modified</TableHead>
+                      <TableHead>Created By</TableHead>
+                      <TableHead>Modified By</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody columnCount={4} emptyMessage="No profiles match your search.">
                     {shown.map((profile) => (
                       <TableRow key={profile.id}>
                         <TableCell>
-                          <span className="inline-flex items-center gap-2">
-                            <Link href={`/crm/${orgSlug}/settings/profiles/${profile.id}`}>
-                              {profile.name}
-                            </Link>
-                            {profile.kind !== "custom" ? <Badge>System</Badge> : null}
-                          </span>
+                          <Link href={`/crm/${orgSlug}/settings/profiles/${profile.id}`}>
+                            {profile.name}
+                          </Link>
                         </TableCell>
-                        <TableCell>{profile.description}</TableCell>
-                        <TableCell>{profile.memberCount}</TableCell>
-                        <TableCell>{new Date(profile.updatedAt).toLocaleDateString()}</TableCell>
+                        <TableCell>
+                          <ProfileDescription text={profile.description} />
+                        </TableCell>
+                        <TableCell>{profile.createdByName ?? ""}</TableCell>
+                        <TableCell>{profile.modifiedByName ?? ""}</TableCell>
                       </TableRow>
                     ))}
                   </TableBody>

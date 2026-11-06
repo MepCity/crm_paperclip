@@ -14,6 +14,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { Icons } from "@/components/ui/icon";
 import { Select, SelectItem } from "@/components/ui/select";
 import {
   Table,
@@ -189,6 +190,24 @@ function RuleDialog({
   );
 }
 
+/** Row order of the module table, as in the reference; modules it lacks follow. */
+const DISPLAY_ORDER = [
+  "Leads",
+  "Accounts",
+  "Contacts",
+  "Deals",
+  "Campaigns",
+  "Tasks",
+  "Meetings",
+  "Calls",
+  "Cases",
+  "Solutions",
+];
+const DISPLAY_MODULES = [
+  ...DISPLAY_ORDER.filter((m) => (OWNED_MODULES as readonly string[]).includes(m)),
+  ...OWNED_MODULES.filter((m) => !DISPLAY_ORDER.includes(m)),
+];
+
 export function DataSharingScreen({ orgSlug }: { orgSlug: string }) {
   const api = useMemo(() => createAccessClient(orgSlug), [orgSlug]);
   const load = useCallback(
@@ -216,22 +235,70 @@ export function DataSharingScreen({ orgSlug }: { orgSlug: string }) {
         const moduleRules = data.rules.filter((r) => r.module === ruleModule);
         return (
           <>
-            <div role="tablist" className="flex gap-2">
-              {(
-                [
-                  ["defaults", "Organization Default Permissions"],
-                  ["rules", "Sharing Rules"],
-                ] as const
-              ).map(([id, text]) => (
-                <Button
-                  key={id}
-                  variant={tab === id ? "primary" : "secondary"}
-                  onPress={() => setTab(id)}
-                  aria-pressed={tab === id}
-                >
-                  {text}
-                </Button>
-              ))}
+            <div className="flex items-center justify-between gap-4">
+              <div role="tablist" className="flex gap-2">
+                {(
+                  [
+                    ["defaults", "Organization Default Permissions"],
+                    ["rules", "Sharing Rules"],
+                  ] as const
+                ).map(([id, text]) => (
+                  <Button
+                    key={id}
+                    variant={tab === id ? "primary" : "secondary"}
+                    onPress={() => setTab(id)}
+                    aria-pressed={tab === id}
+                  >
+                    {text}
+                  </Button>
+                ))}
+              </div>
+              <div className="flex items-center gap-2 text-text-muted">
+                {tab === "defaults" ? (
+                  <div className="flex gap-2">
+                    {editing ? (
+                      <>
+                        <Button
+                          isPending={busy}
+                          onPress={async () => {
+                            setBusy(true);
+                            setError(null);
+                            try {
+                              await api.putModuleDefaults(
+                                OWNED_MODULES.map((module) => ({ module, level: levelOf(module) })),
+                              );
+                              setEditing(false);
+                              setDraft({});
+                              reload();
+                            } catch (e) {
+                              setError(errorText(e));
+                            } finally {
+                              setBusy(false);
+                            }
+                          }}
+                        >
+                          Save
+                        </Button>
+                        <Button
+                          variant="secondary"
+                          onPress={() => {
+                            setEditing(false);
+                            setDraft({});
+                            setError(null);
+                          }}
+                        >
+                          Cancel
+                        </Button>
+                      </>
+                    ) : (
+                      <Button variant="ghost" size="sm" onPress={() => setEditing(true)}>
+                        Edit
+                      </Button>
+                    )}
+                  </div>
+                ) : null}
+                <Icons.help aria-label="Help" role="img" className="size-5" />
+              </div>
             </div>
             {error ? <Alert variant="danger">{error}</Alert> : null}
             {tab === "defaults" ? (
@@ -240,47 +307,6 @@ export function DataSharingScreen({ orgSlug }: { orgSlug: string }) {
                   The default access of a module applies to every user who does not already get
                   access through the owner, the role hierarchy or a sharing rule.
                 </HelpText>
-                <div className="flex gap-2">
-                  {editing ? (
-                    <>
-                      <Button
-                        isPending={busy}
-                        onPress={async () => {
-                          setBusy(true);
-                          setError(null);
-                          try {
-                            await api.putModuleDefaults(
-                              OWNED_MODULES.map((module) => ({ module, level: levelOf(module) })),
-                            );
-                            setEditing(false);
-                            setDraft({});
-                            reload();
-                          } catch (e) {
-                            setError(errorText(e));
-                          } finally {
-                            setBusy(false);
-                          }
-                        }}
-                      >
-                        Save
-                      </Button>
-                      <Button
-                        variant="secondary"
-                        onPress={() => {
-                          setEditing(false);
-                          setDraft({});
-                          setError(null);
-                        }}
-                      >
-                        Cancel
-                      </Button>
-                    </>
-                  ) : (
-                    <Button variant="secondary" onPress={() => setEditing(true)}>
-                      Edit
-                    </Button>
-                  )}
-                </div>
                 <Card>
                   <CardContent>
                     <Table>
@@ -291,7 +317,7 @@ export function DataSharingScreen({ orgSlug }: { orgSlug: string }) {
                         </TableRow>
                       </TableHeader>
                       <TableBody columnCount={2}>
-                        {OWNED_MODULES.map((module) => (
+                        {DISPLAY_MODULES.map((module) => (
                           <TableRow key={module}>
                             <TableCell>{module}</TableCell>
                             <TableCell>

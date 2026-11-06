@@ -305,25 +305,25 @@ test("Mobile rail starts hidden and changes with viewport width", () => {
   expect(media.removeEventListener).toHaveBeenCalledWith("change", onChange);
 });
 
-test("Settings navigation links to Members and keeps General exact", () => {
-  navigation.path = "/crm/example/settings/members";
+test("Settings navigation links to Users and keeps General exact", () => {
+  navigation.path = "/crm/example/settings/users";
   render(<SettingsNavigation orgSlug="example" />);
-  const members = screen.getByRole("link", { name: "Members" });
-  expect(members.getAttribute("href")).toBe("/crm/example/settings/members");
+  const members = screen.getByRole("link", { name: "Users" });
+  expect(members.getAttribute("href")).toBe("/crm/example/settings/users");
   expect(members.getAttribute("aria-current")).toBe("page");
   expect(screen.getByRole("link", { name: "General" }).getAttribute("aria-current")).toBeNull();
 });
 
 test("Settings navigation marks only the current page with fill and bold", () => {
-  navigation.path = "/crm/example/settings/members";
+  navigation.path = "/crm/example/settings/users";
   const view = render(<SettingsNavigation orgSlug="example" />);
 
-  const members = classes(screen.getByRole("link", { name: "Members" }));
+  const members = classes(screen.getByRole("link", { name: "Users" }));
   const general = classes(screen.getByRole("link", { name: "General" }));
-  expect(members.has("bg-surface-hover")).toBe(true);
+  expect(members.has("bg-primary-subtle")).toBe(true);
   expect(members.has("font-semibold")).toBe(true);
   expect(members.has("text-text-muted")).toBe(false);
-  expect(general.has("bg-surface-hover")).toBe(false);
+  expect(general.has("bg-primary-subtle")).toBe(false);
   expect(general.has("font-semibold")).toBe(false);
   expect(general.has("text-text-muted")).toBe(true);
   expect(general.has("data-hovered:bg-surface-hover")).toBe(true);
@@ -335,11 +335,9 @@ test("Settings navigation marks only the current page with fill and bold", () =>
   navigation.path = "/crm/example/settings";
   view.rerender(<SettingsNavigation orgSlug="example" />);
   const activeGeneral = classes(screen.getByRole("link", { name: "General" }));
-  expect(activeGeneral.has("bg-surface-hover")).toBe(true);
+  expect(activeGeneral.has("bg-primary-subtle")).toBe(true);
   expect(activeGeneral.has("font-semibold")).toBe(true);
-  expect(classes(screen.getByRole("link", { name: "Members" })).has("bg-surface-hover")).toBe(
-    false,
-  );
+  expect(classes(screen.getByRole("link", { name: "Users" })).has("bg-primary-subtle")).toBe(false);
 });
 
 test("PageHeader supplies description and actions without repeating a title", () => {

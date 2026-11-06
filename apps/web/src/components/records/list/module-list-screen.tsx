@@ -55,6 +55,7 @@ import { SelectionBar } from "./selection-bar";
 import { SelectionTagsDialog } from "./selection-tags-dialog";
 import type { SystemFilterDraft } from "./system-filter-editor";
 import "./module-list-page.css";
+import { usePermissions } from "@/lib/access";
 import {
   useDeleteRecords,
   useModule,
@@ -250,6 +251,7 @@ function ModuleListScreenLoaded({
   viewId,
   currentUserId, userRole, isAdmin: explicitIsAdmin,
 }: ModuleListScreenProps & { routeViewId?: string; viewId: string }) {
+  const permissions = usePermissions();
   const t = useUiTranslations();
   const adapter = useMetadataDisplayAdapter();
   const singularLabel = adapter.getModuleSingular(config.module, config.singularLabel);
@@ -823,7 +825,34 @@ function ModuleListScreenLoaded({
   const nextHref = moreRecords && listBasePath ? withSearchParams(listBasePath, nextParams) : null;
 
   const inert = () => {};
-  const toolbarActions = config.inventory?.actions ?? config.toolbarActions;
+  // ADR 0017 §8: hidden, not disabled. No provider (isolated tests) = nothing gated.
+  const flags = permissions?.modules[config.module];
+  const allow = {
+    create: flags ? flags.create : true,
+    import: flags ? flags.import : true,
+    export: flags ? flags.export : true,
+    massUpdate: flags ? flags.massUpdate : true,
+    massDelete: flags ? flags.massDelete : true,
+    delete: flags ? flags.delete : true,
+    changeOwner: flags ? flags.changeOwner : true,
+    merge: flags ? flags.merge : true,
+    print: flags ? flags.print : true,
+    tags: permissions ? permissions.tools.tags : true,
+    manageViews: permissions ? permissions.tools.manageViews : true,
+  };
+  const toolbarActionAllowed = (id: string) =>
+    (id !== "export" || allow.export) &&
+    (id !== "import" || allow.import) &&
+    (id !== "tags" || allow.tags) &&
+    (id !== "print" || allow.print) &&
+    (id !== "deduplicate" || allow.merge) &&
+    (id !== "mass-update" || allow.massUpdate) &&
+    (id !== "mass-delete" || (allow.massDelete && allow.delete)) &&
+    (id !== "mass-transfer" || allow.changeOwner) &&
+    (id !== "drafts" || allow.create);
+  const toolbarActions = (config.inventory?.actions ?? config.toolbarActions)?.filter((item) =>
+    toolbarActionAllowed(item.id),
+  );
   const transferModule = isTransferModule(config.module) ? config.module : null;
   const exportSelectedTooLarge = pageSelectedIds.length > MAX_EXPORT_SELECTION;
   const importEnabled = (IMPORT_MODULES as readonly string[]).includes(config.module);
@@ -835,7 +864,7 @@ function ModuleListScreenLoaded({
   const filterTitle = isStandardFilterTitle
     ? t("records.filter.filterBy", { plural: pluralLabel })
     : config.filterTitle;
-  const createItems: readonly MenuAction[] | undefined = importEnabled
+  const createItems: readonly MenuAction[] | undefined = importEnabled && allow.import
     ? [
         {
           id: "import",
@@ -847,7 +876,7 @@ function ModuleListScreenLoaded({
         ...(config.inventory?.createItems ?? []).filter((item) => item.id !== "import"),
       ]
     : config.inventory?.createItems;
-  const selectionActions: MenuAction[] = [
+  const allSelectionActions: MenuAction[] = [
     { id: "run-macro", label: "Run Macro", onAction: inert },
     { id: "create-task", label: "Create Task", onAction: inert },
     {
@@ -880,6 +909,12 @@ function ModuleListScreenLoaded({
         : inert,
     },
   ];
+  const hiddenSelectionActions = new Set<string>([
+    ...(allow.changeOwner ? [] : ["change-owner"]),
+    ...(allow.delete && allow.massDelete ? [] : ["delete"]),
+    ...(allow.export ? [] : ["export-selected"]),
+  ]);
+  const selectionActions = allSelectionActions.filter((a) => !hiddenSelectionActions.has(a.id));
   return (
     <div
       className="module-list-page"
@@ -902,16 +937,18 @@ function ModuleListScreenLoaded({
             withSearchParams(config.paths.customList(orgSlug, config.module, id), params),
           );
         }}
-        {...{ onNewView, onEditView }}
+        hideViewManagement={!allow.manageViews}
+        onNewView={allow.manageViews ? onNewView : undefined}
+        onEditView={allow.manageViews ? onEditView : undefined}
       />
       {selectionActive && presentation === "table" ? (
         <SelectionBar
           laterInventory={Boolean(config.inventory)}
-          tagsEnabled={Boolean(config.selectionTags)}
-          onTags={config.selectionTags ? () => setSelectionTagsOpen(true) : undefined}
+          tagsEnabled={Boolean(config.selectionTags) && allow.tags}
+          onTags={config.selectionTags && allow.tags ? () => setSelectionTagsOpen(true) : undefined}
           selectedCount={pageSelectedIds.length}
           onClear={clearSelection}
-          onMassUpdate={massUpdateFields.length > 0 ? () => setMassUpdateOpen(true) : undefined}
+          onMassUpdate={massUpdateFields.length > 0 && allow.massUpdate ? () => setMassUpdateOpen(true) : undefined}
           actions={selectionActions}
         />
       ) : (
@@ -960,7 +997,8 @@ function ModuleListScreenLoaded({
                 }
               : {}),
           }))}
-          createControl={config.renderCreateControl?.({ orgSlug, currentUserId: currentUserId ?? "", items: createItems })}
+          createControl={allow.create ? config.renderCreateControl?.({ orgSlug, currentUserId: currentUserId ?? "", items: createItems }) : undefined}
+          hideCreate={!allow.create}
           create={{
             label: createLabel,
             href: config.quickCreate ? undefined : config.paths.create(orgSlug, config.module),

@@ -19,6 +19,8 @@
   "empty": "Kayıt bulunamadı",
   "selected": "{count} kayıt seçildi",
   "notFound": "İstenen sayfa bulunamadı.",
+  "accessDenied": "Bu sayfayı görüntüleme izniniz yok.",
+  "accessDeniedTitle": "Erişim reddedildi",
   "pageError": "Sayfa yüklenemedi. Lütfen yeniden deneyin.",
   "errorTitle": "Bir hata oluştu!",
   "errorShort": "Bir hata oluştu.",

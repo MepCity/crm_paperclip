@@ -10,6 +10,7 @@ import { Link } from "@/components/ui/link";
 import { SplitButton } from "@/components/ui/split-button";
 import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { useRecordLabel } from "@/i18n/record-labels";
+import { type RecordAccess, recordAllows, usePermissions } from "@/lib/access";
 import {
   ACTIVITY_ADD_NEW_ENTRIES,
   type ActivityModule,
@@ -57,6 +58,7 @@ function ActivityAddNew({
 
 export function RelatedListCard({ definition, context }: RelatedListCardProps) {
   const recordLabel = useRecordLabel();
+  const permissions = usePermissions();
   const adapter = useMetadataDisplayAdapter();
   const {
     id,
@@ -92,8 +94,14 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
     definition,
   });
 
-  const afterTitleControls = upperControls.filter((c) => c.position === "after-title");
-  const rightControls = upperControls.filter((c) => c.position !== "after-title");
+  // Hidden, not disabled: add buttons need edit on the parent (profile ∧ `$access`).
+  const parentFlags =
+    permissions && context?.module ? permissions.modules[context.module] : undefined;
+  const parentAccess = (context?.record as { $access?: RecordAccess } | undefined)?.$access;
+  const canAdd = (parentFlags?.edit ?? true) && recordAllows(parentAccess, "edit");
+  const visibleControls = upperControls.filter((c) => canAdd || !c.id.startsWith("add"));
+  const afterTitleControls = visibleControls.filter((c) => c.position === "after-title");
+  const rightControls = visibleControls.filter((c) => c.position !== "after-title");
 
   function renderControl(ctrl: RelatedListControlDefinition) {
     const laterMod = resolveLaterModule(ctrl.moduleKey);

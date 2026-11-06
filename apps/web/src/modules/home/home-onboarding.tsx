@@ -82,7 +82,7 @@ export function HomeOnboarding({ orgSlug, userName }: { orgSlug: string; userNam
             {t(`modules.home.choices.${selected}.description` as MessageKey)}
           </p>
           {selected === "team" ? (
-            <Link href={`/crm/${orgSlug}/settings/members`} className={`mt-6 ${actionClass}`}>
+            <Link href={`/crm/${orgSlug}/settings/users`} className={`mt-6 ${actionClass}`}>
               {t(`modules.home.choices.${selected}.action` as MessageKey)}
             </Link>
           ) : (

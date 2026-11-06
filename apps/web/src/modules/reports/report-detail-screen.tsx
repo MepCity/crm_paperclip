@@ -26,11 +26,13 @@ export function ReportDetailScreen({
   reportId,
   port = fixtureReportsPort,
   initialReport,
+  editable = false,
 }: {
   orgSlug: string;
   reportId: string;
   port?: ReportsPort;
   initialReport?: ReportDetail | null;
+  editable?: boolean;
 }) {
   const t = useUiTranslations();
   const [report, setReport] = useState<ReportDetail | null>(initialReport ?? null);
@@ -97,14 +99,23 @@ export function ReportDetailScreen({
           </Button>
           <span className="text-text-muted">{relativeUpdate(report.updatedAt, now, t)}</span>
           <div className="inline-flex items-center">
-            <button
-              type="button"
-              aria-disabled="true"
-              aria-describedby="reports-unavailable"
-              className="h-8 rounded-l border border-border bg-surface px-3 text-text"
-            >
-              {t("common.actions.edit")}
-            </button>
+            {editable ? (
+              <Link
+                href={`${reportPath(orgSlug, reportId)}/edit`}
+                className="h-8 rounded-l border border-border bg-surface px-3 py-1 text-text"
+              >
+                {t("common.actions.edit")}
+              </Link>
+            ) : (
+              <button
+                type="button"
+                aria-disabled="true"
+                aria-describedby="reports-unavailable"
+                className="h-8 rounded-l border border-border bg-surface px-3 text-text"
+              >
+                {t("common.actions.edit")}
+              </button>
+            )}
             <button
               type="button"
               aria-label={t("modules.reports.reportMenu")}

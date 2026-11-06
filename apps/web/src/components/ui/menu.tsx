@@ -1,10 +1,11 @@
 "use client";
 
-import { type ComponentProps, type ReactNode, type Ref, useContext } from "react";
+import { type ComponentProps, isValidElement, type ReactNode, type Ref, useContext } from "react";
 import {
   Menu as AriaMenu,
   MenuItem as AriaMenuItem,
   type MenuProps as AriaMenuProps,
+  SubmenuTrigger as AriaSubmenuTrigger,
   composeRenderProps,
   type MenuItemProps,
   MenuSection,
@@ -12,12 +13,35 @@ import {
   Popover,
   RootMenuTriggerStateContext,
   Separator,
-  SubmenuTrigger,
+  type SubmenuTriggerProps,
 } from "react-aria-components";
 import { Button, type ButtonProps } from "./button";
 import { laterModuleProps, type ModuleKey, useLaterModule } from "./later-module";
 
-export { MenuTrigger, SubmenuTrigger };
+export { MenuTrigger };
+
+/**
+ * `openSubmenu` receives the key of the submenu trigger node, which the collection generates
+ * unless an id is given; it is not the id of the trigger's `MenuItem`. A trigger whose item is
+ * a later-module item gets a marked id so the blocked `openSubmenu` below can refuse it,
+ * whatever the focus or hover state is when the hover timer fires.
+ */
+const LATER_MODULE_TRIGGER_SUFFIX = "::later-module-trigger";
+
+export function SubmenuTrigger(props: SubmenuTriggerProps) {
+  const item = props.children[0];
+  const itemProps = isValidElement<{ id?: unknown; laterModule?: ModuleKey }>(item)
+    ? item.props
+    : undefined;
+  if (itemProps?.laterModule && itemProps.id != null) {
+    const triggerProps = {
+      ...props,
+      id: `${String(itemProps.id)}${LATER_MODULE_TRIGGER_SUFFIX}`,
+    } as SubmenuTriggerProps;
+    return <AriaSubmenuTrigger {...triggerProps} />;
+  }
+  return <AriaSubmenuTrigger {...props} />;
+}
 
 export function MenuGroup({ children }: { children: ReactNode }) {
   return <MenuSection>{children}</MenuSection>;
@@ -68,7 +92,10 @@ export function MenuItem<T extends object>({
     ) {
       const blockedOpenSubmenu = (triggerKey: string, level: number) => {
         const keyStr = String(triggerKey);
-        if (rootMenuTriggerState.__laterModuleBlockedKeys?.has(keyStr)) {
+        if (
+          keyStr.endsWith(LATER_MODULE_TRIGGER_SUFFIX) ||
+          rootMenuTriggerState.__laterModuleBlockedKeys?.has(keyStr)
+        ) {
           return;
         }
 

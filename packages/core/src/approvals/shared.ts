@@ -1,4 +1,6 @@
 import { sql } from "drizzle-orm";
+import { getAccessSnapshot } from "../access/context";
+import { adminPermitted } from "../access-gate";
 import { ConflictError, ForbiddenError } from "../errors";
 import type { OrgContext, Transaction } from "../tenancy/types";
 
@@ -31,12 +33,16 @@ export function pgCode(error: unknown): string | undefined {
 }
 
 /**
- * Setup is `admin.processManagement` once ADR 0017 enforcement lands; until then it
- * is the administrator membership, re-read inside the transaction.
+ * Process setup is `admin.manageAutomation` (ADR 0017 §3). An administrator membership is
+ * re-read inside the transaction; any other member needs a profile that grants the key.
  */
 export async function requireProcessAdmin(tx: Transaction, ctx: OrgContext): Promise<void> {
-  if (ctx.role !== "admin") throw new ForbiddenError();
-  if (!(await isAdmin(tx, ctx))) throw new ForbiddenError();
+  if (ctx.role === "admin") {
+    if (!(await isAdmin(tx, ctx))) throw new ForbiddenError();
+    return;
+  }
+  if (!(await adminPermitted(ctx, "manageAutomation", getAccessSnapshot)))
+    throw new ForbiddenError();
 }
 
 export async function isAdmin(tx: Transaction, ctx: OrgContext): Promise<boolean> {

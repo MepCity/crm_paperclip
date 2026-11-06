@@ -1,3 +1,4 @@
+import { getAccessSnapshot } from "@crm/core/access";
 import {
   type AutomationPort,
   createMemoryAutomationPort,
@@ -21,6 +22,7 @@ export function createAutomationPort(options?: MemoryAutomationOptions): Automat
   if (options) return createMemoryAutomationPort(options);
   const forOrg = (ctx: OrgContext) =>
     createMemoryAutomationPort({
+      access: getAccessSnapshot,
       fixtures: ctx.orgName.startsWith(POPULATED_FIXTURE_ORG_PREFIX)
         ? { [ctx.orgId]: [...syntheticAssignmentRules, ...SYNTHETIC_WORKFLOW_RULES] }
         : {},

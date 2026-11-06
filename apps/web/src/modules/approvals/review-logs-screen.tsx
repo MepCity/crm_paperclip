@@ -1,9 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { fetchHistory, fetchHistoryMeta } from "./api";
+import { FilterCaret, FilterMenu } from "./filter-menu";
 import type { ApprovalHistoryItem, HistoryMeta } from "./types";
 
 interface ReviewLogsScreenProps {
@@ -114,219 +114,107 @@ export function ReviewLogsScreen({ orgSlug }: ReviewLogsScreenProps) {
   const activeTimeLabel =
     TIME_RANGES.find((r) => r.id === timeFilter)?.label ?? "Herhangi bir zaman";
 
+  const filters: {
+    key: string;
+    label: string;
+    open: boolean;
+    setOpen: (v: boolean) => void;
+    options: { id: string; label: string }[];
+    value: string;
+    onSelect: (id: string) => void;
+  }[] = [
+    {
+      key: "module",
+      label: activeModuleLabel,
+      open: moduleOpen,
+      setOpen: setModuleOpen,
+      options: [
+        { id: "", label: "Tüm Modüller" },
+        ...meta.modules.map((m) => ({ id: m, label: m })),
+      ],
+      value: moduleFilter,
+      onSelect: setModuleFilter,
+    },
+    {
+      key: "user",
+      label: activeUserLabel,
+      open: userOpen,
+      setOpen: setUserOpen,
+      options: [
+        { id: "", label: "Tüm Kullanıcılar" },
+        ...meta.users.map((u) => ({ id: u.id, label: u.name })),
+      ],
+      value: userFilter,
+      onSelect: setUserFilter,
+    },
+    {
+      key: "action",
+      label: activeActionLabel,
+      open: actionOpen,
+      setOpen: setActionOpen,
+      options: [
+        { id: "", label: "Tüm Eylemler" },
+        ...meta.actions.map((a) => ({ id: a, label: ACTION_LABELS[a] ?? a })),
+      ],
+      value: actionFilter,
+      onSelect: setActionFilter,
+    },
+    {
+      key: "time",
+      label: activeTimeLabel,
+      open: timeOpen,
+      setOpen: setTimeOpen,
+      options: TIME_RANGES,
+      value: timeFilter,
+      onSelect: setTimeFilter,
+    },
+  ];
+  const closeAll = () => {
+    setModuleOpen(false);
+    setUserOpen(false);
+    setActionOpen(false);
+    setTimeOpen(false);
+  };
+
   return (
-    <div className="flex flex-col gap-5 p-6" data-testid="review-logs-screen">
-      {/* Title & Back Link */}
-      <div className="flex items-center justify-between border-b border-border pb-4">
-        <h1 className="text-xl font-bold text-text">Gözden Geçirme Geçmişi</h1>
+    <div className="flex flex-col gap-5 px-8 py-6" data-testid="review-logs-screen">
+      <div className="flex items-center justify-between">
+        <h1 className="text-[28px] font-bold leading-tight text-text">Gözden Geçirme Geçmişi</h1>
         <Link
           href={`/crm/${orgSlug}/tab/Approvals`}
-          className="text-sm font-semibold text-primary hover:underline inline-flex items-center gap-1.5"
+          className="text-base font-normal text-primary hover:underline"
         >
-          <Icons.arrowLeft className="size-4" />
-          <span>Gözden geçirilecek kayıtlara dön</span>
+          Gözden geçirilecek kayıtlara dön
         </Link>
       </div>
 
-      {/* Four Filter Dropdowns */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Module Filter */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => {
-              setModuleOpen((v) => !v);
-              setUserOpen(false);
-              setActionOpen(false);
-              setTimeOpen(false);
-            }}
-            className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-text shadow-xs hover:bg-surface-secondary transition-colors"
-          >
-            <span>{activeModuleLabel}</span>
-            <Icons.chevronDown className={`size-3.5 ${moduleOpen ? "rotate-180" : ""}`} />
-          </button>
-          {moduleOpen && (
-            <div className="absolute left-0 top-full z-30 mt-1 max-h-60 w-48 overflow-y-auto rounded-md border border-border bg-surface p-1 shadow-lg">
-              <button
-                type="button"
-                onClick={() => {
-                  setModuleFilter("");
-                  setModuleOpen(false);
+      <div className="flex flex-wrap items-center gap-4">
+        {filters.map((f) => (
+          <div key={f.key} className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                const next = !f.open;
+                closeAll();
+                f.setOpen(next);
+              }}
+              className="inline-flex h-[34px] items-center gap-3 rounded-md border border-border bg-surface px-3 text-base font-normal text-text hover:bg-surface-secondary transition-colors"
+            >
+              <span>{f.label}</span>
+              <FilterCaret open={f.open} />
+            </button>
+            {f.open && (
+              <FilterMenu
+                options={f.options}
+                value={f.value}
+                onSelect={(id) => {
+                  f.onSelect(id);
+                  closeAll();
                 }}
-                className={`flex w-full items-center justify-between rounded px-3 py-1.5 text-xs ${
-                  !moduleFilter
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-text hover:bg-surface-secondary"
-                }`}
-              >
-                Tüm Modüller
-              </button>
-              {meta.modules.map((mod) => (
-                <button
-                  key={mod}
-                  type="button"
-                  onClick={() => {
-                    setModuleFilter(mod);
-                    setModuleOpen(false);
-                  }}
-                  className={`flex w-full items-center justify-between rounded px-3 py-1.5 text-xs ${
-                    moduleFilter === mod
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-text hover:bg-surface-secondary"
-                  }`}
-                >
-                  <span>{mod}</span>
-                  {moduleFilter === mod && <Icons.check className="size-3.5" />}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* User Filter */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => {
-              setUserOpen((v) => !v);
-              setModuleOpen(false);
-              setActionOpen(false);
-              setTimeOpen(false);
-            }}
-            className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-text shadow-xs hover:bg-surface-secondary transition-colors"
-          >
-            <span>{activeUserLabel}</span>
-            <Icons.chevronDown className={`size-3.5 ${userOpen ? "rotate-180" : ""}`} />
-          </button>
-          {userOpen && (
-            <div className="absolute left-0 top-full z-30 mt-1 max-h-60 w-52 overflow-y-auto rounded-md border border-border bg-surface p-1 shadow-lg">
-              <button
-                type="button"
-                onClick={() => {
-                  setUserFilter("");
-                  setUserOpen(false);
-                }}
-                className={`flex w-full items-center justify-between rounded px-3 py-1.5 text-xs ${
-                  !userFilter
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-text hover:bg-surface-secondary"
-                }`}
-              >
-                Tüm Kullanıcılar
-              </button>
-              {meta.users.map((u) => (
-                <button
-                  key={u.id}
-                  type="button"
-                  onClick={() => {
-                    setUserFilter(u.id);
-                    setUserOpen(false);
-                  }}
-                  className={`flex w-full items-center justify-between rounded px-3 py-1.5 text-xs ${
-                    userFilter === u.id
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-text hover:bg-surface-secondary"
-                  }`}
-                >
-                  <span>{u.name}</span>
-                  {userFilter === u.id && <Icons.check className="size-3.5" />}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Action Filter */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => {
-              setActionOpen((v) => !v);
-              setModuleOpen(false);
-              setUserOpen(false);
-              setTimeOpen(false);
-            }}
-            className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-text shadow-xs hover:bg-surface-secondary transition-colors"
-          >
-            <span>{activeActionLabel}</span>
-            <Icons.chevronDown className={`size-3.5 ${actionOpen ? "rotate-180" : ""}`} />
-          </button>
-          {actionOpen && (
-            <div className="absolute left-0 top-full z-30 mt-1 w-52 rounded-md border border-border bg-surface p-1 shadow-lg">
-              <button
-                type="button"
-                onClick={() => {
-                  setActionFilter("");
-                  setActionOpen(false);
-                }}
-                className={`flex w-full items-center justify-between rounded px-3 py-1.5 text-xs ${
-                  !actionFilter
-                    ? "bg-primary/10 text-primary font-semibold"
-                    : "text-text hover:bg-surface-secondary"
-                }`}
-              >
-                Tüm Eylemler
-              </button>
-              {meta.actions.map((act) => (
-                <button
-                  key={act}
-                  type="button"
-                  onClick={() => {
-                    setActionFilter(act);
-                    setActionOpen(false);
-                  }}
-                  className={`flex w-full items-center justify-between rounded px-3 py-1.5 text-xs ${
-                    actionFilter === act
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-text hover:bg-surface-secondary"
-                  }`}
-                >
-                  <span>{ACTION_LABELS[act] ?? act}</span>
-                  {actionFilter === act && <Icons.check className="size-3.5" />}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Time Filter */}
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => {
-              setTimeOpen((v) => !v);
-              setModuleOpen(false);
-              setUserOpen(false);
-              setActionOpen(false);
-            }}
-            className="inline-flex items-center gap-2 rounded-md border border-border bg-surface px-3 py-1.5 text-xs font-semibold text-text shadow-xs hover:bg-surface-secondary transition-colors"
-          >
-            <span>{activeTimeLabel}</span>
-            <Icons.chevronDown className={`size-3.5 ${timeOpen ? "rotate-180" : ""}`} />
-          </button>
-          {timeOpen && (
-            <div className="absolute left-0 top-full z-30 mt-1 w-44 rounded-md border border-border bg-surface p-1 shadow-lg">
-              {TIME_RANGES.map((r) => (
-                <button
-                  key={r.id}
-                  type="button"
-                  onClick={() => {
-                    setTimeFilter(r.id);
-                    setTimeOpen(false);
-                  }}
-                  className={`flex w-full items-center justify-between rounded px-3 py-1.5 text-xs ${
-                    timeFilter === r.id
-                      ? "bg-primary/10 text-primary font-semibold"
-                      : "text-text hover:bg-surface-secondary"
-                  }`}
-                >
-                  <span>{r.label}</span>
-                  {timeFilter === r.id && <Icons.check className="size-3.5" />}
-                </button>
-              ))}
-            </div>
-          )}
-        </div>
+              />
+            )}
+          </div>
+        ))}
       </div>
 
       {error && (
@@ -335,38 +223,30 @@ export function ReviewLogsScreen({ orgSlug }: ReviewLogsScreenProps) {
         </div>
       )}
 
-      {/* Main Table Card */}
-      <div className="rounded-lg border border-border bg-surface shadow-xs overflow-hidden">
-        <div className="overflow-x-auto min-h-[300px]">
-          <table className="w-full text-left text-sm">
-            <thead className="border-b border-border bg-surface-secondary/50 text-xs font-semibold text-text-muted">
-              <tr>
-                <th className="px-4 py-3">Kayıt Adı</th>
-                <th className="px-4 py-3">Modül</th>
-                <th className="px-4 py-3">İşlem Adı</th>
-                <th className="px-4 py-3">Adım</th>
-                <th className="px-4 py-3">Eylem</th>
-                <th className="px-4 py-3">Kullanıcı</th>
-                <th className="px-4 py-3">Tarih</th>
-                <th className="px-4 py-3">Yorum</th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
-              {loading ? (
+      {loading ? (
+        <div className="py-8 text-center text-base text-text-muted">Yükleniyor...</div>
+      ) : items.length === 0 ? (
+        <div className="py-6 text-center text-base font-normal text-[#7c8b9e]">
+          Görüntülenecek kayıt yok
+        </div>
+      ) : (
+        <div className="rounded-lg border border-border bg-surface overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full text-left text-sm">
+              <thead className="border-b border-border bg-surface-secondary/50 text-xs font-semibold text-text-muted">
                 <tr>
-                  <td colSpan={8} className="py-16 text-center text-text-muted">
-                    <Icons.spinner className="mx-auto size-6 animate-spin mb-2" />
-                    Yükleniyor...
-                  </td>
+                  <th className="px-4 py-3">Kayıt Adı</th>
+                  <th className="px-4 py-3">Modül</th>
+                  <th className="px-4 py-3">İşlem Adı</th>
+                  <th className="px-4 py-3">Adım</th>
+                  <th className="px-4 py-3">Eylem</th>
+                  <th className="px-4 py-3">Kullanıcı</th>
+                  <th className="px-4 py-3">Tarih</th>
+                  <th className="px-4 py-3">Yorum</th>
                 </tr>
-              ) : items.length === 0 ? (
-                <tr>
-                  <td colSpan={8} className="py-20 text-center text-text-muted font-semibold">
-                    Görüntülenecek kayıt yok
-                  </td>
-                </tr>
-              ) : (
-                items.map((item) => (
+              </thead>
+              <tbody className="divide-y divide-border">
+                {items.map((item) => (
                   <tr key={item.id} className="hover:bg-surface-secondary/30 transition-colors">
                     <td className="px-4 py-3 font-semibold text-text">{item.recordLabel}</td>
                     <td className="px-4 py-3 text-text-muted">{item.module}</td>
@@ -381,12 +261,12 @@ export function ReviewLogsScreen({ orgSlug }: ReviewLogsScreenProps) {
                     </td>
                     <td className="px-4 py-3 text-text-muted italic">{item.comment || "-"}</td>
                   </tr>
-                ))
-              )}
-            </tbody>
-          </table>
+                ))}
+              </tbody>
+            </table>
+          </div>
         </div>
-      </div>
+      )}
     </div>
   );
 }

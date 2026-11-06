@@ -9,9 +9,9 @@ import { Select, SelectItem } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
-import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { fixtureEmailSettingsPort } from "./fixture-port";
+import { type OrganizationAddressActions, OrganizationAddresses } from "./organization-addresses";
 import {
   configurationTabs,
   type EmailConfigurationTab,
@@ -47,11 +47,13 @@ export function EmailSettingsScreen({
   area = "email-configuration",
   initialTab = "email-compose-settings",
   port = fixtureEmailSettingsPort,
+  addressActions,
 }: {
   orgSlug: string;
   area?: EmailSettingsArea;
   initialTab?: EmailConfigurationTab;
   port?: EmailSettingsPort;
+  addressActions?: OrganizationAddressActions;
 }) {
   const t = useUiTranslations();
   const router = useRouter();
@@ -136,7 +138,12 @@ export function EmailSettingsScreen({
                   ) : !load.data ? (
                     <p role="status">{t("modules.emailSettings.loading")}</p>
                   ) : (
-                    <ConfigurationContent tab={item.id} data={load.data} />
+                    <ConfigurationContent
+                      tab={item.id}
+                      data={load.data}
+                      addressActions={addressActions}
+                      orgSlug={orgSlug}
+                    />
                   )}
                 </TabPanel>
               ))}
@@ -223,51 +230,19 @@ function ClosedSetting({ label, value }: { label: string; value: string }) {
 function ConfigurationContent({
   tab,
   data,
+  addressActions,
+  orgSlug,
 }: {
+  orgSlug: string;
   tab: EmailConfigurationTab;
   data: EmailSettingsSnapshot;
+  addressActions?: OrganizationAddressActions;
 }) {
   const t = useUiTranslations();
-  const [addressOpen, setAddressOpen] = useState(false);
   const [signatureOpen, setSignatureOpen] = useState(false);
   if (tab === "email-sharing") return <Sharing data={data} />;
   if (tab === "organization-emails")
-    return (
-      <>
-        {addressOpen && (
-          <TopAlignedModal
-            isOpen
-            aria-labelledby="org-address-title"
-            onOpenChange={(open) => {
-              if (!open) setAddressOpen(false);
-            }}
-            panelStyle={{ width: "min(600px,95vw)" }}
-          >
-            <div className="p-8 space-y-5">
-              <h2 id="org-address-title" className="text-xl font-semibold">
-                {t("modules.emailSettings.addAddress")}
-              </h2>
-              <TextField label={t("modules.emailSettings.displayName")} />
-              <TextField label={t("modules.emailSettings.emailAddress")} type="email" />
-              <p className="text-text-muted">{t("modules.emailSettings.addressUnavailable")}</p>
-              <div className="flex justify-end gap-3">
-                <Button variant="secondary" onPress={() => setAddressOpen(false)}>
-                  {t("common.actions.cancel")}
-                </Button>
-                <Button isDisabled>{t("common.actions.save")}</Button>
-              </div>
-            </div>
-          </TopAlignedModal>
-        )}
-        <Heading title={t("modules.emailSettings.orgTitle")} />
-        <p className="mt-3 max-w-5xl text-md leading-relaxed">
-          {t("modules.emailSettings.orgDescription")}
-        </p>
-        <Button onPress={() => setAddressOpen(true)} className="mt-8">
-          {t("modules.emailSettings.addAddress")}
-        </Button>
-      </>
-    );
+    return <OrganizationAddresses actions={addressActions} orgSlug={orgSlug} />;
   if (tab === "custom-email-fields-preference")
     return (
       <>

@@ -228,7 +228,7 @@ describe("settingsNav", () => {
   it("defines settings links in group order", () => {
     expect(settingsNav.map((link) => link.id)).toEqual([
       "general",
-      "members",
+      "users",
       "personal-settings",
       "company-details",
       "currencies",
@@ -254,11 +254,12 @@ describe("settingsNav", () => {
       group: "General",
     });
     expect(members).toEqual({
-      id: "members",
-      label: "Members",
+      id: "users",
+      label: "Users",
       icon: Icons.users,
       href: expect.any(Function),
-      match: "exact",
+      alsoActive: expect.any(Function),
+      match: "prefix",
       group: "General",
     });
     expect(calendarBooking).toEqual({
@@ -271,7 +272,7 @@ describe("settingsNav", () => {
     });
 
     expect(general?.href("acme")).toBe("/crm/acme/settings");
-    expect(members?.href("acme")).toBe("/crm/acme/settings/members");
+    expect(members?.href("acme")).toBe("/crm/acme/settings/users");
     expect(calendarBooking?.href("acme")).toBe("/crm/acme/settings/calendar-booking");
   });
 
@@ -279,7 +280,7 @@ describe("settingsNav", () => {
     const generalLinks = settingsNav.filter((link) => link.group === "General");
     expect(generalLinks.map((link) => link.label)).toEqual([
       "General",
-      "Members",
+      "Users",
       "Personal Settings",
       "Company Details",
       "Currencies",
@@ -318,7 +319,7 @@ describe("settingsNav", () => {
     expect(
       isNavLinkActive(email, "demo", "/crm/demo/settings/email-configuration/email-sharing"),
     ).toBe(true);
-    expect(isNavLinkActive(email, "demo", "/crm/demo/settings/members")).toBe(false);
+    expect(isNavLinkActive(email, "demo", "/crm/demo/settings/users")).toBe(false);
   });
 
   it("groups transfer history links and matches only their own settings page", () => {
@@ -339,7 +340,7 @@ describe("settingsNav", () => {
   it("edge case: generates correct paths for empty and non-standard organization slugs without accent tokens", () => {
     const [general, members] = settingsNav;
     expect(general?.href("")).toBe("/crm//settings");
-    expect(members?.href("acme-team_42")).toBe("/crm/acme-team_42/settings/members");
+    expect(members?.href("acme-team_42")).toBe("/crm/acme-team_42/settings/users");
     expect(general?.iconAccentToken).toBeUndefined();
     expect(members?.iconAccentToken).toBeUndefined();
     expect(general?.activePrefix).toBeUndefined();

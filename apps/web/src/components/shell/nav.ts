@@ -1,3 +1,4 @@
+import type { ClientPermissions } from "@crm/core/access";
 import { type Icon, Icons } from "@/components/ui/icon";
 import { english } from "@/i18n/catalogs";
 import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
@@ -42,12 +43,38 @@ export interface NavLink {
   match: "exact" | "prefix";
   /** When set, prefix matching uses this root instead of `href`. */
   activePrefix?: (orgSlug: string) => string;
+  /** Extra page roots (with their sub-paths) that also mark the link active, e.g. tab pages. */
+  alsoActive?: (orgSlug: string) => readonly string[];
   /** Pinned-link icon accent; label colour rules are unchanged. */
   iconAccentToken?: NavLinkIconAccentToken;
   /** Settings navigation heading shown above the first link of each group. */
   group?: string;
+  /** Module API name; the link is hidden when the profile cannot view the module. */
+  module?: string;
+  /** Feature area with a `view` flag; hidden when the profile cannot view it. */
+  feature?: "reports" | "analytics" | "documents";
   /** Settings link shown only to viewers with `admin.userManagement`. */
   requiresUserManagement?: boolean;
+}
+
+/** Settings links hidden without this administrator permission (ADR 0017 §8). */
+const settingsAdminKey: Readonly<Record<string, keyof ClientPermissions["admin"]>> = {
+  members: "userManagement",
+  currencies: "manageCurrencies",
+  "modules-and-fields": "moduleCustomization",
+  "workflow-rules": "manageAutomation",
+  "assignment-rules": "manageAutomation",
+  email: "emailSettings",
+};
+
+/** Hidden, not disabled: a link without permission is not rendered. No payload = everything shown. */
+export function isNavLinkAllowed(link: NavLink, permissions: ClientPermissions | null): boolean {
+  if (!permissions) return true;
+  if (link.module && permissions.modules[link.module]?.view === false) return false;
+  const adminKey = settingsAdminKey[link.id];
+  if (adminKey && link.group && !permissions.admin[adminKey]) return false;
+  if (link.feature && !permissions.features[link.feature].view) return false;
+  return true;
 }
 
 export interface NavGroup {
@@ -97,6 +124,7 @@ function moduleNavLinks(group: "sales" | "activities" | "flat"): NavLink[] {
     .filter((definition) => (definition.navigation.group ?? "sales") === group)
     .map((definition) => ({
       id: definition.navigation.id,
+      module: definition.apiName,
       label: definition.pluralLabel,
       icon: definition.navigation.icon,
       href: (slug: string) => moduleListDefaultPath(slug, definition.tab),
@@ -143,6 +171,7 @@ function flatNavLinks(): NavLink[] {
 /** Documents is not a record module (no list/detail engine); it sits after Deals in the Sales group. */
 const documentsLink: NavLink = {
   id: "documents",
+  feature: "documents",
   label: "Documents",
   icon: Icons.folder,
   href: (slug: string) => moduleTabPath(slug, "Documents"),
@@ -186,6 +215,7 @@ export const shellNav: NavConfig = {
     },
     {
       id: "reports",
+      feature: "reports",
       label: "Reports",
       icon: Icons.file,
       href: (slug) => moduleTabPath(slug, "Reports"),
@@ -194,6 +224,7 @@ export const shellNav: NavConfig = {
     },
     {
       id: "analytics",
+      feature: "analytics",
       label: "Analytics",
       icon: Icons.barChart,
       href: (slug) => moduleTabPath(slug, "Dashboards"),
@@ -239,11 +270,12 @@ export const settingsNav: readonly NavLink[] = [
     group: "General",
   },
   {
-    id: "members",
-    label: "Members",
+    id: "users",
+    label: english.shell.users,
     icon: Icons.users,
-    href: (slug) => `/crm/${slug}/settings/members`,
-    match: "exact",
+    href: (slug) => `/crm/${slug}/settings/users`,
+    alsoActive: (slug) => [`/crm/${slug}/settings/groups`, `/crm/${slug}/settings/activate-users`],
+    match: "prefix",
     group: "General",
   },
   {
@@ -379,8 +411,10 @@ export const createRecordsNav: readonly CreateRecordEntry[] = getModuleScreens()
 export function isNavLinkActive(link: NavLink, orgSlug: string, pathname: string): boolean {
   const href = link.href(orgSlug);
   const prefixRoot = link.activePrefix?.(orgSlug) ?? href;
+  const under = (root: string) => pathname === root || pathname.startsWith(`${root}/`);
   return (
     pathname === href ||
-    (link.match === "prefix" && (pathname === prefixRoot || pathname.startsWith(`${prefixRoot}/`)))
+    (link.match === "prefix" && under(prefixRoot)) ||
+    (link.alsoActive?.(orgSlug).some(under) ?? false)
   );
 }

@@ -16,7 +16,7 @@ describe("HomeOnboarding", () => {
     expect(options.length).toBeGreaterThanOrEqual(4);
     expect(screen.getByRole("button", { name: "Invite your team", pressed: true })).toBeTruthy();
     expect(screen.getByRole("link", { name: "Invite users" }).getAttribute("href")).toBe(
-      "/crm/acme/settings/members",
+      "/crm/acme/settings/users",
     );
   });
 

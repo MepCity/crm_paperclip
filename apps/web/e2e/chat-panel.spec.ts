@@ -177,9 +177,9 @@ test("two members of one organization chat live: send, unread, read, edit, delet
   const organization = await createOrganization(page, "Live Chat Org");
 
   // Ada invites Bea through the members page (reuses the invitation flow).
-  await page.goto(`/crm/${organization.slug}/settings/members`);
+  await page.goto(`/crm/${organization.slug}/settings/users`);
   const beaEmail = `bea-${crypto.randomUUID()}@example.test`;
-  await page.getByRole("button", { name: "Invite member" }).click();
+  await page.getByRole("button", { name: "New User" }).click();
   const inviteDialog = page.getByRole("dialog", { name: "Invite member" });
   await inviteDialog.getByRole("textbox", { name: "Email" }).fill(beaEmail);
   await inviteDialog.getByRole("button", { name: "Create invitation" }).click();
@@ -462,6 +462,8 @@ test("channels, threads, pins, mentions, starred and advanced search dialogs wor
 
   // Pin the channel from conversation header
   await page.getByTestId("chat-conversation-pin").click();
+  // The header toggle flips only once the pin has synced back from the server.
+  await expect(page.getByTestId("chat-conversation-unpin")).toBeVisible();
 
   // Back to list
   await page.getByTestId("chat-conversation-back").click();

@@ -29,7 +29,7 @@ export default async function ModuleFieldsPage({
   const meta = await getRecordService(ctx).getModule(name);
   let editor: FieldEditorData | undefined;
   let editorRows: FieldRow[] | undefined;
-  if (getCustomizationService(ctx).capabilities(name).fields) {
+  if ((await getCustomizationService(ctx).prepare()).capabilities(name).fields) {
     const effective = await fixtureCustomizationPort().readEffective(ctx.orgId, name);
     const layout = effective.layouts[0];
     if (layout) {

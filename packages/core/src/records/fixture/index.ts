@@ -17,6 +17,7 @@ import {
   type RecordAccessChecker,
   type RecordAccessSource,
 } from "../access-policy";
+import { projectMetadataForViewer, projectViewForViewer } from "../access-projection";
 import {
   activityDate,
   activityParentIds,
@@ -174,9 +175,12 @@ const dropIgnored = (
 export interface FixtureRecordServiceOptions extends FixtureHistoryPermissions {
   /**
    * Record access policy source (ADR 0017 §6): applied in the single candidate-selection step
-   * and on get/write. Absent = system actor (automation, worker, tests).
+   * and on get/write. Without it the service acts as the organisation system actor (§4.8),
+   * which production callers must request explicitly with `system: true`.
    */
   access?: RecordAccessSource;
+  /** Marks an intentional system actor (automation, worker, approval write-back). */
+  system?: boolean;
   customization?: CustomizationPort;
   /** Internal ephemeral schema integration; shared by every service for this organization. */
   schema?: InMemorySchemaCoordinator;
@@ -469,6 +473,15 @@ export function createFixtureRecordService(
     (checkerPromise ??= options?.access
       ? options.access().then((snapshot) => createRecordAccessChecker(snapshot, childLevel))
       : Promise.resolve(undefined));
+  // The history reader's permission hooks are synchronous; the guard below resolves the access
+  // checker before every read so the timeline follows the same record and field rules (§4.5).
+  let historyAccess: RecordAccessChecker | undefined;
+  const guardedHistory = (inner: RecordHistoryService): RecordHistoryService => ({
+    async list(module, recordId, query) {
+      historyAccess = await accessFor();
+      return inner.list(module, recordId, query);
+    },
+  });
   const assertRecordLevel = async (
     module: string,
     ids: readonly string[],
@@ -688,7 +701,8 @@ export function createFixtureRecordService(
             options?.canReadRecord?.(event.subject.module, event.subject.recordId) !== false,
         )
       : [];
-    const view = applyView ? viewFor(module, query.viewId) : undefined;
+    const rawView = applyView ? viewFor(module, query.viewId) : undefined;
+    const view = rawView && acc ? projectViewForViewer(rawView, acc.hiddenFields(module)) : rawView;
     const fieldMap = withLineItemFilterFields(
       new Map(bundle.metadata.fields.map((field) => [field.apiName, field])),
     );
@@ -1120,6 +1134,11 @@ export function createFixtureRecordService(
   ): Promise<readonly DuplicateGroup[]> => {
     const bundle = bundleFor(module);
     if (bundle.childModule) return [];
+    // A hidden field must not be usable as a duplicate-match key (ADR 0017 §4.5).
+    const dupAccess = await accessFor();
+    for (const field of fields)
+      if (dupAccess?.hiddenFields(module).has(field))
+        throw new ForbiddenError(undefined, "field_forbidden");
     return copy(
       duplicateGroups(
         await matching(module, { viewId: "" }, false),
@@ -1370,59 +1389,84 @@ export function createFixtureRecordService(
         );
       },
     },
-    tags,
+    // Tagging a record is a record write (ADR 0017 §7.3): invisible → 404, read-only → 403.
+    tags: {
+      ...tags,
+      async addTags(module, recordId, ids) {
+        recordFor(module, recordId);
+        await assertRecordLevel(module, [recordId], "edit");
+        return tags.addTags(module, recordId, ids);
+      },
+      async removeTags(module, recordId, ids) {
+        recordFor(module, recordId);
+        await assertRecordLevel(module, [recordId], "edit");
+        return tags.removeTags(module, recordId, ids);
+      },
+      async listRecordTags(module, recordId) {
+        recordFor(module, recordId);
+        await assertRecordLevel(module, [recordId], "read");
+        return tags.listRecordTags(module, recordId);
+      },
+    },
     recycleBin,
-    history: fixtureHistoryReader(
-      ctx,
-      () => fixtureHistoryStore(state.history),
-      () => state.sequence,
-      (module, id) => {
-        recordFor(module, id);
-      },
-      (module) => Object.hasOwn(fixtureModules, module),
-      {
-        canReadRecord: options?.canReadRecord,
-        canReadField: (module, apiName) =>
-          bundleFor(module).metadata.fields.some((field) => field.apiName === apiName) &&
-          (options?.canReadField?.(module, apiName) ?? true),
-      },
-      state.cursors,
-      (event) => {
-        if (event.kind === "note_added") {
-          const note = state.modules.get("Notes")?.records.get(event.subject.recordId);
-          if (!note || !noteParentVisible(note.fields)) return null;
-          return {
-            ...(options?.canReadField?.("Notes", "Note_Title") !== false &&
-            typeof note.fields.Note_Title === "string"
-              ? { name: note.fields.Note_Title }
-              : {}),
-            payload: {
-              body:
-                options?.canReadField?.("Notes", "Note_Content") !== false
-                  ? String(note.fields.Note_Content ?? "")
-                  : "",
-            },
-          };
-        }
-        if (["attachment_added", "attachment_deleted"].includes(event.kind)) {
-          const noteId = event.payload?.noteId;
-          if (typeof noteId === "string") {
-            const note = state.modules.get("Notes")?.records.get(noteId);
-            if (
-              !note ||
-              !noteParentVisible(note.fields) ||
-              options?.canReadRecord?.("Notes", noteId) === false
-            )
-              return null;
+    history: guardedHistory(
+      fixtureHistoryReader(
+        ctx,
+        () => fixtureHistoryStore(state.history),
+        () => state.sequence,
+        (module, id) => {
+          recordFor(module, id);
+        },
+        (module) => Object.hasOwn(fixtureModules, module),
+        {
+          canReadRecord: (module, id) => {
+            if (options?.canReadRecord?.(module, id) === false) return false;
+            const stored = state.modules.get(module)?.records.get(id);
+            return !historyAccess || !stored || historyAccess.visible(module, stored.fields);
+          },
+          canReadField: (module, apiName) =>
+            bundleFor(module).metadata.fields.some((field) => field.apiName === apiName) &&
+            (options?.canReadField?.(module, apiName) ?? true) &&
+            !historyAccess?.hiddenFields(module).has(apiName),
+        },
+        state.cursors,
+        (event) => {
+          if (event.kind === "note_added") {
+            const note = state.modules.get("Notes")?.records.get(event.subject.recordId);
+            if (!note || !noteParentVisible(note.fields)) return null;
+            return {
+              ...(options?.canReadField?.("Notes", "Note_Title") !== false &&
+              typeof note.fields.Note_Title === "string"
+                ? { name: note.fields.Note_Title }
+                : {}),
+              payload: {
+                body:
+                  options?.canReadField?.("Notes", "Note_Content") !== false
+                    ? String(note.fields.Note_Content ?? "")
+                    : "",
+              },
+            };
           }
-        }
-        if (
-          ["attachment_added", "attachment_deleted"].includes(event.kind) &&
-          options?.canReadField?.("Attachments", "File_Name") !== false
-        )
-          return { name: event.subject.name ?? undefined, payload: null };
-        return { payload: null };
-      },
+          if (["attachment_added", "attachment_deleted"].includes(event.kind)) {
+            const noteId = event.payload?.noteId;
+            if (typeof noteId === "string") {
+              const note = state.modules.get("Notes")?.records.get(noteId);
+              if (
+                !note ||
+                !noteParentVisible(note.fields) ||
+                options?.canReadRecord?.("Notes", noteId) === false
+              )
+                return null;
+            }
+          }
+          if (
+            ["attachment_added", "attachment_deleted"].includes(event.kind) &&
+            options?.canReadField?.("Attachments", "File_Name") !== false
+          )
+            return { name: event.subject.name ?? undefined, payload: null };
+          return { payload: null };
+        },
+      ),
     ),
     merge,
     findDuplicateGroups,
@@ -1430,6 +1474,7 @@ export function createFixtureRecordService(
       assertModuleWritable(module);
       moduleExists(module);
       const dedupAccess = await accessFor();
+      // Without an access source only the administrator membership may deduplicate (fail-closed).
       if (dedupAccess ? !dedupAccess.tool("findAndMerge", module) : ctx.role !== "admin")
         throw new ForbiddenError(undefined, "permission_denied");
       if (state.deduplicating.has(module))
@@ -1494,11 +1539,15 @@ export function createFixtureRecordService(
       if (!Number.isSafeInteger(page) || page < 1 || !Number.isSafeInteger(perPage) || perPage < 1)
         throw new ValidationError({ page: ["Choose positive integer paging values."] });
       const groups = [];
+      const acc = await accessFor();
       for (const module of new Set(
         query.modules ?? Object.keys(fixtureModules).filter((name) => !bundleFor(name).readOnly),
       )) {
         const bundle = bundleFor(module);
         if (bundle.childModule) continue;
+        // Global search spans modules, so the route gate cannot check them: a module the
+        // profile cannot view contributes nothing (ADR 0017 §4.1, MEP-1468).
+        if (acc && !acc.can(module, "view")) continue;
         if (
           query.fields?.some(
             (name) => !bundle.metadata.fields.some((field) => field.apiName === name),
@@ -1529,7 +1578,9 @@ export function createFixtureRecordService(
               : {
                   id: record.id,
                   fields: Object.fromEntries(
-                    query.fields.map((name) => [name, record.fields[name] ?? null]),
+                    query.fields
+                      .filter((name) => !acc?.hiddenFields(module).has(name))
+                      .map((name) => [name, record.fields[name] ?? null]),
                   ),
                 },
           ),
@@ -1554,24 +1605,48 @@ export function createFixtureRecordService(
     },
     async getModuleProjection(module) {
       bundleFor(module);
-      return readFixtureModuleProjection(
+      const projection = await readFixtureModuleProjection(
         ctx.orgId,
         module,
         schema?.metadata ?? options?.customization,
       );
+      const acc = await accessFor();
+      if (!acc) return projection;
+      const hidden = acc.hiddenFields(module);
+      return {
+        ...projectMetadataForViewer(projection, { hidden, readOnly: acc.readOnlyFields(module) }),
+        views: projection.views.map((view) => projectViewForViewer(view, hidden)),
+      };
     },
     async getModule(module) {
-      return copy(bundleFor(module).metadata);
+      const acc = await accessFor();
+      const metadata = bundleFor(module).metadata;
+      return copy(
+        acc
+          ? projectMetadataForViewer(metadata, {
+              hidden: acc.hiddenFields(module),
+              readOnly: acc.readOnlyFields(module),
+            })
+          : metadata,
+      );
     },
     async listViews(module) {
-      return copy(bundleFor(module).views);
+      const acc = await accessFor();
+      const views = bundleFor(module).views;
+      return copy(
+        acc ? views.map((v) => projectViewForViewer(v, acc.hiddenFields(module))) : views,
+      );
     },
     async getView(module, id) {
-      return copy(viewFor(module, id));
+      const acc = await accessFor();
+      const view = viewFor(module, id);
+      return copy(acc ? projectViewForViewer(view, acc.hiddenFields(module)) : view);
     },
     async list(module, query) {
       const bundle = bundleFor(module);
-      const view = viewFor(module, query.viewId);
+      const viewAcc = await accessFor();
+      const rawView = viewFor(module, query.viewId);
+      const view = viewAcc ? projectViewForViewer(rawView, viewAcc.hiddenFields(module)) : rawView;
       const errors: Record<string, string[]> = {};
       if (!Number.isSafeInteger(query.page) || query.page < 1)
         errors.page = ["Choose a positive integer page."];
@@ -1605,10 +1680,13 @@ export function createFixtureRecordService(
             : {
                 id: record.id,
                 fields: Object.fromEntries(
-                  ["id", ...query.fields].map((name) => [
-                    name,
-                    name === "id" ? record.id : (record.fields[name] ?? null),
-                  ]),
+                  // A requested hidden field is dropped, never echoed as null (ADR 0017 §4.5).
+                  ["id", ...query.fields]
+                    .filter((name) => !viewAcc?.hiddenFields(module).has(name))
+                    .map((name) => [
+                      name,
+                      name === "id" ? record.id : (record.fields[name] ?? null),
+                    ]),
                 ),
               },
         ),
@@ -1687,7 +1765,7 @@ export function createFixtureRecordService(
         insertRecord(module, normalized, options),
       );
       await publishWrite(module, "create", created, undefined, options);
-      return created;
+      return writer ? writer.project(module, created) : created;
     },
     async update(module, id, input, options) {
       assertModuleWritable(module);
@@ -1738,7 +1816,8 @@ export function createFixtureRecordService(
         return copy(resolveRead(module, updated));
       });
       await publishWrite(module, "edit", updatedRecord, previous, options);
-      return updatedRecord;
+      const viewer = await accessFor();
+      return viewer ? viewer.project(module, updatedRecord) : updatedRecord;
     },
     async massUpdate(module, ids, input) {
       assertModuleWritable(module);
@@ -1781,6 +1860,12 @@ export function createFixtureRecordService(
     async delete(module, ids) {
       assertModuleWritable(module);
       await assertRecordLevel(module, ids, "delete");
+      // Deleting more than one record at once is the mass-delete tool (ADR 0017 §3, §4.6).
+      if (new Set(ids).size > 1) {
+        const deleter = await accessFor();
+        if (deleter && !deleter.tool("massDelete", module))
+          throw new ForbiddenError(undefined, "permission_denied");
+      }
       moduleExists(module);
       validateIds(ids);
       const records = [...new Set(ids)].map((id) => recordFor(module, id));

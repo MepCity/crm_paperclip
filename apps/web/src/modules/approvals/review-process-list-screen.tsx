@@ -72,26 +72,26 @@ export function ReviewProcessListScreen({ orgSlug }: ReviewProcessListScreenProp
   return (
     <div className="flex flex-col gap-6" data-testid="review-process-list-screen">
       {/* Title Header */}
-      <div className="flex items-center justify-between border-b border-border pb-4">
-        <div className="flex items-center gap-3">
-          <h1 className="text-xl font-bold text-text">Gözden Geçirme Süreci</h1>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-text">Gözden Geçirme Süreçleri</h1>
+        <div className="flex items-center gap-4">
+          {processes.length > 0 && (
+            <Link
+              href={`/crm/${orgSlug}/settings/review-processes/new`}
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-sm font-semibold text-primary-text hover:bg-primary-hover transition-colors"
+            >
+              <Icons.plus className="size-4" />
+              <span>Yeni Süreç Oluştur</span>
+            </Link>
+          )}
           <button
             type="button"
-            className="text-xs text-primary hover:underline font-semibold inline-flex items-center gap-1"
+            className="text-base text-text-muted hover:text-primary inline-flex items-center gap-1.5"
           >
-            <Icons.help className="size-3.5" />
+            <Icons.help className="size-4" />
             <span>Yardım</span>
           </button>
         </div>
-        {processes.length > 0 && (
-          <Link
-            href={`/crm/${orgSlug}/settings/review-processes/new`}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-sm font-semibold text-primary-text hover:bg-primary-hover transition-colors"
-          >
-            <Icons.plus className="size-4" />
-            <span>Yeni Süreç Oluştur</span>
-          </Link>
-        )}
       </div>
 
       {error && (

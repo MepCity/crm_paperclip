@@ -1,7 +1,7 @@
 import { getAccessSnapshot } from "@crm/core/access";
 import { notFound } from "next/navigation";
 import { requireOrgContext } from "@/lib/session";
-import type { AdminKey } from "./route-permission";
+import type { AdminKey, FeatureKey } from "./route-permission";
 
 /**
  * Server-side gate of a settings section (ADR 0017 §7.3): the same `admin.*` key that hides the
@@ -13,4 +13,16 @@ export async function requireSettingsOrg(orgSlug: string, key: AdminKey) {
   const snapshot = await getAccessSnapshot(ctx);
   if (snapshot.profileKind !== "administrator" && !snapshot.permissions.admin[key]) notFound();
   return ctx;
+}
+
+/**
+ * Server-side `view` gate of a feature page (Reports, Analytics; ADR 0017 §7.3): the navigation
+ * hides the link, and a guessed URL renders the denied state instead of the data.
+ */
+export async function canViewFeature(
+  ctx: Awaited<ReturnType<typeof requireOrgContext>>,
+  feature: Extract<FeatureKey, "reports" | "analytics">,
+): Promise<boolean> {
+  const snapshot = await getAccessSnapshot(ctx);
+  return snapshot.profileKind === "administrator" || snapshot.permissions.features[feature].view;
 }
