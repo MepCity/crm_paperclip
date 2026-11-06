@@ -99,4 +99,6 @@ export interface DefinitionDependencies {
   customization: Pick<CustomizationPort, "readEffective">;
   /** Resolved by server authorization, never from client payloads. */
   canManageReports(ctx: OrgContext): Promise<boolean>;
+  /** Profile source for non-administrator members (`admin.manageAutomation`, ADR 0017 §7.3). */
+  access?: import("../access-gate").AccessLoader;
 }

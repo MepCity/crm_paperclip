@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { type AccessLoader, adminPermitted } from "../access-gate";
 import { ForbiddenError, SchemaStaleError, ValidationError } from "../errors";
 import type { OrgContext } from "../tenancy/types";
 import { type CustomizationCommand, customizationRequestSchema } from "./commands";
@@ -16,17 +17,30 @@ export class CustomizationService {
     private readonly metadata: InMemoryCustomizationAdapter,
     private readonly enabled: boolean,
     private readonly now: () => Date = () => new Date(),
+    private readonly access?: AccessLoader,
   ) {
     this.context = { ...context };
+    this.mayCustomize = context.role === "admin";
+  }
+
+  private mayCustomize: boolean;
+
+  /**
+   * Resolves `admin.moduleCustomization` (ADR 0017 §7.3). Until called, only the administrator
+   * membership may customise; call it once per request before `assertAllowed`/`capabilities`.
+   */
+  async prepare(): Promise<this> {
+    this.mayCustomize = await adminPermitted(this.context, "moduleCustomization", this.access);
+    return this;
   }
 
   assertAllowed(): void {
-    if (!this.enabled || !this.metadata.coordinated || this.context.role !== "admin")
+    if (!this.enabled || !this.metadata.coordinated || !this.mayCustomize)
       throw new ForbiddenError();
   }
 
   capabilities(module: string) {
-    const allowed = this.enabled && this.metadata.coordinated && this.context.role === "admin";
+    const allowed = this.enabled && this.metadata.coordinated && this.mayCustomize;
     return {
       fields: allowed,
       layouts: allowed && module !== "Attachments",

@@ -1200,3 +1200,33 @@ describe("source stage fidelity", () => {
     );
   });
 });
+
+describe("job history scope (ADR 0017 §7.3)", () => {
+  const actors = async () => [
+    { id: "example-user", name: "Example User" },
+    { id: "other-user", name: "Other User" },
+  ];
+  it("shows members only their own jobs unless they manage all data", async () => {
+    let manageAll = false;
+    const s = setup({ listActors: actors, canManageAll: async () => manageAll });
+    const job = await s.run("Contacts", [{ Last_Name: "Example" }]);
+    const exported = await s.service.runExport(s.ctx, {
+      module: "Contacts",
+      ids: [],
+      fields: "all",
+    });
+    const other = { ...s.ctx, userId: "other-user" };
+    expect(await s.service.listImports(other)).toEqual([]);
+    expect(await s.service.listExports(other)).toEqual([]);
+    await expect(s.service.getImport(other, job.id)).rejects.toMatchObject({ code: "not_found" });
+    await expect(s.service.undoImport(other, job.id)).rejects.toMatchObject({ code: "not_found" });
+    await expect(s.service.downloadExport(other, exported.id)).rejects.toMatchObject({
+      code: "not_found",
+    });
+    manageAll = true;
+    const manager = s.service;
+    expect((await manager.listImports(other)).map((j) => j.id)).toEqual([job.id]);
+    expect((await manager.listExports(other)).map((j) => j.id)).toEqual([exported.id]);
+    expect((await manager.getImport(other, job.id)).id).toBe(job.id);
+  });
+});
