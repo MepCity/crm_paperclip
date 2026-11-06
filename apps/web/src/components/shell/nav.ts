@@ -1,3 +1,4 @@
+import type { ClientPermissions } from "@crm/core/access";
 import { type Icon, Icons } from "@/components/ui/icon";
 import { english } from "@/i18n/catalogs";
 import { moduleCreatePath, moduleListDefaultPath, moduleTabPath } from "@/lib/crm-paths";
@@ -46,8 +47,32 @@ export interface NavLink {
   iconAccentToken?: NavLinkIconAccentToken;
   /** Settings navigation heading shown above the first link of each group. */
   group?: string;
+  /** Module API name; the link is hidden when the profile cannot view the module. */
+  module?: string;
+  /** Feature area with a `view` flag; hidden when the profile cannot view it. */
+  feature?: "reports" | "analytics" | "documents";
   /** Settings link shown only to viewers with `admin.userManagement`. */
   requiresUserManagement?: boolean;
+}
+
+/** Settings links hidden without this administrator permission (ADR 0017 §8). */
+const settingsAdminKey: Readonly<Record<string, keyof ClientPermissions["admin"]>> = {
+  members: "userManagement",
+  currencies: "manageCurrencies",
+  "modules-and-fields": "moduleCustomization",
+  "workflow-rules": "manageAutomation",
+  "assignment-rules": "manageAutomation",
+  email: "emailSettings",
+};
+
+/** Hidden, not disabled: a link without permission is not rendered. No payload = everything shown. */
+export function isNavLinkAllowed(link: NavLink, permissions: ClientPermissions | null): boolean {
+  if (!permissions) return true;
+  if (link.module && permissions.modules[link.module]?.view === false) return false;
+  const adminKey = settingsAdminKey[link.id];
+  if (adminKey && link.group && !permissions.admin[adminKey]) return false;
+  if (link.feature && !permissions.features[link.feature].view) return false;
+  return true;
 }
 
 export interface NavGroup {
@@ -97,6 +122,7 @@ function moduleNavLinks(group: "sales" | "activities" | "flat"): NavLink[] {
     .filter((definition) => (definition.navigation.group ?? "sales") === group)
     .map((definition) => ({
       id: definition.navigation.id,
+      module: definition.apiName,
       label: definition.pluralLabel,
       icon: definition.navigation.icon,
       href: (slug: string) => moduleListDefaultPath(slug, definition.tab),
@@ -143,6 +169,7 @@ function flatNavLinks(): NavLink[] {
 /** Documents is not a record module (no list/detail engine); it sits after Deals in the Sales group. */
 const documentsLink: NavLink = {
   id: "documents",
+  feature: "documents",
   label: "Documents",
   icon: Icons.folder,
   href: (slug: string) => moduleTabPath(slug, "Documents"),
@@ -186,6 +213,7 @@ export const shellNav: NavConfig = {
     },
     {
       id: "reports",
+      feature: "reports",
       label: "Reports",
       icon: Icons.file,
       href: (slug) => moduleTabPath(slug, "Reports"),
@@ -194,6 +222,7 @@ export const shellNav: NavConfig = {
     },
     {
       id: "analytics",
+      feature: "analytics",
       label: "Analytics",
       icon: Icons.barChart,
       href: (slug) => moduleTabPath(slug, "Dashboards"),

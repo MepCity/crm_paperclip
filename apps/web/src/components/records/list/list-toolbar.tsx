@@ -30,6 +30,8 @@ export interface ListToolbarProps {
   onSortApply: (sort: SortSpec | null) => void;
   create: SplitButtonProps;
   createControl?: ReactNode;
+  /** Profile has no create permission: the create control is not drawn. */
+  hideCreate?: boolean;
   actions?: readonly MenuAction[];
   viewTypeTileIds?: readonly string[];
   /** Measured Actions menu width in px; omitted keeps the shared width. */
@@ -47,6 +49,7 @@ export function ListToolbar({
   onSortApply,
   create,
   createControl,
+  hideCreate,
   actions = [],
   viewTypeTileIds,
   actionsMenuWidth,
@@ -95,7 +98,7 @@ export function ListToolbar({
         ) : null}
       </div>
       <div className="flex items-center gap-(--size-button-gap)">
-        {createControl ?? <SplitButton {...create} />}
+        {hideCreate ? null : (createControl ?? <SplitButton {...create} />)}
         {actions.length > 0 && (
           <MenuTrigger>
             <Button variant="secondary" size="actions" aria-label={t("records.list.actions")}>

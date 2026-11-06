@@ -31,6 +31,7 @@ import { Link } from "@/components/ui/link";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import { useRecordLabel } from "@/i18n/record-labels";
+import { type RecordAccess, recordAllows, usePermissions } from "@/lib/access";
 import {
   useConvertQuoteToInvoice,
   useDeleteRecords,
@@ -271,6 +272,7 @@ export function RecordDetailScreen({
     (viewsQueryEnabled && viewsQuery.isLoading) ||
     (!listContext && fallbackListQuery !== null && fallbackList.isLoading && !fallbackList.data);
 
+  const permissions = usePermissions();
   if (loading) return <RecordLoadingShell definition={definition} />;
 
   if (recordQuery.isError) {
@@ -357,6 +359,27 @@ export function RecordDetailScreen({
     }
   }
 
+  // ADR 0017 §8: profile ∧ `$access`; hidden, not disabled. No provider = nothing gated.
+  const moduleFlags = permissions?.modules[moduleApiName];
+  const recordAccess = (displayRecord as { $access?: RecordAccess }).$access;
+  const canEdit = (moduleFlags?.edit ?? true) && recordAllows(recordAccess, "edit");
+  const canDelete = (moduleFlags?.delete ?? true) && recordAllows(recordAccess, "delete");
+  const canCreate = moduleFlags?.create ?? true;
+  const canChangeOwner = (moduleFlags?.changeOwner ?? true) && canEdit;
+  const canConvert = (moduleFlags?.convert ?? true) && canEdit;
+  const canMerge = (moduleFlags?.merge ?? true) && canEdit;
+  const canPrint = moduleFlags?.print ?? true;
+  const showTimeline = permissions ? permissions.tools.recordTimeline : true;
+  const hiddenActionIds = new Set<string>([
+    ...(canEdit ? [] : ["edit"]),
+    ...(canDelete ? [] : ["delete"]),
+    ...(canCreate ? [] : ["clone"]),
+    ...(canChangeOwner ? [] : ["change-owner"]),
+    ...(canConvert ? [] : ["convert"]),
+    ...(canMerge ? [] : ["find-merge-duplicates"]),
+    ...(canPrint ? [] : ["print-preview", "share"]),
+  ]);
+
   const moreMenuGroups = rules.moreOptions({
     onEdit: () => router.push(paths.edit(orgSlug, definition.tab, recordId)),
     onClone: () => router.push(paths.clone(orgSlug, definition.tab, recordId)),
@@ -406,7 +429,7 @@ export function RecordDetailScreen({
         ) : null}
         <InlineEditProvider
           key={recordId}
-          eligible={rules.inlineEditable}
+          eligible={(field) => canEdit && !field.readOnly && rules.inlineEditable(field)}
           users={(usersQuery.data ?? []).map((user) => ({
             id: user.userId,
             name: user.name,
@@ -620,24 +643,32 @@ export function RecordDetailScreen({
                     href: paths.edit(orgSlug, definition.tab, recordId),
                   },
                 ]
-            ).map((command): RecordCommand => {
-              const label = recordLabel(command.label);
-              if (command.menu) {
+            )
+              .filter((command) => !hiddenActionIds.has(command.id))
+              .map((command): RecordCommand => {
+                const label = recordLabel(command.label);
+                if (command.menu) {
+                  return {
+                    ...command,
+                    label,
+                    menu: command.menu.map((item) => ({ ...item, label: recordLabel(item.label) })),
+                  };
+                }
                 return {
                   ...command,
                   label,
-                  menu: command.menu.map((item) => ({ ...item, label: recordLabel(item.label) })),
                 };
-              }
-              return {
-                ...command,
-                label,
-              };
-            })}
-            menuGroups={[...moreMenuGroups, ...(followGroup ? [followGroup] : [])].map((group) => ({
-              ...group,
-              items: group.items.map((item) => ({ ...item, label: recordLabel(item.label) })),
-            }))}
+              })}
+            menuGroups={[...moreMenuGroups, ...(followGroup ? [followGroup] : [])]
+              .map((group) => ({
+                ...group,
+                items: group.items.filter((item) => !hiddenActionIds.has(item.id)),
+              }))
+              .filter((group) => group.items.length > 0)
+              .map((group) => ({
+                ...group,
+                items: group.items.map((item) => ({ ...item, label: recordLabel(item.label) })),
+              }))}
             moreLabel={t("records.actions.moreOptions")}
             previousLabel={t("records.detail.previousRecord")}
             nextLabel={t("records.detail.nextRecord")}
@@ -663,7 +694,9 @@ export function RecordDetailScreen({
         onTabChange={setSelectedTabId}
         tabs={[
           { id: "overview", label: t("records.detail.overview"), content: overview },
-          { id: "timeline", label: t("records.detail.timeline"), content: timeline },
+          ...(showTimeline
+            ? [{ id: "timeline", label: t("records.detail.timeline"), content: timeline }]
+            : []),
           ...(hasRecordFeed(definition.apiName)
             ? [
                 {
