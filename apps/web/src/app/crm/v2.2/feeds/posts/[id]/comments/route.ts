@@ -8,8 +8,6 @@ export const POST = apiRoute<{ id: string }>(
     return getFeedService(ctx).commentOnPost(params.id, input);
   },
   {
-    permission: {
-      memberOnly: "Scoped to the signed-in actor; the feed service applies record visibility.",
-    },
+    permission: { feature: "feeds", action: "view" },
   },
 );

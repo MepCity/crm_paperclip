@@ -20,9 +20,7 @@ export const PUT = apiRoute<Params>(
     return null;
   },
   {
-    permission: {
-      memberOnly: "Scoped to the signed-in actor; the feed service applies record visibility.",
-    },
+    permission: { feature: "feeds", action: "view" },
   },
 );
 
@@ -32,8 +30,6 @@ export const DELETE = apiRoute<Params>(
     return null;
   },
   {
-    permission: {
-      memberOnly: "Scoped to the signed-in actor; the feed service applies record visibility.",
-    },
+    permission: { feature: "feeds", action: "view" },
   },
 );

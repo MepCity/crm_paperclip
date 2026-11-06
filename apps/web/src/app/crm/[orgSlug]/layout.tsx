@@ -35,6 +35,8 @@ export default async function OrganizationLayout({
   // `admin.userManagement` (ADR 0017 §7.3) may invite people.
   const canInvite =
     snapshot.profileKind === "administrator" || snapshot.permissions.admin.userManagement;
+  const feedsFeature = snapshot.permissions.features.feeds;
+  const admin = snapshot.profileKind === "administrator";
   return (
     <PermissionsProvider permissions={permissions}>
       <AppShell
@@ -43,6 +45,7 @@ export default async function OrganizationLayout({
         user={{ id: user.id, name: user.name, email: user.email }}
         inviteAction={boundInviteAction}
         canInvite={canInvite}
+        feedsAccess={{ view: admin || feedsFeature.view, post: admin || feedsFeature.post }}
       >
         <PreferenceProvider orgSlug={orgSlug} userId={user.id}>
           <FormatProvider format={format}>{children}</FormatProvider>

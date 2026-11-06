@@ -418,3 +418,16 @@ export function isNavLinkActive(link: NavLink, orgSlug: string, pathname: string
     (link.alsoActive?.(orgSlug).some(under) ?? false)
   );
 }
+
+/** A copy of the navigation without the link `id` (permission gating of rail entries). */
+export function navWithoutLink(config: NavConfig, id: string): NavConfig {
+  const keep = (links: readonly NavLink[]) => links.filter((link) => link.id !== id);
+  return {
+    links: keep(config.links),
+    sections: config.sections.map((section) => ({
+      ...section,
+      groups: section.groups.map((group) => ({ ...group, links: keep(group.links) })),
+      ...(section.links ? { links: keep(section.links) } : {}),
+    })),
+  };
+}

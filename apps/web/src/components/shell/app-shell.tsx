@@ -8,10 +8,11 @@ import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { PreferenceProvider } from "@/lib/preferences";
+import { FeedsAccessProvider } from "@/modules/feeds/feeds-access";
 import { LiveChatBottomBar } from "./chat-bottom-bar";
 import { CreateRecordsMenu } from "./create-records";
 import { GlobalSearch } from "./global-search";
-import { navLinkIconClassName, shellNav } from "./nav";
+import { navLinkIconClassName, navWithoutLink, shellNav } from "./nav";
 import { Navigation } from "./navigation";
 import { NotificationBell } from "./notification-bell";
 import { OrganizationSwitcher, type ShellOrganization } from "./organization-switcher";
@@ -25,6 +26,7 @@ export function AppShell({
   children,
   inviteAction,
   canInvite = false,
+  feedsAccess = { view: true, post: true },
 }: {
   orgSlug: string;
   organizations: readonly ShellOrganization[];
@@ -34,7 +36,10 @@ export function AppShell({
   inviteAction?: CreateInvitationAction;
   /** Whether the current user has the invite permission. */
   canInvite?: boolean;
+  /** `features.feeds` of the viewer; without `view` the Feeds entry is hidden. */
+  feedsAccess?: { view: boolean; post: boolean };
 }) {
+  const navConfig = feedsAccess.view ? shellNav : navWithoutLink(shellNav, "feeds");
   const t = useUiTranslations();
   const pathname = usePathname();
   const isCalendar = pathname === `/crm/${orgSlug}/calendar`;
@@ -133,7 +138,7 @@ export function AppShell({
               ))}
             </nav>
           ) : (
-            <Navigation orgSlug={orgSlug} />
+            <Navigation orgSlug={orgSlug} config={navConfig} />
           )}
         </aside>
         <div className="flex min-w-0 flex-1 flex-col">
@@ -223,7 +228,7 @@ export function AppShell({
             className={`min-h-0 flex-1 overflow-auto outline-none ${isSettingsHome ? "bg-bg" : "bg-surface"}`}
           >
             <PreferenceProvider orgSlug={orgSlug} userId={user.id}>
-              {children}
+              <FeedsAccessProvider value={feedsAccess}>{children}</FeedsAccessProvider>
             </PreferenceProvider>
           </main>
         </div>

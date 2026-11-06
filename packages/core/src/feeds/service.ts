@@ -38,6 +38,8 @@ export interface FeedDeps {
   history: RecordHistoryService;
   /** Field visibility for the viewer; defaults to all fields visible (ADR 0017 not enforced yet). */
   canSeeField?: (module: string, apiName: string) => boolean;
+  /** Async source of the fields hidden from the viewer per module (ADR 0017 field security). */
+  hiddenFields?: (module: string) => Promise<ReadonlySet<string>>;
   /** Whether another user may read a record; used to skip notifications (ADR 0018 §4.2). */
   canUserRead?: (userId: string, module: string, recordId: string) => Promise<boolean>;
   /** Called inside the writer's transaction with the notifications to store. */
@@ -134,7 +136,18 @@ export class FeedService {
     return record;
   }
 
+  private readonly hidden = new Map<string, ReadonlySet<string>>();
+
+  private async primeHidden(modules: Iterable<string>): Promise<void> {
+    const load = this.deps.hiddenFields;
+    if (!load) return;
+    for (const m of new Set(modules)) {
+      if (!this.hidden.has(m)) this.hidden.set(m, await load(m));
+    }
+  }
+
   private canSee(module: string, apiName: string): boolean {
+    if (this.hidden.get(module)?.has(apiName)) return false;
     return this.deps.canSeeField ? this.deps.canSeeField(module, apiName) : true;
   }
 
@@ -302,6 +315,7 @@ export class FeedService {
       return true;
     });
     const events: FeedEventItem[] = [];
+    await this.primeHidden(eventTargets.map((t) => t.module));
     for (let i = 0; i < eventTargets.length; i += 10) {
       const chunk = eventTargets.slice(i, i + 10);
       const pages = await Promise.all(
