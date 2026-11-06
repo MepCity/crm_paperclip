@@ -85,6 +85,7 @@ const FEATURE_LABELS: Record<keyof Perms["features"], string> = {
   documents: "Documents",
   notes: "Notes",
   attachments: "Attachments",
+  feeds: "Feeds",
 };
 
 /** Left anchor menu of the profile page, grouped as in the reference. */

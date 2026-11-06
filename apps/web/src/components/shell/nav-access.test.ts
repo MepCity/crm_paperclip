@@ -1,5 +1,13 @@
 import { describe, expect, it } from "vitest";
-import { accessSettingsNav, isNavLinkActive, settingsNav, settingsNavFor } from "./nav";
+import {
+  accessSettingsNav,
+  isNavLinkActive,
+  type NavConfig,
+  navWithoutLink,
+  settingsNav,
+  settingsNavFor,
+  shellNav,
+} from "./nav";
 
 describe("settingsNavFor", () => {
   it("hides the access links without user management", () => {
@@ -27,5 +35,18 @@ describe("settingsNavFor", () => {
     expect(users && isNavLinkActive(users, "acme", "/crm/acme/settings/activate-users")).toBe(true);
     expect(users && isNavLinkActive(users, "acme", "/crm/acme/settings/profiles")).toBe(false);
     expect(accessSettingsNav.every((link) => link.requiresUserManagement)).toBe(true);
+  });
+});
+
+describe("navWithoutLink", () => {
+  it("removes the feeds entry everywhere and keeps the rest", () => {
+    const collect = (c: NavConfig) => [
+      ...c.links,
+      ...c.sections.flatMap((s) => [...s.groups.flatMap((g) => g.links), ...(s.links ?? [])]),
+    ];
+    expect(collect(shellNav).some((l) => l.id === "feeds")).toBe(true);
+    const stripped = navWithoutLink(shellNav, "feeds");
+    expect(collect(stripped).some((l) => l.id === "feeds")).toBe(false);
+    expect(collect(stripped)).toHaveLength(collect(shellNav).length - 1);
   });
 });

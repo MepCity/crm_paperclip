@@ -8,9 +8,7 @@ export const PATCH = apiRoute<{ id: string }>(
     return getFeedService(ctx).editPost(params.id, input);
   },
   {
-    permission: {
-      memberOnly: "Scoped to the signed-in actor; the feed service applies record visibility.",
-    },
+    permission: { feature: "feeds", action: "view" },
   },
 );
 
@@ -20,8 +18,6 @@ export const DELETE = apiRoute<{ id: string }>(
     return null;
   },
   {
-    permission: {
-      memberOnly: "Scoped to the signed-in actor; the feed service applies record visibility.",
-    },
+    permission: { feature: "feeds", action: "view" },
   },
 );
