@@ -5,7 +5,7 @@ import { z } from "zod";
  * a toggle that controls nothing is worse than a missing row. When a feature ships,
  * its keys are added here in the same change.
  */
-export const SCHEMA_VERSION = 1 as const;
+export const SCHEMA_VERSION = 2 as const;
 
 /** Record modules with an `Owner`, in the order the settings screens list them. */
 export const OWNED_MODULES = [
@@ -78,7 +78,7 @@ const attachmentsFeature = z.object({
 });
 
 export const profilePermissionsSchema = z.object({
-  schemaVersion: z.literal(SCHEMA_VERSION),
+  schemaVersion: z.union([z.literal(1), z.literal(2)]).default(SCHEMA_VERSION),
   modules: z.object(
     Object.fromEntries(OWNED_MODULES.map((m) => [m, moduleActions])) as Record<
       ModuleApiName,
@@ -120,6 +120,7 @@ export const profilePermissionsSchema = z.object({
     manageTemplates: z.boolean(),
     emailSettings: z.boolean(),
     dataManagement: z.boolean(),
+    manageWebforms: z.boolean().default(false),
     viewAllRecords: moduleList,
     modifyAllRecords: moduleList,
   }),
@@ -185,6 +186,7 @@ export function administratorPermissions(): ProfilePermissions {
       manageTemplates: true,
       emailSettings: true,
       dataManagement: true,
+      manageWebforms: true,
       viewAllRecords: all(),
       modifyAllRecords: all(),
     },
@@ -208,6 +210,7 @@ export function standardPermissions(): ProfilePermissions {
       manageTemplates: false,
       emailSettings: false,
       dataManagement: false,
+      manageWebforms: false,
       viewAllRecords: [],
       modifyAllRecords: [],
     },

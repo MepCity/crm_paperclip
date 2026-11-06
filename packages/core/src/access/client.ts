@@ -55,6 +55,7 @@ export function toClientPermissions(
       manageTemplates: admin || p.admin.manageTemplates,
       emailSettings: admin || p.admin.emailSettings,
       dataManagement: admin || p.admin.dataManagement,
+      manageWebforms: admin || p.admin.manageWebforms,
     },
     onlyListSubordinates: !admin && p.tools.onlyListSubordinates,
   };

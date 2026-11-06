@@ -12,7 +12,8 @@ export type AdminKey =
   | "manageAutomation"
   | "manageTemplates"
   | "emailSettings"
-  | "dataManagement";
+  | "dataManagement"
+  | "manageWebforms";
 export type ModuleTool = "convert" | "findAndMerge" | "changeOwner" | "massUpdate" | "massDelete";
 
 /** Loads the viewer's access snapshot lazily (the fixture service is built synchronously). */
