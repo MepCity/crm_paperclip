@@ -464,6 +464,11 @@ test("Normal submenu opens via ArrowRight even when cursor is hovered on sibling
       laterSubItem.getAttribute("data-hovered") === "true",
   ).toBe(true);
 
+  // Let the 200 ms hover timer of the later item fire after focus moved (a loaded machine
+  // reaches this order on its own): the later submenu must stay closed.
+  await new Promise((resolve) => setTimeout(resolve, 300));
+  expect(screen.queryByRole("menu", { name: "Later Submenu" })).toBeNull();
+
   // Press ArrowRight on normalSubItem - normal submenu MUST open
   await user.keyboard("{ArrowRight}");
   expect(screen.getByRole("menu", { name: "Normal Submenu" })).toBeTruthy();
