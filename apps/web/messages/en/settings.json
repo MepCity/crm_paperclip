@@ -178,6 +178,7 @@
     "dataAdministration": "Data Administration",
     "customization": "Customization",
     "automation": "Automation",
+    "processManagement": "Process Management",
     "orgId": "Org ID"
   },
   "homeCurrencyQuestion": "Do you want to set {currency} as your home currency? Once you confirm your home currency, you cannot change it later.",
