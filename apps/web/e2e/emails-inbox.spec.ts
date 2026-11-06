@@ -242,7 +242,7 @@ test("emails inbox control inventory (E-01..E-38) matches what Module 10 renders
   await page.goBack();
   await expect(page).toHaveURL(/folder=inbox&message=conversation-1$/);
 
-  // Request safety guard: zero non-GET requests on load and after safe interactions
+  // Keep the write guard active through the complete calendar round trip.
   expect(nonGetRequests).toEqual([]);
 
   // Clean page errors

@@ -10,6 +10,7 @@ import {
   startTestPostgres,
   type TestPostgres,
 } from "@crm/db/testing";
+import pg from "pg";
 import { runCleanupSteps } from "./e2e-cleanup";
 import { acquireE2eLock, releaseE2eLock } from "./e2e-lock";
 import { timeE2eStage } from "./e2e-timing";
@@ -205,9 +206,24 @@ async function main(): Promise<number> {
 
     const port = await pickFreePort();
     activePort = port;
+    const crmPassword = randomBytes(32).toString("hex");
+    const provisioner = new pg.Client({ connectionString: database.url });
+    await provisioner.connect();
+    try {
+      // This role exists only in the disposable test cluster. Never change application roles here.
+      await provisioner.query(
+        `alter role crm_app password ${provisioner.escapeLiteral(crmPassword)}`,
+      );
+    } finally {
+      await provisioner.end();
+    }
+    const crmUrl = new URL(database.url);
+    crmUrl.username = "crm_app";
+    crmUrl.password = crmPassword;
     const env = {
       ...baseEnv,
       DATABASE_URL: database.url,
+      CRM_DATABASE_URL: crmUrl.toString(),
       APP_URL: `http://127.0.0.1:${port}`,
       APP_SECRET: randomBytes(32).toString("hex"),
       E2E_PORT: String(port),

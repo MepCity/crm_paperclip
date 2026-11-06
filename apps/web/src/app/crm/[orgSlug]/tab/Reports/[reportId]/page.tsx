@@ -1,9 +1,7 @@
-import { listMembers } from "@crm/core";
 import { notFound } from "next/navigation";
 import { PageTitle } from "@/components/shell/page-title";
-import { getRecordService } from "@/lib/records";
+import { persistentReportsPort } from "@/lib/definitions/reports";
 import { requireOrgContext } from "@/lib/session";
-import { createRecordReportsPort } from "@/modules/reports/record-port";
 import { ReportDetailScreen } from "@/modules/reports/report-detail-screen";
 
 export const metadata = { title: "Report" };
@@ -15,29 +13,20 @@ export default async function ReportPage({
 }) {
   const { orgSlug, reportId } = await params;
   const ctx = await requireOrgContext(orgSlug);
-  const members = await listMembers(ctx);
-  const port = createRecordReportsPort(getRecordService(ctx), {
-    ownerNames: new Map(members.map((member) => [member.userId, member.name])),
-  });
+  const port = await persistentReportsPort(ctx);
   const report = await port.getReport(reportId);
   if (!report) notFound();
 
   async function getReport(id: string) {
     "use server";
     const innerCtx = await requireOrgContext(orgSlug);
-    const innerMembers = await listMembers(innerCtx);
-    return createRecordReportsPort(getRecordService(innerCtx), {
-      ownerNames: new Map(innerMembers.map((member) => [member.userId, member.name])),
-    }).getReport(id);
+    return (await persistentReportsPort(innerCtx)).getReport(id);
   }
 
   async function listReports() {
     "use server";
     const innerCtx = await requireOrgContext(orgSlug);
-    const innerMembers = await listMembers(innerCtx);
-    return createRecordReportsPort(getRecordService(innerCtx), {
-      ownerNames: new Map(innerMembers.map((member) => [member.userId, member.name])),
-    }).listReports();
+    return (await persistentReportsPort(innerCtx)).listReports();
   }
 
   return (
@@ -47,6 +36,7 @@ export default async function ReportPage({
         orgSlug={orgSlug}
         reportId={reportId}
         initialReport={report}
+        editable={!reportId.startsWith("sample-report-")}
         port={{ getReport, listReports }}
       />
     </>

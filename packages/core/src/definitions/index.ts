@@ -1,2 +1,2 @@
-export { createDefinitionPorts } from "./service";
+export { createDefinitionPorts, validateReportDefinition } from "./service";
 export type * from "./types";

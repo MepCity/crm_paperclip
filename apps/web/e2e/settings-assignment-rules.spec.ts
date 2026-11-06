@@ -132,10 +132,10 @@ test("populated Assignment rules list AL1–AL5 and detail AD1–AD7 read-only i
   await expect(table.getByRole("cell", { name: "Contacts", exact: true })).toBeVisible();
   await expect(table.getByRole("cell", { name: "Inactive", exact: true })).toBeVisible();
 
-  // AL2 / RC1–RC6: No switches, no checkboxes, no creation or write controls
+  // Persisted-shell creation is available; activation and entry editing stay closed.
   await expect(page.getByRole("switch")).toHaveCount(0);
   await expect(table.getByRole("checkbox")).toHaveCount(0);
-  await expect(page.getByRole("button", { name: "Create Assignment Rule" })).toHaveCount(0);
+  await expect(page.getByRole("button", { name: "Create Assignment Rule" })).toBeEnabled();
   const rulesRegion = page.getByRole("region", { name: "Assignment Rules" });
   await expect(rulesRegion.getByRole("button", { name: /edit|delete|clone|reorder/i })).toHaveCount(
     0,
