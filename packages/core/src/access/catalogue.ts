@@ -70,6 +70,7 @@ const crudFeature = z.object({
   edit: z.boolean(),
   delete: z.boolean(),
 });
+const feedsFeature = z.object({ view: z.boolean(), post: z.boolean() });
 const attachmentsFeature = z.object({
   view: z.boolean(),
   create: z.boolean(),
@@ -90,6 +91,8 @@ export const profilePermissionsSchema = z.object({
     documents: documentsFeature,
     notes: crudFeature,
     attachments: attachmentsFeature,
+    // Profiles stored before Feeds shipped have no key: both default to allowed.
+    feeds: feedsFeature.default({ view: true, post: true }),
   }),
   importModules: moduleList,
   exportModules: moduleList,
@@ -154,6 +157,7 @@ export function administratorPermissions(): ProfilePermissions {
       },
       notes: { ...full },
       attachments: { view: true, create: true, delete: true },
+      feeds: { view: true, post: true },
     },
     importModules: all(),
     exportModules: all(),

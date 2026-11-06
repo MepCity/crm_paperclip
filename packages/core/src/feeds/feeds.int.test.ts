@@ -194,4 +194,31 @@ describe("feeds backend integration", () => {
       getFeedService(other, depsFor(other)).editPost(post.id, { body: "<p>x</p>" }),
     ).rejects.toBeInstanceOf(NotFoundError);
   });
+
+  it("drops hidden fields from event changes and skips mentions of users who cannot read", async () => {
+    const { ctx } = await createTestOrganization();
+    const reader = await addTestMember(ctx, "member");
+    const notes: FeedNotification[] = [];
+    const deps = depsFor(ctx, notes);
+    const feed = getFeedService(ctx, {
+      ...deps,
+      hiddenFields: async () => new Set(["Stage"]),
+      canUserRead: async (userId) => userId !== reader.ctx.userId,
+    });
+    const deal = await newDeal(ctx, deps);
+    await deps.records.update("Deals", deal.id, { Stage: "Negotiation/Review", Amount: 5 });
+
+    const page = await feed.listForRecord("Deals", deal.id);
+    const changes = page.items.flatMap((i) => (i.type === "event" ? i.changes : []));
+    expect(changes.some((c) => c.apiName === "Stage")).toBe(false);
+    expect(changes.some((c) => c.apiName === "Amount")).toBe(true);
+
+    await feed.createPost({
+      body: "<p>hi</p>",
+      mentionUserIds: [reader.ctx.userId],
+      recordModule: "Deals",
+      recordId: deal.id,
+    });
+    expect(notes).toEqual([]);
+  });
 });

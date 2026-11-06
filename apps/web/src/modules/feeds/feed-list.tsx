@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { FeedComposer } from "./feed-composer";
 import { FeedItemCard } from "./feed-item-card";
+import { useFeedsAccess } from "./feeds-access";
 import { type FeedScope, feedsApi } from "./feeds-api";
 
 export interface FeedListProps {
@@ -20,6 +21,7 @@ export interface FeedListProps {
 
 export function FeedList({ orgSlug, userId, scope, emptyKey, postRecord }: FeedListProps) {
   const t = useUiTranslations();
+  const canPost = useFeedsAccess().post;
   const api = useMemo(() => feedsApi(orgSlug), [orgSlug]);
   const queryClient = useQueryClient();
   const key = useMemo(
@@ -45,19 +47,21 @@ export function FeedList({ orgSlug, userId, scope, emptyKey, postRecord }: FeedL
 
   return (
     <div className="flex flex-col">
-      <div className="border-b border-border">
-        <FeedComposer
-          busy={busy}
-          onSubmit={async (html, mentions) => {
-            setBusy(true);
-            try {
-              await after(() => api.post(html, mentions, postRecord));
-            } finally {
-              setBusy(false);
-            }
-          }}
-        />
-      </div>
+      {canPost ? (
+        <div className="border-b border-border">
+          <FeedComposer
+            busy={busy}
+            onSubmit={async (html, mentions) => {
+              setBusy(true);
+              try {
+                await after(() => api.post(html, mentions, postRecord));
+              } finally {
+                setBusy(false);
+              }
+            }}
+          />
+        </div>
+      ) : null}
       {query.isError ? (
         <p role="alert" className="p-4 text-md text-danger">
           {t("feeds.loadFailed")}

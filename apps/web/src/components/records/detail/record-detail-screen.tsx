@@ -54,6 +54,7 @@ import {
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
 import { openActivityCreate } from "@/modules/activity-add-new";
+import { useFeedsAccess } from "@/modules/feeds/feeds-access";
 import { hasRecordFeed, RecordFeedTab, useFollowMenuGroup } from "@/modules/feeds/use-record-feed";
 import { resolveModuleLaterKey, resolveModuleScreenByApiName } from "@/modules/registry";
 import type {
@@ -174,6 +175,7 @@ export function RecordDetailScreen({
   const moduleQuery = useModule(moduleApiName);
   const recordQuery = useRecord(moduleApiName, recordId);
   const usersQuery = useUsers();
+  const feedsAccess = useFeedsAccess();
   const followGroup = useFollowMenuGroup(orgSlug, definition.apiName, recordId);
   const homeCurrencyQuery = useHomeCurrency({ enabled: Boolean(rules.headerCurrency) });
   const viewsQuery = useViews(moduleApiName, { enabled: viewsQueryEnabled });
@@ -697,7 +699,7 @@ export function RecordDetailScreen({
           ...(showTimeline
             ? [{ id: "timeline", label: t("records.detail.timeline"), content: timeline }]
             : []),
-          ...(hasRecordFeed(definition.apiName)
+          ...(feedsAccess.view && hasRecordFeed(definition.apiName)
             ? [
                 {
                   id: "feeds",

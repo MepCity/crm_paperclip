@@ -12,8 +12,6 @@ export const GET = apiRoute<{ module: string; recordId: string }>(
     return getFeedService(ctx).listForRecord(params.module, params.recordId, parsed.data);
   },
   {
-    permission: {
-      memberOnly: "Scoped to the signed-in actor; the feed service applies record visibility.",
-    },
+    permission: { feature: "feeds", action: "view" },
   },
 );

@@ -6,6 +6,7 @@ import type { RecordMenuGroup } from "@/components/records/detail/record-header"
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useCurrentUserId } from "@/lib/preferences";
 import { FeedList } from "./feed-list";
+import { useFeedsAccess } from "./feeds-access";
 import { feedsApi } from "./feeds-api";
 
 /** Modules with a record feed tab (ADR 0018 §8: Deals by default). */
@@ -42,7 +43,8 @@ export function useFollowMenuGroup(
   recordId: string,
 ): RecordMenuGroup | null {
   const t = useUiTranslations();
-  const enabled = hasRecordFeed(module);
+  const feedsView = useFeedsAccess().view;
+  const enabled = feedsView && hasRecordFeed(module);
   const api = useMemo(() => feedsApi(orgSlug), [orgSlug]);
   const queryClient = useQueryClient();
   const key = ["feeds", orgSlug, "follow", module, recordId];

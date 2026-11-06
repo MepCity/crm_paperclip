@@ -25,6 +25,28 @@ function snapshot(kind: "administrator" | "standard") {
   });
 }
 
+describe("feeds feature permission", () => {
+  it("is refused (403 path) without features.feeds.view and allowed with it", () => {
+    const perms = standardPermissions();
+    perms.features.feeds = { view: false, post: false };
+    const denied = buildAccessSnapshot({
+      orgId: "o",
+      userId: "u",
+      version: 1,
+      profile: { id: "p", kind: "standard", permissions: perms },
+      fieldRows: [],
+      roles: [{ id: "r", name: "CEO", parentRoleId: null, shareWithPeers: false }],
+      members: [{ userId: "u", roleId: "r", profileId: "p" }],
+      groupMembers: [],
+      defaults: [],
+      rules: [],
+    });
+    expect(permissionAllows(denied, { feature: "feeds", action: "view" })).toBe(false);
+    expect(permissionAllows(denied, { feature: "feeds", action: "post" })).toBe(false);
+    expect(permissionAllows(snapshot("standard"), { feature: "feeds", action: "post" })).toBe(true);
+  });
+});
+
 describe("permissionAllows", () => {
   const std = snapshot("standard");
   const admin = snapshot("administrator");
