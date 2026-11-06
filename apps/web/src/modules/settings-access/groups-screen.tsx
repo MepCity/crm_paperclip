@@ -6,6 +6,7 @@ import { Alert } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
+import { Icons } from "@/components/ui/icon";
 import { Select, SelectItem } from "@/components/ui/select";
 import {
   Table,
@@ -171,7 +172,10 @@ export function GroupsScreen({ orgSlug }: { orgSlug: string }) {
       title="Groups"
       actions={
         state.status === "ready" ? (
-          <GroupDialog orgSlug={orgSlug} dir={state.data} label="Create Group" onDone={reload} />
+          <span className="inline-flex items-center gap-1.5 text-sm text-text-muted">
+            <Icons.help aria-hidden className="size-4" />
+            Help
+          </span>
         ) : null
       }
     >
@@ -181,56 +185,79 @@ export function GroupsScreen({ orgSlug }: { orgSlug: string }) {
             Groups combine users, roles and other groups. Use them as the source or target of a
             sharing rule.
           </HelpText>
+          <div>
+            <GroupDialog orgSlug={orgSlug} dir={dir} label="Create Group" onDone={reload} />
+          </div>
           {deleteError ? <Alert variant="danger">{deleteError}</Alert> : null}
-          <Card>
-            <CardContent>
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Group Name</TableHead>
-                    <TableHead>Description</TableHead>
-                    <TableHead>Members</TableHead>
-                    <TableHead>Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody columnCount={4} emptyMessage="No groups have been created">
-                  {dir.groups.map((group) => (
-                    <TableRow key={group.id}>
-                      <TableCell>{group.name}</TableCell>
-                      <TableCell>{group.description}</TableCell>
-                      <TableCell>{group.members.length}</TableCell>
-                      <TableCell>
-                        <span className="inline-flex gap-2">
-                          <GroupDialog
-                            orgSlug={orgSlug}
-                            dir={dir}
-                            group={group}
-                            label="Edit"
-                            onDone={reload}
-                          />
-                          <Button
-                            variant="danger"
-                            aria-label={`Delete ${group.name}`}
-                            onPress={async () => {
-                              try {
-                                await api.deleteGroup(group.id);
-                                setDeleteError(null);
-                                reload();
-                              } catch (e) {
-                                setDeleteError(errorText(e));
-                              }
-                            }}
-                          >
-                            Delete
-                          </Button>
-                        </span>
-                      </TableCell>
+          {dir.groups.length === 0 ? (
+            <div className="flex flex-col items-center gap-3 py-12 text-center">
+              <svg
+                aria-hidden
+                viewBox="0 0 120 80"
+                className="h-24 w-36 text-primary-subtle"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="3"
+              >
+                <path d="M20 30 40 12h40l20 18v36H20z" className="text-border" />
+                <rect x="20" y="30" width="80" height="36" className="text-border" />
+                <circle cx="50" cy="48" r="2" fill="currentColor" className="text-border" />
+                <circle cx="70" cy="48" r="2" fill="currentColor" className="text-border" />
+              </svg>
+              <p className="text-sm text-text-muted">No groups have been created</p>
+            </div>
+          ) : null}
+          {dir.groups.length === 0 ? null : (
+            <Card>
+              <CardContent>
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead>Group Name</TableHead>
+                      <TableHead>Description</TableHead>
+                      <TableHead>Members</TableHead>
+                      <TableHead>Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </CardContent>
-          </Card>
+                  </TableHeader>
+                  <TableBody columnCount={4}>
+                    {dir.groups.map((group) => (
+                      <TableRow key={group.id}>
+                        <TableCell>{group.name}</TableCell>
+                        <TableCell>{group.description}</TableCell>
+                        <TableCell>{group.members.length}</TableCell>
+                        <TableCell>
+                          <span className="inline-flex gap-2">
+                            <GroupDialog
+                              orgSlug={orgSlug}
+                              dir={dir}
+                              group={group}
+                              label="Edit"
+                              onDone={reload}
+                            />
+                            <Button
+                              variant="danger"
+                              aria-label={`Delete ${group.name}`}
+                              onPress={async () => {
+                                try {
+                                  await api.deleteGroup(group.id);
+                                  setDeleteError(null);
+                                  reload();
+                                } catch (e) {
+                                  setDeleteError(errorText(e));
+                                }
+                              }}
+                            >
+                              Delete
+                            </Button>
+                          </span>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </CardContent>
+            </Card>
+          )}
         </>
       )}
     </Screen>

@@ -47,6 +47,8 @@ export type ProfileSummary = {
   kind: ProfileKind;
   memberCount: number;
   updatedAt: string;
+  createdByName: string | null;
+  modifiedByName: string | null;
 };
 export type ProfileDetail = ProfileSummary & { permissions: ProfilePermissions };
 export type RoleNode = {
@@ -151,6 +153,7 @@ async function profileCounts(tx: Transaction, orgId: string): Promise<Map<string
 function toProfile(
   row: typeof schema.accessProfiles.$inferSelect,
   counts: Map<string, number>,
+  names: Map<string, string> = new Map(),
 ): ProfileSummary {
   return {
     id: row.id,
@@ -159,7 +162,19 @@ function toProfile(
     kind: row.kind as ProfileKind,
     memberCount: counts.get(row.id) ?? 0,
     updatedAt: row.updatedAt.toISOString(),
+    createdByName: row.createdBy ? (names.get(row.createdBy) ?? null) : null,
+    modifiedByName: row.modifiedBy ? (names.get(row.modifiedBy) ?? null) : null,
   };
+}
+
+async function userNames(tx: Transaction, ids: (string | null)[]): Promise<Map<string, string>> {
+  const wanted = [...new Set(ids.filter((v): v is string => v !== null))];
+  if (wanted.length === 0) return new Map();
+  const rows = await tx
+    .select({ id: schema.users.id, name: schema.users.name })
+    .from(schema.users)
+    .where(inArray(schema.users.id, wanted));
+  return new Map(rows.map((r) => [r.id, r.name]));
 }
 
 async function loadProfile(tx: Transaction, orgId: string, id: string) {
@@ -179,7 +194,11 @@ export async function listProfiles(ctx: OrgContext): Promise<ProfileSummary[]> {
       .from(schema.accessProfiles)
       .where(eq(schema.accessProfiles.organizationId, ctx.orgId))
       .orderBy(asc(schema.accessProfiles.createdAt), asc(schema.accessProfiles.id));
-    return rows.map((r) => toProfile(r, counts));
+    const names = await userNames(
+      tx,
+      rows.flatMap((r) => [r.createdBy, r.modifiedBy]),
+    );
+    return rows.map((r) => toProfile(r, counts, names));
   });
 }
 
@@ -188,7 +207,11 @@ export async function getProfile(ctx: OrgContext, id: string): Promise<ProfileDe
   return read(ctx, async (tx) => {
     const row = await loadProfile(tx, ctx.orgId, profileId);
     return {
-      ...toProfile(row, await profileCounts(tx, ctx.orgId)),
+      ...toProfile(
+        row,
+        await profileCounts(tx, ctx.orgId),
+        await userNames(tx, [row.createdBy, row.modifiedBy]),
+      ),
       permissions: parseStoredPermissions(row.permissions),
     };
   });
