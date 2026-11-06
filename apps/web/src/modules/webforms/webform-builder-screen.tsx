@@ -253,7 +253,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
         <div className="flex items-center gap-4">
           <Link
             href={`/crm/${orgSlug}/settings/webforms`}
-            className="text-sm font-medium text-muted-foreground hover:text-foreground flex items-center gap-1"
+            className="text-sm font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1"
           >
             ← Webforms
           </Link>
@@ -289,7 +289,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
 
         <div className="flex items-center gap-2">
           {successMessage && (
-            <span className="text-xs text-success font-medium animate-fade-in mr-2">
+            <span className="text-xs text-success font-semibold animate-fade-in mr-2">
               {successMessage}
             </span>
           )}
@@ -383,7 +383,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                   onClick={() => handleAddField(eligible)}
                 >
                   <div className="flex items-center gap-1.5 truncate">
-                    <span className="font-medium truncate">{eligible.label}</span>
+                    <span className="font-semibold truncate">{eligible.label}</span>
                     {eligible.required && (
                       <span className="text-destructive font-bold text-sm leading-none">*</span>
                     )}
@@ -410,7 +410,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                 Form Fields ({fields.length})
               </span>
               {isReadOnly && (
-                <span className="text-xs text-amber-500 font-medium">
+                <span className="text-xs text-amber-500 font-semibold">
                   Viewing published version (Read-only)
                 </span>
               )}
@@ -454,7 +454,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                           {field.fieldApiName}
                         </span>
                         {isLayoutRequired && (
-                          <span className="text-[10px] text-destructive bg-destructive/10 px-1.5 py-0.5 rounded font-medium">
+                          <span className="text-[10px] text-destructive bg-destructive/10 px-1.5 py-0.5 rounded font-semibold">
                             Module Required
                           </span>
                         )}
@@ -477,7 +477,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                       <div className="flex flex-col gap-1">
                         <label
                           htmlFor={`field-label-${field.fieldApiName}`}
-                          className="text-xs font-medium text-foreground"
+                          className="text-xs font-semibold text-foreground"
                         >
                           Field Label
                         </label>
@@ -495,7 +495,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                       <div className="flex flex-col gap-1">
                         <label
                           htmlFor={`field-help-${field.fieldApiName}`}
-                          className="text-xs font-medium text-foreground"
+                          className="text-xs font-semibold text-foreground"
                         >
                           Help Text
                         </label>
@@ -552,7 +552,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                 <div className="flex items-center gap-3">
                   <label
                     htmlFor="submit-button-label-input"
-                    className="text-xs font-medium text-foreground"
+                    className="text-xs font-semibold text-foreground"
                   >
                     Button Label:
                   </label>
@@ -593,7 +593,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                     <div key={field.fieldApiName} className="flex flex-col gap-1 text-sm">
                       <label
                         htmlFor={`preview-field-${field.fieldApiName}`}
-                        className="font-medium text-foreground flex items-center gap-1"
+                        className="font-semibold text-foreground flex items-center gap-1"
                       >
                         {field.label}
                         {field.required && <span className="text-destructive">*</span>}
@@ -723,7 +723,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                   </h4>
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div className="flex flex-col gap-1">
-                      <label htmlFor="settings-owner-kind" className="font-medium">
+                      <label htmlFor="settings-owner-kind" className="font-semibold">
                         Assign Owner Kind
                       </label>
                       <select
@@ -743,7 +743,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                       </select>
                     </div>
                     <div className="flex flex-col gap-1">
-                      <label htmlFor="settings-owner-ref" className="font-medium">
+                      <label htmlFor="settings-owner-ref" className="font-semibold">
                         {settings.ownerKind === "user" ? "User ID / Ref" : "Rule Ref"}
                       </label>
                       <input
@@ -801,7 +801,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                   <div className="flex flex-col gap-2 pt-1">
                     <label
                       htmlFor="new-location-input"
-                      className="text-xs font-medium text-foreground"
+                      className="text-xs font-semibold text-foreground"
                     >
                       Allowed Form Locations (Origins)
                     </label>
@@ -877,7 +877,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                     Approvals & Double Opt-in
                   </h4>
                   <div className="flex items-center gap-3">
-                    <label htmlFor="settings-manual-approval" className="font-medium">
+                    <label htmlFor="settings-manual-approval" className="font-semibold">
                       Manual Approval:
                     </label>
                     <select
@@ -905,7 +905,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                   <h4 className="text-sm font-semibold text-foreground">Public Key Security</h4>
                   <div className="flex items-center justify-between p-3 rounded bg-muted/20 border border-border">
                     <div className="flex flex-col gap-0.5">
-                      <span className="font-medium text-foreground">Endpoint Public Key</span>
+                      <span className="font-semibold text-foreground">Endpoint Public Key</span>
                       <span className="text-[11px] text-muted-foreground">
                         128-bit random base64url key hashed in database.
                       </span>

@@ -234,6 +234,7 @@ describe("settingsNav", () => {
       "currencies",
       "calendar-booking",
       "email",
+      "webforms",
       "import-history",
       "export-history",
       "modules-and-fields",
@@ -320,6 +321,16 @@ describe("settingsNav", () => {
       isNavLinkActive(email, "demo", "/crm/demo/settings/email-configuration/email-sharing"),
     ).toBe(true);
     expect(isNavLinkActive(email, "demo", "/crm/demo/settings/users")).toBe(false);
+  });
+
+  it("exposes Webforms under Channels and matches its settings page", () => {
+    const webforms = settingsNav.find((link) => link.id === "webforms");
+    expect(webforms?.group).toBe("Channels");
+    expect(webforms?.href("demo")).toBe("/crm/demo/settings/webforms");
+    if (!webforms) return;
+    expect(isNavLinkActive(webforms, "demo", "/crm/demo/settings/webforms")).toBe(true);
+    expect(isNavLinkActive(webforms, "demo", "/crm/demo/settings/webforms/new")).toBe(true);
+    expect(isNavLinkActive(webforms, "demo", "/crm/demo/settings/users")).toBe(false);
   });
 
   it("groups transfer history links and matches only their own settings page", () => {

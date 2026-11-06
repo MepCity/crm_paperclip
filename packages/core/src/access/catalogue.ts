@@ -139,10 +139,43 @@ export function parseStoredPermissions(value: unknown): ProfilePermissions {
 const all = (): ModuleApiName[] => [...OWNED_MODULES];
 
 /** Administrator: every key true, every module listed. Not editable. */
-export function administratorPermissions(): ProfilePermissions {
+export function administratorPermissions(opts?: { schemaVersion?: 2 }): ProfilePermissions;
+export function administratorPermissions(opts: { schemaVersion: 1 }): Record<string, unknown>;
+export function administratorPermissions(opts?: {
+  schemaVersion?: 1 | 2;
+}): ProfilePermissions | Record<string, unknown> {
+  const version = opts?.schemaVersion ?? SCHEMA_VERSION;
   const full = { view: true, create: true, edit: true, delete: true };
+  const adminPart =
+    version === 1
+      ? {
+          userManagement: true,
+          moduleCustomization: true,
+          manageCurrencies: true,
+          customizeHome: true,
+          manageAutomation: true,
+          manageTemplates: true,
+          emailSettings: true,
+          dataManagement: true,
+          viewAllRecords: all(),
+          modifyAllRecords: all(),
+        }
+      : {
+          userManagement: true,
+          moduleCustomization: true,
+          manageCurrencies: true,
+          customizeHome: true,
+          manageAutomation: true,
+          manageTemplates: true,
+          emailSettings: true,
+          dataManagement: true,
+          manageWebforms: true,
+          viewAllRecords: all(),
+          modifyAllRecords: all(),
+        };
+
   return {
-    schemaVersion: SCHEMA_VERSION,
+    schemaVersion: version,
     modules: Object.fromEntries(OWNED_MODULES.map((m) => [m, { ...full }])) as Record<
       ModuleApiName,
       typeof full
@@ -177,19 +210,7 @@ export function administratorPermissions(): ProfilePermissions {
       recordTimeline: true,
       onlyListSubordinates: false,
     },
-    admin: {
-      userManagement: true,
-      moduleCustomization: true,
-      manageCurrencies: true,
-      customizeHome: true,
-      manageAutomation: true,
-      manageTemplates: true,
-      emailSettings: true,
-      dataManagement: true,
-      manageWebforms: true,
-      viewAllRecords: all(),
-      modifyAllRecords: all(),
-    },
+    admin: adminPart,
   };
 }
 
@@ -197,23 +218,43 @@ export function administratorPermissions(): ProfilePermissions {
  * Standard: Administrator minus every `admin.*` permission. The reference also drops a few
  * export/print entries of modules we do not ship, so there is nothing further to remove.
  */
-export function standardPermissions(): ProfilePermissions {
-  const base = administratorPermissions();
+export function standardPermissions(opts?: { schemaVersion?: 2 }): ProfilePermissions;
+export function standardPermissions(opts: { schemaVersion: 1 }): Record<string, unknown>;
+export function standardPermissions(opts?: {
+  schemaVersion?: 1 | 2;
+}): ProfilePermissions | Record<string, unknown> {
+  const version = opts?.schemaVersion ?? SCHEMA_VERSION;
+  const base = administratorPermissions(opts as { schemaVersion?: 2 });
+  const adminPart =
+    version === 1
+      ? {
+          userManagement: false,
+          moduleCustomization: false,
+          manageCurrencies: false,
+          customizeHome: false,
+          manageAutomation: false,
+          manageTemplates: false,
+          emailSettings: false,
+          dataManagement: false,
+          viewAllRecords: [],
+          modifyAllRecords: [],
+        }
+      : {
+          userManagement: false,
+          moduleCustomization: false,
+          manageCurrencies: false,
+          customizeHome: false,
+          manageAutomation: false,
+          manageTemplates: false,
+          emailSettings: false,
+          dataManagement: false,
+          manageWebforms: false,
+          viewAllRecords: [],
+          modifyAllRecords: [],
+        };
   return {
     ...base,
-    admin: {
-      userManagement: false,
-      moduleCustomization: false,
-      manageCurrencies: false,
-      customizeHome: false,
-      manageAutomation: false,
-      manageTemplates: false,
-      emailSettings: false,
-      dataManagement: false,
-      manageWebforms: false,
-      viewAllRecords: [],
-      modifyAllRecords: [],
-    },
+    admin: adminPart,
   };
 }
 

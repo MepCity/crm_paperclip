@@ -221,7 +221,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
           role="tab"
           aria-selected={activeTab === "webforms"}
           onClick={() => setActiveTab("webforms")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "webforms"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
@@ -234,7 +234,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
           role="tab"
           aria-selected={activeTab === "auto-response-rules"}
           onClick={() => setActiveTab("auto-response-rules")}
-          className={`px-4 py-2 text-sm font-medium border-b-2 transition-colors ${
+          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "auto-response-rules"
               ? "border-primary text-primary"
               : "border-transparent text-muted-foreground hover:text-foreground"
@@ -330,7 +330,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
             /* Populated Table of Webforms */
             <div className="border border-border rounded-lg overflow-hidden bg-card">
               <table className="w-full text-left text-sm" data-testid="webforms-table">
-                <thead className="bg-muted/50 border-b border-border text-muted-foreground font-medium">
+                <thead className="bg-muted/50 border-b border-border text-muted-foreground font-semibold">
                   <tr>
                     <th className="px-4 py-3">Form Name</th>
                     <th className="px-4 py-3">Module</th>
@@ -342,7 +342,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                 <tbody className="divide-y divide-border">
                   {forms.map((form) => (
                     <tr key={form.id} className="hover:bg-muted/20 transition-colors">
-                      <td className="px-4 py-3 font-medium">
+                      <td className="px-4 py-3 font-semibold">
                         <Link
                           href={`/crm/${orgSlug}/settings/webforms/${form.id}`}
                           className="text-primary hover:underline"
@@ -409,7 +409,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <label htmlFor="rule-module-filter" className="text-sm font-medium text-foreground">
+              <label htmlFor="rule-module-filter" className="text-sm font-semibold text-foreground">
                 Filter Module:
               </label>
               <select
@@ -458,7 +458,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
           ) : (
             <div className="border border-border rounded-lg overflow-hidden bg-card">
               <table className="w-full text-left text-sm" data-testid="rules-table">
-                <thead className="bg-muted/50 border-b border-border text-muted-foreground font-medium">
+                <thead className="bg-muted/50 border-b border-border text-muted-foreground font-semibold">
                   <tr>
                     <th className="px-4 py-3 w-12">Order</th>
                     <th className="px-4 py-3">Rule Name</th>
@@ -472,7 +472,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                   {rules.map((rule, idx) => (
                     <tr key={rule.id} className="hover:bg-muted/20 transition-colors">
                       <td className="px-4 py-3 text-muted-foreground text-xs">{idx + 1}</td>
-                      <td className="px-4 py-3 font-medium text-foreground">{rule.name}</td>
+                      <td className="px-4 py-3 font-semibold text-foreground">{rule.name}</td>
                       <td className="px-4 py-3 text-muted-foreground">{rule.module}</td>
                       <td className="px-4 py-3 text-muted-foreground text-xs">
                         {rule.criteria.kind === "all_records"
@@ -553,7 +553,10 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                   </div>
                 )}
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="form-name-input" className="text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="form-name-input"
+                    className="text-sm font-semibold text-foreground"
+                  >
                     Form Name <span className="text-destructive">*</span>
                   </label>
                   <input
@@ -569,7 +572,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                 <div className="flex flex-col gap-1.5">
                   <label
                     htmlFor="form-module-select"
-                    className="text-sm font-medium text-foreground"
+                    className="text-sm font-semibold text-foreground"
                   >
                     Module <span className="text-destructive">*</span>
                   </label>
@@ -638,7 +641,10 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
               </Heading>
               <div className="flex flex-col gap-4 py-2">
                 <div className="flex flex-col gap-1.5">
-                  <label htmlFor="rule-name-input" className="text-sm font-medium text-foreground">
+                  <label
+                    htmlFor="rule-name-input"
+                    className="text-sm font-semibold text-foreground"
+                  >
                     Rule Name <span className="text-destructive">*</span>
                   </label>
                   <input
@@ -654,7 +660,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                   <div className="flex flex-col gap-1.5">
                     <label
                       htmlFor="rule-module-select"
-                      className="text-sm font-medium text-foreground"
+                      className="text-sm font-semibold text-foreground"
                     >
                       Module
                     </label>
