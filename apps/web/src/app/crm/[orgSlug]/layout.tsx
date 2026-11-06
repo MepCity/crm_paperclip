@@ -26,6 +26,8 @@ export default async function OrganizationLayout({
   const access = await getAccessSnapshot(org);
   const canInvite =
     access.profileKind === "administrator" || access.permissions.admin.userManagement;
+  const feedsFeature = access.permissions.features.feeds;
+  const admin = access.profileKind === "administrator";
   return (
     <AppShell
       orgSlug={orgSlug}
@@ -33,6 +35,7 @@ export default async function OrganizationLayout({
       user={{ id: user.id, name: user.name, email: user.email }}
       inviteAction={boundInviteAction}
       canInvite={canInvite}
+      feedsAccess={{ view: admin || feedsFeature.view, post: admin || feedsFeature.post }}
     >
       <PreferenceProvider orgSlug={orgSlug} userId={user.id}>
         <FormatProvider format={format}>{children}</FormatProvider>
