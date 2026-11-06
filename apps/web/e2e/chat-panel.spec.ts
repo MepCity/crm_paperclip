@@ -177,9 +177,9 @@ test("two members of one organization chat live: send, unread, read, edit, delet
   const organization = await createOrganization(page, "Live Chat Org");
 
   // Ada invites Bea through the members page (reuses the invitation flow).
-  await page.goto(`/crm/${organization.slug}/settings/members`);
+  await page.goto(`/crm/${organization.slug}/settings/users`);
   const beaEmail = `bea-${crypto.randomUUID()}@example.test`;
-  await page.getByRole("button", { name: "Invite member" }).click();
+  await page.getByRole("button", { name: "New User" }).click();
   const inviteDialog = page.getByRole("dialog", { name: "Invite member" });
   await inviteDialog.getByRole("textbox", { name: "Email" }).fill(beaEmail);
   await inviteDialog.getByRole("button", { name: "Create invitation" }).click();

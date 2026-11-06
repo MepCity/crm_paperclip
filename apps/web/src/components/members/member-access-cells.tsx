@@ -3,22 +3,29 @@
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Select, SelectItem } from "@/components/ui/select";
-import { TableCell } from "@/components/ui/table";
 import { createAccessClient } from "@/modules/settings-access/api";
 import { errorText } from "@/modules/settings-access/shared";
-import type { MemberAccessInfo } from "./members-table";
 
-/** Profile and access-role pickers of one member row (ADR 0017 §9); admin only. */
-export function MemberAccessCells({
+export type MemberAccessInfo = {
+  orgSlug: string;
+  profiles: readonly { id: string; name: string }[];
+  roles: readonly { id: string; name: string }[];
+  byUser: Readonly<Record<string, { profileId: string; roleId: string; isOwner: boolean }>>;
+};
+
+/** Profile and access-role pickers of one member (ADR 0017 §9); admin only. */
+export function MemberAccessPickers({
   access,
   userId,
   name,
   report,
+  showLabels = false,
 }: {
   access: MemberAccessInfo;
   userId: string;
   name: string;
   report: (message: string | null) => void;
+  showLabels?: boolean;
 }) {
   const router = useRouter();
   const current = access.byUser[userId];
@@ -40,7 +47,12 @@ export function MemberAccessCells({
 
   return (
     <>
-      <TableCell>
+      <div className="flex flex-col gap-1">
+        {showLabels ? (
+          <span aria-hidden="true" className="text-sm text-text-muted">
+            Profile
+          </span>
+        ) : null}
         <Select
           label={`Profile of ${name}`}
           hideLabel
@@ -54,8 +66,13 @@ export function MemberAccessCells({
         >
           {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
         </Select>
-      </TableCell>
-      <TableCell>
+      </div>
+      <div className="flex flex-col gap-1">
+        {showLabels ? (
+          <span aria-hidden="true" className="text-sm text-text-muted">
+            Role
+          </span>
+        ) : null}
         <Select
           label={`Access role of ${name}`}
           hideLabel
@@ -69,7 +86,7 @@ export function MemberAccessCells({
         >
           {(item) => <SelectItem id={item.id}>{item.name}</SelectItem>}
         </Select>
-      </TableCell>
+      </div>
     </>
   );
 }

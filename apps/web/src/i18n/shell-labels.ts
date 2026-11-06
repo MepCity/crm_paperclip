@@ -30,6 +30,7 @@ const keys: Record<string, keyof typeof english.shell> = {
   feeds: "feeds",
   general: "general",
   members: "members",
+  users: "users",
   "personal-settings": "personal-settings",
   "company-details": "company-details",
   currencies: "currencies",

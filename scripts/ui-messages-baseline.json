@@ -60,12 +60,6 @@
     "hash": "39414102545e7861"
   },
   {
-    "file": "apps/web/src/app/crm/[orgSlug]/settings/members/page.tsx",
-    "line": 46,
-    "column": 21,
-    "hash": "58caefbcdfa1efb1"
-  },
-  {
     "file": "apps/web/src/app/crm/[orgSlug]/settings/recycle-bin/page.tsx",
     "line": 7,
     "column": 34,
@@ -319,111 +313,69 @@
   },
   {
     "file": "apps/web/src/components/members/invite-member-dialog.tsx",
-    "line": 37,
-    "column": 15,
+    "line": 40,
+    "column": 27,
     "hash": "08aa7a0b9da3df52"
   },
   {
     "file": "apps/web/src/components/members/invite-member-dialog.tsx",
-    "line": 38,
+    "line": 41,
     "column": 21,
     "hash": "08aa7a0b9da3df52"
   },
   {
     "file": "apps/web/src/components/members/invite-member-dialog.tsx",
-    "line": 66,
+    "line": 69,
     "column": 37,
     "hash": "969ccbd3cf6300ec"
   },
   {
     "file": "apps/web/src/components/members/invite-member-dialog.tsx",
-    "line": 67,
+    "line": 70,
     "column": 33,
     "hash": "14736a2eb9f4159f"
   },
   {
     "file": "apps/web/src/components/members/invite-member-dialog.tsx",
-    "line": 74,
+    "line": 77,
     "column": 19,
     "hash": "d696a35bdd1883da"
   },
   {
     "file": "apps/web/src/components/members/invite-member-dialog.tsx",
-    "line": 82,
+    "line": 85,
     "column": 19,
     "hash": "001fbe38fbaefeb4"
   },
   {
     "file": "apps/web/src/components/members/invite-member-dialog.tsx",
-    "line": 90,
+    "line": 93,
     "column": 21,
     "hash": "a6612262af018ade"
   },
   {
     "file": "apps/web/src/components/members/invite-member-dialog.tsx",
-    "line": 109,
+    "line": 112,
     "column": 46,
     "hash": "0a09e036692f5d8d"
   },
   {
     "file": "apps/web/src/components/members/invite-member-dialog.tsx",
-    "line": 112,
+    "line": 115,
     "column": 49,
     "hash": "7d9eb7acb13e2462"
   },
   {
-    "file": "apps/web/src/components/members/members-table.tsx",
-    "line": 71,
-    "column": 26,
-    "hash": "dcd1d5223f73b3a9"
-  },
-  {
-    "file": "apps/web/src/components/members/members-table.tsx",
-    "line": 72,
-    "column": 26,
-    "hash": "969ccbd3cf6300ec"
-  },
-  {
-    "file": "apps/web/src/components/members/members-table.tsx",
-    "line": 73,
-    "column": 26,
-    "hash": "14736a2eb9f4159f"
-  },
-  {
-    "file": "apps/web/src/components/members/members-table.tsx",
-    "line": 74,
-    "column": 36,
+    "file": "apps/web/src/components/members/member-access-cells.tsx",
+    "line": 52,
+    "column": 72,
     "hash": "d696a35bdd1883da"
   },
   {
-    "file": "apps/web/src/components/members/members-table.tsx",
-    "line": 75,
-    "column": 36,
-    "hash": "001fbe38fbaefeb4"
-  },
-  {
-    "file": "apps/web/src/components/members/members-table.tsx",
-    "line": 76,
-    "column": 26,
-    "hash": "69318b0c6a928e7e"
-  },
-  {
-    "file": "apps/web/src/components/members/members-table.tsx",
-    "line": 77,
-    "column": 39,
-    "hash": "ff8059dc6752afdd"
-  },
-  {
-    "file": "apps/web/src/components/members/members-table.tsx",
-    "line": 80,
-    "column": 61,
-    "hash": "98df596f0d79204e"
-  },
-  {
-    "file": "apps/web/src/components/members/members-table.tsx",
-    "line": 86,
-    "column": 63,
-    "hash": "08b041935798fbf6"
+    "file": "apps/web/src/components/members/member-access-cells.tsx",
+    "line": 72,
+    "column": 72,
+    "hash": "14736a2eb9f4159f"
   },
   {
     "file": "apps/web/src/components/members/remove-member-button.tsx",
@@ -3241,127 +3193,121 @@
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 143,
+    "line": 145,
     "column": 14,
     "hash": "f1b7505afa5c9e2b"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 173,
+    "line": 175,
     "column": 10,
     "hash": "b4e929d8bcfe0418"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 200,
+    "line": 202,
     "column": 14,
     "hash": "3a78695388b38b5c"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 208,
+    "line": 210,
     "column": 14,
     "hash": "24984fe2592707f8"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 217,
+    "line": 219,
     "column": 14,
     "hash": "dacca3cba3f346a4"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 226,
+    "line": 228,
     "column": 14,
     "hash": "94c116ee118a7299"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 236,
+    "line": 238,
     "column": 14,
     "hash": "0d24b42db450ca85"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 242,
+    "line": 244,
     "column": 18,
     "hash": "090512d93fcc3c0d"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 247,
+    "line": 249,
     "column": 22,
     "hash": "f514c310bd9e7f02"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 264,
+    "line": 266,
     "column": 12,
     "hash": "c910d474dcd724bf"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 272,
-    "column": 12,
-    "hash": "1044a4c056d0d685"
-  },
-  {
-    "file": "apps/web/src/components/shell/nav.ts",
-    "line": 280,
+    "line": 283,
     "column": 12,
     "hash": "2c57faa0b6257edd"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 288,
+    "line": 291,
     "column": 12,
     "hash": "a749cc4a01647267"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 296,
+    "line": 299,
     "column": 12,
     "hash": "d079ee92c1cb3559"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 304,
+    "line": 307,
     "column": 12,
     "hash": "fadf4711a2619a30"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 312,
+    "line": 315,
     "column": 12,
     "hash": "969ccbd3cf6300ec"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 321,
+    "line": 324,
     "column": 12,
     "hash": "ef9992233a1892eb"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 329,
+    "line": 332,
     "column": 12,
     "hash": "6ee71699e8b69061"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 337,
+    "line": 340,
     "column": 12,
     "hash": "31d61c75fac97fd9"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 345,
+    "line": 348,
     "column": 12,
     "hash": "39c7fb1dc54fd272"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 354,
+    "line": 357,
     "column": 12,
     "hash": "b186714a4117b87a"
   },
@@ -9589,81 +9535,135 @@
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 17,
+    "line": 18,
     "column": 30,
     "hash": "cf8d2d856900e000"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 18,
+    "line": 19,
     "column": 29,
     "hash": "ca1048507ded5d1d"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 19,
+    "line": 20,
     "column": 26,
     "hash": "e43a5f8abe7cba61"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 35,
+    "line": 38,
     "column": 33,
     "hash": "14688ba5dde1a12b"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 38,
-    "column": 21,
-    "hash": "425172cafd9a57a0"
+    "line": 49,
+    "column": 73,
+    "hash": "76c86c4c32432be3"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 44,
-    "column": 19,
-    "hash": "f148224ae44fb843"
+    "line": 50,
+    "column": 31,
+    "hash": "76c86c4c32432be3"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 51,
-    "column": 42,
-    "hash": "535e52e4a2616ebe"
+    "line": 74,
+    "column": 28,
+    "hash": "6902614f9cee5f26"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 119,
+    "line": 80,
+    "column": 18,
+    "hash": "6f7cb7b186500043"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
+    "line": 86,
+    "column": 18,
+    "hash": "14688ba5dde1a12b"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
+    "line": 90,
+    "column": 25,
+    "hash": "c2a29dbceda905b7"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
+    "line": 96,
+    "column": 25,
+    "hash": "d696a35bdd1883da"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
+    "line": 111,
+    "column": 32,
+    "hash": "ae0215400b52c4bb"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
+    "line": 112,
+    "column": 33,
+    "hash": "ae0215400b52c4bb"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
+    "line": 118,
+    "column": 79,
+    "hash": "64e945a913597205"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
+    "line": 189,
     "column": 60,
     "hash": "ba3bbbe10d8bef66"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 147,
-    "column": 43,
+    "line": 219,
+    "column": 51,
     "hash": "def7a15bb5e12728"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 149,
-    "column": 33,
+    "line": 221,
+    "column": 31,
     "hash": "2791be6450744f26"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 154,
-    "column": 36,
-    "hash": "f45fc1dfdc96db27"
+    "line": 224,
+    "column": 20,
+    "hash": "2d4b87972ac23045"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 171,
+    "line": 233,
+    "column": 55,
+    "hash": "616f48c1db195b6f"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
+    "line": 250,
     "column": 73,
     "hash": "89db19f651b18285"
   },
   {
     "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
-    "line": 192,
-    "column": 53,
+    "line": 273,
+    "column": 71,
     "hash": "1509f561f2416598"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/field-permissions-screen.tsx",
+    "line": 283,
+    "column": 12,
+    "hash": "19766ed6ccb2f4a3"
   },
   {
     "file": "apps/web/src/modules/settings-access/groups-screen.tsx",
@@ -9811,345 +9811,423 @@
   },
   {
     "file": "apps/web/src/modules/settings-access/nav.ts",
-    "line": 8,
+    "line": 11,
     "column": 12,
     "hash": "535e52e4a2616ebe"
   },
   {
     "file": "apps/web/src/modules/settings-access/nav.ts",
-    "line": 18,
+    "line": 21,
     "column": 12,
-    "hash": "c25337055464f8d3"
+    "hash": "f109bcca3b67df24"
   },
   {
     "file": "apps/web/src/modules/settings-access/nav.ts",
-    "line": 28,
-    "column": 12,
-    "hash": "39bbb719fa2b9d22"
-  },
-  {
-    "file": "apps/web/src/modules/settings-access/nav.ts",
-    "line": 38,
-    "column": 12,
-    "hash": "79cc9575cb100bc6"
-  },
-  {
-    "file": "apps/web/src/modules/settings-access/nav.ts",
-    "line": 48,
+    "line": 32,
     "column": 12,
     "hash": "14688ba5dde1a12b"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 31,
+    "line": 37,
     "column": 12,
     "hash": "05e8403c971d4eaa"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 32,
+    "line": 38,
     "column": 12,
     "hash": "3664895579f0a7e6"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 33,
+    "line": 41,
     "column": 12,
     "hash": "5908bccf22118371"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 34,
+    "line": 42,
     "column": 12,
     "hash": "170091c2d41b044c"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 35,
+    "line": 43,
     "column": 12,
     "hash": "04709dd01d337a11"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 36,
+    "line": 46,
     "column": 12,
     "hash": "5a264945a25df60f"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 37,
+    "line": 47,
     "column": 12,
     "hash": "530a52df6978414f"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 38,
+    "line": 48,
     "column": 12,
     "hash": "00c10076da9bef65"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 39,
+    "line": 49,
     "column": 12,
     "hash": "631916d1e0e8561f"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 40,
+    "line": 50,
     "column": 12,
     "hash": "5cd425f518c2e59a"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 41,
+    "line": 51,
     "column": 12,
     "hash": "29887a5ff9846ccc"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 42,
+    "line": 52,
     "column": 12,
     "hash": "1029a1a7a81b987e"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 43,
+    "line": 53,
     "column": 12,
     "hash": "796d995d764dbd6f"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 44,
-    "column": 12,
-    "hash": "f7cd0d3618163b78"
-  },
-  {
-    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 45,
-    "column": 12,
-    "hash": "0dd01224ae6addf9"
-  },
-  {
-    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 49,
+    "line": 56,
     "column": 12,
     "hash": "1ce025f4ac24ed9f"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 50,
+    "line": 57,
     "column": 12,
     "hash": "1331275bc537b4c2"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 51,
-    "column": 12,
-    "hash": "49aaee80f3223389"
-  },
-  {
-    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 52,
+    "line": 58,
     "column": 12,
     "hash": "351980a9ec310a50"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 53,
+    "line": 59,
+    "column": 12,
+    "hash": "49aaee80f3223389"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 62,
     "column": 12,
     "hash": "fe45f3a1addc213e"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 54,
+    "line": 63,
     "column": 12,
     "hash": "28cf2ece572b1aa1"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 55,
+    "line": 64,
     "column": 12,
     "hash": "a18476703e7d35a7"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 56,
+    "line": 65,
     "column": 12,
     "hash": "ea07dc5106470efd"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 57,
+    "line": 68,
     "column": 12,
-    "hash": "b6075a0b6da10528"
+    "hash": "f7cd0d3618163b78"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 58,
+    "line": 69,
     "column": 12,
-    "hash": "cb930c763b0b9428"
+    "hash": "0dd01224ae6addf9"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 59,
+    "line": 72,
     "column": 12,
     "hash": "e1422a80344e19f7"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 60,
+    "line": 73,
+    "column": 12,
+    "hash": "cb930c763b0b9428"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 76,
+    "column": 12,
+    "hash": "b6075a0b6da10528"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 79,
     "column": 12,
     "hash": "b428e6898ddd0296"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 95,
+    "column": 29,
+    "hash": "0e35f6e9742e074d"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 96,
+    "column": 37,
+    "hash": "42191ef46da3531a"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 97,
+    "column": 34,
+    "hash": "5908bccf22118371"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 98,
+    "column": 29,
+    "hash": "ea93d6a262ecb87a"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
     "line": 99,
-    "column": 22,
+    "column": 29,
+    "hash": "f97e9da0e3b879f0"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 105,
+    "column": 43,
+    "hash": "ab067cffaa7e10c4"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 106,
+    "column": 39,
+    "hash": "d69dfc13c06585a6"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 107,
+    "column": 34,
+    "hash": "d909750b1bbb71a3"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 108,
+    "column": 39,
+    "hash": "b428e6898ddd0296"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 265,
+    "column": 55,
     "hash": "4de949dd1c2e48c5"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 133,
-    "column": 22,
-    "hash": "5697d03daef4de9c"
+    "line": 266,
+    "column": 37,
+    "hash": "5edfc7a7698573d2"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 160,
-    "column": 22,
-    "hash": "4683d83acf332ebc"
+    "line": 324,
+    "column": 45,
+    "hash": "42191ef46da3531a"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 172,
-    "column": 41,
-    "hash": "28391d3bc64ec15c"
+    "line": 327,
+    "column": 42,
+    "hash": "5908bccf22118371"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 172,
-    "column": 67,
-    "hash": "dd0cf71843ec384e"
+    "line": 330,
+    "column": 37,
+    "hash": "ea93d6a262ecb87a"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 206,
-    "column": 22,
-    "hash": "9870ac0a15859e67"
+    "line": 334,
+    "column": 37,
+    "hash": "f97e9da0e3b879f0"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 244,
+    "line": 335,
+    "column": 53,
+    "hash": "22168599831c8c9b"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 340,
+    "column": 60,
+    "hash": "b44dcdaa9595f831"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 341,
+    "column": 51,
+    "hash": "3d314f37bfe9f104"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 347,
+    "column": 47,
+    "hash": "d69dfc13c06585a6"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 350,
+    "column": 42,
+    "hash": "d909750b1bbb71a3"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 353,
+    "column": 47,
+    "hash": "b428e6898ddd0296"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 363,
+    "column": 18,
+    "hash": "453b79a7862b1e0a"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 398,
     "column": 33,
     "hash": "d696a35bdd1883da"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 315,
+    "line": 477,
     "column": 71,
     "hash": "657ca8453f1099bd"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 318,
+    "line": 480,
     "column": 59,
     "hash": "468998b19c63db69"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 319,
-    "column": 28,
-    "hash": "6725e7bbcd28f3a8"
-  },
-  {
-    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 326,
+    "line": 487,
     "column": 19,
     "hash": "5779f32fab00c2aa"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 328,
-    "column": 79,
+    "line": 489,
+    "column": 77,
     "hash": "3b7446e94014c702"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 343,
-    "column": 16,
-    "hash": "19766ed6ccb2f4a3"
-  },
-  {
-    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 346,
-    "column": 55,
-    "hash": "1509f561f2416598"
-  },
-  {
-    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 358,
+    "line": 501,
     "column": 14,
     "hash": "464c4ffd019e1e96"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 364,
+    "line": 507,
     "column": 40,
     "hash": "e2d0a54968ead24e"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 365,
+    "line": 508,
     "column": 29,
     "hash": "47311af432a79c40"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 372,
+    "line": 515,
     "column": 48,
     "hash": "826077c7d6fb0ff0"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 376,
+    "line": 519,
     "column": 33,
     "hash": "05afa914fdb9e816"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 385,
+    "line": 528,
     "column": 56,
     "hash": "c2e5f0fa1f8aff05"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 388,
+    "line": 531,
     "column": 67,
     "hash": "19766ed6ccb2f4a3"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 401,
+    "line": 544,
     "column": 24,
     "hash": "47311af432a79c40"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 419,
-    "column": 53,
+    "line": 562,
+    "column": 51,
     "hash": "c1632eafd4468cab"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 423,
+    "line": 566,
     "column": 28,
     "hash": "d3663280e101b56d"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 424,
+    "line": 567,
     "column": 27,
     "hash": "526e0087cc3f254d"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 587,
+    "column": 51,
+    "hash": "1509f561f2416598"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 590,
+    "column": 73,
+    "hash": "19766ed6ccb2f4a3"
   },
   {
     "file": "apps/web/src/modules/settings-access/profiles-screen.tsx",
@@ -10416,10 +10494,322 @@
     "hash": "e49dfd511658cc5a"
   },
   {
+    "file": "apps/web/src/modules/settings-access/settings-tabs.tsx",
+    "line": 13,
+    "column": 12,
+    "hash": "f3fcc2e819e8fc9e"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/settings-tabs.tsx",
+    "line": 15,
+    "column": 29,
+    "hash": "6b0cc904d081a8c1"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/settings-tabs.tsx",
+    "line": 16,
+    "column": 30,
+    "hash": "39bbb719fa2b9d22"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/settings-tabs.tsx",
+    "line": 17,
+    "column": 38,
+    "hash": "f11fc8567667cbba"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/settings-tabs.tsx",
+    "line": 21,
+    "column": 12,
+    "hash": "b132be9f8e60f188"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/settings-tabs.tsx",
+    "line": 23,
+    "column": 29,
+    "hash": "c25337055464f8d3"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/settings-tabs.tsx",
+    "line": 24,
+    "column": 36,
+    "hash": "2a8a13ea304738cb"
+  },
+  {
     "file": "apps/web/src/modules/settings-access/shared.tsx",
     "line": 65,
     "column": 62,
     "hash": "ba3bbbe10d8bef66"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 136,
+    "column": 21,
+    "hash": "6e07a34f319ff2ca"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 154,
+    "column": 76,
+    "hash": "31527ebb90114034"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 165,
+    "column": 32,
+    "hash": "f57c41b7266c0034"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 177,
+    "column": 45,
+    "hash": "f11fc8567667cbba"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 186,
+    "column": 23,
+    "hash": "5236895593a9448c"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 198,
+    "column": 26,
+    "hash": "e4bb77af4bc57267"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 199,
+    "column": 27,
+    "hash": "49c266baaaa70981"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 205,
+    "column": 26,
+    "hash": "6b0cc904d081a8c1"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 207,
+    "column": 72,
+    "hash": "ce0171e51b07c9d6"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 246,
+    "column": 65,
+    "hash": "08b041935798fbf6"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 306,
+    "column": 101,
+    "hash": "cd55f733e210a64a"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 310,
+    "column": 131,
+    "hash": "cd55f733e210a64a"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 375,
+    "column": 28,
+    "hash": "05b88d18fc0d8eb2"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 393,
+    "column": 55,
+    "hash": "9feceb9333b5ff62"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 434,
+    "column": 26,
+    "hash": "d9d17b8264af6ed3"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 435,
+    "column": 24,
+    "hash": "96ce6e6193a04726"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 436,
+    "column": 24,
+    "hash": "f55563b386a39dc3"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 437,
+    "column": 24,
+    "hash": "969ccbd3cf6300ec"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 442,
+    "column": 24,
+    "hash": "14736a2eb9f4159f"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 443,
+    "column": 24,
+    "hash": "d696a35bdd1883da"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 444,
+    "column": 24,
+    "hash": "b19e02e9502bbe5a"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 445,
+    "column": 24,
+    "hash": "63dceb8800b2dd4a"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 446,
+    "column": 24,
+    "hash": "cbaad3cf4a6507e5"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 447,
+    "column": 24,
+    "hash": "b5a229ac8becc603"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 448,
+    "column": 24,
+    "hash": "00d84ab46e6345e1"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 449,
+    "column": 24,
+    "hash": "fdc739f52650c2c8"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 451,
+    "column": 26,
+    "hash": "fb82e2f02e7fce77"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 452,
+    "column": 24,
+    "hash": "c666591df0537cf2"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 453,
+    "column": 24,
+    "hash": "fc33f73246f48295"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 454,
+    "column": 24,
+    "hash": "a3b50c476732c740"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 455,
+    "column": 24,
+    "hash": "a8fca6c77cabd144"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 456,
+    "column": 24,
+    "hash": "701d021d08c54579"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 458,
+    "column": 26,
+    "hash": "95015bf4fedba16e"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 459,
+    "column": 24,
+    "hash": "dfd60b9aa5ca29f4"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 460,
+    "column": 24,
+    "hash": "6015680f13679068"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 461,
+    "column": 24,
+    "hash": "3ffa444cffc9214a"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 462,
+    "column": 24,
+    "hash": "d19e9b0fd1621b24"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 464,
+    "column": 26,
+    "hash": "031c2d79d71a06af"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 465,
+    "column": 24,
+    "hash": "a4fe65264ef7dbb3"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 466,
+    "column": 24,
+    "hash": "7525e706b521c568"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 467,
+    "column": 24,
+    "hash": "75643a210b6595a7"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 468,
+    "column": 24,
+    "hash": "c93f7ba4644529a1"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 471,
+    "column": 24,
+    "hash": "2545516e175b818b"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 473,
+    "column": 26,
+    "hash": "39bbb719fa2b9d22"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/users-screen.tsx",
+    "line": 474,
+    "column": 24,
+    "hash": "74ad5a16135be83a"
   },
   {
     "file": "apps/web/src/modules/settings-modules/fields-api.ts",

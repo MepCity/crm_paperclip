@@ -117,8 +117,8 @@ for (const module of modules) {
       // Add a real member through the existing invitation flow, without altering seeds.
       const email = `bulk-owner-${crypto.randomUUID()}@example.test`;
       const ownerName = "Bulk Action Member";
-      await page.goto(`/crm/${org.slug}/settings/members`);
-      await page.getByRole("button", { name: "Invite member", exact: true }).click();
+      await page.goto(`/crm/${org.slug}/settings/users`);
+      await page.getByRole("button", { name: "New User", exact: true }).click();
       const invitation = page.getByRole("dialog", { name: "Invite member", exact: true });
       await invitation.getByRole("textbox", { name: "Email", exact: true }).fill(email);
       await invitation.getByRole("button", { name: "Create invitation", exact: true }).click();

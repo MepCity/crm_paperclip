@@ -22,10 +22,17 @@ test("administrator manages profiles, roles, groups and sharing", async ({
   const base = `/crm/${org.slug}/settings`;
 
   // Navigation entries exist for an administrator.
-  await page.goto(`${base}/members`);
-  for (const name of ["Profiles", "Roles", "Groups", "Data Sharing", "Field Permissions"]) {
+  await page.goto(`${base}/users`);
+  for (const name of ["Profiles", "Roles and Sharing", "Field Permissions"]) {
     await expect(page.getByRole("link", { name, exact: true })).toBeVisible();
   }
+  // Groups and Data Sharing Settings are tabs, not menu entries; the old route redirects.
+  const userTabs = page.getByRole("navigation", { name: "Users and groups" });
+  for (const name of ["Users", "Groups", "Activate Users"]) {
+    await expect(userTabs.getByRole("link", { name, exact: true })).toBeVisible();
+  }
+  await page.goto(`${base}/members`);
+  await expect(page).toHaveURL(`${base}/users`);
 
   // Profiles: the two system profiles, then a clone.
   await page.goto(`${base}/profiles`);
@@ -44,13 +51,39 @@ test("administrator manages profiles, roles, groups and sharing", async ({
   await dialog.getByRole("button", { name: "Create profile" }).click();
   await expect(dialog.getByRole("alert")).toBeVisible();
   await page.keyboard.press("Escape");
-  // Custom profile edit: remove Leads delete.
-  await page.getByRole("button", { name: "Edit", exact: true }).click();
+  // Left anchor menu and the Reports / Analytics / Import rows.
+  const anchors = page.getByRole("navigation", { name: "Profile permissions" });
+  for (const name of ["Basic", "Import/Export", "Send Email", "Tools", "Other"]) {
+    await expect(anchors.getByRole("link", { name, exact: true })).toBeVisible();
+  }
+  await expect(anchors.getByRole("link", { name: "Administrator Level" })).toBeVisible();
+  for (const name of ["Reports", "Analytics", "Import Records"]) {
+    await expect(page.getByRole("switch", { name, exact: true })).toBeVisible();
+  }
+  // Custom profile edit: remove Leads delete through the action-summary dropdown.
+  await page.getByRole("button", { name: "Leads actions: View, Create, Edit, Delete" }).click();
   await page.getByRole("checkbox", { name: "Leads: Delete" }).focus();
+  await page.keyboard.press("Space");
+  await page.keyboard.press("Escape");
+  await page.getByRole("button", { name: "Save", exact: true }).click();
+  await expect(page.getByText("Profile saved.")).toBeVisible();
+  await page.reload();
+  await expect(
+    page.getByRole("button", { name: "Leads actions: View, Create, Edit", exact: true }),
+  ).toBeVisible();
+  // The module toggle switches the whole module off and on.
+  // The switch input is visually hidden, so it is operated from the keyboard.
+  await page.getByRole("switch", { name: "Campaigns", exact: true }).focus();
   await page.keyboard.press("Space");
   await page.getByRole("button", { name: "Save", exact: true }).click();
   await expect(page.getByText("Profile saved.")).toBeVisible();
-  await expect(page.getByRole("checkbox", { name: "Leads: Delete" })).not.toBeChecked();
+  await page.reload();
+  await expect(page.getByRole("switch", { name: "Campaigns", exact: true })).not.toBeChecked();
+  // System profiles have no Edit button (Standard included).
+  await page.goto(`${base}/profiles`);
+  await page.getByRole("link", { name: "Standard", exact: true }).click();
+  await expect(page.getByRole("heading", { name: "Profile: Standard" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Edit", exact: true })).toHaveCount(0);
   // The Administrator profile is read-only.
   await page.goto(`${base}/profiles`);
   await page.getByRole("link", { name: "Administrator" }).click();
@@ -59,6 +92,12 @@ test("administrator manages profiles, roles, groups and sharing", async ({
 
   // Roles: create under Manager, root cannot be deleted.
   await page.goto(`${base}/roles`);
+  const roleTabs = page.getByRole("navigation", { name: "Roles and sharing" });
+  await expect(roleTabs.getByRole("link", { name: "Roles", exact: true })).toHaveAttribute(
+    "aria-current",
+    "page",
+  );
+  await expect(roleTabs.getByRole("link", { name: "Data Sharing Settings" })).toBeVisible();
   await expect(page.getByRole("link", { name: "CEO" })).toBeVisible();
   await page.getByRole("button", { name: "New Role" }).click();
   dialog = page.getByRole("dialog", { name: "New role" });
@@ -103,12 +142,22 @@ test("administrator manages profiles, roles, groups and sharing", async ({
 
   // Field permissions: tabs per profile, radios, administrator is fixed.
   await page.goto(`${base}/field-permissions`);
-  await page.getByRole("button", { name: "Support" }).click();
+  await expect(page.getByRole("link", { name: "Create and Edit Fields" })).toHaveAttribute(
+    "href",
+    `${base}/modules/Leads/fields`,
+  );
+  await pick(page, page.getByRole("main"), /Profile/, "Support");
+  await expect(page.getByTestId("field-permissions")).toBeVisible();
+  await page
+    .getByRole("navigation", { name: "Modules" })
+    .getByRole("button", { name: "Contacts" })
+    .click();
+  await expect(page.getByRole("heading", { name: "Contacts", level: 2 })).toBeVisible();
   await expect(page.getByTestId("field-permissions")).toBeVisible();
 
   // Invitation carries profile and role; the new member shows them.
-  await page.goto(`${base}/members`);
-  await page.getByRole("button", { name: "Invite member" }).click();
+  await page.goto(`${base}/users`);
+  await page.getByRole("button", { name: "New User" }).click();
   dialog = page.getByRole("dialog", { name: "Invite member" });
   const email = `rep-${crypto.randomUUID()}@example.test`;
   await dialog.getByRole("textbox", { name: "Email" }).fill(email);
@@ -139,21 +188,30 @@ test("administrator manages profiles, roles, groups and sharing", async ({
   }
 
   await page.reload();
-  const row = page.getByRole("row", { name: /Rita Rep/ });
-  await expect(row.getByRole("button", { name: /Profile of Rita Rep/ })).toContainText("Support");
-  await expect(row.getByRole("button", { name: /Access role of Rita Rep/ })).toContainText(
+  const users = page.getByRole("list", { name: "Users" });
+  await expect(users.getByRole("listitem").filter({ hasText: "Rita Rep" })).toContainText(
+    "Sales Rep, Support",
+  );
+  await users.getByRole("button", { name: /Rita Rep/ }).click();
+  const detail = page.getByRole("article", { name: "User details: Rita Rep" });
+  await detail.getByRole("button", { name: "Edit user" }).click();
+  await expect(detail.getByRole("button", { name: /Profile of Rita Rep/ })).toContainText(
+    "Support",
+  );
+  await expect(detail.getByRole("button", { name: /Access role of Rita Rep/ })).toContainText(
     "Sales Rep",
   );
-  // Change the member's access role through the row control.
+  // Change the member's access role through the detail panel.
   const saved = page.waitForResponse(
     (res) => res.url().includes("/member_access/") && res.request().method() === "PUT",
   );
-  await pick(page, row, /Access role of Rita Rep/, "Manager");
+  await pick(page, detail, /Access role of Rita Rep/, "Manager");
   await saved;
   await page.reload();
-  await expect(
-    page.getByRole("row", { name: /Rita Rep/ }).getByRole("button", { name: /Access role of/ }),
-  ).toContainText("Manager");
+  await users.getByRole("button", { name: /Rita Rep/ }).click();
+  await expect(users.getByRole("listitem").filter({ hasText: "Rita Rep" })).toContainText(
+    "Manager, Support",
+  );
 
   // Delete the in-use profile: replacement is required, then the member moves.
   await page.goto(`${base}/profiles`);

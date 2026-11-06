@@ -43,6 +43,8 @@ export interface NavLink {
   match: "exact" | "prefix";
   /** When set, prefix matching uses this root instead of `href`. */
   activePrefix?: (orgSlug: string) => string;
+  /** Extra page roots (with their sub-paths) that also mark the link active, e.g. tab pages. */
+  alsoActive?: (orgSlug: string) => readonly string[];
   /** Pinned-link icon accent; label colour rules are unchanged. */
   iconAccentToken?: NavLinkIconAccentToken;
   /** Settings navigation heading shown above the first link of each group. */
@@ -268,11 +270,12 @@ export const settingsNav: readonly NavLink[] = [
     group: "General",
   },
   {
-    id: "members",
-    label: "Members",
+    id: "users",
+    label: english.shell.users,
     icon: Icons.users,
-    href: (slug) => `/crm/${slug}/settings/members`,
-    match: "exact",
+    href: (slug) => `/crm/${slug}/settings/users`,
+    alsoActive: (slug) => [`/crm/${slug}/settings/groups`, `/crm/${slug}/settings/activate-users`],
+    match: "prefix",
     group: "General",
   },
   {
@@ -408,8 +411,10 @@ export const createRecordsNav: readonly CreateRecordEntry[] = getModuleScreens()
 export function isNavLinkActive(link: NavLink, orgSlug: string, pathname: string): boolean {
   const href = link.href(orgSlug);
   const prefixRoot = link.activePrefix?.(orgSlug) ?? href;
+  const under = (root: string) => pathname === root || pathname.startsWith(`${root}/`);
   return (
     pathname === href ||
-    (link.match === "prefix" && (pathname === prefixRoot || pathname.startsWith(`${prefixRoot}/`)))
+    (link.match === "prefix" && under(prefixRoot)) ||
+    (link.alsoActive?.(orgSlug).some(under) ?? false)
   );
 }
