@@ -462,6 +462,8 @@ test("channels, threads, pins, mentions, starred and advanced search dialogs wor
 
   // Pin the channel from conversation header
   await page.getByTestId("chat-conversation-pin").click();
+  // The header toggle flips only once the pin has synced back from the server.
+  await expect(page.getByTestId("chat-conversation-unpin")).toBeVisible();
 
   // Back to list
   await page.getByTestId("chat-conversation-back").click();
