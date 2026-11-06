@@ -54,7 +54,9 @@ test("a restricted profile gets a gated shell, list and routes", async ({ page, 
     await expect(user.getByRole("button", { name: "Create Lead" })).toHaveCount(0);
 
     // Settings sections without their administrator key are absent.
-    await user.goto(`/crm/${organization.slug}/settings/members`);
+    await user.goto(`/crm/${organization.slug}/settings/users`);
+    await expect(user.getByRole("navigation", { name: "Settings navigation" })).toBeVisible();
+    await expect(user.getByRole("link", { name: "Personal Settings" })).toBeVisible();
     await expect(user.getByRole("link", { name: "Currencies" })).toHaveCount(0);
 
     // A module without view renders the denied state.
