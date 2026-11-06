@@ -132,6 +132,8 @@ export function ApprovalProcessListScreen({ orgSlug }: ApprovalProcessListScreen
     return true;
   });
 
+  const isEmpty = !loading && filteredProcesses.length === 0;
+
   return (
     <div className="flex flex-col gap-6" data-testid="approval-process-list-screen">
       {/* Title & Subtitle */}
@@ -151,13 +153,14 @@ export function ApprovalProcessListScreen({ orgSlug }: ApprovalProcessListScreen
           >
             İşlemleri Yeniden Düzenle
           </Button>
-          <Link
-            href={`/crm/${orgSlug}/settings/approval-processes/new`}
-            className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-sm font-semibold text-primary-text hover:bg-primary-hover transition-colors"
-          >
-            <Icons.plus className="size-4" />
-            <span>+ Onay İşlemi Ekle</span>
-          </Link>
+          {!isEmpty && (
+            <Link
+              href={`/crm/${orgSlug}/settings/approval-processes/new`}
+              className="inline-flex items-center gap-1.5 rounded-md bg-primary px-3.5 py-2 text-sm font-semibold text-primary-text hover:bg-primary-hover transition-colors"
+            >
+              <span>+ Onay İşlemi Ekle</span>
+            </Link>
+          )}
         </div>
       </div>
 
@@ -333,7 +336,7 @@ export function ApprovalProcessListScreen({ orgSlug }: ApprovalProcessListScreen
                     </div>
                   )}
                 </th>
-                <th className="px-4 py-3 text-right">Eylemler</th>
+                {!isEmpty && <th className="px-4 py-3 text-right">Eylemler</th>}
               </tr>
             </thead>
             <tbody className="divide-y divide-border">
@@ -347,14 +350,13 @@ export function ApprovalProcessListScreen({ orgSlug }: ApprovalProcessListScreen
               ) : filteredProcesses.length === 0 ? (
                 <tr>
                   <td colSpan={6} className="py-20 text-center">
-                    <p className="text-base font-semibold text-text mb-4">
+                    <p className="text-lg font-normal text-text mb-5">
                       Onay işlemi yapılandırmanız yok
                     </p>
                     <Link
                       href={`/crm/${orgSlug}/settings/approval-processes/new`}
                       className="inline-flex items-center gap-1.5 rounded-md bg-primary px-4 py-2 text-sm font-semibold text-primary-text hover:bg-primary-hover transition-colors"
                     >
-                      <Icons.plus className="size-4" />
                       <span>+ Onay İşlemi Ekle</span>
                     </Link>
                   </td>

@@ -32,6 +32,7 @@ describe("ReviewProcessListScreen", () => {
     });
 
     // Headings from reference capture §4.2
+    expect(screen.getByRole("heading", { name: "Gözden Geçirme Süreçleri" })).toBeTruthy();
     expect(screen.getByText("Bilgilerin El ile Gözden Geçirilmesi")).toBeTruthy();
     expect(screen.getByText("Bilgi Toplamayı İyileştir")).toBeTruthy();
     expect(
