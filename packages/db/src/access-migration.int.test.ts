@@ -126,9 +126,11 @@ it("backfills profiles, roles, defaults, members and owner on an existing organi
         ])
       ).rows;
       expect(stored.find((r) => r.kind === "administrator")?.permissions).toEqual(
-        administratorPermissions(),
+        administratorPermissions({ schemaVersion: 1 }),
       );
-      expect(stored.find((r) => r.kind === "standard")?.permissions).toEqual(standardPermissions());
+      expect(stored.find((r) => r.kind === "standard")?.permissions).toEqual(
+        standardPermissions({ schemaVersion: 1 }),
+      );
     } finally {
       await db.end();
     }

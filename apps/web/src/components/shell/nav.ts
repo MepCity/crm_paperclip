@@ -65,6 +65,7 @@ const settingsAdminKey: Readonly<Record<string, keyof ClientPermissions["admin"]
   "workflow-rules": "manageAutomation",
   "assignment-rules": "manageAutomation",
   email: "emailSettings",
+  webforms: "manageWebforms",
 };
 
 /** Hidden, not disabled: a link without permission is not rendered. No payload = everything shown. */
@@ -316,6 +317,15 @@ export const settingsNav: readonly NavLink[] = [
     icon: Icons.settings,
     href: (slug) => `/crm/${slug}/settings/email-configuration`,
     activePrefix: (slug) => `/crm/${slug}/settings/email-configuration`,
+    match: "prefix",
+    group: "Channels",
+  },
+  {
+    id: "webforms",
+    label: english.shell.webforms,
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/webforms`,
+    activePrefix: (slug) => `/crm/${slug}/settings/webforms`,
     match: "prefix",
     group: "Channels",
   },
