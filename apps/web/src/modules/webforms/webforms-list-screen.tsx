@@ -404,7 +404,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                     {t("modules.webforms.list.analyticsDesc")}{" "}
                     <Link
                       href="#"
-                      className="text-primary hover:underline font-medium inline-block ml-1"
+                      className="text-primary hover:underline inline-block ml-1"
                       data-testid="analytics-learn-more"
                     >
                       {t("modules.webforms.list.learnMore")}
@@ -424,7 +424,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                     {t("modules.webforms.list.abTestingDesc")}{" "}
                     <Link
                       href="#"
-                      className="text-primary hover:underline font-medium inline-block ml-1"
+                      className="text-primary hover:underline inline-block ml-1"
                       data-testid="ab-testing-learn-more"
                     >
                       {t("modules.webforms.list.learnMore")}
@@ -691,10 +691,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
           <div className="flex flex-col gap-4 py-1">
             {/* Row 1: Form Name */}
             <div className="grid grid-cols-[120px_1fr] items-center gap-4">
-              <label
-                htmlFor="form-name-input"
-                className="text-right text-sm font-medium text-foreground"
-              >
+              <label htmlFor="form-name-input" className="text-right text-sm text-foreground">
                 {t("modules.webforms.dialogs.formName")}
               </label>
               <div className="relative">
@@ -716,7 +713,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
               <label
                 id="form-module-label"
                 htmlFor="form-module-select"
-                className="text-right text-sm font-medium text-foreground"
+                className="text-right text-sm text-foreground"
               >
                 {t("modules.webforms.dialogs.module")}
               </label>
@@ -778,7 +775,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                           }}
                           className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center justify-between ${
                             formModule === mod
-                              ? "bg-primary/10 text-primary font-medium"
+                              ? "bg-primary/10 text-primary font-semibold"
                               : "hover:bg-muted/50 text-foreground"
                           }`}
                           data-testid={`module-option-${mod}`}
