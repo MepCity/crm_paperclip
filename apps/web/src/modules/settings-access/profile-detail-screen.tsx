@@ -74,6 +74,7 @@ const EMAIL_TEMPLATE_ROWS: FlagRowDef[] = [
 ];
 const AUTOMATION_ROWS: FlagRowDef[] = [
   { label: "Manage Automation", group: "admin", key: "manageAutomation" },
+  { label: "Manage Webforms", group: "admin", key: "manageWebforms" },
 ];
 const DATA_ROWS: FlagRowDef[] = [
   { label: "Data Management", group: "admin", key: "dataManagement" },

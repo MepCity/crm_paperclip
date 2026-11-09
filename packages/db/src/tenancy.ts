@@ -50,6 +50,16 @@ export const approvalTableContracts: readonly TableContract[] = [
   { name: "notifications", privileges: ["SELECT", "INSERT", "UPDATE"] },
 ];
 
+export const webformTableContracts: readonly TableContract[] = [
+  { name: "webforms", privileges: ["SELECT", "INSERT", "UPDATE"] },
+  { name: "webform_versions", privileges: ["SELECT", "INSERT", "UPDATE"] },
+  { name: "webform_locations", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "webform_submissions", privileges: ["SELECT", "INSERT", "UPDATE"] },
+  { name: "webform_daily_stats", privileges: ["SELECT", "INSERT", "UPDATE"] },
+  { name: "webform_auto_response_rules", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "public_rate_limits", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+];
+
 const identityTables = new Set([
   "users",
   "accounts",
@@ -58,6 +68,7 @@ const identityTables = new Set([
   "organizations",
   "memberships",
   "invitations",
+  "public_endpoint_keys",
 ]);
 
 function unsafe(): never {
@@ -114,6 +125,7 @@ export async function assertRuntimeCatalog(
     ...accessTableContracts,
     ...approvalTableContracts,
     ...feedTableContracts,
+    ...webformTableContracts,
   ];
   tables = [...installed.filter((base) => !tables.some((t) => t.name === base.name)), ...tables];
   const contracts = new Map(tables.map((table) => [table.name, table]));

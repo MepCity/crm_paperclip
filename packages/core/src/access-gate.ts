@@ -10,7 +10,8 @@ export type AdminPermissionKey =
   | "manageAutomation"
   | "manageTemplates"
   | "emailSettings"
-  | "dataManagement";
+  | "dataManagement"
+  | "manageWebforms";
 
 export type AccessLoader = (ctx: OrgContext) => Promise<AccessSnapshot>;
 
