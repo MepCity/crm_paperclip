@@ -2,13 +2,14 @@ import type {
   FieldDataType,
   HistoryEventKind,
   HistoryRef,
+  HistorySource,
   JsonObject,
   RecordHistoryEvent,
   RecordHistoryPage,
 } from "@crm/core/records";
 import { invalid, object } from "./codec";
 
-export type HistorySource = "manual" | "api" | "import";
+export type { HistorySource };
 
 export interface TimelineQuery {
   perPage: number;
@@ -33,11 +34,13 @@ const WIRE_TO_SOURCE: Record<string, HistorySource> = {
   crm_ui: "manual",
   crm_api: "api",
   import: "import",
+  webform: "webform",
 };
 const SOURCE_TO_WIRE: Record<HistorySource, string> = {
   manual: "crm_ui",
   api: "crm_api",
   import: "import",
+  webform: "webform",
 };
 const DEFAULT_PER_PAGE = 25;
 const MAX_PER_PAGE = 200;

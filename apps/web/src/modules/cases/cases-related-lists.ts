@@ -1,3 +1,8 @@
+import { createElement } from "react";
+import {
+  WEBFORM_USAGE_TITLE,
+  WebformUsageCardBody,
+} from "@/components/records/webforms/webform-usage-card-body";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
 import { notesCardBody, openNotesComposer } from "../notes-card";
@@ -142,6 +147,18 @@ export const casesRelatedLists: readonly RelatedListDefinition[] = [
       type: "select",
       moduleKey: "M10",
     },
+    emptyStateText: "No records found",
+  },
+  {
+    id: "webform-usage",
+    renderBody: ({ record }) =>
+      record
+        ? createElement(WebformUsageCardBody, { module: "Cases", recordId: record.id })
+        : undefined,
+    title: WEBFORM_USAGE_TITLE,
+    moduleKey: "M2",
+    order: 20,
+    targetId: "related-list-webform-usage",
     emptyStateText: "No records found",
   },
 ];

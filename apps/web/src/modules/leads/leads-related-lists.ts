@@ -1,5 +1,9 @@
 import { createElement } from "react";
 import { campaignsCardBody } from "@/components/records/campaigns/campaigns-card";
+import {
+  WEBFORM_USAGE_TITLE,
+  WebformUsageCardBody,
+} from "@/components/records/webforms/webform-usage-card-body";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
 import { emailsCard } from "../emails/record-card";
@@ -150,6 +154,18 @@ export function createLeadsRelatedLists(
       moduleKey: "M2",
       order: 6,
       targetId: "related-list-social",
+    },
+    {
+      id: "webform-usage",
+      renderBody: ({ record }) =>
+        record
+          ? createElement(WebformUsageCardBody, { module: "Leads", recordId: record.id })
+          : undefined,
+      title: WEBFORM_USAGE_TITLE,
+      moduleKey: "M2",
+      order: 7,
+      targetId: "related-list-webform-usage",
+      emptyStateText: "No records found",
     },
   ];
 }

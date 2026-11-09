@@ -72,6 +72,62 @@ export interface WebformDetail extends Webform {
   publishedVersion: WebformVersion | null;
   locations: WebformLocation[];
   hasActivePublicKey: boolean;
+  publicKey?: string | null;
+}
+
+export interface WebformAnalyticsOutcomeBreakdown {
+  accepted: number;
+  invalid: number;
+  spam: number;
+  duplicatePendingApproval: number;
+  pendingApproval: number;
+  pendingDoubleOptIn: number;
+  rejectedLocation: number;
+  rateLimited: number;
+}
+
+export interface WebformLocationStats {
+  location: string;
+  visits: number;
+  submissions: number;
+  accepted: number;
+  conversionRate: number;
+  outcomes: WebformAnalyticsOutcomeBreakdown;
+}
+
+export interface WebformDailyStatsPoint {
+  day: string;
+  visits: number;
+  submissions: number;
+  accepted: number;
+  outcomes: WebformAnalyticsOutcomeBreakdown;
+}
+
+export interface WebformAnalyticsSummary {
+  formId: string;
+  formName: string;
+  totalVisits: number;
+  totalSubmissions: number;
+  totalAccepted: number;
+  overallConversionRate: number;
+  outcomes: WebformAnalyticsOutcomeBreakdown;
+  byLocation: WebformLocationStats[];
+  daily: WebformDailyStatsPoint[];
+}
+
+export interface WebformAnalyticsFilter {
+  startDate?: string;
+  endDate?: string;
+  location?: string;
+}
+
+export interface WebformRecordUsageItem {
+  id: string;
+  formId: string;
+  formName: string;
+  location: string;
+  outcome: string;
+  createdAt: string;
 }
 
 export interface WebformAutoResponseRule {

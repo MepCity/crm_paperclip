@@ -1,11 +1,19 @@
 import { describe, expect, it } from "vitest";
 import { ValidationError } from "../errors";
 import {
+  computeClientHash,
+  createRenderToken,
+  derivePublicKey,
+  generateChallenge,
   getEligibleFieldsForModule,
+  hashPublicKey,
   isFieldEligible,
   MAX_LOCATIONS_PER_FORM,
   normalizeOrigin,
+  resolveLocation,
   validateForPublish,
+  verifyChallenge,
+  verifyRenderToken,
   webformFieldSchema,
   webformSettingsSchema,
 } from "./index";
@@ -213,6 +221,233 @@ describe("Webforms core validation", () => {
         approval: "none",
         doubleOptIn: false,
       });
+    });
+  });
+
+  describe("Render tokens and HMAC security (§3.2, §3.5)", () => {
+    const payload = {
+      orgId: "org-123",
+      formId: "form-456",
+      versionId: "ver-789",
+      issuedAt: 1700000000000,
+    };
+
+    it("creates and verifies a valid render token", () => {
+      const token = createRenderToken(payload);
+      expect(typeof token).toBe("string");
+      expect(token.includes(".")).toBe(true);
+
+      const verified = verifyRenderToken(token);
+      expect(verified.ok).toBe(true);
+      if (verified.ok) {
+        expect(verified.payload.orgId).toBe(payload.orgId);
+        expect(verified.payload.formId).toBe(payload.formId);
+        expect(verified.payload.versionId).toBe(payload.versionId);
+        expect(verified.payload.issuedAt).toBe(payload.issuedAt);
+      }
+    });
+
+    it("binds challengeHash in render token when present", () => {
+      const token = createRenderToken({ ...payload, challengeHash: "ch-hash-abc" });
+      const verified = verifyRenderToken(token);
+      expect(verified.ok).toBe(true);
+      if (verified.ok) {
+        expect(verified.payload.challengeHash).toBe("ch-hash-abc");
+      }
+    });
+
+    it("rejects tampered token signature", () => {
+      const token = createRenderToken(payload);
+      const [data, sig] = token.split(".");
+      const tampered = `${data}.${sig}bad`;
+      const verified = verifyRenderToken(tampered);
+      expect(verified.ok).toBe(false);
+      if (!verified.ok) {
+        expect(verified.reason).toBe("tampered");
+      }
+    });
+
+    it("rejects tampered token payload data", () => {
+      const token = createRenderToken(payload);
+      const [, sig] = token.split(".");
+      const alteredData = Buffer.from(
+        JSON.stringify({ ...payload, orgId: "attacker-org" }),
+      ).toString("base64url");
+      const tampered = `${alteredData}.${sig}`;
+      const verified = verifyRenderToken(tampered);
+      expect(verified.ok).toBe(false);
+      if (!verified.ok) {
+        expect(verified.reason).toBe("tampered");
+      }
+    });
+
+    it("rejects malformed token strings", () => {
+      expect(verifyRenderToken("").ok).toBe(false);
+      expect(verifyRenderToken("not-a-token").ok).toBe(false);
+      expect(verifyRenderToken("part1.part2.part3").ok).toBe(false);
+      expect(verifyRenderToken("invalid-base64.signature").ok).toBe(false);
+    });
+  });
+
+  describe("Challenge generation and verification (§3.5)", () => {
+    it("generates challenge code, hash and valid SVG image", () => {
+      const { code, challengeHash, svg } = generateChallenge();
+      expect(code).toHaveLength(5);
+      expect(typeof challengeHash).toBe("string");
+      expect(challengeHash.length).toBeGreaterThan(10);
+      expect(svg).toContain("<svg");
+      expect(svg).toContain("</svg>");
+      expect(svg).toContain('role="img"');
+    });
+
+    it("verifies challenge answer case-insensitively and trimmed", () => {
+      const { code, challengeHash } = generateChallenge();
+      expect(verifyChallenge(code, challengeHash)).toBe(true);
+      expect(verifyChallenge(code.toLowerCase(), challengeHash)).toBe(true);
+      expect(verifyChallenge(`  ${code}  `, challengeHash)).toBe(true);
+    });
+
+    it("rejects incorrect challenge answer", () => {
+      const { challengeHash } = generateChallenge();
+      expect(verifyChallenge("WRONG", challengeHash)).toBe(false);
+      expect(verifyChallenge("", challengeHash)).toBe(false);
+      expect(verifyChallenge(undefined, challengeHash)).toBe(false);
+    });
+
+    it("returns true when challengeHash is undefined (challenge not enabled)", () => {
+      expect(verifyChallenge(undefined, undefined)).toBe(true);
+      expect(verifyChallenge("", undefined)).toBe(true);
+    });
+  });
+
+  describe("Client hash and public key hashing (§3.3, §3.5)", () => {
+    it("computes client hash via HMAC so raw IP is never stored", () => {
+      const hash1 = computeClientHash("203.0.113.195");
+      const hash2 = computeClientHash("203.0.113.195");
+      const hashDiff = computeClientHash("198.51.100.42");
+
+      expect(hash1).toBe(hash2);
+      expect(hash1).not.toBe("203.0.113.195");
+      expect(hash1).not.toBe(hashDiff);
+    });
+
+    it("hashes public key via SHA-256 base64url for index lookup", () => {
+      const rawKey = "wfk_live_sampleKey123456789";
+      const h1 = hashPublicKey(rawKey);
+      const h2 = hashPublicKey(rawKey);
+      expect(h1).toBe(h2);
+      expect(h1).not.toBe(rawKey);
+    });
+
+    it("derives deterministic 128-bit public key and matching keyHash", () => {
+      const orgId = "11111111-1111-1111-1111-111111111111";
+      const formId = "22222222-2222-2222-2222-222222222222";
+      const timestamp = new Date("2026-11-09T10:00:00.000Z");
+
+      const derived1 = derivePublicKey(orgId, formId, timestamp);
+      const derived2 = derivePublicKey(orgId, formId, timestamp);
+
+      expect(derived1.publicKey).toBe(derived2.publicKey);
+      expect(derived1.keyHash).toBe(derived2.keyHash);
+      expect(derived1.keyHash).toBe(hashPublicKey(derived1.publicKey));
+      expect(derived1.publicKey.length).toBeGreaterThanOrEqual(20);
+
+      // Different timestamp yields a different key (key rotation/regeneration)
+      const later = new Date("2026-11-09T11:00:00.000Z");
+      const derivedLater = derivePublicKey(orgId, formId, later);
+      expect(derivedLater.publicKey).not.toBe(derived1.publicKey);
+      expect(derivedLater.keyHash).not.toBe(derived1.keyHash);
+
+      // Different form yields a different key
+      const otherFormId = "33333333-3333-3333-3333-333333333333";
+      const derivedOther = derivePublicKey(orgId, otherFormId, timestamp);
+      expect(derivedOther.publicKey).not.toBe(derived1.publicKey);
+    });
+  });
+
+  describe("Locations and embedding resolution (§3.6)", () => {
+    const allowed = [
+      {
+        organizationId: "org-1",
+        formId: "form-1",
+        origin: "https://shop.example.com",
+        label: "Store",
+        createdAt: new Date().toISOString(),
+      },
+    ];
+
+    it("allows hosted form access as 'hosted'", () => {
+      const res = resolveLocation({
+        isHostedRoute: true,
+        restrictLocations: true,
+        allowedLocations: allowed,
+      });
+      expect(res).toEqual({
+        location: "hosted",
+        allowed: true,
+        isAllowedOrigin: true,
+      });
+    });
+
+    it("allows allowlisted origin when locations are restricted", () => {
+      const res = resolveLocation({
+        origin: "https://Shop.Example.com",
+        restrictLocations: true,
+        allowedLocations: allowed,
+      });
+      expect(res.allowed).toBe(true);
+      expect(res.location).toBe("https://shop.example.com");
+      expect(res.isAllowedOrigin).toBe(true);
+    });
+
+    it("rejects foreign origin when locations are restricted", () => {
+      const res = resolveLocation({
+        origin: "https://malicious-site.com",
+        restrictLocations: true,
+        allowedLocations: allowed,
+      });
+      expect(res.allowed).toBe(false);
+      expect(res.location).toBe("https://malicious-site.com");
+      expect(res.isAllowedOrigin).toBe(false);
+    });
+
+    it("accepts foreign origin as 'undefined' when locations are unrestricted", () => {
+      const res = resolveLocation({
+        origin: "https://any-external-site.com",
+        restrictLocations: false,
+        allowedLocations: allowed,
+      });
+      expect(res.allowed).toBe(true);
+      expect(res.location).toBe("undefined");
+      expect(res.isAllowedOrigin).toBe(false);
+    });
+
+    it("falls back to Referer origin when Origin header is omitted", () => {
+      const res = resolveLocation({
+        referer: "https://shop.example.com/checkout/form?ref=123",
+        restrictLocations: true,
+        allowedLocations: allowed,
+      });
+      expect(res.allowed).toBe(true);
+      expect(res.location).toBe("https://shop.example.com");
+    });
+
+    it("rejects missing origin and referer when locations are restricted", () => {
+      const res = resolveLocation({
+        restrictLocations: true,
+        allowedLocations: allowed,
+      });
+      expect(res.allowed).toBe(false);
+      expect(res.location).toBe("undefined");
+    });
+
+    it("accepts missing origin and referer when locations are unrestricted", () => {
+      const res = resolveLocation({
+        restrictLocations: false,
+        allowedLocations: allowed,
+      });
+      expect(res.allowed).toBe(true);
+      expect(res.location).toBe("undefined");
     });
   });
 });

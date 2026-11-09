@@ -1,5 +1,6 @@
 "use client";
 
+import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-components";
 import { Badge } from "@/components/ui/badge";
@@ -25,13 +26,20 @@ import type {
   WebformLocation,
   WebformSettings,
 } from "./types";
+import { WebformEmbedDialog } from "./webform-embed-dialog";
 
 interface WebformBuilderScreenProps {
   orgSlug: string;
   formId: string;
+  initialEmbedOpen?: boolean;
 }
 
-export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenProps) {
+export function WebformBuilderScreen({
+  orgSlug,
+  formId,
+  initialEmbedOpen = false,
+}: WebformBuilderScreenProps) {
+  const router = useRouter();
   const t = useUiTranslations();
   const [form, setForm] = useState<WebformDetail | null>(null);
   const [eligibleFields, setEligibleFields] = useState<EligibleField[]>([]);
@@ -50,6 +58,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
   const [publishing, setPublishing] = useState(false);
   const [previewOpen, setPreviewOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [embedOpen, setEmbedOpen] = useState(initialEmbedOpen);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   // Location add state
@@ -297,6 +306,22 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
           )}
           <Button variant="secondary" size="sm" onClick={() => setPreviewOpen(true)}>
             {t("modules.webforms.builder.preview")}
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => setEmbedOpen(true)}
+            data-testid="form-embed-button"
+          >
+            {t("modules.webforms.builder.embedButton")}
+          </Button>
+          <Button
+            variant="secondary"
+            size="sm"
+            onClick={() => router.push(`/crm/${orgSlug}/settings/webforms/${formId}/analytics`)}
+            data-testid="form-analytics-button"
+          >
+            {t("modules.webforms.builder.analyticsButton")}
           </Button>
           <Button
             variant="secondary"
@@ -978,6 +1003,23 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
           </Modal>
         </ModalOverlay>
       )}
+
+      {/* Webform Embed Dialog */}
+      <WebformEmbedDialog
+        isOpen={embedOpen}
+        onOpenChange={setEmbedOpen}
+        orgSlug={orgSlug}
+        formId={formId}
+        formName={form.name}
+        module={form.module}
+        status={form.status}
+        publicKey={form.publicKey}
+        isPublished={Boolean(form.publishedVersionId)}
+        onKeyRegenerated={(newKey) => {
+          setForm((prev) => (prev ? { ...prev, publicKey: newKey } : null));
+          setNewGeneratedKey(newKey);
+        }}
+      />
 
       {/* Confirm Regenerate Key Dialog */}
       <ConfirmDialog

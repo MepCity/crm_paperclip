@@ -31,6 +31,7 @@ import {
 } from "../activities";
 import { validateCampaignFilter } from "../campaigns";
 import type {
+  ActorRef,
   ConvertLeadInput,
   DuplicateGroup,
   FieldDefinition,
@@ -181,6 +182,8 @@ export interface FixtureRecordServiceOptions extends FixtureHistoryPermissions {
   access?: RecordAccessSource;
   /** Marks an intentional system actor (automation, worker, approval write-back). */
   system?: boolean;
+  /** Bounded principal (ADR 0019 §3.1). */
+  actor?: ActorRef;
   customization?: CustomizationPort;
   /** Internal ephemeral schema integration; shared by every service for this organization. */
   schema?: InMemorySchemaCoordinator;
@@ -214,6 +217,22 @@ export function createFixtureRecordService(
     readonly recycleBin: RecycleBinService;
   } {
   const ctx = { ...context };
+  const isWebformActor = options?.actor?.kind === "webform";
+  const webformFormName = options?.actor?.kind === "webform" ? options.actor.formName : undefined;
+  let webformRecordsCreated = 0;
+  const assertWebformCanRead = () => {
+    if (isWebformActor) {
+      throw new ForbiddenError("Webform actor cannot read records", "permission_denied");
+    }
+  };
+  const assertWebformCanMutate = () => {
+    if (isWebformActor) {
+      throw new ForbiddenError(
+        "Webform actor cannot update or delete records",
+        "permission_denied",
+      );
+    }
+  };
   const clock = () => options?.now?.() ?? new Date();
   let store = stores.get(ctx.orgId);
   if (!store) {
@@ -478,6 +497,7 @@ export function createFixtureRecordService(
   let historyAccess: RecordAccessChecker | undefined;
   const guardedHistory = (inner: RecordHistoryService): RecordHistoryService => ({
     async list(module, recordId, query) {
+      assertWebformCanRead();
       historyAccess = await accessFor();
       return inner.list(module, recordId, query);
     },
@@ -813,8 +833,17 @@ export function createFixtureRecordService(
       const commit = {
         sequence: state.sequence + 1,
         occurredAt: clock().toISOString(),
-        actor: { id: ctx.userId, name: options?.actorName ?? ctx.userId },
-        source: options?.source ?? ("manual" as const),
+        actor:
+          options?.actor?.kind === "webform"
+            ? {
+                id: options.actor.formId,
+                name: webformFormName ?? options.actor.formName ?? options.actorName ?? "Webform",
+              }
+            : { id: ctx.userId, name: options?.actorName ?? ctx.userId },
+        source:
+          options?.actor?.kind === "webform"
+            ? ("webform" as const)
+            : (options?.source ?? ("manual" as const)),
       };
       const operationId = operation.operationId ?? randomUUID();
       const events = historyBatch(
@@ -1018,6 +1047,7 @@ export function createFixtureRecordService(
   };
 
   const merge = async (module: string, input: MergeInput): Promise<RecordData> => {
+    assertWebformCanMutate();
     assertModuleWritable(module);
     const bundle = bundleFor(module);
     if (bundle.childModule) throw new ForbiddenError("Child modules do not support merge.");
@@ -1132,6 +1162,7 @@ export function createFixtureRecordService(
     module: string,
     fields: readonly string[],
   ): Promise<readonly DuplicateGroup[]> => {
+    assertWebformCanRead();
     const bundle = bundleFor(module);
     if (bundle.childModule) return [];
     // A hidden field must not be usable as a duplicate-match key (ADR 0017 §4.5).
@@ -1151,6 +1182,7 @@ export function createFixtureRecordService(
 
   const attachmentLifecycle = fixtureAttachmentLifecycle(hookContext);
   const convertLead = async (leadId: string, input: ConvertLeadInput) => {
+    assertWebformCanMutate();
     assertModuleWritable("Leads");
     const sourceLead = recordFor("Leads", leadId);
     const convertAccess = await accessFor();
@@ -1328,6 +1360,7 @@ export function createFixtureRecordService(
   };
   /** ADR 0016 §7: one atomic write; returns the new invoice id. The quote is not changed. */
   const convertQuoteToInvoice = async (quoteId: string): Promise<string> => {
+    assertWebformCanMutate();
     assertModuleWritable("Invoices");
     const quote = recordFor("Quotes", quoteId);
     const q = quote.fields;
@@ -1393,22 +1426,42 @@ export function createFixtureRecordService(
     tags: {
       ...tags,
       async addTags(module, recordId, ids) {
+        assertWebformCanMutate();
         recordFor(module, recordId);
         await assertRecordLevel(module, [recordId], "edit");
         return tags.addTags(module, recordId, ids);
       },
       async removeTags(module, recordId, ids) {
+        assertWebformCanMutate();
         recordFor(module, recordId);
         await assertRecordLevel(module, [recordId], "edit");
         return tags.removeTags(module, recordId, ids);
       },
       async listRecordTags(module, recordId) {
+        assertWebformCanRead();
         recordFor(module, recordId);
         await assertRecordLevel(module, [recordId], "read");
         return tags.listRecordTags(module, recordId);
       },
     },
-    recycleBin,
+    recycleBin: {
+      list(query) {
+        assertWebformCanRead();
+        return recycleBin.list(query);
+      },
+      restore(entryIds) {
+        assertWebformCanMutate();
+        return recycleBin.restore(entryIds);
+      },
+      purge(entryIds) {
+        assertWebformCanMutate();
+        return recycleBin.purge(entryIds);
+      },
+      empty() {
+        assertWebformCanMutate();
+        return recycleBin.empty();
+      },
+    },
     history: guardedHistory(
       fixtureHistoryReader(
         ctx,
@@ -1471,6 +1524,7 @@ export function createFixtureRecordService(
     merge,
     findDuplicateGroups,
     async deduplicate(module, fields) {
+      assertWebformCanMutate();
       assertModuleWritable(module);
       moduleExists(module);
       const dedupAccess = await accessFor();
@@ -1530,6 +1584,7 @@ export function createFixtureRecordService(
       }
     },
     async search(query) {
+      assertWebformCanRead();
       if (typeof query.text !== "string" || query.text.trim().length < 3)
         throw new ValidationError({ text: ["Enter at least three characters."] });
       if (query.scope !== undefined && query.scope !== "all" && query.scope !== "nameOrTags")
@@ -1589,21 +1644,27 @@ export function createFixtureRecordService(
       return copy(groups);
     },
     async listKanbanViews(module) {
+      assertWebformCanRead();
       return kanbanViews.list(module);
     },
     async getKanbanView(module, id) {
+      assertWebformCanRead();
       return kanbanViews.get(module, id);
     },
     async createKanbanView(module, input) {
+      assertWebformCanMutate();
       return kanbanViews.create(module, input);
     },
     async updateKanbanView(module, id, input) {
+      assertWebformCanMutate();
       return kanbanViews.update(module, id, input);
     },
     async getHomeCurrency() {
+      assertWebformCanRead();
       return { isoCode: "TRY", symbol: "TL", name: "Turkish Lira - TRY", prefixSymbol: true };
     },
     async getModuleProjection(module) {
+      assertWebformCanRead();
       bundleFor(module);
       const projection = await readFixtureModuleProjection(
         ctx.orgId,
@@ -1619,6 +1680,7 @@ export function createFixtureRecordService(
       };
     },
     async getModule(module) {
+      assertWebformCanRead();
       const acc = await accessFor();
       const metadata = bundleFor(module).metadata;
       return copy(
@@ -1631,6 +1693,7 @@ export function createFixtureRecordService(
       );
     },
     async listViews(module) {
+      assertWebformCanRead();
       const acc = await accessFor();
       const views = bundleFor(module).views;
       return copy(
@@ -1638,11 +1701,13 @@ export function createFixtureRecordService(
       );
     },
     async getView(module, id) {
+      assertWebformCanRead();
       const acc = await accessFor();
       const view = viewFor(module, id);
       return copy(acc ? projectViewForViewer(view, acc.hiddenFields(module)) : view);
     },
     async list(module, query) {
+      assertWebformCanRead();
       const bundle = bundleFor(module);
       const viewAcc = await accessFor();
       const rawView = viewFor(module, query.viewId);
@@ -1697,9 +1762,11 @@ export function createFixtureRecordService(
       });
     },
     async count(module, query) {
+      assertWebformCanRead();
       return (await matching(module, query)).length;
     },
     async summarize(module, query) {
+      assertWebformCanRead();
       (await accessFor())?.assertCriteria(module, query.filters, undefined, query.groupBy);
       const metadata = bundleFor(module).metadata;
       const groupField = metadata.fields.find((field) => field.apiName === query.groupBy);
@@ -1734,6 +1801,7 @@ export function createFixtureRecordService(
       });
     },
     async get(module, id) {
+      assertWebformCanRead();
       const record = recordFor(module, id);
       await assertRecordLevel(module, [id], "read");
       if (module === "Attachments" && record.fields.$state !== "ready")
@@ -1742,9 +1810,41 @@ export function createFixtureRecordService(
       const acc = await accessFor();
       return copy(acc ? acc.project(module, resolved) : resolved);
     },
-    async create(module, input, options) {
+    async create(module, input, createOpts) {
+      if (isWebformActor && options?.actor?.kind === "webform") {
+        if (webformRecordsCreated > 0) {
+          throw new ForbiddenError("Webform actor may only create one record", "permission_denied");
+        }
+        const webformActor = options.actor;
+        const actorModule = webformActor.module;
+        const allowedFields = webformActor.allowedFields
+          ? webformActor.allowedFields instanceof Set
+            ? webformActor.allowedFields
+            : new Set(webformActor.allowedFields)
+          : undefined;
+
+        if (actorModule && module !== actorModule) {
+          throw new ForbiddenError(
+            `Webform actor cannot create records in module '${module}'`,
+            "permission_denied",
+          );
+        }
+
+        if (allowedFields) {
+          for (const key of Object.keys(input)) {
+            if (key !== "Owner" && !allowedFields.has(key)) {
+              throw new ForbiddenError(
+                `Webform actor cannot write extra field '${key}'`,
+                "field_forbidden",
+              );
+            }
+          }
+        }
+
+        webformRecordsCreated++;
+      }
       assertModuleWritable(module);
-      assertSourceTimes(options?.sourceTimes);
+      assertSourceTimes(createOpts?.sourceTimes);
       const bundle = bundleFor(module);
       const stringFields = stringFieldNames(bundle);
       const normalized = dropIgnored(
@@ -1754,7 +1854,7 @@ export function createFixtureRecordService(
       validateInput(
         normalized,
         false,
-        relaxRequired(bundle, normalized, options),
+        relaxRequired(bundle, normalized, createOpts),
         bundle.managedFields,
       );
       validateReferences(module, normalized);
@@ -1762,12 +1862,13 @@ export function createFixtureRecordService(
       const writer = await accessFor();
       writer?.assertWrite(module, normalized);
       const created = atomic({ module, mechanism: "create" }, () =>
-        insertRecord(module, normalized, options),
+        insertRecord(module, normalized, createOpts),
       );
-      await publishWrite(module, "create", created, undefined, options);
+      await publishWrite(module, "create", created, undefined, createOpts);
       return writer ? writer.project(module, created) : created;
     },
     async update(module, id, input, options) {
+      assertWebformCanMutate();
       assertModuleWritable(module);
       await assertRecordLevel(module, [id], "edit");
       assertSourceTimes(options?.sourceTimes);
@@ -1820,6 +1921,7 @@ export function createFixtureRecordService(
       return viewer ? viewer.project(module, updatedRecord) : updatedRecord;
     },
     async massUpdate(module, ids, input) {
+      assertWebformCanMutate();
       assertModuleWritable(module);
       const bundle = bundleFor(module);
       const targets = [...ids];
@@ -1843,6 +1945,7 @@ export function createFixtureRecordService(
       await batchWithObserver(module, targets, normalized, "mass_update");
     },
     async changeOwner(module, ids, ownerId) {
+      assertWebformCanMutate();
       assertModuleWritable(module);
       const bundle = bundleFor(module);
       const targets = [...ids];
@@ -1858,6 +1961,7 @@ export function createFixtureRecordService(
       await batchWithObserver(module, targets, input, "change_owner");
     },
     async delete(module, ids) {
+      assertWebformCanMutate();
       assertModuleWritable(module);
       await assertRecordLevel(module, ids, "delete");
       // Deleting more than one record at once is the mass-delete tool (ADR 0017 §3, §4.6).

@@ -67,6 +67,7 @@ test.describe("Cases record detail (provisional rules, MEP-863)", () => {
       "open-activities",
       "closed-activities",
       "emails",
+      "webform-usage",
     ]);
 
     // GK-5: Notes card works

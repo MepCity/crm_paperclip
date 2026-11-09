@@ -1160,7 +1160,65 @@
         "title": "Regenerate Public Key",
         "message": "Regenerating the key will immediately revoke the current key. Any external websites using the old embed or public key will stop accepting submissions until updated.",
         "confirm": "Regenerate"
-      }
+      },
+      "embedButton": "Embed Code",
+      "analyticsButton": "Analytics"
+    },
+    "embed": {
+      "title": "Embed Codes: {name}",
+      "scriptEmbed": "Script Embed",
+      "scriptEmbedDesc": "Lightweight script that automatically renders the form in an iframe without giving external access to the parent document.",
+      "iframe": "iFrame",
+      "iframeDesc": "Standard HTML iframe snippet to embed the webform directly on any website or CMS.",
+      "hostedUrl": "Hosted URL",
+      "hostedUrlDesc": "Direct public link to the hosted form page for testing or sharing directly.",
+      "sourceHtml": "Source HTML",
+      "sourceHtmlDisabled": "Static source-HTML embed is not offered because secure form submissions require signed render tokens and anti-spam verification.",
+      "copyCode": "Copy Code",
+      "copyUrl": "Copy URL",
+      "copied": "Copied!",
+      "openInNewTab": "Open in New Tab",
+      "unpublishedNotice": "This form is not published yet. Publish the form so visitors can submit it.",
+      "close": "Close"
+    },
+    "analytics": {
+      "title": "Webform Analytics: {name}",
+      "back": "Back to Webforms",
+      "dateRange": "Date Range",
+      "allTime": "All time",
+      "last7Days": "Last 7 days",
+      "last30Days": "Last 30 days",
+      "last90Days": "Last 90 days",
+      "allLocations": "All Locations",
+      "visits": "Total Visits",
+      "submissions": "Total Submissions",
+      "accepted": "Accepted Records",
+      "conversionRate": "Conversion Rate",
+      "outcomesTitle": "Submissions by Outcome",
+      "outcomeAccepted": "Accepted",
+      "outcomeInvalid": "Invalid (Validation Errors)",
+      "outcomeSpam": "Suspected Spam",
+      "outcomeDuplicate": "Duplicate (Pending Approval)",
+      "outcomePendingApproval": "Pending Approval",
+      "outcomePendingDoubleOptIn": "Pending Double Opt-in",
+      "outcomeRejectedLocation": "Rejected Location",
+      "outcomeRateLimited": "Rate Limited",
+      "locationBreakdown": "Performance by Location",
+      "location": "Location",
+      "dailyTrends": "Daily Breakdown",
+      "date": "Date",
+      "count": "Count",
+      "noData": "No analytics data recorded yet",
+      "noDataDesc": "Analytics will update automatically as visitors view and submit your published webform."
+    },
+    "recordUsage": {
+      "title": "Webform Usage",
+      "submissionDate": "Submission Date",
+      "form": "Webform",
+      "location": "Location",
+      "outcome": "Outcome",
+      "noUsage": "No webform submissions recorded for this record",
+      "viewForm": "View Webform"
     }
   }
 }
