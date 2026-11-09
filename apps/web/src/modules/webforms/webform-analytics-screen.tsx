@@ -211,7 +211,7 @@ export function WebformAnalyticsScreen({ orgSlug, formId }: WebformAnalyticsScre
             {/* KPI Cards */}
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
               <div className="p-4 bg-card border border-border rounded-lg flex flex-col gap-1">
-                <span className="text-xs font-medium text-muted-foreground">
+                <span className="text-xs font-semibold text-muted-foreground">
                   {t("modules.webforms.analytics.visits")}
                 </span>
                 <span className="text-2xl font-bold text-foreground" data-testid="kpi-visits">
@@ -220,7 +220,7 @@ export function WebformAnalyticsScreen({ orgSlug, formId }: WebformAnalyticsScre
               </div>
 
               <div className="p-4 bg-card border border-border rounded-lg flex flex-col gap-1">
-                <span className="text-xs font-medium text-muted-foreground">
+                <span className="text-xs font-semibold text-muted-foreground">
                   {t("modules.webforms.analytics.submissions")}
                 </span>
                 <span className="text-2xl font-bold text-foreground" data-testid="kpi-submissions">
@@ -229,7 +229,7 @@ export function WebformAnalyticsScreen({ orgSlug, formId }: WebformAnalyticsScre
               </div>
 
               <div className="p-4 bg-card border border-border rounded-lg flex flex-col gap-1">
-                <span className="text-xs font-medium text-muted-foreground">
+                <span className="text-xs font-semibold text-muted-foreground">
                   {t("modules.webforms.analytics.accepted")}
                 </span>
                 <span className="text-2xl font-bold text-success" data-testid="kpi-accepted">
@@ -238,7 +238,7 @@ export function WebformAnalyticsScreen({ orgSlug, formId }: WebformAnalyticsScre
               </div>
 
               <div className="p-4 bg-card border border-border rounded-lg flex flex-col gap-1">
-                <span className="text-xs font-medium text-muted-foreground">
+                <span className="text-xs font-semibold text-muted-foreground">
                   {t("modules.webforms.analytics.conversionRate")}
                 </span>
                 <span className="text-2xl font-bold text-primary" data-testid="kpi-conversion">
@@ -358,16 +358,16 @@ export function WebformAnalyticsScreen({ orgSlug, formId }: WebformAnalyticsScre
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="border-b border-border text-muted-foreground">
-                        <th className="pb-2 font-medium">
+                        <th className="pb-2 font-semibold">
                           {t("modules.webforms.analytics.location")}
                         </th>
-                        <th className="pb-2 font-medium text-right">
+                        <th className="pb-2 font-semibold text-right">
                           {t("modules.webforms.analytics.visits")}
                         </th>
-                        <th className="pb-2 font-medium text-right">
+                        <th className="pb-2 font-semibold text-right">
                           {t("modules.webforms.analytics.submissions")}
                         </th>
-                        <th className="pb-2 font-medium text-right">
+                        <th className="pb-2 font-semibold text-right">
                           {t("modules.webforms.analytics.conversionRate")}
                         </th>
                       </tr>
@@ -375,7 +375,7 @@ export function WebformAnalyticsScreen({ orgSlug, formId }: WebformAnalyticsScre
                     <tbody className="divide-y divide-border">
                       {analytics.byLocation.map((loc) => (
                         <tr key={loc.location} className="hover:bg-muted/10">
-                          <td className="py-2.5 font-mono text-foreground font-medium">
+                          <td className="py-2.5 font-mono text-foreground font-semibold">
                             {loc.location}
                           </td>
                           <td className="py-2.5 text-right text-muted-foreground">{loc.visits}</td>
@@ -403,17 +403,19 @@ export function WebformAnalyticsScreen({ orgSlug, formId }: WebformAnalyticsScre
                   <table className="w-full text-left text-xs">
                     <thead>
                       <tr className="border-b border-border text-muted-foreground">
-                        <th className="pb-2 font-medium">{t("modules.webforms.analytics.date")}</th>
-                        <th className="pb-2 font-medium text-right">
+                        <th className="pb-2 font-semibold">
+                          {t("modules.webforms.analytics.date")}
+                        </th>
+                        <th className="pb-2 font-semibold text-right">
                           {t("modules.webforms.analytics.visits")}
                         </th>
-                        <th className="pb-2 font-medium text-right">
+                        <th className="pb-2 font-semibold text-right">
                           {t("modules.webforms.analytics.submissions")}
                         </th>
-                        <th className="pb-2 font-medium text-right">
+                        <th className="pb-2 font-semibold text-right">
                           {t("modules.webforms.analytics.accepted")}
                         </th>
-                        <th className="pb-2 font-medium text-right">
+                        <th className="pb-2 font-semibold text-right">
                           {t("modules.webforms.analytics.conversionRate")}
                         </th>
                       </tr>
@@ -429,7 +431,7 @@ export function WebformAnalyticsScreen({ orgSlug, formId }: WebformAnalyticsScre
                             <td className="py-2.5 text-right text-muted-foreground">
                               {d.submissions}
                             </td>
-                            <td className="py-2.5 text-right text-success font-medium">
+                            <td className="py-2.5 text-right text-success font-semibold">
                               {d.accepted}
                             </td>
                             <td className="py-2.5 text-right font-semibold text-primary">

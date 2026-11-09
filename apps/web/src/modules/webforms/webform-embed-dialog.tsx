@@ -153,7 +153,7 @@ export function WebformEmbedDialog({
             <div className="flex items-center border-b border-border gap-1">
               <button
                 type="button"
-                className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
+                className={`px-3 py-2 text-xs font-semibold border-b-2 transition-colors ${
                   activeTab === "script"
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground"
@@ -165,7 +165,7 @@ export function WebformEmbedDialog({
               </button>
               <button
                 type="button"
-                className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
+                className={`px-3 py-2 text-xs font-semibold border-b-2 transition-colors ${
                   activeTab === "iframe"
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground"
@@ -177,7 +177,7 @@ export function WebformEmbedDialog({
               </button>
               <button
                 type="button"
-                className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
+                className={`px-3 py-2 text-xs font-semibold border-b-2 transition-colors ${
                   activeTab === "url"
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground"
@@ -189,7 +189,7 @@ export function WebformEmbedDialog({
               </button>
               <button
                 type="button"
-                className={`px-3 py-2 text-xs font-medium border-b-2 transition-colors ${
+                className={`px-3 py-2 text-xs font-semibold border-b-2 transition-colors ${
                   activeTab === "source"
                     ? "border-primary text-primary"
                     : "border-transparent text-muted-foreground hover:text-foreground opacity-60"

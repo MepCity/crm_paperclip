@@ -72,10 +72,12 @@ export function WebformUsageCardBody({ module, recordId }: WebformUsageCardBodyP
       <table className="w-full text-left text-xs">
         <thead>
           <tr className="border-b border-border text-muted-foreground">
-            <th className="pb-2 font-medium">{t("modules.webforms.recordUsage.submissionDate")}</th>
-            <th className="pb-2 font-medium">{t("modules.webforms.recordUsage.form")}</th>
-            <th className="pb-2 font-medium">{t("modules.webforms.recordUsage.location")}</th>
-            <th className="pb-2 font-medium text-right">
+            <th className="pb-2 font-semibold">
+              {t("modules.webforms.recordUsage.submissionDate")}
+            </th>
+            <th className="pb-2 font-semibold">{t("modules.webforms.recordUsage.form")}</th>
+            <th className="pb-2 font-semibold">{t("modules.webforms.recordUsage.location")}</th>
+            <th className="pb-2 font-semibold text-right">
               {t("modules.webforms.recordUsage.outcome")}
             </th>
           </tr>
@@ -86,7 +88,7 @@ export function WebformUsageCardBody({ module, recordId }: WebformUsageCardBodyP
               <td className="py-2.5 font-mono text-muted-foreground">
                 {new Date(sub.createdAt).toLocaleString()}
               </td>
-              <td className="py-2.5 font-medium text-foreground">
+              <td className="py-2.5 font-semibold text-foreground">
                 <Link
                   href={`/crm/${orgSlug}/settings/webforms/${sub.formId}`}
                   className="text-primary hover:underline"
