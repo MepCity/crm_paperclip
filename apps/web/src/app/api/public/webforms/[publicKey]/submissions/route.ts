@@ -284,15 +284,39 @@ export const POST = exemptRoute(
     }
 
     // Call ingestion pipeline
-    const result = await submitWebform({
-      publicKey,
-      data,
-      origin,
-      referer,
-      isHostedRoute,
-      appOrigin,
-      ip,
-    });
+    let result: Awaited<ReturnType<typeof submitWebform>>;
+    try {
+      result = await submitWebform({
+        publicKey,
+        data,
+        origin,
+        referer,
+        isHostedRoute,
+        appOrigin,
+        ip,
+      });
+    } catch (err) {
+      if (
+        (typeof err === "object" && err !== null && "fieldErrors" in err) ||
+        (err instanceof Error &&
+          (err.name === "ValidationError" || err.message.toLowerCase().includes("validation")))
+      ) {
+        const errors = (err as { fieldErrors?: Record<string, string[]> }).fieldErrors ?? {
+          form: [(err as Error).message || "Validation failed."],
+        };
+        const isJson =
+          request.headers.get("accept")?.includes("application/json") ||
+          contentType.includes("application/json");
+        if (isJson) {
+          return Response.json({ error: "Validation failed", errors }, { status: 422 });
+        }
+        return new Response(renderValidationErrorHtml(errors), {
+          status: 422,
+          headers: { "Content-Type": "text/html; charset=utf-8" },
+        });
+      }
+      throw err;
+    }
 
     // Form lookup for CORS headers
     const resolved = await resolvePublicForm(publicKey);

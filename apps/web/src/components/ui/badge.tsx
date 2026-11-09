@@ -12,9 +12,15 @@ const badgeBase = "inline-flex items-center px-2 py-0.5 rounded text-xs font-sem
 export function Badge({
   children,
   variant = "neutral",
+  className = "",
+  ...props
 }: {
   children: ReactNode;
   variant?: keyof typeof badgeStyles;
-}) {
-  return <span className={`${badgeBase} ${badgeStyles[variant]}`}>{children}</span>;
+} & React.HTMLAttributes<HTMLSpanElement>) {
+  return (
+    <span className={`${badgeBase} ${badgeStyles[variant]} ${className}`.trim()} {...props}>
+      {children}
+    </span>
+  );
 }

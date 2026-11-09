@@ -320,4 +320,102 @@ test.describe("webforms public routes and ingestion", () => {
     ignoreFailedResponses(pageErrors, [404]);
     expect(fakeRes.status()).toBe(404);
   });
+
+  test("hosted Cases form renders picklists as select, and invalid submission returns 422 instead of 500", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const origin = new URL(page.url()).origin;
+    const jsonHeaders = {
+      "X-CRM-ORG": org.slug,
+      Origin: origin,
+      "Content-Type": "application/json",
+    };
+    const actionHeaders = {
+      "X-CRM-ORG": org.slug,
+      Origin: origin,
+    };
+
+    // 1. Create a Cases webform
+    const createRes = await page.request.post("/crm/v2.1/settings/webforms", {
+      headers: jsonHeaders,
+      data: { name: "Support Ticket Form", module: "Cases" },
+    });
+    expect(createRes.ok()).toBe(true);
+    const { webform } = await createRes.json();
+
+    // 2. Configure fields: Subject, Case_Origin (hidden with default), Status (picklist)
+    const updateRes = await page.request.put(`/crm/v2.1/settings/webforms/${webform.id}`, {
+      headers: jsonHeaders,
+      data: {
+        fields: [
+          { fieldApiName: "Subject", label: "Subject", required: true, hidden: false },
+          {
+            fieldApiName: "Case_Origin",
+            label: "Origin",
+            required: true,
+            hidden: true,
+            defaultValue: "Web",
+          },
+          { fieldApiName: "Status", label: "Status", required: true, hidden: false },
+        ],
+        settings: {
+          buttonLabel: "Submit Ticket",
+          acknowledgement: {
+            kind: "message",
+            text: "Your ticket has been logged.",
+          },
+        },
+      },
+    });
+    expect(updateRes.ok()).toBe(true);
+
+    // 3. Publish & regenerate key
+    const pubRes = await page.request.post(
+      `/crm/v2.1/settings/webforms/${webform.id}/actions/publish`,
+      { headers: actionHeaders },
+    );
+    expect(pubRes.ok()).toBe(true);
+
+    const keyRes = await page.request.post(
+      `/crm/v2.1/settings/webforms/${webform.id}/actions/regenerate_key`,
+      { headers: actionHeaders },
+    );
+    expect(keyRes.ok()).toBe(true);
+    const { publicKey } = await keyRes.json();
+
+    // 4. Visit hosted form: Status must render as a <select>
+    await page.goto(`/f/${publicKey}`);
+    const statusSelect = page.locator("select#field-Status");
+    await expect(statusSelect).toBeVisible();
+    await expect(statusSelect.locator("option")).not.toHaveCount(0);
+
+    // 5. Test invalid JSON submission: invalid picklist value must return 422, NOT 500
+    // First get a valid token from the hosted page
+    const tokenVal = await page.locator('input[name="_token"]').inputValue();
+    await page.waitForTimeout(2100);
+
+    ignoreFailedResponses(pageErrors, [422]);
+    const badSubmitRes = await page.request.post(`/api/public/webforms/${publicKey}/submissions`, {
+      headers: {
+        Origin: origin,
+        Referer: `${origin}/f/${publicKey}`,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      data: {
+        _token: tokenVal,
+        _hp: "",
+        Subject: "Testing invalid status",
+        Status: "NonExistentStatusValue999",
+      },
+    });
+
+    expect(badSubmitRes.status()).toBe(422);
+    const errJson = await badSubmitRes.json();
+    expect(errJson.error).toBe("Validation failed");
+    expect(errJson.errors?.Status).toBeDefined();
+  });
 });

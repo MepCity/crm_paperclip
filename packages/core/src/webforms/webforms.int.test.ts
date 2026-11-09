@@ -618,4 +618,159 @@ describe("webforms backend integration", () => {
     });
     expect(rlResult.outcome).toBe("rate_limited");
   });
+
+  it("handles typed field validation on public submission, recording invalid outcome and stats", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createWebformService();
+    const db = getDb();
+
+    // 1. Create a Cases webform with custom layout
+    const form = await service.createForm(ctx, {
+      name: "Support Request",
+      module: "Cases",
+      layout: "Support Layout",
+    });
+
+    expect(form.draftVersion?.settings.layout).toBe("Support Layout");
+
+    // 2. Add fields: Case_Origin (picklist), Priority (picklist), Status (picklist), Subject (text)
+    const customFields: WebformField[] = [
+      { fieldApiName: "Subject", label: "Subject", required: true, hidden: false },
+      {
+        fieldApiName: "Case_Origin",
+        label: "Origin",
+        required: true,
+        hidden: true,
+        defaultValue: "Web",
+      },
+      { fieldApiName: "Status", label: "Status", required: true, hidden: false },
+    ];
+
+    await service.updateDraft(ctx, form.id, {
+      fields: customFields,
+      settings: {
+        buttonLabel: "Submit Case",
+        ownerKind: "user",
+        ownerRef: ctx.userId,
+        notifyOwner: false,
+        acknowledgement: { kind: "message", text: "Ticket opened." },
+        challenge: false,
+        restrictLocations: false,
+        captureAttribution: false,
+        approval: "none",
+        doubleOptIn: false,
+        layout: "Support Layout",
+      },
+    });
+
+    // 3. Publishing should work because hidden required field Case_Origin has default value
+    const published = await service.publish(ctx, form.id);
+    expect(published.publishedVersion?.settings.layout).toBe("Support Layout");
+
+    // Get public key
+    const [keyRow] = await db
+      .select()
+      .from(schema.publicEndpointKeys)
+      .where(
+        and(
+          eq(schema.publicEndpointKeys.organizationId, ctx.orgId),
+          eq(schema.publicEndpointKeys.kind, "webform"),
+          eq(schema.publicEndpointKeys.targetId, form.id),
+        ),
+      );
+    expect(keyRow).toBeDefined();
+
+    const versionId = published.publishedVersion?.id;
+    expect(versionId).toBeDefined();
+    if (!versionId) throw new Error("Expected versionId");
+
+    // 4. Submit invalid picklist value for Status (Status only allows "New", "Closed", "On Hold", "Escalated")
+    // Use submitWebform with public key:
+    // To get the actual raw key, let's regenerate a key to get raw publicKey
+    const regenerated = await service.regeneratePublicKey(ctx, form.id);
+    const publicKey = regenerated.publicKey;
+
+    const tokenForSubmission = createRenderToken({
+      orgId: ctx.orgId,
+      formId: form.id,
+      versionId,
+      issuedAt: Date.now() - 5000,
+    });
+
+    const invalidResult = await submitWebform({
+      publicKey,
+      data: {
+        _token: tokenForSubmission,
+        _hp: "",
+        Subject: "Need help",
+        Status: "InvalidStatusChoice123",
+      },
+      origin: "https://example.com",
+      ip: "192.168.1.1",
+    });
+
+    expect(invalidResult.outcome).toBe("invalid");
+    expect(invalidResult.errors).toBeDefined();
+    expect(invalidResult.errors?.Status).toBeDefined();
+
+    // 5. Verify stats updated for invalid
+    const [stats] = await db
+      .select()
+      .from(schema.webformDailyStats)
+      .where(
+        and(
+          eq(schema.webformDailyStats.organizationId, ctx.orgId),
+          eq(schema.webformDailyStats.formId, form.id),
+        ),
+      );
+    expect(stats?.invalid).toBeGreaterThanOrEqual(1);
+
+    // 6. Submitting valid picklist value succeeds
+    const validToken = createRenderToken({
+      orgId: ctx.orgId,
+      formId: form.id,
+      versionId,
+      issuedAt: Date.now() - 5000,
+    });
+
+    const validResult = await submitWebform({
+      publicKey,
+      data: {
+        _token: validToken,
+        _hp: "",
+        Subject: "Valid help request",
+        Status: "New",
+      },
+      origin: "https://example.com",
+      ip: "192.168.1.1",
+    });
+
+    expect(validResult.outcome).toBe("accepted");
+    expect(validResult.recordId).toBeDefined();
+  });
+
+  it("rejects hidden required fields missing default value in draft update", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createWebformService();
+
+    const form = await service.createForm(ctx, {
+      name: "Lead Form",
+      module: "Leads",
+    });
+
+    // Try to update draft with hidden required field without default
+    await expect(
+      service.updateDraft(ctx, form.id, {
+        fields: [
+          {
+            fieldApiName: "Last_Name",
+            label: "Last Name",
+            required: true,
+            hidden: true,
+            defaultValue: "",
+          },
+        ],
+      }),
+    ).rejects.toThrow(/Hidden required field .* must have a default value/);
+  });
 });

@@ -58,7 +58,7 @@ test("webforms builder: create form → add fields → set required → publish 
 
   // Assert published status: status is ACTIVE, version shows Published v1
   await expect(page.getByText("Published v1")).toBeVisible();
-  await expect(page.getByText("ACTIVE", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("form-status-badge")).toContainText(/active/i);
 
   // In published mode, "Edit Form (New Draft)" is visible
   const editFormBtn = page.getByTestId("edit-form-button");
@@ -72,5 +72,5 @@ test("webforms builder: create form → add fields → set required → publish 
   // 8. Publish again -> publishes v2
   await page.getByTestId("publish-form-button").click();
   await expect(page.getByText("Published v2")).toBeVisible();
-  await expect(page.getByText("ACTIVE", { exact: true })).toBeVisible();
+  await expect(page.getByTestId("form-status-badge")).toContainText(/active/i);
 });

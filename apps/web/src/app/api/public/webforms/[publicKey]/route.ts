@@ -4,6 +4,7 @@ import {
   createRenderToken,
   generateChallenge,
   getClientIp,
+  getEligibleFieldsForModule,
   type OrgContext,
   recordVisit,
   resolveLocation,
@@ -143,6 +144,18 @@ export const GET = exemptRoute(
       challengeHash,
     });
 
+    const eligibleFields = getEligibleFieldsForModule(resolved.form.module);
+    const fieldDefMap = new Map(eligibleFields.map((f) => [f.apiName, f]));
+
+    const enrichedFields = resolved.version.fields.map((f) => {
+      const def = fieldDefMap.get(f.fieldApiName);
+      return {
+        ...f,
+        dataType: def?.dataType ?? "text",
+        picklistOptions: def?.picklistOptions ?? null,
+      };
+    });
+
     const body = {
       form: {
         id: resolved.form.id,
@@ -152,8 +165,9 @@ export const GET = exemptRoute(
       version: {
         id: resolved.version.id,
         number: resolved.version.number,
-        fields: resolved.version.fields,
+        fields: enrichedFields,
         settings: {
+          layout: resolved.version.settings.layout,
           buttonLabel: resolved.version.settings.buttonLabel,
           challenge: resolved.version.settings.challenge,
           captureAttribution: resolved.version.settings.captureAttribution,

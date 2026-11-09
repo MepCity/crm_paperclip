@@ -18,6 +18,7 @@ export const webformFieldSchema = z.object({
 });
 
 export const webformSettingsSchema = z.object({
+  layout: z.string().trim().max(120).default("Standard Layout"),
   buttonLabel: z.string().trim().min(1).max(80).default("Submit"),
   ownerKind: z.enum(["user", "assignment_rule"]).default("user"),
   ownerRef: z.string().default(""),
@@ -44,6 +45,7 @@ export const webformSettingsSchema = z.object({
 export const createWebformSchema = z.object({
   name: z.string().trim().min(1).max(120),
   module: z.enum(WEBFORM_MODULES),
+  layout: z.string().trim().max(120).optional(),
 });
 
 export const updateDraftSchema = z.object({
@@ -206,6 +208,27 @@ export function validateForPublish(options: {
         },
         `Redirect URL origin '${redirectOrigin}' is not in the location allowlist.`,
       );
+    }
+  }
+
+  // 3. Hidden required fields must have a default value
+  for (const field of options.fields) {
+    if (field.hidden && field.required) {
+      const hasDefault =
+        field.defaultValue !== undefined &&
+        field.defaultValue !== null &&
+        String(field.defaultValue).trim() !== "";
+      if (!hasDefault) {
+        throw new ValidationError(
+          {
+            fields: [
+              `Hidden required field '${field.label || field.fieldApiName}' must have a default value.`,
+            ],
+          },
+          `Hidden required field '${field.label || field.fieldApiName}' must have a default value.`,
+          "mandatory",
+        );
+      }
     }
   }
 }

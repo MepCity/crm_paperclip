@@ -190,7 +190,7 @@ export function createWebformService() {
 
     async createForm(
       ctx: OrgContext,
-      input: { name: string; module: WebformModule },
+      input: { name: string; module: WebformModule; layout?: string },
     ): Promise<WebformDetail> {
       return withOrg(ctx, async (tx) => {
         // Check uniqueness of name (case-insensitive)
@@ -244,6 +244,7 @@ export function createWebformService() {
             fields: initialFields,
             settings: webformSettingsSchema.parse({
               ownerRef: ctx.userId,
+              layout: input.layout || "Standard Layout",
             }),
           })
           .returning();
@@ -312,6 +313,28 @@ export function createWebformService() {
             );
           if (existing) {
             throw new ConflictError("A webform with this name already exists.");
+          }
+        }
+
+        if (input.fields !== undefined) {
+          for (const field of input.fields) {
+            if (field.hidden && field.required) {
+              const hasDefault =
+                field.defaultValue !== undefined &&
+                field.defaultValue !== null &&
+                String(field.defaultValue).trim() !== "";
+              if (!hasDefault) {
+                throw new ValidationError(
+                  {
+                    fields: [
+                      `Hidden required field '${field.label || field.fieldApiName}' must have a default value.`,
+                    ],
+                  },
+                  `Hidden required field '${field.label || field.fieldApiName}' must have a default value.`,
+                  "mandatory",
+                );
+              }
+            }
           }
         }
 
