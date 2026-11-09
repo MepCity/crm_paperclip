@@ -1040,6 +1040,7 @@
       "rules": "Otomatik Yanıt Kuralları"
     },
     "list": {
+      "emptyHeading": "Web sitesi ziyaretçilerinizi müşterilere dönüştürün",
       "count": "{count} web formu yapılandırıldı",
       "newForm": "Yeni Form",
       "editForm": "Formu Düzenle",
@@ -1047,11 +1048,13 @@
       "deactivate": "Devre Dışı Bırak",
       "delete": "Sil",
       "formBuilding": "Form Oluşturma",
-      "formBuildingDesc": "Harici web sitelerinden ve açılış sayfalarından aday, kişi veya talep toplamak için özelleştirilmiş web formları oluşturun.",
-      "analytics": "Analizler",
-      "analyticsDesc": "Tüm alan adlarındaki web formu ziyaretlerini, gönderimlerini, spam tespitini ve dönüşüm performansını izleyin.",
+      "formBuildingDesc": "CRM sisteminize veri göndermek için özel web formlarınızı oluşturun.",
+      "analytics": "Form Analitikleri",
+      "analyticsDesc": "Müşteri işlemlerini analiz etmek ve dönüştürmelerinizi iyileştirmek için formlarınızı izleyin.",
       "abTesting": "A/B Testi",
-      "abTestingDesc": "Gönderim dönüşümünü en üst düzeye çıkarmak için alan sıralaması, harekete geçirici butonlar ve form düzenleri ile denemeler yapın.",
+      "abTestingDesc": "Hangisinin daha iyi çalıştığını belirlemek için bir formun farklı versiyonlarını karşılaştırın.",
+      "learnMore": "Daha Fazlası",
+      "contextHelp": "Yardım",
       "table": {
         "formName": "Form Adı",
         "module": "Modül",
@@ -1091,8 +1094,10 @@
     "dialogs": {
       "newFormTitle": "Yeni Form",
       "formName": "Form Adı",
-      "formNamePlaceholder": "örn. Web Sitesi İletişim Formu",
+      "formNamePlaceholder": "Form Adı Girin",
       "module": "Modül",
+      "chooseModule": "Modül Seç",
+      "searchModulesPlaceholder": "Ara...",
       "editRuleTitle": "Otomatik Yanıt Kuralını Düzenle",
       "newRuleTitle": "Yeni Otomatik Yanıt Kuralı",
       "ruleName": "Kural Adı",
