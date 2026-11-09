@@ -5,6 +5,10 @@ import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-
 import { RelatedInvoicesCardBody } from "@/components/records/detail/related-invoices-card-body";
 import { RelatedQuotesCardBody } from "@/components/records/detail/related-quotes-card-body";
 import { ReportingContactsCardBody } from "@/components/records/detail/reporting-contacts-card-body";
+import {
+  WEBFORM_USAGE_TITLE,
+  WebformUsageCardBody,
+} from "@/components/records/webforms/webform-usage-card-body";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
 import { emailsCard } from "../emails/record-card";
@@ -513,6 +517,18 @@ export function createContactsRelatedLists(
         label: "Enable feature",
         moduleKey: "P3",
       },
+    },
+    {
+      id: "webform-usage",
+      renderBody: ({ record }) =>
+        record
+          ? createElement(WebformUsageCardBody, { module: "Contacts", recordId: record.id })
+          : undefined,
+      title: WEBFORM_USAGE_TITLE,
+      moduleKey: "M2",
+      order: 20,
+      targetId: "related-list-webform-usage",
+      emptyStateText: "No records found",
     },
   ];
 }

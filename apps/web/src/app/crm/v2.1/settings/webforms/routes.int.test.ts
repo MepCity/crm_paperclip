@@ -1,6 +1,7 @@
 import { toClientPermissions } from "@crm/core/access";
 import { addTestMember, createTestOrganization } from "@crm/core/testing";
 import { describe, expect, it } from "vitest";
+import * as recordWebformUsage from "@/app/crm/v2.1/[module]/[recordId]/webform_usage/route";
 import * as rulesDetail from "@/app/crm/v2.1/settings/webform_auto_response_rules/[id]/route";
 import * as rulesReorder from "@/app/crm/v2.1/settings/webform_auto_response_rules/actions/reorder/route";
 import * as rulesList from "@/app/crm/v2.1/settings/webform_auto_response_rules/route";
@@ -8,6 +9,7 @@ import * as webformsActivate from "@/app/crm/v2.1/settings/webforms/[id]/actions
 import * as webformsDeactivate from "@/app/crm/v2.1/settings/webforms/[id]/actions/deactivate/route";
 import * as webformsPublish from "@/app/crm/v2.1/settings/webforms/[id]/actions/publish/route";
 import * as webformsKey from "@/app/crm/v2.1/settings/webforms/[id]/actions/regenerate_key/route";
+import * as webformsAnalytics from "@/app/crm/v2.1/settings/webforms/[id]/analytics/route";
 import * as webformsLocations from "@/app/crm/v2.1/settings/webforms/[id]/locations/route";
 import * as webformsDetail from "@/app/crm/v2.1/settings/webforms/[id]/route";
 import * as webformsFields from "@/app/crm/v2.1/settings/webforms/eligible_fields/route";
@@ -281,6 +283,46 @@ describe("webforms settings routes access gating", () => {
       { id: dummyRuleId },
     );
     expect(deniedRuleDelete.status).toBe(403);
+
+    // GET analytics
+    const deniedAnalytics = await call(
+      webformsAnalytics.GET as Handler,
+      req(
+        "GET",
+        `/crm/v2.1/settings/webforms/${formId}/analytics`,
+        standardMember.headers,
+        ctx.orgSlug,
+      ),
+      { id: formId },
+    );
+    expect(deniedAnalytics.status).toBe(403);
+
+    // Admin can access analytics
+    const adminAnalytics = await call(
+      webformsAnalytics.GET as Handler,
+      req("GET", `/crm/v2.1/settings/webforms/${formId}/analytics`, admin.headers, ctx.orgSlug),
+      { id: formId },
+    );
+    expect(adminAnalytics.status).toBe(200);
+    const analyticsBody = (await adminAnalytics.json()) as { analytics: { formId: string } };
+    expect(analyticsBody.analytics.formId).toBe(formId);
+
+    // Record Webform Usage endpoint module guard
+    const unsupportedModuleUsage = await call(
+      recordWebformUsage.GET as Handler,
+      req("GET", "/crm/v2.1/Accounts/acc-1/webform_usage", admin.headers, ctx.orgSlug),
+      { module: "Accounts", recordId: "acc-1" },
+    );
+    expect(unsupportedModuleUsage.status).toBe(404);
+
+    const supportedModuleUsage = await call(
+      recordWebformUsage.GET as Handler,
+      req("GET", "/crm/v2.1/Leads/lead-1/webform_usage", admin.headers, ctx.orgSlug),
+      { module: "Leads", recordId: "lead-1" },
+    );
+    expect(supportedModuleUsage.status).toBe(200);
+    const usageBody = (await supportedModuleUsage.json()) as { submissions: unknown[] };
+    expect(Array.isArray(usageBody.submissions)).toBe(true);
 
     // DELETE form
     const deniedDelete = await call(

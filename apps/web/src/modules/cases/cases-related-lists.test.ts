@@ -17,6 +17,7 @@ test("casesRelatedLists follows metadata order and hides unobservable cards", ()
     "Open Activities",
     "Closed Activities",
     "Emails",
+    "Webform Usage",
   ]);
   const orders = casesRelatedLists.map((list) => list.order);
   expect([...orders].sort((a, b) => a - b)).toEqual(orders);

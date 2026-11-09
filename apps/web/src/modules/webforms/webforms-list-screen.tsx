@@ -375,6 +375,16 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
                           <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() =>
+                              router.push(`/crm/${orgSlug}/settings/webforms/${form.id}/analytics`)
+                            }
+                            data-testid={`form-analytics-${form.id}`}
+                          >
+                            {t("modules.webforms.list.analytics")}
+                          </Button>
+                          <Button
                             variant="secondary"
                             size="sm"
                             onClick={() =>

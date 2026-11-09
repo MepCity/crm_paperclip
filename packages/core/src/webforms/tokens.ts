@@ -1,4 +1,4 @@
-import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
 import { parseEnv } from "../env";
 
 export interface RenderTokenPayload {
@@ -41,6 +41,22 @@ export function getAppSecret(envSource: Record<string, string | undefined> = pro
       }`,
     );
   }
+}
+
+export function derivePublicKey(
+  orgId: string,
+  formId: string,
+  createdAt: Date | string | number,
+): { publicKey: string; keyHash: string } {
+  const secret = getAppSecret();
+  const timeMs = typeof createdAt === "number" ? createdAt : new Date(createdAt).getTime();
+  const rawKey = createHmac("sha256", secret)
+    .update(`webform_key:${orgId}:${formId}:${timeMs}`)
+    .digest()
+    .subarray(0, 16)
+    .toString("base64url");
+  const keyHash = createHash("sha256").update(rawKey).digest("base64url");
+  return { publicKey: rawKey, keyHash };
 }
 
 export function computeClientHash(ip: string, secret = getAppSecret()): string {

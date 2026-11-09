@@ -1160,7 +1160,65 @@
         "title": "Açık Anahtarı Yeniden Oluştur",
         "message": "Anahtarın yeniden oluşturulması geçerli anahtarı derhal iptal edecektir. Eski yerleştirmeyi veya açık anahtarı kullanan harici web siteleri güncellenene kadar gönderimleri kabul etmeyi durduracaktır.",
         "confirm": "Yeniden Oluştur"
-      }
+      },
+      "embedButton": "Yerleştirme Kodu",
+      "analyticsButton": "Analitik"
+    },
+    "embed": {
+      "title": "Yerleştirme Kodları: {name}",
+      "scriptEmbed": "Komut Dosyası Yerleştirme (Script)",
+      "scriptEmbedDesc": "Formu üst belgeye harici erişim vermeden bir iframe içinde otomatik olarak oluşturan hafif komut dosyası.",
+      "iframe": "iFrame",
+      "iframeDesc": "Web formunu doğrudan herhangi bir web sitesine veya CMS'ye yerleştirmek için standart HTML iframe parçacığı.",
+      "hostedUrl": "Barındırılan URL",
+      "hostedUrlDesc": "Doğrudan test etmek veya paylaşmak için barındırılan form sayfasına doğrudan genel bağlantı.",
+      "sourceHtml": "Kaynak HTML",
+      "sourceHtmlDisabled": "Güvenli form gönderimleri imzalı render tokenları ve anti-spam doğrulaması gerektirdiğinden statik kaynak HTML yerleştirmesi sunulmamaktadır.",
+      "copyCode": "Kodu Kopyala",
+      "copyUrl": "URL'yi Kopyala",
+      "copied": "Kopyalandı!",
+      "openInNewTab": "Yeni Sekmede Aç",
+      "unpublishedNotice": "Bu form henüz yayınlanmadı. Ziyaretçilerin gönderebilmesi için formu yayınlayın.",
+      "close": "Kapat"
+    },
+    "analytics": {
+      "title": "Webform Analitiği: {name}",
+      "back": "Webformlara Dön",
+      "dateRange": "Tarih Aralığı",
+      "allTime": "Tüm zamanlar",
+      "last7Days": "Son 7 gün",
+      "last30Days": "Son 30 gün",
+      "last90Days": "Son 90 gün",
+      "allLocations": "Tüm Konumlar",
+      "visits": "Toplam Ziyaret",
+      "submissions": "Toplam Gönderim",
+      "accepted": "Kabul Edilen Kayıtlar",
+      "conversionRate": "Dönüşüm Oranı",
+      "outcomesTitle": "Sonuca Göre Gönderimler",
+      "outcomeAccepted": "Kabul Edildi",
+      "outcomeInvalid": "Geçersiz (Doğrulama Hataları)",
+      "outcomeSpam": "Şüpheli Spam",
+      "outcomeDuplicate": "Mükerrer (Onay Bekliyor)",
+      "outcomePendingApproval": "Onay Bekliyor",
+      "outcomePendingDoubleOptIn": "Çift Onay Bekliyor",
+      "outcomeRejectedLocation": "Reddedilen Konum",
+      "outcomeRateLimited": "Hız Sınırı Aşıldı",
+      "locationBreakdown": "Konuma Göre Performans",
+      "location": "Konum",
+      "dailyTrends": "Günlük Dağılım",
+      "date": "Tarih",
+      "count": "Adet",
+      "noData": "Henüz analitik verisi kaydedilmedi",
+      "noDataDesc": "Ziyaretçiler yayınlanan web formunuzu görüntüleyip gönderdikçe analitik veriler otomatik olarak güncellenecektir."
+    },
+    "recordUsage": {
+      "title": "Webform Kullanımı",
+      "submissionDate": "Gönderim Tarihi",
+      "form": "Webform",
+      "location": "Konum",
+      "outcome": "Sonuç",
+      "noUsage": "Bu kayıt için kaydedilmiş webform gönderimi yok",
+      "viewForm": "Webformu Görüntüle"
     }
   }
 }
