@@ -33,13 +33,18 @@ function escapeHtml(str: unknown): string {
     .replace(/'/g, "&#039;");
 }
 
-function renderThankYouHtml(message: string): string {
+function renderThankYouHtml(message: string, isTr = false): string {
+  const displayMessage =
+    isTr && message === "Thank you for your submission."
+      ? "Gönderiminiz için teşekkür ederiz."
+      : message;
+
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${isTr ? "tr" : "en"}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Submission Received</title>
+  <title>${isTr ? "Gönderim Alındı" : "Submission Received"}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1rem; }
     .card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2.5rem; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -51,30 +56,30 @@ function renderThankYouHtml(message: string): string {
 <body>
   <div class="card">
     <div class="icon">✓</div>
-    <h1>Thank You</h1>
-    <p id="thank-you-message">${escapeHtml(message)}</p>
+    <h1>${isTr ? "Teşekkürler" : "Thank You"}</h1>
+    <p id="thank-you-message">${escapeHtml(displayMessage)}</p>
   </div>
 </body>
 </html>`;
 }
 
-function renderValidationErrorHtml(errors?: Record<string, string[]>): string {
+function renderValidationErrorHtml(errors?: Record<string, string[]>, isTr = false): string {
   const errorItems = errors
     ? Object.entries(errors)
         .flatMap(([_field, msgs]) => msgs)
         .map((m) => `<li style="margin-bottom: 0.25rem;">${escapeHtml(m)}</li>`)
         .join("\n")
-    : "<li>Validation failed.</li>";
+    : `<li>${isTr ? "Doğrulama başarısız." : "Validation failed."}</li>`;
 
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${isTr ? "tr" : "en"}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Submission Error</title>
+  <title>${isTr ? "Gönderim Hatası" : "Submission Error"}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1rem; }
-    .card { background: white; border: 1px solid #fecaca; border-radius: 8px; padding: 2.5rem; max-width: 480px; width: 100%; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+    .card { background: white; border: 1px solid #fecaca; border-radius: 8px; padding: 2.5rem; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
     h1 { font-size: 1.25rem; font-weight: 600; margin-bottom: 0.75rem; color: #dc2626; }
     ul { color: #991b1b; font-size: 0.875rem; padding-left: 1.25rem; margin: 0 0 1.5rem 0; line-height: 1.5; }
     .btn { display: inline-block; background: #f1f5f9; color: #334155; text-decoration: none; border: 1px solid #cbd5e1; border-radius: 6px; padding: 0.5rem 1rem; font-size: 0.875rem; font-weight: 500; cursor: pointer; }
@@ -83,23 +88,23 @@ function renderValidationErrorHtml(errors?: Record<string, string[]>): string {
 </head>
 <body>
   <div class="card">
-    <h1>Please fix the following:</h1>
+    <h1>${isTr ? "Lütfen aşağıdaki hataları düzeltin:" : "Please fix the following:"}</h1>
     <ul>
       ${errorItems}
     </ul>
-    <button type="button" class="btn" onclick="history.back()">Go back</button>
+    <button type="button" class="btn" onclick="history.back()">${isTr ? "Geri dön" : "Go back"}</button>
   </div>
 </body>
 </html>`;
 }
 
-function renderRateLimitHtml(): string {
+function renderRateLimitHtml(isTr = false): string {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${isTr ? "tr" : "en"}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Too Many Requests</title>
+  <title>${isTr ? "Çok Fazla İstek" : "Too Many Requests"}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1rem; }
     .card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2.5rem; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -109,20 +114,24 @@ function renderRateLimitHtml(): string {
 </head>
 <body>
   <div class="card">
-    <h1>Too Many Requests</h1>
-    <p>Rate limit exceeded. Please try again later.</p>
+    <h1>${isTr ? "Çok Fazla İstek" : "Too Many Requests"}</h1>
+    <p>${
+      isTr
+        ? "İstek sınırı aşıldı. Lütfen daha sonra tekrar deneyin."
+        : "Rate limit exceeded. Please try again later."
+    }</p>
   </div>
 </body>
 </html>`;
 }
 
-function renderNotFoundHtml(): string {
+function renderNotFoundHtml(isTr = false): string {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${isTr ? "tr" : "en"}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Form Unavailable</title>
+  <title>${isTr ? "Form Kullanılamıyor" : "Form Unavailable"}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1rem; }
     .card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2.5rem; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -132,8 +141,12 @@ function renderNotFoundHtml(): string {
 </head>
 <body>
   <div class="card">
-    <h1>Form Unavailable</h1>
-    <p>The form you are looking for is unavailable, inactive, or does not exist.</p>
+    <h1>${isTr ? "Form Kullanılamıyor" : "Form Unavailable"}</h1>
+    <p>${
+      isTr
+        ? "Aradığınız form kullanılamıyor, devre dışı veya mevcut değil."
+        : "The form you are looking for is unavailable, inactive, or does not exist."
+    }</p>
   </div>
 </body>
 </html>`;
@@ -264,6 +277,9 @@ export const POST = exemptRoute(
     const appOrigin = getAppPublicOrigin(request);
     const origin = request.headers.get("origin");
     const referer = request.headers.get("referer");
+    const acceptLang = request.headers.get("accept-language") || "";
+    const isTr =
+      acceptLang.toLowerCase().includes("tr") || !acceptLang.toLowerCase().includes("en");
 
     // Origin header takes precedence: if Origin is present, it must match appOrigin to be considered hosted.
     let isHostedRoute = false;
@@ -302,7 +318,7 @@ export const POST = exemptRoute(
           (err.name === "ValidationError" || err.message.toLowerCase().includes("validation")))
       ) {
         const errors = (err as { fieldErrors?: Record<string, string[]> }).fieldErrors ?? {
-          form: [(err as Error).message || "Validation failed."],
+          form: [(err as Error).message || (isTr ? "Doğrulama başarısız." : "Validation failed.")],
         };
         const isJson =
           request.headers.get("accept")?.includes("application/json") ||
@@ -310,7 +326,7 @@ export const POST = exemptRoute(
         if (isJson) {
           return Response.json({ error: "Validation failed", errors }, { status: 422 });
         }
-        return new Response(renderValidationErrorHtml(errors), {
+        return new Response(renderValidationErrorHtml(errors, isTr), {
           status: 422,
           headers: { "Content-Type": "text/html; charset=utf-8" },
         });
@@ -336,7 +352,7 @@ export const POST = exemptRoute(
           { status: 429, headers: corsHeaders },
         );
       }
-      return new Response(renderRateLimitHtml(), {
+      return new Response(renderRateLimitHtml(isTr), {
         status: 429,
         headers: {
           ...Object.fromEntries(corsHeaders.entries()),
@@ -350,7 +366,7 @@ export const POST = exemptRoute(
       if (isJsonClient) {
         return Response.json({ error: "Form unavailable" }, { status: 404, headers: corsHeaders });
       }
-      return new Response(renderNotFoundHtml(), {
+      return new Response(renderNotFoundHtml(isTr), {
         status: 404,
         headers: {
           ...Object.fromEntries(corsHeaders.entries()),
@@ -366,7 +382,7 @@ export const POST = exemptRoute(
           { status: 422, headers: corsHeaders },
         );
       }
-      return new Response(renderValidationErrorHtml(result.errors), {
+      return new Response(renderValidationErrorHtml(result.errors, isTr), {
         status: 422,
         headers: {
           ...Object.fromEntries(corsHeaders.entries()),
@@ -393,7 +409,7 @@ export const POST = exemptRoute(
         ? result.acknowledgement.text
         : "Thank you for your submission.";
 
-    return new Response(renderThankYouHtml(thankYouText), {
+    return new Response(renderThankYouHtml(thankYouText, isTr), {
       status: 200,
       headers: {
         ...Object.fromEntries(corsHeaders.entries()),

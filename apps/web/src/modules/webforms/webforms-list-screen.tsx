@@ -304,17 +304,17 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
   });
 
   return (
-    <div className="flex flex-col gap-6 p-6">
+    <div className="relative flex flex-col rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
       {/* Tabs */}
-      <div className="flex border-b border-border">
+      <div className="flex border-b border-border px-6 pt-3 bg-surface">
         <button
           type="button"
           role="tab"
           aria-selected={activeTab === "webforms"}
           onClick={() => setActiveTab("webforms")}
-          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
+          className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "webforms"
-              ? "border-primary text-primary"
+              ? "border-primary text-foreground"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -325,9 +325,9 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
           role="tab"
           aria-selected={activeTab === "auto-response-rules"}
           onClick={() => setActiveTab("auto-response-rules")}
-          className={`px-4 py-2 text-sm font-semibold border-b-2 transition-colors ${
+          className={`px-4 py-2.5 text-sm font-semibold border-b-2 transition-colors ${
             activeTab === "auto-response-rules"
-              ? "border-primary text-primary"
+              ? "border-primary text-foreground"
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
@@ -337,7 +337,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
 
       {/* Webforms Tab Content */}
       {activeTab === "webforms" && (
-        <div className="flex flex-col gap-4">
+        <div className={forms.length > 0 ? "flex flex-col gap-4 p-6" : ""}>
           {forms.length > 0 && (
             <div className="flex items-center justify-between">
               <span className="text-sm text-muted-foreground">
@@ -366,51 +366,51 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
           ) : forms.length === 0 ? (
             /* W1 Empty Landing Page Panels */
             <div
-              className="relative flex flex-col items-center justify-center py-8 px-4"
+              className="relative flex flex-col items-center justify-center pt-8 pb-12 px-6"
               data-testid="webforms-empty-state"
             >
               {/* Contextual Help Marker on right edge */}
               <Link
-                href="#"
+                href={`/crm/${orgSlug}/settings/webforms/help#what-is-webform`}
                 aria-label={t("modules.webforms.list.contextHelp")}
-                className="absolute top-0 right-0 flex items-center justify-center w-8 h-10 rounded-l-md bg-[#ea580c] hover:bg-[#ea580c]/90 text-white shadow-sm transition-colors cursor-pointer"
+                className="absolute top-4 right-0 flex items-center justify-center w-7 h-9 rounded-l-md bg-[#ea580c] hover:bg-[#ea580c]/90 text-white shadow-sm transition-colors cursor-pointer"
                 data-testid="contextual-help-marker"
               >
                 <span className="text-sm font-bold">?</span>
               </Link>
 
               {/* Centered Heading */}
-              <h2 className="text-xl font-bold text-foreground text-center mb-8 max-w-2xl">
+              <h2 className="text-lg font-bold text-foreground text-center mb-6 max-w-2xl">
                 {t("modules.webforms.list.emptyHeading")}
               </h2>
 
               {/* 3 Columns */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full mb-10">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl w-full mb-8">
                 {/* Column 1: Form Oluşturma */}
-                <div className="flex flex-col items-center text-center px-4">
-                  <div className="w-52 h-36 flex items-center justify-center mb-4">
+                <div className="flex flex-col items-center text-center px-3">
+                  <div className="w-40 h-28 flex items-center justify-center mb-2.5">
                     <FormCreationIllustration />
                   </div>
-                  <h3 className="font-semibold text-base text-foreground mb-2">
+                  <h3 className="font-semibold text-sm text-foreground mb-1.5">
                     {t("modules.webforms.list.formBuilding")}
                   </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-xs text-muted-foreground leading-relaxed max-w-[260px]">
                     {t("modules.webforms.list.formBuildingDesc")}
                   </p>
                 </div>
 
                 {/* Column 2: Form Analitikleri */}
-                <div className="flex flex-col items-center text-center px-4">
-                  <div className="w-52 h-36 flex items-center justify-center mb-4">
+                <div className="flex flex-col items-center text-center px-3">
+                  <div className="w-40 h-28 flex items-center justify-center mb-2.5">
                     <FormAnalyticsIllustration />
                   </div>
-                  <h3 className="font-semibold text-base text-foreground mb-2">
+                  <h3 className="font-semibold text-sm text-foreground mb-1.5">
                     {t("modules.webforms.list.analytics")}
                   </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-xs text-muted-foreground leading-relaxed max-w-[260px]">
                     {t("modules.webforms.list.analyticsDesc")}{" "}
                     <Link
-                      href="#"
+                      href={`/crm/${orgSlug}/settings/webforms/help#analytics`}
                       className="text-primary hover:underline inline-block ml-1"
                       data-testid="analytics-learn-more"
                     >
@@ -420,17 +420,17 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                 </div>
 
                 {/* Column 3: A/B Testi */}
-                <div className="flex flex-col items-center text-center px-4">
-                  <div className="w-52 h-36 flex items-center justify-center mb-4">
+                <div className="flex flex-col items-center text-center px-3">
+                  <div className="w-40 h-28 flex items-center justify-center mb-2.5">
                     <AbTestingIllustration />
                   </div>
-                  <h3 className="font-semibold text-base text-foreground mb-2">
+                  <h3 className="font-semibold text-sm text-foreground mb-1.5">
                     {t("modules.webforms.list.abTesting")}
                   </h3>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
+                  <p className="text-xs text-muted-foreground leading-relaxed max-w-[260px]">
                     {t("modules.webforms.list.abTestingDesc")}{" "}
                     <Link
-                      href="#"
+                      href={`/crm/${orgSlug}/settings/webforms/help#ab-testing`}
                       className="text-primary hover:underline inline-block ml-1"
                       data-testid="ab-testing-learn-more"
                     >
@@ -446,7 +446,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                   variant="primary"
                   onClick={handleOpenCreateDialog}
                   data-testid="new-form-button"
-                  className="px-6 py-2"
+                  className="px-6 py-2 text-sm font-semibold"
                 >
                   {t("modules.webforms.list.newForm")}
                 </Button>
@@ -556,7 +556,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
 
       {/* Auto-response Rules Tab Content */}
       {activeTab === "auto-response-rules" && (
-        <div className="flex flex-col gap-4">
+        <div className="flex flex-col gap-4 p-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <label htmlFor="rule-module-filter" className="text-sm font-semibold text-foreground">
@@ -691,8 +691,8 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
         isOpen={createDialogOpen}
         onOpenChange={(open) => !open && handleCloseCreateDialog()}
         aria-labelledby="new-form-dialog-title"
-        panelStyle={{ width: "min(600px, 95vw)" }}
-        panelClassName="border border-t-0 border-border rounded-b-lg shadow-xl"
+        panelStyle={{ width: "min(560px, 95vw)" }}
+        panelClassName="border border-t-0 border-border rounded-b-xl shadow-xl"
       >
         <div className="p-6 pt-5 flex flex-col gap-5">
           <h2 id="new-form-dialog-title" className="text-lg font-semibold text-foreground">
@@ -809,26 +809,6 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                     </div>
                   </div>
                 )}
-              </div>
-            </div>
-
-            {/* Row 3: Layout */}
-            <div className="grid grid-cols-[120px_1fr] items-center gap-4">
-              <label htmlFor="form-layout-select" className="text-right text-sm text-foreground">
-                {t("modules.webforms.dialogs.layout")}
-              </label>
-              <div className="relative">
-                <select
-                  id="form-layout-select"
-                  value={formLayout}
-                  onChange={(e) => setFormLayout(e.target.value)}
-                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                  data-testid="form-layout-select"
-                >
-                  <option value="Standard Layout">
-                    {t("modules.webforms.dialogs.standardLayout")}
-                  </option>
-                </select>
               </div>
             </div>
           </div>

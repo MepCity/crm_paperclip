@@ -351,6 +351,8 @@
     "invoices": "Faturalar",
     "social": "Sosyal",
     "emails": "E-postalar",
-    "competitors": "Rakipler"
+    "competitors": "Rakipler",
+    "webformUsage": "Webform Kullanımı",
+    "webform-usage": "Webform Kullanımı"
   }
 }

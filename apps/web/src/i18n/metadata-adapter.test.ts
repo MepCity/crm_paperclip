@@ -137,6 +137,7 @@ describe("MetadataDisplayAdapter", () => {
     expect(adapter.getRelatedListTitle("closed-activities", "Closed Activities")).toBe(
       "Kapalı Aktiviteler",
     );
+    expect(adapter.getRelatedListTitle("webform-usage", "Webform Usage")).toBe("Webform Kullanımı");
     expect(adapter.getRelatedListTitle("unknown", "Custom Related List")).toBe(
       "Custom Related List",
     );

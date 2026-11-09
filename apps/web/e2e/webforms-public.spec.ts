@@ -417,5 +417,28 @@ test.describe("webforms public routes and ingestion", () => {
     const errJson = await badSubmitRes.json();
     expect(errJson.error).toBe("Validation failed");
     expect(errJson.errors?.Status).toBeDefined();
+    expect(errJson.errors?.Status[0]).toContain("Durum");
+
+    // 6. Test HTML submission with Turkish validation errors
+    const htmlBadRes = await page.request.post(`/api/public/webforms/${publicKey}/submissions`, {
+      headers: {
+        Origin: origin,
+        Referer: `${origin}/f/${publicKey}`,
+        "Content-Type": "application/x-www-form-urlencoded",
+        "Accept-Language": "tr",
+      },
+      data: new URLSearchParams({
+        _token: tokenVal,
+        _hp: "",
+        Subject: "Testing invalid status HTML",
+        Status: "NonExistentOption999",
+      }).toString(),
+    });
+
+    expect(htmlBadRes.status()).toBe(422);
+    const htmlBody = await htmlBadRes.text();
+    expect(htmlBody).toContain("Lütfen aşağıdaki hataları düzeltin:");
+    expect(htmlBody).toContain("Durum için geçerli bir seçenek seçin.");
+    expect(htmlBody).toContain("Geri dön");
   });
 });

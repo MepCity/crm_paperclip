@@ -351,6 +351,8 @@
     "invoices": "Invoices",
     "social": "Social",
     "emails": "Emails",
-    "competitors": "Competitors"
+    "competitors": "Competitors",
+    "webformUsage": "Webform Usage",
+    "webform-usage": "Webform Usage"
   }
 }

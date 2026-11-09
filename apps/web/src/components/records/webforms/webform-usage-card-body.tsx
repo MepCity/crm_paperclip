@@ -110,7 +110,13 @@ export function WebformUsageCardBody({ module, recordId }: WebformUsageCardBodyP
                   {sub.formName}
                 </Link>
               </td>
-              <td className="py-2.5 font-mono text-muted-foreground">{sub.location}</td>
+              <td className="py-2.5 font-mono text-muted-foreground">
+                {sub.location === "hosted"
+                  ? t("modules.webforms.recordUsage.locationHosted")
+                  : sub.location === "undefined"
+                    ? t("modules.webforms.recordUsage.locationUnknown")
+                    : sub.location}
+              </td>
               <td className="py-2.5 text-right">
                 <Badge variant={sub.outcome === "accepted" ? "success" : "neutral"}>
                   {outcomeLabels[sub.outcome] ?? sub.outcome}
