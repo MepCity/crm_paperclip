@@ -10,8 +10,8 @@ import { contactsRelatedLists, createContactsRelatedLists } from "./contacts-rel
 afterEach(cleanup);
 
 describe("contactsRelatedLists definition", () => {
-  it("defines exactly 19 cards in reference order", () => {
-    expect(contactsRelatedLists).toHaveLength(19);
+  it("defines exactly 20 cards in reference order", () => {
+    expect(contactsRelatedLists).toHaveLength(20);
 
     const expectedOrder = [
       { order: 1, id: "notes", title: "Notes", moduleKey: "M2" },
@@ -33,6 +33,7 @@ describe("contactsRelatedLists definition", () => {
       { order: 17, id: "social", title: "Social", moduleKey: "M2" },
       { order: 18, id: "reporting-contacts", title: "Reporting Contacts", moduleKey: "M2" },
       { order: 19, id: "voice-of-the-customer", title: "Voice of the Customer", moduleKey: "P3" },
+      { order: 20, id: "webform-usage", title: "Webform Usage", moduleKey: "M2" },
     ];
 
     expectedOrder.forEach((expected, i) => {
@@ -64,7 +65,8 @@ describe("contactsRelatedLists definition", () => {
         card.id === "campaigns" ||
         card.id === "cases" ||
         card.id === "social" ||
-        card.id === "notes"
+        card.id === "notes" ||
+        card.id === "webform-usage"
       ) {
         expect(card.moduleKey).toBe("M2");
       } else {
@@ -97,7 +99,7 @@ describe("contactsRelatedLists definition", () => {
 });
 
 describe("RelatedCardsContainer with Contacts card set", () => {
-  it("renders all 19 card titles and sections", () => {
+  it("renders all 20 card titles and sections", () => {
     render(<RelatedCardsContainer relatedLists={contactsRelatedLists} />);
 
     for (const card of contactsRelatedLists) {
@@ -263,7 +265,7 @@ describe("RelatedCardsContainer with Contacts card set", () => {
 });
 
 describe("RecordPageFrame with Contacts rail", () => {
-  it("renders 19 rail entries, badges, selection-dependent plus actions, and handles rail navigation", async () => {
+  it("renders 20 rail entries, badges, selection-dependent plus actions, and handles rail navigation", async () => {
     const user = userEvent.setup();
     const onSelect = vi.fn();
     const onAddReporting = vi.fn();

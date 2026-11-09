@@ -1,20 +1,26 @@
-import { createHash, randomBytes } from "node:crypto";
 import { schema } from "@crm/db";
 import { and, asc, desc, eq, isNull, sql } from "drizzle-orm";
 import { ConflictError, NotFoundError, ValidationError } from "../errors";
 import { fixtureModules } from "../records/fixture/registry";
 import { withOrg } from "../tenancy";
 import type { OrgContext } from "../tenancy/types";
-import type {
-  EligibleField,
-  Webform,
-  WebformAutoResponseRule,
-  WebformDetail,
-  WebformField,
-  WebformLocation,
-  WebformModule,
-  WebformSettings,
-  WebformVersion,
+import { derivePublicKey } from "./tokens";
+import {
+  type EligibleField,
+  WEBFORM_MODULES,
+  type Webform,
+  type WebformAnalyticsFilter,
+  type WebformAnalyticsSummary,
+  type WebformAutoResponseRule,
+  type WebformDailyStatsPoint,
+  type WebformDetail,
+  type WebformField,
+  type WebformLocation,
+  type WebformLocationStats,
+  type WebformModule,
+  type WebformRecordUsageItem,
+  type WebformSettings,
+  type WebformVersion,
 } from "./types";
 import {
   isFieldEligible,
@@ -35,15 +41,6 @@ export function getEligibleFieldsForModule(module: WebformModule): EligibleField
     readOnly: Boolean(f.readOnly),
     picklistOptions: f.picklist,
   }));
-}
-
-function hashPublicKey(publicKey: string): string {
-  return createHash("sha256").update(publicKey).digest("base64url");
-}
-
-function generateRawPublicKey(): string {
-  // 128-bit random base64url string
-  return randomBytes(16).toString("base64url");
 }
 
 function mapVersion(row: typeof schema.webformVersions.$inferSelect): WebformVersion {
@@ -172,12 +169,21 @@ export function createWebformService() {
             ),
           );
 
+        let activePublicKey: string | null = null;
+        if (keyRow) {
+          const derived = derivePublicKey(ctx.orgId, formId, keyRow.createdAt);
+          if (derived.keyHash === keyRow.keyHash) {
+            activePublicKey = derived.publicKey;
+          }
+        }
+
         return {
           ...mapForm(formRow),
           draftVersion: draftVersionRow ? mapVersion(draftVersionRow) : null,
           publishedVersion: publishedVersionRow ? mapVersion(publishedVersionRow) : null,
           locations: locations.map(mapLocation),
           hasActivePublicKey: Boolean(keyRow),
+          publicKey: activePublicKey,
         };
       });
     },
@@ -252,14 +258,15 @@ export function createWebformService() {
           );
 
         // Generate initial public key
-        const rawKey = generateRawPublicKey();
-        const keyHash = hashPublicKey(rawKey);
+        const now = new Date();
+        const { publicKey: rawKey, keyHash } = derivePublicKey(ctx.orgId, formRow.id, now);
         await tx.insert(schema.publicEndpointKeys).values({
           keyHash,
           organizationId: ctx.orgId,
           kind: "webform",
           targetId: formRow.id,
           revokedAt: null,
+          createdAt: now,
         });
 
         return {
@@ -269,6 +276,7 @@ export function createWebformService() {
           publishedVersion: null,
           locations: [],
           hasActivePublicKey: true,
+          publicKey: rawKey,
         };
       });
     },
@@ -630,9 +638,8 @@ export function createWebformService() {
           );
         if (!formRow) throw new NotFoundError("Webform not found");
 
-        const rawKey = generateRawPublicKey();
-        const keyHash = hashPublicKey(rawKey);
         const now = new Date();
+        const { publicKey: rawKey, keyHash } = derivePublicKey(ctx.orgId, formId, now);
 
         // Revoke old active keys
         await tx
@@ -913,6 +920,253 @@ export function createWebformService() {
           .orderBy(asc(schema.webformAutoResponseRules.position));
 
         return rows.map(mapAutoResponseRule);
+      });
+    },
+
+    // Analytics
+    async getFormAnalytics(
+      ctx: OrgContext,
+      formId: string,
+      filter?: WebformAnalyticsFilter,
+    ): Promise<WebformAnalyticsSummary> {
+      return withOrg(ctx, async (tx) => {
+        const [formRow] = await tx
+          .select({ id: schema.webforms.id, name: schema.webforms.name })
+          .from(schema.webforms)
+          .where(
+            and(eq(schema.webforms.organizationId, ctx.orgId), eq(schema.webforms.id, formId)),
+          );
+        if (!formRow) throw new NotFoundError("Webform not found");
+
+        const conditions = [
+          eq(schema.webformDailyStats.organizationId, ctx.orgId),
+          eq(schema.webformDailyStats.formId, formId),
+        ];
+
+        if (filter?.startDate) {
+          conditions.push(sql`${schema.webformDailyStats.day} >= ${filter.startDate}`);
+        }
+        if (filter?.endDate) {
+          conditions.push(sql`${schema.webformDailyStats.day} <= ${filter.endDate}`);
+        }
+        if (filter?.location) {
+          conditions.push(eq(schema.webformDailyStats.location, filter.location));
+        }
+
+        const rows = await tx
+          .select()
+          .from(schema.webformDailyStats)
+          .where(and(...conditions))
+          .orderBy(asc(schema.webformDailyStats.day));
+
+        // Aggregations
+        let totalVisits = 0;
+        let totalAccepted = 0;
+        let totalInvalid = 0;
+        let totalSpam = 0;
+        let totalDuplicate = 0;
+        let totalPendingApproval = 0;
+        let totalPendingDoubleOptIn = 0;
+        let totalRejectedLocation = 0;
+        let totalRateLimited = 0;
+
+        const byLocationMap = new Map<string, WebformLocationStats>();
+        const dailyMap = new Map<string, WebformDailyStatsPoint>();
+
+        for (const row of rows) {
+          const visits = row.visits ?? 0;
+          const accepted = row.accepted ?? 0;
+          const invalid = row.invalid ?? 0;
+          const spam = row.spam ?? 0;
+          const duplicate = row.duplicatePendingApproval ?? 0;
+          const pendingApproval = row.pendingApproval ?? 0;
+          const pendingDoubleOptIn = row.pendingDoubleOptIn ?? 0;
+          const rejectedLocation = row.rejectedLocation ?? 0;
+          const rateLimited = row.rateLimited ?? 0;
+
+          totalVisits += visits;
+          totalAccepted += accepted;
+          totalInvalid += invalid;
+          totalSpam += spam;
+          totalDuplicate += duplicate;
+          totalPendingApproval += pendingApproval;
+          totalPendingDoubleOptIn += pendingDoubleOptIn;
+          totalRejectedLocation += rejectedLocation;
+          totalRateLimited += rateLimited;
+
+          // By Location
+          const loc = row.location;
+          let locStat = byLocationMap.get(loc);
+          if (!locStat) {
+            locStat = {
+              location: loc,
+              visits: 0,
+              submissions: 0,
+              accepted: 0,
+              conversionRate: 0,
+              outcomes: {
+                accepted: 0,
+                invalid: 0,
+                spam: 0,
+                duplicatePendingApproval: 0,
+                pendingApproval: 0,
+                pendingDoubleOptIn: 0,
+                rejectedLocation: 0,
+                rateLimited: 0,
+              },
+            };
+            byLocationMap.set(loc, locStat);
+          }
+          locStat.visits += visits;
+          locStat.accepted += accepted;
+          locStat.submissions +=
+            accepted +
+            invalid +
+            spam +
+            duplicate +
+            pendingApproval +
+            pendingDoubleOptIn +
+            rejectedLocation +
+            rateLimited;
+          locStat.outcomes.accepted += accepted;
+          locStat.outcomes.invalid += invalid;
+          locStat.outcomes.spam += spam;
+          locStat.outcomes.duplicatePendingApproval += duplicate;
+          locStat.outcomes.pendingApproval += pendingApproval;
+          locStat.outcomes.pendingDoubleOptIn += pendingDoubleOptIn;
+          locStat.outcomes.rejectedLocation += rejectedLocation;
+          locStat.outcomes.rateLimited += rateLimited;
+
+          // By Day
+          const day = row.day;
+          let dayPoint = dailyMap.get(day);
+          if (!dayPoint) {
+            dayPoint = {
+              day,
+              visits: 0,
+              submissions: 0,
+              accepted: 0,
+              outcomes: {
+                accepted: 0,
+                invalid: 0,
+                spam: 0,
+                duplicatePendingApproval: 0,
+                pendingApproval: 0,
+                pendingDoubleOptIn: 0,
+                rejectedLocation: 0,
+                rateLimited: 0,
+              },
+            };
+            dailyMap.set(day, dayPoint);
+          }
+          dayPoint.visits += visits;
+          dayPoint.accepted += accepted;
+          dayPoint.submissions +=
+            accepted +
+            invalid +
+            spam +
+            duplicate +
+            pendingApproval +
+            pendingDoubleOptIn +
+            rejectedLocation +
+            rateLimited;
+          dayPoint.outcomes.accepted += accepted;
+          dayPoint.outcomes.invalid += invalid;
+          dayPoint.outcomes.spam += spam;
+          dayPoint.outcomes.duplicatePendingApproval += duplicate;
+          dayPoint.outcomes.pendingApproval += pendingApproval;
+          dayPoint.outcomes.pendingDoubleOptIn += pendingDoubleOptIn;
+          dayPoint.outcomes.rejectedLocation += rejectedLocation;
+          dayPoint.outcomes.rateLimited += rateLimited;
+        }
+
+        // Calculate location conversion rates
+        for (const locStat of byLocationMap.values()) {
+          locStat.conversionRate =
+            locStat.visits > 0 ? Number(((locStat.accepted / locStat.visits) * 100).toFixed(1)) : 0;
+        }
+
+        const totalSubmissions =
+          totalAccepted +
+          totalInvalid +
+          totalSpam +
+          totalDuplicate +
+          totalPendingApproval +
+          totalPendingDoubleOptIn +
+          totalRejectedLocation +
+          totalRateLimited;
+
+        const overallConversionRate =
+          totalVisits > 0 ? Number(((totalAccepted / totalVisits) * 100).toFixed(1)) : 0;
+
+        return {
+          formId,
+          formName: formRow.name,
+          totalVisits,
+          totalSubmissions,
+          totalAccepted,
+          overallConversionRate,
+          outcomes: {
+            accepted: totalAccepted,
+            invalid: totalInvalid,
+            spam: totalSpam,
+            duplicatePendingApproval: totalDuplicate,
+            pendingApproval: totalPendingApproval,
+            pendingDoubleOptIn: totalPendingDoubleOptIn,
+            rejectedLocation: totalRejectedLocation,
+            rateLimited: totalRateLimited,
+          },
+          byLocation: Array.from(byLocationMap.values()).sort((a, b) => b.visits - a.visits),
+          daily: Array.from(dailyMap.values()).sort((a, b) => a.day.localeCompare(b.day)),
+        };
+      });
+    },
+
+    // Webform Record Usage
+    async getRecordWebformUsage(
+      ctx: OrgContext,
+      module: string,
+      recordId: string,
+    ): Promise<WebformRecordUsageItem[]> {
+      if (!WEBFORM_MODULES.includes(module as WebformModule)) {
+        throw new ValidationError({ module: ["Invalid module for webform usage"] });
+      }
+
+      return withOrg(ctx, async (tx) => {
+        const rows = await tx
+          .select({
+            id: schema.webformSubmissions.id,
+            formId: schema.webformSubmissions.formId,
+            formName: schema.webforms.name,
+            location: schema.webformSubmissions.location,
+            outcome: schema.webformSubmissions.outcome,
+            createdAt: schema.webformSubmissions.createdAt,
+          })
+          .from(schema.webformSubmissions)
+          .leftJoin(
+            schema.webforms,
+            and(
+              eq(schema.webforms.organizationId, schema.webformSubmissions.organizationId),
+              eq(schema.webforms.id, schema.webformSubmissions.formId),
+            ),
+          )
+          .where(
+            and(
+              eq(schema.webformSubmissions.organizationId, ctx.orgId),
+              eq(schema.webformSubmissions.recordModule, module),
+              eq(schema.webformSubmissions.recordId, recordId),
+            ),
+          )
+          .orderBy(desc(schema.webformSubmissions.createdAt));
+
+        return rows.map((r) => ({
+          id: r.id,
+          formId: r.formId,
+          formName: r.formName ?? "Unknown Form",
+          location: r.location,
+          outcome: r.outcome,
+          createdAt: r.createdAt.toISOString(),
+        }));
       });
     },
   };

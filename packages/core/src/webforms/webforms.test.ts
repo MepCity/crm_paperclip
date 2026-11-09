@@ -3,6 +3,7 @@ import { ValidationError } from "../errors";
 import {
   computeClientHash,
   createRenderToken,
+  derivePublicKey,
   generateChallenge,
   getEligibleFieldsForModule,
   hashPublicKey,
@@ -336,6 +337,31 @@ describe("Webforms core validation", () => {
       const h2 = hashPublicKey(rawKey);
       expect(h1).toBe(h2);
       expect(h1).not.toBe(rawKey);
+    });
+
+    it("derives deterministic 128-bit public key and matching keyHash", () => {
+      const orgId = "11111111-1111-1111-1111-111111111111";
+      const formId = "22222222-2222-2222-2222-222222222222";
+      const timestamp = new Date("2026-11-09T10:00:00.000Z");
+
+      const derived1 = derivePublicKey(orgId, formId, timestamp);
+      const derived2 = derivePublicKey(orgId, formId, timestamp);
+
+      expect(derived1.publicKey).toBe(derived2.publicKey);
+      expect(derived1.keyHash).toBe(derived2.keyHash);
+      expect(derived1.keyHash).toBe(hashPublicKey(derived1.publicKey));
+      expect(derived1.publicKey.length).toBeGreaterThanOrEqual(20);
+
+      // Different timestamp yields a different key (key rotation/regeneration)
+      const later = new Date("2026-11-09T11:00:00.000Z");
+      const derivedLater = derivePublicKey(orgId, formId, later);
+      expect(derivedLater.publicKey).not.toBe(derived1.publicKey);
+      expect(derivedLater.keyHash).not.toBe(derived1.keyHash);
+
+      // Different form yields a different key
+      const otherFormId = "33333333-3333-3333-3333-333333333333";
+      const derivedOther = derivePublicKey(orgId, otherFormId, timestamp);
+      expect(derivedOther.publicKey).not.toBe(derived1.publicKey);
     });
   });
 

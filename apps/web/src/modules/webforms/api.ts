@@ -1,11 +1,14 @@
 import type {
   EligibleField,
   Webform,
+  WebformAnalyticsFilter,
+  WebformAnalyticsSummary,
   WebformAutoResponseRule,
   WebformDetail,
   WebformField,
   WebformLocation,
   WebformModule,
+  WebformRecordUsageItem,
   WebformSettings,
 } from "./types";
 
@@ -240,4 +243,32 @@ export async function reorderAutoResponseRules(
   });
   const data = await handleResponse<{ rules: WebformAutoResponseRule[] }>(res);
   return data.rules;
+}
+
+export async function fetchWebformAnalytics(
+  orgSlug: string,
+  id: string,
+  filter?: WebformAnalyticsFilter,
+): Promise<WebformAnalyticsSummary> {
+  const params = new URLSearchParams();
+  if (filter?.startDate) params.set("startDate", filter.startDate);
+  if (filter?.endDate) params.set("endDate", filter.endDate);
+  if (filter?.location) params.set("location", filter.location);
+  const qs = params.toString();
+  const url = `/crm/v2.1/settings/webforms/${id}/analytics${qs ? `?${qs}` : ""}`;
+  const res = await fetch(url, { headers: headers(orgSlug) });
+  const data = await handleResponse<{ analytics: WebformAnalyticsSummary }>(res);
+  return data.analytics;
+}
+
+export async function fetchRecordWebformUsage(
+  orgSlug: string,
+  module: string,
+  recordId: string,
+): Promise<WebformRecordUsageItem[]> {
+  const res = await fetch(`/crm/v2.1/${module}/${recordId}/webform_usage`, {
+    headers: headers(orgSlug),
+  });
+  const data = await handleResponse<{ submissions: WebformRecordUsageItem[] }>(res);
+  return data.submissions;
 }
