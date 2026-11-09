@@ -396,21 +396,36 @@ describe("Webforms core validation", () => {
         expect(getClientIp(req)).toBe("203.0.113.195");
       });
 
-      it("selects the rightmost IP from x-forwarded-for to prevent client header spoofing", () => {
+      it("selects the rightmost IP from x-forwarded-for when client injects first value", () => {
         const req = new Request("http://localhost/api/test", {
           headers: { "x-forwarded-for": "1.2.3.4, 5.6.7.8, 203.0.113.195" },
         });
         expect(getClientIp(req)).toBe("203.0.113.195");
       });
 
-      it("prioritizes x-real-ip when set by reverse proxy", () => {
+      it("prioritizes rightmost x-forwarded-for over spoofed x-real-ip", () => {
         const req = new Request("http://localhost/api/test", {
           headers: {
             "x-real-ip": "198.51.100.50",
             "x-forwarded-for": "1.2.3.4, 203.0.113.195",
           },
         });
-        expect(getClientIp(req)).toBe("198.51.100.50");
+        expect(getClientIp(req)).toBe("203.0.113.195");
+      });
+
+      it("uses x-real-ip only when x-forwarded-for is missing or empty", () => {
+        const req1 = new Request("http://localhost/api/test", {
+          headers: { "x-real-ip": "198.51.100.50" },
+        });
+        expect(getClientIp(req1)).toBe("198.51.100.50");
+
+        const req2 = new Request("http://localhost/api/test", {
+          headers: {
+            "x-real-ip": "198.51.100.50",
+            "x-forwarded-for": "   ,  ",
+          },
+        });
+        expect(getClientIp(req2)).toBe("198.51.100.50");
       });
 
       it("falls back to 127.0.0.1 when no IP headers are present", () => {
@@ -545,6 +560,69 @@ describe("Webforms core validation", () => {
       });
       expect(res.allowed).toBe(true);
       expect(res.location).toBe("undefined");
+    });
+
+    it("handles invalid APP_URL without throwing and resolves location from origin", () => {
+      const originalAppUrl = process.env.APP_URL;
+      try {
+        process.env.APP_URL = "invalid-url-not-http";
+        const res = resolveLocation({
+          origin: "https://shop.example.com",
+          restrictLocations: true,
+          allowedLocations: allowed,
+        });
+        expect(res.allowed).toBe(true);
+        expect(res.location).toBe("https://shop.example.com");
+        expect(res.isAllowedOrigin).toBe(true);
+      } finally {
+        if (originalAppUrl === undefined) {
+          delete process.env.APP_URL;
+        } else {
+          process.env.APP_URL = originalAppUrl;
+        }
+      }
+    });
+
+    it("handles invalid APP_URL without throwing and resolves location from referer", () => {
+      const originalAppUrl = process.env.APP_URL;
+      try {
+        process.env.APP_URL = ":::invalid-url:::";
+        const res = resolveLocation({
+          referer: "https://shop.example.com/checkout/form?ref=123",
+          restrictLocations: true,
+          allowedLocations: allowed,
+        });
+        expect(res.allowed).toBe(true);
+        expect(res.location).toBe("https://shop.example.com");
+        expect(res.isAllowedOrigin).toBe(true);
+      } finally {
+        if (originalAppUrl === undefined) {
+          delete process.env.APP_URL;
+        } else {
+          process.env.APP_URL = originalAppUrl;
+        }
+      }
+    });
+
+    it("handles invalid APP_URL without throwing and rejects unauthorized origin", () => {
+      const originalAppUrl = process.env.APP_URL;
+      try {
+        process.env.APP_URL = "not_a_valid_url";
+        const res = resolveLocation({
+          origin: "https://evil.com",
+          restrictLocations: true,
+          allowedLocations: allowed,
+        });
+        expect(res.allowed).toBe(false);
+        expect(res.location).toBe("https://evil.com");
+        expect(res.isAllowedOrigin).toBe(false);
+      } finally {
+        if (originalAppUrl === undefined) {
+          delete process.env.APP_URL;
+        } else {
+          process.env.APP_URL = originalAppUrl;
+        }
+      }
     });
   });
 });

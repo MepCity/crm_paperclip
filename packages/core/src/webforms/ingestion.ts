@@ -230,8 +230,14 @@ export function resolveLocation(params: {
 }): { location: string; allowed: boolean; isAllowedOrigin: boolean } {
   let isHosted = Boolean(params.isHostedRoute);
 
-  let effectiveAppOrigin = params.appOrigin ?? null;
-  if (!effectiveAppOrigin && process.env.APP_URL) {
+  let effectiveAppOrigin: string | null = null;
+  if (params.appOrigin) {
+    try {
+      effectiveAppOrigin = new URL(params.appOrigin).origin;
+    } catch {
+      effectiveAppOrigin = null;
+    }
+  } else if (process.env.APP_URL) {
     try {
       effectiveAppOrigin = new URL(process.env.APP_URL).origin;
     } catch {
@@ -240,15 +246,15 @@ export function resolveLocation(params: {
   }
 
   // Origin header takes precedence: if Origin is present, it must match appOrigin to be considered hosted.
-  if (isHosted && params.origin && effectiveAppOrigin) {
-    if (!isSameOrigin(params.origin, effectiveAppOrigin)) {
+  if (isHosted && params.origin) {
+    if (!effectiveAppOrigin || !isSameOrigin(params.origin, effectiveAppOrigin)) {
       isHosted = false;
     }
   }
 
   // If referer is present, its origin must also match appOrigin to be considered hosted.
-  if (isHosted && params.referer && effectiveAppOrigin) {
-    if (!isSameOrigin(params.referer, effectiveAppOrigin)) {
+  if (isHosted && params.referer) {
+    if (!effectiveAppOrigin || !isSameOrigin(params.referer, effectiveAppOrigin)) {
       isHosted = false;
     }
   }
