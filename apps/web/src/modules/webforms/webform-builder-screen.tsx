@@ -275,8 +275,8 @@ export function WebformBuilderScreen({
           data-testid={`field-default-select-${field.fieldApiName}`}
         >
           <option value="">--</option>
-          <option value="true">true</option>
-          <option value="false">false</option>
+          <option value="true">{t("modules.webforms.builder.booleanTrue")}</option>
+          <option value="false">{t("modules.webforms.builder.booleanFalse")}</option>
         </select>
       );
     }
@@ -668,7 +668,7 @@ export function WebformBuilderScreen({
                           <div className="flex items-center gap-1 text-muted-foreground">
                             <span
                               className="cursor-grab active:cursor-grabbing text-xs px-1 select-none font-bold"
-                              title="Drag to reorder"
+                              title={t("modules.webforms.builder.dragToReorder")}
                               data-testid={`field-drag-handle-${field.fieldApiName}`}
                             >
                               ⋮⋮
@@ -772,7 +772,7 @@ export function WebformBuilderScreen({
                           <span>{t("modules.webforms.builder.defaultValue")}</span>
                           {isHiddenRequiredMissingDefault && (
                             <span className="text-[10px] text-destructive font-normal">
-                              *Required
+                              {t("modules.webforms.builder.requiredBadge")}
                             </span>
                           )}
                         </label>
