@@ -4,6 +4,7 @@ import {
   createRenderToken,
   generateChallenge,
   getClientIp,
+  getEligibleFieldsForModule,
   type OrgContext,
   recordVisit,
   resolvePublicForm,
@@ -24,13 +25,13 @@ function escapeHtml(str: unknown): string {
     .replace(/'/g, "&#039;");
 }
 
-function renderNotFoundHtml(): string {
+function renderNotFoundHtml(isTr = false): string {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${isTr ? "tr" : "en"}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Form Unavailable</title>
+  <title>${isTr ? "Form Kullanılamıyor" : "Form Unavailable"}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1rem; }
     .card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2.5rem; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -40,20 +41,24 @@ function renderNotFoundHtml(): string {
 </head>
 <body>
   <div class="card">
-    <h1>Form Unavailable</h1>
-    <p>The form you are looking for is unavailable, inactive, or does not exist.</p>
+    <h1>${isTr ? "Form Kullanılamıyor" : "Form Unavailable"}</h1>
+    <p>${
+      isTr
+        ? "Aradığınız form kullanılamıyor, devre dışı veya mevcut değil."
+        : "The form you are looking for is unavailable, inactive, or does not exist."
+    }</p>
   </div>
 </body>
 </html>`;
 }
 
-function renderRateLimitHtml(): string {
+function renderRateLimitHtml(isTr = false): string {
   return `<!DOCTYPE html>
-<html lang="en">
+<html lang="${isTr ? "tr" : "en"}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Too Many Requests</title>
+  <title>${isTr ? "Çok Fazla İstek" : "Too Many Requests"}</title>
   <style>
     body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background-color: #f8fafc; color: #1e293b; display: flex; align-items: center; justify-content: center; min-height: 100vh; margin: 0; padding: 1rem; }
     .card { background: white; border: 1px solid #e2e8f0; border-radius: 8px; padding: 2.5rem; max-width: 480px; width: 100%; text-align: center; box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
@@ -63,8 +68,12 @@ function renderRateLimitHtml(): string {
 </head>
 <body>
   <div class="card">
-    <h1>Too Many Requests</h1>
-    <p>Rate limit exceeded. Please try again later.</p>
+    <h1>${isTr ? "Çok Fazla İstek" : "Too Many Requests"}</h1>
+    <p>${
+      isTr
+        ? "İstek sınırı aşıldı. Lütfen daha sonra tekrar deneyin."
+        : "Rate limit exceeded. Please try again later."
+    }</p>
   </div>
 </body>
 </html>`;
@@ -78,10 +87,12 @@ export const GET = exemptRoute(
     { params }: { params: Promise<{ publicKey: string }> },
   ): Promise<Response> => {
     const { publicKey } = await params;
+    const acceptLang = request.headers.get("accept-language") || "";
+    const isTr = acceptLang.toLowerCase().includes("tr");
 
     const resolved = await resolvePublicForm(publicKey);
     if (!resolved) {
-      return new Response(renderNotFoundHtml(), {
+      return new Response(renderNotFoundHtml(isTr), {
         status: 404,
         headers: {
           "Content-Type": "text/html; charset=utf-8",
@@ -112,7 +123,7 @@ export const GET = exemptRoute(
     );
 
     if (!rateLimitCheck.allowed) {
-      return new Response(renderRateLimitHtml(), {
+      return new Response(renderRateLimitHtml(isTr), {
         status: 429,
         headers: {
           "Content-Type": "text/html; charset=utf-8",
@@ -154,6 +165,9 @@ export const GET = exemptRoute(
       challengeHash,
     });
 
+    const eligibleFields = getEligibleFieldsForModule(resolved.form.module);
+    const fieldDefMap = new Map(eligibleFields.map((f) => [f.apiName, f]));
+
     const visibleFields = resolved.version.fields.filter((f) => !f.hidden);
     const formFieldsHtml = visibleFields
       .map((field) => {
@@ -165,18 +179,130 @@ export const GET = exemptRoute(
           ? `<div class="field-help" style="font-size: 0.75rem; color: #64748b; margin-top: 0.25rem;">${escapeHtml(field.helpText)}</div>`
           : "";
 
+        const fieldDef = fieldDefMap.get(field.fieldApiName);
+        let inputHtml = "";
+
+        if (fieldDef?.picklistOptions && fieldDef.picklistOptions.length > 0) {
+          const optionsHtml = [
+            `<option value="">${isTr ? "-- Seçin --" : "-- Select --"}</option>`,
+            ...fieldDef.picklistOptions.map((opt) => {
+              const isSelected = field.defaultValue === opt.storedValue ? " selected" : "";
+              return `<option value="${escapeHtml(opt.storedValue)}"${isSelected}>${escapeHtml(opt.displayValue)}</option>`;
+            }),
+          ].join("\n            ");
+
+          inputHtml = `
+          <select
+            id="field-${escapeHtml(field.fieldApiName)}"
+            name="${escapeHtml(field.fieldApiName)}"
+            ${requiredAttr}
+            style="width: 100%; box-sizing: border-box; padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; background: white;"
+          >
+            ${optionsHtml}
+          </select>`;
+        } else if (fieldDef?.dataType === "textarea") {
+          inputHtml = `
+          <textarea
+            id="field-${escapeHtml(field.fieldApiName)}"
+            name="${escapeHtml(field.fieldApiName)}"
+            ${requiredAttr}
+            rows="4"
+            style="width: 100%; box-sizing: border-box; padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; resize: vertical;"
+          >${escapeHtml(field.defaultValue || "")}</textarea>`;
+        } else if (
+          fieldDef?.dataType === "number" ||
+          fieldDef?.dataType === "integer" ||
+          fieldDef?.dataType === "double" ||
+          fieldDef?.dataType === "currency"
+        ) {
+          const step = fieldDef.dataType === "integer" ? ' step="1"' : ' step="any"';
+          inputHtml = `
+          <input
+            type="number"${step}
+            id="field-${escapeHtml(field.fieldApiName)}"
+            name="${escapeHtml(field.fieldApiName)}"
+            value="${escapeHtml(field.defaultValue ?? "")}"
+            ${requiredAttr}
+            style="width: 100%; box-sizing: border-box; padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;"
+          />`;
+        } else if (fieldDef?.dataType === "date") {
+          inputHtml = `
+          <input
+            type="date"
+            id="field-${escapeHtml(field.fieldApiName)}"
+            name="${escapeHtml(field.fieldApiName)}"
+            value="${escapeHtml(field.defaultValue ?? "")}"
+            ${requiredAttr}
+            style="width: 100%; box-sizing: border-box; padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;"
+          />`;
+        } else if (fieldDef?.dataType === "datetime") {
+          inputHtml = `
+          <input
+            type="datetime-local"
+            id="field-${escapeHtml(field.fieldApiName)}"
+            name="${escapeHtml(field.fieldApiName)}"
+            value="${escapeHtml(field.defaultValue ?? "")}"
+            ${requiredAttr}
+            style="width: 100%; box-sizing: border-box; padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;"
+          />`;
+        } else if (fieldDef?.dataType === "email") {
+          inputHtml = `
+          <input
+            type="email"
+            id="field-${escapeHtml(field.fieldApiName)}"
+            name="${escapeHtml(field.fieldApiName)}"
+            value="${escapeHtml(field.defaultValue ?? "")}"
+            ${requiredAttr}
+            style="width: 100%; box-sizing: border-box; padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;"
+          />`;
+        } else if (fieldDef?.dataType === "phone") {
+          inputHtml = `
+          <input
+            type="tel"
+            id="field-${escapeHtml(field.fieldApiName)}"
+            name="${escapeHtml(field.fieldApiName)}"
+            value="${escapeHtml(field.defaultValue ?? "")}"
+            ${requiredAttr}
+            style="width: 100%; box-sizing: border-box; padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;"
+          />`;
+        } else if (fieldDef?.dataType === "url" || fieldDef?.dataType === "website") {
+          inputHtml = `
+          <input
+            type="url"
+            id="field-${escapeHtml(field.fieldApiName)}"
+            name="${escapeHtml(field.fieldApiName)}"
+            value="${escapeHtml(field.defaultValue ?? "")}"
+            ${requiredAttr}
+            style="width: 100%; box-sizing: border-box; padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;"
+          />`;
+        } else if (fieldDef?.dataType === "boolean") {
+          const isChecked = field.defaultValue === true ? " checked" : "";
+          inputHtml = `
+          <input
+            type="checkbox"
+            id="field-${escapeHtml(field.fieldApiName)}"
+            name="${escapeHtml(field.fieldApiName)}"
+            value="true"${isChecked}
+            style="size: 1rem; margin-top: 0.25rem;"
+          />`;
+        } else {
+          inputHtml = `
+          <input
+            type="text"
+            id="field-${escapeHtml(field.fieldApiName)}"
+            name="${escapeHtml(field.fieldApiName)}"
+            value="${escapeHtml(field.defaultValue ?? "")}"
+            ${requiredAttr}
+            style="width: 100%; box-sizing: border-box; padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; transition: border-color 0.15s ease;"
+          />`;
+        }
+
         return `
         <div class="field-group" style="margin-bottom: 1.25rem;">
           <label for="field-${escapeHtml(field.fieldApiName)}" style="display: block; font-size: 0.875rem; font-weight: 500; color: #334155; margin-bottom: 0.375rem;">
             ${escapeHtml(field.label)}${requiredBadge}
           </label>
-          <input
-            type="text"
-            id="field-${escapeHtml(field.fieldApiName)}"
-            name="${escapeHtml(field.fieldApiName)}"
-            ${requiredAttr}
-            style="width: 100%; box-sizing: border-box; padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none; transition: border-color 0.15s ease;"
-          />
+          ${inputHtml}
           ${helpHtml}
         </div>`;
       })
@@ -186,7 +312,7 @@ export const GET = exemptRoute(
       ? `
       <div class="field-group challenge-group" style="margin-bottom: 1.25rem;">
         <label for="field-_challenge" style="display: block; font-size: 0.875rem; font-weight: 500; color: #334155; margin-bottom: 0.375rem;">
-          Verification Code <span class="required" aria-hidden="true" style="color: #ef4444;">*</span>
+          ${isTr ? "Doğrulama Kodu" : "Verification Code"} <span class="required" aria-hidden="true" style="color: #ef4444;">*</span>
         </label>
         <div style="margin-bottom: 0.5rem; display: inline-block;">
           ${challengeSvg}
@@ -198,7 +324,7 @@ export const GET = exemptRoute(
           required
           aria-required="true"
           autocomplete="off"
-          placeholder="Enter code above"
+          placeholder="${isTr ? "Yukarıdaki kodu girin" : "Enter code above"}"
           style="width: 100%; box-sizing: border-box; padding: 0.5rem 0.75rem; font-size: 0.875rem; border: 1px solid #cbd5e1; border-radius: 6px; outline: none;"
         />
       </div>`
@@ -229,8 +355,11 @@ export const GET = exemptRoute(
       </script>`
       : "";
 
+    const defaultBtnLabel = isTr ? "Gönder" : "Submit";
+    const submitBtnLabel = resolved.version.settings.buttonLabel || defaultBtnLabel;
+
     const html = `<!DOCTYPE html>
-<html lang="en">
+<html lang="${isTr ? "tr" : "en"}">
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -254,7 +383,7 @@ export const GET = exemptRoute(
       ${attributionHtml}
       ${formFieldsHtml}
       ${challengeHtml}
-      <button type="submit" class="submit-btn">${escapeHtml(resolved.version.settings.buttonLabel || "Submit")}</button>
+      <button type="submit" class="submit-btn">${escapeHtml(submitBtnLabel)}</button>
     </form>
   </div>
 </body>

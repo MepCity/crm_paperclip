@@ -1,11 +1,13 @@
 "use client";
 
+import { formatDate } from "@crm/core/format";
 import { useCallback, useEffect, useState } from "react";
 import { Badge } from "@/components/ui/badge";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Spinner } from "@/components/ui/spinner";
 import { useUiTranslations } from "@/i18n/client-provider";
+import { useFormat } from "@/lib/format-context";
 import { fetchWebform, fetchWebformAnalytics } from "./api";
 import type { WebformAnalyticsSummary, WebformDetail } from "./types";
 
@@ -18,6 +20,7 @@ type DateRangeOption = "7d" | "30d" | "90d" | "all";
 
 export function WebformAnalyticsScreen({ orgSlug, formId }: WebformAnalyticsScreenProps) {
   const t = useUiTranslations();
+  const orgFormat = useFormat();
   const [form, setForm] = useState<WebformDetail | null>(null);
   const [analytics, setAnalytics] = useState<WebformAnalyticsSummary | null>(null);
   const [loading, setLoading] = useState(true);
@@ -426,7 +429,9 @@ export function WebformAnalyticsScreen({ orgSlug, formId }: WebformAnalyticsScre
                           d.visits > 0 ? Number(((d.accepted / d.visits) * 100).toFixed(1)) : 0;
                         return (
                           <tr key={d.day} className="hover:bg-muted/10">
-                            <td className="py-2.5 font-mono text-foreground">{d.day}</td>
+                            <td className="py-2.5 font-mono text-foreground">
+                              {formatDate(d.day, orgFormat)}
+                            </td>
                             <td className="py-2.5 text-right text-muted-foreground">{d.visits}</td>
                             <td className="py-2.5 text-right text-muted-foreground">
                               {d.submissions}

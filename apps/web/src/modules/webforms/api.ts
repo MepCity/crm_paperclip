@@ -52,7 +52,7 @@ export async function fetchWebform(orgSlug: string, id: string): Promise<Webform
 
 export async function createWebform(
   orgSlug: string,
-  input: { name: string; module: WebformModule },
+  input: { name: string; module: WebformModule; layout?: string },
 ): Promise<WebformDetail> {
   const res = await fetch("/crm/v2.1/settings/webforms", {
     method: "POST",
@@ -169,6 +169,36 @@ export async function fetchEligibleFields(
   });
   const data = await handleResponse<{ fields: EligibleField[] }>(res);
   return data.fields;
+}
+
+export async function fetchModuleAssignmentRules(
+  orgSlug: string,
+  module: WebformModule,
+): Promise<{ id: string; name: string; module: string; description?: string }[]> {
+  const res = await fetch(`/crm/v2.1/settings/webforms/assignment_rules?module=${module}`, {
+    headers: headers(orgSlug),
+  });
+  const data = await handleResponse<{
+    rules: { id: string; name: string; module: string; description?: string }[];
+  }>(res);
+  return data.rules;
+}
+
+export async function fetchEligibleUsers(
+  orgSlug: string,
+): Promise<{ id: string; name: string; email?: string }[]> {
+  const res = await fetch("/crm/v9/users", {
+    headers: headers(orgSlug),
+  });
+  if (res.status === 204) return [];
+  const data = await handleResponse<{
+    users?: { id: string; full_name?: string; name?: string; email?: string }[];
+  }>(res);
+  return (data.users ?? []).map((u) => ({
+    id: u.id,
+    name: u.full_name || u.name || u.id,
+    email: u.email,
+  }));
 }
 
 export async function fetchAutoResponseRules(

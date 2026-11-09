@@ -65,6 +65,6 @@ describe("WebformUsageCardBody & Guard", () => {
     expect(table).toBeDefined();
     expect(screen.getByText("Contact Us Webform")).toBeDefined();
     expect(screen.getByText("https://example.com")).toBeDefined();
-    expect(screen.getByText("accepted")).toBeDefined();
+    expect(screen.getByText(/accepted/i)).toBeDefined();
   });
 });

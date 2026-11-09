@@ -123,6 +123,7 @@ describe("WebformsListScreen - Empty State & Dialog Parity", () => {
       expect(mockCreateWebform).toHaveBeenCalledWith("test-org", {
         name: "Lead Capture Form",
         module: "Leads",
+        layout: "Standard Layout",
       });
       expect(mockPush).toHaveBeenCalledWith("/crm/test-org/settings/webforms/new-form-123");
     });

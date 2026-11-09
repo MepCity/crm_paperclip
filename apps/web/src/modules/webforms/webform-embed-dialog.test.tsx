@@ -54,7 +54,7 @@ describe("WebformEmbedDialog", () => {
     fireEvent.click(screen.getByTestId("embed-tab-source"));
     expect(
       screen.getByText(
-        "Static source-HTML embed is not offered because secure form submissions require signed render tokens and anti-spam verification.",
+        "Static source HTML is not supported. Use the script embed or iframe to ensure secure submissions and spam protection.",
       ),
     ).toBeDefined();
   });

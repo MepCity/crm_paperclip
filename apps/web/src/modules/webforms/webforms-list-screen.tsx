@@ -1,5 +1,6 @@
 "use client";
 
+import { formatDate } from "@crm/core/format";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-components";
@@ -11,6 +12,7 @@ import { Link } from "@/components/ui/link";
 import { Spinner } from "@/components/ui/spinner";
 import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { useUiTranslations } from "@/i18n/client-provider";
+import { useFormat } from "@/lib/format-context";
 import {
   activateWebform,
   createAutoResponseRule,
@@ -49,6 +51,7 @@ interface WebformsListScreenProps {
 
 export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
   const t = useUiTranslations();
+  const orgFormat = useFormat();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"webforms" | "auto-response-rules">("webforms");
 
@@ -61,6 +64,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [formName, setFormName] = useState("");
   const [formModule, setFormModule] = useState<WebformModule | "">("");
+  const [formLayout, setFormLayout] = useState("Standard Layout");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
   const [moduleMenuOpen, setModuleMenuOpen] = useState(false);
@@ -130,6 +134,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
   const handleOpenCreateDialog = () => {
     setFormName("");
     setFormModule("");
+    setFormLayout("Standard Layout");
     setCreateError(null);
     setModuleMenuOpen(false);
     setModuleSearchQuery("");
@@ -140,6 +145,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
     setCreateDialogOpen(false);
     setFormName("");
     setFormModule("");
+    setFormLayout("Standard Layout");
     setCreateError(null);
     setModuleMenuOpen(false);
     setModuleSearchQuery("");
@@ -196,6 +202,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
       const created = await createWebform(orgSlug, {
         name: formName.trim(),
         module: formModule as WebformModule,
+        layout: formLayout,
       });
       handleCloseCreateDialog();
       router.push(`/crm/${orgSlug}/settings/webforms/${created.id}`);
@@ -471,7 +478,13 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                           {form.name}
                         </Link>
                       </td>
-                      <td className="px-4 py-3 text-muted-foreground">{form.module}</td>
+                      <td className="px-4 py-3 text-muted-foreground">
+                        {form.module === "Leads"
+                          ? t("shell.leads")
+                          : form.module === "Contacts"
+                            ? t("shell.contacts")
+                            : t("shell.cases")}
+                      </td>
                       <td className="px-4 py-3">
                         <Badge
                           variant={
@@ -482,11 +495,15 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                                 : "neutral"
                           }
                         >
-                          {form.status.toUpperCase()}
+                          {form.status === "active"
+                            ? t("modules.webforms.builder.statusActive")
+                            : form.status === "inactive"
+                              ? t("modules.webforms.builder.statusInactive")
+                              : t("modules.webforms.builder.statusDraft")}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-muted-foreground text-xs">
-                        {new Date(form.createdAt).toLocaleDateString()}
+                        {formatDate(form.createdAt, orgFormat)}
                       </td>
                       <td className="px-4 py-3 text-right">
                         <div className="flex items-center justify-end gap-2">
@@ -792,6 +809,26 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                     </div>
                   </div>
                 )}
+              </div>
+            </div>
+
+            {/* Row 3: Layout */}
+            <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+              <label htmlFor="form-layout-select" className="text-right text-sm text-foreground">
+                {t("modules.webforms.dialogs.layout")}
+              </label>
+              <div className="relative">
+                <select
+                  id="form-layout-select"
+                  value={formLayout}
+                  onChange={(e) => setFormLayout(e.target.value)}
+                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  data-testid="form-layout-select"
+                >
+                  <option value="Standard Layout">
+                    {t("modules.webforms.dialogs.standardLayout")}
+                  </option>
+                </select>
               </div>
             </div>
           </div>

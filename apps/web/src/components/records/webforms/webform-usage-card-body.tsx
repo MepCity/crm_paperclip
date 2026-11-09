@@ -1,11 +1,13 @@
 "use client";
 
+import { formatDateTime } from "@crm/core/format";
 import { useQuery } from "@tanstack/react-query";
 import { Badge } from "@/components/ui/badge";
 import { Link } from "@/components/ui/link";
 import { Spinner } from "@/components/ui/spinner";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useOrgSlug } from "@/lib/api/client/provider";
+import { useFormat } from "@/lib/format-context";
 import { fetchRecordWebformUsage } from "@/modules/webforms/api";
 import type { WebformRecordUsageItem } from "@/modules/webforms/types";
 
@@ -23,7 +25,19 @@ export function isWebformUsageSupported(module: string): boolean {
 export function WebformUsageCardBody({ module, recordId }: WebformUsageCardBodyProps) {
   const t = useUiTranslations();
   const orgSlug = useOrgSlug();
+  const orgFormat = useFormat();
   const isSupported = isWebformUsageSupported(module);
+
+  const outcomeLabels: Record<string, string> = {
+    accepted: t("modules.webforms.analytics.outcomeAccepted") || "Accepted",
+    invalid: t("modules.webforms.analytics.outcomeInvalid") || "Invalid",
+    spam: t("modules.webforms.analytics.outcomeSpam") || "Spam",
+    rate_limited: t("modules.webforms.analytics.outcomeRateLimited") || "Rate limited",
+    rejected_location:
+      t("modules.webforms.analytics.outcomeRejectedLocation") || "Rejected location",
+    duplicate_pending_approval:
+      t("modules.webforms.analytics.outcomeDuplicate") || "Duplicate pending approval",
+  };
 
   const {
     data: submissions = [],
@@ -86,7 +100,7 @@ export function WebformUsageCardBody({ module, recordId }: WebformUsageCardBodyP
           {submissions.map((sub) => (
             <tr key={sub.id} className="hover:bg-muted/10 transition-colors">
               <td className="py-2.5 font-mono text-muted-foreground">
-                {new Date(sub.createdAt).toLocaleString()}
+                {formatDateTime(sub.createdAt, orgFormat)}
               </td>
               <td className="py-2.5 font-semibold text-foreground">
                 <Link
@@ -99,7 +113,7 @@ export function WebformUsageCardBody({ module, recordId }: WebformUsageCardBodyP
               <td className="py-2.5 font-mono text-muted-foreground">{sub.location}</td>
               <td className="py-2.5 text-right">
                 <Badge variant={sub.outcome === "accepted" ? "success" : "neutral"}>
-                  {sub.outcome}
+                  {outcomeLabels[sub.outcome] ?? sub.outcome}
                 </Badge>
               </td>
             </tr>

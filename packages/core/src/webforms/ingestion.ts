@@ -4,11 +4,13 @@ import { and, asc, eq, isNull, lt, sql } from "drizzle-orm";
 import { matchesCondition } from "../approvals/criteria";
 import type { ProcessCondition } from "../approvals/types";
 import { getDb } from "../database";
-import { ConflictError } from "../errors";
+import { ConflictError, ValidationError } from "../errors";
 import type { JobQueue } from "../jobs/types";
 import type { ActorRef, RecordData } from "../records/contract";
 import { createFixtureRecordService } from "../records/fixture";
 import { fixtureModules } from "../records/fixture/registry";
+import { isValidDateOnly } from "../records/fixture/validation";
+import { OPEN_PICKLIST_FIELDS } from "../records/picklist-policy";
 import { withOrg } from "../tenancy";
 import type { OrgContext, Transaction } from "../tenancy/types";
 import { checkRateLimit, type RateLimitCheckResult } from "./rate-limit";
@@ -547,6 +549,9 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
     // Prepare submitted values
     const fieldErrors: Record<string, string[]> = {};
     const sanitizedRecordInput: Record<string, unknown> = {};
+    const bundle = fixtureModules[form.module];
+    const fieldDefs = bundle?.metadata.fields ?? [];
+    const fieldDefMap = new Map(fieldDefs.map((f) => [f.apiName, f]));
 
     // 1) Visible fields
     for (const field of visibleFields) {
@@ -557,7 +562,87 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
       if (field.required && isEmpty) {
         fieldErrors[field.fieldApiName] = [`${field.label} is required.`];
       } else if (!isEmpty) {
-        sanitizedRecordInput[field.fieldApiName] = stringVal;
+        const fieldDef = fieldDefMap.get(field.fieldApiName);
+        if (fieldDef?.picklist) {
+          const isAllowed =
+            OPEN_PICKLIST_FIELDS.has(field.fieldApiName) ||
+            fieldDef.picklist.some(
+              (opt) => opt.storedValue === stringVal || opt.displayValue === stringVal,
+            );
+          if (!isAllowed) {
+            fieldErrors[field.fieldApiName] = ["Choose a listed option."];
+          } else {
+            const match = fieldDef.picklist.find(
+              (opt) => opt.storedValue === stringVal || opt.displayValue === stringVal,
+            );
+            sanitizedRecordInput[field.fieldApiName] = match?.storedValue ?? stringVal;
+          }
+        } else if (fieldDef?.dataType === "integer") {
+          if (typeof val === "number" && Number.isSafeInteger(val)) {
+            sanitizedRecordInput[field.fieldApiName] = val;
+          } else if (typeof val === "string" && /^-?\d+$/.test(val.trim())) {
+            sanitizedRecordInput[field.fieldApiName] = parseInt(val.trim(), 10);
+          } else {
+            fieldErrors[field.fieldApiName] = ["Enter a valid integer."];
+          }
+        } else if (
+          fieldDef?.dataType === "double" ||
+          fieldDef?.dataType === "currency" ||
+          fieldDef?.dataType === "bigint"
+        ) {
+          if (typeof val === "number" && Number.isFinite(val)) {
+            sanitizedRecordInput[field.fieldApiName] = val;
+          } else if (
+            typeof val === "string" &&
+            val.trim() !== "" &&
+            !Number.isNaN(Number(val.trim()))
+          ) {
+            sanitizedRecordInput[field.fieldApiName] = Number(val.trim());
+          } else {
+            fieldErrors[field.fieldApiName] = ["Enter a valid number."];
+          }
+        } else if (fieldDef?.dataType === "date") {
+          const dateStr = String(val).trim();
+          if (isValidDateOnly(dateStr)) {
+            sanitizedRecordInput[field.fieldApiName] = dateStr;
+          } else {
+            fieldErrors[field.fieldApiName] = ["Enter a valid date."];
+          }
+        } else if (fieldDef?.dataType === "datetime") {
+          const dtStr = String(val).trim();
+          if (
+            /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d(?:\.\d+)?Z$/.test(dtStr) &&
+            Number.isFinite(Date.parse(dtStr))
+          ) {
+            sanitizedRecordInput[field.fieldApiName] = dtStr;
+          } else {
+            fieldErrors[field.fieldApiName] = ["Enter a valid datetime."];
+          }
+        } else if (fieldDef?.dataType === "email") {
+          const emailStr = String(val).trim();
+          if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr)) {
+            sanitizedRecordInput[field.fieldApiName] = emailStr;
+          } else {
+            fieldErrors[field.fieldApiName] = ["Enter a valid email address."];
+          }
+        } else if (fieldDef?.dataType === "boolean") {
+          if (typeof val === "boolean") {
+            sanitizedRecordInput[field.fieldApiName] = val;
+          } else if (val === "true" || val === "on" || val === "1") {
+            sanitizedRecordInput[field.fieldApiName] = true;
+          } else if (val === "false" || val === "0" || val === "") {
+            sanitizedRecordInput[field.fieldApiName] = false;
+          } else {
+            fieldErrors[field.fieldApiName] = ["Enter a valid boolean."];
+          }
+        } else {
+          const str = typeof val === "string" ? val.trim() : String(val);
+          if (fieldDef?.maxLength && str.length > fieldDef.maxLength) {
+            fieldErrors[field.fieldApiName] = ["Value is too long."];
+          } else {
+            sanitizedRecordInput[field.fieldApiName] = str;
+          }
+        }
       }
     }
 
@@ -568,7 +653,7 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
       }
     }
 
-    // Return 422 if required fields missing
+    // Return 422 if required fields missing or typed validations failed
     if (Object.keys(fieldErrors).length > 0) {
       await incrementStats("invalid", submissionLocation);
       await tx.insert(dbSchema.webformSubmissions).values({
@@ -585,7 +670,6 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
 
     // 6. Duplicate check (§3.7)
     // Run unique-field check before create
-    const bundle = fixtureModules[form.module];
     let isDuplicate = false;
 
     if (bundle) {
@@ -747,6 +831,47 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
         return {
           outcome: "duplicate_pending_approval",
           acknowledgement: activeVersion.settings.acknowledgement,
+        };
+      }
+      if (
+        err instanceof ValidationError ||
+        (typeof err === "object" && err !== null && "fieldErrors" in err)
+      ) {
+        await incrementStats("invalid", submissionLocation);
+        await tx.insert(dbSchema.webformSubmissions).values({
+          organizationId: orgId,
+          formId: form.id,
+          versionId: activeVersion.id,
+          location: submissionLocation,
+          outcome: "invalid",
+          clientHash,
+          payload: null,
+        });
+        const errs = (err as ValidationError).fieldErrors ?? {
+          form: [(err as Error).message || "Validation failed."],
+        };
+        return {
+          outcome: "invalid",
+          errors: errs,
+        };
+      }
+      if (
+        err instanceof Error &&
+        (err.name === "ValidationError" || err.message.toLowerCase().includes("validation"))
+      ) {
+        await incrementStats("invalid", submissionLocation);
+        await tx.insert(dbSchema.webformSubmissions).values({
+          organizationId: orgId,
+          formId: form.id,
+          versionId: activeVersion.id,
+          location: submissionLocation,
+          outcome: "invalid",
+          clientHash,
+          payload: null,
+        });
+        return {
+          outcome: "invalid",
+          errors: { form: [err.message] },
         };
       }
       throw err;

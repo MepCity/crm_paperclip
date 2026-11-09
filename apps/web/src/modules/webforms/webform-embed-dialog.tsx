@@ -121,9 +121,21 @@ export function WebformEmbedDialog({
                 <Heading slot="title" className="text-lg font-semibold text-foreground">
                   {t("modules.webforms.embed.title", { name: formName })}
                 </Heading>
-                <Badge variant="neutral">{module}</Badge>
+                <Badge variant="neutral">
+                  {module === "Leads"
+                    ? t("shell.leads")
+                    : module === "Contacts"
+                      ? t("shell.contacts")
+                      : module === "Cases"
+                        ? t("shell.cases")
+                        : module}
+                </Badge>
                 <Badge variant={status === "active" ? "success" : "neutral"}>
-                  {status.toUpperCase()}
+                  {status === "active"
+                    ? t("modules.webforms.builder.statusActive")
+                    : status === "inactive"
+                      ? t("modules.webforms.builder.statusInactive")
+                      : t("modules.webforms.builder.statusDraft")}
                 </Badge>
               </div>
               <Button

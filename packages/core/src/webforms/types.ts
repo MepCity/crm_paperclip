@@ -20,6 +20,7 @@ export interface WebformField {
 }
 
 export interface WebformSettings {
+  layout?: string;
   buttonLabel: string;
   ownerKind: "user" | "assignment_rule";
   ownerRef: string;

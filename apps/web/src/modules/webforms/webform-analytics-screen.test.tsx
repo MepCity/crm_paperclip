@@ -1,5 +1,7 @@
+import { formatDate } from "@crm/core/format";
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { DEFAULT_FORMAT } from "@/lib/locale";
 import type { WebformAnalyticsSummary, WebformDetail } from "./types";
 import { WebformAnalyticsScreen } from "./webform-analytics-screen";
 
@@ -144,8 +146,8 @@ describe("WebformAnalyticsScreen", () => {
       expect(screen.getAllByText("https://example.com").length).toBeGreaterThan(0);
     });
 
-    expect(screen.getByText("2026-11-08")).toBeDefined();
-    expect(screen.getByText("2026-11-09")).toBeDefined();
+    expect(screen.getByText(formatDate("2026-11-08", DEFAULT_FORMAT))).toBeDefined();
+    expect(screen.getByText(formatDate("2026-11-09", DEFAULT_FORMAT))).toBeDefined();
   });
 
   it("renders empty state when analytics has zero visits and zero submissions", async () => {

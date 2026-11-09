@@ -189,6 +189,54 @@ describe("Webforms core validation", () => {
         }),
       ).toThrow(ValidationError);
     });
+
+    it("rejects publish when a hidden field is required but has no default value", () => {
+      const hiddenRequiredNoDefault: WebformField[] = [
+        ...validFields,
+        {
+          fieldApiName: "Case_Origin",
+          label: "Case Origin",
+          required: true,
+          hidden: true,
+          defaultValue: "",
+        },
+      ];
+      expect(() =>
+        validateForPublish({
+          fields: hiddenRequiredNoDefault,
+          settings: baseSettings,
+          locations: [],
+          eligibleFields: [
+            ...requiredEligible,
+            { apiName: "Case_Origin", label: "Case Origin", dataType: "picklist", required: true },
+          ],
+        }),
+      ).toThrow(ValidationError);
+    });
+
+    it("passes publish when a hidden required field has a default value", () => {
+      const hiddenRequiredWithDefault: WebformField[] = [
+        ...validFields,
+        {
+          fieldApiName: "Case_Origin",
+          label: "Case Origin",
+          required: true,
+          hidden: true,
+          defaultValue: "Web",
+        },
+      ];
+      expect(() =>
+        validateForPublish({
+          fields: hiddenRequiredWithDefault,
+          settings: baseSettings,
+          locations: [],
+          eligibleFields: [
+            ...requiredEligible,
+            { apiName: "Case_Origin", label: "Case Origin", dataType: "picklist", required: true },
+          ],
+        }),
+      ).not.toThrow();
+    });
   });
 
   describe("Zod schema contracts", () => {
@@ -212,6 +260,7 @@ describe("Webforms core validation", () => {
     it("validates webformSettingsSchema with defaults", () => {
       const parsed = webformSettingsSchema.parse({});
       expect(parsed).toEqual({
+        layout: "Standard Layout",
         buttonLabel: "Submit",
         ownerKind: "user",
         ownerRef: "",

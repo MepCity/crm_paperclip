@@ -13,6 +13,8 @@ import { useUiTranslations } from "@/i18n/client-provider";
 import {
   addLocation,
   fetchEligibleFields,
+  fetchEligibleUsers,
+  fetchModuleAssignmentRules,
   fetchWebform,
   publishWebform,
   regenerateKey,
@@ -60,6 +62,9 @@ export function WebformBuilderScreen({
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [embedOpen, setEmbedOpen] = useState(initialEmbedOpen);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [users, setUsers] = useState<{ id: string; name: string }[]>([]);
+  const [assignmentRules, setAssignmentRules] = useState<{ id: string; name: string }[]>([]);
+  const [draggedIdx, setDraggedIdx] = useState<number | null>(null);
 
   // Location add state
   const [newOrigin, setNewOrigin] = useState("");
@@ -87,8 +92,14 @@ export function WebformBuilderScreen({
         setSettings(activeVersion.settings);
       }
 
-      const eligible = await fetchEligibleFields(orgSlug, detail.module);
+      const [eligible, userList, ruleList] = await Promise.all([
+        fetchEligibleFields(orgSlug, detail.module),
+        fetchEligibleUsers(orgSlug),
+        fetchModuleAssignmentRules(orgSlug, detail.module),
+      ]);
       setEligibleFields(eligible);
+      setUsers(userList);
+      setAssignmentRules(ruleList);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to load webform.");
     } finally {
@@ -136,8 +147,28 @@ export function WebformBuilderScreen({
     setFields(next);
   };
 
+  const validateHiddenRequired = (fieldsToValidate: WebformField[]): string | null => {
+    for (const f of fieldsToValidate) {
+      const defVal =
+        typeof f.defaultValue === "string"
+          ? f.defaultValue
+          : f.defaultValue != null
+            ? String(f.defaultValue)
+            : "";
+      if (f.hidden && f.required && !defVal.trim()) {
+        return t("modules.webforms.builder.hiddenRequiredNotice");
+      }
+    }
+    return null;
+  };
+
   const handleSaveDraft = async () => {
     if (!settings) return;
+    const valErr = validateHiddenRequired(fields);
+    if (valErr) {
+      setError(valErr);
+      return;
+    }
     try {
       setSavingDraft(true);
       setError(null);
@@ -147,7 +178,7 @@ export function WebformBuilderScreen({
         settings,
       });
       setForm(updated);
-      setSuccessMessage("Draft saved successfully.");
+      setSuccessMessage(t("modules.webforms.builder.draftSaved"));
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save draft.");
@@ -166,7 +197,7 @@ export function WebformBuilderScreen({
         settings,
       });
       setForm(updated);
-      setSuccessMessage("New draft opened for editing.");
+      setSuccessMessage(t("modules.webforms.builder.draftOpened"));
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to open draft.");
@@ -176,6 +207,11 @@ export function WebformBuilderScreen({
   };
 
   const handlePublish = async () => {
+    const valErr = validateHiddenRequired(fields);
+    if (valErr) {
+      setError(valErr);
+      return;
+    }
     try {
       setPublishing(true);
       setError(null);
@@ -189,13 +225,120 @@ export function WebformBuilderScreen({
       }
       const updated = await publishWebform(orgSlug, formId);
       setForm(updated);
-      setSuccessMessage("Form published successfully!");
+      setSuccessMessage(t("modules.webforms.builder.publishSuccess"));
       setTimeout(() => setSuccessMessage(null), 4000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to publish webform.");
     } finally {
       setPublishing(false);
     }
+  };
+
+  const renderDefaultValueInput = (field: WebformField, eligible: EligibleField | undefined) => {
+    const id = `field-default-${field.fieldApiName}`;
+    const disabled = isReadOnly;
+    const value =
+      typeof field.defaultValue === "string"
+        ? field.defaultValue
+        : field.defaultValue != null
+          ? String(field.defaultValue)
+          : "";
+
+    if (eligible?.picklistOptions && eligible.picklistOptions.length > 0) {
+      return (
+        <select
+          id={id}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => handleUpdateField(field.fieldApiName, { defaultValue: e.target.value })}
+          className="h-8 rounded border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+          data-testid={`field-default-select-${field.fieldApiName}`}
+        >
+          <option value="">--</option>
+          {eligible.picklistOptions.map((opt) => (
+            <option key={opt.storedValue} value={opt.storedValue}>
+              {opt.displayValue}
+            </option>
+          ))}
+        </select>
+      );
+    }
+
+    if (eligible?.dataType === "boolean") {
+      return (
+        <select
+          id={id}
+          value={value}
+          disabled={disabled}
+          onChange={(e) => handleUpdateField(field.fieldApiName, { defaultValue: e.target.value })}
+          className="h-8 rounded border border-border bg-background px-2 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+          data-testid={`field-default-select-${field.fieldApiName}`}
+        >
+          <option value="">--</option>
+          <option value="true">{t("modules.webforms.builder.booleanTrue")}</option>
+          <option value="false">{t("modules.webforms.builder.booleanFalse")}</option>
+        </select>
+      );
+    }
+
+    if (
+      eligible?.dataType === "integer" ||
+      eligible?.dataType === "number" ||
+      eligible?.dataType === "currency" ||
+      eligible?.dataType === "double"
+    ) {
+      return (
+        <input
+          id={id}
+          type="number"
+          value={value}
+          disabled={disabled}
+          onChange={(e) => handleUpdateField(field.fieldApiName, { defaultValue: e.target.value })}
+          className="h-8 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+          data-testid={`field-default-input-${field.fieldApiName}`}
+        />
+      );
+    }
+
+    if (eligible?.dataType === "date") {
+      return (
+        <input
+          id={id}
+          type="date"
+          value={value}
+          disabled={disabled}
+          onChange={(e) => handleUpdateField(field.fieldApiName, { defaultValue: e.target.value })}
+          className="h-8 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+          data-testid={`field-default-input-${field.fieldApiName}`}
+        />
+      );
+    }
+
+    if (eligible?.dataType === "datetime") {
+      return (
+        <input
+          id={id}
+          type="datetime-local"
+          value={value}
+          disabled={disabled}
+          onChange={(e) => handleUpdateField(field.fieldApiName, { defaultValue: e.target.value })}
+          className="h-8 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+          data-testid={`field-default-input-${field.fieldApiName}`}
+        />
+      );
+    }
+
+    return (
+      <input
+        id={id}
+        type="text"
+        value={value}
+        disabled={disabled}
+        onChange={(e) => handleUpdateField(field.fieldApiName, { defaultValue: e.target.value })}
+        className="h-8 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+        data-testid={`field-default-input-${field.fieldApiName}`}
+      />
+    );
   };
 
   const handleAddLocation = async () => {
@@ -278,7 +421,15 @@ export function WebformBuilderScreen({
               className="text-base font-semibold bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none px-1 text-foreground"
               placeholder={t("modules.webforms.builder.namePlaceholder")}
             />
-            <Badge variant="neutral">{form.module}</Badge>
+            <Badge variant="neutral">
+              {form.module === "Leads"
+                ? t("shell.leads")
+                : form.module === "Contacts"
+                  ? t("shell.contacts")
+                  : form.module === "Cases"
+                    ? t("shell.cases")
+                    : form.module}
+            </Badge>
             <Badge
               variant={
                 form.status === "active"
@@ -287,13 +438,25 @@ export function WebformBuilderScreen({
                     ? "warning"
                     : "neutral"
               }
+              data-testid="form-status-badge"
             >
-              {form.status.toUpperCase()}
+              {form.status === "active"
+                ? t("modules.webforms.builder.statusActive")
+                : form.status === "inactive"
+                  ? t("modules.webforms.builder.statusInactive")
+                  : t("modules.webforms.builder.statusDraft")}
+            </Badge>
+            <Badge variant="neutral">
+              {settings.layout || t("modules.webforms.dialogs.standardLayout")}
             </Badge>
             <span className="text-xs text-muted-foreground ml-2">
               {form.draftVersion
-                ? `Draft v${form.draftVersion.number}`
-                : `Published v${form.publishedVersion?.number}`}
+                ? t("modules.webforms.builder.versionDraft", {
+                    number: form.draftVersion.number,
+                  })
+                : t("modules.webforms.builder.versionPublished", {
+                    number: form.publishedVersion?.number ?? 1,
+                  })}
             </span>
           </div>
         </div>
@@ -454,37 +617,82 @@ export function WebformBuilderScreen({
             </div>
 
             {/* Field Cards */}
-            <div className="flex flex-col gap-3" data-testid="form-fields-list">
+            <ul className="flex flex-col gap-3 p-0 m-0 list-none" data-testid="form-fields-list">
               {fields.map((field, idx) => {
                 const eligible = eligibleFields.find((f) => f.apiName === field.fieldApiName);
                 const isLayoutRequired = Boolean(eligible?.required);
+                const defStr =
+                  typeof field.defaultValue === "string"
+                    ? field.defaultValue
+                    : field.defaultValue != null
+                      ? String(field.defaultValue)
+                      : "";
+                const isHiddenRequiredMissingDefault =
+                  field.hidden && field.required && !defStr.trim();
 
                 return (
-                  <div
+                  <li
                     key={field.fieldApiName}
-                    className="p-4 rounded-lg border border-border bg-card shadow-xs flex flex-col gap-3"
+                    draggable={!isReadOnly}
+                    onDragStart={(e) => {
+                      if (isReadOnly) return;
+                      setDraggedIdx(idx);
+                      e.dataTransfer.effectAllowed = "move";
+                    }}
+                    onDragOver={(e) => {
+                      if (isReadOnly) return;
+                      e.preventDefault();
+                      e.dataTransfer.dropEffect = "move";
+                    }}
+                    onDrop={(e) => {
+                      if (isReadOnly) return;
+                      e.preventDefault();
+                      if (draggedIdx === null || draggedIdx === idx) return;
+                      const next = [...fields];
+                      const [item] = next.splice(draggedIdx, 1);
+                      if (item) {
+                        next.splice(idx, 0, item);
+                        setFields(next);
+                      }
+                      setDraggedIdx(null);
+                    }}
+                    onDragEnd={() => setDraggedIdx(null)}
+                    className={`p-4 rounded-lg border bg-card shadow-xs flex flex-col gap-3 transition-colors ${
+                      draggedIdx === idx ? "border-primary opacity-60" : "border-border"
+                    }`}
                     data-testid={`form-field-${field.fieldApiName}`}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-2">
                         {!isReadOnly && (
-                          <div className="flex flex-col gap-0.5 text-muted-foreground">
-                            <button
-                              type="button"
-                              disabled={idx === 0}
-                              onClick={() => handleMoveField(idx, "up")}
-                              className="hover:text-foreground disabled:opacity-30 text-xs px-1"
+                          <div className="flex items-center gap-1 text-muted-foreground">
+                            <span
+                              className="cursor-grab active:cursor-grabbing text-xs px-1 select-none font-bold"
+                              title={t("modules.webforms.builder.dragToReorder")}
+                              data-testid={`field-drag-handle-${field.fieldApiName}`}
                             >
-                              ▲
-                            </button>
-                            <button
-                              type="button"
-                              disabled={idx === fields.length - 1}
-                              onClick={() => handleMoveField(idx, "down")}
-                              className="hover:text-foreground disabled:opacity-30 text-xs px-1"
-                            >
-                              ▼
-                            </button>
+                              ⋮⋮
+                            </span>
+                            <div className="flex flex-col gap-0.5">
+                              <button
+                                type="button"
+                                disabled={idx === 0}
+                                onClick={() => handleMoveField(idx, "up")}
+                                className="hover:text-foreground disabled:opacity-30 text-xs px-1"
+                                aria-label={`Move ${field.label} up`}
+                              >
+                                ▲
+                              </button>
+                              <button
+                                type="button"
+                                disabled={idx === fields.length - 1}
+                                onClick={() => handleMoveField(idx, "down")}
+                                className="hover:text-foreground disabled:opacity-30 text-xs px-1"
+                                aria-label={`Move ${field.label} down`}
+                              >
+                                ▼
+                              </button>
+                            </div>
                           </div>
                         )}
                         <span className="text-xs font-mono text-muted-foreground">
@@ -493,6 +701,14 @@ export function WebformBuilderScreen({
                         {isLayoutRequired && (
                           <span className="text-[10px] text-destructive bg-destructive/10 px-1.5 py-0.5 rounded font-semibold">
                             {t("modules.webforms.builder.moduleRequired")}
+                          </span>
+                        )}
+                        {isHiddenRequiredMissingDefault && (
+                          <span
+                            className="text-[10px] text-destructive bg-destructive/10 px-1.5 py-0.5 rounded font-semibold"
+                            data-testid={`field-warning-${field.fieldApiName}`}
+                          >
+                            {t("modules.webforms.builder.hiddenRequiredNotice")}
                           </span>
                         )}
                       </div>
@@ -510,7 +726,7 @@ export function WebformBuilderScreen({
                       )}
                     </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                       <div className="flex flex-col gap-1">
                         <label
                           htmlFor={`field-label-${field.fieldApiName}`}
@@ -548,6 +764,20 @@ export function WebformBuilderScreen({
                           className="h-8 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
                         />
                       </div>
+                      <div className="flex flex-col gap-1">
+                        <label
+                          htmlFor={`field-default-${field.fieldApiName}`}
+                          className="text-xs font-semibold text-foreground flex items-center justify-between"
+                        >
+                          <span>{t("modules.webforms.builder.defaultValue")}</span>
+                          {isHiddenRequiredMissingDefault && (
+                            <span className="text-[10px] text-destructive font-normal">
+                              {t("modules.webforms.builder.requiredBadge")}
+                            </span>
+                          )}
+                        </label>
+                        {renderDefaultValueInput(field, eligible)}
+                      </div>
                     </div>
 
                     <div className="flex items-center gap-6 pt-1 border-t border-border/50 text-xs">
@@ -581,31 +811,31 @@ export function WebformBuilderScreen({
                         </span>
                       </label>
                     </div>
-                  </div>
+                  </li>
                 );
               })}
+            </ul>
 
-              {/* Submit Button Config */}
-              <div className="p-4 rounded-lg border border-border bg-card shadow-xs flex flex-col gap-2">
-                <span className="text-xs font-semibold text-muted-foreground uppercase">
-                  {t("modules.webforms.builder.submitButton")}
-                </span>
-                <div className="flex items-center gap-3">
-                  <label
-                    htmlFor="submit-button-label-input"
-                    className="text-xs font-semibold text-foreground"
-                  >
-                    {t("modules.webforms.builder.buttonLabel")}
-                  </label>
-                  <input
-                    id="submit-button-label-input"
-                    type="text"
-                    value={settings.buttonLabel}
-                    disabled={isReadOnly}
-                    onChange={(e) => setSettings({ ...settings, buttonLabel: e.target.value })}
-                    className="h-8 w-48 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
-                  />
-                </div>
+            {/* Submit Button Config */}
+            <div className="p-4 rounded-lg border border-border bg-card shadow-xs flex flex-col gap-2">
+              <span className="text-xs font-semibold text-muted-foreground uppercase">
+                {t("modules.webforms.builder.submitButton")}
+              </span>
+              <div className="flex items-center gap-3">
+                <label
+                  htmlFor="submit-button-label-input"
+                  className="text-xs font-semibold text-foreground"
+                >
+                  {t("modules.webforms.builder.buttonLabel")}
+                </label>
+                <input
+                  id="submit-button-label-input"
+                  type="text"
+                  value={settings.buttonLabel}
+                  disabled={isReadOnly}
+                  onChange={(e) => setSettings({ ...settings, buttonLabel: e.target.value })}
+                  className="h-8 w-48 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
+                />
               </div>
             </div>
           </div>
@@ -683,8 +913,29 @@ export function WebformBuilderScreen({
                 {t("modules.webforms.builder.settingsTitle")}
               </Heading>
               <div className="flex flex-col gap-6 py-2">
-                {/* Acknowledgement */}
+                {/* Module Layout */}
                 <div className="flex flex-col gap-2">
+                  <h4 className="text-sm font-semibold text-foreground">
+                    {t("modules.webforms.builder.layout")}
+                  </h4>
+                  <div className="flex flex-col gap-1 text-xs">
+                    <select
+                      id="settings-layout-select"
+                      value={settings.layout || "Standard Layout"}
+                      disabled={isReadOnly}
+                      onChange={(e) => setSettings({ ...settings, layout: e.target.value })}
+                      className="h-8 rounded border border-border bg-background px-2 text-xs"
+                      data-testid="settings-layout-select"
+                    >
+                      <option value="Standard Layout">
+                        {t("modules.webforms.dialogs.standardLayout")}
+                      </option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Acknowledgement */}
+                <div className="flex flex-col gap-2 pt-3 border-t border-border">
                   <h4 className="text-sm font-semibold text-foreground">
                     {t("modules.webforms.builder.acknowledgement")}
                   </h4>
@@ -796,14 +1047,43 @@ export function WebformBuilderScreen({
                           ? t("modules.webforms.builder.userRef")
                           : t("modules.webforms.builder.ruleRef")}
                       </label>
-                      <input
-                        id="settings-owner-ref"
-                        type="text"
-                        value={settings.ownerRef}
-                        disabled={isReadOnly}
-                        onChange={(e) => setSettings({ ...settings, ownerRef: e.target.value })}
-                        className="h-8 rounded border border-border bg-background px-2 text-xs"
-                      />
+                      {settings.ownerKind === "user" ? (
+                        <select
+                          id="settings-owner-ref"
+                          value={settings.ownerRef}
+                          disabled={isReadOnly}
+                          onChange={(e) => setSettings({ ...settings, ownerRef: e.target.value })}
+                          className="h-8 rounded border border-border bg-background px-2 text-xs"
+                          data-testid="settings-owner-user-select"
+                        >
+                          <option value="">{t("modules.webforms.builder.selectUser")}</option>
+                          {users.map((u) => (
+                            <option key={u.id} value={u.id}>
+                              {u.name}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <select
+                          id="settings-owner-ref"
+                          value={settings.ownerRef}
+                          disabled={isReadOnly || assignmentRules.length === 0}
+                          onChange={(e) => setSettings({ ...settings, ownerRef: e.target.value })}
+                          className="h-8 rounded border border-border bg-background px-2 text-xs"
+                          data-testid="settings-owner-rule-select"
+                        >
+                          <option value="">
+                            {assignmentRules.length === 0
+                              ? t("modules.webforms.builder.noAssignmentRules")
+                              : t("modules.webforms.builder.selectRule")}
+                          </option>
+                          {assignmentRules.map((r) => (
+                            <option key={r.id} value={r.id}>
+                              {r.name}
+                            </option>
+                          ))}
+                        </select>
+                      )}
                     </div>
                   </div>
                   <label className="flex items-center gap-2 text-xs cursor-pointer">
