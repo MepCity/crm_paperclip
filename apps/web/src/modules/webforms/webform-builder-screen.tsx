@@ -8,6 +8,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Spinner } from "@/components/ui/spinner";
+import { useUiTranslations } from "@/i18n/client-provider";
 import {
   addLocation,
   fetchEligibleFields,
@@ -31,6 +32,7 @@ interface WebformBuilderScreenProps {
 }
 
 export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenProps) {
+  const t = useUiTranslations();
   const [form, setForm] = useState<WebformDetail | null>(null);
   const [eligibleFields, setEligibleFields] = useState<EligibleField[]>([]);
   const [loading, setLoading] = useState(true);
@@ -255,7 +257,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
             href={`/crm/${orgSlug}/settings/webforms`}
             className="text-sm font-semibold text-muted-foreground hover:text-foreground flex items-center gap-1"
           >
-            ← Webforms
+            {t("modules.webforms.builder.back")}
           </Link>
           <div className="h-4 w-px bg-border" />
           <div className="flex items-center gap-2">
@@ -265,7 +267,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
               onChange={(e) => setName(e.target.value)}
               disabled={isReadOnly}
               className="text-base font-semibold bg-transparent border-b border-transparent hover:border-border focus:border-primary focus:outline-none px-1 text-foreground"
-              placeholder="Webform Name"
+              placeholder={t("modules.webforms.builder.namePlaceholder")}
             />
             <Badge variant="neutral">{form.module}</Badge>
             <Badge
@@ -294,7 +296,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
             </span>
           )}
           <Button variant="secondary" size="sm" onClick={() => setPreviewOpen(true)}>
-            Preview
+            {t("modules.webforms.builder.preview")}
           </Button>
           <Button
             variant="secondary"
@@ -302,7 +304,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
             onClick={() => setSettingsOpen(true)}
             data-testid="form-settings-button"
           >
-            Form Settings
+            {t("modules.webforms.builder.formSettings")}
           </Button>
           {isReadOnly ? (
             <Button
@@ -312,7 +314,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
               isDisabled={savingDraft}
               data-testid="edit-form-button"
             >
-              Edit Form (New Draft)
+              {t("modules.webforms.builder.editDraft")}
             </Button>
           ) : (
             <>
@@ -323,7 +325,11 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                 isDisabled={savingDraft}
                 data-testid="save-draft-button"
               >
-                {savingDraft ? <Spinner className="size-4" /> : "Save Draft"}
+                {savingDraft ? (
+                  <Spinner className="size-4" />
+                ) : (
+                  t("modules.webforms.builder.saveDraft")
+                )}
               </Button>
               <Button
                 variant="primary"
@@ -332,7 +338,11 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                 isDisabled={publishing}
                 data-testid="publish-form-button"
               >
-                {publishing ? <Spinner className="size-4" /> : "Publish"}
+                {publishing ? (
+                  <Spinner className="size-4" />
+                ) : (
+                  t("modules.webforms.builder.publish")
+                )}
               </Button>
             </>
           )}
@@ -350,13 +360,15 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
         {/* Left Palette: Available Fields */}
         <div className="w-80 border-r border-border bg-muted/10 flex flex-col shrink-0">
           <div className="p-4 border-b border-border flex flex-col gap-2 bg-card">
-            <h2 className="text-sm font-semibold text-foreground">Available Fields</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              {t("modules.webforms.builder.availableFields")}
+            </h2>
             <div className="relative">
               <input
                 type="text"
                 value={fieldSearch}
                 onChange={(e) => setFieldSearch(e.target.value)}
-                placeholder="Search fields..."
+                placeholder={t("modules.webforms.builder.searchFieldsPlaceholder")}
                 className="w-full h-8 pl-8 pr-3 text-xs rounded border border-border bg-background focus:outline-none focus:ring-1 focus:ring-ring"
               />
               <Icons.filterSearch className="size-3.5 text-muted-foreground absolute left-2.5 top-2.5" />
@@ -371,7 +383,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                   type="button"
                   key={eligible.apiName}
                   disabled={inForm || isReadOnly}
-                  aria-label={`Add ${eligible.label}`}
+                  aria-label={t("modules.webforms.builder.addFieldAria", { label: eligible.label })}
                   data-testid={`add-field-${eligible.apiName}`}
                   className={`flex w-full items-center justify-between p-2.5 rounded border text-xs transition-colors text-left ${
                     inForm
@@ -407,11 +419,11 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
           <div className="w-full max-w-2xl flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <span className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                Form Fields ({fields.length})
+                {t("modules.webforms.builder.formFieldsCount", { count: fields.length })}
               </span>
               {isReadOnly && (
                 <span className="text-xs text-amber-500 font-semibold">
-                  Viewing published version (Read-only)
+                  {t("modules.webforms.builder.publishedReadOnly")}
                 </span>
               )}
             </div>
@@ -455,7 +467,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                         </span>
                         {isLayoutRequired && (
                           <span className="text-[10px] text-destructive bg-destructive/10 px-1.5 py-0.5 rounded font-semibold">
-                            Module Required
+                            {t("modules.webforms.builder.moduleRequired")}
                           </span>
                         )}
                       </div>
@@ -468,7 +480,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                           onClick={() => handleRemoveField(field.fieldApiName)}
                           className="text-muted-foreground hover:text-destructive h-7 text-xs"
                         >
-                          Remove
+                          {t("modules.webforms.builder.remove")}
                         </Button>
                       )}
                     </div>
@@ -479,7 +491,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                           htmlFor={`field-label-${field.fieldApiName}`}
                           className="text-xs font-semibold text-foreground"
                         >
-                          Field Label
+                          {t("modules.webforms.builder.fieldLabel")}
                         </label>
                         <input
                           id={`field-label-${field.fieldApiName}`}
@@ -497,14 +509,14 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                           htmlFor={`field-help-${field.fieldApiName}`}
                           className="text-xs font-semibold text-foreground"
                         >
-                          Help Text
+                          {t("modules.webforms.builder.helpText")}
                         </label>
                         <input
                           id={`field-help-${field.fieldApiName}`}
                           type="text"
                           value={field.helpText || ""}
                           disabled={isReadOnly}
-                          placeholder="Visitor instructions..."
+                          placeholder={t("modules.webforms.builder.helpTextPlaceholder")}
                           onChange={(e) =>
                             handleUpdateField(field.fieldApiName, { helpText: e.target.value })
                           }
@@ -525,7 +537,9 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                           className="size-3.5 rounded border-border"
                           data-testid={`field-required-toggle-${field.fieldApiName}`}
                         />
-                        <span className="text-foreground">Required</span>
+                        <span className="text-foreground">
+                          {t("modules.webforms.builder.required")}
+                        </span>
                       </label>
                       <label className="flex items-center gap-2 cursor-pointer">
                         <input
@@ -537,7 +551,9 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                           }
                           className="size-3.5 rounded border-border"
                         />
-                        <span className="text-foreground">Hidden field</span>
+                        <span className="text-foreground">
+                          {t("modules.webforms.builder.hidden")}
+                        </span>
                       </label>
                     </div>
                   </div>
@@ -547,14 +563,14 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
               {/* Submit Button Config */}
               <div className="p-4 rounded-lg border border-border bg-card shadow-xs flex flex-col gap-2">
                 <span className="text-xs font-semibold text-muted-foreground uppercase">
-                  Submit Button
+                  {t("modules.webforms.builder.submitButton")}
                 </span>
                 <div className="flex items-center gap-3">
                   <label
                     htmlFor="submit-button-label-input"
                     className="text-xs font-semibold text-foreground"
                   >
-                    Button Label:
+                    {t("modules.webforms.builder.buttonLabel")}
                   </label>
                   <input
                     id="submit-button-label-input"
@@ -580,11 +596,11 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
         >
           <Modal className="bg-surface border border-border rounded-lg shadow-lg max-w-md w-full p-6 outline-none max-h-[90vh] overflow-y-auto">
             <AriaDialog
-              aria-label={`Preview: ${name}`}
+              aria-label={t("modules.webforms.builder.previewTitle", { name })}
               className="outline-none flex flex-col gap-4"
             >
               <Heading slot="title" className="text-lg font-semibold text-foreground">
-                Preview: {name}
+                {t("modules.webforms.builder.previewTitle", { name })}
               </Heading>
               <div className="p-4 border border-border rounded-lg bg-card flex flex-col gap-4 shadow-xs">
                 {fields
@@ -618,7 +634,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
               </div>
               <div className="flex justify-end pt-2">
                 <Button variant="secondary" onClick={() => setPreviewOpen(false)}>
-                  Close Preview
+                  {t("modules.webforms.builder.closePreview")}
                 </Button>
               </div>
             </AriaDialog>
@@ -634,14 +650,19 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
           className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50 p-4"
         >
           <Modal className="bg-surface border border-border rounded-lg shadow-lg max-w-lg w-full p-6 outline-none max-h-[90vh] overflow-y-auto">
-            <AriaDialog aria-label="Form Settings" className="outline-none flex flex-col gap-4">
+            <AriaDialog
+              aria-label={t("modules.webforms.builder.settingsTitle")}
+              className="outline-none flex flex-col gap-4"
+            >
               <Heading slot="title" className="text-lg font-semibold text-foreground">
-                Form Settings
+                {t("modules.webforms.builder.settingsTitle")}
               </Heading>
               <div className="flex flex-col gap-6 py-2">
                 {/* Acknowledgement */}
                 <div className="flex flex-col gap-2">
-                  <h4 className="text-sm font-semibold text-foreground">Acknowledgement</h4>
+                  <h4 className="text-sm font-semibold text-foreground">
+                    {t("modules.webforms.builder.acknowledgement")}
+                  </h4>
                   <div className="flex items-center gap-4 text-xs">
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input
@@ -659,7 +680,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                           })
                         }
                       />
-                      <span>Thank you message</span>
+                      <span>{t("modules.webforms.builder.thankYouMessage")}</span>
                     </label>
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input
@@ -677,7 +698,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                           })
                         }
                       />
-                      <span>Redirect to URL</span>
+                      <span>{t("modules.webforms.builder.redirectToUrl")}</span>
                     </label>
                   </div>
 
@@ -700,7 +721,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                         type="url"
                         value={settings.acknowledgement.url}
                         disabled={isReadOnly}
-                        placeholder="https://yourdomain.com/thank-you"
+                        placeholder={t("modules.webforms.builder.redirectPlaceholder")}
                         onChange={(e) =>
                           setSettings({
                             ...settings,
@@ -710,7 +731,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                         className="h-8 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
                       />
                       <span className="text-[11px] text-muted-foreground">
-                        Must be https: and its origin must be in the Allowed Locations list below.
+                        {t("modules.webforms.builder.redirectHelp")}
                       </span>
                     </div>
                   )}
@@ -719,12 +740,12 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                 {/* Assignment & Notifications */}
                 <div className="flex flex-col gap-3 pt-3 border-t border-border">
                   <h4 className="text-sm font-semibold text-foreground">
-                    Record Assignment & Notification
+                    {t("modules.webforms.builder.assignmentAndNotification")}
                   </h4>
                   <div className="grid grid-cols-2 gap-3 text-xs">
                     <div className="flex flex-col gap-1">
                       <label htmlFor="settings-owner-kind" className="font-semibold">
-                        Assign Owner Kind
+                        {t("modules.webforms.builder.ownerKind")}
                       </label>
                       <select
                         id="settings-owner-kind"
@@ -738,13 +759,17 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                         }
                         className="h-8 rounded border border-border bg-background px-2 text-xs"
                       >
-                        <option value="user">Specific User</option>
-                        <option value="assignment_rule">Assignment Rule</option>
+                        <option value="user">{t("modules.webforms.builder.specificUser")}</option>
+                        <option value="assignment_rule">
+                          {t("modules.webforms.builder.assignmentRule")}
+                        </option>
                       </select>
                     </div>
                     <div className="flex flex-col gap-1">
                       <label htmlFor="settings-owner-ref" className="font-semibold">
-                        {settings.ownerKind === "user" ? "User ID / Ref" : "Rule Ref"}
+                        {settings.ownerKind === "user"
+                          ? t("modules.webforms.builder.userRef")
+                          : t("modules.webforms.builder.ruleRef")}
                       </label>
                       <input
                         id="settings-owner-ref"
@@ -764,13 +789,15 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                       onChange={(e) => setSettings({ ...settings, notifyOwner: e.target.checked })}
                       className="size-3.5 rounded border-border"
                     />
-                    <span>Notify record owner on submission</span>
+                    <span>{t("modules.webforms.builder.notifyOwner")}</span>
                   </label>
                 </div>
 
                 {/* Spam Prevention & Locations */}
                 <div className="flex flex-col gap-3 pt-3 border-t border-border">
-                  <h4 className="text-sm font-semibold text-foreground">Spam & Security</h4>
+                  <h4 className="text-sm font-semibold text-foreground">
+                    {t("modules.webforms.builder.spamAndSecurity")}
+                  </h4>
                   <div className="flex flex-col gap-2 text-xs">
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input
@@ -780,7 +807,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                         onChange={(e) => setSettings({ ...settings, challenge: e.target.checked })}
                         className="size-3.5 rounded border-border"
                       />
-                      <span>Enable Spam Challenge / CAPTCHA</span>
+                      <span>{t("modules.webforms.builder.enableCaptcha")}</span>
                     </label>
 
                     <label className="flex items-center gap-2 cursor-pointer">
@@ -793,7 +820,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                         }
                         className="size-3.5 rounded border-border"
                       />
-                      <span>Restrict form submission to allowed domain locations</span>
+                      <span>{t("modules.webforms.builder.restrictLocations")}</span>
                     </label>
                   </div>
 
@@ -803,7 +830,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                       htmlFor="new-location-input"
                       className="text-xs font-semibold text-foreground"
                     >
-                      Allowed Form Locations (Origins)
+                      {t("modules.webforms.builder.allowedLocations")}
                     </label>
                     {locationError && (
                       <span className="text-xs text-destructive">{locationError}</span>
@@ -813,7 +840,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                         id="new-location-input"
                         type="text"
                         value={newOrigin}
-                        placeholder="https://example.com"
+                        placeholder={t("modules.webforms.builder.locationPlaceholder")}
                         onChange={(e) => setNewOrigin(e.target.value)}
                         className="h-8 flex-1 rounded border border-border bg-background px-2.5 text-xs focus:outline-none focus:ring-1 focus:ring-ring"
                       />
@@ -823,14 +850,14 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                         onClick={handleAddLocation}
                         isDisabled={!newOrigin.trim() || addingLocation}
                       >
-                        Add Location
+                        {t("modules.webforms.builder.addLocation")}
                       </Button>
                     </div>
 
                     <div className="border border-border rounded divide-y divide-border text-xs max-h-32 overflow-y-auto">
                       {locations.length === 0 ? (
                         <div className="p-2 text-muted-foreground text-center">
-                          No restricted locations added.
+                          {t("modules.webforms.builder.noLocations")}
                         </div>
                       ) : (
                         locations.map((loc) => (
@@ -845,7 +872,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                               className="h-6 text-destructive text-xs hover:bg-destructive/10"
                               onClick={() => handleRemoveLocation(loc.origin)}
                             >
-                              Remove
+                              {t("modules.webforms.builder.remove")}
                             </Button>
                           </div>
                         ))
@@ -856,7 +883,9 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
 
                 {/* Attribution & Tracking */}
                 <div className="flex flex-col gap-2 pt-3 border-t border-border text-xs">
-                  <h4 className="text-sm font-semibold text-foreground">Lead / Ad Attribution</h4>
+                  <h4 className="text-sm font-semibold text-foreground">
+                    {t("modules.webforms.builder.attribution")}
+                  </h4>
                   <label className="flex items-center gap-2 cursor-pointer">
                     <input
                       type="checkbox"
@@ -867,18 +896,18 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                       }
                       className="size-3.5 rounded border-border"
                     />
-                    <span>Capture visitor ad attribution parameters (gclid, utm_*)</span>
+                    <span>{t("modules.webforms.builder.captureAttribution")}</span>
                   </label>
                 </div>
 
                 {/* Approval & Double Opt-in (ADR 0019 §2: stored as none/false) */}
                 <div className="flex flex-col gap-2 pt-3 border-t border-border text-xs opacity-70">
                   <h4 className="text-sm font-semibold text-foreground">
-                    Approvals & Double Opt-in
+                    {t("modules.webforms.builder.approvals")}
                   </h4>
                   <div className="flex items-center gap-3">
                     <label htmlFor="settings-manual-approval" className="font-semibold">
-                      Manual Approval:
+                      {t("modules.webforms.builder.manualApproval")}
                     </label>
                     <select
                       id="settings-manual-approval"
@@ -886,7 +915,9 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                       value="none"
                       className="h-7 rounded border border-border bg-muted px-2 text-xs"
                     >
-                      <option value="none">None (Direct Creation)</option>
+                      <option value="none">
+                        {t("modules.webforms.builder.noneDirectCreation")}
+                      </option>
                     </select>
                   </div>
                   <label className="flex items-center gap-2">
@@ -896,18 +927,22 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                       checked={false}
                       className="size-3.5 rounded border-border"
                     />
-                    <span>Require double opt-in email verification before record creation</span>
+                    <span>{t("modules.webforms.builder.doubleOptIn")}</span>
                   </label>
                 </div>
 
                 {/* Public Endpoint Key Management */}
                 <div className="flex flex-col gap-2 pt-3 border-t border-border text-xs">
-                  <h4 className="text-sm font-semibold text-foreground">Public Key Security</h4>
+                  <h4 className="text-sm font-semibold text-foreground">
+                    {t("modules.webforms.builder.publicKeySecurity")}
+                  </h4>
                   <div className="flex items-center justify-between p-3 rounded bg-muted/20 border border-border">
                     <div className="flex flex-col gap-0.5">
-                      <span className="font-semibold text-foreground">Endpoint Public Key</span>
+                      <span className="font-semibold text-foreground">
+                        {t("modules.webforms.builder.endpointPublicKey")}
+                      </span>
                       <span className="text-[11px] text-muted-foreground">
-                        128-bit random base64url key hashed in database.
+                        {t("modules.webforms.builder.publicKeyDesc")}
                       </span>
                     </div>
                     <Button
@@ -916,17 +951,19 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
                       onClick={() => setConfirmRegenerateOpen(true)}
                       isDisabled={regenerating}
                     >
-                      Regenerate Key
+                      {t("modules.webforms.builder.regenerateKey")}
                     </Button>
                   </div>
                   {newGeneratedKey && (
                     <div className="p-3 bg-success/10 border border-success/30 rounded text-xs flex flex-col gap-1">
-                      <span className="font-semibold text-success">New Public Key:</span>
+                      <span className="font-semibold text-success">
+                        {t("modules.webforms.builder.newPublicKey")}
+                      </span>
                       <span className="font-mono bg-background p-1.5 rounded select-all break-all border border-border">
                         {newGeneratedKey}
                       </span>
                       <span className="text-[10px] text-muted-foreground">
-                        Copy this key now. Old keys have been revoked immediately.
+                        {t("modules.webforms.builder.newPublicKeyWarning")}
                       </span>
                     </div>
                   )}
@@ -934,7 +971,7 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
               </div>
               <div className="flex justify-end pt-2">
                 <Button variant="secondary" onClick={() => setSettingsOpen(false)}>
-                  Close Settings
+                  {t("modules.webforms.builder.closeSettings")}
                 </Button>
               </div>
             </AriaDialog>
@@ -946,10 +983,10 @@ export function WebformBuilderScreen({ orgSlug, formId }: WebformBuilderScreenPr
       <ConfirmDialog
         isOpen={confirmRegenerateOpen}
         onOpenChange={setConfirmRegenerateOpen}
-        title="Regenerate Public Key"
-        message="Regenerating the key will immediately revoke the current key. Any external websites using the old embed or public key will stop accepting submissions until updated."
-        confirmLabel="Regenerate"
-        cancelLabel="Cancel"
+        title={t("modules.webforms.builder.regenerateDialog.title")}
+        message={t("modules.webforms.builder.regenerateDialog.message")}
+        confirmLabel={t("modules.webforms.builder.regenerateDialog.confirm")}
+        cancelLabel={t("common.actions.cancel")}
         tone="danger"
         busy={regenerating}
         onConfirm={handleRegenerateKey}

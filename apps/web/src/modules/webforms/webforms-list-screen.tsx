@@ -9,6 +9,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Spinner } from "@/components/ui/spinner";
+import { useUiTranslations } from "@/i18n/client-provider";
 import {
   activateWebform,
   createAutoResponseRule,
@@ -28,6 +29,7 @@ interface WebformsListScreenProps {
 }
 
 export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
+  const t = useUiTranslations();
   const router = useRouter();
   const [activeTab, setActiveTab] = useState<"webforms" | "auto-response-rules">("webforms");
 
@@ -208,10 +210,8 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
     <div className="flex flex-col gap-6 p-6">
       {/* Page Header */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold text-foreground">Webforms</h1>
-        <p className="text-sm text-muted-foreground">
-          Build embeddable online forms to capture records directly into Leads, Contacts, and Cases.
-        </p>
+        <h1 className="text-xl font-semibold text-foreground">{t("modules.webforms.title")}</h1>
+        <p className="text-sm text-muted-foreground">{t("modules.webforms.description")}</p>
       </div>
 
       {/* Tabs */}
@@ -227,7 +227,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
-          Webforms
+          {t("modules.webforms.tabs.webforms")}
         </button>
         <button
           type="button"
@@ -240,7 +240,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
               : "border-transparent text-muted-foreground hover:text-foreground"
           }`}
         >
-          Auto-response Rules
+          {t("modules.webforms.tabs.rules")}
         </button>
       </div>
 
@@ -249,7 +249,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
         <div className="flex flex-col gap-4">
           <div className="flex items-center justify-between">
             <span className="text-sm text-muted-foreground">
-              {forms.length > 0 ? `${forms.length} webforms configured` : ""}
+              {forms.length > 0 ? t("modules.webforms.list.count", { count: forms.length }) : ""}
             </span>
             <Button
               variant="primary"
@@ -261,7 +261,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
               }}
               data-testid="new-form-button"
             >
-              New Form
+              {t("modules.webforms.list.newForm")}
             </Button>
           </div>
 
@@ -283,30 +283,33 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                   <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                     <Icons.fieldEdit className="size-5" />
                   </div>
-                  <h3 className="font-semibold text-foreground">Form Building</h3>
+                  <h3 className="font-semibold text-foreground">
+                    {t("modules.webforms.list.formBuilding")}
+                  </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Create customised webforms to capture leads, contacts, or cases from external
-                    websites and landing pages.
+                    {t("modules.webforms.list.formBuildingDesc")}
                   </p>
                 </div>
                 <div className="p-6 border border-border rounded-lg bg-card flex flex-col gap-3">
                   <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                     <Icons.activity className="size-5" />
                   </div>
-                  <h3 className="font-semibold text-foreground">Analytics</h3>
+                  <h3 className="font-semibold text-foreground">
+                    {t("modules.webforms.list.analytics")}
+                  </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Track webform visits, submissions, spam detection, and conversion performance
-                    across all domains.
+                    {t("modules.webforms.list.analyticsDesc")}
                   </p>
                 </div>
                 <div className="p-6 border border-border rounded-lg bg-card flex flex-col gap-3">
                   <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
                     <Icons.newspaper className="size-5" />
                   </div>
-                  <h3 className="font-semibold text-foreground">A/B Testing</h3>
+                  <h3 className="font-semibold text-foreground">
+                    {t("modules.webforms.list.abTesting")}
+                  </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    Experiment with field ordering, call-to-action buttons, and form layouts to
-                    maximise submission conversion.
+                    {t("modules.webforms.list.abTestingDesc")}
                   </p>
                 </div>
               </div>
@@ -322,7 +325,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                   }}
                   data-testid="empty-new-form-button"
                 >
-                  New Form
+                  {t("modules.webforms.list.newForm")}
                 </Button>
               </div>
             </div>
@@ -332,11 +335,13 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
               <table className="w-full text-left text-sm" data-testid="webforms-table">
                 <thead className="bg-muted/50 border-b border-border text-muted-foreground font-semibold">
                   <tr>
-                    <th className="px-4 py-3">Form Name</th>
-                    <th className="px-4 py-3">Module</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3">Created</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
+                    <th className="px-4 py-3">{t("modules.webforms.list.table.formName")}</th>
+                    <th className="px-4 py-3">{t("modules.webforms.list.table.module")}</th>
+                    <th className="px-4 py-3">{t("modules.webforms.list.table.status")}</th>
+                    <th className="px-4 py-3">{t("modules.webforms.list.table.created")}</th>
+                    <th className="px-4 py-3 text-right">
+                      {t("modules.webforms.list.table.actions")}
+                    </th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -376,14 +381,16 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                               router.push(`/crm/${orgSlug}/settings/webforms/${form.id}`)
                             }
                           >
-                            Edit Form
+                            {t("modules.webforms.list.editForm")}
                           </Button>
                           <Button
                             variant="ghost"
                             size="sm"
                             onClick={() => handleToggleActivate(form)}
                           >
-                            {form.status === "active" ? "Deactivate" : "Activate"}
+                            {form.status === "active"
+                              ? t("modules.webforms.list.deactivate")
+                              : t("modules.webforms.list.activate")}
                           </Button>
                           <Button
                             variant="ghost"
@@ -391,7 +398,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                             className="text-destructive hover:bg-destructive/10"
                             onClick={() => setDeleteFormTarget(form)}
                           >
-                            Delete
+                            {t("common.actions.delete")}
                           </Button>
                         </div>
                       </td>
@@ -410,7 +417,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
               <label htmlFor="rule-module-filter" className="text-sm font-semibold text-foreground">
-                Filter Module:
+                {t("modules.webforms.rules.filterModule")}
               </label>
               <select
                 id="rule-module-filter"
@@ -418,10 +425,10 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                 onChange={(e) => setRuleModuleFilter(e.target.value)}
                 className="h-8 rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
               >
-                <option value="All">All Modules</option>
-                <option value="Leads">Leads</option>
-                <option value="Contacts">Contacts</option>
-                <option value="Cases">Cases</option>
+                <option value="All">{t("modules.webforms.rules.allModules")}</option>
+                <option value="Leads">{t("shell.leads")}</option>
+                <option value="Contacts">{t("shell.contacts")}</option>
+                <option value="Cases">{t("shell.cases")}</option>
               </select>
             </div>
             <Button
@@ -437,7 +444,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
               }}
               data-testid="new-rule-button"
             >
-              New Rule
+              {t("modules.webforms.rules.newRule")}
             </Button>
           </div>
 
@@ -453,19 +460,19 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
             </div>
           ) : rules.length === 0 ? (
             <div className="p-8 text-center border border-border rounded-lg bg-card text-muted-foreground">
-              No auto-response rules configured for this module.
+              {t("modules.webforms.rules.empty")}
             </div>
           ) : (
             <div className="border border-border rounded-lg overflow-hidden bg-card">
               <table className="w-full text-left text-sm" data-testid="rules-table">
                 <thead className="bg-muted/50 border-b border-border text-muted-foreground font-semibold">
                   <tr>
-                    <th className="px-4 py-3 w-12">Order</th>
-                    <th className="px-4 py-3">Rule Name</th>
-                    <th className="px-4 py-3">Module</th>
-                    <th className="px-4 py-3">Criteria</th>
-                    <th className="px-4 py-3">Status</th>
-                    <th className="px-4 py-3 text-right">Actions</th>
+                    <th className="px-4 py-3 w-12">{t("modules.webforms.rules.order")}</th>
+                    <th className="px-4 py-3">{t("modules.webforms.rules.ruleName")}</th>
+                    <th className="px-4 py-3">{t("modules.webforms.rules.module")}</th>
+                    <th className="px-4 py-3">{t("modules.webforms.rules.criteria")}</th>
+                    <th className="px-4 py-3">{t("modules.webforms.rules.status")}</th>
+                    <th className="px-4 py-3 text-right">{t("modules.webforms.rules.actions")}</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
@@ -476,12 +483,14 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                       <td className="px-4 py-3 text-muted-foreground">{rule.module}</td>
                       <td className="px-4 py-3 text-muted-foreground text-xs">
                         {rule.criteria.kind === "all_records"
-                          ? "All submissions"
-                          : "Custom criteria"}
+                          ? t("modules.webforms.rules.allSubmissions")
+                          : t("modules.webforms.rules.customCriteria")}
                       </td>
                       <td className="px-4 py-3">
                         <Badge variant={rule.active ? "success" : "neutral"}>
-                          {rule.active ? "Active" : "Inactive"}
+                          {rule.active
+                            ? t("modules.webforms.rules.active")
+                            : t("modules.webforms.rules.inactive")}
                         </Badge>
                       </td>
                       <td className="px-4 py-3 text-right">
@@ -513,7 +522,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                               setRuleDialogOpen(true);
                             }}
                           >
-                            Edit
+                            {t("common.actions.edit")}
                           </Button>
                           <Button
                             variant="ghost"
@@ -521,7 +530,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                             className="text-destructive hover:bg-destructive/10"
                             onClick={() => setDeleteRuleTarget(rule)}
                           >
-                            Delete
+                            {t("common.actions.delete")}
                           </Button>
                         </div>
                       </td>
@@ -542,9 +551,12 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
           className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50 p-4"
         >
           <Modal className="bg-surface border border-border rounded-lg shadow-lg max-w-md w-full p-6 outline-none">
-            <AriaDialog aria-label="New Form" className="outline-none flex flex-col gap-4">
+            <AriaDialog
+              aria-label={t("modules.webforms.dialogs.newFormTitle")}
+              className="outline-none flex flex-col gap-4"
+            >
               <Heading slot="title" className="text-lg font-semibold text-foreground">
-                New Form
+                {t("modules.webforms.dialogs.newFormTitle")}
               </Heading>
               <div className="flex flex-col gap-4 py-2">
                 {createError && (
@@ -557,14 +569,15 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                     htmlFor="form-name-input"
                     className="text-sm font-semibold text-foreground"
                   >
-                    Form Name <span className="text-destructive">*</span>
+                    {t("modules.webforms.dialogs.formName")}{" "}
+                    <span className="text-destructive">*</span>
                   </label>
                   <input
                     id="form-name-input"
                     type="text"
                     value={formName}
                     onChange={(e) => setFormName(e.target.value)}
-                    placeholder="e.g. Website Contact Form"
+                    placeholder={t("modules.webforms.dialogs.formNamePlaceholder")}
                     className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                     data-testid="form-name-input"
                   />
@@ -574,7 +587,8 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                     htmlFor="form-module-select"
                     className="text-sm font-semibold text-foreground"
                   >
-                    Module <span className="text-destructive">*</span>
+                    {t("modules.webforms.dialogs.module")}{" "}
+                    <span className="text-destructive">*</span>
                   </label>
                   <select
                     id="form-module-select"
@@ -583,9 +597,9 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                     className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                     data-testid="form-module-select"
                   >
-                    <option value="Leads">Leads</option>
-                    <option value="Contacts">Contacts</option>
-                    <option value="Cases">Cases</option>
+                    <option value="Leads">{t("shell.leads")}</option>
+                    <option value="Contacts">{t("shell.contacts")}</option>
+                    <option value="Cases">{t("shell.cases")}</option>
                   </select>
                 </div>
               </div>
@@ -595,7 +609,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                   onClick={() => setCreateDialogOpen(false)}
                   isDisabled={creating}
                 >
-                  Cancel
+                  {t("common.actions.cancel")}
                 </Button>
                 <Button
                   variant="primary"
@@ -603,7 +617,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                   isDisabled={!formName.trim() || creating}
                   data-testid="dialog-create-button"
                 >
-                  {creating ? <Spinner className="size-4" /> : "Create"}
+                  {creating ? <Spinner className="size-4" /> : t("common.actions.create")}
                 </Button>
               </div>
             </AriaDialog>
@@ -615,10 +629,12 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
       <ConfirmDialog
         isOpen={Boolean(deleteFormTarget)}
         onOpenChange={(open) => !open && setDeleteFormTarget(null)}
-        title="Delete Webform"
-        message={`Are you sure you want to delete "${deleteFormTarget?.name}"? All associated draft and published versions and endpoint keys will be removed.`}
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        title={t("modules.webforms.list.deleteDialog.title")}
+        message={t("modules.webforms.list.deleteDialog.message", {
+          name: deleteFormTarget?.name ?? "",
+        })}
+        confirmLabel={t("common.actions.delete")}
+        cancelLabel={t("common.actions.cancel")}
         tone="danger"
         busy={deletingForm}
         onConfirm={handleDeleteForm}
@@ -633,11 +649,17 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
         >
           <Modal className="bg-surface border border-border rounded-lg shadow-lg max-w-md w-full p-6 outline-none">
             <AriaDialog
-              aria-label={editingRule ? "Edit Auto-response Rule" : "New Auto-response Rule"}
+              aria-label={
+                editingRule
+                  ? t("modules.webforms.dialogs.editRuleTitle")
+                  : t("modules.webforms.dialogs.newRuleTitle")
+              }
               className="outline-none flex flex-col gap-4"
             >
               <Heading slot="title" className="text-lg font-semibold text-foreground">
-                {editingRule ? "Edit Auto-response Rule" : "New Auto-response Rule"}
+                {editingRule
+                  ? t("modules.webforms.dialogs.editRuleTitle")
+                  : t("modules.webforms.dialogs.newRuleTitle")}
               </Heading>
               <div className="flex flex-col gap-4 py-2">
                 <div className="flex flex-col gap-1.5">
@@ -645,14 +667,15 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                     htmlFor="rule-name-input"
                     className="text-sm font-semibold text-foreground"
                   >
-                    Rule Name <span className="text-destructive">*</span>
+                    {t("modules.webforms.dialogs.ruleName")}{" "}
+                    <span className="text-destructive">*</span>
                   </label>
                   <input
                     id="rule-name-input"
                     type="text"
                     value={ruleName}
                     onChange={(e) => setRuleName(e.target.value)}
-                    placeholder="e.g. Standard Acknowledgement"
+                    placeholder={t("modules.webforms.dialogs.ruleNamePlaceholder")}
                     className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                   />
                 </div>
@@ -662,7 +685,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                       htmlFor="rule-module-select"
                       className="text-sm font-semibold text-foreground"
                     >
-                      Module
+                      {t("modules.webforms.dialogs.module")}
                     </label>
                     <select
                       id="rule-module-select"
@@ -670,9 +693,9 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                       onChange={(e) => setRuleModule(e.target.value as WebformModule)}
                       className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
                     >
-                      <option value="Leads">Leads</option>
-                      <option value="Contacts">Contacts</option>
-                      <option value="Cases">Cases</option>
+                      <option value="Leads">{t("shell.leads")}</option>
+                      <option value="Contacts">{t("shell.contacts")}</option>
+                      <option value="Cases">{t("shell.cases")}</option>
                     </select>
                   </div>
                 )}
@@ -685,7 +708,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                     className="size-4 rounded border-border"
                   />
                   <label htmlFor="rule-active" className="text-sm text-foreground">
-                    Active
+                    {t("modules.webforms.dialogs.ruleActive")}
                   </label>
                 </div>
               </div>
@@ -695,14 +718,14 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                   onClick={() => setRuleDialogOpen(false)}
                   isDisabled={savingRule}
                 >
-                  Cancel
+                  {t("common.actions.cancel")}
                 </Button>
                 <Button
                   variant="primary"
                   onClick={handleSaveRule}
                   isDisabled={!ruleName.trim() || savingRule}
                 >
-                  {savingRule ? <Spinner className="size-4" /> : "Save"}
+                  {savingRule ? <Spinner className="size-4" /> : t("common.actions.save")}
                 </Button>
               </div>
             </AriaDialog>
@@ -714,10 +737,12 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
       <ConfirmDialog
         isOpen={Boolean(deleteRuleTarget)}
         onOpenChange={(open) => !open && setDeleteRuleTarget(null)}
-        title="Delete Rule"
-        message={`Are you sure you want to delete auto-response rule "${deleteRuleTarget?.name}"?`}
-        confirmLabel="Delete"
-        cancelLabel="Cancel"
+        title={t("modules.webforms.rules.deleteDialog.title")}
+        message={t("modules.webforms.rules.deleteDialog.message", {
+          name: deleteRuleTarget?.name ?? "",
+        })}
+        confirmLabel={t("common.actions.delete")}
+        cancelLabel={t("common.actions.cancel")}
         tone="danger"
         busy={deletingRule}
         onConfirm={handleDeleteRule}

@@ -322,7 +322,7 @@ export const settingsNav: readonly NavLink[] = [
   },
   {
     id: "webforms",
-    label: "Webforms",
+    label: english.shell.webforms,
     icon: Icons.settings,
     href: (slug) => `/crm/${slug}/settings/webforms`,
     activePrefix: (slug) => `/crm/${slug}/settings/webforms`,
