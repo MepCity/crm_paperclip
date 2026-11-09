@@ -29,7 +29,7 @@ export function SettingsNavigation({
 
   useEffect(() => {
     if (pathname && activeLinkRef.current) {
-      activeLinkRef.current.scrollIntoView({ block: "center", behavior: "instant" });
+      activeLinkRef.current.scrollIntoView?.({ block: "center", behavior: "instant" });
     }
   }, [pathname]);
 
