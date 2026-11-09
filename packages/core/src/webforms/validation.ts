@@ -95,6 +95,16 @@ export function normalizeOrigin(input: string): string {
   return `${url.protocol}//${url.host.toLowerCase()}`;
 }
 
+export function isSameOrigin(urlOrOriginA: string, urlOrOriginB: string): boolean {
+  try {
+    const a = urlOrOriginA.startsWith("http") ? new URL(urlOrOriginA).origin : urlOrOriginA;
+    const b = urlOrOriginB.startsWith("http") ? new URL(urlOrOriginB).origin : urlOrOriginB;
+    return a.toLowerCase() === b.toLowerCase();
+  } catch {
+    return false;
+  }
+}
+
 const SUPPORTED_DATA_TYPES = new Set([
   "text",
   "textarea",

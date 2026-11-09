@@ -423,6 +423,29 @@ describe("webforms backend integration", () => {
     });
     expect(locResult.outcome).toBe("rejected_location");
 
+    // 1b. Rejected location: foreign origin with fake hosted referer
+    const fakeHostedResult = await submitWebform({
+      publicKey,
+      data: { _token: makeToken(), Last_Name: "Smith", Company: "Acme" },
+      origin: "https://evil-site.com",
+      referer: "http://127.0.0.1:3000/f/testkey",
+      isHostedRoute: true,
+      appOrigin: "http://127.0.0.1:3000",
+      ip: "10.0.0.2",
+    });
+    expect(fakeHostedResult.outcome).toBe("rejected_location");
+
+    // 1c. Rejected location: fake hosted referer on evil domain without origin
+    const evilRefererResult = await submitWebform({
+      publicKey,
+      data: { _token: makeToken(), Last_Name: "Smith", Company: "Acme" },
+      referer: "https://evil-site.com/f/testkey",
+      isHostedRoute: true,
+      appOrigin: "http://127.0.0.1:3000",
+      ip: "10.0.0.2",
+    });
+    expect(evilRefererResult.outcome).toBe("rejected_location");
+
     // 2. Spam: Honeypot filled -> returns normal success acknowledgement, no record created
     const hpResult = await submitWebform({
       publicKey,
