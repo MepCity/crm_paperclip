@@ -234,6 +234,15 @@ describe("WebformBuilderScreen", () => {
       expect(subjectInput).toBeDefined();
     });
 
+    // Card header titles must show display label and never API names
+    const subjectCard = screen.getByTestId("form-field-Subject");
+    expect(subjectCard.textContent).toContain("Konu");
+    expect(subjectCard.querySelector(".font-mono")?.textContent ?? "").not.toContain("Subject");
+
+    const statusCard = screen.getByTestId("form-field-Status");
+    expect(statusCard.textContent).toContain("Durum");
+    expect(statusCard.querySelector(".font-mono")?.textContent ?? "").not.toContain("Status");
+
     // Status stock field label should be localized to Durum
     expect(screen.getByDisplayValue("Durum")).toBeDefined();
 

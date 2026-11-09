@@ -754,8 +754,12 @@ export function WebformBuilderScreen({
                             </div>
                           </div>
                         )}
-                        <span className="text-xs font-mono text-muted-foreground">
-                          {field.fieldApiName}
+                        <span className="text-sm font-semibold text-foreground">
+                          {field.label ||
+                            adapter.getFieldLabel(form?.module ?? "", {
+                              apiName: field.fieldApiName,
+                              label: field.label || field.fieldApiName,
+                            })}
                         </span>
                         {isLayoutRequired && (
                           <span className="text-[10px] text-destructive bg-destructive/10 px-1.5 py-0.5 rounded font-semibold">
