@@ -21,7 +21,7 @@ import type {
   WebformSettings,
   WebformVersion,
 } from "./types";
-import { normalizeOrigin, webformSettingsSchema } from "./validation";
+import { isSameOrigin, normalizeOrigin, webformSettingsSchema } from "./validation";
 
 export const WEBFORM_AUTO_RESPONSE_JOB_KIND = "webform.auto_response";
 export const WEBFORM_AUTO_RESPONSE_JOB_VERSION = 1;
@@ -194,6 +194,7 @@ export interface SubmissionInput {
   origin?: string | null;
   referer?: string | null;
   isHostedRoute?: boolean;
+  appOrigin?: string | null;
   ip: string;
   now?: Date;
   queue?: JobQueue;
@@ -225,8 +226,34 @@ export function resolveLocation(params: {
   isHostedRoute?: boolean;
   restrictLocations: boolean;
   allowedLocations: WebformLocation[];
+  appOrigin?: string | null;
 }): { location: string; allowed: boolean; isAllowedOrigin: boolean } {
-  if (params.isHostedRoute) {
+  let isHosted = Boolean(params.isHostedRoute);
+
+  let effectiveAppOrigin = params.appOrigin ?? null;
+  if (!effectiveAppOrigin && process.env.APP_URL) {
+    try {
+      effectiveAppOrigin = new URL(process.env.APP_URL).origin;
+    } catch {
+      effectiveAppOrigin = null;
+    }
+  }
+
+  // Origin header takes precedence: if Origin is present, it must match appOrigin to be considered hosted.
+  if (isHosted && params.origin && effectiveAppOrigin) {
+    if (!isSameOrigin(params.origin, effectiveAppOrigin)) {
+      isHosted = false;
+    }
+  }
+
+  // If referer is present, its origin must also match appOrigin to be considered hosted.
+  if (isHosted && params.referer && effectiveAppOrigin) {
+    if (!isSameOrigin(params.referer, effectiveAppOrigin)) {
+      isHosted = false;
+    }
+  }
+
+  if (isHosted) {
     return { location: "hosted", allowed: true, isAllowedOrigin: true };
   }
 
@@ -348,6 +375,7 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
       isHostedRoute: input.isHostedRoute,
       restrictLocations: publishedVersion.settings.restrictLocations,
       allowedLocations: locations,
+      appOrigin: input.appOrigin,
     });
 
     if (!locResult.allowed) {

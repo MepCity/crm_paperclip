@@ -2,6 +2,40 @@ import { schema as dbSchema } from "@crm/db";
 import { lt, sql } from "drizzle-orm";
 import type { Transaction } from "../tenancy/types";
 
+/**
+ * Resolves the client IP address from incoming request headers.
+ *
+ * Security & Proxy Architecture:
+ * 1. If `x-real-ip` is set, it is prioritized because upstream reverse proxies (e.g. Nginx, Render)
+ *    overwrite this header with the direct socket remote address, stripping/preventing client manipulation.
+ * 2. Otherwise, `x-forwarded-for` is parsed. In standard single-hop reverse proxy configurations
+ *    (Vercel, Render, Cloudflare), the trusted edge proxy appends the connecting client's IP to the end
+ *    of the chain. Taking the first element (`forwarded.split(",")[0]`) is vulnerable to header injection
+ *    (e.g., client sends `X-Forwarded-For: 1.2.3.4` which becomes `1.2.3.4, <real_ip>`), allowing trivial
+ *    rate limit bypass. Taking the rightmost (last) non-empty element safely extracts the proxy-appended IP.
+ * 3. Falls back to "127.0.0.1" if no valid header exists.
+ */
+export function getClientIp(request: Request): string {
+  const realIp = request.headers.get("x-real-ip")?.trim();
+  if (realIp) {
+    return realIp;
+  }
+
+  const forwarded = request.headers.get("x-forwarded-for");
+  if (forwarded) {
+    const parts = forwarded
+      .split(",")
+      .map((part) => part.trim())
+      .filter(Boolean);
+    const last = parts[parts.length - 1];
+    if (last) {
+      return last;
+    }
+  }
+
+  return "127.0.0.1";
+}
+
 export interface RateLimitCheckResult {
   allowed: boolean;
   bucket?: string;
