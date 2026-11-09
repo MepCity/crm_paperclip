@@ -2,7 +2,7 @@
 
 import { formatDate } from "@crm/core/format";
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-components";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -10,6 +10,7 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Spinner } from "@/components/ui/spinner";
+import { TopAlignedModal } from "@/components/ui/top-aligned-modal";
 import { useUiTranslations } from "@/i18n/client-provider";
 import { useFormat } from "@/lib/format-context";
 import {
@@ -25,6 +26,24 @@ import {
   updateAutoResponseRule,
 } from "./api";
 import type { Webform, WebformAutoResponseRule, WebformModule } from "./types";
+import {
+  AbTestingIllustration,
+  FormAnalyticsIllustration,
+  FormCreationIllustration,
+} from "./webforms-illustrations";
+
+const MODULE_OPTIONS: WebformModule[] = ["Leads", "Contacts", "Cases"];
+
+function getModuleLabel(mod: WebformModule, t: ReturnType<typeof useUiTranslations>): string {
+  switch (mod) {
+    case "Leads":
+      return t("shell.leads");
+    case "Contacts":
+      return t("shell.contacts");
+    case "Cases":
+      return t("shell.cases");
+  }
+}
 
 interface WebformsListScreenProps {
   orgSlug: string;
@@ -44,10 +63,16 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
   // Create Form Dialog state (W2)
   const [createDialogOpen, setCreateDialogOpen] = useState(false);
   const [formName, setFormName] = useState("");
-  const [formModule, setFormModule] = useState<WebformModule>("Leads");
+  const [formModule, setFormModule] = useState<WebformModule | "">("");
   const [formLayout, setFormLayout] = useState("Standard Layout");
   const [creating, setCreating] = useState(false);
   const [createError, setCreateError] = useState<string | null>(null);
+  const [moduleMenuOpen, setModuleMenuOpen] = useState(false);
+  const [moduleSearchQuery, setModuleSearchQuery] = useState("");
+  const nameInputRef = useRef<HTMLInputElement>(null);
+  const moduleSearchInputRef = useRef<HTMLInputElement>(null);
+  const moduleMenuRef = useRef<HTMLDivElement>(null);
+  const moduleTriggerRef = useRef<HTMLButtonElement>(null);
 
   // Delete Form state
   const [deleteFormTarget, setDeleteFormTarget] = useState<Webform | null>(null);
@@ -106,19 +131,80 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
     }
   }, [activeTab, loadRules]);
 
+  const handleOpenCreateDialog = () => {
+    setFormName("");
+    setFormModule("");
+    setFormLayout("Standard Layout");
+    setCreateError(null);
+    setModuleMenuOpen(false);
+    setModuleSearchQuery("");
+    setCreateDialogOpen(true);
+  };
+
+  const handleCloseCreateDialog = () => {
+    setCreateDialogOpen(false);
+    setFormName("");
+    setFormModule("");
+    setFormLayout("Standard Layout");
+    setCreateError(null);
+    setModuleMenuOpen(false);
+    setModuleSearchQuery("");
+  };
+
+  useEffect(() => {
+    if (createDialogOpen) {
+      const timer = setTimeout(() => {
+        nameInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [createDialogOpen]);
+
+  useEffect(() => {
+    if (moduleMenuOpen) {
+      const timer = setTimeout(() => {
+        moduleSearchInputRef.current?.focus();
+      }, 50);
+      return () => clearTimeout(timer);
+    }
+  }, [moduleMenuOpen]);
+
+  useEffect(() => {
+    if (!moduleMenuOpen) return;
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        moduleMenuRef.current &&
+        !moduleMenuRef.current.contains(e.target as Node) &&
+        moduleTriggerRef.current &&
+        !moduleTriggerRef.current.contains(e.target as Node)
+      ) {
+        setModuleMenuOpen(false);
+      }
+    };
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setModuleMenuOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+      document.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [moduleMenuOpen]);
+
   const handleCreateForm = async () => {
-    if (!formName.trim()) return;
+    if (!formName.trim() || !formModule) return;
     try {
       setCreating(true);
       setCreateError(null);
       const created = await createWebform(orgSlug, {
         name: formName.trim(),
-        module: formModule,
+        module: formModule as WebformModule,
         layout: formLayout,
       });
-      setCreateDialogOpen(false);
-      setFormName("");
-      setFormLayout("Standard Layout");
+      handleCloseCreateDialog();
       router.push(`/crm/${orgSlug}/settings/webforms/${created.id}`);
     } catch (err) {
       setCreateError(err instanceof Error ? err.message : "Failed to create webform.");
@@ -212,14 +298,13 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
     );
   };
 
+  const filteredModules = MODULE_OPTIONS.filter((mod) => {
+    const label = getModuleLabel(mod, t).toLowerCase();
+    return label.includes(moduleSearchQuery.trim().toLowerCase());
+  });
+
   return (
     <div className="flex flex-col gap-6 p-6">
-      {/* Page Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-xl font-semibold text-foreground">{t("modules.webforms.title")}</h1>
-        <p className="text-sm text-muted-foreground">{t("modules.webforms.description")}</p>
-      </div>
-
       {/* Tabs */}
       <div className="flex border-b border-border">
         <button
@@ -253,24 +338,20 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
       {/* Webforms Tab Content */}
       {activeTab === "webforms" && (
         <div className="flex flex-col gap-4">
-          <div className="flex items-center justify-between">
-            <span className="text-sm text-muted-foreground">
-              {forms.length > 0 ? t("modules.webforms.list.count", { count: forms.length }) : ""}
-            </span>
-            <Button
-              variant="primary"
-              onClick={() => {
-                setFormName("");
-                setFormModule("Leads");
-                setFormLayout("Standard Layout");
-                setCreateError(null);
-                setCreateDialogOpen(true);
-              }}
-              data-testid="new-form-button"
-            >
-              {t("modules.webforms.list.newForm")}
-            </Button>
-          </div>
+          {forms.length > 0 && (
+            <div className="flex items-center justify-between">
+              <span className="text-sm text-muted-foreground">
+                {t("modules.webforms.list.count", { count: forms.length })}
+              </span>
+              <Button
+                variant="primary"
+                onClick={handleOpenCreateDialog}
+                data-testid="new-form-button"
+              >
+                {t("modules.webforms.list.newForm")}
+              </Button>
+            </div>
+          )}
 
           {formsError && (
             <div className="p-3 text-sm text-destructive bg-destructive/10 rounded-md">
@@ -284,54 +365,88 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
             </div>
           ) : forms.length === 0 ? (
             /* W1 Empty Landing Page Panels */
-            <div className="flex flex-col gap-6 py-6" data-testid="webforms-empty-state">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                <div className="p-6 border border-border rounded-lg bg-card flex flex-col gap-3">
-                  <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <Icons.fieldEdit className="size-5" />
+            <div
+              className="relative flex flex-col items-center justify-center py-8 px-4"
+              data-testid="webforms-empty-state"
+            >
+              {/* Contextual Help Marker on right edge */}
+              <Link
+                href="#"
+                aria-label={t("modules.webforms.list.contextHelp")}
+                className="absolute top-0 right-0 flex items-center justify-center w-8 h-10 rounded-l-md bg-[#ea580c] hover:bg-[#ea580c]/90 text-white shadow-sm transition-colors cursor-pointer"
+                data-testid="contextual-help-marker"
+              >
+                <span className="text-sm font-bold">?</span>
+              </Link>
+
+              {/* Centered Heading */}
+              <h2 className="text-xl font-bold text-foreground text-center mb-8 max-w-2xl">
+                {t("modules.webforms.list.emptyHeading")}
+              </h2>
+
+              {/* 3 Columns */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-5xl w-full mb-10">
+                {/* Column 1: Form Oluşturma */}
+                <div className="flex flex-col items-center text-center px-4">
+                  <div className="w-52 h-36 flex items-center justify-center mb-4">
+                    <FormCreationIllustration />
                   </div>
-                  <h3 className="font-semibold text-foreground">
+                  <h3 className="font-semibold text-base text-foreground mb-2">
                     {t("modules.webforms.list.formBuilding")}
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {t("modules.webforms.list.formBuildingDesc")}
                   </p>
                 </div>
-                <div className="p-6 border border-border rounded-lg bg-card flex flex-col gap-3">
-                  <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <Icons.activity className="size-5" />
+
+                {/* Column 2: Form Analitikleri */}
+                <div className="flex flex-col items-center text-center px-4">
+                  <div className="w-52 h-36 flex items-center justify-center mb-4">
+                    <FormAnalyticsIllustration />
                   </div>
-                  <h3 className="font-semibold text-foreground">
+                  <h3 className="font-semibold text-base text-foreground mb-2">
                     {t("modules.webforms.list.analytics")}
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    {t("modules.webforms.list.analyticsDesc")}
+                    {t("modules.webforms.list.analyticsDesc")}{" "}
+                    <Link
+                      href="#"
+                      className="text-primary hover:underline inline-block ml-1"
+                      data-testid="analytics-learn-more"
+                    >
+                      {t("modules.webforms.list.learnMore")}
+                    </Link>
                   </p>
                 </div>
-                <div className="p-6 border border-border rounded-lg bg-card flex flex-col gap-3">
-                  <div className="size-10 rounded-full bg-primary/10 flex items-center justify-center text-primary">
-                    <Icons.newspaper className="size-5" />
+
+                {/* Column 3: A/B Testi */}
+                <div className="flex flex-col items-center text-center px-4">
+                  <div className="w-52 h-36 flex items-center justify-center mb-4">
+                    <AbTestingIllustration />
                   </div>
-                  <h3 className="font-semibold text-foreground">
+                  <h3 className="font-semibold text-base text-foreground mb-2">
                     {t("modules.webforms.list.abTesting")}
                   </h3>
                   <p className="text-sm text-muted-foreground leading-relaxed">
-                    {t("modules.webforms.list.abTestingDesc")}
+                    {t("modules.webforms.list.abTestingDesc")}{" "}
+                    <Link
+                      href="#"
+                      className="text-primary hover:underline inline-block ml-1"
+                      data-testid="ab-testing-learn-more"
+                    >
+                      {t("modules.webforms.list.learnMore")}
+                    </Link>
                   </p>
                 </div>
               </div>
 
-              <div className="flex justify-center pt-4">
+              {/* Centered Single CTA button */}
+              <div className="flex justify-center">
                 <Button
                   variant="primary"
-                  onClick={() => {
-                    setFormName("");
-                    setFormModule("Leads");
-                    setFormLayout("Standard Layout");
-                    setCreateError(null);
-                    setCreateDialogOpen(true);
-                  }}
-                  data-testid="empty-new-form-button"
+                  onClick={handleOpenCreateDialog}
+                  data-testid="new-form-button"
+                  className="px-6 py-2"
                 >
                   {t("modules.webforms.list.newForm")}
                 </Button>
@@ -572,105 +687,172 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
       )}
 
       {/* W2 Initial Create Dialog */}
-      {createDialogOpen && (
-        <ModalOverlay
-          isOpen
-          onOpenChange={(open) => !open && setCreateDialogOpen(false)}
-          className="fixed inset-0 z-50 flex items-center justify-center bg-overlay/50 p-4"
-        >
-          <Modal className="bg-surface border border-border rounded-lg shadow-lg max-w-md w-full p-6 outline-none">
-            <AriaDialog
-              aria-label={t("modules.webforms.dialogs.newFormTitle")}
-              className="outline-none flex flex-col gap-4"
-            >
-              <Heading slot="title" className="text-lg font-semibold text-foreground">
-                {t("modules.webforms.dialogs.newFormTitle")}
-              </Heading>
-              <div className="flex flex-col gap-4 py-2">
-                {createError && (
-                  <div className="p-2 text-sm text-destructive bg-destructive/10 rounded">
-                    {createError}
+      <TopAlignedModal
+        isOpen={createDialogOpen}
+        onOpenChange={(open) => !open && handleCloseCreateDialog()}
+        aria-labelledby="new-form-dialog-title"
+        panelStyle={{ width: "min(600px, 95vw)" }}
+        panelClassName="border border-t-0 border-border rounded-b-lg shadow-xl"
+      >
+        <div className="p-6 pt-5 flex flex-col gap-5">
+          <h2 id="new-form-dialog-title" className="text-lg font-semibold text-foreground">
+            {t("modules.webforms.dialogs.newFormTitle")}
+          </h2>
+
+          {createError && (
+            <div className="p-2 text-sm text-destructive bg-destructive/10 rounded">
+              {createError}
+            </div>
+          )}
+
+          <div className="flex flex-col gap-4 py-1">
+            {/* Row 1: Form Name */}
+            <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+              <label htmlFor="form-name-input" className="text-right text-sm text-foreground">
+                {t("modules.webforms.dialogs.formName")}
+              </label>
+              <div className="relative">
+                <input
+                  id="form-name-input"
+                  ref={nameInputRef}
+                  type="text"
+                  value={formName}
+                  onChange={(e) => setFormName(e.target.value)}
+                  placeholder={t("modules.webforms.dialogs.formNamePlaceholder")}
+                  className="h-9 w-full rounded-md border border-border border-l-[3px] border-l-[#ff3b30] bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  data-testid="form-name-input"
+                />
+              </div>
+            </div>
+
+            {/* Row 2: Module */}
+            <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+              <label
+                id="form-module-label"
+                htmlFor="form-module-select"
+                className="text-right text-sm text-foreground"
+              >
+                {t("modules.webforms.dialogs.module")}
+              </label>
+              <div className="relative" ref={moduleMenuRef}>
+                <button
+                  id="form-module-select"
+                  ref={moduleTriggerRef}
+                  type="button"
+                  aria-haspopup="listbox"
+                  aria-expanded={moduleMenuOpen}
+                  aria-labelledby="form-module-label form-module-select"
+                  onClick={() => setModuleMenuOpen((prev) => !prev)}
+                  className="h-9 w-full rounded-md border border-border border-l-[3px] border-l-[#ff3b30] bg-background px-3 text-sm flex items-center justify-between text-left focus:outline-none focus:ring-1 focus:ring-ring"
+                  data-testid="form-module-select"
+                >
+                  <span className={formModule ? "text-foreground" : "text-muted-foreground"}>
+                    {formModule
+                      ? getModuleLabel(formModule, t)
+                      : t("modules.webforms.dialogs.chooseModule")}
+                  </span>
+                  <Icons.chevronDown
+                    className={`size-4 text-muted-foreground transition-transform ${
+                      moduleMenuOpen ? "rotate-180" : ""
+                    }`}
+                  />
+                </button>
+
+                {/* Searchable module dropdown menu */}
+                {moduleMenuOpen && (
+                  <div
+                    className="absolute left-0 top-full mt-1 w-full z-50 rounded-md border border-border bg-surface shadow-lg py-2 flex flex-col gap-1"
+                    data-testid="module-menu"
+                  >
+                    <div className="px-2 pb-2 border-b border-border">
+                      <div className="relative flex items-center">
+                        <Icons.filterSearch className="absolute left-2.5 size-4 text-muted-foreground pointer-events-none" />
+                        <input
+                          ref={moduleSearchInputRef}
+                          type="text"
+                          value={moduleSearchQuery}
+                          onChange={(e) => setModuleSearchQuery(e.target.value)}
+                          placeholder={t("modules.webforms.dialogs.searchModulesPlaceholder")}
+                          className="h-8 w-full rounded-md border border-border bg-background pl-8 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                          data-testid="module-search-input"
+                        />
+                      </div>
+                    </div>
+                    <div className="max-h-48 overflow-y-auto px-1 py-1" role="listbox">
+                      {filteredModules.map((mod) => (
+                        <button
+                          key={mod}
+                          type="button"
+                          role="option"
+                          aria-selected={formModule === mod}
+                          onClick={() => {
+                            setFormModule(mod);
+                            setModuleMenuOpen(false);
+                            setModuleSearchQuery("");
+                          }}
+                          className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center justify-between ${
+                            formModule === mod
+                              ? "bg-primary/10 text-primary font-semibold"
+                              : "hover:bg-muted/50 text-foreground"
+                          }`}
+                          data-testid={`module-option-${mod}`}
+                        >
+                          <span>{getModuleLabel(mod, t)}</span>
+                          {formModule === mod && <Icons.check className="size-4 text-primary" />}
+                        </button>
+                      ))}
+                      {filteredModules.length === 0 && (
+                        <div className="px-3 py-2 text-sm text-muted-foreground">
+                          {t("common.empty")}
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    htmlFor="form-name-input"
-                    className="text-sm font-semibold text-foreground"
-                  >
-                    {t("modules.webforms.dialogs.formName")}{" "}
-                    <span className="text-destructive">*</span>
-                  </label>
-                  <input
-                    id="form-name-input"
-                    type="text"
-                    value={formName}
-                    onChange={(e) => setFormName(e.target.value)}
-                    placeholder={t("modules.webforms.dialogs.formNamePlaceholder")}
-                    className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                    data-testid="form-name-input"
-                  />
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    htmlFor="form-module-select"
-                    className="text-sm font-semibold text-foreground"
-                  >
-                    {t("modules.webforms.dialogs.module")}{" "}
-                    <span className="text-destructive">*</span>
-                  </label>
-                  <select
-                    id="form-module-select"
-                    value={formModule}
-                    onChange={(e) => setFormModule(e.target.value as WebformModule)}
-                    className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                    data-testid="form-module-select"
-                  >
-                    <option value="Leads">{t("shell.leads")}</option>
-                    <option value="Contacts">{t("shell.contacts")}</option>
-                    <option value="Cases">{t("shell.cases")}</option>
-                  </select>
-                </div>
-                <div className="flex flex-col gap-1.5">
-                  <label
-                    htmlFor="form-layout-select"
-                    className="text-sm font-semibold text-foreground"
-                  >
-                    {t("modules.webforms.dialogs.layout")}
-                  </label>
-                  <select
-                    id="form-layout-select"
-                    value={formLayout}
-                    onChange={(e) => setFormLayout(e.target.value)}
-                    className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                    data-testid="form-layout-select"
-                  >
-                    <option value="Standard Layout">
-                      {t("modules.webforms.dialogs.standardLayout")}
-                    </option>
-                  </select>
-                </div>
               </div>
-              <div className="flex justify-end gap-2 pt-2">
-                <Button
-                  variant="secondary"
-                  onClick={() => setCreateDialogOpen(false)}
-                  isDisabled={creating}
+            </div>
+
+            {/* Row 3: Layout */}
+            <div className="grid grid-cols-[120px_1fr] items-center gap-4">
+              <label htmlFor="form-layout-select" className="text-right text-sm text-foreground">
+                {t("modules.webforms.dialogs.layout")}
+              </label>
+              <div className="relative">
+                <select
+                  id="form-layout-select"
+                  value={formLayout}
+                  onChange={(e) => setFormLayout(e.target.value)}
+                  className="h-9 w-full rounded-md border border-border bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                  data-testid="form-layout-select"
                 >
-                  {t("common.actions.cancel")}
-                </Button>
-                <Button
-                  variant="primary"
-                  onClick={handleCreateForm}
-                  isDisabled={!formName.trim() || creating}
-                  data-testid="dialog-create-button"
-                >
-                  {creating ? <Spinner className="size-4" /> : t("common.actions.create")}
-                </Button>
+                  <option value="Standard Layout">
+                    {t("modules.webforms.dialogs.standardLayout")}
+                  </option>
+                </select>
               </div>
-            </AriaDialog>
-          </Modal>
-        </ModalOverlay>
-      )}
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
+            <Button
+              variant="secondary"
+              onClick={handleCloseCreateDialog}
+              isDisabled={creating}
+              data-testid="dialog-cancel-button"
+            >
+              {t("common.actions.cancel")}
+            </Button>
+            <Button
+              variant="primary"
+              onClick={handleCreateForm}
+              isDisabled={!formName.trim() || !formModule || creating}
+              data-testid="dialog-create-button"
+            >
+              {creating ? <Spinner className="size-4" /> : t("common.actions.create")}
+            </Button>
+          </div>
+        </div>
+      </TopAlignedModal>
 
       {/* Delete Form Confirmation */}
       <ConfirmDialog

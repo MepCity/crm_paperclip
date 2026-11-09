@@ -10,7 +10,7 @@ test("webforms builder: create form → add fields → set required → publish 
 
   // 1. Navigate to Settings -> Webforms
   await page.goto(`/crm/${org.slug}/settings/webforms`);
-  await expect(page.getByRole("heading", { name: "Webforms" })).toBeVisible();
+  await expect(page.getByTestId("webforms-empty-state")).toBeVisible();
 
   // 2. Open New Form dialog and create a Lead form
   const newFormBtn = page.getByTestId("new-form-button");
@@ -19,12 +19,26 @@ test("webforms builder: create form → add fields → set required → publish 
 
   const nameInput = page.getByTestId("form-name-input");
   await expect(nameInput).toBeVisible();
+  await expect(nameInput).toBeFocused();
   await nameInput.fill("Customer Inquiry Form");
 
-  const moduleSelect = page.getByTestId("form-module-select");
-  await moduleSelect.selectOption("Leads");
-
+  // Create button is disabled before selecting a module
   const createBtn = page.getByTestId("dialog-create-button");
+  await expect(createBtn).toBeDisabled();
+
+  // Searchable module dropdown
+  const moduleSelect = page.getByTestId("form-module-select");
+  await expect(moduleSelect).toBeVisible();
+  await moduleSelect.click();
+
+  const moduleSearch = page.getByTestId("module-search-input");
+  await expect(moduleSearch).toBeVisible();
+  await expect(page.getByTestId("module-option-Vendors")).toHaveCount(0); // Vendors excluded
+
+  const leadOption = page.getByTestId("module-option-Leads");
+  await expect(leadOption).toBeVisible();
+  await leadOption.click();
+
   await expect(createBtn).toBeEnabled();
   await createBtn.click();
 
