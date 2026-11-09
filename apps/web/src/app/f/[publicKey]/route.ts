@@ -356,7 +356,44 @@ export const GET = exemptRoute(
       : "";
 
     const defaultBtnLabel = isTr ? "Gönder" : "Submit";
-    const submitBtnLabel = resolved.version.settings.buttonLabel || defaultBtnLabel;
+    const submitBtnLabel =
+      isTr &&
+      (!resolved.version.settings.buttonLabel || resolved.version.settings.buttonLabel === "Submit")
+        ? "Gönder"
+        : resolved.version.settings.buttonLabel || defaultBtnLabel;
+
+    const validationScriptHtml = `
+      <script>
+        (function() {
+          var form = document.getElementById("mep-webform");
+          if (!form) return;
+          var inputs = form.querySelectorAll("input, select, textarea");
+          for (var i = 0; i < inputs.length; i++) {
+            var el = inputs[i];
+            el.addEventListener("input", function() { this.setCustomValidity(""); });
+            el.addEventListener("change", function() { this.setCustomValidity(""); });
+            el.addEventListener("invalid", function() {
+              var group = this.closest(".field-group");
+              var labelEl = group ? group.querySelector("label") : null;
+              var labelText = labelEl ? labelEl.innerText.replace("*", "").trim() : (this.name || "Alan");
+              var isTr = ${JSON.stringify(isTr)};
+              if (this.validity.valueMissing) {
+                this.setCustomValidity(isTr ? labelText + " zorunludur." : labelText + " is required.");
+              } else if (this.validity.typeMismatch && this.type === "email") {
+                this.setCustomValidity(isTr ? labelText + " geçerli bir e-posta olmalı." : labelText + " must be a valid email.");
+              } else if (this.validity.typeMismatch && this.type === "url") {
+                this.setCustomValidity(isTr ? labelText + " geçerli bir URL olmalı." : labelText + " must be a valid URL.");
+              } else if (this.validity.badInput || this.validity.rangeUnderflow || this.validity.rangeOverflow) {
+                this.setCustomValidity(isTr ? labelText + " geçerli bir sayı olmalı." : labelText + " must be a valid number.");
+              } else if (this.validity.tooLong) {
+                this.setCustomValidity(isTr ? labelText + " değeri çok uzun." : labelText + " value is too long.");
+              } else {
+                this.setCustomValidity(isTr ? labelText + " geçerli bir değer içermelidir." : labelText + " is invalid.");
+              }
+            });
+          }
+        })();
+      </script>`;
 
     const html = `<!DOCTYPE html>
 <html lang="${isTr ? "tr" : "en"}">
@@ -386,6 +423,7 @@ export const GET = exemptRoute(
       <button type="submit" class="submit-btn">${escapeHtml(submitBtnLabel)}</button>
     </form>
   </div>
+  ${validationScriptHtml}
 </body>
 </html>`;
 

@@ -10,6 +10,7 @@ const config: NextConfig = {
   serverExternalPackages: ["pg"],
   outputFileTracingRoot: monorepoRoot,
   turbopack: { root: monorepoRoot },
+  devIndicators: false,
 };
 
 export default createNextIntlPlugin()(config);

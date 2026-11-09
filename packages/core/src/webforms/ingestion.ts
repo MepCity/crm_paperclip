@@ -28,6 +28,24 @@ import { isSameOrigin, normalizeOrigin, webformSettingsSchema } from "./validati
 export const WEBFORM_AUTO_RESPONSE_JOB_KIND = "webform.auto_response";
 export const WEBFORM_AUTO_RESPONSE_JOB_VERSION = 1;
 
+const STOCK_FIELD_TR_LABELS: Record<string, string> = {
+  Last_Name: "Soyadı",
+  Company: "Şirket",
+  First_Name: "Adı",
+  Email: "E-posta",
+  Phone: "Telefon",
+  Mobile: "Cep Telefonu",
+  Subject: "Konu",
+  Status: "Durum",
+  Case_Origin: "Servis Dosyası Kaynağı",
+  Priority: "Öncelik",
+  Type: "Tür",
+  Case_Reason: "Servis Dosyası Nedeni",
+  Lead_Source: "Müşteri Adayı Kaynağı",
+  Lead_Status: "Müşteri Adayı Durumu",
+  Account_Name: "Firma Adı",
+};
+
 export function hashPublicKey(publicKey: string): string {
   return createHash("sha256").update(publicKey).digest("base64url");
 }
@@ -541,7 +559,7 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
         });
         return {
           outcome: "invalid",
-          errors: { [key]: [`Unexpected field '${key}'`] },
+          errors: { [key]: [`'${key}' beklenmeyen bir alan.`] },
         };
       }
     }
@@ -555,14 +573,20 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
 
     // 1) Visible fields
     for (const field of visibleFields) {
+      const fieldDef = fieldDefMap.get(field.fieldApiName);
+      const isEnglishStock =
+        field.label === field.fieldApiName || (fieldDef && field.label === fieldDef.label);
+      const fieldLabel = isEnglishStock
+        ? (STOCK_FIELD_TR_LABELS[field.fieldApiName] ?? field.label)
+        : field.label;
+
       const val = input.data[field.fieldApiName];
       const stringVal = typeof val === "string" ? val.trim() : val;
       const isEmpty = stringVal === undefined || stringVal === null || stringVal === "";
 
       if (field.required && isEmpty) {
-        fieldErrors[field.fieldApiName] = [`${field.label} is required.`];
+        fieldErrors[field.fieldApiName] = [`${fieldLabel} zorunludur.`];
       } else if (!isEmpty) {
-        const fieldDef = fieldDefMap.get(field.fieldApiName);
         if (fieldDef?.picklist) {
           const isAllowed =
             OPEN_PICKLIST_FIELDS.has(field.fieldApiName) ||
@@ -570,7 +594,7 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
               (opt) => opt.storedValue === stringVal || opt.displayValue === stringVal,
             );
           if (!isAllowed) {
-            fieldErrors[field.fieldApiName] = ["Choose a listed option."];
+            fieldErrors[field.fieldApiName] = [`${fieldLabel} için geçerli bir seçenek seçin.`];
           } else {
             const match = fieldDef.picklist.find(
               (opt) => opt.storedValue === stringVal || opt.displayValue === stringVal,
@@ -583,7 +607,7 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
           } else if (typeof val === "string" && /^-?\d+$/.test(val.trim())) {
             sanitizedRecordInput[field.fieldApiName] = parseInt(val.trim(), 10);
           } else {
-            fieldErrors[field.fieldApiName] = ["Enter a valid integer."];
+            fieldErrors[field.fieldApiName] = [`${fieldLabel} geçerli bir tam sayı olmalı.`];
           }
         } else if (
           fieldDef?.dataType === "double" ||
@@ -599,14 +623,14 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
           ) {
             sanitizedRecordInput[field.fieldApiName] = Number(val.trim());
           } else {
-            fieldErrors[field.fieldApiName] = ["Enter a valid number."];
+            fieldErrors[field.fieldApiName] = [`${fieldLabel} geçerli bir sayı olmalı.`];
           }
         } else if (fieldDef?.dataType === "date") {
           const dateStr = String(val).trim();
           if (isValidDateOnly(dateStr)) {
             sanitizedRecordInput[field.fieldApiName] = dateStr;
           } else {
-            fieldErrors[field.fieldApiName] = ["Enter a valid date."];
+            fieldErrors[field.fieldApiName] = [`${fieldLabel} geçerli bir tarih olmalı.`];
           }
         } else if (fieldDef?.dataType === "datetime") {
           const dtStr = String(val).trim();
@@ -616,14 +640,14 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
           ) {
             sanitizedRecordInput[field.fieldApiName] = dtStr;
           } else {
-            fieldErrors[field.fieldApiName] = ["Enter a valid datetime."];
+            fieldErrors[field.fieldApiName] = [`${fieldLabel} geçerli bir tarih ve saat olmalı.`];
           }
         } else if (fieldDef?.dataType === "email") {
           const emailStr = String(val).trim();
           if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailStr)) {
             sanitizedRecordInput[field.fieldApiName] = emailStr;
           } else {
-            fieldErrors[field.fieldApiName] = ["Enter a valid email address."];
+            fieldErrors[field.fieldApiName] = [`${fieldLabel} geçerli bir e-posta olmalı.`];
           }
         } else if (fieldDef?.dataType === "boolean") {
           if (typeof val === "boolean") {
@@ -633,12 +657,12 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
           } else if (val === "false" || val === "0" || val === "") {
             sanitizedRecordInput[field.fieldApiName] = false;
           } else {
-            fieldErrors[field.fieldApiName] = ["Enter a valid boolean."];
+            fieldErrors[field.fieldApiName] = [`${fieldLabel} geçerli bir mantıksal değer olmalı.`];
           }
         } else {
           const str = typeof val === "string" ? val.trim() : String(val);
           if (fieldDef?.maxLength && str.length > fieldDef.maxLength) {
-            fieldErrors[field.fieldApiName] = ["Value is too long."];
+            fieldErrors[field.fieldApiName] = [`${fieldLabel} değeri çok uzun.`];
           } else {
             sanitizedRecordInput[field.fieldApiName] = str;
           }
@@ -848,7 +872,7 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
           payload: null,
         });
         const errs = (err as ValidationError).fieldErrors ?? {
-          form: [(err as Error).message || "Validation failed."],
+          form: [(err as Error).message || "Doğrulama başarısız."],
         };
         return {
           outcome: "invalid",

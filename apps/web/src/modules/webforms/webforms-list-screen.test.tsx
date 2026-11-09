@@ -50,11 +50,18 @@ describe("WebformsListScreen - Empty State & Dialog Parity", () => {
     expect(newFormButtons).toHaveLength(1);
 
     // Contextual help marker
-    expect(screen.getByTestId("contextual-help-marker")).toBeDefined();
+    const helpMarker = screen.getByTestId("contextual-help-marker");
+    expect(helpMarker).toBeDefined();
+    expect(helpMarker.getAttribute("href")).toContain("/settings/webforms/help#what-is-webform");
 
     // Analytics and A/B test Learn more links
-    expect(screen.getByTestId("analytics-learn-more")).toBeDefined();
-    expect(screen.getByTestId("ab-testing-learn-more")).toBeDefined();
+    const analyticsLink = screen.getByTestId("analytics-learn-more");
+    expect(analyticsLink).toBeDefined();
+    expect(analyticsLink.getAttribute("href")).toContain("/settings/webforms/help#analytics");
+
+    const abTestingLink = screen.getByTestId("ab-testing-learn-more");
+    expect(abTestingLink).toBeDefined();
+    expect(abTestingLink.getAttribute("href")).toContain("/settings/webforms/help#ab-testing");
   });
 
   it("opens dialog, focuses name input, and enforces Create gating (name + module required)", async () => {

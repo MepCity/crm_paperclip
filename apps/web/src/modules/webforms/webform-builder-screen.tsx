@@ -1,7 +1,7 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-components";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -9,7 +9,8 @@ import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Spinner } from "@/components/ui/spinner";
-import { useUiTranslations } from "@/i18n/client-provider";
+import { useUiLanguage, useUiTranslations } from "@/i18n/client-provider";
+import { useMetadataDisplayAdapter } from "@/i18n/metadata-adapter";
 import {
   addLocation,
   fetchEligibleFields,
@@ -43,6 +44,17 @@ export function WebformBuilderScreen({
 }: WebformBuilderScreenProps) {
   const router = useRouter();
   const t = useUiTranslations();
+  const language = useUiLanguage();
+  const adapter = useMetadataDisplayAdapter();
+  const isTr = language === "tr";
+
+  const adapterRef = useRef(adapter);
+  adapterRef.current = adapter;
+  const isTrRef = useRef(isTr);
+  isTrRef.current = isTr;
+  const tRef = useRef(t);
+  tRef.current = t;
+
   const [form, setForm] = useState<WebformDetail | null>(null);
   const [eligibleFields, setEligibleFields] = useState<EligibleField[]>([]);
   const [loading, setLoading] = useState(true);
@@ -88,8 +100,40 @@ export function WebformBuilderScreen({
 
       const activeVersion = detail.draftVersion ?? detail.publishedVersion;
       if (activeVersion) {
-        setFields(activeVersion.fields);
-        setSettings(activeVersion.settings);
+        // Localize stock field labels if they haven't been customized
+        const localizedFields = activeVersion.fields.map((f) => ({
+          ...f,
+          label: adapterRef.current.getFieldLabel(detail.module, {
+            apiName: f.fieldApiName,
+            label: f.label,
+          }),
+        }));
+        setFields(localizedFields);
+
+        // Localize default button label if still default "Submit"
+        const currentButtonLabel = activeVersion.settings.buttonLabel;
+        const localizedButtonLabel =
+          isTrRef.current && (!currentButtonLabel || currentButtonLabel === "Submit")
+            ? tRef.current("modules.webforms.builder.defaultSubmitButton")
+            : currentButtonLabel || tRef.current("modules.webforms.builder.defaultSubmitButton");
+
+        // Localize default thank you message if still default English
+        const currentAck = activeVersion.settings.acknowledgement;
+        const localizedAck =
+          currentAck.kind === "message" &&
+          isTrRef.current &&
+          currentAck.text === "Thank you for your submission."
+            ? {
+                kind: "message" as const,
+                text: tRef.current("modules.webforms.builder.defaultThankYouMessage"),
+              }
+            : currentAck;
+
+        setSettings({
+          ...activeVersion.settings,
+          buttonLabel: localizedButtonLabel,
+          acknowledgement: localizedAck,
+        });
       }
 
       const [eligible, userList, ruleList] = await Promise.all([
@@ -116,9 +160,13 @@ export function WebformBuilderScreen({
 
   const handleAddField = (eligible: EligibleField) => {
     if (fields.some((f) => f.fieldApiName === eligible.apiName)) return;
+    const localizedLabel = adapter.getFieldLabel(form?.module ?? "", {
+      apiName: eligible.apiName,
+      label: eligible.label,
+    });
     const newField: WebformField = {
       fieldApiName: eligible.apiName,
-      label: eligible.label,
+      label: localizedLabel,
       required: eligible.required,
       hidden: false,
       defaultValue: "",
@@ -382,11 +430,18 @@ export function WebformBuilderScreen({
     }
   };
 
-  const filteredEligible = eligibleFields.filter(
-    (f) =>
-      f.label.toLowerCase().includes(fieldSearch.toLowerCase()) ||
-      f.apiName.toLowerCase().includes(fieldSearch.toLowerCase()),
-  );
+  const filteredEligible = eligibleFields.filter((f) => {
+    const displayLabel = adapter.getFieldLabel(form?.module ?? "", {
+      apiName: f.apiName,
+      label: f.label,
+    });
+    const searchLower = fieldSearch.toLowerCase();
+    return (
+      f.label.toLowerCase().includes(searchLower) ||
+      displayLabel.toLowerCase().includes(searchLower) ||
+      f.apiName.toLowerCase().includes(searchLower)
+    );
+  });
 
   if (loading) {
     return (
@@ -566,12 +621,16 @@ export function WebformBuilderScreen({
           <div className="flex-1 overflow-y-auto p-3 flex flex-col gap-1.5">
             {filteredEligible.map((eligible) => {
               const inForm = fields.some((f) => f.fieldApiName === eligible.apiName);
+              const displayLabel = adapter.getFieldLabel(form?.module ?? "", {
+                apiName: eligible.apiName,
+                label: eligible.label,
+              });
               return (
                 <button
                   type="button"
                   key={eligible.apiName}
                   disabled={inForm || isReadOnly}
-                  aria-label={t("modules.webforms.builder.addFieldAria", { label: eligible.label })}
+                  aria-label={t("modules.webforms.builder.addFieldAria", { label: displayLabel })}
                   data-testid={`add-field-${eligible.apiName}`}
                   className={`flex w-full items-center justify-between p-2.5 rounded border text-xs transition-colors text-left ${
                     inForm
@@ -583,7 +642,7 @@ export function WebformBuilderScreen({
                   onClick={() => handleAddField(eligible)}
                 >
                   <div className="flex items-center gap-1.5 truncate">
-                    <span className="font-semibold truncate">{eligible.label}</span>
+                    <span className="font-semibold truncate">{displayLabel}</span>
                     {eligible.required && (
                       <span className="text-destructive font-bold text-sm leading-none">*</span>
                     )}
@@ -883,7 +942,7 @@ export function WebformBuilderScreen({
                   ))}
                 <div className="pt-2">
                   <Button variant="primary" className="w-full" isDisabled>
-                    {settings?.buttonLabel || "Submit"}
+                    {settings?.buttonLabel || t("modules.webforms.builder.defaultSubmitButton")}
                   </Button>
                 </div>
               </div>
@@ -951,7 +1010,7 @@ export function WebformBuilderScreen({
                             ...settings,
                             acknowledgement: {
                               kind: "message",
-                              text: "Thank you for your submission.",
+                              text: t("modules.webforms.builder.defaultThankYouMessage"),
                             },
                           })
                         }

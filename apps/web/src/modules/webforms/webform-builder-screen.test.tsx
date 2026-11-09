@@ -1,5 +1,7 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { LanguageProvider } from "@/i18n/client-provider";
+import type { WebformDetail } from "./types";
 import { WebformBuilderScreen } from "./webform-builder-screen";
 
 vi.mock("next/navigation", () => ({
@@ -201,5 +203,44 @@ describe("WebformBuilderScreen", () => {
       screen.getAllByText("Hidden required fields must have a default value.").length,
     ).toBeGreaterThan(0);
     expect(api.updateDraft).not.toHaveBeenCalled();
+  });
+
+  it("localizes stock field labels and defaults button label to Gönder in Turkish", async () => {
+    // When form settings have default "Submit" button label:
+    const detailWithDefaultButton = {
+      ...mockWebformDetail,
+      draftVersion: {
+        ...mockWebformDetail.draftVersion,
+        settings: {
+          ...mockWebformDetail.draftVersion.settings,
+          buttonLabel: "Submit",
+        },
+      },
+    };
+    const api = await import("./api");
+    vi.mocked(api.fetchWebform).mockResolvedValueOnce(
+      detailWithDefaultButton as unknown as WebformDetail,
+    );
+
+    render(
+      <LanguageProvider language="tr">
+        <WebformBuilderScreen orgSlug="acme" formId="form-123" />
+      </LanguageProvider>,
+    );
+
+    // Subject stock field label should be localized to Konu
+    await waitFor(() => {
+      const subjectInput = screen.getByDisplayValue("Konu");
+      expect(subjectInput).toBeDefined();
+    });
+
+    // Status stock field label should be localized to Durum
+    expect(screen.getByDisplayValue("Durum")).toBeDefined();
+
+    // Available field Priority should be localized to Öncelik
+    expect(screen.getByText("Öncelik")).toBeDefined();
+
+    // Default button label should be localized to Gönder
+    expect(screen.getByDisplayValue("Gönder")).toBeDefined();
   });
 });
