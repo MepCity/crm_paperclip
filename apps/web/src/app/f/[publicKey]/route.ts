@@ -3,6 +3,7 @@ import {
   computeClientHash,
   createRenderToken,
   generateChallenge,
+  getClientIp,
   type OrgContext,
   recordVisit,
   resolvePublicForm,
@@ -89,10 +90,7 @@ export const GET = exemptRoute(
       });
     }
 
-    const forwarded = request.headers.get("x-forwarded-for");
-    const ip = forwarded
-      ? forwarded.split(",")[0]?.trim() || "127.0.0.1"
-      : request.headers.get("x-real-ip") || "127.0.0.1";
+    const ip = getClientIp(request);
     const clientHash = computeClientHash(ip);
 
     const ctx: OrgContext = {

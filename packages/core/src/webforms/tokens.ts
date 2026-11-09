@@ -1,4 +1,5 @@
 import { createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { parseEnv } from "../env";
 
 export interface RenderTokenPayload {
   orgId: string;
@@ -8,19 +9,47 @@ export interface RenderTokenPayload {
   challengeHash?: string;
 }
 
-export function getAppSecret(): string {
-  return process.env.APP_SECRET || "default-webforms-token-secret-at-least-32-chars-long-for-tests";
+/**
+ * Resolves the application secret used for HMAC signing of render tokens and client hashes.
+ *
+ * Security contract (ADR 0019 §3.2, §3.5):
+ * - In non-test environments (production, staging, dev), APP_SECRET is mandatory and must contain
+ *   at least 32 characters, validated via core env parsing. If missing or invalid, it fails closed (throws).
+ * - In test environments (`NODE_ENV === "test"` or `VITEST`), a fallback test secret is permitted
+ *   so unit tests can run without full environment bootstrapping.
+ */
+export function getAppSecret(envSource: Record<string, string | undefined> = process.env): string {
+  const directSecret = envSource.APP_SECRET;
+  if (directSecret) {
+    if (directSecret.length < 32) {
+      throw new Error("APP_SECRET must contain at least 32 characters");
+    }
+    return directSecret;
+  }
+
+  try {
+    const env = parseEnv(envSource);
+    return env.APP_SECRET;
+  } catch (err) {
+    const isTest = envSource.NODE_ENV === "test" || Boolean(envSource.VITEST);
+    if (isTest) {
+      return "default-webforms-token-secret-at-least-32-chars-long-for-tests";
+    }
+    throw new Error(
+      `APP_SECRET is required and must contain at least 32 characters in production: ${
+        err instanceof Error ? err.message : "Missing secret"
+      }`,
+    );
+  }
 }
 
-export function computeClientHash(ip: string): string {
-  const secret = getAppSecret();
+export function computeClientHash(ip: string, secret = getAppSecret()): string {
   return createHmac("sha256", secret)
     .update(ip.trim() || "unknown")
     .digest("base64url");
 }
 
-export function createRenderToken(payload: RenderTokenPayload): string {
-  const secret = getAppSecret();
+export function createRenderToken(payload: RenderTokenPayload, secret = getAppSecret()): string {
   const jsonStr = JSON.stringify({
     orgId: payload.orgId,
     formId: payload.formId,
@@ -35,6 +64,7 @@ export function createRenderToken(payload: RenderTokenPayload): string {
 
 export function verifyRenderToken(
   token: string,
+  secret = getAppSecret(),
 ): { ok: true; payload: RenderTokenPayload } | { ok: false; reason: "tampered" | "malformed" } {
   if (!token || typeof token !== "string") {
     return { ok: false, reason: "malformed" };
@@ -44,7 +74,6 @@ export function verifyRenderToken(
     return { ok: false, reason: "malformed" };
   }
   const [data, sig] = parts as [string, string];
-  const secret = getAppSecret();
   const expectedSig = createHmac("sha256", secret).update(data).digest("base64url");
 
   const sigBuf = Buffer.from(sig);

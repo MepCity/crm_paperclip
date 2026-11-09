@@ -4,6 +4,8 @@ import {
   computeClientHash,
   createRenderToken,
   generateChallenge,
+  getAppSecret,
+  getClientIp,
   getEligibleFieldsForModule,
   hashPublicKey,
   isFieldEligible,
@@ -286,6 +288,28 @@ describe("Webforms core validation", () => {
       expect(verifyRenderToken("part1.part2.part3").ok).toBe(false);
       expect(verifyRenderToken("invalid-base64.signature").ok).toBe(false);
     });
+
+    describe("getAppSecret configuration and fail-closed security", () => {
+      it("allows test secret fallback in test environments when APP_SECRET is unset", () => {
+        const secret = getAppSecret({ NODE_ENV: "test" });
+        expect(secret).toBe("default-webforms-token-secret-at-least-32-chars-long-for-tests");
+      });
+
+      it("throws when APP_SECRET is missing in production", () => {
+        expect(() => getAppSecret({ NODE_ENV: "production" })).toThrow(/APP_SECRET/);
+      });
+
+      it("throws when APP_SECRET is shorter than 32 characters in production", () => {
+        expect(() => getAppSecret({ NODE_ENV: "production", APP_SECRET: "short-secret" })).toThrow(
+          /at least 32 characters/,
+        );
+      });
+
+      it("returns configured secret when valid in production", () => {
+        const valid = "production-app-secret-with-more-than-32-chars-12345";
+        expect(getAppSecret({ NODE_ENV: "production", APP_SECRET: valid })).toBe(valid);
+      });
+    });
   });
 
   describe("Challenge generation and verification (§3.5)", () => {
@@ -337,6 +361,37 @@ describe("Webforms core validation", () => {
       expect(h1).toBe(h2);
       expect(h1).not.toBe(rawKey);
     });
+
+    describe("getClientIp proxy handling", () => {
+      it("resolves single IP from x-forwarded-for", () => {
+        const req = new Request("http://localhost/api/test", {
+          headers: { "x-forwarded-for": "203.0.113.195" },
+        });
+        expect(getClientIp(req)).toBe("203.0.113.195");
+      });
+
+      it("selects the rightmost IP from x-forwarded-for to prevent client header spoofing", () => {
+        const req = new Request("http://localhost/api/test", {
+          headers: { "x-forwarded-for": "1.2.3.4, 5.6.7.8, 203.0.113.195" },
+        });
+        expect(getClientIp(req)).toBe("203.0.113.195");
+      });
+
+      it("prioritizes x-real-ip when set by reverse proxy", () => {
+        const req = new Request("http://localhost/api/test", {
+          headers: {
+            "x-real-ip": "198.51.100.50",
+            "x-forwarded-for": "1.2.3.4, 203.0.113.195",
+          },
+        });
+        expect(getClientIp(req)).toBe("198.51.100.50");
+      });
+
+      it("falls back to 127.0.0.1 when no IP headers are present", () => {
+        const req = new Request("http://localhost/api/test");
+        expect(getClientIp(req)).toBe("127.0.0.1");
+      });
+    });
   });
 
   describe("Locations and embedding resolution (§3.6)", () => {
@@ -361,6 +416,48 @@ describe("Webforms core validation", () => {
         allowed: true,
         isAllowedOrigin: true,
       });
+    });
+
+    it("rejects fake hosted referer when origin is foreign and locations are restricted", () => {
+      const res = resolveLocation({
+        origin: "https://evil.com",
+        referer: "https://shop.example.com/f/public-key-123",
+        isHostedRoute: true,
+        appOrigin: "https://shop.example.com",
+        restrictLocations: true,
+        allowedLocations: allowed,
+      });
+      expect(res.allowed).toBe(false);
+      expect(res.location).toBe("https://evil.com");
+      expect(res.isAllowedOrigin).toBe(false);
+    });
+
+    it("rejects fake hosted referer on evil domain when origin is omitted and locations are restricted", () => {
+      const res = resolveLocation({
+        origin: null,
+        referer: "https://evil.com/f/public-key-123",
+        isHostedRoute: true,
+        appOrigin: "https://shop.example.com",
+        restrictLocations: true,
+        allowedLocations: allowed,
+      });
+      expect(res.allowed).toBe(false);
+      expect(res.location).toBe("https://evil.com");
+      expect(res.isAllowedOrigin).toBe(false);
+    });
+
+    it("allows hosted route when origin and referer match appOrigin", () => {
+      const res = resolveLocation({
+        origin: "https://shop.example.com",
+        referer: "https://shop.example.com/f/public-key-123",
+        isHostedRoute: true,
+        appOrigin: "https://shop.example.com",
+        restrictLocations: true,
+        allowedLocations: allowed,
+      });
+      expect(res.allowed).toBe(true);
+      expect(res.location).toBe("hosted");
+      expect(res.isAllowedOrigin).toBe(true);
     });
 
     it("allows allowlisted origin when locations are restricted", () => {

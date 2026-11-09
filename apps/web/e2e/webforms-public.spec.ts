@@ -248,4 +248,76 @@ test.describe("webforms public routes and ingestion", () => {
       page.getByText("The form you are looking for is unavailable, inactive, or does not exist."),
     ).toBeVisible();
   });
+
+  test("rejects foreign origin and fake hosted referer when locations are restricted", async ({
+    page,
+    pageErrors,
+  }) => {
+    await signUpNewUser(page);
+    const org = await createOrganization(page);
+    const origin = new URL(page.url()).origin;
+    const jsonHeaders = {
+      "X-CRM-ORG": org.slug,
+      Origin: origin,
+      "Content-Type": "application/json",
+    };
+    const actionHeaders = {
+      "X-CRM-ORG": org.slug,
+      Origin: origin,
+    };
+
+    // 1. Create form with restrictLocations: true
+    const createRes = await page.request.post("/crm/v2.1/settings/webforms", {
+      headers: jsonHeaders,
+      data: { name: "Restricted Form", module: "Leads" },
+    });
+    expect(createRes.ok()).toBe(true);
+    const { webform } = await createRes.json();
+
+    const updateRes = await page.request.put(`/crm/v2.1/settings/webforms/${webform.id}`, {
+      headers: jsonHeaders,
+      data: {
+        fields: [
+          { fieldApiName: "Last_Name", label: "Last Name", required: true, hidden: false },
+          { fieldApiName: "Company", label: "Company", required: true, hidden: false },
+        ],
+        settings: {
+          restrictLocations: true,
+        },
+      },
+    });
+    expect(updateRes.ok()).toBe(true);
+
+    const pubRes = await page.request.post(
+      `/crm/v2.1/settings/webforms/${webform.id}/actions/publish`,
+      {
+        headers: actionHeaders,
+      },
+    );
+    expect(pubRes.ok()).toBe(true);
+
+    const keyRes = await page.request.post(
+      `/crm/v2.1/settings/webforms/${webform.id}/actions/regenerate_key`,
+      {
+        headers: actionHeaders,
+      },
+    );
+    expect(keyRes.ok()).toBe(true);
+    const { publicKey } = await keyRes.json();
+
+    // Try submitting with foreign origin and fake hosted referer
+    const fakeRes = await page.request.post(`/api/public/webforms/${publicKey}/submissions`, {
+      headers: {
+        Origin: "https://evil.example.com",
+        Referer: `${origin}/f/${publicKey}`,
+        "Content-Type": "application/json",
+      },
+      data: {
+        Last_Name: "Hacker",
+        Company: "EvilCorp",
+      },
+    });
+    ignoreFailedResponses(pageErrors, [404]);
+    expect(fakeRes.status()).toBe(404);
+  });
 });

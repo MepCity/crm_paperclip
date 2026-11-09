@@ -194,6 +194,7 @@ export interface SubmissionInput {
   origin?: string | null;
   referer?: string | null;
   isHostedRoute?: boolean;
+  appOrigin?: string | null;
   ip: string;
   now?: Date;
   queue?: JobQueue;
@@ -225,8 +226,36 @@ export function resolveLocation(params: {
   isHostedRoute?: boolean;
   restrictLocations: boolean;
   allowedLocations: WebformLocation[];
+  appOrigin?: string | null;
 }): { location: string; allowed: boolean; isAllowedOrigin: boolean } {
-  if (params.isHostedRoute) {
+  let isHosted = Boolean(params.isHostedRoute);
+
+  const effectiveAppOrigin =
+    params.appOrigin ?? (process.env.APP_URL ? new URL(process.env.APP_URL).origin : null);
+
+  // Origin header takes precedence: if Origin is present, it must match appOrigin to be considered hosted.
+  if (isHosted && params.origin && effectiveAppOrigin) {
+    try {
+      if (normalizeOrigin(params.origin) !== normalizeOrigin(effectiveAppOrigin)) {
+        isHosted = false;
+      }
+    } catch {
+      isHosted = false;
+    }
+  }
+
+  // If referer is present, its origin must also match appOrigin to be considered hosted.
+  if (isHosted && params.referer && effectiveAppOrigin) {
+    try {
+      if (normalizeOrigin(new URL(params.referer).origin) !== normalizeOrigin(effectiveAppOrigin)) {
+        isHosted = false;
+      }
+    } catch {
+      isHosted = false;
+    }
+  }
+
+  if (isHosted) {
     return { location: "hosted", allowed: true, isAllowedOrigin: true };
   }
 
@@ -348,6 +377,7 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
       isHostedRoute: input.isHostedRoute,
       restrictLocations: publishedVersion.settings.restrictLocations,
       allowedLocations: locations,
+      appOrigin: input.appOrigin,
     });
 
     if (!locResult.allowed) {

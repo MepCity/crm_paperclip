@@ -1,9 +1,37 @@
-import { resolvePublicForm, submitWebform } from "@crm/core/webforms";
+import { getClientIp, resolvePublicForm, submitWebform } from "@crm/core/webforms";
 import { exemptRoute } from "@/lib/access/route-permission";
 
 export const dynamic = "force-dynamic";
 
 const MAX_PAYLOAD_BYTES = 32 * 1024; // 32 KB
+
+function getAppPublicOrigin(request?: Request): string {
+  if (process.env.APP_URL) {
+    try {
+      return new URL(process.env.APP_URL).origin.toLowerCase();
+    } catch {
+      // ignore
+    }
+  }
+  if (request) {
+    try {
+      return new URL(request.url).origin.toLowerCase();
+    } catch {
+      // ignore
+    }
+  }
+  return "http://127.0.0.1:3000";
+}
+
+function isSameOrigin(urlOrOriginA: string, urlOrOriginB: string): boolean {
+  try {
+    const a = urlOrOriginA.startsWith("http") ? new URL(urlOrOriginA).origin : urlOrOriginA;
+    const b = urlOrOriginB.startsWith("http") ? new URL(urlOrOriginB).origin : urlOrOriginB;
+    return a.toLowerCase() === b.toLowerCase();
+  } catch {
+    return false;
+  }
+}
 
 function escapeHtml(str: unknown): string {
   if (str === null || str === undefined) return "";
@@ -242,19 +270,22 @@ export const POST = exemptRoute(
       }
     }
 
-    const forwarded = request.headers.get("x-forwarded-for");
-    const ip = forwarded
-      ? forwarded.split(",")[0]?.trim() || "127.0.0.1"
-      : request.headers.get("x-real-ip") || "127.0.0.1";
-
+    const ip = getClientIp(request);
+    const appOrigin = getAppPublicOrigin(request);
     const origin = request.headers.get("origin");
     const referer = request.headers.get("referer");
 
+    // Origin header takes precedence: if Origin is present, it must match appOrigin to be considered hosted.
     let isHostedRoute = false;
-    if (referer) {
+    const originMatchesApp = origin ? isSameOrigin(origin, appOrigin) : true;
+
+    if (originMatchesApp && referer) {
       try {
         const refUrl = new URL(referer);
-        if (refUrl.pathname.startsWith(`/f/${publicKey}`)) {
+        if (
+          isSameOrigin(refUrl.origin, appOrigin) &&
+          refUrl.pathname.startsWith(`/f/${publicKey}`)
+        ) {
           isHostedRoute = true;
         }
       } catch {
@@ -269,6 +300,7 @@ export const POST = exemptRoute(
       origin,
       referer,
       isHostedRoute,
+      appOrigin,
       ip,
     });
 
