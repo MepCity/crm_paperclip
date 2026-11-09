@@ -84,7 +84,7 @@ test.describe("webforms embed codes, analytics, and record usage", () => {
 
     // Check disabled Source HTML tab
     await page.getByTestId("embed-tab-source").click();
-    await expect(page.getByText("Static source-HTML embed is not offered")).toBeVisible();
+    await expect(page.getByText("Static source HTML is not supported")).toBeVisible();
 
     // Close embed dialog
     await page.keyboard.press("Escape");
