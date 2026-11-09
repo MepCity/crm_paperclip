@@ -453,6 +453,23 @@ export interface RecordService {
 
 export type RecordServiceFactory = (ctx: OrgContext) => RecordService;
 
+export interface WebformActorRef {
+  readonly kind: "webform";
+  readonly formId: string;
+  readonly versionId: string;
+  readonly module?: string;
+  readonly allowedFields?: ReadonlySet<string> | readonly string[];
+  readonly formName?: string;
+}
+
+export interface ExecutionActorRef {
+  readonly kind: "cadence" | "journey";
+  readonly id: string;
+  readonly versionId: string;
+}
+
+export type ActorRef = WebformActorRef | ExecutionActorRef;
+
 /** All allowed targets; a single-target field retains its existing default. */
 export function lookupTargetModules(field: FieldDefinition): readonly ModuleApiName[] {
   return field.lookup?.modules ?? (field.lookup ? [field.lookup.module] : []);

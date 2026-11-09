@@ -1,6 +1,6 @@
 import type { FieldDataType, FieldValue, JsonObject } from "./contract";
 
-export type HistorySource = "manual" | "api" | "import";
+export type HistorySource = "manual" | "api" | "import" | "webform";
 export type HistoryEventKind =
   | "record_created"
   | "fields_updated"
