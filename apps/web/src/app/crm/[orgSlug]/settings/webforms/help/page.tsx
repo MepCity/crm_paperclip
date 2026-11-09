@@ -22,7 +22,7 @@ export default async function WebformsHelpPage({
         <div>
           <Link
             href={`/crm/${orgSlug}/settings/webforms`}
-            className="text-sm text-primary hover:underline font-medium inline-flex items-center gap-1 mb-4"
+            className="text-sm text-primary hover:underline font-semibold inline-flex items-center gap-1 mb-4"
           >
             {t("modules.webforms.help.back")}
           </Link>
