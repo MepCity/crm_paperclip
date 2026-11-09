@@ -21,7 +21,7 @@ import type {
   WebformSettings,
   WebformVersion,
 } from "./types";
-import { normalizeOrigin, webformSettingsSchema } from "./validation";
+import { isSameOrigin, normalizeOrigin, webformSettingsSchema } from "./validation";
 
 export const WEBFORM_AUTO_RESPONSE_JOB_KIND = "webform.auto_response";
 export const WEBFORM_AUTO_RESPONSE_JOB_VERSION = 1;
@@ -230,27 +230,25 @@ export function resolveLocation(params: {
 }): { location: string; allowed: boolean; isAllowedOrigin: boolean } {
   let isHosted = Boolean(params.isHostedRoute);
 
-  const effectiveAppOrigin =
-    params.appOrigin ?? (process.env.APP_URL ? new URL(process.env.APP_URL).origin : null);
+  let effectiveAppOrigin = params.appOrigin ?? null;
+  if (!effectiveAppOrigin && process.env.APP_URL) {
+    try {
+      effectiveAppOrigin = new URL(process.env.APP_URL).origin;
+    } catch {
+      effectiveAppOrigin = null;
+    }
+  }
 
   // Origin header takes precedence: if Origin is present, it must match appOrigin to be considered hosted.
   if (isHosted && params.origin && effectiveAppOrigin) {
-    try {
-      if (normalizeOrigin(params.origin) !== normalizeOrigin(effectiveAppOrigin)) {
-        isHosted = false;
-      }
-    } catch {
+    if (!isSameOrigin(params.origin, effectiveAppOrigin)) {
       isHosted = false;
     }
   }
 
   // If referer is present, its origin must also match appOrigin to be considered hosted.
   if (isHosted && params.referer && effectiveAppOrigin) {
-    try {
-      if (normalizeOrigin(new URL(params.referer).origin) !== normalizeOrigin(effectiveAppOrigin)) {
-        isHosted = false;
-      }
-    } catch {
+    if (!isSameOrigin(params.referer, effectiveAppOrigin)) {
       isHosted = false;
     }
   }

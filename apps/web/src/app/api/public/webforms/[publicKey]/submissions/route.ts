@@ -1,4 +1,4 @@
-import { getClientIp, resolvePublicForm, submitWebform } from "@crm/core/webforms";
+import { getClientIp, isSameOrigin, resolvePublicForm, submitWebform } from "@crm/core/webforms";
 import { exemptRoute } from "@/lib/access/route-permission";
 
 export const dynamic = "force-dynamic";
@@ -21,16 +21,6 @@ function getAppPublicOrigin(request?: Request): string {
     }
   }
   return "http://127.0.0.1:3000";
-}
-
-function isSameOrigin(urlOrOriginA: string, urlOrOriginB: string): boolean {
-  try {
-    const a = urlOrOriginA.startsWith("http") ? new URL(urlOrOriginA).origin : urlOrOriginA;
-    const b = urlOrOriginB.startsWith("http") ? new URL(urlOrOriginB).origin : urlOrOriginB;
-    return a.toLowerCase() === b.toLowerCase();
-  } catch {
-    return false;
-  }
 }
 
 function escapeHtml(str: unknown): string {
