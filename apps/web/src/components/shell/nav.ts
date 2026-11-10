@@ -52,7 +52,7 @@ export interface NavLink {
   /** Module API name; the link is hidden when the profile cannot view the module. */
   module?: string;
   /** Feature area with a `view` flag; hidden when the profile cannot view it. */
-  feature?: "reports" | "analytics" | "documents";
+  feature?: "reports" | "analytics" | "documents" | "cadences";
   /** Settings link shown only to viewers with `admin.userManagement`. */
   requiresUserManagement?: boolean;
 }
@@ -369,6 +369,16 @@ export const settingsNav: readonly NavLink[] = [
     href: (slug) => `/crm/${slug}/settings/assignment-rules`,
     match: "exact",
     group: "Automation",
+  },
+  {
+    id: "cadences",
+    label: english.shell.cadences,
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/cadences`,
+    activePrefix: (slug) => `/crm/${slug}/settings/cadences`,
+    match: "prefix",
+    group: "Automation",
+    feature: "cadences",
   },
   {
     id: "approval-processes",

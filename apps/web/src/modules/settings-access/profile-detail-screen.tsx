@@ -51,6 +51,11 @@ const TOOL_LIST_ROWS: ListRowDef[] = [
   { label: "Share", path: ["tools", "share"] },
   { label: "Print View", path: ["tools", "printView"] },
   { label: "Find & Merge", path: ["tools", "findAndMerge"] },
+  {
+    label: "Enroll in Cadence",
+    path: ["tools", "enrollInCadence"],
+    on: ["Leads", "Contacts", "Accounts", "Deals"],
+  },
 ];
 const TOOL_FLAG_ROWS: FlagRowDef[] = [
   { label: "Manage Views", group: "tools", key: "manageViews" },
@@ -87,6 +92,7 @@ const FEATURE_LABELS: Record<keyof Perms["features"], string> = {
   notes: "Notes",
   attachments: "Attachments",
   feeds: "Feeds",
+  cadences: "Cadences",
 };
 
 /** Left anchor menu of the profile page, grouped as in the reference. */

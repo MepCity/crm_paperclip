@@ -48,7 +48,8 @@
     "./notifications": "./src/notifications/index.ts",
     "./records/write-observer": "./src/records/write-observer.ts",
     "./definitions/runtime": "./src/definitions/runtime.ts",
-    "./webforms": "./src/webforms/index.ts"
+    "./webforms": "./src/webforms/index.ts",
+    "./cadences": "./src/cadences/index.ts"
   },
   "dependencies": {
     "@crm/db": "workspace:*",

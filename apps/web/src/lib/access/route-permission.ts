@@ -23,7 +23,14 @@ export type ModuleListKey =
   | "changeOwner"
   | "convert"
   | "findAndMerge";
-export type FeatureKey = "reports" | "analytics" | "documents" | "notes" | "attachments" | "feeds";
+export type FeatureKey =
+  | "reports"
+  | "analytics"
+  | "documents"
+  | "notes"
+  | "attachments"
+  | "feeds"
+  | "cadences";
 export type AdminKey =
   | "userManagement"
   | "moduleCustomization"
