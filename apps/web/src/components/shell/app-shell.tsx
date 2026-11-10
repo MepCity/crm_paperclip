@@ -225,7 +225,7 @@ export function AppShell({
             ref={mainContent}
             id="main-content"
             tabIndex={-1}
-            className={`min-h-0 flex-1 overflow-auto outline-none ${isSettingsHome ? "bg-bg" : "bg-surface"}`}
+            className={`min-h-0 flex-1 overflow-auto outline-none ${isSettings ? "bg-bg" : "bg-surface"}`}
           >
             <PreferenceProvider orgSlug={orgSlug} userId={user.id}>
               <FeedsAccessProvider value={feedsAccess}>{children}</FeedsAccessProvider>

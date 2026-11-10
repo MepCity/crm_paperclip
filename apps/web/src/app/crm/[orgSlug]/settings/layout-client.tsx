@@ -27,7 +27,7 @@ export function SettingsLayoutClient({
   }
 
   return (
-    <div className="flex flex-col gap-6 p-6 md:flex-row">
+    <div className="flex min-h-full flex-col gap-6 bg-bg p-6 md:flex-row">
       <SettingsNavigation orgSlug={orgSlug} canManageAccess={canManageAccess} />
       <div className="min-w-0 flex-1">{children}</div>
     </div>

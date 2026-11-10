@@ -1,3 +1,5 @@
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
 import { signUpNewUser } from "./support/auth";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
@@ -6,6 +8,10 @@ test.describe("webforms embed codes, analytics, and record usage", () => {
   test("end-to-end embed dialog, submission analytics, and record webform usage related list", async ({
     page,
   }) => {
+    const evidenceDir = process.env.MEP_EVIDENCE_DIR || "/tmp/webforms-mep1499-evidence";
+    mkdirSync(evidenceDir, { recursive: true });
+    await page.setViewportSize({ width: 1180, height: 703 });
+
     await signUpNewUser(page);
     const org = await createOrganization(page);
     const origin = new URL(page.url()).origin;
@@ -125,6 +131,13 @@ test.describe("webforms embed codes, analytics, and record usage", () => {
     // Verify location table has 'hosted' row
     await expect(page.getByRole("cell", { name: "hosted" })).toBeVisible();
 
+    // Switch to Turkish so related list cards display reference Turkish titles
+    const langRes = await page.request.put("/api/personal-settings/language", {
+      headers: { Origin: origin },
+      data: { language: "tr" },
+    });
+    expect(langRes.ok()).toBe(true);
+
     // 6. Navigate to Leads List and open the newly created Lead
     await page.goto(`/crm/${org.slug}/tab/Leads/list`);
     const leadLink = page.getByRole("link", { name: "Curie" }).first();
@@ -134,9 +147,52 @@ test.describe("webforms embed codes, analytics, and record usage", () => {
     // Verify Webform Usage related list card on Lead detail
     const webformUsageCard = page.locator("#related-list-webform-usage");
     await expect(webformUsageCard).toBeVisible();
+    await expect(
+      webformUsageCard.getByRole("heading", { name: "Webform Kullanımı" }),
+    ).toBeVisible();
     await expect(webformUsageCard.getByText("Analytics Test Form")).toBeVisible();
-    await expect(webformUsageCard.getByRole("cell", { name: "hosted" })).toBeVisible();
-    await expect(webformUsageCard.getByText("accepted")).toBeVisible();
+    await expect(
+      webformUsageCard.getByRole("cell", { name: /Barındırılan|hosted/i }),
+    ).toBeVisible();
+    await expect(webformUsageCard.getByText(/Kabul Edildi|accepted/i)).toBeVisible();
+    await webformUsageCard.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: join(evidenceDir, "lead-detail-usage-1180x703.png") });
+
+    // Verify Webform Usage related list card on Contact detail
+    const createContactRes = await page.request.post("/crm/v2.2/Contacts", {
+      headers: jsonHeaders,
+      data: { data: [{ Last_Name: "ContactTest" }] },
+    });
+    expect(createContactRes.ok(), await createContactRes.text()).toBe(true);
+    const contactBody = await createContactRes.json();
+    const contactId = contactBody.data[0].details.id;
+    await page.goto(`/crm/${org.slug}/tab/Contacts/${contactId}`);
+    const contactWebformUsageCard = page.locator("#related-list-webform-usage");
+    await expect(contactWebformUsageCard).toBeVisible();
+    await expect(
+      contactWebformUsageCard.getByRole("heading", { name: "Webform Kullanımı" }),
+    ).toBeVisible();
+    await contactWebformUsageCard.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: join(evidenceDir, "contact-detail-usage-1180x703.png") });
+
+    // Verify Webform Usage related list card on Case detail
+    const createCaseRes = await page.request.post("/crm/v2.2/Cases", {
+      headers: jsonHeaders,
+      data: {
+        data: [{ Subject: "CaseTest", Status: "New", Case_Origin: "Web" }],
+      },
+    });
+    expect(createCaseRes.ok(), await createCaseRes.text()).toBe(true);
+    const caseBody = await createCaseRes.json();
+    const caseId = caseBody.data[0].details.id;
+    await page.goto(`/crm/${org.slug}/tab/Cases/${caseId}`);
+    const caseWebformUsageCard = page.locator("#related-list-webform-usage");
+    await expect(caseWebformUsageCard).toBeVisible();
+    await expect(
+      caseWebformUsageCard.getByRole("heading", { name: "Webform Kullanımı" }),
+    ).toBeVisible();
+    await caseWebformUsageCard.scrollIntoViewIfNeeded();
+    await page.screenshot({ path: join(evidenceDir, "case-detail-usage-1180x703.png") });
 
     // 7. Verify Accounts module does NOT show Webform Usage related list
     const unsupportedUsageRes = await page.request.get(

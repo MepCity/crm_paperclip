@@ -304,7 +304,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
   });
 
   return (
-    <div className="relative flex flex-col rounded-xl border border-border bg-surface shadow-xs overflow-hidden">
+    <div className="relative flex flex-col rounded-xl border border-border bg-surface shadow-xs overflow-hidden min-h-[580px]">
       {/* Tabs */}
       <div className="flex border-b border-border px-6 pt-3 bg-surface">
         <button
@@ -366,48 +366,48 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
           ) : forms.length === 0 ? (
             /* W1 Empty Landing Page Panels */
             <div
-              className="relative flex flex-col items-center justify-center pt-8 pb-12 px-6"
+              className="relative flex flex-col items-center justify-center flex-1 py-12 px-6"
               data-testid="webforms-empty-state"
             >
               {/* Contextual Help Marker on right edge */}
               <Link
                 href={`/crm/${orgSlug}/settings/webforms/help#what-is-webform`}
                 aria-label={t("modules.webforms.list.contextHelp")}
-                className="absolute top-4 right-0 flex items-center justify-center w-7 h-9 rounded-l-md bg-[#ea580c] hover:bg-[#ea580c]/90 text-white shadow-sm transition-colors cursor-pointer"
+                className="absolute top-[51px] right-0 flex items-center justify-center w-[25px] h-[44px] rounded-l-full bg-[#ffa860] hover:bg-[#ffa860]/90 text-white shadow-sm transition-colors cursor-pointer"
                 data-testid="contextual-help-marker"
               >
-                <span className="text-sm font-bold">?</span>
+                <span className="text-sm font-bold pl-0.5">?</span>
               </Link>
 
               {/* Centered Heading */}
-              <h2 className="text-lg font-bold text-foreground text-center mb-6 max-w-2xl">
+              <h2 className="text-xl font-bold text-foreground text-center mb-8 max-w-2xl">
                 {t("modules.webforms.list.emptyHeading")}
               </h2>
 
               {/* 3 Columns */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6 max-w-4xl w-full mb-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl w-full mb-10">
                 {/* Column 1: Form Oluşturma */}
                 <div className="flex flex-col items-center text-center px-3">
-                  <div className="w-40 h-28 flex items-center justify-center mb-2.5">
+                  <div className="w-56 h-36 flex items-center justify-center mb-4">
                     <FormCreationIllustration />
                   </div>
-                  <h3 className="font-semibold text-sm text-foreground mb-1.5">
+                  <h3 className="font-semibold text-base text-foreground mb-2">
                     {t("modules.webforms.list.formBuilding")}
                   </h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed max-w-[260px]">
+                  <p className="text-sm text-muted-foreground leading-relaxed max-w-[280px]">
                     {t("modules.webforms.list.formBuildingDesc")}
                   </p>
                 </div>
 
                 {/* Column 2: Form Analitikleri */}
                 <div className="flex flex-col items-center text-center px-3">
-                  <div className="w-40 h-28 flex items-center justify-center mb-2.5">
+                  <div className="w-56 h-36 flex items-center justify-center mb-4">
                     <FormAnalyticsIllustration />
                   </div>
-                  <h3 className="font-semibold text-sm text-foreground mb-1.5">
+                  <h3 className="font-semibold text-base text-foreground mb-2">
                     {t("modules.webforms.list.analytics")}
                   </h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed max-w-[260px]">
+                  <p className="text-sm text-muted-foreground leading-relaxed max-w-[280px]">
                     {t("modules.webforms.list.analyticsDesc")}{" "}
                     <Link
                       href={`/crm/${orgSlug}/settings/webforms/help#analytics`}
@@ -421,13 +421,13 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
 
                 {/* Column 3: A/B Testi */}
                 <div className="flex flex-col items-center text-center px-3">
-                  <div className="w-40 h-28 flex items-center justify-center mb-2.5">
+                  <div className="w-56 h-36 flex items-center justify-center mb-4">
                     <AbTestingIllustration />
                   </div>
-                  <h3 className="font-semibold text-sm text-foreground mb-1.5">
+                  <h3 className="font-semibold text-base text-foreground mb-2">
                     {t("modules.webforms.list.abTesting")}
                   </h3>
-                  <p className="text-xs text-muted-foreground leading-relaxed max-w-[260px]">
+                  <p className="text-sm text-muted-foreground leading-relaxed max-w-[280px]">
                     {t("modules.webforms.list.abTestingDesc")}{" "}
                     <Link
                       href={`/crm/${orgSlug}/settings/webforms/help#ab-testing`}
@@ -446,7 +446,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
                   variant="primary"
                   onClick={handleOpenCreateDialog}
                   data-testid="new-form-button"
-                  className="px-6 py-2 text-sm font-semibold"
+                  className="px-6 py-2.5 text-sm font-semibold rounded-md"
                 >
                   {t("modules.webforms.list.newForm")}
                 </Button>
@@ -691,133 +691,141 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
         isOpen={createDialogOpen}
         onOpenChange={(open) => !open && handleCloseCreateDialog()}
         aria-labelledby="new-form-dialog-title"
-        panelStyle={{ width: "min(560px, 95vw)" }}
-        panelClassName="border border-t-0 border-border rounded-b-xl shadow-xl"
+        panelStyle={{ width: "600px", height: "273px" }}
+        panelClassName="border border-t-0 border-border rounded-b-xl shadow-xl flex flex-col justify-between overflow-hidden"
       >
-        <div className="p-6 pt-5 flex flex-col gap-5">
-          <h2 id="new-form-dialog-title" className="text-lg font-semibold text-foreground">
-            {t("modules.webforms.dialogs.newFormTitle")}
-          </h2>
-
-          {createError && (
-            <div className="p-2 text-sm text-destructive bg-destructive/10 rounded">
-              {createError}
+        <div className="flex flex-col justify-between h-full">
+          <div>
+            <div className="px-8 pt-7 pb-4">
+              <h2 id="new-form-dialog-title" className="text-lg font-semibold text-foreground">
+                {t("modules.webforms.dialogs.newFormTitle")}
+              </h2>
             </div>
-          )}
 
-          <div className="flex flex-col gap-4 py-1">
-            {/* Row 1: Form Name */}
-            <div className="grid grid-cols-[120px_1fr] items-center gap-4">
-              <label htmlFor="form-name-input" className="text-right text-sm text-foreground">
-                {t("modules.webforms.dialogs.formName")}
-              </label>
-              <div className="relative">
-                <input
-                  id="form-name-input"
-                  ref={nameInputRef}
-                  type="text"
-                  value={formName}
-                  onChange={(e) => setFormName(e.target.value)}
-                  placeholder={t("modules.webforms.dialogs.formNamePlaceholder")}
-                  className="h-9 w-full rounded-md border border-border border-l-[3px] border-l-[#ff3b30] bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                  data-testid="form-name-input"
-                />
+            {createError && (
+              <div className="mx-8 mb-2 p-2 text-sm text-destructive bg-destructive/10 rounded">
+                {createError}
               </div>
-            </div>
+            )}
 
-            {/* Row 2: Module */}
-            <div className="grid grid-cols-[120px_1fr] items-center gap-4">
-              <label
-                id="form-module-label"
-                htmlFor="form-module-select"
-                className="text-right text-sm text-foreground"
-              >
-                {t("modules.webforms.dialogs.module")}
-              </label>
-              <div className="relative" ref={moduleMenuRef}>
-                <button
-                  id="form-module-select"
-                  ref={moduleTriggerRef}
-                  type="button"
-                  aria-haspopup="listbox"
-                  aria-expanded={moduleMenuOpen}
-                  aria-labelledby="form-module-label form-module-select"
-                  onClick={() => setModuleMenuOpen((prev) => !prev)}
-                  className="h-9 w-full rounded-md border border-border border-l-[3px] border-l-[#ff3b30] bg-background px-3 text-sm flex items-center justify-between text-left focus:outline-none focus:ring-1 focus:ring-ring"
-                  data-testid="form-module-select"
+            <div className="flex flex-col gap-4 px-8">
+              {/* Row 1: Form Name */}
+              <div className="flex items-center gap-4">
+                <label
+                  htmlFor="form-name-input"
+                  className="w-[140px] shrink-0 text-right text-sm text-foreground"
                 >
-                  <span className={formModule ? "text-foreground" : "text-muted-foreground"}>
-                    {formModule
-                      ? getModuleLabel(formModule, t)
-                      : t("modules.webforms.dialogs.chooseModule")}
-                  </span>
-                  <Icons.chevronDown
-                    className={`size-4 text-muted-foreground transition-transform ${
-                      moduleMenuOpen ? "rotate-180" : ""
-                    }`}
+                  {t("modules.webforms.dialogs.formName")}
+                </label>
+                <div className="w-[368px] relative">
+                  <input
+                    id="form-name-input"
+                    ref={nameInputRef}
+                    type="text"
+                    value={formName}
+                    onChange={(e) => setFormName(e.target.value)}
+                    placeholder={t("modules.webforms.dialogs.formNamePlaceholder")}
+                    className="h-[34px] w-full rounded-md border border-border border-l-[3px] border-l-[#ff3b30] bg-background px-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                    data-testid="form-name-input"
                   />
-                </button>
+                </div>
+              </div>
 
-                {/* Searchable module dropdown menu */}
-                {moduleMenuOpen && (
-                  <div
-                    className="absolute left-0 top-full mt-1 w-full z-50 rounded-md border border-border bg-surface shadow-lg py-2 flex flex-col gap-1"
-                    data-testid="module-menu"
+              {/* Row 2: Module */}
+              <div className="flex items-center gap-4">
+                <label
+                  id="form-module-label"
+                  htmlFor="form-module-select"
+                  className="w-[140px] shrink-0 text-right text-sm text-foreground"
+                >
+                  {t("modules.webforms.dialogs.module")}
+                </label>
+                <div className="w-[368px] relative" ref={moduleMenuRef}>
+                  <button
+                    id="form-module-select"
+                    ref={moduleTriggerRef}
+                    type="button"
+                    aria-haspopup="listbox"
+                    aria-expanded={moduleMenuOpen}
+                    aria-labelledby="form-module-label form-module-select"
+                    onClick={() => setModuleMenuOpen((prev) => !prev)}
+                    className="h-[34px] w-full rounded-md border border-border border-l-[3px] border-l-[#ff3b30] bg-background px-3 text-sm flex items-center justify-between text-left focus:outline-none focus:ring-1 focus:ring-ring"
+                    data-testid="form-module-select"
                   >
-                    <div className="px-2 pb-2 border-b border-border">
-                      <div className="relative flex items-center">
-                        <Icons.filterSearch className="absolute left-2.5 size-4 text-muted-foreground pointer-events-none" />
-                        <input
-                          ref={moduleSearchInputRef}
-                          type="text"
-                          value={moduleSearchQuery}
-                          onChange={(e) => setModuleSearchQuery(e.target.value)}
-                          placeholder={t("modules.webforms.dialogs.searchModulesPlaceholder")}
-                          className="h-8 w-full rounded-md border border-border bg-background pl-8 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
-                          data-testid="module-search-input"
-                        />
+                    <span className={formModule ? "text-foreground" : "text-muted-foreground"}>
+                      {formModule
+                        ? getModuleLabel(formModule, t)
+                        : t("modules.webforms.dialogs.chooseModule")}
+                    </span>
+                    <Icons.chevronDown
+                      className={`size-4 text-muted-foreground transition-transform ${
+                        moduleMenuOpen ? "rotate-180" : ""
+                      }`}
+                    />
+                  </button>
+
+                  {/* Searchable module dropdown menu */}
+                  {moduleMenuOpen && (
+                    <div
+                      className="absolute left-0 top-full mt-1 w-full z-50 rounded-md border border-border bg-surface shadow-lg py-2 flex flex-col gap-1"
+                      data-testid="module-menu"
+                    >
+                      <div className="px-2 pb-2 border-b border-border">
+                        <div className="relative flex items-center">
+                          <Icons.filterSearch className="absolute left-2.5 size-4 text-muted-foreground pointer-events-none" />
+                          <input
+                            ref={moduleSearchInputRef}
+                            type="text"
+                            value={moduleSearchQuery}
+                            onChange={(e) => setModuleSearchQuery(e.target.value)}
+                            placeholder={t("modules.webforms.dialogs.searchModulesPlaceholder")}
+                            className="h-8 w-full rounded-md border border-border bg-background pl-8 pr-3 text-sm focus:outline-none focus:ring-1 focus:ring-ring"
+                            data-testid="module-search-input"
+                          />
+                        </div>
+                      </div>
+                      <div className="max-h-48 overflow-y-auto px-1 py-1" role="listbox">
+                        {filteredModules.map((mod) => (
+                          <button
+                            key={mod}
+                            type="button"
+                            role="option"
+                            aria-selected={formModule === mod}
+                            onClick={() => {
+                              setFormModule(mod);
+                              setModuleMenuOpen(false);
+                              setModuleSearchQuery("");
+                            }}
+                            className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center justify-between ${
+                              formModule === mod
+                                ? "bg-primary/10 text-primary font-semibold"
+                                : "hover:bg-muted/50 text-foreground"
+                            }`}
+                            data-testid={`module-option-${mod}`}
+                          >
+                            <span>{getModuleLabel(mod, t)}</span>
+                            {formModule === mod && <Icons.check className="size-4 text-primary" />}
+                          </button>
+                        ))}
+                        {filteredModules.length === 0 && (
+                          <div className="px-3 py-2 text-sm text-muted-foreground">
+                            {t("common.empty")}
+                          </div>
+                        )}
                       </div>
                     </div>
-                    <div className="max-h-48 overflow-y-auto px-1 py-1" role="listbox">
-                      {filteredModules.map((mod) => (
-                        <button
-                          key={mod}
-                          type="button"
-                          role="option"
-                          aria-selected={formModule === mod}
-                          onClick={() => {
-                            setFormModule(mod);
-                            setModuleMenuOpen(false);
-                            setModuleSearchQuery("");
-                          }}
-                          className={`w-full text-left px-3 py-2 text-sm rounded-md transition-colors flex items-center justify-between ${
-                            formModule === mod
-                              ? "bg-primary/10 text-primary font-semibold"
-                              : "hover:bg-muted/50 text-foreground"
-                          }`}
-                          data-testid={`module-option-${mod}`}
-                        >
-                          <span>{getModuleLabel(mod, t)}</span>
-                          {formModule === mod && <Icons.check className="size-4 text-primary" />}
-                        </button>
-                      ))}
-                      {filteredModules.length === 0 && (
-                        <div className="px-3 py-2 text-sm text-muted-foreground">
-                          {t("common.empty")}
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
           </div>
 
-          <div className="flex justify-end gap-2 pt-3 border-t border-border/50">
+          <div className="flex justify-end gap-3 px-8 pt-4 pb-7 border-t border-border/50">
             <Button
               variant="secondary"
               onClick={handleCloseCreateDialog}
               isDisabled={creating}
+              className="min-w-[58px] h-[32px] px-3 text-sm"
               data-testid="dialog-cancel-button"
             >
               {t("common.actions.cancel")}
@@ -826,6 +834,7 @@ export function WebformsListScreen({ orgSlug }: WebformsListScreenProps) {
               variant="primary"
               onClick={handleCreateForm}
               isDisabled={!formName.trim() || !formModule || creating}
+              className="min-w-[77px] h-[32px] px-3 text-sm"
               data-testid="dialog-create-button"
             >
               {creating ? <Spinner className="size-4" /> : t("common.actions.create")}
