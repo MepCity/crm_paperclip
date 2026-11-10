@@ -322,7 +322,7 @@ export function CadencesListScreen({ orgSlug }: CadencesListScreenProps) {
                 <tr>
                   <td
                     colSpan={5}
-                    className="py-12 text-center text-muted-foreground font-medium"
+                    className="py-12 text-center text-muted-foreground"
                     data-testid="cadence-empty-state"
                   >
                     {t("modules.cadences.list.empty")}
@@ -336,7 +336,7 @@ export function CadencesListScreen({ orgSlug }: CadencesListScreenProps) {
                     onClick={() => router.push(`/crm/${orgSlug}/settings/cadences/${c.id}`)}
                     data-testid={`cadence-row-${c.id}`}
                   >
-                    <td className="px-4 py-3 font-medium text-foreground">
+                    <td className="px-4 py-3 font-semibold text-foreground">
                       <Link
                         href={`/crm/${orgSlug}/settings/cadences/${c.id}`}
                         className="text-primary hover:underline font-semibold"

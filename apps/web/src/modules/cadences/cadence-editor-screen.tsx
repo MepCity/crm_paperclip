@@ -309,7 +309,7 @@ export function CadenceEditorScreen({ orgSlug, cadenceId }: CadenceEditorScreenP
   if (!cadence) {
     return (
       <div className="flex flex-1 flex-col items-center justify-center p-12">
-        <p className="text-destructive font-medium mb-4">{error ?? "Cadence not found"}</p>
+        <p className="text-destructive mb-4">{error ?? "Cadence not found"}</p>
         <Link href={`/crm/${orgSlug}/settings/cadences`} className="text-primary hover:underline">
           {t("modules.cadences.editor.back")}
         </Link>
