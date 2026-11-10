@@ -136,7 +136,7 @@ export function EnrollCadenceDialog({
               <div>
                 <label
                   htmlFor="cadence-select"
-                  className="mb-1 block text-sm font-medium text-text"
+                  className="mb-1 block text-sm font-semibold text-text"
                 >
                   Select Cadence
                 </label>
@@ -157,7 +157,7 @@ export function EnrollCadenceDialog({
 
               {selectedCadence && (
                 <div className="rounded border border-border/50 bg-surface-muted/50 p-3 text-xs text-text-muted">
-                  <div className="font-medium text-text">{selectedCadence.name}</div>
+                  <div className="font-semibold text-text">{selectedCadence.name}</div>
                   {selectedCadence.description ? (
                     <div className="mt-1">{selectedCadence.description}</div>
                   ) : null}
