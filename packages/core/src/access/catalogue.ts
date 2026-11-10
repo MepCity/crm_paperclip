@@ -71,6 +71,10 @@ const crudFeature = z.object({
   delete: z.boolean(),
 });
 const feedsFeature = z.object({ view: z.boolean(), post: z.boolean() });
+const cadencesFeature = z.object({
+  view: z.boolean().default(true),
+  manage: z.boolean().default(false),
+});
 const attachmentsFeature = z.object({
   view: z.boolean(),
   create: z.boolean(),
@@ -93,6 +97,8 @@ export const profilePermissionsSchema = z.object({
     attachments: attachmentsFeature,
     // Profiles stored before Feeds shipped have no key: both default to allowed.
     feeds: feedsFeature.default({ view: true, post: true }),
+    // Profiles stored before Cadences shipped have no key: view defaults to true, manage to false (ADR 0019 §4).
+    cadences: cadencesFeature.default({ view: true, manage: false }),
   }),
   importModules: moduleList,
   exportModules: moduleList,
@@ -110,6 +116,7 @@ export const profilePermissionsSchema = z.object({
     tags: z.boolean(),
     recordTimeline: z.boolean(),
     onlyListSubordinates: z.boolean(),
+    enrollInCadence: moduleList.default(["Leads", "Contacts", "Deals"]),
   }),
   admin: z.object({
     userManagement: z.boolean(),
@@ -180,36 +187,69 @@ export function administratorPermissions(opts?: {
       ModuleApiName,
       typeof full
     >,
-    features: {
-      reports: { view: true, manage: true, schedule: true, export: true },
-      analytics: { view: true, manage: true, export: true },
-      documents: {
-        view: true,
-        createTeamFolder: true,
-        associateTeamFolder: true,
-        editTeamFolder: true,
-      },
-      notes: { ...full },
-      attachments: { view: true, create: true, delete: true },
-      feeds: { view: true, post: true },
-    },
+    features:
+      version === 1
+        ? {
+            reports: { view: true, manage: true, schedule: true, export: true },
+            analytics: { view: true, manage: true, export: true },
+            documents: {
+              view: true,
+              createTeamFolder: true,
+              associateTeamFolder: true,
+              editTeamFolder: true,
+            },
+            notes: { ...full },
+            attachments: { view: true, create: true, delete: true },
+            feeds: { view: true, post: true },
+          }
+        : {
+            reports: { view: true, manage: true, schedule: true, export: true },
+            analytics: { view: true, manage: true, export: true },
+            documents: {
+              view: true,
+              createTeamFolder: true,
+              associateTeamFolder: true,
+              editTeamFolder: true,
+            },
+            notes: { ...full },
+            attachments: { view: true, create: true, delete: true },
+            feeds: { view: true, post: true },
+            cadences: { view: true, manage: true },
+          },
     importModules: all(),
     exportModules: all(),
     email: { send: all(), mass: all(), delete: all() },
-    tools: {
-      massUpdate: all(),
-      massDelete: all(),
-      changeOwner: all(),
-      massTransfer: all(),
-      convert: ["Leads"],
-      share: all(),
-      printView: all(),
-      findAndMerge: all(),
-      manageViews: true,
-      tags: true,
-      recordTimeline: true,
-      onlyListSubordinates: false,
-    },
+    tools:
+      version === 1
+        ? {
+            massUpdate: all(),
+            massDelete: all(),
+            changeOwner: all(),
+            massTransfer: all(),
+            convert: ["Leads"],
+            share: all(),
+            printView: all(),
+            findAndMerge: all(),
+            manageViews: true,
+            tags: true,
+            recordTimeline: true,
+            onlyListSubordinates: false,
+          }
+        : {
+            massUpdate: all(),
+            massDelete: all(),
+            changeOwner: all(),
+            massTransfer: all(),
+            convert: ["Leads"],
+            share: all(),
+            printView: all(),
+            findAndMerge: all(),
+            manageViews: true,
+            tags: true,
+            recordTimeline: true,
+            onlyListSubordinates: false,
+            enrollInCadence: all(),
+          },
     admin: adminPart,
   };
 }
@@ -252,8 +292,22 @@ export function standardPermissions(opts?: {
           viewAllRecords: [],
           modifyAllRecords: [],
         };
+  if (version === 1) {
+    return {
+      ...base,
+      admin: adminPart,
+    };
+  }
   return {
     ...base,
+    features: {
+      ...base.features,
+      cadences: { view: true, manage: false },
+    },
+    tools: {
+      ...base.tools,
+      enrollInCadence: ["Leads", "Contacts", "Deals"],
+    },
     admin: adminPart,
   };
 }

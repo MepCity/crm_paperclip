@@ -240,6 +240,7 @@ describe("settingsNav", () => {
       "modules-and-fields",
       "workflow-rules",
       "assignment-rules",
+      "cadences",
       "approval-processes",
       "review-processes",
     ]);

@@ -81,6 +81,7 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
   } = definition;
 
   const [activeSubtab, setActiveSubtab] = useState(subtabs?.[0]?.id ?? "");
+  const displayTitle = adapter.getRelatedListTitle(id, title);
   const customCard = definition.renderCard?.({
     orgSlug: "",
     recordPath: () => "#",
@@ -205,13 +206,13 @@ export function RelatedListCard({ definition, context }: RelatedListCardProps) {
   return (
     <section
       id={targetId}
-      aria-label={title}
+      aria-label={displayTitle}
       data-related-card={id}
       className="detail-card border border-panel-border"
     >
       <div className="flex items-center justify-between min-h-(--size-list-header-height) py-2 border-b border-panel-border">
         <div className="flex items-center gap-3">
-          <h3 className="text-md font-bold text-text-strong">{title}</h3>
+          <h3 className="text-md font-bold text-text-strong">{displayTitle}</h3>
           {afterTitleControls.map((ctrl) => renderControl(ctrl))}
         </div>
         {rightControls.length > 0 && (

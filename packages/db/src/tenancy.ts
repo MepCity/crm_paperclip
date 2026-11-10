@@ -60,6 +60,13 @@ export const webformTableContracts: readonly TableContract[] = [
   { name: "public_rate_limits", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
 ];
 
+export const cadenceTableContracts: readonly TableContract[] = [
+  { name: "cadences", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "cadence_versions", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "cadence_enrollments", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "cadence_step_runs", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+];
+
 const identityTables = new Set([
   "users",
   "accounts",
@@ -126,6 +133,7 @@ export async function assertRuntimeCatalog(
     ...approvalTableContracts,
     ...feedTableContracts,
     ...webformTableContracts,
+    ...cadenceTableContracts,
   ];
   tables = [...installed.filter((base) => !tables.some((t) => t.name === base.name)), ...tables];
   const contracts = new Map(tables.map((table) => [table.name, table]));

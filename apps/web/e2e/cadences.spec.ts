@@ -1,0 +1,146 @@
+import { mkdirSync } from "node:fs";
+import { join } from "node:path";
+import { signUpNewUser } from "./support/auth";
+import { createOrganization } from "./support/org";
+import { expect, test } from "./support/test";
+
+test("cadences: C1 empty list → C1a/C1b filter menus → C2 create dialog → editor 3 steps → publish and status toggling", async ({
+  page,
+}) => {
+  const evidenceDir = process.env.MEP_EVIDENCE_DIR || "/tmp/cadences-evidence";
+  mkdirSync(evidenceDir, { recursive: true });
+
+  await page.setViewportSize({ width: 1180, height: 703 });
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+
+  // 1. Navigate to Settings -> Cadences
+  await page.goto(`/crm/${org.slug}/settings/cadences`);
+  await expect(page.getByTestId("cadence-empty-state")).toBeVisible();
+
+  // Screenshot 1: C1 Empty state
+  await page.screenshot({ path: join(evidenceDir, "cadences-c1-empty.png") });
+
+  // Verify contextual help marker
+  const helpMarker = page.getByTestId("cadence-help-marker");
+  await expect(helpMarker).toBeVisible();
+  await expect(helpMarker).toHaveAttribute("href", "https://help.crm.reference/cadences");
+
+  // Screenshot 2: C1a All Modules filter menu open
+  const moduleFilterBtn = page.getByTestId("module-filter-button");
+  await expect(moduleFilterBtn).toBeVisible();
+  await moduleFilterBtn.click();
+  await expect(page.getByTestId("module-filter-menu")).toBeVisible();
+  await page.screenshot({ path: join(evidenceDir, "cadences-c1a-module-filter.png") });
+  // Close menu
+  await moduleFilterBtn.click();
+  await expect(page.getByTestId("module-filter-menu")).toBeHidden();
+
+  // Screenshot 3: C1b Status filter menu open
+  const statusFilterBtn = page.getByTestId("status-filter-button");
+  await expect(statusFilterBtn).toBeVisible();
+  await statusFilterBtn.click();
+  await expect(page.getByTestId("status-filter-menu")).toBeVisible();
+  await page.screenshot({ path: join(evidenceDir, "cadences-c1b-status-filter.png") });
+  // Close menu
+  await statusFilterBtn.click();
+  await expect(page.getByTestId("status-filter-menu")).toBeHidden();
+
+  // 2. Open C2 Create Cadence Dialog
+  const createBtn = page.getByTestId("create-cadence-button");
+  await expect(createBtn).toBeVisible();
+  await createBtn.click();
+
+  const createDialog = page.getByTestId("create-cadence-dialog");
+  await expect(createDialog).toBeVisible();
+
+  // Next is disabled initially
+  const nextBtn = page.getByTestId("cadence-next-button");
+  await expect(nextBtn).toBeDisabled();
+
+  // Audience select is disabled until module is chosen
+  const audienceSelect = page.getByTestId("cadence-audience-select");
+  await expect(audienceSelect).toBeDisabled();
+
+  // Screenshot 4: C2 Create Dialog
+  await page.screenshot({ path: join(evidenceDir, "cadences-c2-dialog.png") });
+
+  // Fill Name
+  const nameInput = page.getByTestId("cadence-name-input");
+  await nameInput.fill("Inbound Lead Nurturing");
+  await expect(nextBtn).toBeDisabled();
+
+  // Select Module
+  const moduleSelect = page.getByTestId("cadence-module-select");
+  await moduleSelect.selectOption("Leads");
+
+  // Now audience select is enabled and default is manual, enabling Next
+  await expect(audienceSelect).toBeEnabled();
+  await expect(nextBtn).toBeEnabled();
+
+  // Fill Description
+  const descInput = page.getByTestId("cadence-description-input");
+  await descInput.fill("Standard sequence for inbound prospect outreach.");
+
+  // Click Next -> Navigates to editor
+  await nextBtn.click();
+  await expect(page.getByTestId("cadence-editor-name")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId("cadence-editor-name")).toHaveText("Inbound Lead Nurturing");
+  await expect(page.getByTestId("cadence-status-badge")).toHaveText("Draft");
+
+  // 3. Add Step 1 (Email)
+  await page.getByTestId("add-email-step-button").click();
+  await expect(page.getByTestId("cadence-step-modal")).toBeVisible();
+  await page.getByTestId("step-email-name-input").fill("Welcome Introduction Email");
+  await page.getByTestId("step-delay-amount-input").fill("1");
+  await page.getByTestId("step-save-button").click();
+  await expect(page.getByTestId("cadence-step-0")).toBeVisible();
+
+  // 4. Add Step 2 (Task)
+  await page.getByTestId("add-task-step-button").click();
+  await expect(page.getByTestId("cadence-step-modal")).toBeVisible();
+  await page.getByTestId("step-task-subject-input").fill("Review Prospect Activity");
+  await page.getByTestId("step-delay-amount-input").fill("2");
+  await page.getByTestId("step-save-button").click();
+  await expect(page.getByTestId("cadence-step-1")).toBeVisible();
+
+  // 5. Add Step 3 (Call)
+  await page.getByTestId("add-call-step-button").click();
+  await expect(page.getByTestId("cadence-step-modal")).toBeVisible();
+  await page.getByTestId("step-call-subject-input").fill("Follow-up Discovery Call");
+  await page.getByTestId("step-delay-amount-input").fill("3");
+  await page.getByTestId("step-save-button").click();
+  await expect(page.getByTestId("cadence-step-2")).toBeVisible();
+
+  // 6. Toggle Exit Rules
+  await page.getByTestId("exit-rule-reply-checkbox").check();
+  await page.getByTestId("exit-rule-meeting-checkbox").check();
+
+  // Screenshot 5: Editor with 3 steps and exit rules
+  await page.screenshot({ path: join(evidenceDir, "cadences-editor-3steps.png") });
+
+  // 7. Save Draft
+  const saveDraftBtn = page.getByTestId("cadence-save-draft-button");
+  await saveDraftBtn.click();
+  await expect(page.getByText("Draft version saved successfully")).toBeVisible();
+
+  // 8. Publish Cadence
+  const publishBtn = page.getByTestId("cadence-publish-button");
+  await publishBtn.click();
+  await expect(page.getByTestId("cadence-status-badge")).toHaveText("Active");
+
+  // 9. Deactivate and Activate Toggles
+  const toggleStatusBtn = page.getByTestId("cadence-toggle-status-button");
+  await expect(toggleStatusBtn).toBeVisible();
+  await toggleStatusBtn.click();
+  await expect(page.getByTestId("cadence-status-badge")).toHaveText("Inactive");
+
+  await toggleStatusBtn.click();
+  await expect(page.getByTestId("cadence-status-badge")).toHaveText("Active");
+
+  // 10. Back to Cadences List Screen
+  const backBtn = page.getByTestId("cadence-editor-back");
+  await backBtn.click();
+  await expect(page.getByText("Inbound Lead Nurturing")).toBeVisible();
+  await expect(page.getByTestId("cadence-search-input")).toBeVisible();
+});

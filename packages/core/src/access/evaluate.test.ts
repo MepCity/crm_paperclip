@@ -74,10 +74,17 @@ describe("catalogue", () => {
     const read = parseStoredPermissions({ ...standardPermissions(), extra: 1 });
     expect("extra" in read).toBe(false);
   });
-  it("Standard is Administrator minus admin.*", () => {
+  it("Standard is Administrator minus admin.* with standard defaults for cadences", () => {
     const admin = administratorPermissions();
     const std = standardPermissions();
-    expect({ ...std, admin: null }).toEqual({ ...admin, admin: null });
+    expect({
+      ...std,
+      admin: null,
+      features: { ...std.features, cadences: { view: true, manage: true } },
+      tools: { ...std.tools, enrollInCadence: admin.tools.enrollInCadence },
+    }).toEqual({ ...admin, admin: null });
+    expect(std.features.cadences).toEqual({ view: true, manage: false });
+    expect(std.tools.enrollInCadence).toEqual(["Leads", "Contacts", "Deals"]);
     expect(std.admin.userManagement).toBe(false);
     expect(std.admin.viewAllRecords).toEqual([]);
   });
