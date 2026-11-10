@@ -306,6 +306,8 @@ export interface RecordWriteOptions {
   sourceTimes?: { createdTime?: string; modifiedTime?: string };
   /** Allows imported quotes or invoices to be stored without line items (ADR 0016 §9). */
   allowEmptyLines?: boolean;
+  /** Optional idempotency key for deduplication across retried operations. */
+  idempotencyKey?: string;
 }
 
 export type RecordInput = Readonly<Record<string, FieldValue>>;

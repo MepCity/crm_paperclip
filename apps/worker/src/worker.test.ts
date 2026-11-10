@@ -366,4 +366,41 @@ describe("worker lifecycle", () => {
     await stop;
     expect(run).not.toHaveBeenCalled();
   });
+
+  it("executes cadence step handler under Worker lifecycle and fence", async () => {
+    const { createCadenceJobCatalog, CADENCE_STEP_JOB_KIND, CADENCE_STEP_JOB_VERSION } =
+      await import("@crm/core/cadences");
+    const catalog = createCadenceJobCatalog();
+    const queue = new InMemoryJobQueue(catalog, Date.now, () => 1);
+    const run = vi.fn();
+    const handler = {
+      kind: CADENCE_STEP_JOB_KIND,
+      version: CADENCE_STEP_JOB_VERSION,
+      isCurrent: async () => true,
+      run,
+    };
+    const worker = new Worker({
+      queue: queue as JobQueue,
+      catalog,
+      workerId: "worker-cadence",
+      handlers: new HandlerRegistry([handler]),
+    });
+    await queue.enqueue(
+      { organizationId: "org-cadence" },
+      {
+        kind: CADENCE_STEP_JOB_KIND,
+        payloadVersion: CADENCE_STEP_JOB_VERSION,
+        payload: {
+          enrollmentId: "enr-1",
+          stepId: "step-1",
+          cadenceGeneration: "1",
+        },
+        idempotencyKey: "cadence_enr-1_step-1_1",
+      },
+    );
+    worker.start();
+    await flush();
+    await worker.stop();
+    expect(run).toHaveBeenCalledTimes(1);
+  });
 });

@@ -1,4 +1,10 @@
 import { pathToFileURL } from "node:url";
+import {
+  type CadenceWorkerDeps,
+  createCadenceJobCatalog,
+  createCadenceStepHandler,
+  createCadenceSweepHandler,
+} from "@crm/core/cadences";
 import { InMemoryJobQueue } from "@crm/core/jobs";
 import {
   createInMemoryMailRepository,
@@ -6,6 +12,7 @@ import {
   createMailSendHandler,
   createMailSyncHandler,
 } from "@crm/core/mail";
+import type { RecordService } from "@crm/core/records";
 import { HandlerRegistry, Worker } from "./worker";
 
 export interface SignalSource {
@@ -82,6 +89,20 @@ export function createEphemeralMailRuntime() {
     }),
   ]);
   return { catalog, queue, repository, handlers };
+}
+
+export function createEphemeralCadenceRuntime(
+  deps?: CadenceWorkerDeps & { recordService?: RecordService },
+) {
+  const catalog = createCadenceJobCatalog();
+  const queue = new InMemoryJobQueue(catalog);
+  const handlers = new HandlerRegistry([
+    createCadenceStepHandler({ ...deps, jobQueue: queue }),
+    ...(deps?.recordService
+      ? [createCadenceSweepHandler({ ...deps, recordService: deps.recordService, jobQueue: queue })]
+      : []),
+  ]);
+  return { catalog, queue, handlers };
 }
 
 export function startEphemeralWorker() {

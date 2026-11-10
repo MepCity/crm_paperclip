@@ -2,7 +2,14 @@ import { schema } from "@crm/db";
 import { and, eq, lte, sql } from "drizzle-orm";
 import { can, canOnRecord } from "../access/evaluate";
 import type { AccessSnapshot } from "../access/types";
-import type { JobFence } from "../jobs";
+import {
+  type Job,
+  JobCatalog,
+  type JobDefinition,
+  JobExecutionError,
+  type JobFence,
+  type JobQueue,
+} from "../jobs";
 import type { OutboxOptions } from "../mail/outbox";
 import { createMailOutbox } from "../mail/outbox";
 import type { MailRepository } from "../mail/types";
@@ -26,6 +33,7 @@ export interface CadenceWorkerDeps {
   outboxOptions?: OutboxOptions;
   accessSnapshotProvider?: (ctx: OrgContext, userId: string) => Promise<AccessSnapshot>;
   timeZone?: string;
+  jobQueue?: JobQueue;
 }
 
 export interface ExecuteStepParams {
@@ -51,6 +59,22 @@ export async function executeCadenceStep(
   params: ExecuteStepParams,
 ): Promise<StepExecutionResult> {
   return withOrg(ctx, async (tx) => {
+    // 0. Job fence validation (ADR 0019 §6, ADR 0013 §3)
+    if (params.jobFence) {
+      if (params.jobFence.organizationId !== ctx.orgId) {
+        return { status: "aborted", reason: "fence_tenant_mismatch" };
+      }
+      if (!params.jobFence.id || !params.jobFence.lockedBy || !params.jobFence.leaseToken) {
+        return { status: "aborted", reason: "invalid_job_fence" };
+      }
+      if (params.deps?.jobQueue) {
+        const stillLeased = await params.deps.jobQueue.renew(params.jobFence, 60000);
+        if (!stillLeased) {
+          return { status: "aborted", reason: "fence_lease_lost" };
+        }
+      }
+    }
+
     // 1. Lock the enrollment row FOR UPDATE (ADR 0019 §6)
     const [enrollment] = await tx
       .select()
@@ -234,7 +258,15 @@ export async function executeCadenceStep(
       outcome = "skipped";
       outcomeReason = "actor_lost_access";
     } else {
-      // 7. Execute the effect
+      // 7. Execute the effect under job fence with idempotency key (ADR 0019 §6, ADR 0013 §3)
+      if (params.jobFence && params.deps?.jobQueue) {
+        const stillLeased = await params.deps.jobQueue.renew(params.jobFence, 60000);
+        if (!stillLeased) {
+          return { status: "aborted", reason: "fence_lease_lost" };
+        }
+      }
+
+      const idempotencyKey = `cadence-${enrollment.id}-${currentStep.id}-${enrollment.generation}`;
       try {
         if (currentStep.kind === "email") {
           const email = record ? (record.fields.Email as string | undefined) : undefined;
@@ -257,7 +289,7 @@ export async function executeCadenceStep(
               outcomeReason = "actor_lost_access";
             } else {
               await outbox.compose({
-                idempotencyKey: `cadence-${enrollment.id}-${currentStep.id}-${enrollment.generation}`,
+                idempotencyKey,
                 mailboxId: userMailbox.id,
                 from: {
                   address: userMailbox.id.includes("@") ? userMailbox.id : "user@example.com",
@@ -274,30 +306,96 @@ export async function executeCadenceStep(
             const taskStep = currentStep as CadenceTaskStep;
             const isContactOrLead =
               enrollment.recordModule === "Leads" || enrollment.recordModule === "Contacts";
-            await params.deps.recordService.create("Tasks", {
-              Subject: taskStep.subject,
-              Priority: taskStep.priority,
-              Status: "Not Started",
-              Owner: enrollment.enrolledBy,
-              ...(isContactOrLead
-                ? { Who_Id: { module: enrollment.recordModule, id: enrollment.recordId } }
-                : { What_Id: { module: enrollment.recordModule, id: enrollment.recordId } }),
-            });
+            let alreadyExists = false;
+            try {
+              const existingTasks = await params.deps.recordService.list("Tasks", {
+                viewId: "all-tasks",
+                page: 1,
+                perPage: 100,
+              });
+              if (
+                existingTasks.records.some((t) => {
+                  const desc = t.fields.Description as string | undefined;
+                  return (
+                    desc?.includes(`[cadence_key:${idempotencyKey}]`) ||
+                    (t.fields.Subject === taskStep.subject &&
+                      JSON.stringify(isContactOrLead ? t.fields.Who_Id : t.fields.What_Id) ===
+                        JSON.stringify({
+                          module: enrollment.recordModule,
+                          id: enrollment.recordId,
+                        }))
+                  );
+                })
+              ) {
+                alreadyExists = true;
+              }
+            } catch {
+              // Ignore listing errors, rely on create options
+            }
+            if (!alreadyExists) {
+              await params.deps.recordService.create(
+                "Tasks",
+                {
+                  Subject: taskStep.subject,
+                  Priority: taskStep.priority,
+                  Status: "Not Started",
+                  Owner: enrollment.enrolledBy,
+                  Description: `[cadence_key:${idempotencyKey}]`,
+                  ...(isContactOrLead
+                    ? { Who_Id: { module: enrollment.recordModule, id: enrollment.recordId } }
+                    : { What_Id: { module: enrollment.recordModule, id: enrollment.recordId } }),
+                },
+                { idempotencyKey },
+              );
+            }
           }
         } else if (currentStep.kind === "call") {
           if (params.deps?.recordService) {
             const callStep = currentStep as CadenceCallStep;
             const isContactOrLead =
               enrollment.recordModule === "Leads" || enrollment.recordModule === "Contacts";
-            await params.deps.recordService.create("Calls", {
-              Subject: callStep.subject,
-              Call_Type: callStep.callType,
-              Call_Start_Time: new Date().toISOString(),
-              Owner: enrollment.enrolledBy,
-              ...(isContactOrLead
-                ? { Who_Id: { module: enrollment.recordModule, id: enrollment.recordId } }
-                : { What_Id: { module: enrollment.recordModule, id: enrollment.recordId } }),
-            });
+            let alreadyExists = false;
+            try {
+              const existingCalls = await params.deps.recordService.list("Calls", {
+                viewId: "all-calls",
+                page: 1,
+                perPage: 100,
+              });
+              if (
+                existingCalls.records.some((c) => {
+                  const desc = c.fields.Description as string | undefined;
+                  return (
+                    desc?.includes(`[cadence_key:${idempotencyKey}]`) ||
+                    (c.fields.Subject === callStep.subject &&
+                      JSON.stringify(isContactOrLead ? c.fields.Who_Id : c.fields.What_Id) ===
+                        JSON.stringify({
+                          module: enrollment.recordModule,
+                          id: enrollment.recordId,
+                        }))
+                  );
+                })
+              ) {
+                alreadyExists = true;
+              }
+            } catch {
+              // Ignore listing errors
+            }
+            if (!alreadyExists) {
+              await params.deps.recordService.create(
+                "Calls",
+                {
+                  Subject: callStep.subject,
+                  Call_Type: callStep.callType,
+                  Call_Start_Time: new Date().toISOString(),
+                  Owner: enrollment.enrolledBy,
+                  Description: `[cadence_key:${idempotencyKey}]`,
+                  ...(isContactOrLead
+                    ? { Who_Id: { module: enrollment.recordModule, id: enrollment.recordId } }
+                    : { What_Id: { module: enrollment.recordModule, id: enrollment.recordId } }),
+                },
+                { idempotencyKey },
+              );
+            }
           }
         }
       } catch (err) {
@@ -368,17 +466,21 @@ export async function executeCadenceStep(
   });
 }
 
+export interface SweepDueEnrollmentsOptions {
+  limit?: number;
+  asOf?: Date;
+  deps?: CadenceWorkerDeps;
+  jobFence?: JobFence;
+  jobQueue?: JobQueue;
+}
+
 /**
- * Finds active due enrollments for an organisation and runs them.
+ * Finds active due enrollments for an organisation and runs or enqueues them.
  * Due batch capped at 200 per worker tick (ADR 0019 §consequences).
  */
 export async function sweepDueEnrollments(
   ctx: OrgContext,
-  options?: {
-    limit?: number;
-    asOf?: Date;
-    deps?: CadenceWorkerDeps;
-  },
+  options?: SweepDueEnrollmentsOptions,
 ): Promise<number> {
   const asOf = options?.asOf ?? new Date();
   const limit = Math.min(options?.limit ?? 200, 200);
@@ -411,6 +513,32 @@ export async function sweepDueEnrollments(
       .limit(limit);
   });
 
+  const queue = options?.jobQueue ?? options?.deps?.jobQueue;
+  if (queue) {
+    let enqueuedCount = 0;
+    for (const row of dueRows) {
+      if (!row.nextStepId) continue;
+      await queue.enqueue(
+        { organizationId: ctx.orgId },
+        {
+          kind: CADENCE_STEP_JOB_KIND,
+          payloadVersion: CADENCE_STEP_JOB_VERSION,
+          payload: {
+            enrollmentId: row.id,
+            stepId: row.nextStepId,
+            cadenceGeneration: String(row.generation),
+          },
+          idempotencyKey: `cadence-step_${row.id}_${row.nextStepId}_${row.generation}`.slice(
+            0,
+            128,
+          ),
+        },
+      );
+      enqueuedCount++;
+    }
+    return enqueuedCount;
+  }
+
   let executedCount = 0;
   for (const row of dueRows) {
     if (!row.nextStepId) continue;
@@ -418,6 +546,7 @@ export async function sweepDueEnrollments(
       enrollmentId: row.id,
       stepId: row.nextStepId,
       generation: row.generation,
+      jobFence: options?.jobFence,
       deps: options?.deps,
     });
     if (
@@ -435,6 +564,7 @@ export async function sweepDueEnrollments(
 /**
  * Sweeps custom view audiences: resolves viewId within org and enrolls matching records.
  * CTO item 3: viewId resolved and verified inside org at execution time.
+ * Finding 4: enrollNewMatches enrolls new matches only; does not infinitely re-enroll completed records.
  */
 export async function sweepAudienceCustomViews(
   ctx: OrgContext,
@@ -491,10 +621,14 @@ export async function sweepAudienceCustomViews(
     const firstStep = steps[0];
 
     for (const rec of matchingRecords) {
-      // Check if already has an enrollment
-      const hasEnrollment = await withOrg(ctx, async (tx) => {
-        const [existing] = await tx
-          .select({ id: schema.cadenceEnrollments.id })
+      // Query all existing enrollments for this cadence and record
+      const existingEnrollments = await withOrg(ctx, async (tx) => {
+        return tx
+          .select({
+            id: schema.cadenceEnrollments.id,
+            state: schema.cadenceEnrollments.state,
+            updatedAt: schema.cadenceEnrollments.updatedAt,
+          })
           .from(schema.cadenceEnrollments)
           .where(
             and(
@@ -502,39 +636,194 @@ export async function sweepAudienceCustomViews(
               eq(schema.cadenceEnrollments.cadenceId, cad.cadenceId),
               eq(schema.cadenceEnrollments.recordModule, cad.module),
               eq(schema.cadenceEnrollments.recordId, rec.id),
-              audience.enrollNewMatches
-                ? sql`${schema.cadenceEnrollments.state} in ('active', 'paused')`
-                : sql`true`,
             ),
           )
-          .limit(1);
-        return Boolean(existing);
+          .orderBy(sql`${schema.cadenceEnrollments.updatedAt} desc`);
       });
 
-      if (!hasEnrollment) {
-        const nextDueAt = firstStep
-          ? computeDueAt(new Date(), firstStep.delay, deps.timeZone ?? "UTC")
-          : null;
-
-        await withOrg(ctx, async (tx) => {
-          await tx.insert(schema.cadenceEnrollments).values({
-            organizationId: ctx.orgId,
-            cadenceId: cad.cadenceId,
-            versionId: cad.versionId as string,
-            recordModule: cad.module,
-            recordId: rec.id,
-            enrolledBy: ctx.userId,
-            state: firstStep ? "active" : "completed",
-            generation: 1,
-            nextStepId: firstStep?.id ?? null,
-            nextDueAt,
-          });
-        });
-
-        enrolledCount++;
+      // 1. If active or paused enrollment exists -> skip (cannot have duplicate non-final enrollments)
+      const hasActive = existingEnrollments.some(
+        (e) => e.state === "active" || e.state === "paused",
+      );
+      if (hasActive) {
+        continue;
       }
+
+      // 2. If enrollNewMatches is false:
+      // If any enrollment already exists for this record -> do not enroll
+      if (!audience.enrollNewMatches && existingEnrollments.length > 0) {
+        continue;
+      }
+
+      // 3. If previous enrollment completed/exited:
+      // Only re-enroll if the record newly matched the view (modified after the previous enrollment completed/exited)
+      if (existingEnrollments.length > 0) {
+        const lastEnrollment = existingEnrollments[0];
+        if (!lastEnrollment) continue;
+        const recordModified = rec.fields.Modified_Time
+          ? new Date(rec.fields.Modified_Time as string)
+          : rec.fields.Created_Time
+            ? new Date(rec.fields.Created_Time as string)
+            : null;
+
+        // If the record was not modified after previous enrollment completed/exited, it's not a new match!
+        if (!recordModified || recordModified.getTime() <= lastEnrollment.updatedAt.getTime()) {
+          continue;
+        }
+      }
+
+      const nextDueAt = firstStep
+        ? computeDueAt(new Date(), firstStep.delay, deps.timeZone ?? "UTC")
+        : null;
+
+      await withOrg(ctx, async (tx) => {
+        await tx.insert(schema.cadenceEnrollments).values({
+          organizationId: ctx.orgId,
+          cadenceId: cad.cadenceId,
+          versionId: cad.versionId as string,
+          recordModule: cad.module,
+          recordId: rec.id,
+          enrolledBy:
+            ctx.userId || (rec.fields.Owner as string) || "018f3a2b-0000-7000-8000-000000000001",
+          state: firstStep ? "active" : "completed",
+          generation: 1,
+          nextStepId: firstStep?.id ?? null,
+          nextDueAt,
+        });
+      });
+
+      enrolledCount++;
     }
   }
 
   return { enrolledCount };
+}
+
+// ============================================================================
+// Job Catalog and Handlers (ADR 0019 §6, ADR 0013 §3)
+// ============================================================================
+
+export const CADENCE_STEP_JOB_KIND = "cadence_step";
+export const CADENCE_STEP_JOB_VERSION = 1;
+
+export const cadenceStepJobDefinition: JobDefinition = {
+  kind: CADENCE_STEP_JOB_KIND,
+  version: CADENCE_STEP_JOB_VERSION,
+  referenceKeys: ["enrollmentId", "stepId", "cadenceGeneration"],
+  retrySafe: false,
+};
+
+export const CADENCE_SWEEP_JOB_KIND = "cadence_sweep";
+export const CADENCE_SWEEP_JOB_VERSION = 1;
+
+export const cadenceSweepJobDefinition: JobDefinition = {
+  kind: CADENCE_SWEEP_JOB_KIND,
+  version: CADENCE_SWEEP_JOB_VERSION,
+  referenceKeys: [],
+  retrySafe: true,
+};
+
+export const cadenceJobDefinitions: readonly JobDefinition[] = [
+  cadenceStepJobDefinition,
+  cadenceSweepJobDefinition,
+] as const;
+
+export function createCadenceJobCatalog(): JobCatalog {
+  return new JobCatalog(cadenceJobDefinitions);
+}
+
+export interface CadenceHandlerContext {
+  readonly organizationId: string;
+  readonly job: Job;
+  readonly fence: JobFence;
+  readonly signal?: AbortSignal;
+  checkpoint(): Promise<void>;
+}
+
+function systemOrgContext(orgId: string, userId = ""): OrgContext {
+  return {
+    orgId,
+    userId,
+    orgSlug: "",
+    orgName: "",
+    role: "admin",
+  };
+}
+
+export function createCadenceStepHandler(deps?: CadenceWorkerDeps) {
+  return {
+    kind: CADENCE_STEP_JOB_KIND,
+    version: CADENCE_STEP_JOB_VERSION,
+    async isCurrent(c: CadenceHandlerContext): Promise<boolean> {
+      const { enrollmentId, stepId, cadenceGeneration } = c.job.payload;
+      const gen = Number(cadenceGeneration);
+      if (!enrollmentId || !stepId || Number.isNaN(gen)) return false;
+      return withOrg(systemOrgContext(c.organizationId), async (tx) => {
+        const [enrollment] = await tx
+          .select({
+            state: schema.cadenceEnrollments.state,
+            generation: schema.cadenceEnrollments.generation,
+            nextStepId: schema.cadenceEnrollments.nextStepId,
+            cadenceId: schema.cadenceEnrollments.cadenceId,
+          })
+          .from(schema.cadenceEnrollments)
+          .where(
+            and(
+              eq(schema.cadenceEnrollments.organizationId, c.organizationId),
+              eq(schema.cadenceEnrollments.id, enrollmentId),
+            ),
+          );
+        if (enrollment?.state !== "active") return false;
+        if (enrollment.generation !== gen || enrollment.nextStepId !== stepId) return false;
+        const [cadence] = await tx
+          .select({ status: schema.cadences.status })
+          .from(schema.cadences)
+          .where(
+            and(
+              eq(schema.cadences.organizationId, c.organizationId),
+              eq(schema.cadences.id, enrollment.cadenceId),
+            ),
+          );
+        return cadence?.status === "active";
+      });
+    },
+    async run(c: CadenceHandlerContext): Promise<void> {
+      const { enrollmentId, stepId, cadenceGeneration } = c.job.payload;
+      const generation = Number(cadenceGeneration);
+      if (!enrollmentId || !stepId || Number.isNaN(generation)) {
+        throw new JobExecutionError({ code: "invalid_payload", retryable: false });
+      }
+      await c.checkpoint();
+      const result = await executeCadenceStep(systemOrgContext(c.organizationId), {
+        enrollmentId,
+        stepId,
+        generation,
+        jobFence: c.fence,
+        deps,
+      });
+      if (result.status === "aborted") {
+        if (result.reason === "fence_lease_lost") {
+          throw new JobExecutionError({ code: "lease_expired", retryable: true });
+        }
+      }
+    },
+  };
+}
+
+export function createCadenceSweepHandler(
+  deps: CadenceWorkerDeps & { recordService: RecordService },
+) {
+  return {
+    kind: CADENCE_SWEEP_JOB_KIND,
+    version: CADENCE_SWEEP_JOB_VERSION,
+    async isCurrent(): Promise<boolean> {
+      return true;
+    },
+    async run(c: CadenceHandlerContext): Promise<void> {
+      await c.checkpoint();
+      const ctx = systemOrgContext(c.organizationId);
+      await sweepAudienceCustomViews(ctx, deps);
+      await sweepDueEnrollments(ctx, { deps, jobFence: c.fence });
+    },
+  };
 }

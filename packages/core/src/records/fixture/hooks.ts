@@ -8,6 +8,7 @@ export interface FixtureModuleStore {
   /** Canonical rows partitioned out of active reads until restore or purge. */
   deletedRecords?: Map<string, RecordData>;
   deletedTagLinks?: Map<string, Set<string>>;
+  idempotencyMap?: Map<string, string>;
   records: Map<string, RecordData>;
   nextId: bigint;
   nextAutoNumber?: bigint;

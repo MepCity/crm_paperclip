@@ -4,11 +4,20 @@ import { describe, expect, it } from "vitest";
 import type { AccessSnapshot } from "../access/types";
 import { getDb } from "../database";
 import { ConflictError, ForbiddenError, NotFoundError } from "../errors";
+import { fence, InMemoryJobQueue } from "../jobs";
 import { createFixtureRecordService } from "../records/fixture";
 import { createTestOrganization } from "../testing";
 import { createCadenceService } from "./service";
 import type { CadenceExitRule, CadenceStep } from "./types";
-import { executeCadenceStep, sweepAudienceCustomViews } from "./worker";
+import {
+  CADENCE_STEP_JOB_KIND,
+  CADENCE_STEP_JOB_VERSION,
+  createCadenceJobCatalog,
+  createCadenceStepHandler,
+  executeCadenceStep,
+  sweepAudienceCustomViews,
+  sweepDueEnrollments,
+} from "./worker";
 
 describe("cadences backend integration", () => {
   it("manages full lifecycle, unique name, filters, and publish/supersede immutability", async () => {
@@ -961,5 +970,333 @@ describe("cadences backend integration", () => {
     await expect(
       recordService.convertLead(lead.id, { account: { create: { Account_Name: "Acme" } } }),
     ).rejects.toThrowError(ForbiddenError);
+  });
+
+  it("executes due cadence steps under job fence via JobQueue (ADR 0019 §6, ADR 0013 §3)", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createCadenceService();
+    const records = createFixtureRecordService(ctx);
+
+    const lead = await records.create("Leads", {
+      First_Name: "JobQueue",
+      Last_Name: "Lead",
+      Company: "FenceCo",
+    });
+
+    const cadence = await service.createCadence(ctx, {
+      name: "Job Fence Cadence",
+      module: "Leads",
+    });
+    await service.updateCadenceDraft(ctx, cadence.id, {
+      steps: [
+        {
+          id: "step-jf1",
+          kind: "task",
+          delay: { amount: 0, unit: "minutes" },
+          subject: "Fenced Task",
+          priority: "Normal",
+          dueOffsetDays: 0,
+        },
+      ],
+    });
+    await service.publish(ctx, cadence.id);
+
+    const enrollment = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: lead.id,
+    });
+
+    // Set up queue with cadence catalog
+    const queue = new InMemoryJobQueue(createCadenceJobCatalog());
+
+    // Sweep due enrollments into queue
+    const enqueuedCount = await sweepDueEnrollments(ctx, {
+      jobQueue: queue,
+      deps: { recordService: records },
+    });
+    expect(enqueuedCount).toBe(1);
+
+    // Worker claims job
+    const [claimed] = await queue.claim({ workerId: "worker-cadence", limit: 10, leaseMs: 60000 });
+    expect(claimed).toBeDefined();
+    if (!claimed) throw new Error("Expected claimed job");
+
+    // Acquire fence from claimed job
+    const jobFence = fence(claimed);
+    expect(jobFence.organizationId).toBe(ctx.orgId);
+
+    // Create cadence step handler and verify isCurrent
+    const handler = createCadenceStepHandler({ recordService: records, jobQueue: queue });
+    const isCurrent = await handler.isCurrent({
+      organizationId: ctx.orgId,
+      job: claimed,
+      fence: jobFence,
+      checkpoint: async () => {},
+    });
+    expect(isCurrent).toBe(true);
+
+    // Run handler under fence
+    await handler.run({
+      organizationId: ctx.orgId,
+      job: claimed,
+      fence: jobFence,
+      checkpoint: async () => {
+        const renewed = await queue.renew(jobFence, 60000);
+        if (!renewed) throw new Error("Fence lost");
+      },
+    });
+
+    // Succeed job
+    const succeeded = await queue.succeed(jobFence);
+    expect(succeeded).toBe(true);
+
+    // Verify task created
+    const createdTasks = await records.list("Tasks", { viewId: "all-tasks", page: 1, perPage: 10 });
+    const task = createdTasks.records.find((t) => t.fields.Subject === "Fenced Task");
+    expect(task).toBeDefined();
+
+    // Verify enrollment completed
+    const updatedEnrollment = await service.getEnrollment(ctx, enrollment.id);
+    expect(updatedEnrollment.state).toBe("completed");
+
+    // Verify step run recorded
+    const runs = await service.listStepRuns(ctx, enrollment.id);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]?.stepId).toBe("step-jf1");
+    expect(runs[0]?.outcome).toBe("completed");
+  });
+
+  it("validates and enforces job fence against tenant mismatch and lost lease", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createCadenceService();
+    const records = createFixtureRecordService(ctx);
+
+    const lead = await records.create("Leads", {
+      First_Name: "Foreign",
+      Last_Name: "Tenant",
+      Company: "FenceTenantCo",
+    });
+
+    const cadence = await service.createCadence(ctx, {
+      name: "Tenant Fence Cadence",
+      module: "Leads",
+    });
+    await service.updateCadenceDraft(ctx, cadence.id, {
+      steps: [
+        {
+          id: "step-tf1",
+          kind: "task",
+          delay: { amount: 0, unit: "minutes" },
+          subject: "Tenant Task",
+          priority: "Normal",
+          dueOffsetDays: 0,
+        },
+      ],
+    });
+    await service.publish(ctx, cadence.id);
+
+    const enrollment = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: lead.id,
+    });
+
+    // 1. Foreign tenant fence -> aborted with fence_tenant_mismatch
+    const resMismatched = await executeCadenceStep(ctx, {
+      enrollmentId: enrollment.id,
+      stepId: "step-tf1",
+      generation: enrollment.generation,
+      jobFence: {
+        organizationId: "other-org-id",
+        id: "job-1",
+        lockedBy: "worker-1",
+        leaseToken: "tok-1",
+      },
+      deps: { recordService: records },
+    });
+    expect(resMismatched.status).toBe("aborted");
+    if (resMismatched.status === "aborted") {
+      expect(resMismatched.reason).toBe("fence_tenant_mismatch");
+    }
+
+    // 2. Lost lease fence -> aborted with fence_lease_lost
+    const queue = new InMemoryJobQueue(createCadenceJobCatalog());
+    await queue.enqueue(
+      { organizationId: ctx.orgId },
+      {
+        kind: CADENCE_STEP_JOB_KIND,
+        payloadVersion: CADENCE_STEP_JOB_VERSION,
+        payload: {
+          enrollmentId: enrollment.id,
+          stepId: "step-tf1",
+          cadenceGeneration: String(enrollment.generation),
+        },
+        idempotencyKey: "test-lost-lease",
+      },
+    );
+    const [claimed] = await queue.claim({ workerId: "worker-1", limit: 1, leaseMs: 60000 });
+    if (!claimed) throw new Error("Expected claimed job");
+    const jobFence = fence(claimed);
+
+    // Cancel job behind the worker's back to invalidate lease
+    await queue.cancel(jobFence);
+
+    const resLostLease = await executeCadenceStep(ctx, {
+      enrollmentId: enrollment.id,
+      stepId: "step-tf1",
+      generation: enrollment.generation,
+      jobFence,
+      deps: { recordService: records, jobQueue: queue },
+    });
+    expect(resLostLease.status).toBe("aborted");
+    if (resLostLease.status === "aborted") {
+      expect(resLostLease.reason).toBe("fence_lease_lost");
+    }
+  });
+
+  it("enforces idempotency on retried step execution: exactly one task created", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createCadenceService();
+    const records = createFixtureRecordService(ctx);
+
+    const lead = await records.create("Leads", {
+      First_Name: "Idempotent",
+      Last_Name: "Execution",
+      Company: "RetryCo",
+    });
+
+    const cadence = await service.createCadence(ctx, {
+      name: "Idempotent Cadence",
+      module: "Leads",
+    });
+    await service.updateCadenceDraft(ctx, cadence.id, {
+      steps: [
+        {
+          id: "step-idemp",
+          kind: "task",
+          delay: { amount: 0, unit: "minutes" },
+          subject: "Unique Idempotent Task",
+          priority: "High",
+          dueOffsetDays: 0,
+        },
+      ],
+    });
+    await service.publish(ctx, cadence.id);
+
+    const enrollment = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: lead.id,
+    });
+
+    // First execution
+    const firstRes = await executeCadenceStep(ctx, {
+      enrollmentId: enrollment.id,
+      stepId: "step-idemp",
+      generation: enrollment.generation,
+      deps: { recordService: records },
+    });
+    expect(firstRes.status).toBe("completed");
+
+    // Second execution (simulated retry)
+    const secondRes = await executeCadenceStep(ctx, {
+      enrollmentId: enrollment.id,
+      stepId: "step-idemp",
+      generation: enrollment.generation,
+      deps: { recordService: records },
+    });
+    // Already executed aborts or does not re-create effect
+    expect(secondRes.status).toBe("aborted");
+
+    // Verify exactly ONE task was created
+    const tasks = await records.list("Tasks", { viewId: "all-tasks", page: 1, perPage: 50 });
+    const matchingTasks = tasks.records.filter(
+      (t) => t.fields.Subject === "Unique Idempotent Task",
+    );
+    expect(matchingTasks).toHaveLength(1);
+  });
+
+  it("sweepAudienceCustomViews: enrollNewMatches prevents infinite loop on completed records and only re-enrolls on new modification", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createCadenceService();
+    const records = createFixtureRecordService(ctx);
+
+    const views = await records.listViews("Leads");
+    const defaultView = views.find((v) => v.isDefault);
+    if (!defaultView) throw new Error("Expected default view");
+
+    const cadence = await service.createCadence(ctx, {
+      name: "Loop Guard Cadence",
+      module: "Leads",
+      audience: {
+        kind: "custom_view",
+        viewId: defaultView.id,
+        enrollNewMatches: true,
+      },
+    });
+    await service.updateCadenceDraft(ctx, cadence.id, {
+      steps: [
+        {
+          id: "step-lg1",
+          kind: "task",
+          delay: { amount: 0, unit: "minutes" },
+          subject: "Loop Guard Task",
+          priority: "Normal",
+          dueOffsetDays: 0,
+        },
+      ],
+    });
+    await service.publish(ctx, cadence.id);
+
+    const lead = await records.create("Leads", {
+      First_Name: "Loop",
+      Last_Name: "Target",
+      Company: "LoopCo",
+    });
+
+    // Sweep 1: Lead is enrolled
+    const sweep1 = await sweepAudienceCustomViews(ctx, { recordService: records });
+    expect(sweep1.enrolledCount).toBeGreaterThanOrEqual(1);
+
+    // Get enrollment and complete it
+    const enrollments = await service.listEnrollments(ctx, { cadenceId: cadence.id });
+    const leadEnrollment = enrollments.find((e) => e.recordId === lead.id);
+    expect(leadEnrollment).toBeDefined();
+    if (!leadEnrollment) throw new Error("Expected lead enrollment");
+
+    await executeCadenceStep(ctx, {
+      enrollmentId: leadEnrollment.id,
+      stepId: "step-lg1",
+      generation: leadEnrollment.generation,
+      deps: { recordService: records },
+    });
+
+    const completed = await service.getEnrollment(ctx, leadEnrollment.id);
+    expect(completed.state).toBe("completed");
+
+    // Sweep 2: Lead is still in the view, but has NOT been modified since completion.
+    // Must NOT be re-enrolled (finding 4: no infinite loop!)
+    const sweep2 = await sweepAudienceCustomViews(ctx, { recordService: records });
+    expect(sweep2.enrolledCount).toBe(0);
+
+    // Now update lead with a new modification time (new match)
+    await new Promise((r) => setTimeout(r, 50));
+    await records.update(
+      "Leads",
+      lead.id,
+      { Lead_Status: "Contacted" },
+      { sourceTimes: { modifiedTime: new Date(Date.now() + 1000).toISOString() } },
+    );
+
+    // Sweep 3: Modified lead newly matches the view -> successfully re-enrolled!
+    const sweep3 = await sweepAudienceCustomViews(ctx, { recordService: records });
+    expect(sweep3.enrolledCount).toBe(1);
+
+    const reEnrollments = await service.listEnrollments(ctx, { cadenceId: cadence.id });
+    const leadActiveEnrollments = reEnrollments.filter(
+      (e) => e.recordId === lead.id && e.state === "active",
+    );
+    expect(leadActiveEnrollments).toHaveLength(1);
   });
 });

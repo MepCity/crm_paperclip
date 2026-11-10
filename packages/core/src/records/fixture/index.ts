@@ -1877,6 +1877,17 @@ export function createFixtureRecordService(
         webformRecordsCreated++;
       }
       assertModuleWritable(module);
+      if (createOpts?.idempotencyKey) {
+        const moduleState = moduleStore(module);
+        const existingId = moduleState.idempotencyMap?.get(createOpts.idempotencyKey);
+        if (existingId) {
+          const existingRecord = moduleState.records.get(existingId);
+          if (existingRecord) {
+            const writer = await accessFor();
+            return copy(writer ? writer.project(module, existingRecord) : existingRecord);
+          }
+        }
+      }
       assertSourceTimes(createOpts?.sourceTimes);
       const bundle = bundleFor(module);
       const stringFields = stringFieldNames(bundle);
@@ -1897,6 +1908,11 @@ export function createFixtureRecordService(
       const created = atomic({ module, mechanism: "create" }, () =>
         insertRecord(module, normalized, createOpts),
       );
+      if (createOpts?.idempotencyKey) {
+        const moduleState = moduleStore(module);
+        moduleState.idempotencyMap ??= new Map<string, string>();
+        moduleState.idempotencyMap.set(createOpts.idempotencyKey, created.id);
+      }
       await publishWrite(module, "create", created, undefined, createOpts);
       return writer ? writer.project(module, created) : created;
     },

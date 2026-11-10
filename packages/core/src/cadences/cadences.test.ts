@@ -407,4 +407,49 @@ describe("Cadence Schemas and Validation", () => {
       expect(emptyIds.success).toBe(false);
     });
   });
+
+  describe("Job catalog and definitions (ADR 0019 §6, ADR 0013 §3)", () => {
+    it("creates cadence job catalog and validates payloads", async () => {
+      const {
+        createCadenceJobCatalog,
+        cadenceStepJobDefinition,
+        cadenceSweepJobDefinition,
+        CADENCE_STEP_JOB_KIND,
+        CADENCE_SWEEP_JOB_KIND,
+      } = await import("./worker");
+
+      expect(cadenceStepJobDefinition.kind).toBe(CADENCE_STEP_JOB_KIND);
+      expect(cadenceStepJobDefinition.retrySafe).toBe(false);
+      expect(cadenceSweepJobDefinition.kind).toBe(CADENCE_SWEEP_JOB_KIND);
+      expect(cadenceSweepJobDefinition.retrySafe).toBe(true);
+
+      const catalog = createCadenceJobCatalog();
+      expect(catalog.definition(CADENCE_STEP_JOB_KIND, 1)).toBeDefined();
+      expect(catalog.definition(CADENCE_SWEEP_JOB_KIND, 1)).toBeDefined();
+
+      // Valid step payload
+      const stepPayload = catalog.validate(CADENCE_STEP_JOB_KIND, 1, {
+        enrollmentId: "enr-123",
+        stepId: "step-456",
+        cadenceGeneration: "1",
+      });
+      expect(stepPayload).toEqual({
+        enrollmentId: "enr-123",
+        stepId: "step-456",
+        cadenceGeneration: "1",
+      });
+
+      // Valid sweep payload
+      const sweepPayload = catalog.validate(CADENCE_SWEEP_JOB_KIND, 1, {});
+      expect(sweepPayload).toEqual({});
+
+      // Rejects invalid payload
+      expect(() =>
+        catalog.validate(CADENCE_STEP_JOB_KIND, 1, {
+          enrollmentId: "enr-123",
+          // missing stepId and cadenceGeneration
+        }),
+      ).toThrow();
+    });
+  });
 });
