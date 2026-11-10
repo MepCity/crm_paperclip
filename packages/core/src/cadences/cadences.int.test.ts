@@ -1,10 +1,12 @@
 import { schema } from "@crm/db";
 import { and, eq } from "drizzle-orm";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 import type { AccessSnapshot } from "../access/types";
 import { getDb } from "../database";
 import { ConflictError, ForbiddenError, NotFoundError } from "../errors";
 import { fence, InMemoryJobQueue } from "../jobs";
+import type { MailRepository } from "../mail";
+import type { RecordService } from "../records";
 import { createFixtureRecordService } from "../records/fixture";
 import { createTestOrganization } from "../testing";
 import { createCadenceService } from "./service";
@@ -1298,5 +1300,346 @@ describe("cadences backend integration", () => {
       (e) => e.recordId === lead.id && e.state === "active",
     );
     expect(leadActiveEnrollments).toHaveLength(1);
+  });
+
+  it("re-enrollment creates a second task and does not silently drop effects", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createCadenceService();
+    const records = createFixtureRecordService(ctx);
+
+    const lead = await records.create("Leads", {
+      First_Name: "ReEnroll",
+      Last_Name: "Target",
+      Company: "ReEnrollCo",
+    });
+
+    const cadence = await service.createCadence(ctx, {
+      name: "Re-enroll Task Cadence",
+      module: "Leads",
+    });
+    await service.updateCadenceDraft(ctx, cadence.id, {
+      steps: [
+        {
+          id: "step-t1",
+          kind: "task",
+          delay: { amount: 0, unit: "minutes" },
+          subject: "First Follow Up",
+          priority: "Normal",
+          dueOffsetDays: 0,
+        },
+      ],
+    });
+    await service.publish(ctx, cadence.id);
+
+    // 1. First enrollment
+    const enroll1 = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: lead.id,
+    });
+    const res1 = await executeCadenceStep(ctx, {
+      enrollmentId: enroll1.id,
+      stepId: "step-t1",
+      generation: enroll1.generation,
+      deps: { recordService: records },
+    });
+    expect(res1.status).toBe("completed");
+
+    // Exit the first enrollment
+    await service.unenrollRecord(ctx, enroll1.id);
+
+    // 2. Re-enrollment
+    const enroll2 = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: lead.id,
+    });
+    expect(enroll2.id).not.toBe(enroll1.id);
+
+    const res2 = await executeCadenceStep(ctx, {
+      enrollmentId: enroll2.id,
+      stepId: "step-t1",
+      generation: enroll2.generation,
+      deps: { recordService: records },
+    });
+    expect(res2.status).toBe("completed");
+
+    // Verify TWO tasks were created
+    const tasks = await records.list("Tasks", { viewId: "all-tasks", page: 1, perPage: 50 });
+    const matchingTasks = tasks.records.filter((t) => t.fields.Subject === "First Follow Up");
+    expect(matchingTasks).toHaveLength(2);
+    // Verify Description does NOT contain internal cadence key
+    expect(matchingTasks[0]?.fields.Description).toBeFalsy();
+    expect(matchingTasks[1]?.fields.Description).toBeFalsy();
+  });
+
+  it("manually created task with identical subject does not block cadence task creation", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createCadenceService();
+    const records = createFixtureRecordService(ctx);
+
+    const lead = await records.create("Leads", {
+      First_Name: "Manual",
+      Last_Name: "Collision",
+      Company: "CollideCo",
+    });
+
+    // Manually create a task on this lead
+    await records.create("Tasks", {
+      Subject: "Quarterly Checkin",
+      Status: "Not Started",
+      Priority: "High",
+      Who_Id: { module: "Leads", id: lead.id },
+    });
+
+    const cadence = await service.createCadence(ctx, {
+      name: "Checkin Cadence",
+      module: "Leads",
+    });
+    await service.updateCadenceDraft(ctx, cadence.id, {
+      steps: [
+        {
+          id: "step-checkin",
+          kind: "task",
+          delay: { amount: 0, unit: "minutes" },
+          subject: "Quarterly Checkin",
+          priority: "Normal",
+          dueOffsetDays: 0,
+        },
+      ],
+    });
+    await service.publish(ctx, cadence.id);
+
+    const enrollment = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: lead.id,
+    });
+
+    const res = await executeCadenceStep(ctx, {
+      enrollmentId: enrollment.id,
+      stepId: "step-checkin",
+      generation: enrollment.generation,
+      deps: { recordService: records },
+    });
+    expect(res.status).toBe("completed");
+
+    // Both tasks exist
+    const tasks = await records.list("Tasks", { viewId: "all-tasks", page: 1, perPage: 50 });
+    const checkinTasks = tasks.records.filter((t) => t.fields.Subject === "Quarterly Checkin");
+    expect(checkinTasks).toHaveLength(2);
+  });
+
+  it("transient errors roll back transaction and rethrow, while ForbiddenError skips with actor_lost_access", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createCadenceService();
+    const records = createFixtureRecordService(ctx);
+
+    const lead = await records.create("Leads", {
+      First_Name: "Error",
+      Last_Name: "Test",
+      Company: "ErrCo",
+    });
+
+    const cadence = await service.createCadence(ctx, {
+      name: "Error Cadence",
+      module: "Leads",
+    });
+    await service.updateCadenceDraft(ctx, cadence.id, {
+      steps: [
+        {
+          id: "step-err",
+          kind: "task",
+          delay: { amount: 0, unit: "minutes" },
+          subject: "Error Task",
+          priority: "Normal",
+          dueOffsetDays: 0,
+        },
+      ],
+    });
+    await service.publish(ctx, cadence.id);
+
+    const enrollment = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: lead.id,
+    });
+
+    // 1. Transient DB/Service error -> rethrows and rolls back
+    const failingRecords = {
+      ...records,
+      create: vi.fn().mockRejectedValue(new Error("Transient connection timeout")),
+    } as unknown as RecordService;
+
+    await expect(
+      executeCadenceStep(ctx, {
+        enrollmentId: enrollment.id,
+        stepId: "step-err",
+        generation: enrollment.generation,
+        deps: { recordService: failingRecords },
+      }),
+    ).rejects.toThrow("Transient connection timeout");
+
+    // Verify enrollment has NOT advanced and no step run was recorded
+    const freshEnrollment = await service.getEnrollment(ctx, enrollment.id);
+    expect(freshEnrollment.nextStepId).toBe("step-err");
+    expect(freshEnrollment.state).toBe("active");
+    const runs = await service.listStepRuns(ctx, enrollment.id);
+    expect(runs).toHaveLength(0);
+
+    // 2. ForbiddenError -> skipped with actor_lost_access
+    const forbiddenRecords = {
+      ...records,
+      create: vi.fn().mockRejectedValue(new ForbiddenError("Permission denied")),
+    } as unknown as RecordService;
+
+    const skipResult = await executeCadenceStep(ctx, {
+      enrollmentId: enrollment.id,
+      stepId: "step-err",
+      generation: enrollment.generation,
+      deps: { recordService: forbiddenRecords },
+    });
+
+    expect(skipResult.status).toBe("skipped");
+    if (skipResult.status === "skipped") {
+      expect(skipResult.reason).toBe("actor_lost_access");
+    }
+
+    const runsAfterForbidden = await service.listStepRuns(ctx, enrollment.id);
+    expect(runsAfterForbidden).toHaveLength(1);
+    expect(runsAfterForbidden[0]?.outcome).toBe("skipped");
+    expect(runsAfterForbidden[0]?.outcomeReason).toBe("actor_lost_access");
+  });
+
+  it("email step uses connected mailbox address without fake fallback, and skips if no address available", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createCadenceService();
+    const records = createFixtureRecordService(ctx);
+
+    const lead = await records.create("Leads", {
+      First_Name: "Email",
+      Last_Name: "Recipient",
+      Company: "MailCo",
+      Email: "recipient@example.com",
+    });
+
+    const cadence = await service.createCadence(ctx, {
+      name: "Mail Cadence",
+      module: "Leads",
+    });
+    await service.updateCadenceDraft(ctx, cadence.id, {
+      steps: [
+        {
+          id: "step-email",
+          kind: "email",
+          delay: { amount: 0, unit: "minutes" },
+          name: "Welcome Email",
+        },
+      ],
+    });
+    await service.publish(ctx, cadence.id);
+
+    const enrollment = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: lead.id,
+    });
+
+    // Case A: Mailbox with real address
+    const { createInMemoryMailRepository, createMailJobCatalog } = await import("../mail");
+    const repoWithMailbox = createInMemoryMailRepository();
+    await repoWithMailbox.createMailbox({
+      organizationId: ctx.orgId,
+      id: "sender@example.com",
+      ownerUserId: ctx.userId,
+      provider: "google",
+      status: "connected",
+      credentialRef: "cred-1",
+      lastSyncAt: null,
+      lastError: null,
+    });
+
+    const composedCalls: unknown[] = [];
+    const outboxOptions = {
+      repository: repoWithMailbox,
+      queue: new InMemoryJobQueue(createMailJobCatalog()),
+      sender: {
+        send: vi.fn().mockImplementation(async (req) => {
+          composedCalls.push(req);
+          return { status: "accepted", providerMessageId: "prov-1" };
+        }),
+      },
+      recordAddressLookup: { findByAddress: async () => [] },
+      canReadRecord: () => true,
+    };
+
+    const resA = await executeCadenceStep(ctx, {
+      enrollmentId: enrollment.id,
+      stepId: "step-email",
+      generation: enrollment.generation,
+      deps: { recordService: records, outboxOptions },
+    });
+    expect(resA.status).toBe("completed");
+
+    // Case B: Mailbox without any address and user in DB without email -> skips with missing_mailbox_address
+    const lead2 = await records.create("Leads", {
+      First_Name: "NoMailbox",
+      Last_Name: "Recipient",
+      Company: "MailCo",
+      Email: "recipient2@example.com",
+    });
+    const enroll2 = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: lead2.id,
+    });
+
+    const opaqueMailboxRepo = {
+      read: vi.fn().mockResolvedValue({
+        mailboxes: [
+          {
+            id: "opaque-mailbox-id",
+            ownerUserId: ctx.userId,
+            status: "connected",
+          },
+        ],
+      }),
+    };
+
+    const db = getDb();
+    const originalUser = await db
+      .select({ email: schema.users.email })
+      .from(schema.users)
+      .where(eq(schema.users.id, ctx.userId));
+
+    await db
+      .update(schema.users)
+      .set({ email: "invalid-email-without-at" })
+      .where(eq(schema.users.id, ctx.userId));
+
+    try {
+      const resB = await executeCadenceStep(ctx, {
+        enrollmentId: enroll2.id,
+        stepId: "step-email",
+        generation: enroll2.generation,
+        deps: {
+          recordService: records,
+          mailRepository: opaqueMailboxRepo as unknown as MailRepository,
+          outboxOptions,
+        },
+      });
+
+      expect(resB.status).toBe("skipped");
+      if (resB.status === "skipped") {
+        expect(resB.reason).toBe("missing_mailbox_address");
+      }
+    } finally {
+      if (originalUser[0]?.email) {
+        await db
+          .update(schema.users)
+          .set({ email: originalUser[0].email })
+          .where(eq(schema.users.id, ctx.userId));
+      }
+    }
   });
 });

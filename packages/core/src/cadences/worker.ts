@@ -2,6 +2,7 @@ import { schema } from "@crm/db";
 import { and, eq, lte, sql } from "drizzle-orm";
 import { can, canOnRecord } from "../access/evaluate";
 import type { AccessSnapshot } from "../access/types";
+import { ForbiddenError } from "../errors";
 import {
   type Job,
   JobCatalog,
@@ -288,17 +289,33 @@ export async function executeCadenceStep(
               outcome = "skipped";
               outcomeReason = "actor_lost_access";
             } else {
-              await outbox.compose({
-                idempotencyKey,
-                mailboxId: userMailbox.id,
-                from: {
-                  address: userMailbox.id.includes("@") ? userMailbox.id : "user@example.com",
-                },
-                to: [{ address: email }],
-                subject: (currentStep as CadenceEmailStep).name ?? "Cadence Outreach",
-                summary: "Automated sequence message",
-                attachments: [],
-              });
+              const [enrollingUser] = await tx
+                .select({ email: schema.users.email })
+                .from(schema.users)
+                .where(eq(schema.users.id, enrollment.enrolledBy));
+
+              const senderAddress =
+                (userMailbox as { address?: string; email?: string }).address?.trim() ||
+                (userMailbox as { address?: string; email?: string }).email?.trim() ||
+                (userMailbox.id.includes("@") ? userMailbox.id.trim() : undefined) ||
+                (enrollingUser?.email?.includes("@") ? enrollingUser.email.trim() : undefined);
+
+              if (!senderAddress) {
+                outcome = "skipped";
+                outcomeReason = "missing_mailbox_address";
+              } else {
+                await outbox.compose({
+                  idempotencyKey,
+                  mailboxId: userMailbox.id,
+                  from: {
+                    address: senderAddress,
+                  },
+                  to: [{ address: email }],
+                  subject: (currentStep as CadenceEmailStep).name ?? "Cadence Outreach",
+                  summary: "Automated sequence message",
+                  attachments: [],
+                });
+              }
             }
           }
         } else if (currentStep.kind === "task") {
@@ -306,101 +323,53 @@ export async function executeCadenceStep(
             const taskStep = currentStep as CadenceTaskStep;
             const isContactOrLead =
               enrollment.recordModule === "Leads" || enrollment.recordModule === "Contacts";
-            let alreadyExists = false;
-            try {
-              const existingTasks = await params.deps.recordService.list("Tasks", {
-                viewId: "all-tasks",
-                page: 1,
-                perPage: 100,
-              });
-              if (
-                existingTasks.records.some((t) => {
-                  const desc = t.fields.Description as string | undefined;
-                  return (
-                    desc?.includes(`[cadence_key:${idempotencyKey}]`) ||
-                    (t.fields.Subject === taskStep.subject &&
-                      JSON.stringify(isContactOrLead ? t.fields.Who_Id : t.fields.What_Id) ===
-                        JSON.stringify({
-                          module: enrollment.recordModule,
-                          id: enrollment.recordId,
-                        }))
-                  );
-                })
-              ) {
-                alreadyExists = true;
-              }
-            } catch {
-              // Ignore listing errors, rely on create options
-            }
-            if (!alreadyExists) {
-              await params.deps.recordService.create(
-                "Tasks",
-                {
-                  Subject: taskStep.subject,
-                  Priority: taskStep.priority,
-                  Status: "Not Started",
-                  Owner: enrollment.enrolledBy,
-                  Description: `[cadence_key:${idempotencyKey}]`,
-                  ...(isContactOrLead
-                    ? { Who_Id: { module: enrollment.recordModule, id: enrollment.recordId } }
-                    : { What_Id: { module: enrollment.recordModule, id: enrollment.recordId } }),
-                },
-                { idempotencyKey },
-              );
-            }
+            await params.deps.recordService.create(
+              "Tasks",
+              {
+                Subject: taskStep.subject,
+                Priority: taskStep.priority,
+                Status: "Not Started",
+                Owner: enrollment.enrolledBy,
+                ...((taskStep as { description?: string }).description
+                  ? { Description: (taskStep as { description?: string }).description }
+                  : {}),
+                ...(isContactOrLead
+                  ? { Who_Id: { module: enrollment.recordModule, id: enrollment.recordId } }
+                  : { What_Id: { module: enrollment.recordModule, id: enrollment.recordId } }),
+              },
+              { idempotencyKey },
+            );
           }
         } else if (currentStep.kind === "call") {
           if (params.deps?.recordService) {
             const callStep = currentStep as CadenceCallStep;
             const isContactOrLead =
               enrollment.recordModule === "Leads" || enrollment.recordModule === "Contacts";
-            let alreadyExists = false;
-            try {
-              const existingCalls = await params.deps.recordService.list("Calls", {
-                viewId: "all-calls",
-                page: 1,
-                perPage: 100,
-              });
-              if (
-                existingCalls.records.some((c) => {
-                  const desc = c.fields.Description as string | undefined;
-                  return (
-                    desc?.includes(`[cadence_key:${idempotencyKey}]`) ||
-                    (c.fields.Subject === callStep.subject &&
-                      JSON.stringify(isContactOrLead ? c.fields.Who_Id : c.fields.What_Id) ===
-                        JSON.stringify({
-                          module: enrollment.recordModule,
-                          id: enrollment.recordId,
-                        }))
-                  );
-                })
-              ) {
-                alreadyExists = true;
-              }
-            } catch {
-              // Ignore listing errors
-            }
-            if (!alreadyExists) {
-              await params.deps.recordService.create(
-                "Calls",
-                {
-                  Subject: callStep.subject,
-                  Call_Type: callStep.callType,
-                  Call_Start_Time: new Date().toISOString(),
-                  Owner: enrollment.enrolledBy,
-                  Description: `[cadence_key:${idempotencyKey}]`,
-                  ...(isContactOrLead
-                    ? { Who_Id: { module: enrollment.recordModule, id: enrollment.recordId } }
-                    : { What_Id: { module: enrollment.recordModule, id: enrollment.recordId } }),
-                },
-                { idempotencyKey },
-              );
-            }
+            await params.deps.recordService.create(
+              "Calls",
+              {
+                Subject: callStep.subject,
+                Call_Type: callStep.callType,
+                Call_Start_Time: new Date().toISOString(),
+                Owner: enrollment.enrolledBy,
+                ...((callStep as { description?: string }).description
+                  ? { Description: (callStep as { description?: string }).description }
+                  : {}),
+                ...(isContactOrLead
+                  ? { Who_Id: { module: enrollment.recordModule, id: enrollment.recordId } }
+                  : { What_Id: { module: enrollment.recordModule, id: enrollment.recordId } }),
+              },
+              { idempotencyKey },
+            );
           }
         }
       } catch (err) {
-        outcome = "skipped";
-        outcomeReason = err instanceof Error ? err.message : "execution_failed";
+        if (err instanceof ForbiddenError || (err as { name?: string }).name === "ForbiddenError") {
+          outcome = "skipped";
+          outcomeReason = "actor_lost_access";
+        } else {
+          throw err;
+        }
       }
     }
 
@@ -794,17 +763,25 @@ export function createCadenceStepHandler(deps?: CadenceWorkerDeps) {
         throw new JobExecutionError({ code: "invalid_payload", retryable: false });
       }
       await c.checkpoint();
-      const result = await executeCadenceStep(systemOrgContext(c.organizationId), {
-        enrollmentId,
-        stepId,
-        generation,
-        jobFence: c.fence,
-        deps,
-      });
-      if (result.status === "aborted") {
-        if (result.reason === "fence_lease_lost") {
-          throw new JobExecutionError({ code: "lease_expired", retryable: true });
+      try {
+        const result = await executeCadenceStep(systemOrgContext(c.organizationId), {
+          enrollmentId,
+          stepId,
+          generation,
+          jobFence: c.fence,
+          deps,
+        });
+        if (result.status === "aborted") {
+          if (result.reason === "fence_lease_lost") {
+            throw new JobExecutionError({ code: "lease_expired", retryable: true });
+          }
         }
+      } catch (err) {
+        if (err instanceof JobExecutionError) throw err;
+        throw new JobExecutionError({
+          code: "transient",
+          retryable: true,
+        });
       }
     },
   };
