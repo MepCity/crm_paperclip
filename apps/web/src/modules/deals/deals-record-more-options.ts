@@ -10,6 +10,7 @@ type Handlers = {
   onDelete: () => void;
   onFindMergeDuplicates?: () => void;
   onPrintPreview?: () => void;
+  onEnrollCadence?: () => void;
 };
 type Row = { id: string; label: string; handler?: keyof Handlers; laterModule?: ModuleKey };
 
@@ -62,10 +63,15 @@ export function buildDealsRecordMoreMenuGroups(handlers: Handlers): RecordMenuGr
         (item) =>
           item.handler !== "onFindMergeDuplicates" || handlers.onFindMergeDuplicates !== undefined,
       )
-      .map(({ handler, ...row }) => ({
-        ...row,
-        ...(handler ? { onAction: handlers[handler] } : {}),
-      })),
+      .map(({ handler, ...row }) => {
+        if (row.id === "enroll-cadence" && handlers.onEnrollCadence) {
+          return { id: row.id, label: row.label, onAction: handlers.onEnrollCadence };
+        }
+        return {
+          ...row,
+          ...(handler ? { onAction: handlers[handler] } : {}),
+        };
+      }),
   }));
   return withPrintPreviewAction(groups, handlers.onPrintPreview);
 }

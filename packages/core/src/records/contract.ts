@@ -466,6 +466,9 @@ export interface ExecutionActorRef {
   readonly kind: "cadence" | "journey";
   readonly id: string;
   readonly versionId: string;
+  readonly module?: string;
+  readonly allowedModules?: readonly string[];
+  readonly enrolledBy?: string;
 }
 
 export type ActorRef = WebformActorRef | ExecutionActorRef;

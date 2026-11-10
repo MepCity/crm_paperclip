@@ -54,6 +54,7 @@ import {
 } from "@/lib/records/record-list-context";
 import { recordNeighborsOnPage } from "@/lib/records/record-neighbors";
 import { openActivityCreate } from "@/modules/activity-add-new";
+import { EnrollCadenceDialog } from "@/modules/cadences/enroll-cadence-dialog";
 import { useFeedsAccess } from "@/modules/feeds/feeds-access";
 import { hasRecordFeed, RecordFeedTab, useFollowMenuGroup } from "@/modules/feeds/use-record-feed";
 import { resolveModuleLaterKey, resolveModuleScreenByApiName } from "@/modules/registry";
@@ -163,6 +164,7 @@ export function RecordDetailScreen({
     rules.relatedLists?.[0]?.id,
   );
   const [deleteOpen, setDeleteOpen] = useState(false);
+  const [enrollCadenceOpen, setEnrollCadenceOpen] = useState(false);
   const [headerConfirm, setHeaderConfirm] = useState<HeaderConfirmRequest | null>(null);
   const [headerConfirmBusy, setHeaderConfirmBusy] = useState(false);
   const [headerConfirmError, setHeaderConfirmError] = useState<string | null>(null);
@@ -371,6 +373,10 @@ export function RecordDetailScreen({
   const canConvert = (moduleFlags?.convert ?? true) && canEdit;
   const canMerge = (moduleFlags?.merge ?? true) && canEdit;
   const canPrint = moduleFlags?.print ?? true;
+  const canEnrollCadence =
+    ["Leads", "Contacts", "Deals"].includes(moduleApiName) &&
+    (moduleFlags?.enrollCadence ?? true) &&
+    canEdit;
   const showTimeline = permissions ? permissions.tools.recordTimeline : true;
   const hiddenActionIds = new Set<string>([
     ...(canEdit ? [] : ["edit"]),
@@ -380,12 +386,14 @@ export function RecordDetailScreen({
     ...(canConvert ? [] : ["convert"]),
     ...(canMerge ? [] : ["find-merge-duplicates"]),
     ...(canPrint ? [] : ["print-preview", "share"]),
+    ...(canEnrollCadence ? [] : ["enroll-cadence"]),
   ]);
 
   const moreMenuGroups = rules.moreOptions({
     onEdit: () => router.push(paths.edit(orgSlug, definition.tab, recordId)),
     onClone: () => router.push(paths.clone(orgSlug, definition.tab, recordId)),
     onDelete: openDeleteDialog,
+    onEnrollCadence: canEnrollCadence ? () => setEnrollCadenceOpen(true) : undefined,
     ...(definition.merge
       ? {
           onFindMergeDuplicates: () => router.push(paths.merge(orgSlug, definition.tab, recordId)),
@@ -590,6 +598,15 @@ export function RecordDetailScreen({
           busy={deleteRecords.isPending}
           errorMessage={deleteError}
           onConfirm={confirmDelete}
+        />
+      ) : null}
+      {enrollCadenceOpen && ["Leads", "Contacts", "Deals"].includes(moduleApiName) ? (
+        <EnrollCadenceDialog
+          isOpen
+          onOpenChange={setEnrollCadenceOpen}
+          orgSlug={orgSlug}
+          module={moduleApiName as "Leads" | "Contacts" | "Deals"}
+          recordIds={[recordId]}
         />
       ) : null}
       <RecordPageFrame

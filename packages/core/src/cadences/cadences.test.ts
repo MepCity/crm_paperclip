@@ -181,4 +181,229 @@ describe("Cadence Schemas and Validation", () => {
       ).not.toThrow();
     });
   });
+
+  describe("Delays computation", () => {
+    const base = new Date("2026-11-10T10:00:00.000Z");
+
+    it("computes 0 delay", async () => {
+      const { computeDueAt } = await import("./delays");
+      expect(computeDueAt(base, { amount: 0, unit: "minutes" }).getTime()).toBe(base.getTime());
+    });
+
+    it("computes minutes delay", async () => {
+      const { computeDueAt } = await import("./delays");
+      const due = computeDueAt(base, { amount: 30, unit: "minutes" });
+      expect(due.toISOString()).toBe("2026-11-10T10:30:00.000Z");
+    });
+
+    it("computes hours delay", async () => {
+      const { computeDueAt } = await import("./delays");
+      const due = computeDueAt(base, { amount: 5, unit: "hours" });
+      expect(due.toISOString()).toBe("2026-11-10T15:00:00.000Z");
+    });
+
+    it("computes days delay in org timezone", async () => {
+      const { computeDueAt } = await import("./delays");
+      const due = computeDueAt(base, { amount: 2, unit: "days" }, "Europe/Istanbul");
+      expect(due.toISOString()).toBe("2026-11-12T10:00:00.000Z");
+    });
+  });
+
+  describe("Exit rules evaluation", () => {
+    it("matches field_condition exit rule", async () => {
+      const { evaluateExitRules } = await import("./exit-rules");
+      const matched = await evaluateExitRules(
+        [
+          {
+            id: "exit-cond",
+            kind: "field_condition",
+            condition: {
+              kind: "criteria",
+              criteria: {
+                field: "Lead_Status",
+                comparator: "equal",
+                value: "Qualified",
+              },
+            },
+          },
+        ],
+        {
+          record: {
+            id: "lead-1",
+            fields: { Lead_Status: "Qualified" },
+          },
+          orgId: "org-1",
+          recordModule: "Leads",
+          recordId: "lead-1",
+          enrollmentCreatedAt: new Date("2026-11-10T00:00:00.000Z"),
+        },
+      );
+      expect(matched?.id).toBe("exit-cond");
+    });
+
+    it("does not match field_condition if condition does not meet", async () => {
+      const { evaluateExitRules } = await import("./exit-rules");
+      const matched = await evaluateExitRules(
+        [
+          {
+            id: "exit-cond",
+            kind: "field_condition",
+            condition: {
+              kind: "criteria",
+              criteria: {
+                field: "Lead_Status",
+                comparator: "equal",
+                value: "Qualified",
+              },
+            },
+          },
+        ],
+        {
+          record: {
+            id: "lead-1",
+            fields: { Lead_Status: "Attempted to Contact" },
+          },
+          orgId: "org-1",
+          recordModule: "Leads",
+          recordId: "lead-1",
+          enrollmentCreatedAt: new Date("2026-11-10T00:00:00.000Z"),
+        },
+      );
+      expect(matched).toBeNull();
+    });
+
+    it("matches reply exit rule when matching incoming message exists", async () => {
+      const { evaluateExitRules } = await import("./exit-rules");
+      const fakeMailRepo = {
+        read: async () => ({
+          mailboxes: [],
+          threads: [],
+          messages: [
+            {
+              organizationId: "org-1",
+              id: "msg-reply",
+              mailboxId: "mb-1",
+              threadId: "th-1",
+              providerMessageKey: "pm-1",
+              messageIdHeader: "<reply@prospect.com>",
+              inReplyTo: "<cadence@example.com>",
+              references: [],
+              subject: "Re: Quick question",
+              from: [{ address: "lead@prospect.com" }],
+              to: [{ address: "rep@example.com" }],
+              cc: [],
+              bcc: [],
+              sentAt: "2026-11-10T12:00:00.000Z",
+              receivedAt: "2026-11-10T12:05:00.000Z",
+              folder: "inbox" as const,
+              summary: "Yes, I am interested.",
+              bodyRef: null,
+              sharedByOwner: true,
+            },
+          ],
+          attachments: [],
+          links: [
+            {
+              organizationId: "org-1",
+              messageId: "msg-reply",
+              module: "leads" as const,
+              recordId: "lead-1",
+              source: "auto" as const,
+              ambiguous: false,
+            },
+          ],
+          outbox: [],
+        }),
+        createMailbox: async () => {
+          throw new Error("unimplemented");
+        },
+      };
+
+      const matched = await evaluateExitRules([{ id: "exit-reply", kind: "reply" }], {
+        record: {
+          id: "lead-1",
+          fields: { Email: "lead@prospect.com" },
+        },
+        orgId: "org-1",
+        recordModule: "Leads",
+        recordId: "lead-1",
+        enrollmentCreatedAt: new Date("2026-11-10T10:00:00.000Z"),
+        mailRepository: fakeMailRepo as any,
+      });
+
+      expect(matched?.id).toBe("exit-reply");
+    });
+
+    it("matches meeting_booked exit rule when meeting is scheduled", async () => {
+      const { evaluateExitRules } = await import("./exit-rules");
+      const fakeRecordService = {
+        list: async (module: string) => {
+          if (module === "Events") {
+            return {
+              records: [
+                {
+                  id: "ev-1",
+                  fields: {
+                    Subject: "Intro Call",
+                    Who_Id: { module: "Leads", id: "lead-1" },
+                  },
+                },
+              ],
+            };
+          }
+          return { records: [] };
+        },
+      } as any;
+
+      const matched = await evaluateExitRules([{ id: "exit-meeting", kind: "meeting_booked" }], {
+        record: {
+          id: "lead-1",
+          fields: {},
+        },
+        orgId: "org-1",
+        recordModule: "Leads",
+        recordId: "lead-1",
+        enrollmentCreatedAt: new Date("2026-11-10T10:00:00.000Z"),
+        recordService: fakeRecordService,
+      });
+
+      expect(matched?.id).toBe("exit-meeting");
+    });
+  });
+
+  describe("Enrollment schemas", () => {
+    it("validates single record enrollment input", async () => {
+      const { enrollRecordSchema } = await import("./types");
+      const valid = enrollRecordSchema.safeParse({
+        cadenceId: "018f3a2b-1111-7000-8000-000000000001",
+        recordModule: "Leads",
+        recordId: "rec-123",
+      });
+      expect(valid.success).toBe(true);
+
+      const invalidModule = enrollRecordSchema.safeParse({
+        cadenceId: "018f3a2b-1111-7000-8000-000000000001",
+        recordModule: "Vendors",
+        recordId: "rec-123",
+      });
+      expect(invalidModule.success).toBe(false);
+    });
+
+    it("validates mass enrollment input", async () => {
+      const { enrollRecordsSchema } = await import("./types");
+      const valid = enrollRecordsSchema.safeParse({
+        cadenceId: "018f3a2b-1111-7000-8000-000000000001",
+        recordModule: "Contacts",
+        recordIds: ["c-1", "c-2", "c-3"],
+      });
+      expect(valid.success).toBe(true);
+
+      const emptyIds = enrollRecordsSchema.safeParse({
+        cadenceId: "018f3a2b-1111-7000-8000-000000000001",
+        recordModule: "Contacts",
+        recordIds: [],
+      });
+      expect(emptyIds.success).toBe(false);
+    });
+  });
 });

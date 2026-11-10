@@ -2,10 +2,12 @@ import { schema } from "@crm/db";
 import { and, eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 import { getDb } from "../database";
-import { ConflictError, NotFoundError } from "../errors";
+import { ConflictError, ForbiddenError, NotFoundError } from "../errors";
+import { createFixtureRecordService } from "../records/fixture";
 import { createTestOrganization } from "../testing";
 import { createCadenceService } from "./service";
 import type { CadenceExitRule, CadenceStep } from "./types";
+import { executeCadenceStep, sweepAudienceCustomViews } from "./worker";
 
 describe("cadences backend integration", () => {
   it("manages full lifecycle, unique name, filters, and publish/supersede immutability", async () => {
@@ -247,5 +249,714 @@ describe("cadences backend integration", () => {
     // Org B list does not contain Org A's cadence
     const listB = await service.listCadences(ctxB);
     expect(listB.find((c) => c.id === cadenceA.id)).toBeUndefined();
+  });
+
+  it("escapes %, _, and \\ in list search (CTO item 1)", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createCadenceService();
+
+    await service.createCadence(ctx, {
+      name: "100% Guaranteed Close",
+      module: "Deals",
+    });
+    await service.createCadence(ctx, {
+      name: "Regular Sequence",
+      module: "Deals",
+    });
+
+    // Searching for "%" should match only the literal "%"
+    const percentMatches = await service.listCadences(ctx, { search: "%" });
+    expect(percentMatches).toHaveLength(1);
+    expect(percentMatches[0]?.name).toBe("100% Guaranteed Close");
+
+    // Searching for "_" should not match regular names if not present
+    const underscoreMatches = await service.listCadences(ctx, { search: "_" });
+    expect(underscoreMatches).toHaveLength(0);
+  });
+
+  it("blocks cadence deletion when enrollments exist (CTO item 2)", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createCadenceService();
+
+    const cadence = await service.createCadence(ctx, {
+      name: "Enrollment Delete Test",
+      module: "Leads",
+    });
+    await service.updateCadenceDraft(ctx, cadence.id, {
+      steps: [
+        {
+          id: "step-1",
+          kind: "task",
+          delay: { amount: 0, unit: "minutes" },
+          subject: "Test Task",
+          priority: "Normal",
+          dueOffsetDays: 0,
+        },
+      ],
+    });
+    await service.publish(ctx, cadence.id);
+
+    // Enroll a lead
+    await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: "lead-del-1",
+    });
+
+    // Deleting cadence with enrollment throws ConflictError
+    await expect(service.deleteCadence(ctx, cadence.id)).rejects.toThrowError(ConflictError);
+  });
+
+  it("handles enrollment lifecycle, unique non-final rule, pause, resume, unenroll and record deletion", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createCadenceService();
+
+    const cadence = await service.createCadence(ctx, {
+      name: "Lead Lifecycle Sequence",
+      module: "Leads",
+    });
+    await service.updateCadenceDraft(ctx, cadence.id, {
+      steps: [
+        {
+          id: "s1",
+          kind: "task",
+          delay: { amount: 1, unit: "hours" },
+          subject: "Intro Task",
+          priority: "Normal",
+          dueOffsetDays: 0,
+        },
+        {
+          id: "s2",
+          kind: "call",
+          delay: { amount: 2, unit: "days" },
+          subject: "Follow-up Call",
+          callType: "Outbound",
+        },
+      ],
+    });
+    await service.publish(ctx, cadence.id);
+
+    // 1. Enroll record
+    const enrollment = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: "lead-lifecycle-1",
+    });
+
+    expect(enrollment.state).toBe("active");
+    expect(enrollment.generation).toBe(1);
+    expect(enrollment.nextStepId).toBe("s1");
+    expect(enrollment.nextDueAt).not.toBeNull();
+
+    // 2. Second enrollment for the same record while active fails (unique non-final)
+    await expect(
+      service.enrollRecord(ctx, {
+        cadenceId: cadence.id,
+        recordModule: "Leads",
+        recordId: "lead-lifecycle-1",
+      }),
+    ).rejects.toThrowError(ConflictError);
+
+    // 3. Pause enrollment (bumps generation)
+    const paused = await service.pauseEnrollment(ctx, enrollment.id);
+    expect(paused.state).toBe("paused");
+    expect(paused.generation).toBe(2);
+
+    // Pausing again fails
+    await expect(service.pauseEnrollment(ctx, enrollment.id)).rejects.toThrowError(ConflictError);
+
+    // Still cannot re-enroll while paused
+    await expect(
+      service.enrollRecord(ctx, {
+        cadenceId: cadence.id,
+        recordModule: "Leads",
+        recordId: "lead-lifecycle-1",
+      }),
+    ).rejects.toThrowError(ConflictError);
+
+    // 4. Resume enrollment (bumps generation)
+    const resumed = await service.resumeEnrollment(ctx, enrollment.id);
+    expect(resumed.state).toBe("active");
+    expect(resumed.generation).toBe(3);
+
+    // 5. Unenroll record (bumps generation)
+    const exited = await service.unenrollRecord(ctx, enrollment.id, "customer_requested");
+    expect(exited.state).toBe("exited");
+    expect(exited.reason).toBe("customer_requested");
+    expect(exited.generation).toBe(4);
+    expect(exited.nextStepId).toBeNull();
+
+    // 6. After unenroll (final state), re-enrollment is permitted (creates a new row)
+    const reEnrolled = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: "lead-lifecycle-1",
+    });
+    expect(reEnrolled.id).not.toBe(enrollment.id);
+    expect(reEnrolled.state).toBe("active");
+    expect(reEnrolled.generation).toBe(1);
+
+    // 7. Mass enrollment
+    const massResult = await service.enrollRecords(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordIds: ["lead-lifecycle-1", "lead-mass-2", "lead-mass-3"],
+    });
+    // lead-lifecycle-1 was already active, so skippedCount: 1, enrolled: 2
+    expect(massResult.skippedCount).toBe(1);
+    expect(massResult.enrolled).toHaveLength(2);
+
+    // 8. Record deletion exits active enrollments
+    await service.handleRecordDeleted(ctx, "Leads", "lead-mass-2");
+    const mass2Enrollments = await service.listEnrollments(ctx, {
+      cadenceId: cadence.id,
+      recordId: "lead-mass-2",
+    });
+    expect(mass2Enrollments[0]?.state).toBe("exited");
+    expect(mass2Enrollments[0]?.reason).toBe("record_deleted");
+  });
+
+  it("executes due steps with task creation, actor lost access skip, and exit rule priority", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createCadenceService();
+    const records = createFixtureRecordService(ctx);
+
+    const lead = await records.create("Leads", {
+      First_Name: "Alice",
+      Last_Name: "Wonder",
+      Company: "Acme",
+      Email: "alice@example.com",
+      Lead_Status: "Contacted",
+    });
+
+    const cadence = await service.createCadence(ctx, {
+      name: "Step Execution Cadence",
+      module: "Leads",
+    });
+    await service.updateCadenceDraft(ctx, cadence.id, {
+      steps: [
+        {
+          id: "step-t1",
+          kind: "task",
+          delay: { amount: 0, unit: "minutes" },
+          subject: "Call Alice",
+          priority: "High",
+          dueOffsetDays: 1,
+        },
+        {
+          id: "step-c2",
+          kind: "call",
+          delay: { amount: 1, unit: "days" },
+          subject: "Follow up with Alice",
+          callType: "Outbound",
+        },
+      ],
+      exitRules: [
+        {
+          id: "exit-won",
+          kind: "field_condition",
+          condition: {
+            kind: "criteria",
+            criteria: {
+              field: "Lead_Status",
+              comparator: "equal",
+              value: "Lost Lead",
+            },
+          },
+        },
+      ],
+    });
+    await service.publish(ctx, cadence.id);
+
+    const enrollment = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: lead.id,
+    });
+
+    // 1. Execute first step (task)
+    const result1 = await executeCadenceStep(ctx, {
+      enrollmentId: enrollment.id,
+      stepId: "step-t1",
+      generation: enrollment.generation,
+      deps: { recordService: records },
+    });
+
+    expect(result1.status).toBe("completed");
+
+    // Verify task record was created
+    const createdTasks = await records.list("Tasks", { viewId: "all-tasks", page: 1, perPage: 10 });
+    const cadenceTask = createdTasks.records.find((t) => t.fields.Subject === "Call Alice");
+    expect(cadenceTask).toBeDefined();
+    expect(cadenceTask?.fields.Who_Id).toMatchObject({ module: "Leads", id: lead.id });
+
+    // Verify step run recorded
+    const runs = await service.listStepRuns(ctx, enrollment.id);
+    expect(runs).toHaveLength(1);
+    expect(runs[0]?.stepId).toBe("step-t1");
+    expect(runs[0]?.outcome).toBe("completed");
+
+    // Verify enrollment advanced to step-c2
+    const currentEnrollment = await service.getEnrollment(ctx, enrollment.id);
+    expect(currentEnrollment.nextStepId).toBe("step-c2");
+    expect(currentEnrollment.nextDueAt).not.toBeNull();
+
+    // 2. Test exit rule win: update lead to Lost Lead
+    await records.update("Leads", lead.id, { Lead_Status: "Lost Lead" });
+
+    // Attempt to execute step 2 -> Exit rule wins and exits enrollment before step is run!
+    const result2 = await executeCadenceStep(ctx, {
+      enrollmentId: enrollment.id,
+      stepId: "step-c2",
+      generation: currentEnrollment.generation,
+      deps: { recordService: records },
+    });
+
+    expect(result2.status).toBe("exited");
+    if (result2.status === "exited") {
+      expect(result2.rule).toBe("field_condition");
+    }
+
+    const exitedEnrollment = await service.getEnrollment(ctx, enrollment.id);
+    expect(exitedEnrollment.state).toBe("exited");
+    expect(exitedEnrollment.reason).toBe("exit_rule:field_condition");
+
+    // 3. Test actor_lost_access skip: create another lead & enrollment
+    const lead2 = await records.create("Leads", {
+      First_Name: "Bob",
+      Last_Name: "Builder",
+      Company: "BobCo",
+      Lead_Status: "Contacted",
+    });
+    const enroll2 = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: lead2.id,
+    });
+
+    // Provide an access snapshot provider where user does not have task create permission
+    const fakeSnapshotProvider = async () =>
+      ({
+        userId: ctx.userId,
+        profileKind: "standard",
+        permissions: {
+          modules: { Tasks: { view: true, create: false, edit: false, delete: false } },
+          admin: { modifyAllRecords: [], viewAllRecords: [] },
+          tools: { enrollInCadence: ["Leads"] },
+        },
+        fieldAccess: new Map(),
+        ownerLevels: new Map(),
+        defaults: new Map(),
+      }) as any;
+
+    const skipResult = await executeCadenceStep(ctx, {
+      enrollmentId: enroll2.id,
+      stepId: "step-t1",
+      generation: enroll2.generation,
+      deps: { recordService: records, accessSnapshotProvider: fakeSnapshotProvider },
+    });
+
+    expect(skipResult.status).toBe("skipped");
+    if (skipResult.status === "skipped") {
+      expect(skipResult.reason).toBe("actor_lost_access");
+    }
+
+    const runs2 = await service.listStepRuns(ctx, enroll2.id);
+    expect(runs2[0]?.outcome).toBe("skipped");
+    expect(runs2[0]?.outcomeReason).toBe("actor_lost_access");
+  });
+
+  describe("races with two transactions and idempotency (ADR 0019 §8)", () => {
+    it("pause vs due step: pause wins and due step aborts", async () => {
+      const { ctx } = await createTestOrganization();
+      const service = createCadenceService();
+      const records = createFixtureRecordService(ctx);
+
+      const lead = await records.create("Leads", {
+        First_Name: "Race1",
+        Last_Name: "Pause",
+        Company: "Races",
+      });
+
+      const cadence = await service.createCadence(ctx, {
+        name: "Pause Race Cadence",
+        module: "Leads",
+      });
+      await service.updateCadenceDraft(ctx, cadence.id, {
+        steps: [
+          {
+            id: "step-pr",
+            kind: "task",
+            delay: { amount: 0, unit: "minutes" },
+            subject: "Race Task",
+            priority: "Normal",
+            dueOffsetDays: 0,
+          },
+        ],
+      });
+      await service.publish(ctx, cadence.id);
+
+      const enrollment = await service.enrollRecord(ctx, {
+        cadenceId: cadence.id,
+        recordModule: "Leads",
+        recordId: lead.id,
+      });
+
+      // Transaction 1: Pause enrollment
+      await service.pauseEnrollment(ctx, enrollment.id);
+
+      // Transaction 2: Due step worker attempts to run with previous generation (or finds paused state)
+      const res = await executeCadenceStep(ctx, {
+        enrollmentId: enrollment.id,
+        stepId: "step-pr",
+        generation: 1, // original generation before pause
+        deps: { recordService: records },
+      });
+
+      expect(res.status).toBe("aborted");
+      // No task created
+      const tasks = await records.list("Tasks", { viewId: "all-tasks", page: 1, perPage: 10 });
+      expect(tasks.records.filter((t) => t.fields.Subject === "Race Task")).toHaveLength(0);
+    });
+
+    it("exit vs due step: exit wins and due step aborts", async () => {
+      const { ctx } = await createTestOrganization();
+      const service = createCadenceService();
+      const records = createFixtureRecordService(ctx);
+
+      const lead = await records.create("Leads", {
+        First_Name: "Race2",
+        Last_Name: "Exit",
+        Company: "Races",
+      });
+
+      const cadence = await service.createCadence(ctx, {
+        name: "Exit Race Cadence",
+        module: "Leads",
+      });
+      await service.updateCadenceDraft(ctx, cadence.id, {
+        steps: [
+          {
+            id: "step-ex",
+            kind: "task",
+            delay: { amount: 0, unit: "minutes" },
+            subject: "Exit Race Task",
+            priority: "Normal",
+            dueOffsetDays: 0,
+          },
+        ],
+      });
+      await service.publish(ctx, cadence.id);
+
+      const enrollment = await service.enrollRecord(ctx, {
+        cadenceId: cadence.id,
+        recordModule: "Leads",
+        recordId: lead.id,
+      });
+
+      // Transaction 1: Unenroll record
+      await service.unenrollRecord(ctx, enrollment.id);
+
+      // Transaction 2: Worker attempts step
+      const res = await executeCadenceStep(ctx, {
+        enrollmentId: enrollment.id,
+        stepId: "step-ex",
+        generation: 1,
+        deps: { recordService: records },
+      });
+
+      expect(res.status).toBe("aborted");
+      const tasks = await records.list("Tasks", { viewId: "all-tasks", page: 1, perPage: 10 });
+      expect(tasks.records.filter((t) => t.fields.Subject === "Exit Race Task")).toHaveLength(0);
+    });
+
+    it("republish vs due step: republish changing steps stops active enrollments", async () => {
+      const { ctx } = await createTestOrganization();
+      const service = createCadenceService();
+      const records = createFixtureRecordService(ctx);
+
+      const lead = await records.create("Leads", {
+        First_Name: "Race3",
+        Last_Name: "Republish",
+        Company: "Races",
+      });
+
+      const cadence = await service.createCadence(ctx, {
+        name: "Republish Race Cadence",
+        module: "Leads",
+      });
+      await service.updateCadenceDraft(ctx, cadence.id, {
+        steps: [
+          {
+            id: "step-orig",
+            kind: "task",
+            delay: { amount: 0, unit: "minutes" },
+            subject: "Original Task",
+            priority: "Normal",
+            dueOffsetDays: 0,
+          },
+        ],
+      });
+      await service.publish(ctx, cadence.id);
+
+      const enrollment = await service.enrollRecord(ctx, {
+        cadenceId: cadence.id,
+        recordModule: "Leads",
+        recordId: lead.id,
+      });
+
+      // Transaction 1: Update draft with new steps and republish
+      await service.updateCadenceDraft(ctx, cadence.id, {
+        steps: [
+          {
+            id: "step-new",
+            kind: "task",
+            delay: { amount: 0, unit: "minutes" },
+            subject: "New Modified Task",
+            priority: "Normal",
+            dueOffsetDays: 0,
+          },
+        ],
+      });
+      await service.publish(ctx, cadence.id);
+
+      // Verify enrollment was stopped
+      const stopped = await service.getEnrollment(ctx, enrollment.id);
+      expect(stopped.state).toBe("stopped");
+      expect(stopped.reason).toBe("republished_steps_changed");
+
+      // Transaction 2: Worker tries step-orig with old generation
+      const res = await executeCadenceStep(ctx, {
+        enrollmentId: enrollment.id,
+        stepId: "step-orig",
+        generation: 1,
+        deps: { recordService: records },
+      });
+
+      expect(res.status).toBe("aborted");
+    });
+
+    it("deactivate vs due step: deactivate halts scheduled actions", async () => {
+      const { ctx } = await createTestOrganization();
+      const service = createCadenceService();
+      const records = createFixtureRecordService(ctx);
+
+      const lead = await records.create("Leads", {
+        First_Name: "Race4",
+        Last_Name: "Deactivate",
+        Company: "Races",
+      });
+
+      const cadence = await service.createCadence(ctx, {
+        name: "Deactivate Race Cadence",
+        module: "Leads",
+      });
+      await service.updateCadenceDraft(ctx, cadence.id, {
+        steps: [
+          {
+            id: "step-deact",
+            kind: "task",
+            delay: { amount: 0, unit: "minutes" },
+            subject: "Deactivate Race Task",
+            priority: "Normal",
+            dueOffsetDays: 0,
+          },
+        ],
+      });
+      await service.publish(ctx, cadence.id);
+
+      const enrollment = await service.enrollRecord(ctx, {
+        cadenceId: cadence.id,
+        recordModule: "Leads",
+        recordId: lead.id,
+      });
+
+      // Transaction 1: Deactivate cadence
+      await service.deactivateCadence(ctx, cadence.id);
+
+      // Transaction 2: Worker attempts step
+      const res = await executeCadenceStep(ctx, {
+        enrollmentId: enrollment.id,
+        stepId: "step-deact",
+        generation: enrollment.generation,
+        deps: { recordService: records },
+      });
+
+      expect(res.status).toBe("aborted");
+      expect((res as any).reason).toBe("generation_mismatch");
+    });
+
+    it("idempotency: retrying a step twice creates exactly one effect", async () => {
+      const { ctx } = await createTestOrganization();
+      const service = createCadenceService();
+      const records = createFixtureRecordService(ctx);
+
+      const lead = await records.create("Leads", {
+        First_Name: "Idempotent",
+        Last_Name: "Test",
+        Company: "IdempCo",
+      });
+
+      const cadence = await service.createCadence(ctx, {
+        name: "Idempotency Cadence",
+        module: "Leads",
+      });
+      await service.updateCadenceDraft(ctx, cadence.id, {
+        steps: [
+          {
+            id: "step-idemp",
+            kind: "task",
+            delay: { amount: 0, unit: "minutes" },
+            subject: "Idempotent Single Task",
+            priority: "Normal",
+            dueOffsetDays: 0,
+          },
+        ],
+      });
+      await service.publish(ctx, cadence.id);
+
+      const enrollment = await service.enrollRecord(ctx, {
+        cadenceId: cadence.id,
+        recordModule: "Leads",
+        recordId: lead.id,
+      });
+
+      // First execution -> success
+      const res1 = await executeCadenceStep(ctx, {
+        enrollmentId: enrollment.id,
+        stepId: "step-idemp",
+        generation: 1,
+        deps: { recordService: records },
+      });
+      expect(res1.status).toBe("completed");
+
+      // Second execution with same parameters -> aborted (already executed), no duplicate task
+      const res2 = await executeCadenceStep(ctx, {
+        enrollmentId: enrollment.id,
+        stepId: "step-idemp",
+        generation: 1,
+        deps: { recordService: records },
+      });
+      expect(res2.status).toBe("aborted");
+
+      const allTasks = await records.list("Tasks", { viewId: "all-tasks", page: 1, perPage: 10 });
+      const matchingTasks = allTasks.records.filter(
+        (t) => t.fields.Subject === "Idempotent Single Task",
+      );
+      expect(matchingTasks).toHaveLength(1);
+    });
+  });
+
+  it("sweeps custom view audience and verifies viewId within org (CTO item 3)", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createCadenceService();
+    const records = createFixtureRecordService(ctx);
+
+    const views = await records.listViews("Leads");
+    const defaultView = views.find((v) => v.isDefault);
+    if (!defaultView) throw new Error("Expected default view");
+
+    // 1. Cadence with existing default view
+    const cadence = await service.createCadence(ctx, {
+      name: "View Audience Cadence",
+      module: "Leads",
+      audience: {
+        kind: "custom_view",
+        viewId: defaultView.id,
+        enrollNewMatches: true,
+      },
+    });
+    await service.updateCadenceDraft(ctx, cadence.id, {
+      steps: [
+        {
+          id: "step-v1",
+          kind: "task",
+          delay: { amount: 0, unit: "minutes" },
+          subject: "View Sweep Task",
+          priority: "Normal",
+          dueOffsetDays: 0,
+        },
+      ],
+    });
+    await service.publish(ctx, cadence.id);
+
+    // Create a matching lead
+    await records.create("Leads", {
+      First_Name: "Sweep",
+      Last_Name: "Target",
+      Company: "SweepCo",
+    });
+
+    const sweepResult = await sweepAudienceCustomViews(ctx, { recordService: records });
+    expect(sweepResult.enrolledCount).toBeGreaterThanOrEqual(1);
+
+    // 2. Cadence with non-existent or foreign viewId -> safely skipped
+    const invalidCadence = await service.createCadence(ctx, {
+      name: "Invalid View Cadence",
+      module: "Leads",
+      audience: {
+        kind: "custom_view",
+        viewId: "non-existent-view-id",
+        enrollNewMatches: true,
+      },
+    });
+    await service.updateCadenceDraft(ctx, invalidCadence.id, {
+      steps: [
+        {
+          id: "step-inv",
+          kind: "task",
+          delay: { amount: 0, unit: "minutes" },
+          subject: "Inv Task",
+          priority: "Normal",
+          dueOffsetDays: 0,
+        },
+      ],
+    });
+    await service.publish(ctx, invalidCadence.id);
+
+    const sweepResult2 = await sweepAudienceCustomViews(ctx, { recordService: records });
+    expect(sweepResult2.enrolledCount).toBe(0);
+  });
+
+  it("enforces cadence actor module boundary and action isolation", async () => {
+    const { ctx } = await createTestOrganization();
+
+    // Create record service with cadence actor bounded to "Leads"
+    const cadenceActor = {
+      kind: "cadence" as const,
+      id: "cadence-123",
+      versionId: "version-456",
+      module: "Leads",
+    };
+
+    const recordService = createFixtureRecordService(ctx, { actor: cadenceActor });
+
+    // 1. Reading / creating in permitted module works
+    const lead = await recordService.create("Leads", {
+      First_Name: "Bound",
+      Last_Name: "Actor",
+      Company: "BoundCo",
+    });
+    expect(lead.id).toBeDefined();
+
+    // 2. Reading / creating in Tasks & Calls works (permitted activity targets)
+    const task = await recordService.create("Tasks", {
+      Subject: "Cadence Task",
+      Status: "Not Started",
+      Who_Id: { module: "Leads", id: lead.id },
+    });
+    expect(task.id).toBeDefined();
+
+    // 3. Accessing another module (e.g. Deals, Contacts, Accounts) is forbidden
+    await expect(recordService.get("Deals", "deal-1")).rejects.toThrowError(ForbiddenError);
+    await expect(recordService.create("Contacts", { Last_Name: "Forbidden" })).rejects.toThrowError(
+      ForbiddenError,
+    );
+
+    // 4. Cadence actor cannot delete, convert, or merge
+    await expect(recordService.delete("Leads", [lead.id])).rejects.toThrowError(ForbiddenError);
+    await expect(
+      recordService.convertLead(lead.id, { account: { create: { Account_Name: "Acme" } } }),
+    ).rejects.toThrowError(ForbiddenError);
   });
 });

@@ -4,7 +4,10 @@ import { describe, expect, it } from "vitest";
 import * as cadencesActivate from "@/app/crm/v2.1/settings/cadences/[id]/actions/activate/route";
 import * as cadencesDeactivate from "@/app/crm/v2.1/settings/cadences/[id]/actions/deactivate/route";
 import * as cadencesPublish from "@/app/crm/v2.1/settings/cadences/[id]/actions/publish/route";
+import * as cadencesEnroll from "@/app/crm/v2.1/settings/cadences/[id]/enroll/route";
+import * as cadencesEnrollments from "@/app/crm/v2.1/settings/cadences/[id]/enrollments/route";
 import * as cadencesDetail from "@/app/crm/v2.1/settings/cadences/[id]/route";
+import * as enrollmentActions from "@/app/crm/v2.1/settings/cadences/enrollments/[enrollmentId]/route";
 import * as cadencesList from "@/app/crm/v2.1/settings/cadences/route";
 import { isNavLinkAllowed, settingsNav } from "@/components/shell/nav";
 
@@ -281,5 +284,153 @@ describe("cadences settings routes access gating", () => {
       { id: cadenceId },
     );
     expect(adminDelete.status).toBe(200);
+  });
+
+  it("supports enrollment, listing enrollments, state changes, and blocks deletion when enrollments exist", async () => {
+    const { ctx, admin } = await createTestOrganization();
+    const { getRecordService } = await import("@/lib/records");
+    const records = getRecordService(ctx);
+
+    // Create a lead to enroll
+    const lead = await records.create("Leads", {
+      First_Name: "Enroll",
+      Last_Name: "Candidate",
+      Company: "RouteCorp",
+      Email: "enroll@example.com",
+      Lead_Status: "Contacted",
+    });
+
+    // Create and publish an active cadence with a task step
+    const createRes = await call(
+      cadencesList.POST as Handler,
+      req("POST", "/crm/v2.1/settings/cadences", admin.headers, ctx.orgSlug, {
+        name: "Enrollment Route Cadence",
+        module: "Leads",
+        audience: { kind: "manual" },
+      }),
+    );
+    expect(createRes.status).toBe(200);
+    const { cadence } = (await createRes.json()) as { cadence: { id: string } };
+    const cadenceId = cadence.id;
+
+    // Add step to draft
+    await call(
+      cadencesDetail.PUT as Handler,
+      req("PUT", `/crm/v2.1/settings/cadences/${cadenceId}`, admin.headers, ctx.orgSlug, {
+        steps: [
+          {
+            id: "step-1",
+            kind: "task",
+            delay: { amount: 0, unit: "minutes" },
+            subject: "Enrollment Follow-up",
+            priority: "High",
+            dueOffsetDays: 1,
+          },
+        ],
+      }),
+      { id: cadenceId },
+    );
+
+    // Publish
+    await call(
+      cadencesPublish.POST as Handler,
+      req(
+        "POST",
+        `/crm/v2.1/settings/cadences/${cadenceId}/actions/publish`,
+        admin.headers,
+        ctx.orgSlug,
+      ),
+      { id: cadenceId },
+    );
+
+    // 1. Enroll lead
+    const enrollRes = await call(
+      cadencesEnroll.POST as Handler,
+      req("POST", `/crm/v2.1/settings/cadences/${cadenceId}/enroll`, admin.headers, ctx.orgSlug, {
+        recordModule: "Leads",
+        recordId: lead.id,
+      }),
+      { id: cadenceId },
+    );
+    expect(enrollRes.status).toBe(200);
+    const { enrollment } = (await enrollRes.json()) as {
+      enrollment: { id: string; state: string };
+    };
+    expect(enrollment.id).toBeDefined();
+    expect(enrollment.state).toBe("active");
+
+    // 2. Listing enrollments
+    const listEnrollmentsRes = await call(
+      cadencesEnrollments.GET as Handler,
+      req(
+        "GET",
+        `/crm/v2.1/settings/cadences/${cadenceId}/enrollments`,
+        admin.headers,
+        ctx.orgSlug,
+      ),
+      { id: cadenceId },
+    );
+    expect(listEnrollmentsRes.status).toBe(200);
+    const { enrollments } = (await listEnrollmentsRes.json()) as { enrollments: { id: string }[] };
+    expect(enrollments.some((e) => e.id === enrollment.id)).toBe(true);
+
+    // 3. Deleting cadence with active enrollment fails with Conflict (400 on wire)
+    const deleteBlocked = await call(
+      cadencesDetail.DELETE as Handler,
+      req("DELETE", `/crm/v2.1/settings/cadences/${cadenceId}`, admin.headers, ctx.orgSlug),
+      { id: cadenceId },
+    );
+    expect(deleteBlocked.status).toBe(400);
+
+    // 4. Pause enrollment
+    const pauseRes = await call(
+      enrollmentActions.POST as Handler,
+      req(
+        "POST",
+        `/crm/v2.1/settings/cadences/enrollments/${enrollment.id}`,
+        admin.headers,
+        ctx.orgSlug,
+        { action: "pause" },
+      ),
+      { enrollmentId: enrollment.id },
+    );
+    expect(pauseRes.status).toBe(200);
+    const paused = (await pauseRes.json()) as { enrollment: { state: string } };
+    expect(paused.enrollment.state).toBe("paused");
+
+    // 5. Resume enrollment
+    const resumeRes = await call(
+      enrollmentActions.POST as Handler,
+      req(
+        "POST",
+        `/crm/v2.1/settings/cadences/enrollments/${enrollment.id}`,
+        admin.headers,
+        ctx.orgSlug,
+        { action: "resume" },
+      ),
+      { enrollmentId: enrollment.id },
+    );
+    expect(resumeRes.status).toBe(200);
+    const resumed = (await resumeRes.json()) as { enrollment: { state: string } };
+    expect(resumed.enrollment.state).toBe("active");
+
+    // 6. Unenroll
+    const unenrollRes = await call(
+      enrollmentActions.POST as Handler,
+      req(
+        "POST",
+        `/crm/v2.1/settings/cadences/enrollments/${enrollment.id}`,
+        admin.headers,
+        ctx.orgSlug,
+        { action: "unenroll", reason: "finished_early" },
+      ),
+      { enrollmentId: enrollment.id },
+    );
+    expect(unenrollRes.status).toBe(200);
+    const unenrolled = (await unenrollRes.json()) as {
+      enrollment: { state: string; reason: string };
+    };
+    expect(unenrolled.enrollment.state).toBe("exited");
+    expect(unenrolled.enrollment.reason).toBe("finished_early");
   });
 });
