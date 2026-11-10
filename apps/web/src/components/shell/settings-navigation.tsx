@@ -25,12 +25,16 @@ export function SettingsNavigation({
   const label = useShellLabel();
   const pathname = usePathname();
   const permissions = usePermissions();
+  const navRef = useRef<HTMLElement>(null);
   const activeLinkRef = useRef<HTMLAnchorElement>(null);
 
+  // Keep the active link visible by scrolling only the side menu itself;
+  // scrollIntoView would also scroll the page content (MEP-1499 review).
   useEffect(() => {
-    if (pathname && activeLinkRef.current) {
-      activeLinkRef.current.scrollIntoView?.({ block: "center", behavior: "instant" });
-    }
+    const nav = navRef.current;
+    const link = activeLinkRef.current;
+    if (!pathname || !nav || !link || nav.scrollHeight <= nav.clientHeight) return;
+    nav.scrollTop = link.offsetTop - nav.clientHeight / 2 + link.offsetHeight / 2;
   }, [pathname]);
 
   const visibleLinks = settingsNavFor(canManageAccess).filter((link) =>
@@ -38,8 +42,9 @@ export function SettingsNavigation({
   );
   return (
     <nav
+      ref={navRef}
       aria-label={t("shell.settingsNavigation")}
-      className="flex shrink-0 flex-col gap-1 max-h-[calc(100vh-theme(spacing.utility-strip-height)-5rem)] overflow-y-auto pr-2"
+      className="relative flex shrink-0 flex-col gap-1 max-h-[calc(100vh-theme(spacing.utility-strip-height)-5rem)] overflow-y-auto pr-2"
     >
       <Link
         href={`/crm/${orgSlug}/settings`}
