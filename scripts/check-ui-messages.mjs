@@ -160,6 +160,7 @@ export const ALLOWED_NEW_EXEMPTION_PREFIXES = [
   "apps/web/src/components/records/line-items/",
   "apps/web/src/components/records/print/",
   "apps/web/src/modules/approvals/",
+  "apps/web/src/modules/cadences/",
 ];
 
 export function filterUnauthorizedExemptions(

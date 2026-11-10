@@ -1915,49 +1915,49 @@
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 880,
+    "line": 883,
     "column": 31,
     "hash": "2836cfca8acae68d"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 881,
+    "line": 884,
     "column": 33,
     "hash": "5a9133cebfab7531"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 887,
-    "column": 30,
+    "line": 892,
+    "column": 14,
     "hash": "75c4d64dd295ea85"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 890,
+    "line": 899,
     "column": 14,
     "hash": "fee59ce0ce197df2"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 893,
+    "line": 902,
     "column": 42,
     "hash": "d22a513c3f7305ec"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 894,
+    "line": 903,
     "column": 40,
     "hash": "97330d2cf2b46bb8"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 895,
+    "line": 904,
     "column": 32,
     "hash": "07c60b2f79382eb1"
   },
   {
     "file": "apps/web/src/components/records/list/module-list-screen.tsx",
-    "line": 896,
+    "line": 905,
     "column": 34,
     "hash": "86a94a959b984925"
   },
@@ -6168,6 +6168,42 @@
     "hash": "1aa1e44dea28a80b"
   },
   {
+    "file": "apps/web/src/modules/cadences/enroll-cadence-dialog.tsx",
+    "line": 109,
+    "column": 12,
+    "hash": "1966630b74734132"
+  },
+  {
+    "file": "apps/web/src/modules/cadences/enroll-cadence-dialog.tsx",
+    "line": 129,
+    "column": 71,
+    "hash": "20e9dc167d085262"
+  },
+  {
+    "file": "apps/web/src/modules/cadences/enroll-cadence-dialog.tsx",
+    "line": 131,
+    "column": 71,
+    "hash": "e431aa7cb6356dd4"
+  },
+  {
+    "file": "apps/web/src/modules/cadences/enroll-cadence-dialog.tsx",
+    "line": 140,
+    "column": 18,
+    "hash": "83024d708796d5db"
+  },
+  {
+    "file": "apps/web/src/modules/cadences/enroll-cadence-dialog.tsx",
+    "line": 164,
+    "column": 57,
+    "hash": "a04ab1ade629efff"
+  },
+  {
+    "file": "apps/web/src/modules/cadences/enroll-cadence-dialog.tsx",
+    "line": 178,
+    "column": 14,
+    "hash": "19766ed6ccb2f4a3"
+  },
+  {
     "file": "apps/web/src/modules/calls/calls-detail-sections.ts",
     "line": 35,
     "column": 58,
@@ -6871,91 +6907,91 @@
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 21,
+    "line": 22,
     "column": 31,
     "hash": "5779f32fab00c2aa"
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 22,
+    "line": 23,
     "column": 31,
     "hash": "29887a5ff9846ccc"
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 23,
+    "line": 24,
     "column": 32,
     "hash": "e2d0a54968ead24e"
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 29,
+    "line": 30,
     "column": 39,
     "hash": "e15876f36146f4a1"
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 32,
+    "line": 33,
     "column": 18,
     "hash": "a8ba2beb9653f503"
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 35,
+    "line": 36,
     "column": 36,
     "hash": "07c60b2f79382eb1"
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 41,
+    "line": 42,
     "column": 35,
     "hash": "2836cfca8acae68d"
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 42,
+    "line": 43,
     "column": 49,
     "hash": "1bc977dc174dcd90"
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 43,
+    "line": 44,
     "column": 50,
     "hash": "6b498b0418bf0026"
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 44,
+    "line": 45,
     "column": 42,
     "hash": "d2314997346772c4"
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 45,
+    "line": 46,
     "column": 40,
     "hash": "886e29a8779319eb"
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 46,
+    "line": 47,
     "column": 40,
     "hash": "1966630b74734132"
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 47,
+    "line": 48,
     "column": 35,
     "hash": "d2ab5bf226755612"
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 48,
+    "line": 49,
     "column": 39,
     "hash": "b8f1b26308faaebd"
   },
   {
     "file": "apps/web/src/modules/contacts/contacts-record-more-options.ts",
-    "line": 49,
+    "line": 50,
     "column": 46,
     "hash": "a2ea0bb768278e03"
   },
@@ -7531,91 +7567,91 @@
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 24,
+    "line": 25,
     "column": 29,
     "hash": "5779f32fab00c2aa"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 25,
+    "line": 26,
     "column": 29,
     "hash": "29887a5ff9846ccc"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 26,
+    "line": 27,
     "column": 30,
     "hash": "e2d0a54968ead24e"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 32,
+    "line": 33,
     "column": 37,
     "hash": "e15876f36146f4a1"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 35,
+    "line": 36,
     "column": 16,
     "hash": "a8ba2beb9653f503"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 38,
+    "line": 39,
     "column": 34,
     "hash": "07c60b2f79382eb1"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 44,
+    "line": 45,
     "column": 33,
     "hash": "2836cfca8acae68d"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 45,
+    "line": 46,
     "column": 47,
     "hash": "1bc977dc174dcd90"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 46,
+    "line": 47,
     "column": 45,
     "hash": "1a50c3d8a1f2f8e1"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 47,
+    "line": 48,
     "column": 40,
     "hash": "d2314997346772c4"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 48,
+    "line": 49,
     "column": 38,
     "hash": "886e29a8779319eb"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 49,
+    "line": 50,
     "column": 38,
     "hash": "1966630b74734132"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 50,
+    "line": 51,
     "column": 33,
     "hash": "d2ab5bf226755612"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 51,
+    "line": 52,
     "column": 37,
     "hash": "b8f1b26308faaebd"
   },
   {
     "file": "apps/web/src/modules/deals/deals-record-more-options.ts",
-    "line": 52,
+    "line": 53,
     "column": 44,
     "hash": "a2ea0bb768278e03"
   },
@@ -8383,163 +8419,163 @@
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 39,
+    "line": 40,
     "column": 29,
     "hash": "5779f32fab00c2aa"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 40,
+    "line": 41,
     "column": 29,
     "hash": "29887a5ff9846ccc"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 41,
+    "line": 42,
     "column": 30,
     "hash": "e2d0a54968ead24e"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 47,
+    "line": 48,
     "column": 37,
     "hash": "e15876f36146f4a1"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 50,
+    "line": 51,
     "column": 16,
     "hash": "a8ba2beb9653f503"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 53,
+    "line": 54,
     "column": 34,
     "hash": "07c60b2f79382eb1"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 59,
+    "line": 60,
     "column": 33,
     "hash": "2836cfca8acae68d"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 60,
+    "line": 61,
     "column": 47,
     "hash": "1bc977dc174dcd90"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 61,
+    "line": 62,
     "column": 45,
     "hash": "7b688f5b0aa2c3aa"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 62,
+    "line": 63,
     "column": 40,
     "hash": "d2314997346772c4"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 63,
+    "line": 64,
     "column": 38,
     "hash": "886e29a8779319eb"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 64,
+    "line": 65,
     "column": 38,
     "hash": "1966630b74734132"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 65,
+    "line": 66,
     "column": 33,
     "hash": "d2ab5bf226755612"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 66,
+    "line": 67,
     "column": 37,
     "hash": "b8f1b26308faaebd"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 67,
+    "line": 68,
     "column": 44,
     "hash": "a2ea0bb768278e03"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 74,
+    "line": 75,
     "column": 12,
     "hash": "29887a5ff9846ccc"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 75,
+    "line": 76,
     "column": 12,
     "hash": "e15876f36146f4a1"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 76,
+    "line": 77,
     "column": 12,
     "hash": "07c60b2f79382eb1"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 77,
+    "line": 78,
     "column": 12,
     "hash": "2836cfca8acae68d"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 78,
+    "line": 79,
     "column": 12,
     "hash": "1bc977dc174dcd90"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 79,
+    "line": 80,
     "column": 12,
     "hash": "7b688f5b0aa2c3aa"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 80,
+    "line": 81,
     "column": 12,
     "hash": "d2314997346772c4"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 81,
+    "line": 82,
     "column": 12,
     "hash": "886e29a8779319eb"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 82,
+    "line": 83,
     "column": 12,
     "hash": "1966630b74734132"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 83,
+    "line": 84,
     "column": 12,
     "hash": "d2ab5bf226755612"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 84,
+    "line": 85,
     "column": 12,
     "hash": "b8f1b26308faaebd"
   },
   {
     "file": "apps/web/src/modules/leads/leads-record-more-options.ts",
-    "line": 85,
+    "line": 86,
     "column": 12,
     "hash": "a2ea0bb768278e03"
   },

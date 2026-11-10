@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ValidationError } from "../errors";
+import type { RecordService } from "../records";
 import {
   cadenceCallStepSchema,
   cadenceEmailStepSchema,
@@ -328,7 +329,7 @@ describe("Cadence Schemas and Validation", () => {
         recordModule: "Leads",
         recordId: "lead-1",
         enrollmentCreatedAt: new Date("2026-11-10T10:00:00.000Z"),
-        mailRepository: fakeMailRepo as any,
+        mailRepository: fakeMailRepo,
       });
 
       expect(matched?.id).toBe("exit-reply");
@@ -351,9 +352,9 @@ describe("Cadence Schemas and Validation", () => {
               ],
             };
           }
-          return { records: [] };
+          return { records: [], total: 0 };
         },
-      } as any;
+      } as unknown as Pick<RecordService, "list">;
 
       const matched = await evaluateExitRules([{ id: "exit-meeting", kind: "meeting_booked" }], {
         record: {

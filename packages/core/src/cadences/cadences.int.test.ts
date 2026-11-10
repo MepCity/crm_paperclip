@@ -1,6 +1,7 @@
 import { schema } from "@crm/db";
 import { and, eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
+import type { AccessSnapshot } from "../access/types";
 import { getDb } from "../database";
 import { ConflictError, ForbiddenError, NotFoundError } from "../errors";
 import { createFixtureRecordService } from "../records/fixture";
@@ -547,7 +548,7 @@ describe("cadences backend integration", () => {
         fieldAccess: new Map(),
         ownerLevels: new Map(),
         defaults: new Map(),
-      }) as any;
+      }) as unknown as AccessSnapshot;
 
     const skipResult = await executeCadenceStep(ctx, {
       enrollmentId: enroll2.id,
@@ -783,7 +784,9 @@ describe("cadences backend integration", () => {
       });
 
       expect(res.status).toBe("aborted");
-      expect((res as any).reason).toBe("generation_mismatch");
+      if (res.status === "aborted") {
+        expect(res.reason).toBe("generation_mismatch");
+      }
     });
 
     it("idempotency: retrying a step twice creates exactly one effect", async () => {

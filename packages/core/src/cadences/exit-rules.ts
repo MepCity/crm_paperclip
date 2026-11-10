@@ -9,8 +9,8 @@ export interface ExitRuleContext {
   recordId: string;
   enrollmentCreatedAt: Date;
   orgId?: string;
-  recordService?: RecordService;
-  mailRepository?: MailRepository;
+  recordService?: Pick<RecordService, "list">;
+  mailRepository?: Pick<MailRepository, "read">;
 }
 
 /**
