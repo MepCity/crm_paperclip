@@ -239,7 +239,7 @@ export function CadenceEditorScreen({ orgSlug, cadenceId }: CadenceEditorScreenP
         exitRules,
       });
       setCadence(updated);
-      setSuccessMessage(t("modules.cadences.editor.saveDraft"));
+      setSuccessMessage(t("modules.cadences.editor.draftSaved"));
       setTimeout(() => setSuccessMessage(null), 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to save draft");
@@ -343,6 +343,7 @@ export function CadenceEditorScreen({ orgSlug, cadenceId }: CadenceEditorScreenP
             href={`/crm/${orgSlug}/settings/cadences`}
             className="p-1 rounded-md text-muted-foreground hover:text-foreground hover:bg-muted"
             aria-label={t("modules.cadences.editor.back")}
+            data-testid="cadence-editor-back"
           >
             <Icons.chevronLeft className="size-5" />
           </Link>

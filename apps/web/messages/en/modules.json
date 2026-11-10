@@ -1334,6 +1334,7 @@
     "editor": {
       "back": "Back to Cadences",
       "saveDraft": "Save Draft",
+      "draftSaved": "Draft version saved successfully.",
       "publish": "Publish",
       "activate": "Activate",
       "deactivate": "Deactivate",

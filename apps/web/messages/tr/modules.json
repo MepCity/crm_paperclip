@@ -1334,6 +1334,7 @@
     "editor": {
       "back": "Cadence’ler Listesine Dön",
       "saveDraft": "Taslak Olarak Kaydet",
+      "draftSaved": "Taslak sürümü başarıyla kaydedildi.",
       "publish": "Yayınla",
       "activate": "Etkinleştir",
       "deactivate": "Devre Dışı Bırak",
