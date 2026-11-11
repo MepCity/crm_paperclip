@@ -6,6 +6,10 @@ import {
 } from "@/components/records/cadences/cadences-card-body";
 import { campaignsCardBody } from "@/components/records/campaigns/campaigns-card";
 import {
+  JOURNEYS_RELATED_TITLE,
+  JourneysCardBody,
+} from "@/components/records/journeys/journeys-card-body";
+import {
   WEBFORM_USAGE_TITLE,
   WebformUsageCardBody,
 } from "@/components/records/webforms/webform-usage-card-body";
@@ -195,6 +199,18 @@ export function createLeadsRelatedLists(
           moduleKey: "M2",
         },
       ],
+    },
+    {
+      id: "journeys",
+      renderBody: ({ record }) =>
+        record
+          ? createElement(JourneysCardBody, { module: "Leads", recordId: record.id })
+          : undefined,
+      title: JOURNEYS_RELATED_TITLE,
+      moduleKey: "M2",
+      order: 9,
+      targetId: "related-list-journeys",
+      emptyStateText: "No records found",
     },
   ];
 }

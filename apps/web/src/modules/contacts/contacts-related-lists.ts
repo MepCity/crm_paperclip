@@ -7,6 +7,10 @@ import { RelatedInvoicesCardBody } from "@/components/records/detail/related-inv
 import { RelatedQuotesCardBody } from "@/components/records/detail/related-quotes-card-body";
 import { ReportingContactsCardBody } from "@/components/records/detail/reporting-contacts-card-body";
 import {
+  JOURNEYS_RELATED_TITLE,
+  JourneysCardBody,
+} from "@/components/records/journeys/journeys-card-body";
+import {
   WEBFORM_USAGE_TITLE,
   WebformUsageCardBody,
 } from "@/components/records/webforms/webform-usage-card-body";
@@ -533,6 +537,18 @@ export function createContactsRelatedLists(
       moduleKey: "M2",
       order: 20,
       targetId: "related-list-webform-usage",
+      emptyStateText: "No records found",
+    },
+    {
+      id: "journeys",
+      renderBody: ({ record }) =>
+        record
+          ? createElement(JourneysCardBody, { module: "Contacts", recordId: record.id })
+          : undefined,
+      title: JOURNEYS_RELATED_TITLE,
+      moduleKey: "M2",
+      order: 21,
+      targetId: "related-list-journeys",
       emptyStateText: "No records found",
     },
   ];

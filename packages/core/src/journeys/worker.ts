@@ -16,7 +16,7 @@ import { createMailOutbox, type OutboxOptions } from "../mail/outbox";
 import type { MailRepository } from "../mail/types";
 import type { RecordData, RecordService } from "../records";
 import { createFixtureRecordService } from "../records/fixture";
-import { withOrg } from "../tenancy";
+import { systemOrgContext, withOrg } from "../tenancy";
 import type { OrgContext } from "../tenancy/types";
 import { computeDueAt } from "./delays";
 import type {
@@ -36,7 +36,7 @@ export interface JourneysWorkerDeps {
   recordService?: RecordService;
   mailRepository?: MailRepository;
   outboxOptions?: OutboxOptions;
-  accessSnapshotProvider?: (ctx: OrgContext, userId: string) => Promise<AccessSnapshot>;
+  accessSnapshotProvider: (ctx: OrgContext, userId: string) => Promise<AccessSnapshot>;
   canAccess?: (
     userId: string,
     module: string,
@@ -173,44 +173,48 @@ export async function executeActionEffect(
     membership && (membership.role === "admin" || membership.role === "member"),
   );
 
-  if (hasRight && deps?.accessSnapshotProvider) {
-    const snapshot = await deps.accessSnapshotProvider(ctx, ownerId);
-    if (action.kind === "email") {
-      if (!canOnRecord(snapshot, instance.recordModule, "view", ownerId)) {
-        hasRight = false;
-      }
-    } else if (action.kind === "task") {
-      if (!can(snapshot, "Tasks", "create")) {
-        hasRight = false;
-      }
-    } else if (action.kind === "call") {
-      if (!can(snapshot, "Calls", "create")) {
-        hasRight = false;
-      }
-    } else if (action.kind === "field_update") {
-      if (!canOnRecord(snapshot, instance.recordModule, "edit", ownerId)) {
-        hasRight = false;
-      }
-    } else if (action.kind === "notify_user") {
-      const notifyAction = action as JourneyNotifyUserAction;
-      let targetUserId = notifyAction.userRef;
-      if (targetUserId === "owner" || targetUserId === "record_owner") {
-        targetUserId = ownerId;
-      }
-      const [targetMembership] = await tx
-        .select({ role: schema.memberships.role })
-        .from(schema.memberships)
-        .where(
-          and(
-            eq(schema.memberships.organizationId, ctx.orgId),
-            eq(schema.memberships.userId, targetUserId),
-          ),
-        );
-      if (
-        !targetMembership ||
-        (targetMembership.role !== "admin" && targetMembership.role !== "member")
-      ) {
-        hasRight = false;
+  if (hasRight) {
+    if (!deps?.accessSnapshotProvider) {
+      hasRight = false;
+    } else {
+      const snapshot = await deps.accessSnapshotProvider(ctx, ownerId);
+      if (action.kind === "email") {
+        if (!canOnRecord(snapshot, instance.recordModule, "view", ownerId)) {
+          hasRight = false;
+        }
+      } else if (action.kind === "task") {
+        if (!can(snapshot, "Tasks", "create")) {
+          hasRight = false;
+        }
+      } else if (action.kind === "call") {
+        if (!can(snapshot, "Calls", "create")) {
+          hasRight = false;
+        }
+      } else if (action.kind === "field_update") {
+        if (!canOnRecord(snapshot, instance.recordModule, "edit", ownerId)) {
+          hasRight = false;
+        }
+      } else if (action.kind === "notify_user") {
+        const notifyAction = action as JourneyNotifyUserAction;
+        let targetUserId = notifyAction.userRef;
+        if (targetUserId === "owner" || targetUserId === "record_owner") {
+          targetUserId = ownerId;
+        }
+        const [targetMembership] = await tx
+          .select({ role: schema.memberships.role })
+          .from(schema.memberships)
+          .where(
+            and(
+              eq(schema.memberships.organizationId, ctx.orgId),
+              eq(schema.memberships.userId, targetUserId),
+            ),
+          );
+        if (
+          !targetMembership ||
+          (targetMembership.role !== "admin" && targetMembership.role !== "member")
+        ) {
+          hasRight = false;
+        }
       }
     }
   }
@@ -1241,17 +1245,10 @@ export interface JourneyHandlerContext {
   checkpoint(): Promise<void>;
 }
 
-function systemOrgContext(orgId: string, userId = ""): OrgContext {
-  return {
-    orgId,
-    userId,
-    orgSlug: "",
-    orgName: "",
-    role: "admin",
-  };
-}
-
-export function createJourneyTransitionHandler(deps?: JourneysWorkerDeps) {
+export function createJourneyTransitionHandler(deps: JourneysWorkerDeps) {
+  if (!deps?.accessSnapshotProvider) {
+    throw new Error("createJourneyTransitionHandler requires accessSnapshotProvider");
+  }
   return {
     kind: JOURNEY_TRANSITION_JOB_KIND,
     version: JOURNEY_TRANSITION_JOB_VERSION,
@@ -1313,7 +1310,10 @@ export function createJourneyTransitionHandler(deps?: JourneysWorkerDeps) {
   };
 }
 
-export function createJourneyActionHandler(deps?: JourneysWorkerDeps) {
+export function createJourneyActionHandler(deps: JourneysWorkerDeps) {
+  if (!deps?.accessSnapshotProvider) {
+    throw new Error("createJourneyActionHandler requires accessSnapshotProvider");
+  }
   return {
     kind: JOURNEY_ACTION_JOB_KIND,
     version: JOURNEY_ACTION_JOB_VERSION,

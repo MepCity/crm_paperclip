@@ -1,4 +1,6 @@
 import { pathToFileURL } from "node:url";
+import type { OrgContext } from "@crm/core";
+import { type AccessSnapshot, getAccessSnapshot } from "@crm/core/access";
 import {
   type CadenceWorkerDeps,
   cadenceJobDefinitions,
@@ -102,37 +104,64 @@ export function createEphemeralMailRuntime() {
   return { catalog, queue, repository, handlers };
 }
 
+/**
+ * Default access-snapshot provider for worker runtimes, wired from the access service used by the web app (ADR 0017).
+ */
+export const defaultAccessSnapshotProvider = (
+  ctx: OrgContext,
+  userId: string,
+): Promise<AccessSnapshot> =>
+  getAccessSnapshot({
+    ...ctx,
+    userId,
+    accessVersion: undefined,
+  });
+
 export function createEphemeralCadenceRuntime(
-  deps?: CadenceWorkerDeps & { recordService?: RecordService },
+  deps?: Partial<CadenceWorkerDeps> & { recordService?: RecordService },
 ) {
   const catalog = createCadenceJobCatalog();
   const queue = new InMemoryJobQueue(catalog);
+  const cadenceDeps: CadenceWorkerDeps = {
+    accessSnapshotProvider: deps?.accessSnapshotProvider ?? defaultAccessSnapshotProvider,
+    ...deps,
+  };
   const handlers = new HandlerRegistry([
-    createCadenceStepHandler({ ...deps, jobQueue: queue }),
-    ...(deps?.recordService
-      ? [createCadenceSweepHandler({ ...deps, recordService: deps.recordService, jobQueue: queue })]
+    createCadenceStepHandler({ ...cadenceDeps, jobQueue: queue }),
+    ...(cadenceDeps.recordService
+      ? [
+          createCadenceSweepHandler({
+            ...cadenceDeps,
+            recordService: cadenceDeps.recordService,
+            jobQueue: queue,
+          }),
+        ]
       : []),
   ]);
   return { catalog, queue, handlers };
 }
 
 export function createEphemeralJourneyRuntime(
-  deps?: JourneysWorkerDeps & { recordService?: RecordService },
+  deps?: Partial<JourneysWorkerDeps> & { recordService?: RecordService },
 ) {
   const catalog = createJourneyJobCatalog();
   const queue = new InMemoryJobQueue(catalog);
+  const journeyDeps: JourneysWorkerDeps = {
+    accessSnapshotProvider: deps?.accessSnapshotProvider ?? defaultAccessSnapshotProvider,
+    ...deps,
+  };
   const handlers = new HandlerRegistry([
-    createJourneyTransitionHandler({ ...deps, jobQueue: queue }),
-    createJourneyActionHandler({ ...deps, jobQueue: queue }),
-    createJourneySweepHandler({ ...deps, jobQueue: queue }),
+    createJourneyTransitionHandler({ ...journeyDeps, jobQueue: queue }),
+    createJourneyActionHandler({ ...journeyDeps, jobQueue: queue }),
+    createJourneySweepHandler({ ...journeyDeps, jobQueue: queue }),
   ]);
   return { catalog, queue, handlers };
 }
 
 export interface EphemeralWorkerOptions {
   recordService?: RecordService;
-  cadenceDeps?: CadenceWorkerDeps;
-  journeyDeps?: JourneysWorkerDeps;
+  cadenceDeps?: Partial<CadenceWorkerDeps>;
+  journeyDeps?: Partial<JourneysWorkerDeps>;
   signals?: SignalSource;
   exit?: (forced: boolean) => void;
   workerId?: string;
@@ -141,8 +170,8 @@ export interface EphemeralWorkerOptions {
 
 export function createEphemeralRuntime(options?: {
   recordService?: RecordService;
-  cadenceDeps?: CadenceWorkerDeps;
-  journeyDeps?: JourneysWorkerDeps;
+  cadenceDeps?: Partial<CadenceWorkerDeps>;
+  journeyDeps?: Partial<JourneysWorkerDeps>;
 }) {
   const mailDefinitions = [mailSendJobDefinition, mailSyncJobDefinition];
   const catalog = new JobCatalog([
@@ -188,8 +217,16 @@ export function createEphemeralRuntime(options?: {
     }),
   ];
 
-  const cadenceDeps = { ...options?.cadenceDeps };
-  const journeyDeps = { ...options?.journeyDeps };
+  const cadenceDeps: CadenceWorkerDeps = {
+    accessSnapshotProvider:
+      options?.cadenceDeps?.accessSnapshotProvider ?? defaultAccessSnapshotProvider,
+    ...options?.cadenceDeps,
+  };
+  const journeyDeps: JourneysWorkerDeps = {
+    accessSnapshotProvider:
+      options?.journeyDeps?.accessSnapshotProvider ?? defaultAccessSnapshotProvider,
+    ...options?.journeyDeps,
+  };
   const recordService =
     options?.recordService ?? cadenceDeps.recordService ?? journeyDeps.recordService;
 

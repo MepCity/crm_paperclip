@@ -13,6 +13,14 @@ import {
   validateStepsForPublish,
   validateUpdateCadenceDraft,
 } from "./validation";
+import {
+  CADENCE_STEP_JOB_KIND,
+  CADENCE_SWEEP_JOB_KIND,
+  cadenceStepJobDefinition,
+  cadenceSweepJobDefinition,
+  createCadenceJobCatalog,
+  createCadenceStepHandler,
+} from "./worker";
 
 describe("Cadence Schemas and Validation", () => {
   describe("createCadenceSchema", () => {
@@ -409,15 +417,7 @@ describe("Cadence Schemas and Validation", () => {
   });
 
   describe("Job catalog and definitions (ADR 0019 §6, ADR 0013 §3)", () => {
-    it("creates cadence job catalog and validates payloads", async () => {
-      const {
-        createCadenceJobCatalog,
-        cadenceStepJobDefinition,
-        cadenceSweepJobDefinition,
-        CADENCE_STEP_JOB_KIND,
-        CADENCE_SWEEP_JOB_KIND,
-      } = await import("./worker");
-
+    it("creates cadence job catalog and validates payloads", () => {
       expect(cadenceStepJobDefinition.kind).toBe(CADENCE_STEP_JOB_KIND);
       expect(cadenceStepJobDefinition.retrySafe).toBe(false);
       expect(cadenceSweepJobDefinition.kind).toBe(CADENCE_SWEEP_JOB_KIND);
@@ -450,6 +450,12 @@ describe("Cadence Schemas and Validation", () => {
           // missing stepId and cadenceGeneration
         }),
       ).toThrow();
+    });
+
+    it("requires accessSnapshotProvider at handler construction (fail-closed)", () => {
+      expect(() => createCadenceStepHandler({} as never)).toThrowError(
+        /createCadenceStepHandler requires accessSnapshotProvider/,
+      );
     });
   });
 });

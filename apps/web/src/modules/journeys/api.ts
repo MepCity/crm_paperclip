@@ -4,8 +4,10 @@ import type {
   JourneyFilters,
   JourneyInstanceFilterOptions,
   JourneyInstanceSummary,
+  JourneyReportData,
   JourneySummary,
   JourneyTransitionRunSummary,
+  RecordJourneyInstanceItem,
   UpdateJourneyDraftInput,
 } from "./types";
 
@@ -198,4 +200,38 @@ export async function stopJourneyInstance(
   });
   const data = await handleResponse<{ instance: JourneyInstanceSummary }>(res);
   return data.instance;
+}
+
+export async function fetchJourneyReport(
+  orgSlug: string,
+  journeyId: string,
+  options?: { startDate?: string; endDate?: string },
+): Promise<JourneyReportData> {
+  const query = new URLSearchParams();
+  if (options?.startDate) query.set("startDate", options.startDate);
+  if (options?.endDate) query.set("endDate", options.endDate);
+
+  const qs = query.toString();
+  const res = await fetch(`/crm/v2.1/settings/journeys/${journeyId}/reports${qs ? `?${qs}` : ""}`, {
+    headers: headers(orgSlug),
+  });
+  const data = await handleResponse<{ report?: JourneyReportData; data?: JourneyReportData }>(res);
+  const result = data.report ?? data.data;
+  if (!result) throw new Error("Failed to load journey report");
+  return result;
+}
+
+export async function fetchRecordJourneys(
+  orgSlug: string,
+  module: string,
+  recordId: string,
+): Promise<RecordJourneyInstanceItem[]> {
+  const res = await fetch(`/crm/v2.1/${module}/${recordId}/journeys`, {
+    headers: headers(orgSlug),
+  });
+  const data = await handleResponse<{
+    instances?: RecordJourneyInstanceItem[];
+    data?: RecordJourneyInstanceItem[];
+  }>(res);
+  return data.instances ?? data.data ?? [];
 }

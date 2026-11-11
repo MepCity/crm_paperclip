@@ -15,7 +15,7 @@ import type { OutboxOptions } from "../mail/outbox";
 import { createMailOutbox } from "../mail/outbox";
 import type { MailRepository } from "../mail/types";
 import type { RecordData, RecordService } from "../records";
-import { withOrg } from "../tenancy";
+import { systemOrgContext, withOrg } from "../tenancy";
 import type { OrgContext } from "../tenancy/types";
 import { computeDueAt } from "./delays";
 import { evaluateExitRules } from "./exit-rules";
@@ -32,7 +32,7 @@ export interface CadenceWorkerDeps {
   recordService?: RecordService;
   mailRepository?: MailRepository;
   outboxOptions?: OutboxOptions;
-  accessSnapshotProvider?: (ctx: OrgContext, userId: string) => Promise<AccessSnapshot>;
+  accessSnapshotProvider: (ctx: OrgContext, userId: string) => Promise<AccessSnapshot>;
   timeZone?: string;
   jobQueue?: JobQueue;
 }
@@ -239,16 +239,20 @@ export async function executeCadenceStep(
       membership && (membership.role === "admin" || membership.role === "member"),
     );
 
-    if (hasRight && params.deps?.accessSnapshotProvider) {
-      const snapshot = await params.deps.accessSnapshotProvider(ctx, enrollment.enrolledBy);
-      if (currentStep.kind === "email") {
-        const ownerId = record ? (record.fields.Owner as string | undefined) : undefined;
-        const canRead = canOnRecord(snapshot, enrollment.recordModule, "view", ownerId);
-        if (!canRead) hasRight = false;
-      } else if (currentStep.kind === "task") {
-        if (!can(snapshot, "Tasks", "create")) hasRight = false;
-      } else if (currentStep.kind === "call") {
-        if (!can(snapshot, "Calls", "create")) hasRight = false;
+    if (hasRight) {
+      if (!params.deps?.accessSnapshotProvider) {
+        hasRight = false;
+      } else {
+        const snapshot = await params.deps.accessSnapshotProvider(ctx, enrollment.enrolledBy);
+        if (currentStep.kind === "email") {
+          const ownerId = record ? (record.fields.Owner as string | undefined) : undefined;
+          const canRead = canOnRecord(snapshot, enrollment.recordModule, "view", ownerId);
+          if (!canRead) hasRight = false;
+        } else if (currentStep.kind === "task") {
+          if (!can(snapshot, "Tasks", "create")) hasRight = false;
+        } else if (currentStep.kind === "call") {
+          if (!can(snapshot, "Calls", "create")) hasRight = false;
+        }
       }
     }
 
@@ -709,17 +713,10 @@ export interface CadenceHandlerContext {
   checkpoint(): Promise<void>;
 }
 
-function systemOrgContext(orgId: string, userId = ""): OrgContext {
-  return {
-    orgId,
-    userId,
-    orgSlug: "",
-    orgName: "",
-    role: "admin",
-  };
-}
-
-export function createCadenceStepHandler(deps?: CadenceWorkerDeps) {
+export function createCadenceStepHandler(deps: CadenceWorkerDeps) {
+  if (!deps?.accessSnapshotProvider) {
+    throw new Error("createCadenceStepHandler requires accessSnapshotProvider");
+  }
   return {
     kind: CADENCE_STEP_JOB_KIND,
     version: CADENCE_STEP_JOB_VERSION,

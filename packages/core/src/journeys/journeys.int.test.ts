@@ -1,14 +1,45 @@
 import { schema } from "@crm/db";
 import { and, eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
+import type { AccessSnapshot } from "../access/types";
 import { getDb } from "../database";
 import { ConflictError, ForbiddenError, NotFoundError } from "../errors";
+import type { RecordService } from "../records";
 import type { ActorRef } from "../records/contract";
 import { createFixtureRecordService } from "../records/fixture";
 import { createTestOrganization } from "../testing";
 import { createJourneysService } from "./service";
 import type { JourneyState, JourneyTransition } from "./types";
-import { executeJourneyDueAction, executeJourneyTransition } from "./worker";
+import {
+  executeJourneyDueAction,
+  executeJourneyTransition,
+  type JourneysWorkerDeps,
+} from "./worker";
+
+const defaultTestSnapshotProvider = async (ctx: { orgId: string }, userId: string) =>
+  ({
+    userId,
+    orgId: ctx.orgId,
+    version: 1,
+    profileKind: "administrator",
+    permissions: {
+      admin: { viewAllRecords: [], modifyAllRecords: [] },
+      modules: {},
+    },
+    fieldPermissions: new Map(),
+    roles: new Map(),
+    ownerLevels: new Map(),
+    defaults: new Map(),
+  }) as unknown as AccessSnapshot;
+
+const makeJourneyDeps = (
+  records: RecordService,
+  extra: Partial<JourneysWorkerDeps> = {},
+): JourneysWorkerDeps => ({
+  recordService: records,
+  accessSnapshotProvider: defaultTestSnapshotProvider,
+  ...extra,
+});
 
 describe("journeys backend integration", () => {
   it("manages full lifecycle, unique name, draft updates, publish, and version immutability", async () => {
@@ -294,7 +325,7 @@ describe("journeys backend integration", () => {
     it("handles record create, criteria pass/fail on update, actions, and webform trigger", async () => {
       const { ctx } = await createTestOrganization();
       const records = createFixtureRecordService(ctx);
-      const service = createJourneysService({ recordService: records });
+      const service = createJourneysService(makeJourneyDeps(records));
 
       // 1. Create and publish journey
       const journey = await service.createJourney(ctx, {
@@ -507,7 +538,7 @@ describe("journeys backend integration", () => {
     it("skips action effect with actor_lost_access if owner loses access", async () => {
       const { ctx } = await createTestOrganization();
       const records = createFixtureRecordService(ctx);
-      const service = createJourneysService({ recordService: records });
+      const service = createJourneysService(makeJourneyDeps(records));
       const db = getDb();
 
       const journey = await service.createJourney(ctx, {
@@ -544,10 +575,9 @@ describe("journeys backend integration", () => {
       });
 
       // Pass canAccess that returns false
-      const customService = createJourneysService({
-        recordService: records,
-        canAccess: async () => false,
-      });
+      const customService = createJourneysService(
+        makeJourneyDeps(records, { canAccess: async () => false }),
+      );
 
       await customService.enterActiveJourneys(ctx, {
         module: "Leads",
@@ -576,7 +606,7 @@ describe("journeys backend integration", () => {
     it("Race 1: deactivate vs due action - due action ends skipped with journey_inactive or generation_mismatch", async () => {
       const { ctx } = await createTestOrganization();
       const records = createFixtureRecordService(ctx);
-      const service = createJourneysService({ recordService: records });
+      const service = createJourneysService(makeJourneyDeps(records));
       const db = getDb();
 
       const journey = await service.createJourney(ctx, {
@@ -640,7 +670,7 @@ describe("journeys backend integration", () => {
         stateId: dueRow.stateId,
         actionId: dueRow.actionId,
         generation: dueRow.generation,
-        deps: { recordService: records },
+        deps: makeJourneyDeps(records),
       });
 
       expect(res.status).toBe("skipped");
@@ -657,7 +687,7 @@ describe("journeys backend integration", () => {
     it("Race 2: republish vs due action - due action with old generation ends skipped", async () => {
       const { ctx } = await createTestOrganization();
       const records = createFixtureRecordService(ctx);
-      const service = createJourneysService({ recordService: records });
+      const service = createJourneysService(makeJourneyDeps(records));
       const db = getDb();
 
       const journey = await service.createJourney(ctx, {
@@ -722,7 +752,7 @@ describe("journeys backend integration", () => {
         stateId: dueRow.stateId,
         actionId: dueRow.actionId,
         generation: dueRow.generation, // old generation = 1
-        deps: { recordService: records },
+        deps: makeJourneyDeps(records),
       });
 
       expect(res.status).toBe("skipped");
@@ -738,7 +768,7 @@ describe("journeys backend integration", () => {
     it("Race 3: record update vs deadline - update moves instance before deadline triggers", async () => {
       const { ctx } = await createTestOrganization();
       const records = createFixtureRecordService(ctx);
-      const service = createJourneysService({ recordService: records });
+      const service = createJourneysService(makeJourneyDeps(records));
       const db = getDb();
 
       const journey = await service.createJourney(ctx, {
@@ -843,7 +873,7 @@ describe("journeys backend integration", () => {
         stateId: "state_start",
         actionId: "__deadline__",
         generation: deadlineDueRow.generation,
-        deps: { recordService: records },
+        deps: makeJourneyDeps(records),
       });
 
       // Due action finishes without moving instance to state_escalated (no matching transition from state_advanced)
@@ -854,7 +884,7 @@ describe("journeys backend integration", () => {
     it("Race 4: duplicate event delivery - concurrent execution produces exactly 1 run row", async () => {
       const { ctx } = await createTestOrganization();
       const records = createFixtureRecordService(ctx);
-      const service = createJourneysService({ recordService: records });
+      const service = createJourneysService(makeJourneyDeps(records));
       const db = getDb();
 
       const journey = await service.createJourney(ctx, {
@@ -918,7 +948,7 @@ describe("journeys backend integration", () => {
           transitionId: "trans_dup",
           eventId,
           generation: inst.generation,
-          deps: { recordService: records },
+          deps: makeJourneyDeps(records),
           record: lead,
         }),
         executeJourneyTransition(ctx, {
@@ -926,7 +956,7 @@ describe("journeys backend integration", () => {
           transitionId: "trans_dup",
           eventId,
           generation: inst.generation,
-          deps: { recordService: records },
+          deps: makeJourneyDeps(records),
           record: lead,
         }),
       ]);
@@ -953,7 +983,7 @@ describe("journeys backend integration", () => {
     it("supports filtering by state, status, date range, and deadline, plus transition log", async () => {
       const { ctx } = await createTestOrganization();
       const records = createFixtureRecordService(ctx);
-      const service = createJourneysService({ recordService: records });
+      const service = createJourneysService(makeJourneyDeps(records));
 
       const journey = await service.createJourney(ctx, {
         name: "Filter Query Journey",
@@ -1068,6 +1098,103 @@ describe("journeys backend integration", () => {
       const journeysList = await service.listJourneys(ctx);
       const foundJourney = journeysList.find((j) => j.id === journey.id);
       expect(foundJourney?.currentRecordCount).toBe(1);
+    });
+
+    it("aggregates report metrics (state counts, average time, transition flow) and lists record instances", async () => {
+      const { ctx } = await createTestOrganization();
+      const records = createFixtureRecordService(ctx);
+      const service = createJourneysService({ recordService: records });
+
+      const journey = await service.createJourney(ctx, {
+        name: "Reporting Journey",
+        module: "Leads",
+      });
+
+      const states: JourneyState[] = [
+        {
+          id: "state_start",
+          name: "Start State",
+          isStart: true,
+          actions: [],
+          deadline: null,
+        },
+        {
+          id: "state_qualified",
+          name: "Qualified State",
+          isStart: false,
+          actions: [],
+          deadline: null,
+        },
+      ];
+
+      const transitions: JourneyTransition[] = [
+        {
+          id: "trans_qualify",
+          from: "state_start",
+          to: "state_qualified",
+          trigger: "record_updated",
+          criteria: null,
+          actions: [],
+        },
+      ];
+
+      await service.updateJourneyDraft(ctx, journey.id, { states, transitions });
+      await service.publishJourney(ctx, journey.id);
+
+      const lead = await records.create("Leads", {
+        First_Name: "Report",
+        Last_Name: "Lead",
+        Company: "Test Corp",
+      });
+
+      await service.enterActiveJourneys(ctx, {
+        module: "Leads",
+        recordId: lead.id,
+        record: lead,
+      });
+
+      // Initially in state_start
+      let recordInstances = await service.listRecordInstances(ctx, "Leads", lead.id);
+      expect(recordInstances).toHaveLength(1);
+      expect(recordInstances[0]?.journeyName).toBe("Reporting Journey");
+      expect(recordInstances[0]?.currentStateId).toBe("state_start");
+      expect(recordInstances[0]?.currentStateName).toBe("Start State");
+      expect(recordInstances[0]?.status).toBe("active");
+
+      // Verify report before transition
+      let report = await service.getJourneyReport(ctx, journey.id);
+      expect(report.summary.totalInstances).toBe(1);
+      expect(report.summary.active).toBe(1);
+      const startStateMetric = report.states.find((s) => s.id === "state_start");
+      expect(startStateMetric?.currentCount).toBe(1);
+      expect(startStateMetric?.totalEntered).toBe(1);
+      const qualifyTransition = report.transitions.find((t) => t.id === "trans_qualify");
+      expect(qualifyTransition?.count).toBe(0);
+
+      // Execute transition
+      await service.handleRecordEvent(ctx, {
+        kind: "edit",
+        module: "Leads",
+        record: lead,
+        previous: lead,
+        label: "Report Lead",
+      });
+
+      // Verify record instance after transition
+      recordInstances = await service.listRecordInstances(ctx, "Leads", lead.id);
+      expect(recordInstances).toHaveLength(1);
+      expect(recordInstances[0]?.currentStateId).toBe("state_qualified");
+      expect(recordInstances[0]?.currentStateName).toBe("Qualified State");
+
+      // Verify report after transition
+      report = await service.getJourneyReport(ctx, journey.id);
+      expect(report.summary.totalInstances).toBe(1);
+      const qualStateMetric = report.states.find((s) => s.id === "state_qualified");
+      expect(qualStateMetric?.currentCount).toBe(1);
+      expect(qualStateMetric?.totalEntered).toBe(1);
+      const updatedTransition = report.transitions.find((t) => t.id === "trans_qualify");
+      expect(updatedTransition?.count).toBe(1);
+      expect(updatedTransition?.successCount).toBe(1);
     });
   });
 });

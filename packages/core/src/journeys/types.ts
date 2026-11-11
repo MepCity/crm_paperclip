@@ -238,6 +238,7 @@ export interface JourneyInstanceSummary {
   versionId: string;
   recordModule: JourneyModule;
   recordId: string;
+  recordName?: string;
   currentStateId: string;
   stateEnteredAt: string;
   deadlineAt: string | null;
@@ -280,4 +281,63 @@ export interface JourneyInstanceFilterOptions {
   hasDeadline?: boolean;
   page?: number;
   limit?: number;
+}
+
+export interface JourneyStateReportMetric {
+  id: string;
+  name: string;
+  isStart: boolean;
+  currentCount: number;
+  totalEntered: number;
+  averageTimeInStateMs: number;
+  averageTimeInStateFormatted: string;
+}
+
+export interface JourneyTransitionReportMetric {
+  id: string;
+  from: string;
+  fromName: string;
+  to: string;
+  toName: string;
+  triggerKind: string;
+  count: number;
+  successCount: number;
+  failedCount: number;
+}
+
+export interface JourneyReportSummary {
+  totalInstances: number;
+  active: number;
+  completed: number;
+  exited: number;
+  stopped: number;
+}
+
+export interface JourneyReportData {
+  journey: {
+    id: string;
+    name: string;
+    module: JourneyModule;
+    status: JourneyStatus;
+    description: string;
+  };
+  summary: JourneyReportSummary;
+  states: JourneyStateReportMetric[];
+  transitions: JourneyTransitionReportMetric[];
+}
+
+export interface RecordJourneyInstanceItem {
+  id: string;
+  journeyId: string;
+  journeyName: string;
+  recordModule: JourneyModule;
+  recordId: string;
+  recordName?: string;
+  currentStateId: string;
+  currentStateName: string;
+  stateEnteredAt: string;
+  deadlineAt: string | null;
+  status: JourneyInstanceStatus;
+  generation: number;
+  createdAt: string;
 }

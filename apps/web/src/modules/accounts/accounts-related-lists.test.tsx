@@ -39,8 +39,8 @@ function mapRailEntries(
 describe("accountsRelatedLists definition", () => {
   const structuralLists = createAccountsRelatedLists({ includeContactsPreview: false });
 
-  it("defines exactly 16 cards in reference order", () => {
-    expect(structuralLists).toHaveLength(16);
+  it("defines exactly 17 cards in reference order", () => {
+    expect(structuralLists).toHaveLength(17);
 
     const expectedOrder = [
       { order: 1, id: "notes", title: "Notes", moduleKey: "M2" },
@@ -59,6 +59,7 @@ describe("accountsRelatedLists definition", () => {
       { order: 14, id: "cases", title: "Cases", moduleKey: "M3" },
       { order: 15, id: "social", title: "Social", moduleKey: "M2" },
       { order: 16, id: "cadences", title: "Cadences", moduleKey: "P3" },
+      { order: 17, id: "journeys", title: "Journeys", moduleKey: "M2" },
     ];
 
     expectedOrder.forEach((expected, i) => {

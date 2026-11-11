@@ -1,28 +1,35 @@
 import { randomUUID } from "node:crypto";
 import { schema } from "@crm/db";
-import { and, count, desc, eq, ilike, inArray, lte, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, ilike, inArray, lte, sql } from "drizzle-orm";
+import { getAccessSnapshot } from "../access";
 import { ConflictError, NotFoundError, ValidationError } from "../errors";
 import type { RecordData } from "../records";
 import type { RecordWriteEvent, RecordWriteObserver } from "../records/write-observer";
 import { withOrg } from "../tenancy";
 import type { OrgContext } from "../tenancy/types";
 import { computeDueAt } from "./delays";
-import type {
-  CreateJourneyInput,
-  JourneyDetail,
-  JourneyInstanceFilterOptions,
-  JourneyInstanceStatus,
-  JourneyInstanceSummary,
-  JourneyModule,
-  JourneyState,
-  JourneyStatus,
-  JourneySummary,
-  JourneyTransition,
-  JourneyTransitionRunSummary,
-  JourneyTrigger,
-  JourneyVersionState,
-  JourneyVersionSummary,
-  UpdateJourneyDraftInput,
+import {
+  type CreateJourneyInput,
+  JOURNEY_MODULES,
+  type JourneyDetail,
+  type JourneyInstanceFilterOptions,
+  type JourneyInstanceStatus,
+  type JourneyInstanceSummary,
+  type JourneyModule,
+  type JourneyReportData,
+  type JourneyReportSummary,
+  type JourneyState,
+  type JourneyStateReportMetric,
+  type JourneyStatus,
+  type JourneySummary,
+  type JourneyTransition,
+  type JourneyTransitionReportMetric,
+  type JourneyTransitionRunSummary,
+  type JourneyTrigger,
+  type JourneyVersionState,
+  type JourneyVersionSummary,
+  type RecordJourneyInstanceItem,
+  type UpdateJourneyDraftInput,
 } from "./types";
 import {
   validateCreateJourney,
@@ -36,6 +43,21 @@ function normalizeTriggerKind(trigger: JourneyTrigger): string {
   if ("kind" in trigger) return trigger.kind;
   if ("type" in trigger) return (trigger as { type: string }).type;
   return "unknown";
+}
+
+export function formatDuration(ms: number): string {
+  if (ms <= 0 || Number.isNaN(ms)) return "0m";
+  if (ms < 60000) return "< 1m";
+  const minutes = Math.floor(ms / 60000);
+  if (minutes < 60) return `${minutes}m`;
+  const hours = Math.floor(minutes / 60);
+  const remainingMinutes = minutes % 60;
+  if (hours < 24) {
+    return remainingMinutes > 0 ? `${hours}h ${remainingMinutes}m` : `${hours}h`;
+  }
+  const days = Math.floor(hours / 24);
+  const remainingHours = hours % 24;
+  return remainingHours > 0 ? `${days}d ${remainingHours}h` : `${days}d`;
 }
 
 type Tx = Parameters<Parameters<typeof withOrg>[1]>[0];
@@ -126,7 +148,15 @@ async function getJourneyInternal(
   };
 }
 
-export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
+export function createJourneysService(defaultDeps?: Partial<JourneysWorkerDeps>) {
+  const resolvedDeps: JourneysWorkerDeps = {
+    accessSnapshotProvider:
+      defaultDeps?.accessSnapshotProvider ??
+      ((ctx: OrgContext, userId: string) =>
+        getAccessSnapshot({ ...ctx, userId, accessVersion: undefined })),
+    ...defaultDeps,
+  };
+
   const activeJourneysCache = new Map<
     string,
     { fetchedAt: number; journeys: (typeof schema.journeys.$inferSelect)[] }
@@ -164,7 +194,6 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
     activeJourneysCache.set(ctx.orgId, { fetchedAt: now, journeys: activeJourneys });
     return activeJourneys.filter((j) => j.module === module);
   }
-
   return {
     async listJourneys(
       ctx: OrgContext,
@@ -817,6 +846,298 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
       });
     },
 
+    async getJourneyReport(
+      ctx: OrgContext,
+      journeyId: string,
+      options?: { startDate?: string; endDate?: string },
+    ): Promise<JourneyReportData> {
+      return withOrg(ctx, async (tx) => {
+        const [journeyRow] = await tx
+          .select()
+          .from(schema.journeys)
+          .where(
+            and(eq(schema.journeys.organizationId, ctx.orgId), eq(schema.journeys.id, journeyId)),
+          );
+        if (!journeyRow) throw new NotFoundError("Journey not found");
+
+        const targetVersionId = journeyRow.activeVersionId ?? journeyRow.draftVersionId;
+        let states: JourneyState[] = [];
+        let transitions: JourneyTransition[] = [];
+        if (targetVersionId) {
+          const [versionRow] = await tx
+            .select()
+            .from(schema.journeyVersions)
+            .where(
+              and(
+                eq(schema.journeyVersions.organizationId, ctx.orgId),
+                eq(schema.journeyVersions.id, targetVersionId),
+              ),
+            );
+          if (versionRow) {
+            states = (versionRow.states as JourneyState[]) ?? [];
+            transitions = (versionRow.transitions as JourneyTransition[]) ?? [];
+          }
+        }
+
+        const instanceConditions = [
+          eq(schema.journeyInstances.organizationId, ctx.orgId),
+          eq(schema.journeyInstances.journeyId, journeyId),
+        ];
+
+        let startDate: Date | null = null;
+        let endDate: Date | null = null;
+
+        if (options?.startDate) {
+          const d = new Date(options.startDate);
+          if (!Number.isNaN(d.getTime())) {
+            startDate = d;
+            instanceConditions.push(gte(schema.journeyInstances.createdAt, startDate));
+          }
+        }
+        if (options?.endDate) {
+          const d = new Date(options.endDate);
+          if (!Number.isNaN(d.getTime())) {
+            if (options.endDate.length === 10) {
+              endDate = new Date(`${options.endDate}T23:59:59.999Z`);
+            } else {
+              endDate = d;
+            }
+            instanceConditions.push(lte(schema.journeyInstances.createdAt, endDate));
+          }
+        }
+
+        const instances = await tx
+          .select()
+          .from(schema.journeyInstances)
+          .where(and(...instanceConditions));
+
+        const instanceIds = instances.map((i) => i.id);
+
+        let transitionRuns: (typeof schema.journeyTransitionRuns.$inferSelect)[] = [];
+        if (instanceIds.length > 0) {
+          const runConditions = [
+            eq(schema.journeyTransitionRuns.organizationId, ctx.orgId),
+            sql`${schema.journeyTransitionRuns.instanceId} in (${sql.join(
+              instanceIds.map((id) => sql`${id}`),
+              sql`, `,
+            )})`,
+          ];
+          if (startDate) {
+            runConditions.push(gte(schema.journeyTransitionRuns.executedAt, startDate));
+          }
+          if (endDate) {
+            runConditions.push(lte(schema.journeyTransitionRuns.executedAt, endDate));
+          }
+
+          transitionRuns = await tx
+            .select()
+            .from(schema.journeyTransitionRuns)
+            .where(and(...runConditions))
+            .orderBy(schema.journeyTransitionRuns.executedAt);
+        }
+
+        const summary: JourneyReportSummary = {
+          totalInstances: instances.length,
+          active: instances.filter((i) => i.status === "active").length,
+          completed: instances.filter((i) => i.status === "completed").length,
+          exited: instances.filter((i) => i.status === "exited").length,
+          stopped: instances.filter((i) => i.status === "stopped").length,
+        };
+
+        const transitionMetrics: JourneyTransitionReportMetric[] = transitions.map((tr) => {
+          const matchingRuns = transitionRuns.filter((r) => r.transitionId === tr.id);
+          const fromState = states.find((s) => s.id === tr.from);
+          const toState = states.find((s) => s.id === tr.to);
+          const successCount = matchingRuns.filter((r) => r.result === "success").length;
+          const failedCount = matchingRuns.filter((r) => r.result !== "success").length;
+
+          return {
+            id: tr.id,
+            from: tr.from,
+            fromName: fromState?.name ?? tr.from,
+            to: tr.to,
+            toName: toState?.name ?? tr.to,
+            triggerKind: normalizeTriggerKind(tr.trigger),
+            count: matchingRuns.length,
+            successCount,
+            failedCount,
+          };
+        });
+
+        const stateMetrics: JourneyStateReportMetric[] = states.map((st) => {
+          const currentInState = instances.filter(
+            (i) => i.currentStateId === st.id && i.status === "active",
+          );
+
+          const enteredInstanceIds = new Set<string>();
+          for (const inst of instances) {
+            if (inst.currentStateId === st.id) {
+              enteredInstanceIds.add(inst.id);
+            }
+          }
+          for (const run of transitionRuns) {
+            const trDef = transitions.find((t) => t.id === run.transitionId);
+            if (trDef?.to === st.id) {
+              enteredInstanceIds.add(run.instanceId);
+            }
+          }
+          if (st.isStart) {
+            for (const inst of instances) {
+              enteredInstanceIds.add(inst.id);
+            }
+          }
+
+          const durationsMs: number[] = [];
+
+          for (const run of transitionRuns) {
+            const trDef = transitions.find((t) => t.id === run.transitionId);
+            if (trDef?.from === st.id) {
+              const inst = instances.find((i) => i.id === run.instanceId);
+              if (inst) {
+                const prevRuns = transitionRuns
+                  .filter(
+                    (r) =>
+                      r.instanceId === inst.id && r.executedAt.getTime() < run.executedAt.getTime(),
+                  )
+                  .sort((a, b) => b.executedAt.getTime() - a.executedAt.getTime());
+
+                const entryRun = prevRuns.find((r) => {
+                  const def = transitions.find((t) => t.id === r.transitionId);
+                  return def?.to === st.id;
+                });
+
+                const enteredAtTime = entryRun
+                  ? entryRun.executedAt.getTime()
+                  : inst.createdAt.getTime();
+                const duration = Math.max(0, run.executedAt.getTime() - enteredAtTime);
+                durationsMs.push(duration);
+              }
+            }
+          }
+
+          for (const inst of currentInState) {
+            const duration = Math.max(0, Date.now() - inst.stateEnteredAt.getTime());
+            durationsMs.push(duration);
+          }
+
+          const avgMs =
+            durationsMs.length > 0
+              ? Math.round(durationsMs.reduce((a, b) => a + b, 0) / durationsMs.length)
+              : 0;
+
+          return {
+            id: st.id,
+            name: st.name,
+            isStart: Boolean(st.isStart),
+            currentCount: currentInState.length,
+            totalEntered: enteredInstanceIds.size,
+            averageTimeInStateMs: avgMs,
+            averageTimeInStateFormatted: formatDuration(avgMs),
+          };
+        });
+
+        return {
+          journey: {
+            id: journeyRow.id,
+            name: journeyRow.name,
+            module: journeyRow.module as JourneyModule,
+            status: journeyRow.status as JourneyStatus,
+            description: journeyRow.description,
+          },
+          summary,
+          states: stateMetrics,
+          transitions: transitionMetrics,
+        };
+      });
+    },
+
+    async listRecordInstances(
+      ctx: OrgContext,
+      recordModule: JourneyModule,
+      recordId: string,
+    ): Promise<RecordJourneyInstanceItem[]> {
+      if (!JOURNEY_MODULES.includes(recordModule)) {
+        throw new NotFoundError("Module does not support journeys");
+      }
+
+      return withOrg(ctx, async (tx) => {
+        const rows = await tx
+          .select({
+            id: schema.journeyInstances.id,
+            journeyId: schema.journeyInstances.journeyId,
+            journeyName: schema.journeys.name,
+            versionId: schema.journeyInstances.versionId,
+            recordModule: schema.journeyInstances.recordModule,
+            recordId: schema.journeyInstances.recordId,
+            currentStateId: schema.journeyInstances.currentStateId,
+            stateEnteredAt: schema.journeyInstances.stateEnteredAt,
+            deadlineAt: schema.journeyInstances.deadlineAt,
+            status: schema.journeyInstances.status,
+            generation: schema.journeyInstances.generation,
+            createdAt: schema.journeyInstances.createdAt,
+          })
+          .from(schema.journeyInstances)
+          .innerJoin(
+            schema.journeys,
+            and(
+              eq(schema.journeys.organizationId, schema.journeyInstances.organizationId),
+              eq(schema.journeys.id, schema.journeyInstances.journeyId),
+            ),
+          )
+          .where(
+            and(
+              eq(schema.journeyInstances.organizationId, ctx.orgId),
+              eq(schema.journeyInstances.recordModule, recordModule),
+              eq(schema.journeyInstances.recordId, recordId),
+            ),
+          )
+          .orderBy(desc(schema.journeyInstances.stateEnteredAt));
+
+        if (rows.length === 0) return [];
+
+        const versionIds = Array.from(new Set(rows.map((r) => r.versionId)));
+        const versionRows = await tx
+          .select({
+            id: schema.journeyVersions.id,
+            states: schema.journeyVersions.states,
+          })
+          .from(schema.journeyVersions)
+          .where(
+            and(
+              eq(schema.journeyVersions.organizationId, ctx.orgId),
+              sql`${schema.journeyVersions.id} in (${sql.join(
+                versionIds.map((id) => sql`${id}`),
+                sql`, `,
+              )})`,
+            ),
+          );
+
+        const versionStateMap = new Map<string, JourneyState[]>();
+        for (const v of versionRows) {
+          versionStateMap.set(v.id, (v.states as JourneyState[]) ?? []);
+        }
+
+        return rows.map((r) => {
+          const vStates = versionStateMap.get(r.versionId) ?? [];
+          const matchedState = vStates.find((s) => s.id === r.currentStateId);
+          return {
+            id: r.id,
+            journeyId: r.journeyId,
+            journeyName: r.journeyName,
+            recordModule: r.recordModule as JourneyModule,
+            recordId: r.recordId,
+            currentStateId: r.currentStateId,
+            currentStateName: matchedState?.name ?? r.currentStateId,
+            stateEnteredAt: r.stateEnteredAt.toISOString(),
+            deadlineAt: r.deadlineAt?.toISOString() ?? null,
+            status: r.status as JourneyInstanceStatus,
+            generation: r.generation,
+            createdAt: r.createdAt.toISOString(),
+          };
+        });
+      });
+    },
+
     async enterActiveJourneys(
       ctx: OrgContext,
       input: { module: string; recordId: string; record: RecordData },
@@ -868,7 +1189,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
 
           const now = new Date();
           const deadlineAt = startState.deadline
-            ? computeDueAt(now, startState.deadline, defaultDeps?.timeZone ?? "UTC")
+            ? computeDueAt(now, startState.deadline, resolvedDeps?.timeZone ?? "UTC")
             : null;
 
           const [newInstance] = await tx
@@ -919,7 +1240,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
 
             const dueAt = isImmediate
               ? now
-              : computeDueAt(now, action.timing, defaultDeps?.timeZone ?? "UTC");
+              : computeDueAt(now, action.timing, resolvedDeps?.timeZone ?? "UTC");
 
             const [dueRow] = await tx
               .insert(schema.journeyDueActions)
@@ -942,7 +1263,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
                 action,
                 input.record,
                 ownerId,
-                defaultDeps,
+                resolvedDeps,
               );
               await tx
                 .update(schema.journeyDueActions)
@@ -982,7 +1303,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
           transitionId: t.transitionId,
           eventId: `create_${t.instanceId}`,
           generation: 1,
-          deps: defaultDeps,
+          deps: resolvedDeps,
           record: input.record,
         });
       }
@@ -1044,7 +1365,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
               transitionId: t.id,
               eventId,
               generation: inst.generation,
-              deps: defaultDeps,
+              deps: resolvedDeps,
               record: event.record,
             });
             if (res.status === "completed") {
@@ -1141,7 +1462,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
             transitionId: t.id,
             eventId,
             generation: inst.generation,
-            deps: defaultDeps,
+            deps: resolvedDeps,
             record: input.record,
           });
           if (res.status === "completed") {
