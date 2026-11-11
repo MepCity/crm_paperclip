@@ -14,8 +14,9 @@ describe("createLeadsRelatedLists", () => {
       "campaigns",
       "social",
       "webform-usage",
+      "cadences",
     ]);
-    expect(lists.map((card) => card.order)).toEqual([0, 1, 2, 3, 4, 5, 6, 7]);
+    expect(lists.map((card) => card.order)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8]);
 
     const [notes, openActivities, closedActivities] = lists;
     expect(notes).toBeDefined();

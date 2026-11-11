@@ -1,4 +1,9 @@
 import { createElement } from "react";
+import {
+  CADENCE_ENROLL_LABEL,
+  CADENCES_RELATED_TITLE,
+  CadencesCardBody,
+} from "@/components/records/cadences/cadences-card-body";
 import { AccountContactsCardBody } from "@/components/records/detail/account-contacts-card-body";
 import { AccountMemberAccountsCardBody } from "@/components/records/detail/account-member-accounts-card-body";
 import { RelatedCasesCardBody } from "@/components/records/detail/related-cases-card-body";
@@ -558,6 +563,30 @@ export function createAccountsRelatedLists(
       order: 15,
       targetId: "related-list-social",
       renderBody: () => createElement(SocialRecordCardBody),
+    },
+    {
+      id: "cadences",
+      renderBody: ({ record }) =>
+        record
+          ? createElement(CadencesCardBody, { module: "Accounts", recordId: record.id })
+          : undefined,
+      title: CADENCES_RELATED_TITLE,
+      moduleKey: "P3",
+      order: 16,
+      targetId: "related-list-cadences",
+      railAction: {
+        id: "cadences-enroll",
+        label: CADENCE_ENROLL_LABEL,
+        moduleKey: "P3",
+      },
+      upperControls: [
+        {
+          id: "enroll",
+          label: CADENCE_ENROLL_LABEL,
+          type: "button",
+          moduleKey: "P3",
+        },
+      ],
     },
   ];
 }

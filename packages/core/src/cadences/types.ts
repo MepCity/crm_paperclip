@@ -158,3 +158,113 @@ export interface CadenceDetail extends Cadence {
   currentVersion: CadenceVersion;
   recordCount: number;
 }
+
+export const CADENCE_ENROLLMENT_STATES = [
+  "active",
+  "paused",
+  "completed",
+  "exited",
+  "stopped",
+] as const;
+export type CadenceEnrollmentState = (typeof CADENCE_ENROLLMENT_STATES)[number];
+
+export interface CadenceEnrollment {
+  id: string;
+  organizationId: string;
+  cadenceId: string;
+  versionId: string;
+  recordModule: CadenceModule;
+  recordId: string;
+  enrolledBy: string;
+  state: CadenceEnrollmentState;
+  reason: string | null;
+  generation: number;
+  nextStepId: string | null;
+  nextDueAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CadenceStepRun {
+  id: string;
+  organizationId: string;
+  enrollmentId: string;
+  stepId: string;
+  generation: number;
+  outcome: "completed" | "skipped" | "failed";
+  outcomeReason: string | null;
+  executedAt: string;
+}
+
+export const enrollRecordSchema = z.object({
+  cadenceId: z.string().uuid(),
+  recordModule: z.enum(CADENCE_MODULES),
+  recordId: z.string().min(1),
+});
+export type EnrollRecordInput = z.infer<typeof enrollRecordSchema>;
+
+export const enrollRecordsSchema = z.object({
+  cadenceId: z.string().uuid(),
+  recordModule: z.enum(CADENCE_MODULES),
+  recordIds: z.array(z.string().min(1)).min(1),
+});
+export type EnrollRecordsInput = z.infer<typeof enrollRecordsSchema>;
+
+export interface RecordCadenceEnrollmentItem {
+  id: string;
+  cadenceId: string;
+  cadenceName: string;
+  recordModule: CadenceModule;
+  recordId: string;
+  recordStartDate: string;
+  status: CadenceEnrollmentState;
+  reason: string | null;
+  generation: number;
+  nextStepId: string | null;
+  nextDueAt: string | null;
+}
+
+export interface CadenceReportSummary {
+  enrolled: number;
+  active: number;
+  completed: number;
+  exited: number;
+  stopped: number;
+  paused: number;
+}
+
+export interface CadenceStepMetric {
+  stepId: string;
+  stepKind: "email" | "task" | "call";
+  stepName: string;
+  delayText?: string;
+  executed: number;
+  skipped: number;
+  skippedReasons: Record<string, number>;
+  failed: number;
+  emailsSent?: number;
+  replies?: number;
+  tasksCreated?: number;
+  tasksCompleted?: number;
+  callsCreated?: number;
+  callsCompleted?: number;
+  enteredCount: number;
+  completedCount: number;
+  conversionRate: number;
+}
+
+export interface CadenceReportData {
+  cadence: {
+    id: string;
+    name: string;
+    module: CadenceModule;
+    status: CadenceStatus;
+    createdAt: string;
+  };
+  dateRange: {
+    startDate?: string;
+    endDate?: string;
+  };
+  summary: CadenceReportSummary;
+  stepMetrics: CadenceStepMetric[];
+}

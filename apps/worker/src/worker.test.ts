@@ -6,6 +6,7 @@ import {
   JobExecutionError,
   type JobQueue,
 } from "@crm/core/jobs";
+import type { RecordService } from "@crm/core/records";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { bindSignals } from "./main";
 import { HandlerRegistry, type JobHandler, Worker } from "./worker";
@@ -365,5 +366,83 @@ describe("worker lifecycle", () => {
     await flush();
     await stop;
     expect(run).not.toHaveBeenCalled();
+  });
+
+  it("executes cadence step handler under Worker lifecycle and fence", async () => {
+    const { createCadenceJobCatalog, CADENCE_STEP_JOB_KIND, CADENCE_STEP_JOB_VERSION } =
+      await import("@crm/core/cadences");
+    const catalog = createCadenceJobCatalog();
+    const queue = new InMemoryJobQueue(catalog, Date.now, () => 1);
+    const run = vi.fn();
+    const handler = {
+      kind: CADENCE_STEP_JOB_KIND,
+      version: CADENCE_STEP_JOB_VERSION,
+      isCurrent: async () => true,
+      run,
+    };
+    const worker = new Worker({
+      queue: queue as JobQueue,
+      catalog,
+      workerId: "worker-cadence",
+      handlers: new HandlerRegistry([handler]),
+    });
+    await queue.enqueue(
+      { organizationId: "org-cadence" },
+      {
+        kind: CADENCE_STEP_JOB_KIND,
+        payloadVersion: CADENCE_STEP_JOB_VERSION,
+        payload: {
+          enrollmentId: "enr-1",
+          stepId: "step-1",
+          cadenceGeneration: "1",
+        },
+        idempotencyKey: "cadence_enr-1_step-1_1",
+      },
+    );
+    worker.start();
+    await flush();
+    await worker.stop();
+    expect(run).toHaveBeenCalledTimes(1);
+  });
+
+  it("startEphemeralWorker connects cadence step and sweep handlers on unified catalog and queue", async () => {
+    const { startEphemeralWorker } = await import("./main");
+    const signals = new EventEmitter();
+    const fakeRecordService = {
+      list: vi.fn(),
+      listViews: vi.fn(),
+    } as unknown as RecordService;
+
+    const worker = startEphemeralWorker({
+      signals,
+      recordService: fakeRecordService,
+    });
+
+    try {
+      await flush();
+      expect(worker.ready).toBe(true);
+      expect(worker.runtime.handlers.get("mail_send", 1)).toBeDefined();
+      expect(worker.runtime.handlers.get("mail_sync", 1)).toBeDefined();
+      expect(worker.runtime.handlers.get("cadence_step", 1)).toBeDefined();
+      expect(worker.runtime.handlers.get("cadence_sweep", 1)).toBeDefined();
+
+      // Enqueue cadence step and sweep jobs on the worker queue
+      await worker.runtime.queue.enqueue(
+        { organizationId: "org-unified" },
+        {
+          kind: "cadence_step",
+          payloadVersion: 1,
+          payload: {
+            enrollmentId: "enr-unified",
+            stepId: "step-unified",
+            cadenceGeneration: "1",
+          },
+          idempotencyKey: "unified-step-1",
+        },
+      );
+      await flush();
+    } finally {
+      await worker.stop();
+    }
   });
 });

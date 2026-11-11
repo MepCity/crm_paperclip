@@ -35,12 +35,14 @@ const WIRE_TO_SOURCE: Record<string, HistorySource> = {
   crm_api: "api",
   import: "import",
   webform: "webform",
+  cadence: "cadence",
 };
 const SOURCE_TO_WIRE: Record<HistorySource, string> = {
   manual: "crm_ui",
   api: "crm_api",
   import: "import",
   webform: "webform",
+  cadence: "cadence",
 };
 const DEFAULT_PER_PAGE = 25;
 const MAX_PER_PAGE = 200;

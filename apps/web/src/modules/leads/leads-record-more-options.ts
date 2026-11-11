@@ -11,6 +11,7 @@ export type LeadsRecordMoreOptionsHandlers = {
   onDelete: () => void;
   onFindMergeDuplicates?: () => void;
   onPrintPreview?: () => void;
+  onEnrollCadence?: () => void;
 };
 
 type SpecMenuItem = {
@@ -102,6 +103,13 @@ export function buildLeadsRecordMoreMenuGroups(
       )
       .map((item) => {
         const key = item.handlerKey;
+        if (item.id === "enroll-cadence" && handlers.onEnrollCadence) {
+          return {
+            id: item.id,
+            label: item.label,
+            onAction: handlers.onEnrollCadence,
+          };
+        }
         return {
           id: item.id,
           label: item.label,

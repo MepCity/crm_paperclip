@@ -1,11 +1,21 @@
 import { pathToFileURL } from "node:url";
-import { InMemoryJobQueue } from "@crm/core/jobs";
+import {
+  type CadenceWorkerDeps,
+  cadenceJobDefinitions,
+  createCadenceJobCatalog,
+  createCadenceStepHandler,
+  createCadenceSweepHandler,
+} from "@crm/core/cadences";
+import { InMemoryJobQueue, JobCatalog } from "@crm/core/jobs";
 import {
   createInMemoryMailRepository,
   createMailJobCatalog,
   createMailSendHandler,
   createMailSyncHandler,
+  mailSendJobDefinition,
+  mailSyncJobDefinition,
 } from "@crm/core/mail";
+import type { RecordService } from "@crm/core/records";
 import { HandlerRegistry, Worker } from "./worker";
 
 export interface SignalSource {
@@ -84,20 +94,106 @@ export function createEphemeralMailRuntime() {
   return { catalog, queue, repository, handlers };
 }
 
-export function startEphemeralWorker() {
-  const { catalog, queue, handlers } = createEphemeralMailRuntime();
+export function createEphemeralCadenceRuntime(
+  deps?: CadenceWorkerDeps & { recordService?: RecordService },
+) {
+  const catalog = createCadenceJobCatalog();
+  const queue = new InMemoryJobQueue(catalog);
+  const handlers = new HandlerRegistry([
+    createCadenceStepHandler({ ...deps, jobQueue: queue }),
+    ...(deps?.recordService
+      ? [createCadenceSweepHandler({ ...deps, recordService: deps.recordService, jobQueue: queue })]
+      : []),
+  ]);
+  return { catalog, queue, handlers };
+}
+
+export interface EphemeralWorkerOptions {
+  recordService?: RecordService;
+  cadenceDeps?: CadenceWorkerDeps;
+  signals?: SignalSource;
+  exit?: (forced: boolean) => void;
+  workerId?: string;
+  concurrency?: number;
+}
+
+export function createEphemeralRuntime(options?: {
+  recordService?: RecordService;
+  cadenceDeps?: CadenceWorkerDeps;
+}) {
+  const mailDefinitions = [mailSendJobDefinition, mailSyncJobDefinition];
+  const catalog = new JobCatalog([...mailDefinitions, ...cadenceJobDefinitions]);
+  const queue = new InMemoryJobQueue(catalog);
+  const repository = createInMemoryMailRepository();
+  const recordAddressLookup = {
+    async findByAddress() {
+      return [];
+    },
+  };
+  const mailHandlers = [
+    createMailSendHandler({
+      repository,
+      queue,
+      recordAddressLookup,
+      canReadRecord: () => false,
+      sender: {
+        async send() {
+          return { status: "rejected", reason: "fake_provider", retryable: false };
+        },
+      },
+    }),
+    createMailSyncHandler({
+      repository,
+      recordAddressLookup,
+      connector: {
+        async listChanges(_mailbox, cursor) {
+          return { messageIds: [], nextCursor: cursor ?? "fake-empty" };
+        },
+        async fetchMessage() {
+          return null;
+        },
+        async sendRaw() {
+          throw new Error("Fake connector cannot send");
+        },
+        async revoke() {},
+        async disconnect() {},
+      },
+    }),
+  ];
+
+  const cadenceDeps = { ...options?.cadenceDeps };
+  const recordService = options?.recordService ?? cadenceDeps.recordService;
+
+  const cadenceHandlers = [
+    createCadenceStepHandler({ ...cadenceDeps, recordService, jobQueue: queue }),
+    ...(recordService
+      ? [createCadenceSweepHandler({ ...cadenceDeps, recordService, jobQueue: queue })]
+      : []),
+  ];
+
+  const handlers = new HandlerRegistry([...mailHandlers, ...cadenceHandlers]);
+  return { catalog, queue, repository, handlers };
+}
+
+export function startEphemeralWorker(options?: EphemeralWorkerOptions) {
+  const runtime = createEphemeralRuntime(options);
   const worker = new Worker({
-    queue,
-    catalog,
-    handlers,
-    workerId: `worker-${process.pid}`,
+    queue: runtime.queue,
+    catalog: runtime.catalog,
+    handlers: runtime.handlers,
+    workerId: options?.workerId ?? `worker-${process.pid}`,
+    ...(options?.concurrency ? { concurrency: options.concurrency } : {}),
   });
-  bindSignals(worker, process, (forced) => {
-    if (forced) process.exit(1);
-    process.exitCode = 0;
-  });
+  if (options?.signals) {
+    bindSignals(worker, options.signals, options.exit ?? (() => {}));
+  } else if (typeof process !== "undefined") {
+    bindSignals(worker, process, (forced) => {
+      if (forced) process.exit(1);
+      process.exitCode = 0;
+    });
+  }
   worker.start();
-  return worker;
+  return Object.assign(worker, { runtime });
 }
 
 // Imports are inert. Production must not silently select ephemeral storage.

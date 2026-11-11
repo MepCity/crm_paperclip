@@ -143,4 +143,89 @@ test("cadences: C1 empty list → C1a/C1b filter menus → C2 create dialog → 
   await backBtn.click();
   await expect(page.getByText("Inbound Lead Nurturing")).toBeVisible();
   await expect(page.getByTestId("cadence-search-input")).toBeVisible();
+
+  // 11. Navigate to Leads list and open first lead
+  await page.goto(`/crm/${org.slug}/tab/Leads/list`);
+  const recordTable = page.getByRole("table", { name: "Records" });
+  await expect(recordTable).toBeVisible({ timeout: 15_000 });
+  const firstLeadLink = recordTable.locator("tbody tr").first().locator("a").first();
+  await firstLeadLink.click();
+
+  // 12. Record detail More Options -> Enroll to Cadence
+  const moreBtn = page.getByRole("button", { name: "More Options" });
+  await expect(moreBtn).toBeVisible({ timeout: 10_000 });
+  await moreBtn.click();
+  const menu = page.getByRole("menu", { name: "More Options" });
+  await expect(menu).toBeVisible();
+  const enrollItem = menu.getByRole("menuitem", { name: "Enroll to Cadence" });
+  await expect(enrollItem).toBeVisible();
+  await enrollItem.click();
+
+  // 13. Enroll dialog opens, shows active cadence, click Enroll
+  const enrollDialog = page.getByRole("dialog", { name: "Enroll to Cadence" });
+  await expect(enrollDialog).toBeVisible();
+  const enrollBtn = enrollDialog.getByRole("button", { name: "Enroll" });
+  await expect(enrollBtn).toBeEnabled();
+  await enrollBtn.click();
+  await expect(enrollDialog).toBeHidden();
+
+  // 14. Verify Cadences related list on Lead detail
+  const cadencesCard = page.locator('[data-related-card="cadences"]');
+  await cadencesCard.scrollIntoViewIfNeeded();
+  await expect(cadencesCard).toBeVisible();
+
+  const cadencesTable = cadencesCard.getByTestId("cadences-related-table");
+  await expect(cadencesTable).toBeVisible({ timeout: 10_000 });
+  await expect(cadencesTable.getByText("Inbound Lead Nurturing")).toBeVisible();
+  await expect(cadencesTable.getByText("Active")).toBeVisible();
+
+  // Screenshot: Lead detail with Cadences card
+  await page.screenshot({ path: join(evidenceDir, "cadences-lead-detail-card.png") });
+
+  // Test Pause action in related list row
+  const pauseBtn = cadencesTable.locator('[data-testid^="cadence-pause-"]');
+  await expect(pauseBtn).toBeVisible();
+  await pauseBtn.click();
+  await expect(cadencesTable.getByText("Paused")).toBeVisible();
+
+  // Test Resume action
+  const resumeBtn = cadencesTable.locator('[data-testid^="cadence-resume-"]');
+  await expect(resumeBtn).toBeVisible();
+  await resumeBtn.click();
+  await expect(cadencesTable.getByText("Active")).toBeVisible();
+
+  // 15. Navigate to Cadences list screen and verify Number of Records column
+  await page.goto(`/crm/${org.slug}/settings/cadences`);
+  await expect(page.getByTestId("cadence-search-input")).toBeVisible();
+  const cadenceRow = page.locator("tbody tr").first();
+  await expect(cadenceRow).toBeVisible();
+  await expect(cadenceRow.getByText("Inbound Lead Nurturing")).toBeVisible();
+  // Verify Number of Records is 1
+  await expect(cadenceRow.locator("td").nth(3)).toHaveText("1");
+
+  // Screenshot: C1 with row
+  await page.screenshot({ path: join(evidenceDir, "cadences-c1-with-row.png") });
+
+  // 16. Navigate to Cadence editor and click Reports
+  await cadenceRow.click();
+  await expect(page.getByTestId("cadence-editor-name")).toBeVisible({ timeout: 15_000 });
+  const reportsBtn = page.getByTestId("cadence-reports-button");
+  await expect(reportsBtn).toBeVisible();
+  await reportsBtn.click();
+
+  // 17. Verify Cadence Report Screen
+  await expect(page.getByTestId("report-cadence-title")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId("report-cadence-title")).toContainText("Inbound Lead Nurturing");
+  await expect(page.getByTestId("kpi-enrolled")).toHaveText("1");
+  await expect(page.getByTestId("kpi-active")).toHaveText("1");
+
+  // Test Date range filter button
+  await expect(page.getByTestId("report-range-7d")).toBeVisible();
+  const range30Btn = page.getByTestId("report-range-30d");
+  await expect(range30Btn).toBeVisible();
+  await range30Btn.click();
+  await expect(page.getByTestId("kpi-enrolled")).toHaveText("1");
+
+  // Screenshot: Cadence Report Page
+  await page.screenshot({ path: join(evidenceDir, "cadences-report-page.png") });
 });
