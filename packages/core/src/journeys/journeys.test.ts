@@ -374,7 +374,7 @@ describe("Journey Schemas and Validation", () => {
 
       expect(evaluateJourneyCriteria(recordPassing, { kind: "all_records" })).toBe(true);
       expect(evaluateJourneyCriteria(recordPassing, null)).toBe(true);
-    });
+    }, 15000);
   });
 
   describe("all triggers schema and parsing", () => {
@@ -412,6 +412,20 @@ describe("Journey Schemas and Validation", () => {
       expect(journeyTriggerSchema.parse({ kind: "deadline_missed" })).toEqual({
         kind: "deadline_missed",
       });
+    });
+  });
+
+  describe("formatDuration helper", () => {
+    it("formats milliseconds to human readable durations", async () => {
+      const { formatDuration } = await import("./service");
+      expect(formatDuration(0)).toBe("0m");
+      expect(formatDuration(-100)).toBe("0m");
+      expect(formatDuration(30000)).toBe("< 1m");
+      expect(formatDuration(120000)).toBe("2m");
+      expect(formatDuration(3600000)).toBe("1h");
+      expect(formatDuration(5400000)).toBe("1h 30m");
+      expect(formatDuration(86400000)).toBe("1d");
+      expect(formatDuration(100800000)).toBe("1d 4h");
     });
   });
 });

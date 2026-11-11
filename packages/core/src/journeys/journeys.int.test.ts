@@ -1069,5 +1069,102 @@ describe("journeys backend integration", () => {
       const foundJourney = journeysList.find((j) => j.id === journey.id);
       expect(foundJourney?.currentRecordCount).toBe(1);
     });
+
+    it("aggregates report metrics (state counts, average time, transition flow) and lists record instances", async () => {
+      const { ctx } = await createTestOrganization();
+      const records = createFixtureRecordService(ctx);
+      const service = createJourneysService({ recordService: records });
+
+      const journey = await service.createJourney(ctx, {
+        name: "Reporting Journey",
+        module: "Leads",
+      });
+
+      const states: JourneyState[] = [
+        {
+          id: "state_start",
+          name: "Start State",
+          isStart: true,
+          actions: [],
+          deadline: null,
+        },
+        {
+          id: "state_qualified",
+          name: "Qualified State",
+          isStart: false,
+          actions: [],
+          deadline: null,
+        },
+      ];
+
+      const transitions: JourneyTransition[] = [
+        {
+          id: "trans_qualify",
+          from: "state_start",
+          to: "state_qualified",
+          trigger: "record_updated",
+          criteria: null,
+          actions: [],
+        },
+      ];
+
+      await service.updateJourneyDraft(ctx, journey.id, { states, transitions });
+      await service.publishJourney(ctx, journey.id);
+
+      const lead = await records.create("Leads", {
+        First_Name: "Report",
+        Last_Name: "Lead",
+        Company: "Test Corp",
+      });
+
+      await service.enterActiveJourneys(ctx, {
+        module: "Leads",
+        recordId: lead.id,
+        record: lead,
+      });
+
+      // Initially in state_start
+      let recordInstances = await service.listRecordInstances(ctx, "Leads", lead.id);
+      expect(recordInstances).toHaveLength(1);
+      expect(recordInstances[0]?.journeyName).toBe("Reporting Journey");
+      expect(recordInstances[0]?.currentStateId).toBe("state_start");
+      expect(recordInstances[0]?.currentStateName).toBe("Start State");
+      expect(recordInstances[0]?.status).toBe("active");
+
+      // Verify report before transition
+      let report = await service.getJourneyReport(ctx, journey.id);
+      expect(report.summary.totalInstances).toBe(1);
+      expect(report.summary.active).toBe(1);
+      const startStateMetric = report.states.find((s) => s.id === "state_start");
+      expect(startStateMetric?.currentCount).toBe(1);
+      expect(startStateMetric?.totalEntered).toBe(1);
+      const qualifyTransition = report.transitions.find((t) => t.id === "trans_qualify");
+      expect(qualifyTransition?.count).toBe(0);
+
+      // Execute transition
+      await service.handleRecordEvent(ctx, {
+        kind: "edit",
+        module: "Leads",
+        record: lead,
+        previous: lead,
+        label: "Report Lead",
+      });
+
+      // Verify record instance after transition
+      recordInstances = await service.listRecordInstances(ctx, "Leads", lead.id);
+      expect(recordInstances).toHaveLength(1);
+      expect(recordInstances[0]?.currentStateId).toBe("state_qualified");
+      expect(recordInstances[0]?.currentStateName).toBe("Qualified State");
+
+      // Verify report after transition
+      report = await service.getJourneyReport(ctx, journey.id);
+      expect(report.summary.totalInstances).toBe(1);
+      const qualStateMetric = report.states.find((s) => s.id === "state_qualified");
+      expect(qualStateMetric?.currentCount).toBe(1);
+      expect(qualStateMetric?.totalEntered).toBe(1);
+      const updatedTransition = report.transitions.find((t) => t.id === "trans_qualify");
+      expect(updatedTransition?.count).toBe(1);
+      expect(updatedTransition?.successCount).toBe(1);
+    });
   });
 });
