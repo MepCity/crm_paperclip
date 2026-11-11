@@ -10,6 +10,10 @@ import { RelatedCasesCardBody } from "@/components/records/detail/related-cases-
 import { RelatedDealsCardBody } from "@/components/records/detail/related-deals-card-body";
 import { RelatedInvoicesCardBody } from "@/components/records/detail/related-invoices-card-body";
 import { RelatedQuotesCardBody } from "@/components/records/detail/related-quotes-card-body";
+import {
+  JOURNEYS_RELATED_TITLE,
+  JourneysCardBody,
+} from "@/components/records/journeys/journeys-card-body";
 import { Icons } from "@/components/ui/icon";
 import { attachmentsCard } from "../attachments-card";
 import { emailsCard } from "../emails/record-card";
@@ -587,6 +591,18 @@ export function createAccountsRelatedLists(
           moduleKey: "P3",
         },
       ],
+    },
+    {
+      id: "journeys",
+      renderBody: ({ record }) =>
+        record
+          ? createElement(JourneysCardBody, { module: "Accounts", recordId: record.id })
+          : undefined,
+      title: JOURNEYS_RELATED_TITLE,
+      moduleKey: "M2",
+      order: 17,
+      targetId: "related-list-journeys",
+      emptyStateText: "No records found",
     },
   ];
 }

@@ -1429,6 +1429,9 @@
   "journeys": {
     "list": {
       "title": "Journey Builder",
+      "pathFinderTab": "PathFinder",
+      "journeyBuilderTab": "Journey Builder",
+      "subtitle": "Build, automate, and measure the efficiency of complex business processes involving multiple modules in CRM.",
       "help": "Help",
       "searchPlaceholder": "Search journeys",
       "createJourney": "Create Journey",
@@ -1499,7 +1502,64 @@
       "triggerDeadlineMissed": "Deadline Missed",
       "criteria": "Criteria",
       "criteriaAll": "All Records",
-      "criteriaCondition": "Matching Criteria"
+      "criteriaCondition": "Matching Criteria",
+      "tabCanvas": "Canvas"
+    },
+    "reports": {
+      "title": "Reports",
+      "backToEditor": "Back to Journey",
+      "dateRange7d": "Last 7 days",
+      "dateRange30d": "Last 30 days",
+      "dateRange90d": "Last 90 days",
+      "dateRangeAll": "All time",
+      "summaryTitle": "Journey Execution Summary",
+      "totalRecords": "Total Records",
+      "active": "Active",
+      "completed": "Completed",
+      "exited": "Exited",
+      "stopped": "Stopped",
+      "recordsPerStateTitle": "Records per State",
+      "colState": "State",
+      "colCurrentRecords": "Current",
+      "colTotalEntered": "Total Entered",
+      "colAverageTime": "Avg Time",
+      "overallFlowTitle": "Overall Flow",
+      "colTransition": "Transition",
+      "colTrigger": "Trigger",
+      "colExecutions": "Executions",
+      "colSuccessRate": "Success Rate",
+      "noTransitions": "No transitions configured.",
+      "noStates": "No states configured in this journey."
+    },
+    "participants": {
+      "title": "Participating Records",
+      "allStates": "All States",
+      "allStatuses": "All Statuses",
+      "filterState": "State",
+      "filterStatus": "Status",
+      "filterEntryDate": "Entry Date",
+      "filterDeadline": "Deadline",
+      "colRecord": "Record",
+      "colState": "Current State",
+      "colEnteredAt": "Entered At",
+      "colDeadline": "Deadline",
+      "colStatus": "Status",
+      "colActions": "Actions",
+      "viewLog": "Transition Log",
+      "logModalTitle": "Transition Log",
+      "noLogs": "No transitions executed yet.",
+      "empty": "No participating records found.",
+      "colTransitionName": "Transition",
+      "colResult": "Result",
+      "colExecutedAt": "Executed At",
+      "close": "Close"
+    },
+    "recordRelated": {
+      "columnJourney": "Journey Name",
+      "columnState": "Current State",
+      "columnEnteredAt": "Entered At",
+      "columnStatus": "Status",
+      "noRecords": "No journeys found"
     }
   }
 }

@@ -1428,7 +1428,10 @@
   },
   "journeys": {
     "list": {
-      "title": "Journey Builder",
+      "title": "Yolculuk Oluşturucu",
+      "pathFinderTab": "PathFinder",
+      "journeyBuilderTab": "Yolculuk Oluşturucu",
+      "subtitle": "CRM içinde birden fazla modül içeren karmaşık iş süreci oluşturun, otomatikleştirin ve bunun verimliliğini ölçün.",
       "help": "Yardım",
       "searchPlaceholder": "Yolculukları ara",
       "createJourney": "Yolculuk Oluştur",
@@ -1438,9 +1441,9 @@
       "statusInactive": "Etkin Değil",
       "statusDraft": "Taslak",
       "empty": "Yolculuk bulunamadı.",
-      "columnName": "Journey Builder Adı",
-      "columnRecordCount": "Mevcut Kayıt Sayısı",
-      "columnLastModified": "Son Değişiklik",
+      "columnName": "Yolculuk Oluşturucu Adı",
+      "columnRecordCount": "Geçerli Kayıt Sayısı",
+      "columnLastModified": "Son Değiştirme",
       "columnStatus": "Durum"
     },
     "dialog": {
@@ -1499,7 +1502,64 @@
       "triggerDeadlineMissed": "Son Tarih Kaçırıldığında",
       "criteria": "Kriterler",
       "criteriaAll": "Tüm Kayıtlar",
-      "criteriaCondition": "Eşleşen Kriterler"
+      "criteriaCondition": "Eşleşen Kriterler",
+      "tabCanvas": "Tasarım"
+    },
+    "reports": {
+      "title": "Raporlar",
+      "backToEditor": "Yolculuğa Dön",
+      "dateRange7d": "Son 7 gün",
+      "dateRange30d": "Son 30 gün",
+      "dateRange90d": "Son 90 gün",
+      "dateRangeAll": "Tüm zamanlar",
+      "summaryTitle": "Yolculuk Yürütme Özeti",
+      "totalRecords": "Toplam Kayıt",
+      "active": "Etkin",
+      "completed": "Tamamlandı",
+      "exited": "Ayrıldı",
+      "stopped": "Durduruldu",
+      "recordsPerStateTitle": "Durum Başına Kayıtlar",
+      "colState": "Durum",
+      "colCurrentRecords": "Geçerli",
+      "colTotalEntered": "Toplam Giriş",
+      "colAverageTime": "Ortalama Süre",
+      "overallFlowTitle": "Genel Akış",
+      "colTransition": "Geçiş",
+      "colTrigger": "Tetikleyici",
+      "colExecutions": "Yürütme",
+      "colSuccessRate": "Başarı Oranı",
+      "noTransitions": "Yapılandırılmış geçiş yok.",
+      "noStates": "Bu yolculukta yapılandırılmış durum yok."
+    },
+    "participants": {
+      "title": "Katılımcı Kayıtlar",
+      "allStates": "Tüm Durumlar",
+      "allStatuses": "Tüm Durumlar",
+      "filterState": "Durum",
+      "filterStatus": "Durum",
+      "filterEntryDate": "Giriş Tarihi",
+      "filterDeadline": "Son Tarih",
+      "colRecord": "Kayıt",
+      "colState": "Geçerli Durum",
+      "colEnteredAt": "Giriş Tarihi",
+      "colDeadline": "Son Tarih",
+      "colStatus": "Durum",
+      "colActions": "İşlemler",
+      "viewLog": "Geçiş Günlüğü",
+      "logModalTitle": "Geçiş Günlüğü",
+      "noLogs": "Henüz yürütülen geçiş yok.",
+      "empty": "Katılımcı kayıt bulunamadı.",
+      "colTransitionName": "Geçiş",
+      "colResult": "Sonuç",
+      "colExecutedAt": "Yürütülme Tarihi",
+      "close": "Kapat"
+    },
+    "recordRelated": {
+      "columnJourney": "Yolculuk Adı",
+      "columnState": "Geçerli Durum",
+      "columnEnteredAt": "Giriş Tarihi",
+      "columnStatus": "Durum",
+      "noRecords": "Yolculuk bulunamadı"
     }
   }
 }

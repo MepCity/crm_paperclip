@@ -220,3 +220,133 @@ test("journeys execution: published journey + new Lead → instance in start sta
   // Screenshot: Tasks page showing task created by journey transition action
   await page.screenshot({ path: join(evidenceDir, "journeys-transition-task-created.png") });
 });
+
+test("journeys C: record in journey appears in record Journeys related list, editor participating records tab, and report metrics", async ({
+  page,
+}) => {
+  const evidenceDir = process.env.MEP_EVIDENCE_DIR || "/tmp/journeys-evidence";
+  mkdirSync(evidenceDir, { recursive: true });
+
+  await page.setViewportSize({ width: 1180, height: 703 });
+  await signUpNewUser(page);
+  const org = await createOrganization(page);
+
+  const headers = { "X-CRM-ORG": org.slug, Origin: new URL(page.url()).origin };
+
+  // 1. Create a Journey for Leads via settings API
+  const createRes = await page.request.post("/crm/v2.1/settings/journeys", {
+    headers,
+    data: {
+      name: "Enterprise Customer Journey",
+      module: "Leads",
+      description: "Lead nurturing sequence",
+    },
+  });
+  expect(createRes.status()).toBe(200);
+  const { journey } = await createRes.json();
+
+  // 2. Configure States & Transition
+  const states = [
+    {
+      id: "state_new",
+      name: "New Lead",
+      isStart: true,
+      actions: [],
+      deadline: null,
+    },
+    {
+      id: "state_contacted",
+      name: "Contacted",
+      isStart: false,
+      actions: [],
+      deadline: null,
+    },
+  ];
+
+  const transitions = [
+    {
+      id: "trans_contact",
+      from: "state_new",
+      to: "state_contacted",
+      trigger: "record_updated",
+      criteria: null,
+      actions: [],
+    },
+  ];
+
+  const updateRes = await page.request.put(`/crm/v2.1/settings/journeys/${journey.id}`, {
+    headers,
+    data: { states, transitions },
+  });
+  expect(updateRes.status()).toBe(200);
+
+  // 3. Publish Journey
+  const pubRes = await page.request.post(
+    `/crm/v2.1/settings/journeys/${journey.id}/actions/publish`,
+    { headers },
+  );
+  expect(pubRes.status()).toBe(200);
+
+  // 4. Create Lead Record -> Enters Journey
+  const leadRes = await page.request.post("/crm/v2.2/Leads", {
+    headers,
+    data: {
+      data: [
+        {
+          First_Name: "Ayşe",
+          Last_Name: "Yılmaz",
+          Company: "Yılmaz Lojistik",
+        },
+      ],
+    },
+  });
+  expect(leadRes.status()).toBe(200);
+  const leadData = await leadRes.json();
+  const leadId = leadData.data[0].details.id;
+  expect(leadId).toBeDefined();
+
+  // 5. Navigate to Lead Record Detail -> Verify Journeys Related List Card
+  await page.goto(`/crm/${org.slug}/tab/Leads/${leadId}`);
+  await page.locator('[data-related-card="journeys"]').scrollIntoViewIfNeeded();
+  await expect(page.getByTestId("journeys-related-table")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByText("Enterprise Customer Journey")).toBeVisible();
+  await expect(page.getByText("New Lead")).toBeVisible();
+  await expect(page.getByText("active")).toBeVisible();
+
+  // Screenshot 1: Lead detail with Journeys related list card at 1180x703
+  await page.screenshot({ path: join(evidenceDir, "journeys-lead-detail-related-list.png") });
+
+  // 6. Navigate to Journey Builder Canvas Editor -> Check Participating Records Tab
+  await page.goto(`/crm/${org.slug}/settings/commandcenter/journey-builder/${journey.id}`);
+  await expect(page.getByTestId("journey-editor-name")).toBeVisible({ timeout: 15_000 });
+
+  // Screenshot 2: Canvas editor screen at 1180x703
+  await page.screenshot({ path: join(evidenceDir, "journeys-canvas-editor.png") });
+
+  // Switch to Participating Records Tab
+  await page.getByTestId("tab-participating-records").click();
+  const participantsTable = page.getByTestId("participants-table");
+  await expect(participantsTable).toBeVisible({ timeout: 15_000 });
+  await expect(participantsTable.getByText("Ayşe Yılmaz")).toBeVisible();
+  await expect(participantsTable.getByText("New Lead")).toBeVisible();
+
+  // Screenshot 3: Participating records tab at 1180x703
+  await page.screenshot({ path: join(evidenceDir, "journeys-editor-participants.png") });
+
+  // 7. Navigate to Journey Reports Screen
+  await page.getByTestId("journey-reports-button").click();
+  await expect(page.getByTestId("report-journey-title")).toBeVisible({ timeout: 15_000 });
+  await expect(page.getByTestId("kpi-total")).toHaveText("1");
+  await expect(page.getByTestId("kpi-active")).toHaveText("1");
+  await expect(page.getByTestId("state-metric-state_new")).toBeVisible();
+
+  // Screenshot 4: Journey Reports page at 1180x703
+  await page.screenshot({ path: join(evidenceDir, "journeys-reports-page.png") });
+
+  // 8. Navigate to Journey Builder List Screen
+  await page.goto(`/crm/${org.slug}/settings/commandcenter/journey-builder`);
+  await expect(page.getByText("Enterprise Customer Journey")).toBeVisible({ timeout: 15_000 });
+
+  // Screenshot 5: Journey Builder List screen at 1180x703
+  await page.screenshot({ path: join(evidenceDir, "journeys-list-side-by-side.png") });
+});
