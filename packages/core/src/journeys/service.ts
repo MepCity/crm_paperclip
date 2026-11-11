@@ -1,6 +1,7 @@
 import { randomUUID } from "node:crypto";
 import { schema } from "@crm/db";
 import { and, count, desc, eq, ilike, lte, sql } from "drizzle-orm";
+import { getAccessSnapshot } from "../access";
 import { ConflictError, NotFoundError, ValidationError } from "../errors";
 import type { RecordData } from "../records";
 import type { RecordWriteEvent, RecordWriteObserver } from "../records/write-observer";
@@ -126,7 +127,14 @@ async function getJourneyInternal(
   };
 }
 
-export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
+export function createJourneysService(defaultDeps?: Partial<JourneysWorkerDeps>) {
+  const resolvedDeps: JourneysWorkerDeps = {
+    accessSnapshotProvider:
+      defaultDeps?.accessSnapshotProvider ??
+      ((ctx: OrgContext, userId: string) =>
+        getAccessSnapshot({ ...ctx, userId, accessVersion: undefined })),
+    ...defaultDeps,
+  };
   return {
     async listJourneys(
       ctx: OrgContext,
@@ -832,7 +840,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
 
           const now = new Date();
           const deadlineAt = startState.deadline
-            ? computeDueAt(now, startState.deadline, defaultDeps?.timeZone ?? "UTC")
+            ? computeDueAt(now, startState.deadline, resolvedDeps?.timeZone ?? "UTC")
             : null;
 
           const [newInstance] = await tx
@@ -883,7 +891,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
 
             const dueAt = isImmediate
               ? now
-              : computeDueAt(now, action.timing, defaultDeps?.timeZone ?? "UTC");
+              : computeDueAt(now, action.timing, resolvedDeps?.timeZone ?? "UTC");
 
             const [dueRow] = await tx
               .insert(schema.journeyDueActions)
@@ -906,7 +914,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
                 action,
                 input.record,
                 ownerId,
-                defaultDeps,
+                resolvedDeps,
               );
               await tx
                 .update(schema.journeyDueActions)
@@ -934,7 +942,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
               transitionId: recordCreatedTransition.id,
               eventId: `create_${newInstance.id}`,
               generation: 1,
-              deps: defaultDeps,
+              deps: resolvedDeps,
               record: input.record,
             });
           }
@@ -995,7 +1003,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
               transitionId: t.id,
               eventId,
               generation: inst.generation,
-              deps: defaultDeps,
+              deps: resolvedDeps,
               record: event.record,
             });
             if (res.status === "completed") {
@@ -1087,7 +1095,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
             transitionId: t.id,
             eventId,
             generation: inst.generation,
-            deps: defaultDeps,
+            deps: resolvedDeps,
             record: input.record,
           });
           if (res.status === "completed") {
