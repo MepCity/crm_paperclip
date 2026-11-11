@@ -332,7 +332,7 @@ export function JourneysListScreen({ orgSlug }: JourneysListScreenProps) {
                     )}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground">{j.module}</td>
-                  <td className="px-4 py-3 text-right font-medium text-foreground">
+                  <td className="px-4 py-3 text-right font-semibold text-foreground">
                     {j.currentRecordCount}
                   </td>
                   <td className="px-4 py-3 text-muted-foreground text-xs">

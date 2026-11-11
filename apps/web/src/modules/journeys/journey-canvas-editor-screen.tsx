@@ -512,7 +512,7 @@ export function JourneyCanvasEditorScreen({ orgSlug, journeyId }: JourneyCanvasE
           className="mx-6 mt-3 p-3 bg-danger/10 border border-danger/20 rounded-md text-xs text-danger flex items-center justify-between shrink-0"
           data-testid="publish-error-alert"
         >
-          <span className="font-medium whitespace-pre-wrap">{error}</span>
+          <span className="font-semibold whitespace-pre-wrap">{error}</span>
           <button
             type="button"
             onClick={() => setError(null)}
@@ -525,7 +525,7 @@ export function JourneyCanvasEditorScreen({ orgSlug, journeyId }: JourneyCanvasE
 
       {successMessage && (
         <div className="mx-6 mt-3 p-3 bg-success/10 border border-success/20 rounded-md text-xs text-success flex items-center justify-between shrink-0">
-          <span className="font-medium">{successMessage}</span>
+          <span className="font-semibold">{successMessage}</span>
           <button
             type="button"
             onClick={() => setSuccessMessage(null)}
@@ -628,7 +628,7 @@ export function JourneyCanvasEditorScreen({ orgSlug, journeyId }: JourneyCanvasE
                         )}
 
                         <div>
-                          <div className="font-medium text-[11px] text-foreground mb-1">
+                          <div className="font-semibold text-[11px] text-foreground mb-1">
                             {t("modules.journeys.editor.actions")} ({st.actions.length})
                           </div>
                           {st.actions.length === 0 ? (
@@ -642,7 +642,7 @@ export function JourneyCanvasEditorScreen({ orgSlug, journeyId }: JourneyCanvasE
                                   key={act.id}
                                   className="flex items-center justify-between bg-muted/40 px-2 py-1 rounded"
                                 >
-                                  <span className="capitalize font-medium text-foreground">
+                                  <span className="capitalize font-semibold text-foreground">
                                     {act.kind.replace("_", " ")}
                                   </span>
                                   <span className="text-[10px] text-muted-foreground">
@@ -729,7 +729,7 @@ export function JourneyCanvasEditorScreen({ orgSlug, journeyId }: JourneyCanvasE
                               {getTriggerLabel(tr.trigger)}
                             </span>
                             {tr.actions.length > 0 && (
-                              <span className="text-[11px] font-medium text-foreground">
+                              <span className="text-[11px] font-semibold text-foreground">
                                 {tr.actions.length} action(s)
                               </span>
                             )}
@@ -772,7 +772,7 @@ export function JourneyCanvasEditorScreen({ orgSlug, journeyId }: JourneyCanvasE
               <div>
                 <label
                   htmlFor="selected-state-name-input"
-                  className="block text-xs font-medium text-foreground mb-1"
+                  className="block text-xs font-semibold text-foreground mb-1"
                 >
                   {t("modules.journeys.editor.stateName")}
                 </label>
@@ -798,7 +798,7 @@ export function JourneyCanvasEditorScreen({ orgSlug, journeyId }: JourneyCanvasE
                 />
                 <label
                   htmlFor="is-start-checkbox"
-                  className="text-xs text-foreground font-medium cursor-pointer"
+                  className="text-xs text-foreground font-semibold cursor-pointer"
                 >
                   {t("modules.journeys.editor.isStart")}
                   <p className="text-[11px] text-muted-foreground font-normal">
@@ -812,7 +812,7 @@ export function JourneyCanvasEditorScreen({ orgSlug, journeyId }: JourneyCanvasE
                 <div className="flex items-center justify-between mb-2">
                   <label
                     htmlFor="deadline-toggle"
-                    className="text-xs font-medium text-foreground cursor-pointer"
+                    className="text-xs font-semibold text-foreground cursor-pointer"
                   >
                     {t("modules.journeys.editor.deadlineLabel")}
                   </label>
@@ -1180,7 +1180,7 @@ export function JourneyCanvasEditorScreen({ orgSlug, journeyId }: JourneyCanvasE
               <div>
                 <label
                   htmlFor="transition-from-select"
-                  className="block text-xs font-medium text-foreground mb-1"
+                  className="block text-xs font-semibold text-foreground mb-1"
                 >
                   {t("modules.journeys.editor.sourceState")}
                 </label>
@@ -1203,7 +1203,7 @@ export function JourneyCanvasEditorScreen({ orgSlug, journeyId }: JourneyCanvasE
               <div>
                 <label
                   htmlFor="transition-to-select"
-                  className="block text-xs font-medium text-foreground mb-1"
+                  className="block text-xs font-semibold text-foreground mb-1"
                 >
                   {t("modules.journeys.editor.targetState")}
                 </label>
@@ -1226,7 +1226,7 @@ export function JourneyCanvasEditorScreen({ orgSlug, journeyId }: JourneyCanvasE
               <div className="pt-3 border-t border-border">
                 <label
                   htmlFor="transition-trigger-select"
-                  className="block text-xs font-medium text-foreground mb-1"
+                  className="block text-xs font-semibold text-foreground mb-1"
                 >
                   {t("modules.journeys.editor.trigger")}
                 </label>
