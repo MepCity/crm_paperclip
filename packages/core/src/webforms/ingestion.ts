@@ -6,12 +6,13 @@ import type { ProcessCondition } from "../approvals/types";
 import { getDb } from "../database";
 import { ConflictError, ValidationError } from "../errors";
 import type { JobQueue } from "../jobs/types";
+import { createJourneysService } from "../journeys";
 import type { ActorRef, RecordData } from "../records/contract";
 import { createFixtureRecordService } from "../records/fixture";
 import { fixtureModules } from "../records/fixture/registry";
 import { isValidDateOnly } from "../records/fixture/validation";
 import { OPEN_PICKLIST_FIELDS } from "../records/picklist-policy";
-import { withOrg } from "../tenancy";
+import { systemOrgContext, withOrg } from "../tenancy";
 import type { OrgContext, Transaction } from "../tenancy/types";
 import { checkRateLimit, type RateLimitCheckResult } from "./rate-limit";
 import { computeClientHash, verifyChallenge, verifyRenderToken } from "./tokens";
@@ -1029,23 +1030,13 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
 
       // Journey trigger: webform_submitted
       try {
-        const { createJourneysService } = await import("../journeys/service");
         const journeyService = createJourneysService();
-        await journeyService.handleWebformSubmitted(
-          {
-            orgId,
-            userId: ownerId,
-            orgSlug: "",
-            orgName: "",
-            role: "admin",
-          },
-          {
-            formId: form.id,
-            recordModule: form.module,
-            recordId: createdRecord.id,
-            record: createdRecord,
-          },
-        );
+        await journeyService.handleWebformSubmitted(systemOrgContext(orgId, ownerId), {
+          formId: form.id,
+          recordModule: form.module,
+          recordId: createdRecord.id,
+          record: createdRecord,
+        });
       } catch (err) {
         console.error("Webform journey trigger failed", err);
       }

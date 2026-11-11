@@ -44,6 +44,20 @@ export type {
 } from "./types";
 export { createInvitationToken, hashInvitationToken, slugInput } from "./validation";
 
+/**
+ * Creates an internal system/worker OrgContext for background tasks and intake triggers (ADR 0013 §3).
+ * Intended for internal workers that find instances or process background steps; never grants user rights.
+ */
+export function systemOrgContext(orgId: string, userId = ""): OrgContext {
+  return {
+    orgId,
+    userId,
+    orgSlug: "",
+    orgName: "",
+    role: "admin",
+  };
+}
+
 const missingOrg = () => new NotFoundError();
 const pending = (now: Date) =>
   and(

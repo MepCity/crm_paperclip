@@ -51,6 +51,7 @@ export {
   removeMember,
   requireOrgContext,
   revokeInvitation,
+  systemOrgContext,
   type Transaction,
   withOrg,
 } from "./tenancy";
