@@ -306,4 +306,112 @@ describe("Journey Schemas and Validation", () => {
       expect(() => validateJourneyForPublish(states, transitions)).not.toThrow();
     });
   });
+
+  describe("delays calculation (computeDueAt)", () => {
+    it("handles immediate timing", async () => {
+      const { computeDueAt } = await import("./delays");
+      const now = new Date("2026-11-10T12:00:00Z");
+      expect(computeDueAt(now, "immediate").toISOString()).toBe(now.toISOString());
+      expect(computeDueAt(now, { type: "immediate" }).toISOString()).toBe(now.toISOString());
+    });
+
+    it("handles minutes, hours, days delays", async () => {
+      const { computeDueAt } = await import("./delays");
+      const now = new Date("2026-11-10T12:00:00Z");
+      const in15Min = computeDueAt(now, { amount: 15, unit: "minutes" });
+      expect(in15Min.toISOString()).toBe("2026-11-10T12:15:00.000Z");
+
+      const in2Hours = computeDueAt(now, { amount: 2, unit: "hours" });
+      expect(in2Hours.toISOString()).toBe("2026-11-10T14:00:00.000Z");
+
+      const in3Days = computeDueAt(now, { amount: 3, unit: "days" });
+      expect(in3Days.toISOString()).toBe("2026-11-13T12:00:00.000Z");
+    });
+  });
+
+  describe("transition criteria evaluation (pass/fail)", () => {
+    it("evaluates criteria pass and fail correctly", async () => {
+      const { evaluateJourneyCriteria } = await import("./worker");
+
+      const recordPassing = {
+        Rating: "Hot",
+        Annual_Revenue: 100000,
+        City: "Istanbul",
+      };
+
+      const recordFailing = {
+        Rating: "Cold",
+        Annual_Revenue: 20000,
+        City: "Ankara",
+      };
+
+      const simpleCriteria = {
+        field: "Rating",
+        comparator: "equal" as const,
+        value: "Hot",
+      };
+
+      expect(evaluateJourneyCriteria(recordPassing, simpleCriteria)).toBe(true);
+      expect(evaluateJourneyCriteria(recordFailing, simpleCriteria)).toBe(false);
+
+      const complexCriteria = {
+        groupOperator: "and" as const,
+        group: [
+          { field: "Rating", comparator: "equal" as const, value: "Hot" },
+          { field: "Annual_Revenue", comparator: "greater_equal" as const, value: 50000 },
+        ],
+      };
+
+      expect(evaluateJourneyCriteria(recordPassing, complexCriteria)).toBe(true);
+      expect(evaluateJourneyCriteria(recordFailing, complexCriteria)).toBe(false);
+
+      const conditionWrapped = {
+        kind: "criteria" as const,
+        criteria: simpleCriteria,
+      };
+      expect(evaluateJourneyCriteria(recordPassing, conditionWrapped)).toBe(true);
+      expect(evaluateJourneyCriteria(recordFailing, conditionWrapped)).toBe(false);
+
+      expect(evaluateJourneyCriteria(recordPassing, { kind: "all_records" })).toBe(true);
+      expect(evaluateJourneyCriteria(recordPassing, null)).toBe(true);
+    });
+  });
+
+  describe("all triggers schema and parsing", () => {
+    it("parses all required triggers: record_created, record_updated, webform_submitted, date_reached, deadline_missed", () => {
+      expect(journeyTriggerSchema.parse("record_created")).toBe("record_created");
+      expect(journeyTriggerSchema.parse({ kind: "record_created" })).toEqual({
+        kind: "record_created",
+      });
+
+      expect(journeyTriggerSchema.parse("record_updated")).toBe("record_updated");
+      expect(journeyTriggerSchema.parse({ kind: "record_updated" })).toEqual({
+        kind: "record_updated",
+      });
+
+      expect(journeyTriggerSchema.parse({ kind: "webform_submitted", formId: "form-abc" })).toEqual(
+        {
+          kind: "webform_submitted",
+          formId: "form-abc",
+        },
+      );
+
+      expect(
+        journeyTriggerSchema.parse({
+          kind: "date_reached",
+          field: "Closing_Date",
+          offset: { amount: 2, unit: "days" },
+        }),
+      ).toEqual({
+        kind: "date_reached",
+        field: "Closing_Date",
+        offset: { amount: 2, unit: "days" },
+      });
+
+      expect(journeyTriggerSchema.parse("deadline_missed")).toBe("deadline_missed");
+      expect(journeyTriggerSchema.parse({ kind: "deadline_missed" })).toEqual({
+        kind: "deadline_missed",
+      });
+    });
+  });
 });

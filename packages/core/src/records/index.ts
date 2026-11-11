@@ -27,3 +27,4 @@ export { roundMoneyTwoDecimals } from "./rounding";
 export type * from "./tags";
 export type { TaxDefinition } from "./tax";
 export { findTax, listOrganisationTaxes, organisationTaxes, taxLabel } from "./tax";
+export type * from "./write-observer";

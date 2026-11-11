@@ -221,6 +221,8 @@ export function createFixtureRecordService(
   const webformFormName = options?.actor?.kind === "webform" ? options.actor.formName : undefined;
   const isCadenceActor = options?.actor?.kind === "cadence";
   const cadenceActor = options?.actor?.kind === "cadence" ? options.actor : undefined;
+  const isJourneyActor = options?.actor?.kind === "journey";
+  const journeyActor = options?.actor?.kind === "journey" ? options.actor : undefined;
   let webformRecordsCreated = 0;
   const assertWebformCanRead = () => {
     if (isWebformActor) {
@@ -235,7 +237,7 @@ export function createFixtureRecordService(
       );
     }
   };
-  const assertCadenceCanAccess = (module: string) => {
+  const assertExecutionActorCanAccess = (module: string) => {
     if (isCadenceActor && cadenceActor) {
       const allowed = new Set([
         ...(cadenceActor.module ? [cadenceActor.module] : []),
@@ -251,7 +253,23 @@ export function createFixtureRecordService(
         );
       }
     }
+    if (isJourneyActor && journeyActor) {
+      const allowed = new Set([
+        ...(journeyActor.module ? [journeyActor.module] : []),
+        ...(journeyActor.allowedModules ?? []),
+        "Tasks",
+        "Calls",
+      ]);
+      if (!allowed.has(module)) {
+        throw new ForbiddenError(
+          `Journey actor cannot access module '${module}'`,
+          "permission_denied",
+        );
+      }
+    }
   };
+  const assertCadenceCanAccess = assertExecutionActorCanAccess;
+
   const clock = () => options?.now?.() ?? new Date();
   let store = stores.get(ctx.orgId);
   if (!store) {
@@ -1074,8 +1092,13 @@ export function createFixtureRecordService(
 
   const merge = async (module: string, input: MergeInput): Promise<RecordData> => {
     assertWebformCanMutate();
-    if (isCadenceActor)
-      throw new ForbiddenError("Cadence actor cannot merge records", "permission_denied");
+    if (isCadenceActor || isJourneyActor)
+      throw new ForbiddenError(
+        isJourneyActor
+          ? "Journey actor cannot merge records"
+          : "Cadence actor cannot merge records",
+        "permission_denied",
+      );
     assertModuleWritable(module);
     const bundle = bundleFor(module);
     if (bundle.childModule) throw new ForbiddenError("Child modules do not support merge.");
@@ -1211,8 +1234,13 @@ export function createFixtureRecordService(
   const attachmentLifecycle = fixtureAttachmentLifecycle(hookContext);
   const convertLead = async (leadId: string, input: ConvertLeadInput) => {
     assertWebformCanMutate();
-    if (isCadenceActor)
-      throw new ForbiddenError("Cadence actor cannot convert leads", "permission_denied");
+    if (isCadenceActor || isJourneyActor)
+      throw new ForbiddenError(
+        isJourneyActor
+          ? "Journey actor cannot convert leads"
+          : "Cadence actor cannot convert leads",
+        "permission_denied",
+      );
     assertModuleWritable("Leads");
     const sourceLead = recordFor("Leads", leadId);
     const convertAccess = await accessFor();
@@ -1972,8 +2000,13 @@ export function createFixtureRecordService(
     },
     async massUpdate(module, ids, input) {
       assertWebformCanMutate();
-      if (isCadenceActor)
-        throw new ForbiddenError("Cadence actor cannot mass update records", "permission_denied");
+      if (isCadenceActor || isJourneyActor)
+        throw new ForbiddenError(
+          isJourneyActor
+            ? "Journey actor cannot mass update records"
+            : "Cadence actor cannot mass update records",
+          "permission_denied",
+        );
       assertModuleWritable(module);
       const bundle = bundleFor(module);
       const targets = [...ids];
@@ -1998,8 +2031,13 @@ export function createFixtureRecordService(
     },
     async changeOwner(module, ids, ownerId) {
       assertWebformCanMutate();
-      if (isCadenceActor)
-        throw new ForbiddenError("Cadence actor cannot change record owner", "permission_denied");
+      if (isCadenceActor || isJourneyActor)
+        throw new ForbiddenError(
+          isJourneyActor
+            ? "Journey actor cannot change record owner"
+            : "Cadence actor cannot change record owner",
+          "permission_denied",
+        );
       assertModuleWritable(module);
       const bundle = bundleFor(module);
       const targets = [...ids];
@@ -2016,8 +2054,13 @@ export function createFixtureRecordService(
     },
     async delete(module, ids) {
       assertWebformCanMutate();
-      if (isCadenceActor)
-        throw new ForbiddenError("Cadence actor cannot delete records", "permission_denied");
+      if (isCadenceActor || isJourneyActor)
+        throw new ForbiddenError(
+          isJourneyActor
+            ? "Journey actor cannot delete records"
+            : "Cadence actor cannot delete records",
+          "permission_denied",
+        );
       assertModuleWritable(module);
       await assertRecordLevel(module, ids, "delete");
       // Deleting more than one record at once is the mass-delete tool (ADR 0017 §3, §4.6).
@@ -2044,6 +2087,7 @@ export function createFixtureRecordService(
           });
         }
       });
+      await observer?.afterDelete?.({ module, ids: [...new Set(ids)] });
     },
   };
   return schema ? schemaRecordService(ctx, service, schema) : service;

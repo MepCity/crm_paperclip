@@ -2,7 +2,10 @@ import type {
   CreateJourneyInput,
   JourneyDetail,
   JourneyFilters,
+  JourneyInstanceFilterOptions,
+  JourneyInstanceSummary,
   JourneySummary,
+  JourneyTransitionRunSummary,
   UpdateJourneyDraftInput,
 } from "./types";
 
@@ -118,4 +121,81 @@ export async function deleteJourney(orgSlug: string, id: string): Promise<void> 
     headers: headers(orgSlug),
   });
   await handleResponse<{ ok: boolean }>(res);
+}
+
+export async function fetchJourneyInstances(
+  orgSlug: string,
+  journeyId: string,
+  options?: JourneyInstanceFilterOptions,
+): Promise<{ instances: JourneyInstanceSummary[]; total: number }> {
+  const query = new URLSearchParams();
+  if (options?.stateId) query.set("stateId", options.stateId);
+  if (options?.status) query.set("status", options.status);
+  if (options?.enteredBefore)
+    query.set(
+      "enteredBefore",
+      typeof options.enteredBefore === "string"
+        ? options.enteredBefore
+        : options.enteredBefore.toISOString(),
+    );
+  if (options?.enteredAfter)
+    query.set(
+      "enteredAfter",
+      typeof options.enteredAfter === "string"
+        ? options.enteredAfter
+        : options.enteredAfter.toISOString(),
+    );
+  if (options?.deadlineBefore)
+    query.set(
+      "deadlineBefore",
+      typeof options.deadlineBefore === "string"
+        ? options.deadlineBefore
+        : options.deadlineBefore.toISOString(),
+    );
+  if (options?.deadlineAfter)
+    query.set(
+      "deadlineAfter",
+      typeof options.deadlineAfter === "string"
+        ? options.deadlineAfter
+        : options.deadlineAfter.toISOString(),
+    );
+  if (options?.page) query.set("page", String(options.page));
+  if (options?.limit) query.set("limit", String(options.limit));
+
+  const qs = query.toString();
+  const res = await fetch(
+    `/crm/v2.1/settings/journeys/${journeyId}/instances${qs ? `?${qs}` : ""}`,
+    {
+      headers: headers(orgSlug),
+    },
+  );
+  return handleResponse<{ instances: JourneyInstanceSummary[]; total: number }>(res);
+}
+
+export async function fetchJourneyTransitionLog(
+  orgSlug: string,
+  journeyId: string,
+  instanceId: string,
+): Promise<JourneyTransitionRunSummary[]> {
+  const res = await fetch(`/crm/v2.1/settings/journeys/${journeyId}/instances/${instanceId}/log`, {
+    headers: headers(orgSlug),
+  });
+  const data = await handleResponse<{
+    log?: JourneyTransitionRunSummary[];
+    data?: JourneyTransitionRunSummary[];
+  }>(res);
+  return data.log ?? data.data ?? [];
+}
+
+export async function stopJourneyInstance(
+  orgSlug: string,
+  journeyId: string,
+  instanceId: string,
+): Promise<JourneyInstanceSummary> {
+  const res = await fetch(`/crm/v2.1/settings/journeys/${journeyId}/instances/${instanceId}`, {
+    method: "DELETE",
+    headers: headers(orgSlug),
+  });
+  const data = await handleResponse<{ instance: JourneyInstanceSummary }>(res);
+  return data.instance;
 }

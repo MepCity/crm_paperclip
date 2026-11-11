@@ -12,9 +12,11 @@ import {
   createFixtureRecordService,
   createFixtureTagService,
 } from "@crm/core/records/fixture";
+import { combineWriteObservers } from "@crm/core/records/write-observer";
 
 import { getApprovals } from "./approvals";
 import { getCustomizationCoordinator } from "./customization";
+import { getJourneys } from "./journeys";
 
 /** The single application adapter selection point for record data. */
 export function getRecordService(ctx: OrgContext): RecordService & ModuleMetadataReader {
@@ -22,7 +24,10 @@ export function getRecordService(ctx: OrgContext): RecordService & ModuleMetadat
     schema: getCustomizationCoordinator(),
     access: () => getAccessSnapshot(ctx),
     listMemberIds: async () => (await listMembers(ctx)).map((member) => member.userId),
-    writeObserver: getApprovals().writeObserver(ctx),
+    writeObserver: combineWriteObservers(
+      getApprovals().writeObserver(ctx),
+      getJourneys().writeObserver(ctx),
+    ),
   });
 }
 

@@ -1026,6 +1026,29 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
             ),
           );
       }
+
+      // Journey trigger: webform_submitted
+      try {
+        const { createJourneysService } = await import("../journeys/service");
+        const journeyService = createJourneysService();
+        await journeyService.handleWebformSubmitted(
+          {
+            orgId,
+            userId: ownerId,
+            orgSlug: "",
+            orgName: "",
+            role: "admin",
+          },
+          {
+            formId: form.id,
+            recordModule: form.module,
+            recordId: createdRecord.id,
+            record: createdRecord,
+          },
+        );
+      } catch (err) {
+        console.error("Webform journey trigger failed", err);
+      }
     } catch (err) {
       console.error("Webform after-create notification failed", err);
       // Failures set notification_state = failed; the record stays

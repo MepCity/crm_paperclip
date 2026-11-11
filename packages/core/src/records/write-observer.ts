@@ -26,4 +26,33 @@ export interface RecordWriteObserver {
    * service swallows and logs whatever it throws.
    */
   afterWrite(event: RecordWriteEvent): Promise<void>;
+  /**
+   * Runs after records are deleted.
+   */
+  afterDelete?(event: { module: string; ids: readonly string[] }): Promise<void>;
+}
+
+export function combineWriteObservers(
+  ...observers: readonly (RecordWriteObserver | undefined)[]
+): RecordWriteObserver {
+  const active = observers.filter((o): o is RecordWriteObserver => Boolean(o));
+  return {
+    async assertEditable(input) {
+      for (const o of active) {
+        await o.assertEditable(input);
+      }
+    },
+    async afterWrite(event) {
+      for (const o of active) {
+        await o.afterWrite(event);
+      }
+    },
+    async afterDelete(event) {
+      for (const o of active) {
+        if (o.afterDelete) {
+          await o.afterDelete(event);
+        }
+      }
+    },
+  };
 }

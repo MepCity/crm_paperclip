@@ -8,6 +8,14 @@ import {
 } from "@crm/core/cadences";
 import { InMemoryJobQueue, JobCatalog } from "@crm/core/jobs";
 import {
+  createJourneyActionHandler,
+  createJourneyJobCatalog,
+  createJourneySweepHandler,
+  createJourneyTransitionHandler,
+  type JourneysWorkerDeps,
+  journeyJobDefinitions,
+} from "@crm/core/journeys";
+import {
   createInMemoryMailRepository,
   createMailJobCatalog,
   createMailSendHandler,
@@ -108,9 +116,23 @@ export function createEphemeralCadenceRuntime(
   return { catalog, queue, handlers };
 }
 
+export function createEphemeralJourneyRuntime(
+  deps?: JourneysWorkerDeps & { recordService?: RecordService },
+) {
+  const catalog = createJourneyJobCatalog();
+  const queue = new InMemoryJobQueue(catalog);
+  const handlers = new HandlerRegistry([
+    createJourneyTransitionHandler({ ...deps, jobQueue: queue }),
+    createJourneyActionHandler({ ...deps, jobQueue: queue }),
+    createJourneySweepHandler({ ...deps, jobQueue: queue }),
+  ]);
+  return { catalog, queue, handlers };
+}
+
 export interface EphemeralWorkerOptions {
   recordService?: RecordService;
   cadenceDeps?: CadenceWorkerDeps;
+  journeyDeps?: JourneysWorkerDeps;
   signals?: SignalSource;
   exit?: (forced: boolean) => void;
   workerId?: string;
@@ -120,9 +142,14 @@ export interface EphemeralWorkerOptions {
 export function createEphemeralRuntime(options?: {
   recordService?: RecordService;
   cadenceDeps?: CadenceWorkerDeps;
+  journeyDeps?: JourneysWorkerDeps;
 }) {
   const mailDefinitions = [mailSendJobDefinition, mailSyncJobDefinition];
-  const catalog = new JobCatalog([...mailDefinitions, ...cadenceJobDefinitions]);
+  const catalog = new JobCatalog([
+    ...mailDefinitions,
+    ...cadenceJobDefinitions,
+    ...journeyJobDefinitions,
+  ]);
   const queue = new InMemoryJobQueue(catalog);
   const repository = createInMemoryMailRepository();
   const recordAddressLookup = {
@@ -162,7 +189,9 @@ export function createEphemeralRuntime(options?: {
   ];
 
   const cadenceDeps = { ...options?.cadenceDeps };
-  const recordService = options?.recordService ?? cadenceDeps.recordService;
+  const journeyDeps = { ...options?.journeyDeps };
+  const recordService =
+    options?.recordService ?? cadenceDeps.recordService ?? journeyDeps.recordService;
 
   const cadenceHandlers = [
     createCadenceStepHandler({ ...cadenceDeps, recordService, jobQueue: queue }),
@@ -171,7 +200,13 @@ export function createEphemeralRuntime(options?: {
       : []),
   ];
 
-  const handlers = new HandlerRegistry([...mailHandlers, ...cadenceHandlers]);
+  const journeyHandlers = [
+    createJourneyTransitionHandler({ ...journeyDeps, recordService, jobQueue: queue }),
+    createJourneyActionHandler({ ...journeyDeps, recordService, jobQueue: queue }),
+    createJourneySweepHandler({ ...journeyDeps, recordService, jobQueue: queue }),
+  ];
+
+  const handlers = new HandlerRegistry([...mailHandlers, ...cadenceHandlers, ...journeyHandlers]);
   return { catalog, queue, repository, handlers };
 }
 
