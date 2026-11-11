@@ -116,6 +116,7 @@ export type ClientPermissions = {
     emailSettings: boolean;
     dataManagement: boolean;
     manageWebforms: boolean;
+    manageJourneys: boolean;
   };
   onlyListSubordinates: boolean;
 };

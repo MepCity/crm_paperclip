@@ -21,7 +21,7 @@ export async function requireSettingsOrg(orgSlug: string, key: AdminKey) {
  */
 export async function canViewFeature(
   ctx: Awaited<ReturnType<typeof requireOrgContext>>,
-  feature: Extract<FeatureKey, "reports" | "analytics" | "cadences">,
+  feature: Extract<FeatureKey, "reports" | "analytics" | "cadences" | "journeys">,
 ): Promise<boolean> {
   const snapshot = await getAccessSnapshot(ctx);
   return snapshot.profileKind === "administrator" || snapshot.permissions.features[feature].view;
@@ -29,7 +29,7 @@ export async function canViewFeature(
 
 export async function requireFeatureView(
   orgSlug: string,
-  feature: Extract<FeatureKey, "reports" | "analytics" | "cadences">,
+  feature: Extract<FeatureKey, "reports" | "analytics" | "cadences" | "journeys">,
 ) {
   const ctx = await requireOrgContext(orgSlug);
   const allowed = await canViewFeature(ctx, feature);

@@ -80,6 +80,7 @@ const EMAIL_TEMPLATE_ROWS: FlagRowDef[] = [
 const AUTOMATION_ROWS: FlagRowDef[] = [
   { label: "Manage Automation", group: "admin", key: "manageAutomation" },
   { label: "Manage Webforms", group: "admin", key: "manageWebforms" },
+  { label: "Manage Journeys", group: "admin", key: "manageJourneys" },
 ];
 const DATA_ROWS: FlagRowDef[] = [
   { label: "Data Management", group: "admin", key: "dataManagement" },
@@ -93,6 +94,7 @@ const FEATURE_LABELS: Record<keyof Perms["features"], string> = {
   attachments: "Attachments",
   feeds: "Feeds",
   cadences: "Cadences",
+  journeys: "Journeys",
 };
 
 /** Left anchor menu of the profile page, grouped as in the reference. */

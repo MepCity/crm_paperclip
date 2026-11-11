@@ -3199,121 +3199,121 @@
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 146,
+    "line": 152,
     "column": 14,
     "hash": "f1b7505afa5c9e2b"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 176,
+    "line": 182,
     "column": 10,
     "hash": "b4e929d8bcfe0418"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 203,
+    "line": 209,
     "column": 14,
     "hash": "3a78695388b38b5c"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 211,
+    "line": 217,
     "column": 14,
     "hash": "24984fe2592707f8"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 220,
+    "line": 226,
     "column": 14,
     "hash": "dacca3cba3f346a4"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 229,
+    "line": 235,
     "column": 14,
     "hash": "94c116ee118a7299"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 239,
+    "line": 245,
     "column": 14,
     "hash": "0d24b42db450ca85"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 245,
+    "line": 251,
     "column": 18,
     "hash": "090512d93fcc3c0d"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 250,
+    "line": 256,
     "column": 22,
     "hash": "f514c310bd9e7f02"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 267,
+    "line": 273,
     "column": 12,
     "hash": "c910d474dcd724bf"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 284,
+    "line": 290,
     "column": 12,
     "hash": "2c57faa0b6257edd"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 292,
+    "line": 298,
     "column": 12,
     "hash": "a749cc4a01647267"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 300,
+    "line": 306,
     "column": 12,
     "hash": "d079ee92c1cb3559"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 308,
+    "line": 314,
     "column": 12,
     "hash": "fadf4711a2619a30"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 316,
+    "line": 322,
     "column": 12,
     "hash": "969ccbd3cf6300ec"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 334,
+    "line": 340,
     "column": 12,
     "hash": "ef9992233a1892eb"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 342,
+    "line": 348,
     "column": 12,
     "hash": "6ee71699e8b69061"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 350,
+    "line": 356,
     "column": 12,
     "hash": "31d61c75fac97fd9"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 358,
+    "line": 364,
     "column": 12,
     "hash": "39c7fb1dc54fd272"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 367,
+    "line": 373,
     "column": 12,
     "hash": "b186714a4117b87a"
   },
@@ -8394,6 +8394,288 @@
     "hash": "d7a6dfbf48e1fd96"
   },
   {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 124,
+    "column": 16,
+    "hash": "2f79aa55acda2d5e"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 218,
+    "column": 20,
+    "hash": "f537a3af4ca518a6"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 371,
+    "column": 62,
+    "hash": "bd9625b4ac62f7b6"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 373,
+    "column": 79,
+    "hash": "fa4d1c46d38c85a8"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 520,
+    "column": 12,
+    "hash": "48845bff334a50a5"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 533,
+    "column": 12,
+    "hash": "48845bff334a50a5"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 545,
+    "column": 65,
+    "hash": "36826f374fbd4bb4"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 612,
+    "column": 33,
+    "hash": "48fefa24fdf1fb00"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 663,
+    "column": 33,
+    "hash": "76d6aad1a2a03c8f"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 664,
+    "column": 33,
+    "hash": "5f2b6694319d1bc0"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 675,
+    "column": 109,
+    "hash": "d523ccd9f9579d8d"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 722,
+    "column": 37,
+    "hash": "485ee45cf0f731ef"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 733,
+    "column": 52,
+    "hash": "224307a000bfe7c7"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 843,
+    "column": 36,
+    "hash": "a0a1d6936fb748c1"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 860,
+    "column": 36,
+    "hash": "ec55be6cedbe7aec"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 874,
+    "column": 49,
+    "hash": "4f846a84e7fc9ef6"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 875,
+    "column": 47,
+    "hash": "21e8492938abc179"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 876,
+    "column": 46,
+    "hash": "e08c0aa8f558f39f"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 901,
+    "column": 49,
+    "hash": "754aacb2f5c83d94"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 943,
+    "column": 95,
+    "hash": "ef4b6c0abc421455"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 949,
+    "column": 45,
+    "hash": "bf40495e4775c712"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 964,
+    "column": 97,
+    "hash": "68971283841aecdf"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 981,
+    "column": 99,
+    "hash": "86f0dcd88e33a041"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 997,
+    "column": 99,
+    "hash": "d60dbba079223254"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1008,
+    "column": 60,
+    "hash": "a7248eeb45eb1ce2"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1009,
+    "column": 58,
+    "hash": "c4ebc6d4a5832cd9"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1010,
+    "column": 57,
+    "hash": "f793de205ead5ac3"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1021,
+    "column": 97,
+    "hash": "68971283841aecdf"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1037,
+    "column": 97,
+    "hash": "4c00cd67220947fa"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1048,
+    "column": 60,
+    "hash": "02773216e21602cc"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1049,
+    "column": 59,
+    "hash": "d17a5bdde70e7dba"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1059,
+    "column": 97,
+    "hash": "f45fc1dfdc96db27"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1075,
+    "column": 97,
+    "hash": "8e37953d23daca5f"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1096,
+    "column": 97,
+    "hash": "81d629648acc8355"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1112,
+    "column": 97,
+    "hash": "2f77668a9dfbf8d5"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1132,
+    "column": 93,
+    "hash": "e786f9f3e23c2903"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1149,
+    "column": 57,
+    "hash": "ed6cb007a0d02e6a"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1150,
+    "column": 53,
+    "hash": "946308bc931dd643"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1293,
+    "column": 91,
+    "hash": "3d2ec8d5cdf8acf8"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1316,
+    "column": 91,
+    "hash": "7be78c547c8bb1e8"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1345,
+    "column": 72,
+    "hash": "dcd1d5223f73b3a9"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1349,
+    "column": 72,
+    "hash": "f148224ae44fb843"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1356,
+    "column": 74,
+    "hash": "526e0087cc3f254d"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1362,
+    "column": 79,
+    "hash": "2f6e9daec8e9b3b3"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1366,
+    "column": 79,
+    "hash": "700bb6e86a9b2542"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journey-canvas-editor-screen.tsx",
+    "line": 1372,
+    "column": 71,
+    "hash": "c47379710d9e5ea2"
+  },
+  {
+    "file": "apps/web/src/modules/journeys/journeys-list-screen.tsx",
+    "line": 187,
+    "column": 76,
+    "hash": "942087cc2d41e013"
+  },
+  {
     "file": "apps/web/src/modules/leads/definition.ts",
     "line": 55,
     "column": 23,
@@ -10057,247 +10339,253 @@
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 85,
+    "line": 83,
+    "column": 12,
+    "hash": "05faaadb2ab577ae"
+  },
+  {
+    "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
+    "line": 86,
     "column": 12,
     "hash": "b428e6898ddd0296"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 103,
+    "line": 105,
     "column": 29,
     "hash": "0e35f6e9742e074d"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 104,
+    "line": 106,
     "column": 37,
     "hash": "42191ef46da3531a"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 105,
+    "line": 107,
     "column": 34,
     "hash": "5908bccf22118371"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 106,
+    "line": 108,
     "column": 29,
     "hash": "ea93d6a262ecb87a"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 107,
+    "line": 109,
     "column": 29,
     "hash": "f97e9da0e3b879f0"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 113,
+    "line": 115,
     "column": 43,
     "hash": "ab067cffaa7e10c4"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 114,
+    "line": 116,
     "column": 39,
     "hash": "d69dfc13c06585a6"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 115,
+    "line": 117,
     "column": 34,
     "hash": "d909750b1bbb71a3"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 116,
+    "line": 118,
     "column": 39,
     "hash": "b428e6898ddd0296"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 273,
+    "line": 275,
     "column": 55,
     "hash": "4de949dd1c2e48c5"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 274,
+    "line": 276,
     "column": 37,
     "hash": "5edfc7a7698573d2"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 332,
+    "line": 334,
     "column": 45,
     "hash": "42191ef46da3531a"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 335,
+    "line": 337,
     "column": 42,
     "hash": "5908bccf22118371"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 338,
+    "line": 340,
     "column": 37,
     "hash": "ea93d6a262ecb87a"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 342,
+    "line": 344,
     "column": 37,
     "hash": "f97e9da0e3b879f0"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 343,
+    "line": 345,
     "column": 53,
     "hash": "22168599831c8c9b"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 348,
+    "line": 350,
     "column": 60,
     "hash": "b44dcdaa9595f831"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 349,
+    "line": 351,
     "column": 51,
     "hash": "3d314f37bfe9f104"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 355,
+    "line": 357,
     "column": 47,
     "hash": "d69dfc13c06585a6"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 358,
+    "line": 360,
     "column": 42,
     "hash": "d909750b1bbb71a3"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 361,
+    "line": 363,
     "column": 47,
     "hash": "b428e6898ddd0296"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 371,
+    "line": 373,
     "column": 18,
     "hash": "453b79a7862b1e0a"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 406,
+    "line": 408,
     "column": 33,
     "hash": "d696a35bdd1883da"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 485,
+    "line": 487,
     "column": 71,
     "hash": "657ca8453f1099bd"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 488,
+    "line": 490,
     "column": 59,
     "hash": "468998b19c63db69"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 495,
+    "line": 497,
     "column": 19,
     "hash": "5779f32fab00c2aa"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 497,
+    "line": 499,
     "column": 77,
     "hash": "3b7446e94014c702"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 509,
+    "line": 511,
     "column": 14,
     "hash": "464c4ffd019e1e96"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 515,
+    "line": 517,
     "column": 40,
     "hash": "e2d0a54968ead24e"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 516,
+    "line": 518,
     "column": 29,
     "hash": "47311af432a79c40"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 523,
+    "line": 525,
     "column": 48,
     "hash": "826077c7d6fb0ff0"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 527,
+    "line": 529,
     "column": 33,
     "hash": "05afa914fdb9e816"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 536,
+    "line": 538,
     "column": 56,
     "hash": "c2e5f0fa1f8aff05"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 539,
+    "line": 541,
     "column": 67,
     "hash": "19766ed6ccb2f4a3"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 552,
+    "line": 554,
     "column": 24,
     "hash": "47311af432a79c40"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 570,
+    "line": 572,
     "column": 51,
     "hash": "c1632eafd4468cab"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 574,
+    "line": 576,
     "column": 28,
     "hash": "d3663280e101b56d"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 575,
+    "line": 577,
     "column": 27,
     "hash": "526e0087cc3f254d"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 595,
+    "line": 597,
     "column": 51,
     "hash": "1509f561f2416598"
   },
   {
     "file": "apps/web/src/modules/settings-access/profile-detail-screen.tsx",
-    "line": 598,
+    "line": 600,
     "column": 73,
     "hash": "19766ed6ccb2f4a3"
   },
