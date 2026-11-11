@@ -406,7 +406,7 @@ export const settingsNav: readonly NavLink[] = [
   },
   {
     id: "commandcenter",
-    label: (english.shell as Record<string, string>)["commandcenter"] ?? "CommandCenter",
+    label: english.shell.commandcenter,
     icon: Icons.settings,
     href: (slug) => `/crm/${slug}/settings/commandcenter/journey-builder`,
     activePrefix: (slug) => `/crm/${slug}/settings/commandcenter`,
