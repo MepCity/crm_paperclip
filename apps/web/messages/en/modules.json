@@ -1561,5 +1561,96 @@
       "columnStatus": "Status",
       "noRecords": "No journeys found"
     }
+  },
+  "googleExtensions": {
+    "title": "Google",
+    "description": "Configure Google extensions and local advertising models.",
+    "help": "Help",
+    "tabs": {
+      "contacts": "Contacts",
+      "calendar": "Calendar",
+      "ads": "Google Ads",
+      "chat": "Google Chat"
+    },
+    "disabledTab": {
+      "bannerTitle": "External connection disabled in this system",
+      "bannerDescription": "Third-party synchronisation is unavailable in this environment. Manage campaigns and attribution locally under the Google Ads tab.",
+      "authButton": "Authenticate"
+    },
+    "ads": {
+      "bannerTitle": "External connection disabled in this system",
+      "bannerDescription": "External advertising accounts cannot be connected in this environment. Campaigns, ad groups, keywords, and text ads are managed locally and matched to webform submissions.",
+      "attributionCardTitle": "How attribution works",
+      "attributionCardDescription": "Webform submissions automatically capture tracking parameters from incoming visitors: utm_campaign, utm_term, utm_source, utm_medium, utm_content, and gclid. When a visitor submits a webform, the system matches utm_campaign to local campaigns and utm_term to keywords, recording the attribution alongside the lead or contact record.",
+      "newCampaign": "New Campaign",
+      "newAdGroup": "New Ad Group",
+      "newKeyword": "New Keyword",
+      "newAdItem": "New Text Ad",
+      "emptyTitle": "No local ad campaigns configured",
+      "emptyDescription": "Create a campaign to track attribution from webform submissions.",
+      "campaigns": "Campaigns",
+      "adGroups": "Ad Groups",
+      "keywords": "Keywords",
+      "adItems": "Text Ads",
+      "noAdGroups": "No ad groups in this campaign.",
+      "noKeywords": "No keywords in this ad group.",
+      "noAdItems": "No text ads in this ad group.",
+      "status": "Status",
+      "budget": "Budget",
+      "createdAt": "Created",
+      "actions": "Actions",
+      "edit": "Edit",
+      "delete": "Delete",
+      "addAdGroup": "Add Ad Group",
+      "addKeyword": "Add Keyword",
+      "addAdItem": "Add Text Ad",
+      "matchType": "Match Type",
+      "keyword": "Keyword",
+      "headline": "Headline",
+      "description": "Description",
+      "url": "URL",
+      "dialogs": {
+        "campaignCreateTitle": "New Campaign",
+        "campaignEditTitle": "Edit Campaign",
+        "campaignName": "Campaign Name",
+        "budgetAmount": "Budget Amount",
+        "budgetCurrency": "Budget Currency",
+        "groupCreateTitle": "New Ad Group",
+        "groupEditTitle": "Edit Ad Group",
+        "groupName": "Ad Group Name",
+        "keywordCreateTitle": "New Keyword",
+        "keywordEditTitle": "Edit Keyword",
+        "keywordText": "Keyword Text",
+        "adCreateTitle": "New Text Ad",
+        "adEditTitle": "Edit Text Ad",
+        "headline1": "Headline 1",
+        "headline2": "Headline 2",
+        "adDescription": "Ad Description",
+        "finalUrl": "Final URL",
+        "cancel": "Cancel",
+        "save": "Save",
+        "saving": "Saving...",
+        "deleteCampaignTitle": "Delete Campaign",
+        "deleteCampaignMessage": "Are you sure you want to delete this campaign? All child ad groups, keywords, and ads will also be deleted.",
+        "deleteGroupTitle": "Delete Ad Group",
+        "deleteGroupMessage": "Are you sure you want to delete this ad group? All child keywords and ads will also be deleted.",
+        "deleteKeywordTitle": "Delete Keyword",
+        "deleteKeywordMessage": "Are you sure you want to delete this keyword?",
+        "deleteAdTitle": "Delete Text Ad",
+        "deleteAdMessage": "Are you sure you want to delete this text ad?",
+        "confirmDelete": "Delete"
+      },
+      "statuses": {
+        "active": "Active",
+        "enabled": "Enabled",
+        "paused": "Paused",
+        "removed": "Removed"
+      },
+      "matchTypes": {
+        "exact": "Exact",
+        "phrase": "Phrase",
+        "broad": "Broad"
+      }
+    }
   }
 }

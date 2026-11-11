@@ -68,6 +68,7 @@ const ADMIN_FLAG_ROWS: FlagRowDef[] = [
   { label: "Module Customization", group: "admin", key: "moduleCustomization" },
   { label: "Manage Currencies", group: "admin", key: "manageCurrencies" },
   { label: "Customize Home Page", group: "admin", key: "customizeHome" },
+  { label: "Manage Integrations", group: "admin", key: "manageIntegrations" },
 ];
 const ADMIN_LIST_ROWS: ListRowDef[] = [
   { label: "View All Records", path: ["admin", "viewAllRecords"] },

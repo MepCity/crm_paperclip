@@ -228,7 +228,11 @@ export const setupCategories: readonly SetupCategory[] = [
     items: [
       { id: "all-extensions", label: "All", disabled: true },
       { id: "extensions", label: "Marketplace Extensions", disabled: true },
-      { id: "google-extensions", label: "Google", disabled: true },
+      {
+        id: "google-extensions",
+        label: "Google",
+        href: (slug) => `/crm/${slug}/settings/extensions/google`,
+      },
       { id: "microsoft-extensions", label: "Microsoft", disabled: true },
       { id: "extension-builder", label: "Extension Builder", disabled: true },
       { id: "facebook-extensions", label: "Facebook", disabled: true },
