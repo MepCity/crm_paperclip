@@ -97,6 +97,7 @@ export const journeyTriggerSchema = z.union([
   z.literal("record_created"),
   z.literal("record_updated"),
   z.literal("deadline_missed"),
+  z.literal("webform_submitted"),
   z.object({
     kind: z.literal("record_created"),
   }),
@@ -108,7 +109,7 @@ export const journeyTriggerSchema = z.union([
   }),
   z.object({
     kind: z.literal("webform_submitted"),
-    formId: z.string().min(1, "Form ID is required"),
+    formId: z.string().optional(),
   }),
   z.object({
     kind: z.literal("date_reached"),
@@ -135,7 +136,7 @@ export const journeyTriggerSchema = z.union([
   }),
   z.object({
     type: z.literal("webform_submitted"),
-    formId: z.string().min(1, "Form ID is required"),
+    formId: z.string().optional(),
   }),
   z.object({
     type: z.literal("date_reached"),
@@ -226,4 +227,57 @@ export interface JourneySummary {
     name: string;
     avatarUrl?: string | null;
   };
+}
+
+export const JOURNEY_INSTANCE_STATUSES = ["active", "completed", "exited", "stopped"] as const;
+export type JourneyInstanceStatus = (typeof JOURNEY_INSTANCE_STATUSES)[number];
+
+export interface JourneyInstanceSummary {
+  id: string;
+  journeyId: string;
+  versionId: string;
+  recordModule: JourneyModule;
+  recordId: string;
+  currentStateId: string;
+  stateEnteredAt: string;
+  deadlineAt: string | null;
+  status: JourneyInstanceStatus;
+  generation: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface JourneyTransitionRunSummary {
+  id: string;
+  instanceId: string;
+  transitionId: string;
+  eventId: string;
+  result: string;
+  resultReason: string | null;
+  executedAt: string;
+}
+
+export interface JourneyDueActionSummary {
+  id: string;
+  instanceId: string;
+  stateId: string;
+  actionId: string;
+  dueAt: string;
+  generation: number;
+  outcome: string | null;
+  outcomeReason: string | null;
+  executedAt: string | null;
+  createdAt: string;
+}
+
+export interface JourneyInstanceFilterOptions {
+  stateId?: string;
+  status?: string;
+  enteredBefore?: Date | string;
+  enteredAfter?: Date | string;
+  deadlineBefore?: Date | string;
+  deadlineAfter?: Date | string;
+  hasDeadline?: boolean;
+  page?: number;
+  limit?: number;
 }

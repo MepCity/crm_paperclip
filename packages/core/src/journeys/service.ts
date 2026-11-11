@@ -1,16 +1,25 @@
+import { randomUUID } from "node:crypto";
 import { schema } from "@crm/db";
-import { and, count, desc, eq, ilike, sql } from "drizzle-orm";
+import { and, count, desc, eq, ilike, lte, sql } from "drizzle-orm";
 import { ConflictError, NotFoundError, ValidationError } from "../errors";
+import type { RecordData } from "../records";
+import type { RecordWriteEvent, RecordWriteObserver } from "../records/write-observer";
 import { withOrg } from "../tenancy";
 import type { OrgContext } from "../tenancy/types";
+import { computeDueAt } from "./delays";
 import type {
   CreateJourneyInput,
   JourneyDetail,
+  JourneyInstanceFilterOptions,
+  JourneyInstanceStatus,
+  JourneyInstanceSummary,
   JourneyModule,
   JourneyState,
   JourneyStatus,
   JourneySummary,
   JourneyTransition,
+  JourneyTransitionRunSummary,
+  JourneyTrigger,
   JourneyVersionState,
   JourneyVersionSummary,
   UpdateJourneyDraftInput,
@@ -20,6 +29,14 @@ import {
   validateJourneyForPublish,
   validateUpdateJourneyDraft,
 } from "./validation";
+import { executeActionEffect, executeJourneyTransition, type JourneysWorkerDeps } from "./worker";
+
+function normalizeTriggerKind(trigger: JourneyTrigger): string {
+  if (typeof trigger === "string") return trigger;
+  if ("kind" in trigger) return trigger.kind;
+  if ("type" in trigger) return (trigger as { type: string }).type;
+  return "unknown";
+}
 
 type Tx = Parameters<Parameters<typeof withOrg>[1]>[0];
 
@@ -109,7 +126,7 @@ async function getJourneyInternal(
   };
 }
 
-export function createJourneysService() {
+export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
   return {
     async listJourneys(
       ctx: OrgContext,
@@ -428,6 +445,21 @@ export function createJourneysService() {
                 eq(schema.journeyVersions.state, "active"),
               ),
             );
+
+          // Republish bumps generation in active instances (Scope 4)
+          await tx
+            .update(schema.journeyInstances)
+            .set({
+              generation: sql`${schema.journeyInstances.generation} + 1`,
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(schema.journeyInstances.organizationId, ctx.orgId),
+                eq(schema.journeyInstances.journeyId, journeyId),
+                eq(schema.journeyInstances.status, "active"),
+              ),
+            );
         }
 
         // Activate the draft version
@@ -516,6 +548,21 @@ export function createJourneysService() {
             and(eq(schema.journeys.organizationId, ctx.orgId), eq(schema.journeys.id, journeyId)),
           );
 
+        // Deactivate bumps generation in active instances (Scope 4)
+        await tx
+          .update(schema.journeyInstances)
+          .set({
+            generation: sql`${schema.journeyInstances.generation} + 1`,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(schema.journeyInstances.organizationId, ctx.orgId),
+              eq(schema.journeyInstances.journeyId, journeyId),
+              eq(schema.journeyInstances.status, "active"),
+            ),
+          );
+
         return getJourneyInternal(tx, ctx.orgId, journeyId);
       });
     },
@@ -536,6 +583,530 @@ export function createJourneysService() {
             and(eq(schema.journeys.organizationId, ctx.orgId), eq(schema.journeys.id, journeyId)),
           );
       });
+    },
+
+    async listJourneyInstances(
+      ctx: OrgContext,
+      journeyId: string,
+      options?: JourneyInstanceFilterOptions,
+    ): Promise<{ instances: JourneyInstanceSummary[]; total: number }> {
+      return withOrg(ctx, async (tx) => {
+        const conditions = [
+          eq(schema.journeyInstances.organizationId, ctx.orgId),
+          eq(schema.journeyInstances.journeyId, journeyId),
+        ];
+
+        if (options?.stateId) {
+          conditions.push(eq(schema.journeyInstances.currentStateId, options.stateId));
+        }
+        if (options?.status) {
+          conditions.push(eq(schema.journeyInstances.status, options.status));
+        }
+        if (options?.enteredBefore) {
+          conditions.push(
+            lte(schema.journeyInstances.stateEnteredAt, new Date(options.enteredBefore)),
+          );
+        }
+        if (options?.enteredAfter) {
+          conditions.push(
+            sql`${schema.journeyInstances.stateEnteredAt} >= ${new Date(options.enteredAfter)}`,
+          );
+        }
+        if (options?.deadlineBefore) {
+          conditions.push(
+            lte(schema.journeyInstances.deadlineAt, new Date(options.deadlineBefore)),
+          );
+        }
+        if (options?.deadlineAfter) {
+          conditions.push(
+            sql`${schema.journeyInstances.deadlineAt} >= ${new Date(options.deadlineAfter)}`,
+          );
+        }
+        if (options?.hasDeadline !== undefined) {
+          if (options.hasDeadline) {
+            conditions.push(sql`${schema.journeyInstances.deadlineAt} IS NOT NULL`);
+          } else {
+            conditions.push(sql`${schema.journeyInstances.deadlineAt} IS NULL`);
+          }
+        }
+
+        const [totalRow] = await tx
+          .select({ count: count(schema.journeyInstances.id) })
+          .from(schema.journeyInstances)
+          .where(and(...conditions));
+
+        const page = Math.max(1, options?.page ?? 1);
+        const limit = Math.min(100, Math.max(1, options?.limit ?? 50));
+        const offset = (page - 1) * limit;
+
+        const rows = await tx
+          .select()
+          .from(schema.journeyInstances)
+          .where(and(...conditions))
+          .orderBy(desc(schema.journeyInstances.createdAt))
+          .limit(limit)
+          .offset(offset);
+
+        const instances: JourneyInstanceSummary[] = rows.map((r) => ({
+          id: r.id,
+          journeyId: r.journeyId,
+          versionId: r.versionId,
+          recordModule: r.recordModule as JourneyModule,
+          recordId: r.recordId,
+          currentStateId: r.currentStateId,
+          stateEnteredAt: r.stateEnteredAt.toISOString(),
+          deadlineAt: r.deadlineAt?.toISOString() ?? null,
+          status: r.status as JourneyInstanceStatus,
+          generation: r.generation,
+          createdAt: r.createdAt.toISOString(),
+          updatedAt: r.updatedAt.toISOString(),
+        }));
+
+        return { instances, total: Number(totalRow?.count ?? 0) };
+      });
+    },
+
+    async getJourneyInstance(ctx: OrgContext, instanceId: string): Promise<JourneyInstanceSummary> {
+      return withOrg(ctx, async (tx) => {
+        const [row] = await tx
+          .select()
+          .from(schema.journeyInstances)
+          .where(
+            and(
+              eq(schema.journeyInstances.organizationId, ctx.orgId),
+              eq(schema.journeyInstances.id, instanceId),
+            ),
+          );
+        if (!row) throw new NotFoundError("Journey instance not found");
+
+        return {
+          id: row.id,
+          journeyId: row.journeyId,
+          versionId: row.versionId,
+          recordModule: row.recordModule as JourneyModule,
+          recordId: row.recordId,
+          currentStateId: row.currentStateId,
+          stateEnteredAt: row.stateEnteredAt.toISOString(),
+          deadlineAt: row.deadlineAt?.toISOString() ?? null,
+          status: row.status as JourneyInstanceStatus,
+          generation: row.generation,
+          createdAt: row.createdAt.toISOString(),
+          updatedAt: row.updatedAt.toISOString(),
+        };
+      });
+    },
+
+    async getJourneyTransitionLog(
+      ctx: OrgContext,
+      instanceId: string,
+    ): Promise<JourneyTransitionRunSummary[]> {
+      return withOrg(ctx, async (tx) => {
+        const rows = await tx
+          .select()
+          .from(schema.journeyTransitionRuns)
+          .where(
+            and(
+              eq(schema.journeyTransitionRuns.organizationId, ctx.orgId),
+              eq(schema.journeyTransitionRuns.instanceId, instanceId),
+            ),
+          )
+          .orderBy(schema.journeyTransitionRuns.executedAt);
+
+        return rows.map((r) => ({
+          id: r.id,
+          instanceId: r.instanceId,
+          transitionId: r.transitionId,
+          eventId: r.eventId,
+          result: r.result,
+          resultReason: r.resultReason ?? null,
+          executedAt: r.executedAt.toISOString(),
+        }));
+      });
+    },
+
+    async stopJourneyInstance(
+      ctx: OrgContext,
+      instanceId: string,
+    ): Promise<JourneyInstanceSummary> {
+      return withOrg(ctx, async (tx) => {
+        const [instance] = await tx
+          .select()
+          .from(schema.journeyInstances)
+          .where(
+            and(
+              eq(schema.journeyInstances.organizationId, ctx.orgId),
+              eq(schema.journeyInstances.id, instanceId),
+            ),
+          );
+        if (!instance) throw new NotFoundError("Journey instance not found");
+
+        const [updated] = await tx
+          .update(schema.journeyInstances)
+          .set({
+            status: "stopped",
+            generation: sql`${schema.journeyInstances.generation} + 1`,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(schema.journeyInstances.organizationId, ctx.orgId),
+              eq(schema.journeyInstances.id, instanceId),
+            ),
+          )
+          .returning();
+
+        if (!updated) throw new Error("Failed to stop journey instance");
+
+        return {
+          id: updated.id,
+          journeyId: updated.journeyId,
+          versionId: updated.versionId,
+          recordModule: updated.recordModule as JourneyModule,
+          recordId: updated.recordId,
+          currentStateId: updated.currentStateId,
+          stateEnteredAt: updated.stateEnteredAt.toISOString(),
+          deadlineAt: updated.deadlineAt?.toISOString() ?? null,
+          status: updated.status as JourneyInstanceStatus,
+          generation: updated.generation,
+          createdAt: updated.createdAt.toISOString(),
+          updatedAt: updated.updatedAt.toISOString(),
+        };
+      });
+    },
+
+    async enterActiveJourneys(
+      ctx: OrgContext,
+      input: { module: string; recordId: string; record: RecordData },
+    ): Promise<string[]> {
+      return withOrg(ctx, async (tx) => {
+        const activeJourneys = await tx
+          .select()
+          .from(schema.journeys)
+          .where(
+            and(
+              eq(schema.journeys.organizationId, ctx.orgId),
+              eq(schema.journeys.module, input.module),
+              eq(schema.journeys.status, "active"),
+              sql`${schema.journeys.activeVersionId} IS NOT NULL`,
+            ),
+          );
+
+        const instanceIds: string[] = [];
+
+        for (const journey of activeJourneys) {
+          if (!journey.activeVersionId) continue;
+
+          // Check partial unique index: only 1 active instance per (journey, module, recordId)
+          const [existingActive] = await tx
+            .select({ id: schema.journeyInstances.id })
+            .from(schema.journeyInstances)
+            .where(
+              and(
+                eq(schema.journeyInstances.organizationId, ctx.orgId),
+                eq(schema.journeyInstances.journeyId, journey.id),
+                eq(schema.journeyInstances.recordModule, input.module),
+                eq(schema.journeyInstances.recordId, input.recordId),
+                eq(schema.journeyInstances.status, "active"),
+              ),
+            );
+
+          if (existingActive) continue;
+
+          // Load active version
+          const [version] = await tx
+            .select()
+            .from(schema.journeyVersions)
+            .where(
+              and(
+                eq(schema.journeyVersions.organizationId, ctx.orgId),
+                eq(schema.journeyVersions.id, journey.activeVersionId),
+              ),
+            );
+
+          if (!version) continue;
+
+          const states = (version.states as JourneyState[]) ?? [];
+          const transitions = (version.transitions as JourneyTransition[]) ?? [];
+          const startState = states.find((s) => s.isStart) ?? states[0];
+          if (!startState) continue;
+
+          const now = new Date();
+          const deadlineAt = startState.deadline
+            ? computeDueAt(now, startState.deadline, defaultDeps?.timeZone ?? "UTC")
+            : null;
+
+          const [newInstance] = await tx
+            .insert(schema.journeyInstances)
+            .values({
+              organizationId: ctx.orgId,
+              journeyId: journey.id,
+              versionId: version.id,
+              recordModule: input.module,
+              recordId: input.recordId,
+              currentStateId: startState.id,
+              stateEnteredAt: now,
+              deadlineAt,
+              status: "active",
+              generation: 1,
+            })
+            .returning();
+
+          if (!newInstance) continue;
+          instanceIds.push(newInstance.id);
+
+          // Schedule deadline if any
+          if (deadlineAt) {
+            await tx
+              .insert(schema.journeyDueActions)
+              .values({
+                organizationId: ctx.orgId,
+                instanceId: newInstance.id,
+                stateId: startState.id,
+                actionId: "__deadline__",
+                dueAt: deadlineAt,
+                generation: 1,
+              })
+              .onConflictDoNothing();
+          }
+
+          const ownerId =
+            input.record && typeof input.record.fields.Owner === "string"
+              ? input.record.fields.Owner
+              : ctx.userId;
+
+          // Schedule start state actions
+          const startActions = startState.actions ?? [];
+          for (const action of startActions) {
+            const isImmediate =
+              action.timing === "immediate" ||
+              (typeof action.timing === "object" && action.timing.type === "immediate");
+
+            const dueAt = isImmediate
+              ? now
+              : computeDueAt(now, action.timing, defaultDeps?.timeZone ?? "UTC");
+
+            const [dueRow] = await tx
+              .insert(schema.journeyDueActions)
+              .values({
+                organizationId: ctx.orgId,
+                instanceId: newInstance.id,
+                stateId: startState.id,
+                actionId: action.id,
+                dueAt,
+                generation: 1,
+              })
+              .onConflictDoNothing()
+              .returning();
+
+            if (isImmediate && dueRow) {
+              const effectResult = await executeActionEffect(
+                tx,
+                ctx,
+                newInstance,
+                action,
+                input.record,
+                ownerId,
+                defaultDeps,
+              );
+              await tx
+                .update(schema.journeyDueActions)
+                .set({
+                  outcome: effectResult.outcome,
+                  outcomeReason: effectResult.outcomeReason ?? null,
+                  executedAt: new Date(),
+                })
+                .where(
+                  and(
+                    eq(schema.journeyDueActions.organizationId, ctx.orgId),
+                    eq(schema.journeyDueActions.id, dueRow.id),
+                  ),
+                );
+            }
+          }
+
+          // Check if any transition from startState is triggered by record_created
+          const recordCreatedTransition = transitions.find(
+            (t) => t.from === startState.id && normalizeTriggerKind(t.trigger) === "record_created",
+          );
+          if (recordCreatedTransition) {
+            await executeJourneyTransition(ctx, {
+              instanceId: newInstance.id,
+              transitionId: recordCreatedTransition.id,
+              eventId: `create_${newInstance.id}`,
+              generation: 1,
+              deps: defaultDeps,
+              record: input.record,
+            });
+          }
+        }
+
+        return instanceIds;
+      });
+    },
+
+    async handleRecordEvent(ctx: OrgContext, event: RecordWriteEvent): Promise<void> {
+      if (event.kind === "create") {
+        await this.enterActiveJourneys(ctx, {
+          module: event.module,
+          recordId: event.record.id,
+          record: event.record,
+        });
+      } else if (event.kind === "edit") {
+        const activeInstances = await withOrg(ctx, async (tx) => {
+          return tx
+            .select()
+            .from(schema.journeyInstances)
+            .where(
+              and(
+                eq(schema.journeyInstances.organizationId, ctx.orgId),
+                eq(schema.journeyInstances.recordModule, event.module),
+                eq(schema.journeyInstances.recordId, event.record.id),
+                eq(schema.journeyInstances.status, "active"),
+              ),
+            );
+        });
+
+        for (const inst of activeInstances) {
+          const version = await withOrg(ctx, async (tx) => {
+            const [v] = await tx
+              .select()
+              .from(schema.journeyVersions)
+              .where(
+                and(
+                  eq(schema.journeyVersions.organizationId, ctx.orgId),
+                  eq(schema.journeyVersions.id, inst.versionId),
+                ),
+              );
+            return v;
+          });
+
+          if (!version) continue;
+          const transitions = (version.transitions as JourneyTransition[]) ?? [];
+          const matchingTransitions = transitions.filter(
+            (t) =>
+              t.from === inst.currentStateId &&
+              normalizeTriggerKind(t.trigger) === "record_updated",
+          );
+
+          for (const t of matchingTransitions) {
+            const eventId = `update_${inst.id}_${Date.now()}_${randomUUID().slice(0, 8)}`;
+            const res = await executeJourneyTransition(ctx, {
+              instanceId: inst.id,
+              transitionId: t.id,
+              eventId,
+              generation: inst.generation,
+              deps: defaultDeps,
+              record: event.record,
+            });
+            if (res.status === "completed") {
+              break;
+            }
+          }
+        }
+      }
+    },
+
+    async handleRecordDelete(
+      ctx: OrgContext,
+      event: { module: string; ids: readonly string[] },
+    ): Promise<void> {
+      await withOrg(ctx, async (tx) => {
+        for (const id of event.ids) {
+          await tx
+            .update(schema.journeyInstances)
+            .set({
+              status: "stopped",
+              generation: sql`${schema.journeyInstances.generation} + 1`,
+              updatedAt: new Date(),
+            })
+            .where(
+              and(
+                eq(schema.journeyInstances.organizationId, ctx.orgId),
+                eq(schema.journeyInstances.recordModule, event.module),
+                eq(schema.journeyInstances.recordId, id),
+                eq(schema.journeyInstances.status, "active"),
+              ),
+            );
+        }
+      });
+    },
+
+    async handleWebformSubmitted(
+      ctx: OrgContext,
+      input: { formId: string; recordModule: string; recordId: string; record: RecordData },
+    ): Promise<void> {
+      const activeInstances = await withOrg(ctx, async (tx) => {
+        return tx
+          .select()
+          .from(schema.journeyInstances)
+          .where(
+            and(
+              eq(schema.journeyInstances.organizationId, ctx.orgId),
+              eq(schema.journeyInstances.recordModule, input.recordModule),
+              eq(schema.journeyInstances.recordId, input.recordId),
+              eq(schema.journeyInstances.status, "active"),
+            ),
+          );
+      });
+
+      for (const inst of activeInstances) {
+        const version = await withOrg(ctx, async (tx) => {
+          const [v] = await tx
+            .select()
+            .from(schema.journeyVersions)
+            .where(
+              and(
+                eq(schema.journeyVersions.organizationId, ctx.orgId),
+                eq(schema.journeyVersions.id, inst.versionId),
+              ),
+            );
+          return v;
+        });
+
+        if (!version) continue;
+        const transitions = (version.transitions as JourneyTransition[]) ?? [];
+        const matchingTransitions = transitions.filter((t) => {
+          if (t.from !== inst.currentStateId) return false;
+          const kind = normalizeTriggerKind(t.trigger);
+          if (kind !== "webform_submitted") return false;
+          if (
+            typeof t.trigger === "object" &&
+            t.trigger !== null &&
+            "formId" in t.trigger &&
+            (t.trigger as { formId?: string }).formId
+          ) {
+            return (t.trigger as { formId?: string }).formId === input.formId;
+          }
+          return true;
+        });
+
+        for (const t of matchingTransitions) {
+          const eventId = `webform_${input.formId}_${inst.id}_${Date.now()}`;
+          const res = await executeJourneyTransition(ctx, {
+            instanceId: inst.id,
+            transitionId: t.id,
+            eventId,
+            generation: inst.generation,
+            deps: defaultDeps,
+            record: input.record,
+          });
+          if (res.status === "completed") {
+            break;
+          }
+        }
+      }
+    },
+
+    writeObserver(ctx: OrgContext): RecordWriteObserver {
+      return {
+        assertEditable: async () => {},
+        afterWrite: async (event: RecordWriteEvent) => {
+          await this.handleRecordEvent(ctx, event);
+        },
+        afterDelete: async (event: { module: string; ids: readonly string[] }) => {
+          await this.handleRecordDelete(ctx, event);
+        },
+      };
     },
   };
 }
