@@ -300,7 +300,7 @@ export function ParticipatingRecordsTab({
                         <span>{inst.recordName || inst.recordId}</span>
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-foreground font-medium">
+                    <td className="px-4 py-3 text-foreground font-semibold">
                       <Badge variant="neutral" className="text-xs">
                         {getStateName(inst.currentStateId)}
                       </Badge>

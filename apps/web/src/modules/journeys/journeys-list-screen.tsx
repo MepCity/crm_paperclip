@@ -131,7 +131,7 @@ export function JourneysListScreen({ orgSlug }: JourneysListScreenProps) {
     <div className="flex flex-col w-full">
       {/* Top Tabs: PathFinder & Journey Builder */}
       <div className="border-b border-border bg-card px-6 pt-3">
-        <div className="flex items-center gap-8 text-sm font-medium">
+        <div className="flex items-center gap-8 text-sm font-semibold">
           <button
             type="button"
             className="pb-2.5 text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
@@ -165,7 +165,7 @@ export function JourneysListScreen({ orgSlug }: JourneysListScreenProps) {
               href="https://help.crm.reference/commandcenter/journey-builder"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-xs text-primary hover:underline inline-flex items-center gap-1 font-medium"
+              className="text-xs text-primary hover:underline inline-flex items-center gap-1 font-semibold"
               title={t("modules.journeys.list.help")}
               data-testid="journey-help-marker"
             >
