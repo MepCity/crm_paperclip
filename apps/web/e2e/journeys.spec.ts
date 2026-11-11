@@ -1,6 +1,7 @@
 import { mkdirSync } from "node:fs";
 import { join } from "node:path";
 import { signUpNewUser } from "./support/auth";
+import { moduleListDefaultPath } from "./support/crm-paths";
 import { createOrganization } from "./support/org";
 import { expect, test } from "./support/test";
 
@@ -211,8 +212,10 @@ test("journeys execution: published journey + new Lead → instance in start sta
   expect(log[0].result).toBe("success");
 
   // 9. Navigate to Tasks page in UI to verify created Task is visible
-  await page.goto(`/crm/${org.slug}/tasks`);
-  await expect(page.getByText("Urgent Journey Follow-up Task")).toBeVisible({ timeout: 15_000 });
+  await page.goto(moduleListDefaultPath(org.slug, "Tasks"));
+  await expect(page.getByRole("link", { name: "Urgent Journey Follow-up Task" })).toBeVisible({
+    timeout: 15_000,
+  });
 
   // Screenshot: Tasks page showing task created by journey transition action
   await page.screenshot({ path: join(evidenceDir, "journeys-transition-task-created.png") });

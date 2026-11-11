@@ -15,6 +15,7 @@ import {
 import { createMailOutbox, type OutboxOptions } from "../mail/outbox";
 import type { MailRepository } from "../mail/types";
 import type { RecordData, RecordService } from "../records";
+import { createFixtureRecordService } from "../records/fixture";
 import { withOrg } from "../tenancy";
 import type { OrgContext } from "../tenancy/types";
 import { computeDueAt } from "./delays";
@@ -272,53 +273,77 @@ export async function executeActionEffect(
         });
       }
     } else if (action.kind === "task") {
-      if (deps?.recordService) {
-        const taskAction = action as JourneyTaskAction;
-        const isContactOrLead =
-          instance.recordModule === "Leads" || instance.recordModule === "Contacts";
-        await deps.recordService.create(
-          "Tasks",
-          {
-            Subject: taskAction.subject,
-            Priority: taskAction.priority,
-            Status: "Not Started",
-            Owner: ownerId,
-            ...(isContactOrLead
-              ? { Who_Id: { module: instance.recordModule, id: instance.recordId } }
-              : { What_Id: { module: instance.recordModule, id: instance.recordId } }),
+      const recordService =
+        deps?.recordService ??
+        createFixtureRecordService(ctx, {
+          actor: {
+            kind: "journey",
+            id: instance.journeyId,
+            versionId: instance.versionId,
+            module: instance.recordModule,
           },
-          { idempotencyKey },
-        );
-      }
+        });
+      const taskAction = action as JourneyTaskAction;
+      const isContactOrLead =
+        instance.recordModule === "Leads" || instance.recordModule === "Contacts";
+      await recordService.create(
+        "Tasks",
+        {
+          Subject: taskAction.subject,
+          Priority: taskAction.priority,
+          Status: "Not Started",
+          Owner: ownerId,
+          ...(isContactOrLead
+            ? { Who_Id: { module: instance.recordModule, id: instance.recordId } }
+            : { What_Id: { module: instance.recordModule, id: instance.recordId } }),
+        },
+        { idempotencyKey },
+      );
     } else if (action.kind === "call") {
-      if (deps?.recordService) {
-        const callAction = action as JourneyCallAction;
-        const isContactOrLead =
-          instance.recordModule === "Leads" || instance.recordModule === "Contacts";
-        await deps.recordService.create(
-          "Calls",
-          {
-            Subject: callAction.subject,
-            Call_Type: callAction.callType,
-            Call_Start_Time: new Date().toISOString(),
-            Owner: ownerId,
-            ...(isContactOrLead
-              ? { Who_Id: { module: instance.recordModule, id: instance.recordId } }
-              : { What_Id: { module: instance.recordModule, id: instance.recordId } }),
+      const recordService =
+        deps?.recordService ??
+        createFixtureRecordService(ctx, {
+          actor: {
+            kind: "journey",
+            id: instance.journeyId,
+            versionId: instance.versionId,
+            module: instance.recordModule,
           },
-          { idempotencyKey },
-        );
-      }
+        });
+      const callAction = action as JourneyCallAction;
+      const isContactOrLead =
+        instance.recordModule === "Leads" || instance.recordModule === "Contacts";
+      await recordService.create(
+        "Calls",
+        {
+          Subject: callAction.subject,
+          Call_Type: callAction.callType,
+          Call_Start_Time: new Date().toISOString(),
+          Owner: ownerId,
+          ...(isContactOrLead
+            ? { Who_Id: { module: instance.recordModule, id: instance.recordId } }
+            : { What_Id: { module: instance.recordModule, id: instance.recordId } }),
+        },
+        { idempotencyKey },
+      );
     } else if (action.kind === "field_update") {
-      if (deps?.recordService) {
-        const fieldUpdate = action as JourneyFieldUpdateAction;
-        await deps.recordService.update(
-          instance.recordModule,
-          instance.recordId,
-          { [fieldUpdate.field]: fieldUpdate.value as string | number | boolean | null },
-          { idempotencyKey },
-        );
-      }
+      const recordService =
+        deps?.recordService ??
+        createFixtureRecordService(ctx, {
+          actor: {
+            kind: "journey",
+            id: instance.journeyId,
+            versionId: instance.versionId,
+            module: instance.recordModule,
+          },
+        });
+      const fieldUpdate = action as JourneyFieldUpdateAction;
+      await recordService.update(
+        instance.recordModule,
+        instance.recordId,
+        { [fieldUpdate.field]: fieldUpdate.value as string | number | boolean | null },
+        { idempotencyKey },
+      );
     } else if (action.kind === "notify_user") {
       const notifyAction = action as JourneyNotifyUserAction;
       let targetUserId = notifyAction.userRef;
@@ -463,9 +488,19 @@ export async function executeJourneyTransition(
 
     // 5. Fetch target record
     let record = params.record ?? null;
-    if (!record && params.deps?.recordService) {
+    if (!record) {
       try {
-        record = await params.deps.recordService.get(instance.recordModule, instance.recordId);
+        const recordService =
+          params.deps?.recordService ??
+          createFixtureRecordService(ctx, {
+            actor: {
+              kind: "journey",
+              id: instance.journeyId,
+              versionId: instance.versionId,
+              module: instance.recordModule,
+            },
+          });
+        record = await recordService.get(instance.recordModule, instance.recordId);
       } catch {
         // Record deleted or missing -> stop instance with generation bump
         await tx
@@ -995,46 +1030,54 @@ export async function executeJourneyDueAction(
 
     // Fetch target record
     let record: RecordData | null = null;
-    if (params.deps?.recordService) {
-      try {
-        record = await params.deps.recordService.get(instance.recordModule, instance.recordId);
-      } catch {
-        // Record deleted or inaccessible -> stop instance with generation bump
-        await tx
-          .update(schema.journeyInstances)
-          .set({
-            status: "stopped",
-            generation: sql`${schema.journeyInstances.generation} + 1`,
-            updatedAt: new Date(),
-          })
-          .where(
-            and(
-              eq(schema.journeyInstances.organizationId, ctx.orgId),
-              eq(schema.journeyInstances.id, instance.id),
-            ),
-          );
+    try {
+      const recordService =
+        params.deps?.recordService ??
+        createFixtureRecordService(ctx, {
+          actor: {
+            kind: "journey",
+            id: instance.journeyId,
+            versionId: instance.versionId,
+            module: instance.recordModule,
+          },
+        });
+      record = await recordService.get(instance.recordModule, instance.recordId);
+    } catch {
+      // Record deleted or inaccessible -> stop instance with generation bump
+      await tx
+        .update(schema.journeyInstances)
+        .set({
+          status: "stopped",
+          generation: sql`${schema.journeyInstances.generation} + 1`,
+          updatedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(schema.journeyInstances.organizationId, ctx.orgId),
+            eq(schema.journeyInstances.id, instance.id),
+          ),
+        );
 
-        await tx
-          .update(schema.journeyDueActions)
-          .set({
-            outcome: "skipped",
-            outcomeReason: "record_missing",
-            executedAt: new Date(),
-          })
-          .where(
-            and(
-              eq(schema.journeyDueActions.organizationId, ctx.orgId),
-              eq(schema.journeyDueActions.id, dueAction.id),
-            ),
-          );
-
-        return {
-          status: "skipped",
-          actionId: dueAction.actionId,
+      await tx
+        .update(schema.journeyDueActions)
+        .set({
           outcome: "skipped",
-          reason: "record_missing",
-        };
-      }
+          outcomeReason: "record_missing",
+          executedAt: new Date(),
+        })
+        .where(
+          and(
+            eq(schema.journeyDueActions.organizationId, ctx.orgId),
+            eq(schema.journeyDueActions.id, dueAction.id),
+          ),
+        );
+
+      return {
+        status: "skipped",
+        actionId: dueAction.actionId,
+        outcome: "skipped",
+        reason: "record_missing",
+      };
     }
 
     const ownerId =

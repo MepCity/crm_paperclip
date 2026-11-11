@@ -1,18 +1,18 @@
 import { listMembers } from "@crm/core";
 import { getAccessSnapshot } from "@crm/core/access";
-import {
-  combineWriteObservers,
-  type ModuleMetadataReader,
-  type OrgContext,
-  type RecordHistoryService,
-  type RecordService,
-  type TagService,
+import type {
+  ModuleMetadataReader,
+  OrgContext,
+  RecordHistoryService,
+  RecordService,
+  TagService,
 } from "@crm/core/records";
 import {
   createFixtureRecordHistoryService,
   createFixtureRecordService,
   createFixtureTagService,
 } from "@crm/core/records/fixture";
+import { combineWriteObservers } from "@crm/core/records/write-observer";
 
 import { getApprovals } from "./approvals";
 import { getCustomizationCoordinator } from "./customization";

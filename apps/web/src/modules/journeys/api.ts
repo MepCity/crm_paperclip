@@ -180,8 +180,11 @@ export async function fetchJourneyTransitionLog(
   const res = await fetch(`/crm/v2.1/settings/journeys/${journeyId}/instances/${instanceId}/log`, {
     headers: headers(orgSlug),
   });
-  const data = await handleResponse<{ data: JourneyTransitionRunSummary[] }>(res);
-  return data.data;
+  const data = await handleResponse<{
+    log?: JourneyTransitionRunSummary[];
+    data?: JourneyTransitionRunSummary[];
+  }>(res);
+  return data.log ?? data.data ?? [];
 }
 
 export async function stopJourneyInstance(

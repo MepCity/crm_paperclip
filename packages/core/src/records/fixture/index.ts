@@ -1094,7 +1094,9 @@ export function createFixtureRecordService(
     assertWebformCanMutate();
     if (isCadenceActor || isJourneyActor)
       throw new ForbiddenError(
-        isJourneyActor ? "Journey actor cannot merge records" : "Cadence actor cannot merge records",
+        isJourneyActor
+          ? "Journey actor cannot merge records"
+          : "Cadence actor cannot merge records",
         "permission_denied",
       );
     assertModuleWritable(module);
@@ -1234,7 +1236,9 @@ export function createFixtureRecordService(
     assertWebformCanMutate();
     if (isCadenceActor || isJourneyActor)
       throw new ForbiddenError(
-        isJourneyActor ? "Journey actor cannot convert leads" : "Cadence actor cannot convert leads",
+        isJourneyActor
+          ? "Journey actor cannot convert leads"
+          : "Cadence actor cannot convert leads",
         "permission_denied",
       );
     assertModuleWritable("Leads");
@@ -1998,7 +2002,9 @@ export function createFixtureRecordService(
       assertWebformCanMutate();
       if (isCadenceActor || isJourneyActor)
         throw new ForbiddenError(
-          isJourneyActor ? "Journey actor cannot mass update records" : "Cadence actor cannot mass update records",
+          isJourneyActor
+            ? "Journey actor cannot mass update records"
+            : "Cadence actor cannot mass update records",
           "permission_denied",
         );
       assertModuleWritable(module);
@@ -2027,7 +2033,9 @@ export function createFixtureRecordService(
       assertWebformCanMutate();
       if (isCadenceActor || isJourneyActor)
         throw new ForbiddenError(
-          isJourneyActor ? "Journey actor cannot change record owner" : "Cadence actor cannot change record owner",
+          isJourneyActor
+            ? "Journey actor cannot change record owner"
+            : "Cadence actor cannot change record owner",
           "permission_denied",
         );
       assertModuleWritable(module);
@@ -2048,7 +2056,9 @@ export function createFixtureRecordService(
       assertWebformCanMutate();
       if (isCadenceActor || isJourneyActor)
         throw new ForbiddenError(
-          isJourneyActor ? "Journey actor cannot delete records" : "Cadence actor cannot delete records",
+          isJourneyActor
+            ? "Journey actor cannot delete records"
+            : "Cadence actor cannot delete records",
           "permission_denied",
         );
       assertModuleWritable(module);
