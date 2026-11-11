@@ -588,7 +588,7 @@ export function GoogleExtensionsScreen({ orgSlug }: GoogleExtensionsScreenProps)
                                           <Icons.chevronRight className="size-3.5" />
                                         )}
                                       </button>
-                                      <span className="text-sm font-medium text-foreground">
+                                      <span className="text-sm font-semibold text-foreground">
                                         {group.name}
                                       </span>
                                       <Badge
@@ -749,7 +749,7 @@ export function GoogleExtensionsScreen({ orgSlug }: GoogleExtensionsScreenProps)
                                                 data-testid={`item-row-${item.id}`}
                                               >
                                                 <div className="flex items-center gap-2">
-                                                  <span className="font-medium text-foreground">
+                                                  <span className="font-semibold text-foreground">
                                                     {item.name}
                                                   </span>
                                                   <Badge
