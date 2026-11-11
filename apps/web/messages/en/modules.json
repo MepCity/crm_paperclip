@@ -1383,6 +1383,47 @@
       "deleteCadence": "Delete Cadence",
       "deleteConfirmTitle": "Delete Cadence",
       "deleteConfirmMessage": "Cadence \"{name}\" will be deleted. This action cannot be undone. Are you sure you want to continue?"
+    },
+    "recordRelated": {
+      "title": "Cadences",
+      "noRecords": "No records found",
+      "columnName": "Cadence Name",
+      "columnStartDate": "Record Start Date",
+      "columnStatus": "Status",
+      "actionPause": "Pause",
+      "actionResume": "Resume",
+      "actionUnenroll": "Unenroll",
+      "enroll": "Enroll"
+    },
+    "reports": {
+      "title": "Cadence Reports",
+      "backToEditor": "Back to Cadence",
+      "summaryTitle": "Enrollment Summary",
+      "totalEnrolled": "Total Enrolled",
+      "active": "Active",
+      "completed": "Completed",
+      "exited": "Exited",
+      "stopped": "Stopped",
+      "paused": "Paused",
+      "dateRange": "Date Range",
+      "dateRange7d": "Last 7 days",
+      "dateRange30d": "Last 30 days",
+      "dateRange90d": "Last 90 days",
+      "dateRangeAll": "All time",
+      "funnelTitle": "Follow-up Funnel",
+      "funnelStep": "Step {number}",
+      "entered": "Entered",
+      "conversionRate": "Conversion",
+      "actionMetricsTitle": "Action Metrics",
+      "colStep": "Step",
+      "colType": "Type",
+      "colExecuted": "Executed",
+      "colSkipped": "Skipped",
+      "colEmails": "Emails Sent",
+      "colReplies": "Replies",
+      "colTasks": "Tasks Created",
+      "colCalls": "Calls Created",
+      "noMetrics": "No execution metrics recorded for this period."
     }
   }
 }

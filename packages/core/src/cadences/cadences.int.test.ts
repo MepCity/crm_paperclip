@@ -1642,4 +1642,133 @@ describe("cadences backend integration", () => {
       }
     }
   });
+
+  it("lists record enrollments with cadence names and aggregates cadence reports", async () => {
+    const { ctx } = await createTestOrganization();
+    const service = createCadenceService();
+    const db = getDb();
+
+    // 1. Create and publish a Cadence with email and task steps
+    const cadence = await service.createCadence(ctx, {
+      name: "Reports & Related List Cadence",
+      module: "Leads",
+      description: "Cadence for testing reports and record related lists",
+    });
+
+    const steps: CadenceStep[] = [
+      {
+        id: "step-1",
+        kind: "email",
+        delay: { amount: 0, unit: "minutes" },
+        name: "Welcome Email",
+      },
+      {
+        id: "step-2",
+        kind: "task",
+        delay: { amount: 1, unit: "days" },
+        subject: "Follow-up Call/Task",
+        priority: "Normal",
+        dueOffsetDays: 1,
+      },
+    ];
+
+    await service.updateCadenceDraft(ctx, cadence.id, { steps });
+    const published = await service.publishCadence(ctx, cadence.id);
+    expect(published.publishedVersionId).not.toBeNull();
+
+    // 2. Enroll two leads
+    const leadId1 = "lead-rec-1";
+    const leadId2 = "lead-rec-2";
+
+    const enroll1 = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: leadId1,
+    });
+    const enroll2 = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: leadId2,
+    });
+
+    // 3. Test listRecordEnrollments
+    const lead1Enrollments = await service.listRecordEnrollments(ctx, "Leads", leadId1);
+    expect(lead1Enrollments).toHaveLength(1);
+    expect(lead1Enrollments[0]).toMatchObject({
+      id: enroll1.id,
+      cadenceId: cadence.id,
+      cadenceName: "Reports & Related List Cadence",
+      recordModule: "Leads",
+      recordId: leadId1,
+      status: "active",
+    });
+
+    const otherModuleEnrollments = await service.listRecordEnrollments(ctx, "Contacts", leadId1);
+    expect(otherModuleEnrollments).toHaveLength(0);
+
+    // 4. Simulate step runs: step-1 executed for enroll1, skipped for enroll2
+    await db.insert(schema.cadenceStepRuns).values([
+      {
+        organizationId: ctx.orgId,
+        enrollmentId: enroll1.id,
+        stepId: "step-1",
+        generation: enroll1.generation,
+        outcome: "completed",
+        outcomeReason: null,
+      },
+      {
+        organizationId: ctx.orgId,
+        enrollmentId: enroll2.id,
+        stepId: "step-1",
+        generation: enroll2.generation,
+        outcome: "skipped",
+        outcomeReason: "missing_email",
+      },
+    ]);
+
+    // Unenroll enroll2 with exit reason
+    await service.unenrollRecord(ctx, enroll2.id, "reply");
+
+    // 5. Query Cadence Report
+    const report = await service.getCadenceReport(ctx, cadence.id);
+    expect(report.cadence.id).toBe(cadence.id);
+    expect(report.cadence.name).toBe("Reports & Related List Cadence");
+    expect(report.summary.enrolled).toBe(2);
+    expect(report.summary.active).toBe(1);
+    expect(report.summary.exited).toBe(1);
+
+    expect(report.stepMetrics).toHaveLength(2);
+    const step1Metric = report.stepMetrics[0];
+    expect(step1Metric).toMatchObject({
+      stepId: "step-1",
+      stepKind: "email",
+      stepName: "Welcome Email",
+      executed: 1,
+      skipped: 1,
+      emailsSent: 1,
+      replies: 1,
+      enteredCount: 2,
+      completedCount: 1,
+      conversionRate: 50,
+    });
+    expect(step1Metric?.skippedReasons).toEqual({ missing_email: 1 });
+
+    const step2Metric = report.stepMetrics[1];
+    expect(step2Metric).toMatchObject({
+      stepId: "step-2",
+      stepKind: "task",
+      stepName: "Follow-up Call/Task",
+      executed: 0,
+      enteredCount: 1,
+      completedCount: 0,
+      conversionRate: 0,
+    });
+
+    // 6. Test date filter
+    const pastReport = await service.getCadenceReport(ctx, cadence.id, {
+      startDate: "2020-01-01",
+      endDate: "2020-01-02",
+    });
+    expect(pastReport.summary.enrolled).toBe(0);
+  });
 });

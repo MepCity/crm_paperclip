@@ -1,4 +1,5 @@
 import { createElement } from "react";
+import { CadencesCardBody } from "@/components/records/cadences/cadences-card-body";
 import { ContactRolesCardBody } from "@/components/records/detail/contact-roles-card-body";
 import { DealStageHistoryCardBody } from "@/components/records/detail/deal-stage-history-card-body";
 import { RelatedCasesCardBody } from "@/components/records/detail/related-cases-card-body";
@@ -196,6 +197,10 @@ export function createDealsRelatedLists(
     },
     {
       id: "cadences",
+      renderBody: ({ record }) =>
+        record
+          ? createElement(CadencesCardBody, { module: "Deals", recordId: record.id })
+          : undefined,
       title: "Cadences",
       moduleKey: "P3",
       order: 6,

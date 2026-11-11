@@ -1,4 +1,9 @@
 import { createElement } from "react";
+import {
+  CADENCE_ENROLL_LABEL,
+  CADENCES_RELATED_TITLE,
+  CadencesCardBody,
+} from "@/components/records/cadences/cadences-card-body";
 import { campaignsCardBody } from "@/components/records/campaigns/campaigns-card";
 import {
   WEBFORM_USAGE_TITLE,
@@ -166,6 +171,30 @@ export function createLeadsRelatedLists(
       order: 7,
       targetId: "related-list-webform-usage",
       emptyStateText: "No records found",
+    },
+    {
+      id: "cadences",
+      renderBody: ({ record }) =>
+        record
+          ? createElement(CadencesCardBody, { module: "Leads", recordId: record.id })
+          : undefined,
+      title: CADENCES_RELATED_TITLE,
+      moduleKey: "M2",
+      order: 8,
+      targetId: "related-list-cadences",
+      railAction: {
+        id: "cadences-enroll",
+        label: CADENCE_ENROLL_LABEL,
+        moduleKey: "M2",
+      },
+      upperControls: [
+        {
+          id: "enroll",
+          label: CADENCE_ENROLL_LABEL,
+          type: "button",
+          moduleKey: "M2",
+        },
+      ],
     },
   ];
 }

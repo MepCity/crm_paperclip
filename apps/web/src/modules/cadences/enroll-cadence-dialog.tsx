@@ -1,16 +1,17 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
 import { useEffect, useId, useState } from "react";
 import { Dialog as AriaDialog, Heading, Modal, ModalOverlay } from "react-aria-components";
 import { Button } from "@/components/ui/button";
 import { enrollRecord, enrollRecords, fetchCadences } from "./api";
-import type { CadenceSummary } from "./types";
+import type { CadenceModule, CadenceSummary } from "./types";
 
 export interface EnrollCadenceDialogProps {
   isOpen: boolean;
   onOpenChange: (open: boolean) => void;
   orgSlug: string;
-  module: "Leads" | "Contacts" | "Deals";
+  module: CadenceModule;
   recordIds: readonly string[];
   onSuccess?: (result: { enrolledCount: number }) => void;
 }
@@ -23,6 +24,7 @@ export function EnrollCadenceDialog({
   recordIds,
   onSuccess,
 }: EnrollCadenceDialogProps) {
+  const queryClient = useQueryClient();
   const titleId = useId();
   const [cadences, setCadences] = useState<CadenceSummary[]>([]);
   const [selectedCadenceId, setSelectedCadenceId] = useState<string>("");
@@ -65,12 +67,18 @@ export function EnrollCadenceDialog({
           recordModule: module,
           recordId: recordIds[0],
         });
+        queryClient.invalidateQueries({
+          queryKey: ["record-cadences"],
+        });
         onOpenChange(false);
         onSuccess?.({ enrolledCount: 1 });
       } else {
         const res = await enrollRecords(orgSlug, selectedCadenceId, {
           recordModule: module,
           recordIds: [...recordIds],
+        });
+        queryClient.invalidateQueries({
+          queryKey: ["record-cadences"],
         });
         onOpenChange(false);
         onSuccess?.({ enrolledCount: res.enrolled.length });

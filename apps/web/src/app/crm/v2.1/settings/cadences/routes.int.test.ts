@@ -1,11 +1,13 @@
 import { toClientPermissions } from "@crm/core/access";
 import { addAccessTestMember, addTestMember, createTestOrganization } from "@crm/core/testing";
 import { describe, expect, it } from "vitest";
+import * as recordCadences from "@/app/crm/v2.1/[module]/[recordId]/cadences/route";
 import * as cadencesActivate from "@/app/crm/v2.1/settings/cadences/[id]/actions/activate/route";
 import * as cadencesDeactivate from "@/app/crm/v2.1/settings/cadences/[id]/actions/deactivate/route";
 import * as cadencesPublish from "@/app/crm/v2.1/settings/cadences/[id]/actions/publish/route";
 import * as cadencesEnroll from "@/app/crm/v2.1/settings/cadences/[id]/enroll/route";
 import * as cadencesEnrollments from "@/app/crm/v2.1/settings/cadences/[id]/enrollments/route";
+import * as cadenceReports from "@/app/crm/v2.1/settings/cadences/[id]/reports/route";
 import * as cadencesDetail from "@/app/crm/v2.1/settings/cadences/[id]/route";
 import * as enrollmentActions from "@/app/crm/v2.1/settings/cadences/enrollments/[enrollmentId]/route";
 import * as cadencesList from "@/app/crm/v2.1/settings/cadences/route";
@@ -432,5 +434,40 @@ describe("cadences settings routes access gating", () => {
     };
     expect(unenrolled.enrollment.state).toBe("exited");
     expect(unenrolled.enrollment.reason).toBe("finished_early");
+
+    // 7. Get cadence reports
+    const reportRes = await call(
+      cadenceReports.GET as Handler,
+      req("GET", `/crm/v2.1/settings/cadences/${cadenceId}/reports`, admin.headers, ctx.orgSlug),
+      { id: cadenceId },
+    );
+    expect(reportRes.status).toBe(200);
+    const reportData = (await reportRes.json()) as {
+      report: { summary: { enrolled: number; exited: number } };
+    };
+    expect(reportData.report.summary.enrolled).toBe(1);
+    expect(reportData.report.summary.exited).toBe(1);
+
+    // 8. Get record cadences related list for Leads
+    const recordCadencesRes = await call(
+      recordCadences.GET as Handler,
+      req("GET", `/crm/v2.1/Leads/${lead.id}/cadences`, admin.headers, ctx.orgSlug),
+      { module: "Leads", recordId: lead.id },
+    );
+    expect(recordCadencesRes.status).toBe(200);
+    const recordCadencesData = (await recordCadencesRes.json()) as {
+      enrollments: Array<{ cadenceName: string; status: string }>;
+    };
+    expect(recordCadencesData.enrollments).toHaveLength(1);
+    expect(recordCadencesData.enrollments[0]?.cadenceName).toBe("Enrollment Route Cadence");
+    expect(recordCadencesData.enrollments[0]?.status).toBe("exited");
+
+    // 9. Guard: unsupported module throws 404
+    const unsupportedRes = await call(
+      recordCadences.GET as Handler,
+      req("GET", `/crm/v2.1/Cases/case-rec-1/cadences`, admin.headers, ctx.orgSlug),
+      { module: "Cases", recordId: "case-rec-1" },
+    );
+    expect(unsupportedRes.status).toBe(404);
   });
 });

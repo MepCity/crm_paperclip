@@ -1,8 +1,10 @@
 import type {
   CadenceDetail,
   CadenceFilters,
+  CadenceReportData,
   CadenceSummary,
   CreateCadenceInput,
+  RecordCadenceEnrollmentItem,
   UpdateCadenceDraftInput,
 } from "./types";
 
@@ -196,4 +198,32 @@ export async function unenrollRecord(
     body: JSON.stringify({ action: "unenroll", reason }),
   });
   return handleResponse<{ enrollment: unknown }>(res);
+}
+
+export async function fetchRecordCadences(
+  orgSlug: string,
+  module: string,
+  recordId: string,
+): Promise<RecordCadenceEnrollmentItem[]> {
+  const res = await fetch(`/crm/v2.1/${module}/${recordId}/cadences`, {
+    headers: headers(orgSlug),
+  });
+  const data = await handleResponse<{ enrollments: RecordCadenceEnrollmentItem[] }>(res);
+  return data.enrollments;
+}
+
+export async function fetchCadenceReport(
+  orgSlug: string,
+  cadenceId: string,
+  params?: { startDate?: string; endDate?: string },
+): Promise<CadenceReportData> {
+  const query = new URLSearchParams();
+  if (params?.startDate) query.set("startDate", params.startDate);
+  if (params?.endDate) query.set("endDate", params.endDate);
+  const qs = query.toString();
+  const res = await fetch(`/crm/v2.1/settings/cadences/${cadenceId}/reports${qs ? `?${qs}` : ""}`, {
+    headers: headers(orgSlug),
+  });
+  const data = await handleResponse<{ report: CadenceReportData }>(res);
+  return data.report;
 }
