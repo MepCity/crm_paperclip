@@ -227,10 +227,26 @@ export function RecordDetailScreen({
     return rules.relatedLists ?? [];
   }, [buildRelatedLists, recordQuery.data, rules.relatedLists]);
   const relatedLists = useMemo(() => {
-    return rawRelatedLists.map((item) => ({
-      ...item,
-      title: adapter.getRelatedListTitle(item.id, item.title),
-    }));
+    return rawRelatedLists.map((item) => {
+      let upperControls = item.upperControls;
+      let railAction = item.railAction;
+      if (item.id === "cadences") {
+        upperControls = upperControls?.map((ctrl) =>
+          ctrl.id === "enroll" && !ctrl.onAction
+            ? { ...ctrl, onAction: () => setEnrollCadenceOpen(true) }
+            : ctrl,
+        );
+        if (railAction && !railAction.onAction) {
+          railAction = { ...railAction, onAction: () => setEnrollCadenceOpen(true) };
+        }
+      }
+      return {
+        ...item,
+        upperControls,
+        railAction,
+        title: adapter.getRelatedListTitle(item.id, item.title),
+      };
+    });
   }, [adapter, rawRelatedLists]);
   const hasRelatedLists = relatedLists.length > 0;
   const relatedEntries = useMemo(() => {
@@ -374,7 +390,7 @@ export function RecordDetailScreen({
   const canMerge = (moduleFlags?.merge ?? true) && canEdit;
   const canPrint = moduleFlags?.print ?? true;
   const canEnrollCadence =
-    ["Leads", "Contacts", "Deals"].includes(moduleApiName) &&
+    ["Leads", "Contacts", "Accounts", "Deals"].includes(moduleApiName) &&
     (moduleFlags?.enrollCadence ?? true) &&
     canEdit;
   const showTimeline = permissions ? permissions.tools.recordTimeline : true;
@@ -600,12 +616,12 @@ export function RecordDetailScreen({
           onConfirm={confirmDelete}
         />
       ) : null}
-      {enrollCadenceOpen && ["Leads", "Contacts", "Deals"].includes(moduleApiName) ? (
+      {enrollCadenceOpen && ["Leads", "Contacts", "Accounts", "Deals"].includes(moduleApiName) ? (
         <EnrollCadenceDialog
           isOpen
           onOpenChange={setEnrollCadenceOpen}
           orgSlug={orgSlug}
-          module={moduleApiName as "Leads" | "Contacts" | "Deals"}
+          module={moduleApiName as "Leads" | "Contacts" | "Accounts" | "Deals"}
           recordIds={[recordId]}
         />
       ) : null}

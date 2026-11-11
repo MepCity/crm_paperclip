@@ -377,6 +377,14 @@ export function CadenceEditorScreen({ orgSlug, cadenceId }: CadenceEditorScreenP
         <div className="flex items-center gap-2 flex-wrap">
           <Button
             variant="secondary"
+            onClick={() => router.push(`/crm/${orgSlug}/settings/cadences/${cadenceId}/reports`)}
+            data-testid="cadence-reports-button"
+          >
+            {t("modules.cadences.reports.title") || "Reports"}
+          </Button>
+
+          <Button
+            variant="secondary"
             onClick={handleSaveDraft}
             isDisabled={savingDraft || publishing}
             data-testid="cadence-save-draft-button"

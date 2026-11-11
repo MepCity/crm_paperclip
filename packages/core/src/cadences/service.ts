@@ -1,5 +1,5 @@
 import { schema } from "@crm/db";
-import { and, count, desc, eq, ilike, inArray, ne, sql } from "drizzle-orm";
+import { and, count, desc, eq, gte, ilike, inArray, lte, ne, sql } from "drizzle-orm";
 import { canOnRecord } from "../access/evaluate";
 import type { AccessSnapshot } from "../access/types";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../errors";
@@ -12,10 +12,15 @@ import {
   type CadenceAudience,
   type CadenceDetail,
   type CadenceEnrollment,
+  type CadenceEnrollmentState,
   type CadenceExitRule,
   type CadenceFilters,
   type CadenceModule,
+  type CadenceReportData,
+  type CadenceReportSummary,
+  type CadenceStatus,
   type CadenceStep,
+  type CadenceStepMetric,
   type CadenceStepRun,
   type CadenceSummary,
   type CadenceVersion,
@@ -24,6 +29,7 @@ import {
   type EnrollRecordsInput,
   enrollRecordSchema,
   enrollRecordsSchema,
+  type RecordCadenceEnrollmentItem,
   type UpdateCadenceDraftInput,
 } from "./types";
 import {
@@ -994,6 +1000,281 @@ export function createCadenceService() {
           .orderBy(desc(schema.cadenceStepRuns.executedAt));
 
         return rows.map(mapStepRun);
+      });
+    },
+
+    async listRecordEnrollments(
+      ctx: OrgContext,
+      recordModule: CadenceModule,
+      recordId: string,
+    ): Promise<RecordCadenceEnrollmentItem[]> {
+      return withOrg(ctx, async (tx) => {
+        const rows = await tx
+          .select({
+            id: schema.cadenceEnrollments.id,
+            cadenceId: schema.cadenceEnrollments.cadenceId,
+            cadenceName: schema.cadences.name,
+            recordModule: schema.cadenceEnrollments.recordModule,
+            recordId: schema.cadenceEnrollments.recordId,
+            state: schema.cadenceEnrollments.state,
+            reason: schema.cadenceEnrollments.reason,
+            generation: schema.cadenceEnrollments.generation,
+            nextStepId: schema.cadenceEnrollments.nextStepId,
+            nextDueAt: schema.cadenceEnrollments.nextDueAt,
+            createdAt: schema.cadenceEnrollments.createdAt,
+          })
+          .from(schema.cadenceEnrollments)
+          .innerJoin(
+            schema.cadences,
+            and(
+              eq(schema.cadences.organizationId, schema.cadenceEnrollments.organizationId),
+              eq(schema.cadences.id, schema.cadenceEnrollments.cadenceId),
+            ),
+          )
+          .where(
+            and(
+              eq(schema.cadenceEnrollments.organizationId, ctx.orgId),
+              eq(schema.cadenceEnrollments.recordModule, recordModule),
+              eq(schema.cadenceEnrollments.recordId, recordId),
+            ),
+          )
+          .orderBy(desc(schema.cadenceEnrollments.createdAt));
+
+        return rows.map((r) => ({
+          id: r.id,
+          cadenceId: r.cadenceId,
+          cadenceName: r.cadenceName,
+          recordModule: r.recordModule as CadenceModule,
+          recordId: r.recordId,
+          recordStartDate: r.createdAt.toISOString(),
+          status: r.state as CadenceEnrollmentState,
+          reason: r.reason,
+          generation: r.generation,
+          nextStepId: r.nextStepId,
+          nextDueAt: r.nextDueAt ? r.nextDueAt.toISOString() : null,
+        }));
+      });
+    },
+
+    async getCadenceReport(
+      ctx: OrgContext,
+      cadenceId: string,
+      options?: { startDate?: string; endDate?: string },
+    ): Promise<CadenceReportData> {
+      return withOrg(ctx, async (tx) => {
+        const [cadenceRow] = await tx
+          .select()
+          .from(schema.cadences)
+          .where(
+            and(eq(schema.cadences.organizationId, ctx.orgId), eq(schema.cadences.id, cadenceId)),
+          );
+
+        if (!cadenceRow) throw new NotFoundError("Cadence not found");
+
+        const targetVersionId = cadenceRow.publishedVersionId ?? cadenceRow.draftVersionId;
+        let steps: CadenceStep[] = [];
+        if (targetVersionId) {
+          const [versionRow] = await tx
+            .select()
+            .from(schema.cadenceVersions)
+            .where(
+              and(
+                eq(schema.cadenceVersions.organizationId, ctx.orgId),
+                eq(schema.cadenceVersions.id, targetVersionId),
+              ),
+            );
+          if (versionRow) {
+            steps = (versionRow.steps as CadenceStep[]) ?? [];
+          }
+        }
+
+        const enrollmentConditions = [
+          eq(schema.cadenceEnrollments.organizationId, ctx.orgId),
+          eq(schema.cadenceEnrollments.cadenceId, cadenceId),
+        ];
+
+        if (options?.startDate) {
+          const start = new Date(options.startDate);
+          if (!Number.isNaN(start.getTime())) {
+            enrollmentConditions.push(gte(schema.cadenceEnrollments.createdAt, start));
+          }
+        }
+        if (options?.endDate) {
+          const end = new Date(options.endDate);
+          if (!Number.isNaN(end.getTime())) {
+            const endOfDay = new Date(end);
+            endOfDay.setUTCHours(23, 59, 59, 999);
+            enrollmentConditions.push(lte(schema.cadenceEnrollments.createdAt, endOfDay));
+          }
+        }
+
+        const enrollments = await tx
+          .select()
+          .from(schema.cadenceEnrollments)
+          .where(and(...enrollmentConditions));
+
+        const summary: CadenceReportSummary = {
+          enrolled: enrollments.length,
+          active: 0,
+          completed: 0,
+          exited: 0,
+          stopped: 0,
+          paused: 0,
+        };
+
+        const enrollmentIds: string[] = [];
+        const enrollmentsById = new Map<string, (typeof enrollments)[number]>();
+
+        for (const e of enrollments) {
+          enrollmentIds.push(e.id);
+          enrollmentsById.set(e.id, e);
+          if (e.state === "active") summary.active++;
+          else if (e.state === "completed") summary.completed++;
+          else if (e.state === "exited") summary.exited++;
+          else if (e.state === "stopped") summary.stopped++;
+          else if (e.state === "paused") summary.paused++;
+        }
+
+        let stepRuns: Array<typeof schema.cadenceStepRuns.$inferSelect> = [];
+        if (enrollmentIds.length > 0) {
+          const stepRunConditions = [
+            eq(schema.cadenceStepRuns.organizationId, ctx.orgId),
+            inArray(schema.cadenceStepRuns.enrollmentId, enrollmentIds),
+          ];
+          if (options?.startDate) {
+            const start = new Date(options.startDate);
+            if (!Number.isNaN(start.getTime())) {
+              stepRunConditions.push(gte(schema.cadenceStepRuns.executedAt, start));
+            }
+          }
+          if (options?.endDate) {
+            const end = new Date(options.endDate);
+            if (!Number.isNaN(end.getTime())) {
+              const endOfDay = new Date(end);
+              endOfDay.setUTCHours(23, 59, 59, 999);
+              stepRunConditions.push(lte(schema.cadenceStepRuns.executedAt, endOfDay));
+            }
+          }
+
+          stepRuns = await tx
+            .select()
+            .from(schema.cadenceStepRuns)
+            .where(and(...stepRunConditions));
+        }
+
+        const runsByStep = new Map<string, typeof stepRuns>();
+        for (const run of stepRuns) {
+          const list = runsByStep.get(run.stepId) ?? [];
+          list.push(run);
+          runsByStep.set(run.stepId, list);
+        }
+
+        const stepMetrics: CadenceStepMetric[] = [];
+        let previousCompletedCount = summary.enrolled;
+
+        for (let i = 0; i < steps.length; i++) {
+          const step = steps[i];
+          if (!step) continue;
+          const runs = runsByStep.get(step.id) ?? [];
+
+          let executed = 0;
+          let skipped = 0;
+          let failed = 0;
+          const skippedReasons: Record<string, number> = {};
+
+          for (const r of runs) {
+            if (r.outcome === "completed") {
+              executed++;
+            } else if (r.outcome === "skipped") {
+              skipped++;
+              const reason = r.outcomeReason ?? "unknown";
+              skippedReasons[reason] = (skippedReasons[reason] ?? 0) + 1;
+            } else if (r.outcome === "failed") {
+              failed++;
+            }
+          }
+
+          const enteredCount = i === 0 ? summary.enrolled : previousCompletedCount;
+          const completedCount = executed;
+          const conversionRate =
+            enteredCount > 0 ? Math.round((completedCount / enteredCount) * 100) : 0;
+          previousCompletedCount = completedCount;
+
+          let stepName = "";
+          let delayText = "";
+          if (step.delay) {
+            delayText = `${step.delay.amount} ${step.delay.unit}`;
+          }
+
+          let emailsSent: number | undefined;
+          let replies: number | undefined;
+          let tasksCreated: number | undefined;
+          let tasksCompleted: number | undefined;
+          let callsCreated: number | undefined;
+          let callsCompleted: number | undefined;
+
+          if (step.kind === "email") {
+            stepName = step.name || "Email follow-up";
+            emailsSent = executed;
+            const stepRunEnrollmentIds = new Set(runs.map((r) => r.enrollmentId));
+            let replyCount = 0;
+            for (const eid of stepRunEnrollmentIds) {
+              const enr = enrollmentsById.get(eid);
+              if (
+                enr &&
+                enr.state === "exited" &&
+                (enr.reason === "reply" || enr.reason === "on_reply")
+              ) {
+                replyCount++;
+              }
+            }
+            replies = replyCount;
+          } else if (step.kind === "task") {
+            stepName = step.subject || "Task follow-up";
+            tasksCreated = executed;
+            tasksCompleted = executed;
+          } else if (step.kind === "call") {
+            stepName = step.subject || "Call follow-up";
+            callsCreated = executed;
+            callsCompleted = executed;
+          }
+
+          stepMetrics.push({
+            stepId: step.id,
+            stepKind: step.kind,
+            stepName,
+            delayText,
+            executed,
+            skipped,
+            skippedReasons,
+            failed,
+            emailsSent,
+            replies,
+            tasksCreated,
+            tasksCompleted,
+            callsCreated,
+            callsCompleted,
+            enteredCount,
+            completedCount,
+            conversionRate,
+          });
+        }
+
+        return {
+          cadence: {
+            id: cadenceRow.id,
+            name: cadenceRow.name,
+            module: cadenceRow.module as CadenceModule,
+            status: cadenceRow.status as CadenceStatus,
+            createdAt: cadenceRow.createdAt.toISOString(),
+          },
+          dateRange: {
+            startDate: options?.startDate,
+            endDate: options?.endDate,
+          },
+          summary,
+          stepMetrics,
+        };
       });
     },
 

@@ -922,7 +922,7 @@ function ModuleListScreenLoaded({
     ...(allow.changeOwner ? [] : ["change-owner"]),
     ...(allow.delete && allow.massDelete ? [] : ["delete"]),
     ...(allow.export ? [] : ["export-selected"]),
-    ...(!["Leads", "Contacts", "Deals"].includes(config.module) || !allow.enrollCadence ? ["cadences"] : []),
+    ...(!["Leads", "Contacts", "Accounts", "Deals"].includes(config.module) || !allow.enrollCadence ? ["cadences"] : []),
   ]);
   const selectionActions = allSelectionActions.filter((a) => !hiddenSelectionActions.has(a.id));
   return (
@@ -1061,12 +1061,12 @@ function ModuleListScreenLoaded({
           onSuccess={clearSelection}
         />
       ) : null}
-      {enrollCadenceOpen && ["Leads", "Contacts", "Deals"].includes(config.module) ? (
+      {enrollCadenceOpen && ["Leads", "Contacts", "Accounts", "Deals"].includes(config.module) ? (
         <EnrollCadenceDialog
           isOpen
           onOpenChange={setEnrollCadenceOpen}
           orgSlug={orgSlug}
-          module={config.module as "Leads" | "Contacts" | "Deals"}
+          module={config.module as "Leads" | "Contacts" | "Accounts" | "Deals"}
           recordIds={pageSelectedIds}
           onSuccess={clearSelection}
         />
