@@ -67,6 +67,14 @@ export const cadenceTableContracts: readonly TableContract[] = [
   { name: "cadence_step_runs", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
 ];
 
+export const journeyTableContracts: readonly TableContract[] = [
+  { name: "journeys", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "journey_versions", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "journey_instances", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "journey_transition_runs", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "journey_due_actions", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+];
+
 const identityTables = new Set([
   "users",
   "accounts",
@@ -134,6 +142,7 @@ export async function assertRuntimeCatalog(
     ...feedTableContracts,
     ...webformTableContracts,
     ...cadenceTableContracts,
+    ...journeyTableContracts,
   ];
   tables = [...installed.filter((base) => !tables.some((t) => t.name === base.name)), ...tables];
   const contracts = new Map(tables.map((table) => [table.name, table]));

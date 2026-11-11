@@ -80,7 +80,11 @@ describe("catalogue", () => {
     expect({
       ...std,
       admin: null,
-      features: { ...std.features, cadences: { view: true, manage: true } },
+      features: {
+        ...std.features,
+        cadences: { view: true, manage: true },
+        journeys: { view: true },
+      },
       tools: { ...std.tools, enrollInCadence: admin.tools.enrollInCadence },
     }).toEqual({ ...admin, admin: null });
     expect(std.features.cadences).toEqual({ view: true, manage: false });

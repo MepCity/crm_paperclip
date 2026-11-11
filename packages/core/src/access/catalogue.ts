@@ -75,6 +75,9 @@ const cadencesFeature = z.object({
   view: z.boolean().default(true),
   manage: z.boolean().default(false),
 });
+const journeysFeature = z.object({
+  view: z.boolean().default(false),
+});
 const attachmentsFeature = z.object({
   view: z.boolean(),
   create: z.boolean(),
@@ -99,6 +102,8 @@ export const profilePermissionsSchema = z.object({
     feeds: feedsFeature.default({ view: true, post: true }),
     // Profiles stored before Cadences shipped have no key: view defaults to true, manage to false (ADR 0019 §4).
     cadences: cadencesFeature.default({ view: true, manage: false }),
+    // Profiles stored before Journeys shipped have no key: view defaults to false (ADR 0019 §4).
+    journeys: journeysFeature.default({ view: false }),
   }),
   importModules: moduleList,
   exportModules: moduleList,
@@ -128,6 +133,7 @@ export const profilePermissionsSchema = z.object({
     emailSettings: z.boolean(),
     dataManagement: z.boolean(),
     manageWebforms: z.boolean().default(false),
+    manageJourneys: z.boolean().default(false),
     viewAllRecords: moduleList,
     modifyAllRecords: moduleList,
   }),
@@ -177,6 +183,7 @@ export function administratorPermissions(opts?: {
           emailSettings: true,
           dataManagement: true,
           manageWebforms: true,
+          manageJourneys: true,
           viewAllRecords: all(),
           modifyAllRecords: all(),
         };
@@ -215,6 +222,7 @@ export function administratorPermissions(opts?: {
             attachments: { view: true, create: true, delete: true },
             feeds: { view: true, post: true },
             cadences: { view: true, manage: true },
+            journeys: { view: true },
           },
     importModules: all(),
     exportModules: all(),
@@ -289,6 +297,7 @@ export function standardPermissions(opts?: {
           emailSettings: false,
           dataManagement: false,
           manageWebforms: false,
+          manageJourneys: false,
           viewAllRecords: [],
           modifyAllRecords: [],
         };
@@ -303,6 +312,7 @@ export function standardPermissions(opts?: {
     features: {
       ...base.features,
       cadences: { view: true, manage: false },
+      journeys: { view: false },
     },
     tools: {
       ...base.tools,

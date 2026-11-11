@@ -30,7 +30,8 @@ export type FeatureKey =
   | "notes"
   | "attachments"
   | "feeds"
-  | "cadences";
+  | "cadences"
+  | "journeys";
 export type AdminKey =
   | "userManagement"
   | "moduleCustomization"
@@ -40,7 +41,8 @@ export type AdminKey =
   | "manageTemplates"
   | "emailSettings"
   | "dataManagement"
-  | "manageWebforms";
+  | "manageWebforms"
+  | "manageJourneys";
 export type ToolKey = "manageViews" | "tags" | "recordTimeline";
 
 /** `"$module"` means: the module named by the request (route param or `module` query). */

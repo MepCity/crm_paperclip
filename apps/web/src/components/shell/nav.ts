@@ -52,7 +52,7 @@ export interface NavLink {
   /** Module API name; the link is hidden when the profile cannot view the module. */
   module?: string;
   /** Feature area with a `view` flag; hidden when the profile cannot view it. */
-  feature?: "reports" | "analytics" | "documents" | "cadences";
+  feature?: "reports" | "analytics" | "documents" | "cadences" | "journeys";
   /** Settings link shown only to viewers with `admin.userManagement`. */
   requiresUserManagement?: boolean;
 }
@@ -74,7 +74,13 @@ export function isNavLinkAllowed(link: NavLink, permissions: ClientPermissions |
   if (link.module && permissions.modules[link.module]?.view === false) return false;
   const adminKey = settingsAdminKey[link.id];
   if (adminKey && link.group && !permissions.admin[adminKey]) return false;
-  if (link.feature && !permissions.features[link.feature].view) return false;
+  if (
+    link.feature &&
+    !permissions.features[link.feature]?.view &&
+    (link.feature !== "journeys" || !permissions.admin.manageJourneys)
+  ) {
+    return false;
+  }
   return true;
 }
 
@@ -397,6 +403,16 @@ export const settingsNav: readonly NavLink[] = [
     activePrefix: (slug) => `/crm/${slug}/settings/review-processes`,
     match: "prefix",
     group: "Process Management",
+  },
+  {
+    id: "commandcenter",
+    label: (english.shell as Record<string, string>)["commandcenter"] ?? "CommandCenter",
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/commandcenter/journey-builder`,
+    activePrefix: (slug) => `/crm/${slug}/settings/commandcenter`,
+    match: "prefix",
+    group: "Process Management",
+    feature: "journeys",
   },
 ];
 
