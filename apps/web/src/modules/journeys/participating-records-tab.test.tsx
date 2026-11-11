@@ -9,6 +9,7 @@ const mockInstances = [
     versionId: "ver-1",
     recordModule: "Leads" as const,
     recordId: "lead-abc",
+    recordName: "Ayşe Yılmaz",
     currentStateId: "state-start",
     stateEnteredAt: "2026-11-10T12:00:00.000Z",
     deadlineAt: "2026-11-12T12:00:00.000Z",
@@ -96,6 +97,7 @@ describe("ParticipatingRecordsTab", () => {
     expect(await screen.findByTestId("participant-row-inst-101")).toBeDefined();
     const link = screen.getByTestId("participant-record-link-inst-101");
     expect(link.getAttribute("href")).toBe("/crm/test-org/tab/Leads/lead-abc");
+    expect(screen.getByText("Ayşe Yılmaz")).toBeDefined();
     expect(screen.getAllByText("Entry State").length).toBeGreaterThan(0);
     expect(screen.getAllByText("active").length).toBeGreaterThan(0);
 

@@ -297,7 +297,7 @@ export function ParticipatingRecordsTab({
                         <Badge variant="neutral" className="text-[10px] py-0 px-1 font-mono">
                           {inst.recordModule}
                         </Badge>
-                        <span>{inst.recordId}</span>
+                        <span>{inst.recordName || inst.recordId}</span>
                       </Link>
                     </td>
                     <td className="px-4 py-3 text-foreground font-medium">

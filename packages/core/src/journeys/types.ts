@@ -238,6 +238,7 @@ export interface JourneyInstanceSummary {
   versionId: string;
   recordModule: JourneyModule;
   recordId: string;
+  recordName?: string;
   currentStateId: string;
   stateEnteredAt: string;
   deadlineAt: string | null;
@@ -331,6 +332,7 @@ export interface RecordJourneyInstanceItem {
   journeyName: string;
   recordModule: JourneyModule;
   recordId: string;
+  recordName?: string;
   currentStateId: string;
   currentStateName: string;
   stateEnteredAt: string;

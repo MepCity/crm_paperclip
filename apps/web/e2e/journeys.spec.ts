@@ -325,9 +325,10 @@ test("journeys C: record in journey appears in record Journeys related list, edi
 
   // Switch to Participating Records Tab
   await page.getByTestId("tab-participating-records").click();
-  await expect(page.getByTestId("participants-table")).toBeVisible({ timeout: 15_000 });
-  await expect(page.getByText("Ayşe Yılmaz")).toBeVisible();
-  await expect(page.getByText("New Lead")).toBeVisible();
+  const participantsTable = page.getByTestId("participants-table");
+  await expect(participantsTable).toBeVisible({ timeout: 15_000 });
+  await expect(participantsTable.getByText("Ayşe Yılmaz")).toBeVisible();
+  await expect(participantsTable.getByText("New Lead")).toBeVisible();
 
   // Screenshot 3: Participating records tab at 1180x703
   await page.screenshot({ path: join(evidenceDir, "journeys-editor-participants.png") });
