@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { schema } from "@crm/db";
-import { and, count, desc, eq, ilike, lte, sql } from "drizzle-orm";
+import { and, count, desc, eq, ilike, inArray, lte, sql } from "drizzle-orm";
 import { ConflictError, NotFoundError, ValidationError } from "../errors";
 import type { RecordData } from "../records";
 import type { RecordWriteEvent, RecordWriteObserver } from "../records/write-observer";
@@ -127,6 +127,44 @@ async function getJourneyInternal(
 }
 
 export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
+  const activeJourneysCache = new Map<
+    string,
+    { fetchedAt: number; journeys: (typeof schema.journeys.$inferSelect)[] }
+  >();
+
+  function invalidateCache(orgId?: string) {
+    if (orgId) {
+      activeJourneysCache.delete(orgId);
+    } else {
+      activeJourneysCache.clear();
+    }
+  }
+
+  async function getActiveJourneysForModule(
+    ctx: OrgContext,
+    module: string,
+  ): Promise<(typeof schema.journeys.$inferSelect)[]> {
+    const cached = activeJourneysCache.get(ctx.orgId);
+    const now = Date.now();
+    if (cached && now - cached.fetchedAt < 5000) {
+      return cached.journeys.filter((j) => j.module === module);
+    }
+    const activeJourneys = await withOrg(ctx, async (tx) => {
+      return tx
+        .select()
+        .from(schema.journeys)
+        .where(
+          and(
+            eq(schema.journeys.organizationId, ctx.orgId),
+            eq(schema.journeys.status, "active"),
+            sql`${schema.journeys.activeVersionId} IS NOT NULL`,
+          ),
+        );
+    });
+    activeJourneysCache.set(ctx.orgId, { fetchedAt: now, journeys: activeJourneys });
+    return activeJourneys.filter((j) => j.module === module);
+  }
+
   return {
     async listJourneys(
       ctx: OrgContext,
@@ -492,6 +530,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
             and(eq(schema.journeys.organizationId, ctx.orgId), eq(schema.journeys.id, journeyId)),
           );
 
+        invalidateCache(ctx.orgId);
         return getJourneyInternal(tx, ctx.orgId, journeyId);
       });
     },
@@ -523,6 +562,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
             and(eq(schema.journeys.organizationId, ctx.orgId), eq(schema.journeys.id, journeyId)),
           );
 
+        invalidateCache(ctx.orgId);
         return getJourneyInternal(tx, ctx.orgId, journeyId);
       });
     },
@@ -563,6 +603,7 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
             ),
           );
 
+        invalidateCache(ctx.orgId);
         return getJourneyInternal(tx, ctx.orgId, journeyId);
       });
     },
@@ -582,6 +623,8 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
           .where(
             and(eq(schema.journeys.organizationId, ctx.orgId), eq(schema.journeys.id, journeyId)),
           );
+
+        invalidateCache(ctx.orgId);
       });
     },
 
@@ -778,19 +821,12 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
       ctx: OrgContext,
       input: { module: string; recordId: string; record: RecordData },
     ): Promise<string[]> {
-      return withOrg(ctx, async (tx) => {
-        const activeJourneys = await tx
-          .select()
-          .from(schema.journeys)
-          .where(
-            and(
-              eq(schema.journeys.organizationId, ctx.orgId),
-              eq(schema.journeys.module, input.module),
-              eq(schema.journeys.status, "active"),
-              sql`${schema.journeys.activeVersionId} IS NOT NULL`,
-            ),
-          );
+      const activeJourneys = await getActiveJourneysForModule(ctx, input.module);
+      if (activeJourneys.length === 0) return [];
 
+      const recordCreatedTransitions: { instanceId: string; transitionId: string }[] = [];
+
+      const instanceIds = await withOrg(ctx, async (tx) => {
         const instanceIds: string[] = [];
 
         for (const journey of activeJourneys) {
@@ -929,19 +965,29 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
             (t) => t.from === startState.id && normalizeTriggerKind(t.trigger) === "record_created",
           );
           if (recordCreatedTransition) {
-            await executeJourneyTransition(ctx, {
+            recordCreatedTransitions.push({
               instanceId: newInstance.id,
               transitionId: recordCreatedTransition.id,
-              eventId: `create_${newInstance.id}`,
-              generation: 1,
-              deps: defaultDeps,
-              record: input.record,
             });
           }
         }
 
         return instanceIds;
       });
+
+      // Execute record_created transitions outside tx to avoid deadlock
+      for (const t of recordCreatedTransitions) {
+        await executeJourneyTransition(ctx, {
+          instanceId: t.instanceId,
+          transitionId: t.transitionId,
+          eventId: `create_${t.instanceId}`,
+          generation: 1,
+          deps: defaultDeps,
+          record: input.record,
+        });
+      }
+
+      return instanceIds;
     },
 
     async handleRecordEvent(ctx: OrgContext, event: RecordWriteEvent): Promise<void> {
@@ -952,6 +998,9 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
           record: event.record,
         });
       } else if (event.kind === "edit") {
+        const activeJourneys = await getActiveJourneysForModule(ctx, event.module);
+        if (activeJourneys.length === 0) return;
+
         const activeInstances = await withOrg(ctx, async (tx) => {
           return tx
             .select()
@@ -1010,24 +1059,26 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
       ctx: OrgContext,
       event: { module: string; ids: readonly string[] },
     ): Promise<void> {
+      if (!event.ids || event.ids.length === 0) return;
+      const activeJourneys = await getActiveJourneysForModule(ctx, event.module);
+      if (activeJourneys.length === 0) return;
+
       await withOrg(ctx, async (tx) => {
-        for (const id of event.ids) {
-          await tx
-            .update(schema.journeyInstances)
-            .set({
-              status: "stopped",
-              generation: sql`${schema.journeyInstances.generation} + 1`,
-              updatedAt: new Date(),
-            })
-            .where(
-              and(
-                eq(schema.journeyInstances.organizationId, ctx.orgId),
-                eq(schema.journeyInstances.recordModule, event.module),
-                eq(schema.journeyInstances.recordId, id),
-                eq(schema.journeyInstances.status, "active"),
-              ),
-            );
-        }
+        await tx
+          .update(schema.journeyInstances)
+          .set({
+            status: "stopped",
+            generation: sql`${schema.journeyInstances.generation} + 1`,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(schema.journeyInstances.organizationId, ctx.orgId),
+              eq(schema.journeyInstances.recordModule, event.module),
+              inArray(schema.journeyInstances.recordId, [...event.ids]),
+              eq(schema.journeyInstances.status, "active"),
+            ),
+          );
       });
     },
 
@@ -1035,6 +1086,9 @@ export function createJourneysService(defaultDeps?: JourneysWorkerDeps) {
       ctx: OrgContext,
       input: { formId: string; recordModule: string; recordId: string; record: RecordData },
     ): Promise<void> {
+      const activeJourneys = await getActiveJourneysForModule(ctx, input.recordModule);
+      if (activeJourneys.length === 0) return;
+
       const activeInstances = await withOrg(ctx, async (tx) => {
         return tx
           .select()
