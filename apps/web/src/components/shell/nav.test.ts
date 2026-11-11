@@ -243,6 +243,7 @@ describe("settingsNav", () => {
       "cadences",
       "approval-processes",
       "review-processes",
+      "commandcenter",
     ]);
     const [general, members] = settingsNav;
     const calendarBooking = settingsNav.find((link) => link.id === "calendar-booking");
