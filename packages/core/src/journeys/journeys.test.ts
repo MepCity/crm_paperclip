@@ -6,6 +6,12 @@ import {
   validateJourneyForPublish,
   validateUpdateJourneyDraft,
 } from "./validation";
+import {
+  createJourneyActionHandler,
+  createJourneyTransitionHandler,
+  evaluateJourneyCriteria,
+  executeActionEffect,
+} from "./worker";
 
 describe("Journey Schemas and Validation", () => {
   describe("createJourneySchema", () => {
@@ -330,9 +336,7 @@ describe("Journey Schemas and Validation", () => {
   });
 
   describe("transition criteria evaluation (pass/fail)", () => {
-    it("evaluates criteria pass and fail correctly", async () => {
-      const { evaluateJourneyCriteria } = await import("./worker");
-
+    it("evaluates criteria pass and fail correctly", () => {
       const recordPassing = {
         Rating: "Hot",
         Annual_Revenue: 100000,
@@ -411,6 +415,168 @@ describe("Journey Schemas and Validation", () => {
       expect(journeyTriggerSchema.parse("deadline_missed")).toBe("deadline_missed");
       expect(journeyTriggerSchema.parse({ kind: "deadline_missed" })).toEqual({
         kind: "deadline_missed",
+      });
+    });
+  });
+
+  describe("journey action effect access checks (ADR 0019 §6, fail-closed)", () => {
+    it("requires accessSnapshotProvider at handler construction", () => {
+      expect(() => createJourneyActionHandler({} as never)).toThrowError(
+        /createJourneyActionHandler requires accessSnapshotProvider/,
+      );
+      expect(() => createJourneyTransitionHandler({} as never)).toThrowError(
+        /createJourneyTransitionHandler requires accessSnapshotProvider/,
+      );
+    });
+
+    it("skips effect with actor_lost_access when accessSnapshotProvider is missing", async () => {
+      const mockTx = {
+        select: () => ({
+          from: () => ({
+            where: async () => [{ role: "admin" }],
+          }),
+        }),
+      } as never;
+
+      const ctx = {
+        orgId: "org-1",
+        orgSlug: "s",
+        orgName: "O",
+        userId: "u1",
+        role: "admin" as const,
+      };
+      const instance = {
+        id: "inst-1",
+        journeyId: "j-1",
+        versionId: "v-1",
+        recordModule: "Leads",
+        recordId: "rec-1",
+        generation: 1,
+      };
+      const record = {
+        id: "rec-1",
+        module: "Leads",
+        fields: { Owner: "u1" },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      const result = await executeActionEffect(
+        mockTx,
+        ctx,
+        instance,
+        { id: "act-1", kind: "task", title: "Follow up" } as never,
+        record,
+        "u1",
+        undefined,
+      );
+
+      expect(result).toEqual({ outcome: "skipped", outcomeReason: "actor_lost_access" });
+    });
+
+    it("skips effect with actor_lost_access when owner lacks the required module right for each action kind", async () => {
+      const mockTx = {
+        select: () => ({
+          from: () => ({
+            where: async () => [{ role: "member" }],
+          }),
+        }),
+      } as never;
+
+      const ctx = {
+        orgId: "org-1",
+        orgSlug: "s",
+        orgName: "O",
+        userId: "u1",
+        role: "member" as const,
+      };
+      const instance = {
+        id: "inst-1",
+        journeyId: "j-1",
+        versionId: "v-1",
+        recordModule: "Leads",
+        recordId: "rec-1",
+        generation: 1,
+      };
+      const record = {
+        id: "rec-1",
+        module: "Leads",
+        fields: { Owner: "u1" },
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+
+      const makeSnapshot =
+        (moduleRights: Record<string, { view?: boolean; create?: boolean; edit?: boolean }>) =>
+        async () =>
+          ({
+            userId: "u1",
+            orgId: "org-1",
+            version: 1,
+            profileKind: "standard",
+            permissions: {
+              admin: { viewAllRecords: [], modifyAllRecords: [] },
+              modules: moduleRights,
+            },
+            fieldPermissions: new Map(),
+            roles: new Map(),
+            ownerLevels: new Map(),
+            defaults: new Map(),
+          }) as never;
+
+      // 1. Email action: owner lacks view right on recordModule
+      const emailResult = await executeActionEffect(
+        mockTx,
+        ctx,
+        instance,
+        { id: "act-email", kind: "email", templateId: "tmpl-1" } as never,
+        record,
+        "u1",
+        { accessSnapshotProvider: makeSnapshot({ Leads: { view: false } }) },
+      );
+      expect(emailResult).toEqual({ outcome: "skipped", outcomeReason: "actor_lost_access" });
+
+      // 2. Task action: owner lacks create right on Tasks module
+      const taskResult = await executeActionEffect(
+        mockTx,
+        ctx,
+        instance,
+        { id: "act-task", kind: "task", title: "T1" } as never,
+        record,
+        "u1",
+        { accessSnapshotProvider: makeSnapshot({ Tasks: { create: false } }) },
+      );
+      expect(taskResult).toEqual({ outcome: "skipped", outcomeReason: "actor_lost_access" });
+
+      // 3. Call action: owner lacks create right on Calls module
+      const callResult = await executeActionEffect(
+        mockTx,
+        ctx,
+        instance,
+        { id: "act-call", kind: "call", subject: "C1" } as never,
+        record,
+        "u1",
+        { accessSnapshotProvider: makeSnapshot({ Calls: { create: false } }) },
+      );
+      expect(callResult).toEqual({ outcome: "skipped", outcomeReason: "actor_lost_access" });
+
+      // 4. Field update action: owner lacks edit right on recordModule
+      const fieldUpdateResult = await executeActionEffect(
+        mockTx,
+        ctx,
+        instance,
+        {
+          id: "act-fu",
+          kind: "field_update",
+          updates: { Lead_Status: "Contacted" },
+        } as never,
+        record,
+        "u1",
+        { accessSnapshotProvider: makeSnapshot({ Leads: { edit: false } }) },
+      );
+      expect(fieldUpdateResult).toEqual({
+        outcome: "skipped",
+        outcomeReason: "actor_lost_access",
       });
     });
   });

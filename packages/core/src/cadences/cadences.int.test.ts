@@ -14,12 +14,38 @@ import type { CadenceExitRule, CadenceStep } from "./types";
 import {
   CADENCE_STEP_JOB_KIND,
   CADENCE_STEP_JOB_VERSION,
+  type CadenceWorkerDeps,
   createCadenceJobCatalog,
   createCadenceStepHandler,
   executeCadenceStep,
   sweepAudienceCustomViews,
   sweepDueEnrollments,
 } from "./worker";
+
+const defaultTestSnapshotProvider = async (ctx: { orgId: string }, userId: string) =>
+  ({
+    userId,
+    orgId: ctx.orgId,
+    version: 1,
+    profileKind: "administrator",
+    permissions: {
+      admin: { viewAllRecords: [], modifyAllRecords: [] },
+      modules: {},
+    },
+    fieldPermissions: new Map(),
+    roles: new Map(),
+    ownerLevels: new Map(),
+    defaults: new Map(),
+  }) as unknown as AccessSnapshot;
+
+const makeCadenceDeps = (
+  records: RecordService,
+  extra: Partial<CadenceWorkerDeps> = {},
+): CadenceWorkerDeps & { recordService: RecordService } => ({
+  recordService: records,
+  accessSnapshotProvider: defaultTestSnapshotProvider,
+  ...extra,
+});
 
 describe("cadences backend integration", () => {
   it("manages full lifecycle, unique name, filters, and publish/supersede immutability", async () => {
@@ -462,6 +488,12 @@ describe("cadences backend integration", () => {
           subject: "Follow up with Alice",
           callType: "Outbound",
         },
+        {
+          id: "step-e3",
+          kind: "email",
+          delay: { amount: 2, unit: "days" },
+          templateId: "welcome-template",
+        },
       ],
       exitRules: [
         {
@@ -491,7 +523,7 @@ describe("cadences backend integration", () => {
       enrollmentId: enrollment.id,
       stepId: "step-t1",
       generation: enrollment.generation,
-      deps: { recordService: records },
+      deps: makeCadenceDeps(records),
     });
 
     expect(result1.status).toBe("completed");
@@ -521,7 +553,7 @@ describe("cadences backend integration", () => {
       enrollmentId: enrollment.id,
       stepId: "step-c2",
       generation: currentEnrollment.generation,
-      deps: { recordService: records },
+      deps: makeCadenceDeps(records),
     });
 
     expect(result2.status).toBe("exited");
@@ -576,6 +608,79 @@ describe("cadences backend integration", () => {
     const runs2 = await service.listStepRuns(ctx, enroll2.id);
     expect(runs2[0]?.outcome).toBe("skipped");
     expect(runs2[0]?.outcomeReason).toBe("actor_lost_access");
+
+    // 3b. Missing accessSnapshotProvider -> fails closed with actor_lost_access
+    const lead3 = await records.create("Leads", {
+      First_Name: "Charlie",
+      Last_Name: "Brown",
+      Company: "Peanuts",
+      Lead_Status: "Contacted",
+    });
+    const enrollMissingProvider = await service.enrollRecord(ctx, {
+      cadenceId: cadence.id,
+      recordModule: "Leads",
+      recordId: lead3.id,
+    });
+    const skipMissingProvider = await executeCadenceStep(ctx, {
+      enrollmentId: enrollMissingProvider.id,
+      stepId: "step-t1",
+      generation: enrollMissingProvider.generation,
+      deps: { recordService: records } as never,
+    });
+    expect(skipMissingProvider.status).toBe("skipped");
+    if (skipMissingProvider.status === "skipped") {
+      expect(skipMissingProvider.reason).toBe("actor_lost_access");
+    }
+
+    // 3c. Call step without Calls create right -> fails closed with actor_lost_access
+    const noCallsSnapshot = async () =>
+      ({
+        userId: ctx.userId,
+        profileKind: "standard",
+        permissions: {
+          modules: { Calls: { view: true, create: false, edit: false, delete: false } },
+          admin: { modifyAllRecords: [], viewAllRecords: [] },
+        },
+        fieldAccess: new Map(),
+        ownerLevels: new Map(),
+        defaults: new Map(),
+      }) as unknown as AccessSnapshot;
+
+    const skipCallResult = await executeCadenceStep(ctx, {
+      enrollmentId: enroll2.id,
+      stepId: "step-c2",
+      generation: enroll2.generation,
+      deps: { recordService: records, accessSnapshotProvider: noCallsSnapshot },
+    });
+    expect(skipCallResult.status).toBe("skipped");
+    if (skipCallResult.status === "skipped") {
+      expect(skipCallResult.reason).toBe("actor_lost_access");
+    }
+
+    // 3d. Email step without recordModule view right -> fails closed with actor_lost_access
+    const noEmailViewSnapshot = async () =>
+      ({
+        userId: ctx.userId,
+        profileKind: "standard",
+        permissions: {
+          modules: { Leads: { view: false, create: false, edit: false, delete: false } },
+          admin: { modifyAllRecords: [], viewAllRecords: [] },
+        },
+        fieldAccess: new Map(),
+        ownerLevels: new Map(),
+        defaults: new Map(),
+      }) as unknown as AccessSnapshot;
+
+    const skipEmailResult = await executeCadenceStep(ctx, {
+      enrollmentId: enroll2.id,
+      stepId: "step-e3",
+      generation: enroll2.generation,
+      deps: { recordService: records, accessSnapshotProvider: noEmailViewSnapshot },
+    });
+    expect(skipEmailResult.status).toBe("skipped");
+    if (skipEmailResult.status === "skipped") {
+      expect(skipEmailResult.reason).toBe("actor_lost_access");
+    }
   });
 
   describe("races with two transactions and idempotency (ADR 0019 §8)", () => {
@@ -622,7 +727,7 @@ describe("cadences backend integration", () => {
         enrollmentId: enrollment.id,
         stepId: "step-pr",
         generation: 1, // original generation before pause
-        deps: { recordService: records },
+        deps: makeCadenceDeps(records),
       });
 
       expect(res.status).toBe("aborted");
@@ -674,7 +779,7 @@ describe("cadences backend integration", () => {
         enrollmentId: enrollment.id,
         stepId: "step-ex",
         generation: 1,
-        deps: { recordService: records },
+        deps: makeCadenceDeps(records),
       });
 
       expect(res.status).toBe("aborted");
@@ -742,7 +847,7 @@ describe("cadences backend integration", () => {
         enrollmentId: enrollment.id,
         stepId: "step-orig",
         generation: 1,
-        deps: { recordService: records },
+        deps: makeCadenceDeps(records),
       });
 
       expect(res.status).toBe("aborted");
@@ -791,7 +896,7 @@ describe("cadences backend integration", () => {
         enrollmentId: enrollment.id,
         stepId: "step-deact",
         generation: enrollment.generation,
-        deps: { recordService: records },
+        deps: makeCadenceDeps(records),
       });
 
       expect(res.status).toBe("aborted");
@@ -840,7 +945,7 @@ describe("cadences backend integration", () => {
         enrollmentId: enrollment.id,
         stepId: "step-idemp",
         generation: 1,
-        deps: { recordService: records },
+        deps: makeCadenceDeps(records),
       });
       expect(res1.status).toBe("completed");
 
@@ -849,7 +954,7 @@ describe("cadences backend integration", () => {
         enrollmentId: enrollment.id,
         stepId: "step-idemp",
         generation: 1,
-        deps: { recordService: records },
+        deps: makeCadenceDeps(records),
       });
       expect(res2.status).toBe("aborted");
 
@@ -901,7 +1006,7 @@ describe("cadences backend integration", () => {
       Company: "SweepCo",
     });
 
-    const sweepResult = await sweepAudienceCustomViews(ctx, { recordService: records });
+    const sweepResult = await sweepAudienceCustomViews(ctx, makeCadenceDeps(records));
     expect(sweepResult.enrolledCount).toBeGreaterThanOrEqual(1);
 
     // 2. Cadence with non-existent or foreign viewId -> safely skipped
@@ -928,7 +1033,7 @@ describe("cadences backend integration", () => {
     });
     await service.publish(ctx, invalidCadence.id);
 
-    const sweepResult2 = await sweepAudienceCustomViews(ctx, { recordService: records });
+    const sweepResult2 = await sweepAudienceCustomViews(ctx, makeCadenceDeps(records));
     expect(sweepResult2.enrolledCount).toBe(0);
   });
 
@@ -1015,7 +1120,7 @@ describe("cadences backend integration", () => {
     // Sweep due enrollments into queue
     const enqueuedCount = await sweepDueEnrollments(ctx, {
       jobQueue: queue,
-      deps: { recordService: records },
+      deps: makeCadenceDeps(records),
     });
     expect(enqueuedCount).toBe(1);
 
@@ -1029,7 +1134,7 @@ describe("cadences backend integration", () => {
     expect(jobFence.organizationId).toBe(ctx.orgId);
 
     // Create cadence step handler and verify isCurrent
-    const handler = createCadenceStepHandler({ recordService: records, jobQueue: queue });
+    const handler = createCadenceStepHandler(makeCadenceDeps(records, { jobQueue: queue }));
     const isCurrent = await handler.isCurrent({
       organizationId: ctx.orgId,
       job: claimed,
@@ -1115,7 +1220,7 @@ describe("cadences backend integration", () => {
         lockedBy: "worker-1",
         leaseToken: "tok-1",
       },
-      deps: { recordService: records },
+      deps: makeCadenceDeps(records),
     });
     expect(resMismatched.status).toBe("aborted");
     if (resMismatched.status === "aborted") {
@@ -1149,7 +1254,7 @@ describe("cadences backend integration", () => {
       stepId: "step-tf1",
       generation: enrollment.generation,
       jobFence,
-      deps: { recordService: records, jobQueue: queue },
+      deps: makeCadenceDeps(records, { jobQueue: queue }),
     });
     expect(resLostLease.status).toBe("aborted");
     if (resLostLease.status === "aborted") {
@@ -1197,7 +1302,7 @@ describe("cadences backend integration", () => {
       enrollmentId: enrollment.id,
       stepId: "step-idemp",
       generation: enrollment.generation,
-      deps: { recordService: records },
+      deps: makeCadenceDeps(records),
     });
     expect(firstRes.status).toBe("completed");
 
@@ -1206,7 +1311,7 @@ describe("cadences backend integration", () => {
       enrollmentId: enrollment.id,
       stepId: "step-idemp",
       generation: enrollment.generation,
-      deps: { recordService: records },
+      deps: makeCadenceDeps(records),
     });
     // Already executed aborts or does not re-create effect
     expect(secondRes.status).toBe("aborted");
@@ -1258,7 +1363,7 @@ describe("cadences backend integration", () => {
     });
 
     // Sweep 1: Lead is enrolled
-    const sweep1 = await sweepAudienceCustomViews(ctx, { recordService: records });
+    const sweep1 = await sweepAudienceCustomViews(ctx, makeCadenceDeps(records));
     expect(sweep1.enrolledCount).toBeGreaterThanOrEqual(1);
 
     // Get enrollment and complete it
@@ -1271,7 +1376,7 @@ describe("cadences backend integration", () => {
       enrollmentId: leadEnrollment.id,
       stepId: "step-lg1",
       generation: leadEnrollment.generation,
-      deps: { recordService: records },
+      deps: makeCadenceDeps(records),
     });
 
     const completed = await service.getEnrollment(ctx, leadEnrollment.id);
@@ -1279,7 +1384,7 @@ describe("cadences backend integration", () => {
 
     // Sweep 2: Lead is still in the view, but has NOT been modified since completion.
     // Must NOT be re-enrolled (finding 4: no infinite loop!)
-    const sweep2 = await sweepAudienceCustomViews(ctx, { recordService: records });
+    const sweep2 = await sweepAudienceCustomViews(ctx, makeCadenceDeps(records));
     expect(sweep2.enrolledCount).toBe(0);
 
     // Now update lead with a new modification time (new match)
@@ -1292,7 +1397,7 @@ describe("cadences backend integration", () => {
     );
 
     // Sweep 3: Modified lead newly matches the view -> successfully re-enrolled!
-    const sweep3 = await sweepAudienceCustomViews(ctx, { recordService: records });
+    const sweep3 = await sweepAudienceCustomViews(ctx, makeCadenceDeps(records));
     expect(sweep3.enrolledCount).toBe(1);
 
     const reEnrollments = await service.listEnrollments(ctx, { cadenceId: cadence.id });
@@ -1341,7 +1446,7 @@ describe("cadences backend integration", () => {
       enrollmentId: enroll1.id,
       stepId: "step-t1",
       generation: enroll1.generation,
-      deps: { recordService: records },
+      deps: makeCadenceDeps(records),
     });
     expect(res1.status).toBe("completed");
 
@@ -1360,7 +1465,7 @@ describe("cadences backend integration", () => {
       enrollmentId: enroll2.id,
       stepId: "step-t1",
       generation: enroll2.generation,
-      deps: { recordService: records },
+      deps: makeCadenceDeps(records),
     });
     expect(res2.status).toBe("completed");
 
@@ -1420,7 +1525,7 @@ describe("cadences backend integration", () => {
       enrollmentId: enrollment.id,
       stepId: "step-checkin",
       generation: enrollment.generation,
-      deps: { recordService: records },
+      deps: makeCadenceDeps(records),
     });
     expect(res.status).toBe("completed");
 
@@ -1476,7 +1581,7 @@ describe("cadences backend integration", () => {
         enrollmentId: enrollment.id,
         stepId: "step-err",
         generation: enrollment.generation,
-        deps: { recordService: failingRecords },
+        deps: makeCadenceDeps(failingRecords),
       }),
     ).rejects.toThrow("Transient connection timeout");
 
@@ -1497,7 +1602,7 @@ describe("cadences backend integration", () => {
       enrollmentId: enrollment.id,
       stepId: "step-err",
       generation: enrollment.generation,
-      deps: { recordService: forbiddenRecords },
+      deps: makeCadenceDeps(forbiddenRecords),
     });
 
     expect(skipResult.status).toBe("skipped");
@@ -1577,7 +1682,7 @@ describe("cadences backend integration", () => {
       enrollmentId: enrollment.id,
       stepId: "step-email",
       generation: enrollment.generation,
-      deps: { recordService: records, outboxOptions },
+      deps: makeCadenceDeps(records, { outboxOptions }),
     });
     expect(resA.status).toBe("completed");
 
@@ -1622,11 +1727,10 @@ describe("cadences backend integration", () => {
         enrollmentId: enroll2.id,
         stepId: "step-email",
         generation: enroll2.generation,
-        deps: {
-          recordService: records,
+        deps: makeCadenceDeps(records, {
           mailRepository: opaqueMailboxRepo as unknown as MailRepository,
           outboxOptions,
-        },
+        }),
       });
 
       expect(resB.status).toBe("skipped");
