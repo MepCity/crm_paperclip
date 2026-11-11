@@ -143,4 +143,29 @@ test("cadences: C1 empty list → C1a/C1b filter menus → C2 create dialog → 
   await backBtn.click();
   await expect(page.getByText("Inbound Lead Nurturing")).toBeVisible();
   await expect(page.getByTestId("cadence-search-input")).toBeVisible();
+
+  // 11. Navigate to Leads list and open first lead
+  await page.goto(`/crm/${org.slug}/tab/Leads/list`);
+  const recordTable = page.getByRole("table", { name: "Records" });
+  await expect(recordTable).toBeVisible({ timeout: 15_000 });
+  const firstLeadLink = recordTable.locator("tbody tr").first().locator("a").first();
+  await firstLeadLink.click();
+
+  // 12. Record detail More Options -> Enroll to Cadence
+  const moreBtn = page.getByRole("button", { name: "More Options" });
+  await expect(moreBtn).toBeVisible({ timeout: 10_000 });
+  await moreBtn.click();
+  const menu = page.getByRole("menu", { name: "More Options" });
+  await expect(menu).toBeVisible();
+  const enrollItem = menu.getByRole("menuitem", { name: "Enroll to Cadence" });
+  await expect(enrollItem).toBeVisible();
+  await enrollItem.click();
+
+  // 13. Enroll dialog opens, shows active cadence, click Enroll
+  const enrollDialog = page.getByRole("dialog", { name: "Enroll to Cadence" });
+  await expect(enrollDialog).toBeVisible();
+  const enrollBtn = enrollDialog.getByRole("button", { name: "Enroll" });
+  await expect(enrollBtn).toBeEnabled();
+  await enrollBtn.click();
+  await expect(enrollDialog).toBeHidden();
 });

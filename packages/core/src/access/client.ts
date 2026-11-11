@@ -31,6 +31,7 @@ export function toClientPermissions(
       convert: tool(p.tools.convert),
       merge: tool(p.tools.findAndMerge),
       print: tool(p.tools.printView),
+      enrollCadence: tool(p.tools.enrollInCadence),
     };
   }
   return {

@@ -38,6 +38,7 @@ import {
   panelFiltersToCriteria,
 } from "@/lib/records/filter-criteria";
 import type { AppliedFilter } from "@/lib/records/filter-operators";
+import { EnrollCadenceDialog } from "@/modules/cadences/enroll-cadence-dialog";
 import { AddToCampaignsDialog } from "../campaigns/add-to-campaigns-dialog";
 import { ManageColumnsDialog } from "../search/manage-columns-dialog";
 import { ExportLauncher } from "../transfer/export-launcher";
@@ -313,6 +314,7 @@ function ModuleListScreenLoaded({
   const [exportOpen, setExportOpen] = useState(false);
   const [exportSelected, setExportSelected] = useState<string[] | undefined>(undefined);
   const [campaignsOpen, setCampaignsOpen] = useState(false);
+  const [enrollCadenceOpen, setEnrollCadenceOpen] = useState(false);
   const campaignsModule =
     config.module === "Leads" || config.module === "Contacts" ? config.module : null;
   const deleteRecords = useDeleteRecords(config.module);
@@ -839,6 +841,7 @@ function ModuleListScreenLoaded({
     print: flags ? flags.print : true,
     tags: permissions ? permissions.tools.tags : true,
     manageViews: permissions ? permissions.tools.manageViews : true,
+    enrollCadence: flags?.enrollCadence ?? true,
   };
   const toolbarActionAllowed = (id: string) =>
     (id !== "export" || allow.export) &&
@@ -884,7 +887,13 @@ function ModuleListScreenLoaded({
       label: t("records.actions.changeOwner"),
       onAction: ownerField ? () => setChangeOwnerOpen(true) : inert,
     },
-    { id: "cadences", label: "Cadences", onAction: inert },
+    {
+      id: "cadences",
+      label: "Cadences",
+      onAction: ["Leads", "Contacts", "Deals"].includes(config.module)
+        ? () => setEnrollCadenceOpen(true)
+        : inert,
+    },
     {
       id: "add-to-campaigns",
       label: "Add to Campaigns",
@@ -913,6 +922,7 @@ function ModuleListScreenLoaded({
     ...(allow.changeOwner ? [] : ["change-owner"]),
     ...(allow.delete && allow.massDelete ? [] : ["delete"]),
     ...(allow.export ? [] : ["export-selected"]),
+    ...(!["Leads", "Contacts", "Deals"].includes(config.module) || !allow.enrollCadence ? ["cadences"] : []),
   ]);
   const selectionActions = allSelectionActions.filter((a) => !hiddenSelectionActions.has(a.id));
   return (
@@ -1048,6 +1058,16 @@ function ModuleListScreenLoaded({
           recordIds={pageSelectedIds}
           ownerField={ownerField}
           users={ownerOptions}
+          onSuccess={clearSelection}
+        />
+      ) : null}
+      {enrollCadenceOpen && ["Leads", "Contacts", "Deals"].includes(config.module) ? (
+        <EnrollCadenceDialog
+          isOpen
+          onOpenChange={setEnrollCadenceOpen}
+          orgSlug={orgSlug}
+          module={config.module as "Leads" | "Contacts" | "Deals"}
+          recordIds={pageSelectedIds}
           onSuccess={clearSelection}
         />
       ) : null}

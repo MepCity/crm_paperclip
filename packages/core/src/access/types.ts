@@ -99,6 +99,7 @@ export type ClientModulePermissions = {
   convert: boolean;
   merge: boolean;
   print: boolean;
+  enrollCadence: boolean;
 };
 export type ClientPermissions = {
   profile: { id: string; name: string; kind: ProfileKind };

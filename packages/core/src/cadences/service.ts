@@ -1,20 +1,30 @@
 import { schema } from "@crm/db";
 import { and, count, desc, eq, ilike, inArray, ne, sql } from "drizzle-orm";
-import { ConflictError, NotFoundError, ValidationError } from "../errors";
+import { canOnRecord } from "../access/evaluate";
+import type { AccessSnapshot } from "../access/types";
+import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../errors";
+import type { RecordService } from "../records";
 import { withOrg } from "../tenancy";
 import type { OrgContext } from "../tenancy/types";
-import type {
-  Cadence,
-  CadenceAudience,
-  CadenceDetail,
-  CadenceExitRule,
-  CadenceFilters,
-  CadenceModule,
-  CadenceStep,
-  CadenceSummary,
-  CadenceVersion,
-  CreateCadenceInput,
-  UpdateCadenceDraftInput,
+import { computeDueAt } from "./delays";
+import {
+  type Cadence,
+  type CadenceAudience,
+  type CadenceDetail,
+  type CadenceEnrollment,
+  type CadenceExitRule,
+  type CadenceFilters,
+  type CadenceModule,
+  type CadenceStep,
+  type CadenceStepRun,
+  type CadenceSummary,
+  type CadenceVersion,
+  type CreateCadenceInput,
+  type EnrollRecordInput,
+  type EnrollRecordsInput,
+  enrollRecordSchema,
+  enrollRecordsSchema,
+  type UpdateCadenceDraftInput,
 } from "./types";
 import {
   validateCreateCadence,
@@ -23,6 +33,10 @@ import {
 } from "./validation";
 
 type Tx = Parameters<Parameters<typeof withOrg>[1]>[0];
+
+function escapeLike(text: string): string {
+  return text.replace(/[%_\\]/g, "\\$&");
+}
 
 function mapVersion(row: typeof schema.cadenceVersions.$inferSelect): CadenceVersion {
   return {
@@ -54,6 +68,38 @@ function mapCadence(row: typeof schema.cadences.$inferSelect): Cadence {
     createdBy: row.createdBy,
     updatedAt: row.updatedAt.toISOString(),
     updatedBy: row.updatedBy,
+  };
+}
+
+function mapEnrollment(row: typeof schema.cadenceEnrollments.$inferSelect): CadenceEnrollment {
+  return {
+    id: row.id,
+    organizationId: row.organizationId,
+    cadenceId: row.cadenceId,
+    versionId: row.versionId,
+    recordModule: row.recordModule as CadenceModule,
+    recordId: row.recordId,
+    enrolledBy: row.enrolledBy,
+    state: row.state as CadenceEnrollment["state"],
+    reason: row.reason,
+    generation: row.generation,
+    nextStepId: row.nextStepId,
+    nextDueAt: row.nextDueAt?.toISOString() ?? null,
+    createdAt: row.createdAt.toISOString(),
+    updatedAt: row.updatedAt.toISOString(),
+  };
+}
+
+function mapStepRun(row: typeof schema.cadenceStepRuns.$inferSelect): CadenceStepRun {
+  return {
+    id: row.id,
+    organizationId: row.organizationId,
+    enrollmentId: row.enrollmentId,
+    stepId: row.stepId,
+    generation: row.generation,
+    outcome: row.outcome as CadenceStepRun["outcome"],
+    outcomeReason: row.outcomeReason,
+    executedAt: row.executedAt.toISOString(),
   };
 }
 
@@ -119,7 +165,8 @@ export function createCadenceService() {
         const conditions = [eq(schema.cadences.organizationId, ctx.orgId)];
 
         if (filters?.search?.trim()) {
-          conditions.push(ilike(schema.cadences.name, `%${filters.search.trim()}%`));
+          // Escape %, _, and \ for LIKE search (CTO item 1)
+          conditions.push(ilike(schema.cadences.name, `%${escapeLike(filters.search.trim())}%`));
         }
         if (filters?.module && filters.module !== "all") {
           conditions.push(eq(schema.cadences.module, filters.module));
@@ -415,6 +462,41 @@ export function createCadenceService() {
         validateStepsForPublish(draft.steps as CadenceStep[]);
 
         if (cadence.publishedVersionId) {
+          // Check if scheduled steps changed between old published version and new draft
+          const [oldPublished] = await tx
+            .select({ steps: schema.cadenceVersions.steps })
+            .from(schema.cadenceVersions)
+            .where(
+              and(
+                eq(schema.cadenceVersions.organizationId, ctx.orgId),
+                eq(schema.cadenceVersions.id, cadence.publishedVersionId),
+              ),
+            );
+
+          const oldStepsJson = JSON.stringify(oldPublished?.steps ?? []);
+          const newStepsJson = JSON.stringify(draft.steps ?? []);
+
+          if (oldStepsJson !== newStepsJson) {
+            // Republish that changes scheduled steps stops affected enrollments (ADR 0019 §6, scope 3)
+            await tx
+              .update(schema.cadenceEnrollments)
+              .set({
+                state: "stopped",
+                reason: "republished_steps_changed",
+                generation: sql`${schema.cadenceEnrollments.generation} + 1`,
+                nextStepId: null,
+                nextDueAt: null,
+                updatedAt: new Date(),
+              })
+              .where(
+                and(
+                  eq(schema.cadenceEnrollments.organizationId, ctx.orgId),
+                  eq(schema.cadenceEnrollments.cadenceId, cadenceId),
+                  inArray(schema.cadenceEnrollments.state, ["active", "paused"]),
+                ),
+              );
+          }
+
           await tx
             .update(schema.cadenceVersions)
             .set({
@@ -513,6 +595,21 @@ export function createCadenceService() {
             and(eq(schema.cadences.organizationId, ctx.orgId), eq(schema.cadences.id, cadenceId)),
           );
 
+        // Deactivate cadence stops scheduled actions; bump generation in transaction (ADR 0019 §6)
+        await tx
+          .update(schema.cadenceEnrollments)
+          .set({
+            generation: sql`${schema.cadenceEnrollments.generation} + 1`,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(schema.cadenceEnrollments.organizationId, ctx.orgId),
+              eq(schema.cadenceEnrollments.cadenceId, cadenceId),
+              inArray(schema.cadenceEnrollments.state, ["active", "paused"]),
+            ),
+          );
+
         return getCadenceInternal(tx, ctx.orgId, cadenceId);
       });
     },
@@ -527,10 +624,402 @@ export function createCadenceService() {
           );
         if (!cadence) throw new NotFoundError("Cadence not found");
 
+        // CTO note 2: deleteCadence enrollment varken cascade siliyor -> enrollment varsa engelle
+        const [hasEnrollment] = await tx
+          .select({ id: schema.cadenceEnrollments.id })
+          .from(schema.cadenceEnrollments)
+          .where(
+            and(
+              eq(schema.cadenceEnrollments.organizationId, ctx.orgId),
+              eq(schema.cadenceEnrollments.cadenceId, cadenceId),
+            ),
+          )
+          .limit(1);
+
+        if (hasEnrollment) {
+          throw new ConflictError("Cannot delete cadence with existing enrollments");
+        }
+
         await tx
           .delete(schema.cadences)
           .where(
             and(eq(schema.cadences.organizationId, ctx.orgId), eq(schema.cadences.id, cadenceId)),
+          );
+      });
+    },
+
+    // --- Enrollment & State Change Methods (Scope 1 & 3) ---
+
+    async enrollRecord(
+      ctx: OrgContext,
+      rawInput: EnrollRecordInput,
+      options?: {
+        recordService?: RecordService;
+        accessSnapshot?: AccessSnapshot;
+        timeZone?: string;
+      },
+    ): Promise<CadenceEnrollment> {
+      const input = enrollRecordSchema.parse(rawInput);
+
+      return withOrg(ctx, async (tx) => {
+        const [cadence] = await tx
+          .select()
+          .from(schema.cadences)
+          .where(
+            and(
+              eq(schema.cadences.organizationId, ctx.orgId),
+              eq(schema.cadences.id, input.cadenceId),
+            ),
+          );
+
+        if (!cadence) throw new NotFoundError("Cadence not found");
+        if (cadence.status !== "active") {
+          throw new ValidationError({ status: ["Cannot enroll in an inactive cadence"] });
+        }
+        if (cadence.module !== input.recordModule) {
+          throw new ValidationError({ module: ["Record module does not match cadence module"] });
+        }
+        if (!cadence.publishedVersionId) {
+          throw new ValidationError({ cadence: ["Cadence has no published version"] });
+        }
+
+        // Check permission if access snapshot is provided
+        if (options?.accessSnapshot) {
+          const enrollAllowed = options.accessSnapshot.permissions.tools.enrollInCadence.includes(
+            input.recordModule,
+          );
+          if (!enrollAllowed) {
+            throw new ForbiddenError(
+              `User does not have enrollInCadence permission for ${input.recordModule}`,
+              "permission_denied",
+            );
+          }
+          if (options.recordService) {
+            const rec = await options.recordService.get(input.recordModule, input.recordId);
+            const canEdit = canOnRecord(
+              options.accessSnapshot,
+              input.recordModule,
+              "edit",
+              rec.fields.Owner as string | undefined,
+            );
+            if (!canEdit) {
+              throw new ForbiddenError(
+                "User does not have write access to record",
+                "permission_denied",
+              );
+            }
+          }
+        }
+
+        // Unique non-final enrollment check (ADR 0019 §6)
+        const [existing] = await tx
+          .select({ id: schema.cadenceEnrollments.id })
+          .from(schema.cadenceEnrollments)
+          .where(
+            and(
+              eq(schema.cadenceEnrollments.organizationId, ctx.orgId),
+              eq(schema.cadenceEnrollments.cadenceId, input.cadenceId),
+              eq(schema.cadenceEnrollments.recordModule, input.recordModule),
+              eq(schema.cadenceEnrollments.recordId, input.recordId),
+              inArray(schema.cadenceEnrollments.state, ["active", "paused"]),
+            ),
+          );
+
+        if (existing) {
+          throw new ConflictError("Record is already actively enrolled in this cadence");
+        }
+
+        const [version] = await tx
+          .select({ steps: schema.cadenceVersions.steps })
+          .from(schema.cadenceVersions)
+          .where(
+            and(
+              eq(schema.cadenceVersions.organizationId, ctx.orgId),
+              eq(schema.cadenceVersions.id, cadence.publishedVersionId),
+            ),
+          );
+
+        const steps = (version?.steps as CadenceStep[]) ?? [];
+        const firstStep = steps[0];
+        const nextDueAt = firstStep
+          ? computeDueAt(new Date(), firstStep.delay, options?.timeZone ?? "UTC")
+          : null;
+
+        const [enrollment] = await tx
+          .insert(schema.cadenceEnrollments)
+          .values({
+            organizationId: ctx.orgId,
+            cadenceId: input.cadenceId,
+            versionId: cadence.publishedVersionId,
+            recordModule: input.recordModule,
+            recordId: input.recordId,
+            enrolledBy: ctx.userId,
+            state: firstStep ? "active" : "completed",
+            generation: 1,
+            nextStepId: firstStep?.id ?? null,
+            nextDueAt,
+          })
+          .returning();
+
+        if (!enrollment) throw new Error("Failed to enroll record");
+        return mapEnrollment(enrollment);
+      });
+    },
+
+    async enrollRecords(
+      ctx: OrgContext,
+      rawInput: EnrollRecordsInput,
+      options?: {
+        recordService?: RecordService;
+        accessSnapshot?: AccessSnapshot;
+        timeZone?: string;
+      },
+    ): Promise<{ enrolled: CadenceEnrollment[]; skippedCount: number }> {
+      const input = enrollRecordsSchema.parse(rawInput);
+      const enrolled: CadenceEnrollment[] = [];
+      let skippedCount = 0;
+
+      for (const recordId of input.recordIds) {
+        try {
+          const res = await this.enrollRecord(
+            ctx,
+            {
+              cadenceId: input.cadenceId,
+              recordModule: input.recordModule,
+              recordId,
+            },
+            options,
+          );
+          enrolled.push(res);
+        } catch (err) {
+          if (err instanceof ConflictError) {
+            skippedCount++;
+          } else {
+            throw err;
+          }
+        }
+      }
+
+      return { enrolled, skippedCount };
+    },
+
+    async pauseEnrollment(ctx: OrgContext, enrollmentId: string): Promise<CadenceEnrollment> {
+      return withOrg(ctx, async (tx) => {
+        const [enrollment] = await tx
+          .select()
+          .from(schema.cadenceEnrollments)
+          .where(
+            and(
+              eq(schema.cadenceEnrollments.organizationId, ctx.orgId),
+              eq(schema.cadenceEnrollments.id, enrollmentId),
+            ),
+          )
+          .for("update");
+
+        if (!enrollment) throw new NotFoundError("Enrollment not found");
+        if (enrollment.state !== "active") {
+          throw new ConflictError("Can only pause active enrollments");
+        }
+
+        const [updated] = await tx
+          .update(schema.cadenceEnrollments)
+          .set({
+            state: "paused",
+            generation: sql`${schema.cadenceEnrollments.generation} + 1`,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(schema.cadenceEnrollments.organizationId, ctx.orgId),
+              eq(schema.cadenceEnrollments.id, enrollmentId),
+            ),
+          )
+          .returning();
+
+        if (!updated) throw new Error("Failed to pause enrollment");
+        return mapEnrollment(updated);
+      });
+    },
+
+    async resumeEnrollment(ctx: OrgContext, enrollmentId: string): Promise<CadenceEnrollment> {
+      return withOrg(ctx, async (tx) => {
+        const [enrollment] = await tx
+          .select()
+          .from(schema.cadenceEnrollments)
+          .where(
+            and(
+              eq(schema.cadenceEnrollments.organizationId, ctx.orgId),
+              eq(schema.cadenceEnrollments.id, enrollmentId),
+            ),
+          )
+          .for("update");
+
+        if (!enrollment) throw new NotFoundError("Enrollment not found");
+        if (enrollment.state !== "paused") {
+          throw new ConflictError("Can only resume paused enrollments");
+        }
+
+        const [updated] = await tx
+          .update(schema.cadenceEnrollments)
+          .set({
+            state: "active",
+            generation: sql`${schema.cadenceEnrollments.generation} + 1`,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(schema.cadenceEnrollments.organizationId, ctx.orgId),
+              eq(schema.cadenceEnrollments.id, enrollmentId),
+            ),
+          )
+          .returning();
+
+        if (!updated) throw new Error("Failed to resume enrollment");
+        return mapEnrollment(updated);
+      });
+    },
+
+    async unenrollRecord(
+      ctx: OrgContext,
+      enrollmentId: string,
+      reason = "manual_unenroll",
+    ): Promise<CadenceEnrollment> {
+      return withOrg(ctx, async (tx) => {
+        const [enrollment] = await tx
+          .select()
+          .from(schema.cadenceEnrollments)
+          .where(
+            and(
+              eq(schema.cadenceEnrollments.organizationId, ctx.orgId),
+              eq(schema.cadenceEnrollments.id, enrollmentId),
+            ),
+          )
+          .for("update");
+
+        if (!enrollment) throw new NotFoundError("Enrollment not found");
+
+        const [updated] = await tx
+          .update(schema.cadenceEnrollments)
+          .set({
+            state: "exited",
+            reason,
+            generation: sql`${schema.cadenceEnrollments.generation} + 1`,
+            nextStepId: null,
+            nextDueAt: null,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(schema.cadenceEnrollments.organizationId, ctx.orgId),
+              eq(schema.cadenceEnrollments.id, enrollmentId),
+            ),
+          )
+          .returning();
+
+        if (!updated) throw new Error("Failed to unenroll record");
+        return mapEnrollment(updated);
+      });
+    },
+
+    async getEnrollment(ctx: OrgContext, enrollmentId: string): Promise<CadenceEnrollment> {
+      return withOrg(ctx, async (tx) => {
+        const [enrollment] = await tx
+          .select()
+          .from(schema.cadenceEnrollments)
+          .where(
+            and(
+              eq(schema.cadenceEnrollments.organizationId, ctx.orgId),
+              eq(schema.cadenceEnrollments.id, enrollmentId),
+            ),
+          );
+
+        if (!enrollment) throw new NotFoundError("Enrollment not found");
+        return mapEnrollment(enrollment);
+      });
+    },
+
+    async listEnrollments(
+      ctx: OrgContext,
+      filters?: {
+        cadenceId?: string;
+        recordModule?: CadenceModule;
+        recordId?: string;
+        state?: string;
+        limit?: number;
+        offset?: number;
+      },
+    ): Promise<CadenceEnrollment[]> {
+      return withOrg(ctx, async (tx) => {
+        const conditions = [eq(schema.cadenceEnrollments.organizationId, ctx.orgId)];
+
+        if (filters?.cadenceId) {
+          conditions.push(eq(schema.cadenceEnrollments.cadenceId, filters.cadenceId));
+        }
+        if (filters?.recordModule) {
+          conditions.push(eq(schema.cadenceEnrollments.recordModule, filters.recordModule));
+        }
+        if (filters?.recordId) {
+          conditions.push(eq(schema.cadenceEnrollments.recordId, filters.recordId));
+        }
+        if (filters?.state && filters.state !== "all") {
+          conditions.push(eq(schema.cadenceEnrollments.state, filters.state));
+        }
+
+        const baseQuery = tx
+          .select()
+          .from(schema.cadenceEnrollments)
+          .where(and(...conditions))
+          .orderBy(desc(schema.cadenceEnrollments.createdAt));
+
+        const queryWithLimit = filters?.limit ? baseQuery.limit(filters.limit) : baseQuery;
+        const finalQuery = filters?.offset ? queryWithLimit.offset(filters.offset) : queryWithLimit;
+
+        const rows = await finalQuery;
+
+        return rows.map(mapEnrollment);
+      });
+    },
+
+    async listStepRuns(ctx: OrgContext, enrollmentId: string): Promise<CadenceStepRun[]> {
+      return withOrg(ctx, async (tx) => {
+        const rows = await tx
+          .select()
+          .from(schema.cadenceStepRuns)
+          .where(
+            and(
+              eq(schema.cadenceStepRuns.organizationId, ctx.orgId),
+              eq(schema.cadenceStepRuns.enrollmentId, enrollmentId),
+            ),
+          )
+          .orderBy(desc(schema.cadenceStepRuns.executedAt));
+
+        return rows.map(mapStepRun);
+      });
+    },
+
+    async handleRecordDeleted(
+      ctx: OrgContext,
+      recordModule: CadenceModule,
+      recordId: string,
+    ): Promise<void> {
+      return withOrg(ctx, async (tx) => {
+        await tx
+          .update(schema.cadenceEnrollments)
+          .set({
+            state: "exited",
+            reason: "record_deleted",
+            generation: sql`${schema.cadenceEnrollments.generation} + 1`,
+            nextStepId: null,
+            nextDueAt: null,
+            updatedAt: new Date(),
+          })
+          .where(
+            and(
+              eq(schema.cadenceEnrollments.organizationId, ctx.orgId),
+              eq(schema.cadenceEnrollments.recordModule, recordModule),
+              eq(schema.cadenceEnrollments.recordId, recordId),
+              inArray(schema.cadenceEnrollments.state, ["active", "paused"]),
+            ),
           );
       });
     },

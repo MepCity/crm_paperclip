@@ -158,3 +158,54 @@ export interface CadenceDetail extends Cadence {
   currentVersion: CadenceVersion;
   recordCount: number;
 }
+
+export const CADENCE_ENROLLMENT_STATES = [
+  "active",
+  "paused",
+  "completed",
+  "exited",
+  "stopped",
+] as const;
+export type CadenceEnrollmentState = (typeof CADENCE_ENROLLMENT_STATES)[number];
+
+export interface CadenceEnrollment {
+  id: string;
+  organizationId: string;
+  cadenceId: string;
+  versionId: string;
+  recordModule: CadenceModule;
+  recordId: string;
+  enrolledBy: string;
+  state: CadenceEnrollmentState;
+  reason: string | null;
+  generation: number;
+  nextStepId: string | null;
+  nextDueAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CadenceStepRun {
+  id: string;
+  organizationId: string;
+  enrollmentId: string;
+  stepId: string;
+  generation: number;
+  outcome: "completed" | "skipped" | "failed";
+  outcomeReason: string | null;
+  executedAt: string;
+}
+
+export const enrollRecordSchema = z.object({
+  cadenceId: z.string().uuid(),
+  recordModule: z.enum(CADENCE_MODULES),
+  recordId: z.string().min(1),
+});
+export type EnrollRecordInput = z.infer<typeof enrollRecordSchema>;
+
+export const enrollRecordsSchema = z.object({
+  cadenceId: z.string().uuid(),
+  recordModule: z.enum(CADENCE_MODULES),
+  recordIds: z.array(z.string().min(1)).min(1),
+});
+export type EnrollRecordsInput = z.infer<typeof enrollRecordsSchema>;

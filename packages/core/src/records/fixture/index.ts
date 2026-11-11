@@ -219,6 +219,8 @@ export function createFixtureRecordService(
   const ctx = { ...context };
   const isWebformActor = options?.actor?.kind === "webform";
   const webformFormName = options?.actor?.kind === "webform" ? options.actor.formName : undefined;
+  const isCadenceActor = options?.actor?.kind === "cadence";
+  const cadenceActor = options?.actor?.kind === "cadence" ? options.actor : undefined;
   let webformRecordsCreated = 0;
   const assertWebformCanRead = () => {
     if (isWebformActor) {
@@ -231,6 +233,23 @@ export function createFixtureRecordService(
         "Webform actor cannot update or delete records",
         "permission_denied",
       );
+    }
+  };
+  const assertCadenceCanAccess = (module: string) => {
+    if (isCadenceActor && cadenceActor) {
+      const allowed = new Set([
+        ...(cadenceActor.module ? [cadenceActor.module] : []),
+        ...(cadenceActor.allowedModules ?? []),
+        "Tasks",
+        "Calls",
+        "Events",
+      ]);
+      if (!allowed.has(module)) {
+        throw new ForbiddenError(
+          `Cadence actor cannot access module '${module}'`,
+          "permission_denied",
+        );
+      }
     }
   };
   const clock = () => options?.now?.() ?? new Date();
@@ -839,11 +858,18 @@ export function createFixtureRecordService(
                 id: options.actor.formId,
                 name: webformFormName ?? options.actor.formName ?? options.actorName ?? "Webform",
               }
-            : { id: ctx.userId, name: options?.actorName ?? ctx.userId },
+            : options?.actor?.kind === "cadence"
+              ? {
+                  id: options.actor.id,
+                  name: options.actorName ?? "Cadence",
+                }
+              : { id: ctx.userId, name: options?.actorName ?? ctx.userId },
         source:
           options?.actor?.kind === "webform"
             ? ("webform" as const)
-            : (options?.source ?? ("manual" as const)),
+            : options?.actor?.kind === "cadence"
+              ? ("cadence" as const)
+              : (options?.source ?? ("manual" as const)),
       };
       const operationId = operation.operationId ?? randomUUID();
       const events = historyBatch(
@@ -1048,6 +1074,8 @@ export function createFixtureRecordService(
 
   const merge = async (module: string, input: MergeInput): Promise<RecordData> => {
     assertWebformCanMutate();
+    if (isCadenceActor)
+      throw new ForbiddenError("Cadence actor cannot merge records", "permission_denied");
     assertModuleWritable(module);
     const bundle = bundleFor(module);
     if (bundle.childModule) throw new ForbiddenError("Child modules do not support merge.");
@@ -1183,6 +1211,8 @@ export function createFixtureRecordService(
   const attachmentLifecycle = fixtureAttachmentLifecycle(hookContext);
   const convertLead = async (leadId: string, input: ConvertLeadInput) => {
     assertWebformCanMutate();
+    if (isCadenceActor)
+      throw new ForbiddenError("Cadence actor cannot convert leads", "permission_denied");
     assertModuleWritable("Leads");
     const sourceLead = recordFor("Leads", leadId);
     const convertAccess = await accessFor();
@@ -1708,6 +1738,7 @@ export function createFixtureRecordService(
     },
     async list(module, query) {
       assertWebformCanRead();
+      assertCadenceCanAccess(module);
       const bundle = bundleFor(module);
       const viewAcc = await accessFor();
       const rawView = viewFor(module, query.viewId);
@@ -1802,6 +1833,7 @@ export function createFixtureRecordService(
     },
     async get(module, id) {
       assertWebformCanRead();
+      assertCadenceCanAccess(module);
       const record = recordFor(module, id);
       await assertRecordLevel(module, [id], "read");
       if (module === "Attachments" && record.fields.$state !== "ready")
@@ -1811,6 +1843,7 @@ export function createFixtureRecordService(
       return copy(acc ? acc.project(module, resolved) : resolved);
     },
     async create(module, input, createOpts) {
+      assertCadenceCanAccess(module);
       if (isWebformActor && options?.actor?.kind === "webform") {
         if (webformRecordsCreated > 0) {
           throw new ForbiddenError("Webform actor may only create one record", "permission_denied");
@@ -1844,6 +1877,17 @@ export function createFixtureRecordService(
         webformRecordsCreated++;
       }
       assertModuleWritable(module);
+      if (createOpts?.idempotencyKey) {
+        const moduleState = moduleStore(module);
+        const existingId = moduleState.idempotencyMap?.get(createOpts.idempotencyKey);
+        if (existingId) {
+          const existingRecord = moduleState.records.get(existingId);
+          if (existingRecord) {
+            const writer = await accessFor();
+            return copy(writer ? writer.project(module, existingRecord) : existingRecord);
+          }
+        }
+      }
       assertSourceTimes(createOpts?.sourceTimes);
       const bundle = bundleFor(module);
       const stringFields = stringFieldNames(bundle);
@@ -1864,11 +1908,17 @@ export function createFixtureRecordService(
       const created = atomic({ module, mechanism: "create" }, () =>
         insertRecord(module, normalized, createOpts),
       );
+      if (createOpts?.idempotencyKey) {
+        const moduleState = moduleStore(module);
+        moduleState.idempotencyMap ??= new Map<string, string>();
+        moduleState.idempotencyMap.set(createOpts.idempotencyKey, created.id);
+      }
       await publishWrite(module, "create", created, undefined, createOpts);
       return writer ? writer.project(module, created) : created;
     },
     async update(module, id, input, options) {
       assertWebformCanMutate();
+      assertCadenceCanAccess(module);
       assertModuleWritable(module);
       await assertRecordLevel(module, [id], "edit");
       assertSourceTimes(options?.sourceTimes);
@@ -1922,6 +1972,8 @@ export function createFixtureRecordService(
     },
     async massUpdate(module, ids, input) {
       assertWebformCanMutate();
+      if (isCadenceActor)
+        throw new ForbiddenError("Cadence actor cannot mass update records", "permission_denied");
       assertModuleWritable(module);
       const bundle = bundleFor(module);
       const targets = [...ids];
@@ -1946,6 +1998,8 @@ export function createFixtureRecordService(
     },
     async changeOwner(module, ids, ownerId) {
       assertWebformCanMutate();
+      if (isCadenceActor)
+        throw new ForbiddenError("Cadence actor cannot change record owner", "permission_denied");
       assertModuleWritable(module);
       const bundle = bundleFor(module);
       const targets = [...ids];
@@ -1962,6 +2016,8 @@ export function createFixtureRecordService(
     },
     async delete(module, ids) {
       assertWebformCanMutate();
+      if (isCadenceActor)
+        throw new ForbiddenError("Cadence actor cannot delete records", "permission_denied");
       assertModuleWritable(module);
       await assertRecordLevel(module, ids, "delete");
       // Deleting more than one record at once is the mass-delete tool (ADR 0017 §3, §4.6).
