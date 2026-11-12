@@ -92,8 +92,8 @@ function mapRailEntries(lists: typeof dealsRelatedLists) {
 describe("createDealsRelatedLists definition", () => {
   const structuralLists = createDealsRelatedLists();
 
-  it("defines 16 cards in reference rail order with module keys", () => {
-    expect(structuralLists).toHaveLength(16);
+  it("defines 17 cards in reference rail order with module keys", () => {
+    expect(structuralLists).toHaveLength(17);
     const expected = [
       { id: "notes", moduleKey: "M2" },
       { id: "connected-records", moduleKey: "P3" },
@@ -111,6 +111,7 @@ describe("createDealsRelatedLists definition", () => {
       { id: "cases", moduleKey: "M4" },
       { id: "invoices", moduleKey: "P2" },
       { id: "journeys", moduleKey: "M2" },
+      { id: "ad-attribution", moduleKey: "M2" },
     ];
     expected.forEach((row, index) => {
       expect(structuralLists[index]?.id).toBe(row.id);

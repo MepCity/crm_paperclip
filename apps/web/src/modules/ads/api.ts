@@ -4,6 +4,8 @@ import type {
   AdItem,
   AdKeyword,
   AdsSettings,
+  AdsSummary,
+  AttributionSource,
   CreateAdGroupInput,
   CreateAdItemInput,
   CreateAdKeywordInput,
@@ -183,4 +185,89 @@ export async function deleteAdItem(orgSlug: string, id: string): Promise<void> {
     headers: headers(orgSlug),
   });
   await handleResponse<{ success: boolean }>(res);
+}
+
+export interface NamedRef {
+  id: string;
+  name: string;
+}
+
+export interface RecordAttributionView {
+  gclid: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  utmTerm: string | null;
+  utmContent: string | null;
+  source: AttributionSource;
+  modifiedTime: string;
+  campaign: NamedRef | null;
+  adGroup: NamedRef | null;
+  keyword: NamedRef | null;
+  ad: NamedRef | null;
+}
+
+export interface RecordAttributionOptions {
+  campaigns: NamedRef[];
+  adGroups: (NamedRef & { campaignId: string })[];
+  keywords: (NamedRef & { adGroupId: string })[];
+  ads: (NamedRef & { adGroupId: string })[];
+}
+
+export interface RecordAttributionResponse {
+  attribution: RecordAttributionView | null;
+  canEdit: boolean;
+  options: RecordAttributionOptions | null;
+}
+
+export interface ManualAttributionBody {
+  gclid: string | null;
+  utmSource: string | null;
+  utmMedium: string | null;
+  utmCampaign: string | null;
+  utmTerm: string | null;
+  utmContent: string | null;
+  campaignId: string | null;
+  adGroupId: string | null;
+  keywordId: string | null;
+  adItemId: string | null;
+}
+
+export async function fetchRecordAttribution(
+  orgSlug: string,
+  module: string,
+  recordId: string,
+): Promise<RecordAttributionResponse> {
+  const res = await fetch(`/crm/v2.1/${module}/${recordId}/ad_attribution`, {
+    headers: headers(orgSlug),
+  });
+  return handleResponse<RecordAttributionResponse>(res);
+}
+
+export async function saveRecordAttribution(
+  orgSlug: string,
+  module: string,
+  recordId: string,
+  body: ManualAttributionBody,
+): Promise<RecordAttributionResponse> {
+  const res = await fetch(`/crm/v2.1/${module}/${recordId}/ad_attribution`, {
+    method: "PUT",
+    headers: headers(orgSlug),
+    body: JSON.stringify(body),
+  });
+  return handleResponse<RecordAttributionResponse>(res);
+}
+
+export async function fetchAdsSummary(
+  orgSlug: string,
+  range: { from?: string; to?: string },
+): Promise<AdsSummary> {
+  const params = new URLSearchParams();
+  if (range.from) params.set("from", range.from);
+  if (range.to) params.set("to", range.to);
+  const query = params.toString();
+  const res = await fetch(`/crm/v2.1/ads/reports/summary${query ? `?${query}` : ""}`, {
+    headers: headers(orgSlug),
+  });
+  return (await handleResponse<{ summary: AdsSummary }>(res)).summary;
 }

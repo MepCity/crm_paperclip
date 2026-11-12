@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
-import { beforeEach, describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { type OperationDeps, operationPath, operations } from "./operations";
 
 let deps: OperationDeps;
@@ -45,6 +45,23 @@ describe("convert lead operation", () => {
     expect(body.accountId && body.contactId && body.dealId).toBeTruthy();
     expect((await deps.records.get("Leads", id)).fields.Converted__s).toBe(true);
     expect((await deps.records.get("Deals", body.dealId)).fields.Deal_Name).toBe("Wire deal");
+  });
+
+  it("runs the after-convert hook with the committed targets (ad attribution copy)", async () => {
+    const afterLeadConvert = vi.fn(async () => {});
+    deps = { ...deps, afterLeadConvert };
+    const id = await newLead();
+    const result = await run(id, { account: { create: {} }, contact: { create: {} } });
+    expect(afterLeadConvert).toHaveBeenCalledTimes(1);
+    expect(afterLeadConvert).toHaveBeenCalledWith(id, result.body);
+  });
+
+  it("does not run the after-convert hook when the conversion fails", async () => {
+    const afterLeadConvert = vi.fn(async () => {});
+    deps = { ...deps, afterLeadConvert };
+    const id = await newLead();
+    await expect(run(id, { account: { create: {} } })).rejects.toThrow();
+    expect(afterLeadConvert).not.toHaveBeenCalled();
   });
 
   it("reuses an existing account and contact", async () => {

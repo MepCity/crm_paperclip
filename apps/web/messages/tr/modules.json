@@ -1652,5 +1652,59 @@
         "broad": "Geniş Eşleme"
       }
     }
+  },
+  "adAttribution": {
+    "title": "Reklam Atfı",
+    "loading": "Reklam atfı yükleniyor",
+    "empty": "Bu kayıt için reklam atfı yok.",
+    "loadError": "Reklam atfı yüklenemedi.",
+    "edit": "Düzenle",
+    "add": "Atıf Ekle",
+    "save": "Kaydet",
+    "cancel": "İptal",
+    "saving": "Kaydediliyor...",
+    "saveError": "Reklam atfı kaydedilemedi.",
+    "fields": {
+      "gclid": "Tıklama Kimliği (GCLID)",
+      "utmSource": "UTM Kaynağı",
+      "utmMedium": "UTM Ortamı",
+      "utmCampaign": "UTM Kampanyası",
+      "utmTerm": "UTM Terimi",
+      "utmContent": "UTM İçeriği",
+      "campaign": "Kampanya",
+      "adGroup": "Reklam Grubu",
+      "keyword": "Anahtar Kelime",
+      "ad": "Reklam",
+      "source": "Kaynak",
+      "modifiedTime": "Atıf Zamanı"
+    },
+    "none": "Yok",
+    "sources": {
+      "webform": "Web formu",
+      "manual": "Elle",
+      "conversion": "Aday dönüştürme"
+    }
+  },
+  "adsSummary": {
+    "title": "Google Ads Özeti",
+    "link": "Reklam özeti raporu",
+    "folder": "Google Ads Raporları",
+    "from": "Başlangıç",
+    "to": "Bitiş",
+    "apply": "Uygula",
+    "clear": "Temizle",
+    "loadError": "Rapor yüklenemedi.",
+    "empty": "Bu dönemde atıflı kayıt yok.",
+    "columns": {
+      "path": "Kampanya › Reklam Grubu › Anahtar Kelime",
+      "leads": "Adaylar",
+      "contacts": "Kişiler",
+      "deals": "Fırsatlar",
+      "dealAmount": "Fırsat Tutarı"
+    },
+    "noCampaign": "Kampanya yok",
+    "noGroup": "Reklam grubu yok",
+    "noKeyword": "Anahtar kelime yok",
+    "grandTotal": "Genel Toplam"
   }
 }
