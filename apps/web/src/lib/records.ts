@@ -1,5 +1,6 @@
 import { listMembers } from "@crm/core";
 import { getAccessSnapshot } from "@crm/core/access";
+import { portalContactDeleteObserver } from "@crm/core/portals";
 import type {
   ModuleMetadataReader,
   OrgContext,
@@ -27,6 +28,7 @@ export function getRecordService(ctx: OrgContext): RecordService & ModuleMetadat
     writeObserver: combineWriteObservers(
       getApprovals().writeObserver(ctx),
       getJourneys().writeObserver(ctx),
+      portalContactDeleteObserver(ctx),
     ),
   });
 }

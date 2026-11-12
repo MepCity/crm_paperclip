@@ -43,7 +43,8 @@ export type AdminKey =
   | "dataManagement"
   | "manageWebforms"
   | "manageJourneys"
-  | "manageIntegrations";
+  | "manageIntegrations"
+  | "managePortals";
 export type ToolKey = "manageViews" | "tags" | "recordTimeline";
 
 /** `"$module"` means: the module named by the request (route param or `module` query). */
@@ -74,7 +75,11 @@ export function isExemptPermission(
 }
 
 /** Marks a handler outside `apiRoute` (auth endpoint, health probe) as intentionally exempt. */
-export function exemptRoute<T>(_kind: "public" | "memberOnly", _reason: string, handler: T): T {
+export function exemptRoute<T>(
+  _kind: "public" | "memberOnly" | "portal",
+  _reason: string,
+  handler: T,
+): T {
   return handler;
 }
 

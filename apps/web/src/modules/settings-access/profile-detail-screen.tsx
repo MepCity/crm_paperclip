@@ -82,6 +82,7 @@ const AUTOMATION_ROWS: FlagRowDef[] = [
   { label: "Manage Automation", group: "admin", key: "manageAutomation" },
   { label: "Manage Webforms", group: "admin", key: "manageWebforms" },
   { label: "Manage Journeys", group: "admin", key: "manageJourneys" },
+  { label: "Manage Portals", group: "admin", key: "managePortals" },
 ];
 const DATA_ROWS: FlagRowDef[] = [
   { label: "Data Management", group: "admin", key: "dataManagement" },

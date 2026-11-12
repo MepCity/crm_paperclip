@@ -247,6 +247,6 @@ export const publicEndpointKeys = pgTable(
       table.kind,
       table.targetId,
     ),
-    check("public_endpoint_keys_kind_check", sql`${table.kind} in ('webform')`),
+    check("public_endpoint_keys_kind_check", sql`${table.kind} in ('webform', 'portal')`),
   ],
 );
