@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useState } from "react";
+import { type ReactNode, useCallback, useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
@@ -27,12 +27,15 @@ export function ReportDetailScreen({
   port = fixtureReportsPort,
   initialReport,
   editable = false,
+  toolbar,
 }: {
   orgSlug: string;
   reportId: string;
   port?: ReportsPort;
   initialReport?: ReportDetail | null;
   editable?: boolean;
+  /** Replaces the (not yet available) filter controls, e.g. a working date-range filter. */
+  toolbar?: ReactNode;
 }) {
   const t = useUiTranslations();
   const [report, setReport] = useState<ReportDetail | null>(initialReport ?? null);
@@ -129,39 +132,41 @@ export function ReportDetailScreen({
         </div>
       </header>
       <div className="flex items-center justify-between gap-3 px-3 py-3">
-        <div className="flex items-center gap-3">
-          <Button
-            variant="recordSelector"
-            aria-label={t("modules.reports.filter")}
-            aria-disabled="true"
-            aria-describedby="reports-unavailable"
-            className="gap-2"
-          >
-            <Icons.filter className="size-4" aria-hidden />
-            {t("modules.reports.filter")}
-            <span
-              data-testid="filter-active-indicator"
-              className="size-2 rounded-full bg-primary"
-              aria-hidden
-            />
-          </Button>
-          <button
-            type="button"
-            aria-disabled="true"
-            aria-describedby="reports-unavailable"
-            className="px-1 text-text"
-          >
-            {t("modules.reports.filterByDate")}
-          </button>
-          <button
-            type="button"
-            aria-disabled="true"
-            aria-describedby="reports-unavailable"
-            className="px-1 text-primary"
-          >
-            {t("modules.reports.clear")}
-          </button>
-        </div>
+        {toolbar ?? (
+          <div className="flex items-center gap-3">
+            <Button
+              variant="recordSelector"
+              aria-label={t("modules.reports.filter")}
+              aria-disabled="true"
+              aria-describedby="reports-unavailable"
+              className="gap-2"
+            >
+              <Icons.filter className="size-4" aria-hidden />
+              {t("modules.reports.filter")}
+              <span
+                data-testid="filter-active-indicator"
+                className="size-2 rounded-full bg-primary"
+                aria-hidden
+              />
+            </Button>
+            <button
+              type="button"
+              aria-disabled="true"
+              aria-describedby="reports-unavailable"
+              className="px-1 text-text"
+            >
+              {t("modules.reports.filterByDate")}
+            </button>
+            <button
+              type="button"
+              aria-disabled="true"
+              aria-describedby="reports-unavailable"
+              className="px-1 text-primary"
+            >
+              {t("modules.reports.clear")}
+            </button>
+          </div>
+        )}
         <button
           type="button"
           aria-disabled="true"

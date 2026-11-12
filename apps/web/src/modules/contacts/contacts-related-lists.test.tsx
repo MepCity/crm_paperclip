@@ -10,8 +10,8 @@ import { contactsRelatedLists, createContactsRelatedLists } from "./contacts-rel
 afterEach(cleanup);
 
 describe("contactsRelatedLists definition", () => {
-  it("defines exactly 21 cards in reference order", () => {
-    expect(contactsRelatedLists).toHaveLength(21);
+  it("defines exactly 22 cards in reference order", () => {
+    expect(contactsRelatedLists).toHaveLength(22);
 
     const expectedOrder = [
       { order: 1, id: "notes", title: "Notes", moduleKey: "M2" },
@@ -35,6 +35,7 @@ describe("contactsRelatedLists definition", () => {
       { order: 19, id: "voice-of-the-customer", title: "Voice of the Customer", moduleKey: "P3" },
       { order: 20, id: "webform-usage", title: "Webform Usage", moduleKey: "M2" },
       { order: 21, id: "journeys", title: "Journeys", moduleKey: "M2" },
+      { order: 22, id: "ad-attribution", title: "Ad Attribution", moduleKey: "M2" },
     ];
 
     expectedOrder.forEach((expected, i) => {
@@ -68,7 +69,8 @@ describe("contactsRelatedLists definition", () => {
         card.id === "social" ||
         card.id === "notes" ||
         card.id === "webform-usage" ||
-        card.id === "journeys"
+        card.id === "journeys" ||
+        card.id === "ad-attribution"
       ) {
         expect(card.moduleKey).toBe("M2");
       } else {
