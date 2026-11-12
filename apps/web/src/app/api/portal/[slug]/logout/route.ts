@@ -1,5 +1,5 @@
 import { exemptRoute } from "@/lib/access/route-permission";
-import { clearedCookie, getPortalAuth, portalHandler, portalJson } from "@/lib/portals";
+import { clearedCookie, getPortalAuth, portalHandler, portalJson } from "@/server/portals";
 
 export const dynamic = "force-dynamic";
 

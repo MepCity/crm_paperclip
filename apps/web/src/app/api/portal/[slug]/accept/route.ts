@@ -5,7 +5,7 @@ import {
   portalHandler,
   portalJson,
   sessionCookie,
-} from "@/lib/portals";
+} from "@/server/portals";
 
 export const dynamic = "force-dynamic";
 

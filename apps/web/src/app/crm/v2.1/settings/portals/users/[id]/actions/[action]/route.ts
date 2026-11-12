@@ -1,6 +1,6 @@
 import { NotFoundError } from "@crm/core/errors";
 import { apiRoute } from "@/lib/api/server";
-import { getPortalAdmin } from "@/lib/portals";
+import { getPortalAdmin } from "@/server/portals";
 
 export const dynamic = "force-dynamic";
 
