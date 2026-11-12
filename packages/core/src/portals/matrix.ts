@@ -107,7 +107,17 @@ export const portalUserTypeSettingsSchema = z
 
 export type PortalUserTypeSettings = z.infer<typeof portalUserTypeSettingsSchema>;
 
-function moduleFields(module: string): readonly FieldDefinition[] {
+/** Whether a field may appear in a portal projection at all (ADR 0019a §4.1). */
+export function isPortalExposable(field: FieldDefinition): boolean {
+  return !NEVER_EXPOSED.has(field.apiName) && !NEVER_EXPOSED_TYPES.has(field.dataType);
+}
+
+/** Keys the server sets on create for this module; client values are rejected. */
+export function portalServerSetFields(module: PortalModule): readonly string[] {
+  return SERVER_SET[module] ?? [];
+}
+
+export function moduleFields(module: string): readonly FieldDefinition[] {
   const bundle = Object.hasOwn(fixtureModules, module) ? fixtureModules[module] : undefined;
   return bundle?.metadata.fields ?? [];
 }

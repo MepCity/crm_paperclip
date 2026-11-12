@@ -473,7 +473,22 @@ export interface ExecutionActorRef {
   readonly enrolledBy?: string;
 }
 
-export type ActorRef = WebformActorRef | ExecutionActorRef;
+/**
+ * Portal identity (ADR 0019a §4.3): not a membership, no AccessSnapshot, not the system
+ * bypass. The record service accepts it only for portal reads (`portalSelect`), the
+ * identity's own Contact edit and Case create, and throws for every other operation.
+ */
+export interface PortalActorRef {
+  readonly kind: "portal";
+  readonly identityId: string;
+  readonly userTypeId: string;
+  /** The identity's linked Contact `C`. */
+  readonly contactId: string;
+  /** Field keys the user type projects in `edit` mode, per writable module. */
+  readonly editableFields: Readonly<Partial<Record<"Contacts" | "Cases", readonly string[]>>>;
+}
+
+export type ActorRef = WebformActorRef | ExecutionActorRef | PortalActorRef;
 
 /** All allowed targets; a single-target field retains its existing default. */
 export function lookupTargetModules(field: FieldDefinition): readonly ModuleApiName[] {

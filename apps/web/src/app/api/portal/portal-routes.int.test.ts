@@ -1,17 +1,19 @@
 import { randomBytes } from "node:crypto";
 import { readdirSync, readFileSync, statSync } from "node:fs";
 import { join, relative, sep } from "node:path";
-import { getSession, handleAuthRequest } from "@crm/core";
+import { getDb, getSession, handleAuthRequest } from "@crm/core";
 import { InMemoryJobQueue } from "@crm/core/jobs";
 import {
   createPortalAdminService,
   createPortalAuthService,
   createPortalMailJobCatalog,
   createQueuedPortalMailer,
+  PORTAL_NOT_FOUND_BODY,
   portalCookieName,
 } from "@crm/core/portals";
 import { createFixtureRecordService } from "@crm/core/records/fixture";
 import { createTestOrganization } from "@crm/core/testing";
+import { schema } from "@crm/db";
 import { describe, expect, it } from "vitest";
 
 /**
@@ -99,6 +101,9 @@ describe("portal route inventory (ADR 0019a §1.6)", () => {
         "/api/portal/[slug]/password",
         "/api/portal/[slug]/password-reset",
         "/api/portal/[slug]/password-reset/complete",
+        "/api/portal/[slug]/records/[module]",
+        "/api/portal/[slug]/records/[module]/[id]",
+        "/api/portal/[slug]/records/[module]/[id]/[related]",
       ].sort(),
     );
     for (const file of routes.filter(isPortalRoute)) {
@@ -125,6 +130,11 @@ describe("portal route inventory (ADR 0019a §1.6)", () => {
       "/api/portal/[slug]/accept POST": 410,
       "/api/portal/[slug]/password-reset/complete POST": 410,
       "/api/portal/[slug]/password-reset POST": 202,
+      "/api/portal/[slug]/records/[module] GET": 401,
+      "/api/portal/[slug]/records/[module] POST": 401,
+      "/api/portal/[slug]/records/[module]/[id] GET": 401,
+      "/api/portal/[slug]/records/[module]/[id] PATCH": 401,
+      "/api/portal/[slug]/records/[module]/[id]/[related] GET": 401,
     };
     const seen: string[] = [];
     for (const file of routes.filter(isPortalRoute)) {
@@ -282,5 +292,175 @@ describe("portal routes over HTTP (ADR 0019a §1.4, §1.7, §2.2)", () => {
       },
     );
     expect(after.status).toBe(401);
+  });
+});
+
+describe("portal data routes over HTTP (ADR 0019a §3–§4, §1.7, §2.5)", () => {
+  async function dataFixture() {
+    const { ctx } = await createTestOrganization();
+    const mailer = createQueuedPortalMailer({
+      queue: new InMemoryJobQueue(createPortalMailJobCatalog()),
+      resolveSender: async () => ({ address: "sender@example.test" }),
+    });
+    const admin = createPortalAdminService({ mailer, appUrl: APP_URL });
+    const auth = createPortalAuthService({ mailer, appUrl: APP_URL });
+    const slug = `data-${randomBytes(5).toString("hex")}`;
+    await admin.createPortal(ctx, { name: "Data", slug });
+    const type = await admin.createUserType(ctx, {
+      name: "Customers",
+      modules: {
+        Contacts: {
+          enabled: true,
+          actions: { view: true, edit: true },
+          fields: [
+            { apiName: "First_Name", mode: "edit" },
+            { apiName: "Last_Name", mode: "read" },
+          ],
+        },
+        Cases: {
+          enabled: true,
+          actions: { view: true, create: true },
+          fields: [
+            { apiName: "Subject", mode: "edit" },
+            { apiName: "Related_To", mode: "read" },
+          ],
+        },
+      },
+    });
+    const system = createFixtureRecordService(ctx, { system: true });
+    const email = `data-${randomBytes(4).toString("hex")}@example.test`;
+    const contact = await system.create("Contacts", { Last_Name: "Data", Email: email });
+    const stranger = await system.create("Contacts", { Last_Name: "Stranger" });
+    const strangerCase = await system.create("Cases", {
+      Subject: "Not yours",
+      Status: "New",
+      Case_Origin: "Web",
+      Related_To: { module: "Contacts", id: stranger.id },
+    });
+    await admin.invite(ctx, { contactId: contact.id, userTypeId: type.id });
+    const mail = [...mailer.outbox.values()].at(-1);
+    const token = mail?.text.match(/#t=([A-Za-z0-9_-]{43})/)?.[1] ?? "";
+    const accepted = await auth.acceptInvitation(
+      slug,
+      { token, password: "Inventory secret 123" },
+      { ip: "10.9.9.8" },
+    );
+    if (!accepted.ok) throw new Error("accept failed");
+    const cookie = `${portalCookieName(APP_URL)}=${accepted.token}`;
+    const call = async (
+      method: string,
+      path: string,
+      body?: unknown,
+      headers: Record<string, string> = {},
+    ) => {
+      const segments = path.split("?")[0]?.split("/") ?? [];
+      const [module, id, related] = segments;
+      const file = related
+        ? "records/[module]/[id]/[related]"
+        : id
+          ? "records/[module]/[id]"
+          : "records/[module]";
+      const mod = (await import(join(appDir, `api/portal/[slug]/${file}/route.ts`))) as Record<
+        string,
+        Handler
+      >;
+      const handler = mod[method];
+      if (!handler) throw new Error(`no ${method} on ${file}`);
+      return handler(
+        new Request(`${APP_URL}/api/portal/${slug}/records/${path}`, {
+          method,
+          headers: {
+            cookie,
+            ...(method === "GET" ? {} : { origin: ORIGIN, "content-type": "application/json" }),
+            ...headers,
+          },
+          ...(body === undefined ? {} : { body: JSON.stringify(body) }),
+        }),
+        { params: Promise.resolve({ slug, module, id, related }) },
+      );
+    };
+    return { ctx, slug, contact, strangerCase, call, sessionToken: accepted.token };
+  }
+
+  it("lists, reads, creates and self-edits with the session; refusals are identical 404s", async () => {
+    const env = await dataFixture();
+    const list = await env.call("GET", "Cases?per_page=50");
+    expect(list.status).toBe(200);
+    expect(list.headers.get("cache-control")).toBe("no-store");
+    expect(await list.json()).toMatchObject({ data: [], info: { page: 1, per_page: 50 } });
+
+    const created = await env.call("POST", "Cases", { Subject: "Help" });
+    expect(created.status).toBe(201);
+    const row = (await created.json()) as { data: { id: string; fields: Record<string, unknown> } };
+    expect(row.data.fields).toEqual({
+      Subject: "Help",
+      Related_To: { name: "Data", module: "Contacts", id: env.contact.id },
+    });
+    expect((await env.call("GET", `Cases/${row.data.id}`)).status).toBe(200);
+    expect((await env.call("GET", `Contacts/${env.contact.id}/Cases`)).status).toBe(200);
+
+    const edited = await env.call("PATCH", `Contacts/${env.contact.id}`, { First_Name: "Me" });
+    expect(edited.status).toBe(200);
+    const readOnly = await env.call("PATCH", `Contacts/${env.contact.id}`, { Last_Name: "X" });
+    expect(readOnly.status).toBe(422);
+    expect(await readOnly.json()).toMatchObject({ errors: { Last_Name: expect.any(Array) } });
+    const relationship = await env.call("POST", "Cases", {
+      Subject: "X",
+      Related_To: { module: "Contacts", id: env.contact.id },
+    });
+    expect(relationship.status).toBe(422);
+    expect((await env.call("GET", "Cases?sort_by=Owner")).status).toBe(422);
+
+    const refusals = await Promise.all([
+      env.call("GET", "Cases/987654321"),
+      env.call("GET", `Cases/${env.strangerCase.id}`),
+      env.call("GET", "Deals"),
+      env.call("GET", "Leads/1"),
+      env.call("PATCH", `Cases/${row.data.id}`, { Subject: "X" }),
+      env.call("POST", "Contacts", { Last_Name: "X" }),
+      env.call("GET", `Contacts/${env.contact.id}/Deals`),
+    ]);
+    const texts = await Promise.all(
+      refusals.map(async (res) => {
+        expect(res.status).toBe(404);
+        return res.text();
+      }),
+    );
+    expect(new Set(texts)).toEqual(new Set([JSON.stringify(PORTAL_NOT_FOUND_BODY)]));
+  });
+
+  it("CSRF on writes, 401 without a session, 429 over the per-session limit", async () => {
+    const env = await dataFixture();
+    expect(
+      (await env.call("POST", "Cases", { Subject: "X" }, { origin: "https://evil.example" }))
+        .status,
+    ).toBe(403);
+    const form = await env.call("POST", "Cases", undefined, {
+      "content-type": "application/x-www-form-urlencoded",
+    });
+    expect(form.status).toBe(415);
+    const anonymous = await env.call("GET", "Cases", undefined, { cookie: "" });
+    expect(anonymous.status).toBe(401);
+    const auth = createPortalAuthService({ appUrl: APP_URL });
+    const live = await auth.authenticate(env.slug, env.sessionToken, { ip: "10.9.9.8" });
+    if (!live.ok) throw new Error("session not live");
+    const windowMs = 60_000;
+    await getDb()
+      .insert(schema.publicRateLimits)
+      .values({
+        organizationId: env.ctx.orgId,
+        bucket: `portal:session:${live.principal.sessionId}`,
+        windowStart: new Date(Math.floor(Date.now() / windowMs) * windowMs),
+        count: 300,
+      })
+      .onConflictDoUpdate({
+        target: [
+          schema.publicRateLimits.organizationId,
+          schema.publicRateLimits.bucket,
+          schema.publicRateLimits.windowStart,
+        ],
+        set: { count: 300 },
+      });
+    expect((await env.call("GET", "Cases")).status).toBe(429);
   });
 });
