@@ -66,6 +66,7 @@ const settingsAdminKey: Readonly<Record<string, keyof ClientPermissions["admin"]
   "assignment-rules": "manageAutomation",
   email: "emailSettings",
   webforms: "manageWebforms",
+  portals: "managePortals",
   "google-extensions": "manageIntegrations",
 };
 
@@ -333,6 +334,15 @@ export const settingsNav: readonly NavLink[] = [
     icon: Icons.settings,
     href: (slug) => `/crm/${slug}/settings/webforms`,
     activePrefix: (slug) => `/crm/${slug}/settings/webforms`,
+    match: "prefix",
+    group: "Channels",
+  },
+  {
+    id: "portals",
+    label: english.shell.portals,
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/portals`,
+    activePrefix: (slug) => `/crm/${slug}/settings/portals`,
     match: "prefix",
     group: "Channels",
   },

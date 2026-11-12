@@ -11,6 +11,18 @@ const config: NextConfig = {
   outputFileTracingRoot: monorepoRoot,
   turbopack: { root: monorepoRoot },
   devIndicators: false,
+  async headers() {
+    return [
+      {
+        source: "/portal/:path*",
+        headers: [
+          { key: "Content-Security-Policy", value: "frame-ancestors 'none'" },
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "Cache-Control", value: "no-store" },
+        ],
+      },
+    ];
+  },
 };
 
 export default createNextIntlPlugin()(config);

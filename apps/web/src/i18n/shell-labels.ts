@@ -36,6 +36,8 @@ const keys: Record<string, keyof typeof english.shell> = {
   currencies: "currencies",
   "calendar-booking": "calendar-booking",
   email: "email",
+  webforms: "webforms",
+  portals: "portals",
   "import-history": "import-history",
   "export-history": "export-history",
   "modules-and-fields": "modules-and-fields",

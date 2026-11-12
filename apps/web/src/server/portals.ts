@@ -15,7 +15,6 @@ import {
   type PortalAuthService,
   type PortalDataResult,
   type PortalDataService,
-  type PortalMailer,
   type PortalPrincipal,
   portalContactDeleteObserver,
   readPortalCookie,
@@ -31,13 +30,13 @@ import { getJourneys } from "@/lib/journeys";
  * Portal composition (ADR 0019a). Portal handlers read only the portal cookie; member
  * cookies are never consulted here, and member routes never read the portal cookie.
  */
-let mailer: PortalMailer | undefined;
+let mailer: ReturnType<typeof createQueuedPortalMailer> | undefined;
 let auth: PortalAuthService | undefined;
 let admin: PortalAdminService | undefined;
 let data: PortalDataService | undefined;
 
 /** Staging mailer: queue + outbox in memory; no provider is connected (same as member mail). */
-export function getPortalMailer(): PortalMailer {
+export function getPortalMailer(): ReturnType<typeof createQueuedPortalMailer> {
   mailer ??= createQueuedPortalMailer({
     queue: new InMemoryJobQueue(createPortalMailJobCatalog()),
   });
@@ -143,7 +142,8 @@ export function portalHandler(
   return async (request, context) => {
     try {
       const base = appUrl();
-      if (process.env.NODE_ENV === "production" && !isSecureAppUrl(base)) {
+      const isLoopback = ["127.0.0.1", "localhost", "::1"].includes(new URL(base).hostname);
+      if (process.env.NODE_ENV === "production" && !isSecureAppUrl(base) && !isLoopback) {
         return portalJson({ message: "Portal unavailable." }, 503);
       }
       const csrf = checkPortalCsrf(request, base);
