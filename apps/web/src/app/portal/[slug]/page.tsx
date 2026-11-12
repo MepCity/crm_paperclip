@@ -68,7 +68,7 @@ export default function PortalHomePage() {
           {canCreateCase && (
             <Link
               href={`/portal/${encodeURIComponent(slug)}/Cases/new`}
-              className="inline-flex items-center justify-center rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-hover)]"
+              className="inline-flex items-center justify-center rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-hover)]"
               data-testid="portal-home-new-case"
             >
               + Submit New Case
@@ -106,14 +106,14 @@ export default function PortalHomePage() {
                 <div className="mt-5 flex items-center justify-between border-t border-[var(--color-border)] pt-3">
                   <Link
                     href={`/portal/${encodeURIComponent(slug)}/${encodeURIComponent(mod)}`}
-                    className="text-xs font-medium text-[var(--color-primary)] hover:underline"
+                    className="text-xs font-semibold text-[var(--color-primary)] hover:underline"
                   >
                     View Records &rarr;
                   </Link>
                   {mod === "Cases" && canCreateCase && (
                     <Link
                       href={`/portal/${encodeURIComponent(slug)}/Cases/new`}
-                      className="text-xs font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
+                      className="text-xs font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
                     >
                       + New
                     </Link>
@@ -132,14 +132,14 @@ export default function PortalHomePage() {
             <div className="text-xs font-semibold text-[var(--color-text-muted)] uppercase tracking-wider">
               Identity Profile
             </div>
-            <div className="text-sm font-medium text-[var(--color-text)]">
+            <div className="text-sm font-semibold text-[var(--color-text)]">
               {session.user.name} &bull; {session.user.email}
             </div>
           </div>
           {modulesConfig?.Contacts?.enabled && session.user.recordId && (
             <Link
               href={`/portal/${encodeURIComponent(slug)}/Contacts/${encodeURIComponent(session.user.recordId)}`}
-              className="inline-flex items-center text-xs font-medium text-[var(--color-primary)] hover:underline"
+              className="inline-flex items-center text-xs font-semibold text-[var(--color-primary)] hover:underline"
               data-testid="portal-view-my-profile"
             >
               View / Edit Contact Profile &rarr;

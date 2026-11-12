@@ -1,7 +1,7 @@
-import { exemptRoute } from "@/lib/access/route-permission";
-import { clearedCookie, getPortalAuth, portalHandler, portalJson } from "@/server/portals";
 import { systemOrgContext, withOrg } from "@crm/core";
 import { and, eq, schema } from "@crm/db";
+import { exemptRoute } from "@/lib/access/route-permission";
+import { clearedCookie, getPortalAuth, portalHandler, portalJson } from "@/server/portals";
 
 export const dynamic = "force-dynamic";
 

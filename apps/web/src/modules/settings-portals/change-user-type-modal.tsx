@@ -59,7 +59,7 @@ export function ChangeUserTypeModal({
         )}
 
         <div>
-          <div className="text-sm font-medium text-foreground mb-1">
+          <div className="text-sm font-semibold text-foreground mb-1">
             {user?.displayName} ({user?.email})
           </div>
           <label

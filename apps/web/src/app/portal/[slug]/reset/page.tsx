@@ -155,7 +155,7 @@ export default function PortalResetPage() {
                 type="submit"
                 disabled={submitting}
                 data-testid="portal-reset-submit"
-                className="w-full rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
+                className="w-full rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
               >
                 {submitting ? "Saving..." : "Set New Password"}
               </button>
@@ -170,7 +170,7 @@ export default function PortalResetPage() {
             </p>
             <Link
               href={`/portal/${encodeURIComponent(slug)}/login`}
-              className="inline-block text-xs font-medium text-[var(--color-primary)] hover:underline"
+              className="inline-block text-xs font-semibold text-[var(--color-primary)] hover:underline"
             >
               Return to Sign In
             </Link>
@@ -220,7 +220,7 @@ export default function PortalResetPage() {
                 type="submit"
                 disabled={submitting}
                 data-testid="portal-reset-submit"
-                className="w-full rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
+                className="w-full rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
               >
                 {submitting ? "Sending..." : "Send Reset Link"}
               </button>

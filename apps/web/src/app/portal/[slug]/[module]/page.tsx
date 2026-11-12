@@ -157,7 +157,7 @@ export default function PortalModuleListPage() {
           />
           <button
             type="submit"
-            className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-bg-muted)]"
+            className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-xs font-semibold text-[var(--color-text)] hover:bg-[var(--color-bg-muted)]"
             data-testid="portal-search-submit"
           >
             Search
@@ -240,7 +240,7 @@ export default function PortalModuleListPage() {
                             {cIdx === 0 ? (
                               <Link
                                 href={`/portal/${encodeURIComponent(slug)}/${encodeURIComponent(moduleParam)}/${encodeURIComponent(id)}`}
-                                className="font-medium text-[var(--color-primary)] hover:underline"
+                                className="font-semibold text-[var(--color-primary)] hover:underline"
                                 data-testid={`portal-record-link-${id}`}
                               >
                                 {textVal}
@@ -254,7 +254,7 @@ export default function PortalModuleListPage() {
                       <td className="px-4 py-3 text-right">
                         <Link
                           href={`/portal/${encodeURIComponent(slug)}/${encodeURIComponent(moduleParam)}/${encodeURIComponent(id)}`}
-                          className="rounded border border-[var(--color-border)] px-2 py-1 text-[11px] font-medium text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg-muted)]"
+                          className="rounded border border-[var(--color-border)] px-2 py-1 text-[11px] font-semibold text-[var(--color-text-muted)] hover:text-[var(--color-text)] hover:bg-[var(--color-bg-muted)]"
                         >
                           View
                         </Link>
@@ -275,7 +275,7 @@ export default function PortalModuleListPage() {
               type="button"
               disabled={pageInfo.page <= 1 || loading}
               onClick={() => void loadData(pageInfo.page - 1)}
-              className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-bg-muted)] disabled:opacity-40"
+              className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs font-semibold text-[var(--color-text)] hover:bg-[var(--color-bg-muted)] disabled:opacity-40"
               data-testid="portal-pagination-prev"
             >
               Previous
@@ -284,7 +284,7 @@ export default function PortalModuleListPage() {
               type="button"
               disabled={!pageInfo.more_records || loading}
               onClick={() => void loadData(pageInfo.page + 1)}
-              className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs font-medium text-[var(--color-text)] hover:bg-[var(--color-bg-muted)] disabled:opacity-40"
+              className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1 text-xs font-semibold text-[var(--color-text)] hover:bg-[var(--color-bg-muted)] disabled:opacity-40"
               data-testid="portal-pagination-next"
             >
               Next

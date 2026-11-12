@@ -248,7 +248,7 @@ export function UserTypeModal({
           <div>
             <label
               htmlFor="user-type-name-input"
-              className="block text-sm font-medium text-foreground mb-1"
+              className="block text-sm font-semibold text-foreground mb-1"
             >
               {t("modules.portals.userTypeName")} *
             </label>
@@ -267,7 +267,7 @@ export function UserTypeModal({
           <div>
             <label
               htmlFor="case-owner-select"
-              className="block text-sm font-medium text-foreground mb-1"
+              className="block text-sm font-semibold text-foreground mb-1"
             >
               {t("modules.portals.caseOwner")}
             </label>
@@ -324,7 +324,7 @@ export function UserTypeModal({
                       />
                       <label
                         htmlFor={`module-toggle-${mod}`}
-                        className="font-medium text-sm text-foreground cursor-pointer select-none"
+                        className="font-semibold text-sm text-foreground cursor-pointer select-none"
                       >
                         {mod}
                       </label>

@@ -151,7 +151,7 @@ export default function PortalNewCasePage() {
           <div className="flex items-center justify-end gap-3 pt-3 border-t border-[var(--color-border)]">
             <Link
               href={`/portal/${encodeURIComponent(slug)}/Cases`}
-              className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 text-xs font-medium text-[var(--color-text-muted)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text)]"
+              className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-4 py-2 text-xs font-semibold text-[var(--color-text-muted)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text)]"
             >
               Cancel
             </Link>

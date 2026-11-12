@@ -79,7 +79,7 @@ export function PortalConfigModal({
         <div>
           <label
             htmlFor="portal-name-input"
-            className="block text-sm font-medium text-foreground mb-1"
+            className="block text-sm font-semibold text-foreground mb-1"
           >
             {t("modules.portals.name")} *
           </label>
@@ -99,7 +99,7 @@ export function PortalConfigModal({
           <div>
             <label
               htmlFor="portal-slug-input"
-              className="block text-sm font-medium text-foreground mb-1"
+              className="block text-sm font-semibold text-foreground mb-1"
             >
               {t("modules.portals.slug")} *
             </label>
@@ -126,7 +126,7 @@ export function PortalConfigModal({
           <div>
             <label
               htmlFor="portal-status-select"
-              className="block text-sm font-medium text-foreground mb-1"
+              className="block text-sm font-semibold text-foreground mb-1"
             >
               {t("modules.portals.status")}
             </label>
@@ -146,7 +146,7 @@ export function PortalConfigModal({
         <div>
           <label
             htmlFor="portal-language-select"
-            className="block text-sm font-medium text-foreground mb-1"
+            className="block text-sm font-semibold text-foreground mb-1"
           >
             {t("modules.portals.defaultLanguage")}
           </label>

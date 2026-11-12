@@ -75,7 +75,7 @@ export function InviteUserModal({
         <div>
           <label
             htmlFor="contact-select"
-            className="block text-sm font-medium text-foreground mb-1"
+            className="block text-sm font-semibold text-foreground mb-1"
           >
             {t("modules.portals.selectContact")} *
           </label>
@@ -108,7 +108,7 @@ export function InviteUserModal({
         <div>
           <label
             htmlFor="invite-usertype-select"
-            className="block text-sm font-medium text-foreground mb-1"
+            className="block text-sm font-semibold text-foreground mb-1"
           >
             {t("modules.portals.selectUserType")} *
           </label>

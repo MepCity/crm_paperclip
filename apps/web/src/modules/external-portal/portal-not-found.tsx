@@ -22,7 +22,7 @@ export function PortalNotFound({
         <p className="mb-6 text-sm text-[var(--color-text-muted)]">{message}</p>
         <Link
           href={`/portal/${encodeURIComponent(slug)}`}
-          className="inline-flex items-center justify-center rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-hover)]"
+          className="inline-flex items-center justify-center rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-hover)]"
         >
           Return to Portal Home
         </Link>

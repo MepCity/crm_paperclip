@@ -176,7 +176,7 @@ export default function PortalRecordDetailPage() {
                 <button
                   type="button"
                   onClick={() => setEditing(false)}
-                  className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-xs font-medium text-[var(--color-text-muted)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text)]"
+                  className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-3 py-1.5 text-xs font-semibold text-[var(--color-text-muted)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text)]"
                   data-testid="portal-contact-cancel-button"
                 >
                   Cancel
@@ -261,7 +261,7 @@ export default function PortalRecordDetailPage() {
                   <div className="text-[11px] font-semibold uppercase tracking-wider text-[var(--color-text-muted)]">
                     {key.replace(/_/g, " ")}
                   </div>
-                  <div className="text-xs font-medium text-[var(--color-text)]">
+                  <div className="text-xs font-semibold text-[var(--color-text)]">
                     {val === null || val === undefined ? (
                       <span className="text-[var(--color-text-muted)]">—</span>
                     ) : isLinkObject ? (

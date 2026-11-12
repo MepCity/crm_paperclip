@@ -47,7 +47,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
               <nav className="hidden md:flex items-center gap-1">
                 <Link
                   href={`/portal/${encodeURIComponent(slug)}`}
-                  className={`rounded px-3 py-1.5 text-sm font-medium transition ${
+                  className={`rounded px-3 py-1.5 text-sm font-semibold transition ${
                     pathname === `/portal/${slug}`
                       ? "bg-[var(--color-bg-muted)] text-[var(--color-text)]"
                       : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
@@ -62,7 +62,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
                     <Link
                       key={mod}
                       href={href}
-                      className={`rounded px-3 py-1.5 text-sm font-medium transition ${
+                      className={`rounded px-3 py-1.5 text-sm font-semibold transition ${
                         isActive
                           ? "bg-[var(--color-bg-muted)] text-[var(--color-text)]"
                           : "text-[var(--color-text-muted)] hover:text-[var(--color-text)]"
@@ -84,7 +84,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
               <div className="flex items-center gap-3">
                 <div className="text-right">
                   <div
-                    className="text-xs font-medium text-[var(--color-text)]"
+                    className="text-xs font-semibold text-[var(--color-text)]"
                     data-testid="portal-user-name"
                   >
                     {session.user.name}
@@ -96,7 +96,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
                 <button
                   type="button"
                   onClick={() => void logout()}
-                  className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1 text-xs font-medium text-[var(--color-text-muted)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text)]"
+                  className="rounded border border-[var(--color-border)] bg-[var(--color-surface)] px-2.5 py-1 text-xs font-semibold text-[var(--color-text-muted)] hover:bg-[var(--color-bg-muted)] hover:text-[var(--color-text)]"
                   data-testid="portal-logout-button"
                 >
                   Sign Out
@@ -105,7 +105,7 @@ export function PortalShell({ children }: { children: React.ReactNode }) {
             ) : (
               <Link
                 href={`/portal/${encodeURIComponent(slug)}/login`}
-                className="rounded bg-[var(--color-primary)] px-3 py-1.5 text-xs font-medium text-white hover:bg-[var(--color-primary-hover)]"
+                className="rounded bg-[var(--color-primary)] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[var(--color-primary-hover)]"
                 data-testid="portal-login-nav-link"
               >
                 Sign In

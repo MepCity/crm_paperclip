@@ -142,7 +142,7 @@ export default function PortalAcceptPage() {
             type="submit"
             disabled={submitting}
             data-testid="portal-accept-submit"
-            className="w-full rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-medium text-white transition hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
+            className="w-full rounded bg-[var(--color-primary)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--color-primary-hover)] disabled:opacity-50"
           >
             {submitting ? "Activating account..." : "Activate Account"}
           </button>

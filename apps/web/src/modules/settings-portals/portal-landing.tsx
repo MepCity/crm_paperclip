@@ -42,7 +42,7 @@ export function PortalLanding({ onGetStarted }: PortalLandingProps) {
           data-testid="get-started-button"
           variant="primary"
           onPress={onGetStarted}
-          className="px-5 py-2 text-sm font-medium rounded-md shadow-xs"
+          className="px-5 py-2 text-sm font-semibold rounded-md shadow-xs"
         >
           {t("modules.portals.getStarted")}
         </Button>
