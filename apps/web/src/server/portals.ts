@@ -3,6 +3,7 @@ import { InMemoryJobQueue } from "@crm/core/jobs";
 import {
   checkPortalCsrf,
   clearPortalCookie,
+  createFixtureContactReader,
   createPortalAdminService,
   createPortalAuthService,
   createPortalDataService,
@@ -44,12 +45,20 @@ export function getPortalMailer(): PortalMailer {
 }
 
 export function getPortalAuth(): PortalAuthService {
-  auth ??= createPortalAuthService({ mailer: getPortalMailer(), appUrl: appUrl() });
+  auth ??= createPortalAuthService({
+    mailer: getPortalMailer(),
+    appUrl: appUrl(),
+    contacts: createFixtureContactReader(getCustomizationCoordinator()),
+  });
   return auth;
 }
 
 export function getPortalAdmin(): PortalAdminService {
-  admin ??= createPortalAdminService({ mailer: getPortalMailer(), appUrl: appUrl() });
+  admin ??= createPortalAdminService({
+    mailer: getPortalMailer(),
+    appUrl: appUrl(),
+    contacts: createFixtureContactReader(getCustomizationCoordinator()),
+  });
   return admin;
 }
 
