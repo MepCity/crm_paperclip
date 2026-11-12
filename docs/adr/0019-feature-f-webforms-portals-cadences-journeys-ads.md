@@ -181,6 +181,9 @@ internal sessions are rejected by `/portal`. Disabling an identity revokes its
 sessions in the same transaction. Before any portal build issue, a short
 addendum (auth library choice, password policy, lockout, related-record
 lookup list per module) gets Platform Lead + CTO security review.
+Decided in ADR 0019a (`0019a-portal-identity-addendum.md`), which amends
+the cookie path (`Path=/`, required by `__Host-`) and replaces
+`portal_invitations` with `portal_tokens`.
 
 ### 6. Cadence / journey execution seam
 
