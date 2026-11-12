@@ -5,17 +5,26 @@ import {
   clearPortalCookie,
   createPortalAdminService,
   createPortalAuthService,
+  createPortalDataService,
   createPortalMailJobCatalog,
   createQueuedPortalMailer,
   isSecureAppUrl,
   PORTAL_RESPONSE_HEADERS,
   type PortalAdminService,
   type PortalAuthService,
+  type PortalDataResult,
+  type PortalDataService,
   type PortalMailer,
+  type PortalPrincipal,
+  portalContactDeleteObserver,
   readPortalCookie,
   serializePortalCookie,
 } from "@crm/core/portals";
+import { combineWriteObservers } from "@crm/core/records/write-observer";
 import { getClientIp } from "@crm/core/webforms";
+import { getApprovals } from "@/lib/approvals";
+import { getCustomizationCoordinator } from "@/lib/customization";
+import { getJourneys } from "@/lib/journeys";
 
 /**
  * Portal composition (ADR 0019a). Portal handlers read only the portal cookie; member
@@ -24,6 +33,7 @@ import { getClientIp } from "@crm/core/webforms";
 let mailer: PortalMailer | undefined;
 let auth: PortalAuthService | undefined;
 let admin: PortalAdminService | undefined;
+let data: PortalDataService | undefined;
 
 /** Staging mailer: queue + outbox in memory; no provider is connected (same as member mail). */
 export function getPortalMailer(): PortalMailer {
@@ -41,6 +51,41 @@ export function getPortalAuth(): PortalAuthService {
 export function getPortalAdmin(): PortalAdminService {
   admin ??= createPortalAdminService({ mailer: getPortalMailer(), appUrl: appUrl() });
   return admin;
+}
+
+/** Portal data access (ADR 0019a §3–§4); writes fire the same observers as member writes. */
+export function getPortalData(): PortalDataService {
+  data ??= createPortalDataService({
+    schema: getCustomizationCoordinator(),
+    writeObserver: (ctx) =>
+      combineWriteObservers(
+        getApprovals().writeObserver(ctx),
+        getJourneys().writeObserver(ctx),
+        portalContactDeleteObserver(ctx),
+      ),
+  });
+  return data;
+}
+
+/**
+ * Authenticates the portal session (per-session rate limit inside, ADR 0019a §2.5) and runs
+ * a data operation. 401 clears the cookie; data failures keep their 404/422 body.
+ */
+export async function withPortalSession<T>(
+  ctx: PortalRequestContext,
+  work: (principal: PortalPrincipal) => Promise<PortalDataResult<T>>,
+): Promise<Response> {
+  const result = await getPortalAuth().authenticate(ctx.slug, ctx.token, { ip: ctx.ip });
+  if (!result.ok) {
+    return portalJson(
+      { message: result.message },
+      result.status,
+      result.status === 401 ? { setCookie: clearedCookie() } : {},
+    );
+  }
+  const outcome = await work(result.principal);
+  if (!outcome.ok) return portalJson(outcome.body, outcome.status);
+  return portalJson(outcome.data, outcome.status);
 }
 
 export function appUrl(): string {
