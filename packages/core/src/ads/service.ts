@@ -81,7 +81,9 @@ function mapAdItem(row: typeof dbSchema.adItems.$inferSelect): AdItem {
   };
 }
 
-function mapAttribution(row: typeof dbSchema.recordAttributions.$inferSelect): RecordAttribution {
+export function mapAttribution(
+  row: typeof dbSchema.recordAttributions.$inferSelect,
+): RecordAttribution {
   return {
     id: row.id,
     organizationId: row.organizationId,

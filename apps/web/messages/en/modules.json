@@ -1652,5 +1652,59 @@
         "broad": "Broad"
       }
     }
+  },
+  "adAttribution": {
+    "title": "Ad Attribution",
+    "loading": "Loading ad attribution",
+    "empty": "No ad attribution for this record.",
+    "loadError": "Ad attribution could not be loaded.",
+    "edit": "Edit",
+    "add": "Add Attribution",
+    "save": "Save",
+    "cancel": "Cancel",
+    "saving": "Saving...",
+    "saveError": "Ad attribution could not be saved.",
+    "fields": {
+      "gclid": "Click ID (GCLID)",
+      "utmSource": "UTM Source",
+      "utmMedium": "UTM Medium",
+      "utmCampaign": "UTM Campaign",
+      "utmTerm": "UTM Term",
+      "utmContent": "UTM Content",
+      "campaign": "Campaign",
+      "adGroup": "Ad Group",
+      "keyword": "Keyword",
+      "ad": "Ad",
+      "source": "Source",
+      "modifiedTime": "Attributed Time"
+    },
+    "none": "None",
+    "sources": {
+      "webform": "Webform",
+      "manual": "Manual",
+      "conversion": "Lead conversion"
+    }
+  },
+  "adsSummary": {
+    "title": "Google Ads Summary",
+    "link": "Ads summary report",
+    "folder": "Google Ads Reports",
+    "from": "From",
+    "to": "To",
+    "apply": "Apply",
+    "clear": "Clear",
+    "loadError": "The report could not be loaded.",
+    "empty": "No attributed records in this period.",
+    "columns": {
+      "path": "Campaign › Ad Group › Keyword",
+      "leads": "Leads",
+      "contacts": "Contacts",
+      "deals": "Deals",
+      "dealAmount": "Deal Amount"
+    },
+    "noCampaign": "No campaign",
+    "noGroup": "No ad group",
+    "noKeyword": "No keyword",
+    "grandTotal": "Grand Total"
   }
 }

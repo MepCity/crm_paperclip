@@ -1,4 +1,8 @@
 import { createElement } from "react";
+import {
+  AD_ATTRIBUTION_TITLE,
+  AdAttributionCardBody,
+} from "@/components/records/ads/ad-attribution-card-body";
 import { CadencesCardBody } from "@/components/records/cadences/cadences-card-body";
 import { ContactRolesCardBody } from "@/components/records/detail/contact-roles-card-body";
 import { DealStageHistoryCardBody } from "@/components/records/detail/deal-stage-history-card-body";
@@ -520,6 +524,18 @@ export function createDealsRelatedLists(
       moduleKey: "M2",
       order: 16,
       targetId: "related-list-journeys",
+      emptyStateText: "No records found",
+    },
+    {
+      id: "ad-attribution",
+      renderBody: ({ record }) =>
+        record
+          ? createElement(AdAttributionCardBody, { module: "Deals", recordId: record.id })
+          : undefined,
+      title: AD_ATTRIBUTION_TITLE,
+      moduleKey: "M2",
+      order: 17,
+      targetId: "related-list-ad-attribution",
       emptyStateText: "No records found",
     },
   ];

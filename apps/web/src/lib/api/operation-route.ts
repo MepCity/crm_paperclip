@@ -1,6 +1,7 @@
 import { listMembers } from "@crm/core";
 import { getAccessSnapshot } from "@crm/core/access";
 import { NotFoundError } from "@crm/core/errors";
+import { getAttribution } from "@/lib/ads";
 import { getCustomizationService } from "@/lib/customization";
 import { getRecordService } from "@/lib/records";
 import { operationPermission } from "./route-permissions";
@@ -27,6 +28,15 @@ export function operationRoute(operation: Operation) {
               return new Set([snapshot.userId, ...snapshot.subordinateUserIds]);
             },
             customization: () => getCustomizationService(input.ctx),
+            afterLeadConvert: async (leadId, result) => {
+              // The record store commits first; the copy must not turn a committed
+              // conversion into an error response (same rule as write observers).
+              try {
+                await getAttribution().copyOnConversion(input.ctx, leadId, result);
+              } catch (error) {
+                console.error("Ad attribution copy on lead conversion failed", error);
+              }
+            },
           },
           input,
         )

@@ -8,6 +8,7 @@ import { Button } from "@/components/ui/button";
 import { ConfirmDialog } from "@/components/ui/confirm-dialog";
 import { EmptyState } from "@/components/ui/empty-state";
 import { Icons } from "@/components/ui/icon";
+import { Link } from "@/components/ui/link";
 import { Spinner } from "@/components/ui/spinner";
 import { Tab, TabList, TabPanel, Tabs } from "@/components/ui/tabs";
 import { TextField } from "@/components/ui/text-field";
@@ -430,6 +431,13 @@ export function GoogleExtensionsScreen({ orgSlug }: GoogleExtensionsScreenProps)
               <p className="text-sm text-muted-foreground mt-1">
                 {t("modules.googleExtensions.ads.attributionCardDescription")}
               </p>
+              <Link
+                href={`/crm/${orgSlug}/tab/Reports/ads-summary`}
+                className="mt-2 inline-block text-sm text-primary hover:underline"
+                data-testid="ads-summary-link"
+              >
+                {t("modules.adsSummary.link")}
+              </Link>
             </div>
           </div>
 

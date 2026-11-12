@@ -2,6 +2,7 @@ import type { CustomizationService } from "@crm/core/customization";
 import { NotFoundError } from "@crm/core/errors";
 import type {
   ConvertLeadInput,
+  ConvertLeadResult,
   ConvertTarget,
   ListQuery,
   ModuleMetadataReader,
@@ -42,6 +43,8 @@ export type OperationDeps = {
   /** User ids the actor may pick as owner (`onlyListSubordinates`); undefined/null = everyone. */
   pickableUserIds?: () => Promise<ReadonlySet<string> | null>;
   customization?: () => CustomizationService;
+  /** Runs after a committed lead conversion (ad attribution copy, ADR 0019 §7). */
+  afterLeadConvert?: (leadId: string, result: ConvertLeadResult) => Promise<void>;
 };
 export type OperationRequest = {
   params?: Record<string, string>;
@@ -267,7 +270,7 @@ export const operations = {
   convertLead: {
     method: "POST",
     path: "/crm/v2.2/{module}/{recordId}/actions/convert",
-    async run({ records }, input) {
+    async run({ records, afterLeadConvert }, input) {
       const module = moduleOf(input);
       await records.getModule(module);
       if (module === "Quotes") {
@@ -287,7 +290,10 @@ export const operations = {
         ...(contact ? { contact } : {}),
         ...(deal ? { deal } : {}),
       };
-      return ok(await records.convertLead(recordIdOf(input), request, ...writeOptions(body)));
+      const leadId = recordIdOf(input);
+      const result = await records.convertLead(leadId, request, ...writeOptions(body));
+      await afterLeadConvert?.(leadId, result);
+      return ok(result);
     },
   },
   deduplicate: {
