@@ -367,8 +367,8 @@ test.describe("Ads settings and webform attribution", () => {
     await page.screenshot({ path: join(evidenceDir, "ads-summary-report-1180x703.png") });
 
     // A date range before today leaves the report empty.
-    await page.getByLabel("From").fill("2020-01-01");
-    await page.getByLabel("To").fill("2020-01-31");
+    await page.getByLabel("From", { exact: true }).fill("2020-01-01");
+    await page.getByLabel("To", { exact: true }).fill("2020-01-31");
     await page.getByTestId("ads-summary-apply").click();
     await expect(page.getByTestId("ads-summary-empty")).toBeVisible();
 
