@@ -36,6 +36,7 @@ const WIRE_TO_SOURCE: Record<string, HistorySource> = {
   import: "import",
   webform: "webform",
   cadence: "cadence",
+  portal: "portal",
 };
 const SOURCE_TO_WIRE: Record<HistorySource, string> = {
   manual: "crm_ui",
@@ -43,6 +44,7 @@ const SOURCE_TO_WIRE: Record<HistorySource, string> = {
   import: "import",
   webform: "webform",
   cadence: "cadence",
+  portal: "portal",
 };
 const DEFAULT_PER_PAGE = 25;
 const MAX_PER_PAGE = 200;

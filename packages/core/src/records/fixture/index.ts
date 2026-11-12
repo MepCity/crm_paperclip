@@ -47,6 +47,12 @@ import type {
 } from "../contract";
 import type { HistorySource, RecordHistoryEvent, RecordHistoryService } from "../history";
 import { isJsonArray, isJsonObject } from "../json";
+import {
+  evaluatePortalSelect,
+  PORTAL_READ_MODULES,
+  type PortalSelectQuery,
+  type PortalSelectResult,
+} from "../portal-select";
 import type { RecycleBinService } from "../recycle-bin";
 import {
   relatedFilterModules,
@@ -215,6 +221,8 @@ export function createFixtureRecordService(
     readonly history: RecordHistoryService;
     readonly tags: TagService;
     readonly recycleBin: RecycleBinService;
+    /** Portal reads; only with a portal actor (ADR 0019a §4). */
+    readonly portalSelect: (query: PortalSelectQuery) => PortalSelectResult;
   } {
   const ctx = { ...context };
   const isWebformActor = options?.actor?.kind === "webform";
@@ -223,6 +231,10 @@ export function createFixtureRecordService(
   const cadenceActor = options?.actor?.kind === "cadence" ? options.actor : undefined;
   const isJourneyActor = options?.actor?.kind === "journey";
   const journeyActor = options?.actor?.kind === "journey" ? options.actor : undefined;
+  const portalActor = options?.actor?.kind === "portal" ? options.actor : undefined;
+  // The portal actor is neither a member (no AccessSnapshot) nor the system bypass (§4.3).
+  if (portalActor && (options?.access || options?.system))
+    throw new Error("A portal actor cannot carry member access or the system flag.");
   let webformRecordsCreated = 0;
   const assertWebformCanRead = () => {
     if (isWebformActor) {
@@ -881,13 +893,17 @@ export function createFixtureRecordService(
                   id: options.actor.id,
                   name: options.actorName ?? "Cadence",
                 }
-              : { id: ctx.userId, name: options?.actorName ?? ctx.userId },
+              : portalActor
+                ? { id: portalActor.identityId, name: options?.actorName ?? "Portal user" }
+                : { id: ctx.userId, name: options?.actorName ?? ctx.userId },
         source:
           options?.actor?.kind === "webform"
             ? ("webform" as const)
             : options?.actor?.kind === "cadence"
               ? ("cadence" as const)
-              : (options?.source ?? ("manual" as const)),
+              : portalActor
+                ? ("portal" as const)
+                : (options?.source ?? ("manual" as const)),
       };
       const operationId = operation.operationId ?? randomUUID();
       const events = historyBatch(
@@ -1461,6 +1477,73 @@ export function createFixtureRecordService(
       () => insertRecord("Invoices", input).id,
     );
   };
+  const portalDenied = () =>
+    new ForbiddenError("Portal actor cannot perform this operation", "permission_denied");
+  /** `A`: the linked Contact's current Account, read from the live row. */
+  const portalContactAccount = (): string | null => {
+    const contact =
+      portalActor && state.modules.get("Contacts")?.records.get(portalActor.contactId);
+    const account = contact?.fields.Account_Name;
+    return isJsonObject(account) && typeof account.id === "string" ? account.id : null;
+  };
+  /** Case create (ADR 0019a §4.3): projected `edit` keys plus server-set relationship. */
+  const portalCaseInput = (module: string, input: RecordInput): RecordInput => {
+    if (!portalActor || module !== "Cases") throw portalDenied();
+    if (!state.modules.get("Contacts")?.records.has(portalActor.contactId))
+      throw new NotFoundError("Record not found.");
+    const allowed = new Set([...(portalActor.editableFields.Cases ?? []), "Owner"]);
+    for (const key of Object.keys(input))
+      if (!allowed.has(key))
+        throw new ForbiddenError(`Portal actor cannot write field '${key}'`, "field_forbidden");
+    const account = portalContactAccount();
+    return {
+      Status: "New",
+      Case_Origin: "Web",
+      ...input,
+      Related_To: { module: "Contacts", id: portalActor.contactId },
+      Account_Name: account ? { module: "Accounts", id: account } : null,
+    };
+  };
+  const assertPortalSelfEdit = (module: string, id: string, input: RecordInput) => {
+    if (!portalActor || module !== "Contacts" || id !== portalActor.contactId) throw portalDenied();
+    const allowed = new Set(portalActor.editableFields.Contacts ?? []);
+    for (const key of Object.keys(input))
+      if (!allowed.has(key))
+        throw new ForbiddenError(`Portal actor cannot write field '${key}'`, "field_forbidden");
+  };
+  const portalSelect = (query: PortalSelectQuery): PortalSelectResult => {
+    if (!portalActor) throw portalDenied();
+    if (!PORTAL_READ_MODULES.has(query.module)) throw new NotFoundError("Not found.");
+    const fieldsOf = (module: string) =>
+      new Map(bundleFor(module).metadata.fields.map((field) => [field.apiName, field]));
+    const projected = fieldsOf(query.module);
+    if (query.filters)
+      validateCriteria(
+        query.filters,
+        new Map([...projected].filter(([name]) => query.columns.includes(name))),
+      );
+    const runtime = { userId: ctx.userId, now: clock() };
+    return copy(
+      evaluatePortalSelect(
+        {
+          rows: (module) => state.modules.get(module)?.records.values() ?? [],
+          get: (module, id) =>
+            Object.hasOwn(fixtureModules, module)
+              ? state.modules.get(module)?.records.get(id)
+              : undefined,
+          displayName: (module, record) => {
+            const name = record.fields[bundleFor(module).displayNameField];
+            return typeof name === "string" ? name : "";
+          },
+          fields: fieldsOf,
+          matches: (record, criteria, fields) => matches(record, criteria, runtime, fields),
+          sort: (records, sort, fields) => sortRecords(records, sort, fields),
+        },
+        portalActor.contactId,
+        query,
+      ),
+    );
+  };
   const service: RecordService &
     Required<Pick<RecordService, "convertQuoteToInvoice">> &
     ModuleMetadataReader & {
@@ -1468,9 +1551,11 @@ export function createFixtureRecordService(
       history: RecordHistoryService;
       tags: TagService;
       recycleBin: RecycleBinService;
+      portalSelect: typeof portalSelect;
     } = {
     convertLead,
     convertQuoteToInvoice,
+    portalSelect,
     attachmentLifecycle: {
       ...attachmentLifecycle,
       publish(id, data) {
@@ -1870,8 +1955,9 @@ export function createFixtureRecordService(
       const acc = await accessFor();
       return copy(acc ? acc.project(module, resolved) : resolved);
     },
-    async create(module, input, createOpts) {
+    async create(module, rawInput, createOpts) {
       assertCadenceCanAccess(module);
+      const input = portalActor ? portalCaseInput(module, rawInput) : rawInput;
       if (isWebformActor && options?.actor?.kind === "webform") {
         if (webformRecordsCreated > 0) {
           throw new ForbiddenError("Webform actor may only create one record", "permission_denied");
@@ -1947,6 +2033,7 @@ export function createFixtureRecordService(
     async update(module, id, input, options) {
       assertWebformCanMutate();
       assertCadenceCanAccess(module);
+      if (portalActor) assertPortalSelfEdit(module, id, input);
       assertModuleWritable(module);
       await assertRecordLevel(module, [id], "edit");
       assertSourceTimes(options?.sourceTimes);
@@ -2090,7 +2177,43 @@ export function createFixtureRecordService(
       await observer?.afterDelete?.({ module, ids: [...new Set(ids)] });
     },
   };
-  return schema ? schemaRecordService(ctx, service, schema) : service;
+  const bound = schema ? schemaRecordService(ctx, service, schema) : service;
+  return portalActor ? portalGuard(bound, portalActor.contactId) : bound;
+}
+
+const PORTAL_OPERATIONS = new Set(["portalSelect", "create", "update"]);
+
+/**
+ * The record service accepts the portal actor only for portal reads, the identity's own
+ * Contact edit and Case create (ADR 0019a §4.3); every other member throws.
+ */
+function portalGuard<T extends object>(service: T, contactId: string): T {
+  const denied = () =>
+    new ForbiddenError("Portal actor cannot perform this operation", "permission_denied");
+  const deniedObject = new Proxy(
+    {},
+    { get: (_target, prop) => (prop === "then" ? undefined : () => Promise.reject(denied())) },
+  );
+  return new Proxy(service, {
+    get(target, prop, receiver) {
+      const value: unknown = Reflect.get(target, prop, receiver);
+      if (typeof prop === "string" && PORTAL_OPERATIONS.has(prop) && typeof value === "function") {
+        if (prop === "create")
+          return (module: string, ...rest: unknown[]) =>
+            module === "Cases" ? value.call(target, module, ...rest) : Promise.reject(denied());
+        if (prop === "update")
+          return (module: string, id: string, ...rest: unknown[]) =>
+            module === "Contacts" && id === contactId
+              ? value.call(target, module, id, ...rest)
+              : Promise.reject(denied());
+        return value.bind(target);
+      }
+      if (prop === "then") return undefined;
+      if (typeof value === "function") return () => Promise.reject(denied());
+      if (value && typeof value === "object") return deniedObject;
+      return value;
+    },
+  });
 }
 
 /** Internal lifecycle access for the server-side blob adapter; never a wire API. */

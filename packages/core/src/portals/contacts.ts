@@ -1,3 +1,4 @@
+import type { InMemorySchemaCoordinator } from "../customization/coordinator";
 import { NotFoundError } from "../errors";
 import { createFixtureRecordService } from "../records/fixture";
 import { systemOrgContext } from "../tenancy";
@@ -14,13 +15,29 @@ export type PortalContactReader = (
   contactId: string,
 ) => Promise<PortalContact | null>;
 
-export const fixtureContactReader: PortalContactReader = async (orgId, contactId) => {
+/**
+ * The reader must open the organisation's record store with the same schema coordinator as
+ * member services: a store first opened without it refuses a later schema-bound service.
+ */
+export function createFixtureContactReader(
+  schema?: InMemorySchemaCoordinator,
+): PortalContactReader {
+  return (orgId, contactId) => readContact(orgId, contactId, schema);
+}
+
+export const fixtureContactReader: PortalContactReader = createFixtureContactReader();
+
+async function readContact(
+  orgId: string,
+  contactId: string,
+  schema: InMemorySchemaCoordinator | undefined,
+): Promise<PortalContact | null> {
   try {
     // System read (ADR 0017 §4.8) used only to prove the identity's own linked Contact.
-    const record = await createFixtureRecordService(systemOrgContext(orgId), { system: true }).get(
-      "Contacts",
-      contactId,
-    );
+    const record = await createFixtureRecordService(systemOrgContext(orgId), {
+      system: true,
+      ...(schema ? { schema } : {}),
+    }).get("Contacts", contactId);
     const email = typeof record.fields.Email === "string" ? record.fields.Email.trim() : "";
     const full = record.fields.Full_Name;
     const name =
@@ -34,4 +51,4 @@ export const fixtureContactReader: PortalContactReader = async (orgId, contactId
     if (error instanceof NotFoundError) return null;
     throw error;
   }
-};
+}

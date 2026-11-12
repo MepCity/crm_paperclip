@@ -6,5 +6,6 @@ export * from "./auth/rate-limit";
 export * from "./auth/service";
 export * from "./auth/tokens";
 export * from "./contacts";
+export * from "./data";
 export * from "./mail";
 export * from "./matrix";
