@@ -50,7 +50,8 @@
     "./definitions/runtime": "./src/definitions/runtime.ts",
     "./webforms": "./src/webforms/index.ts",
     "./cadences": "./src/cadences/index.ts",
-    "./journeys": "./src/journeys/index.ts"
+    "./journeys": "./src/journeys/index.ts",
+    "./ads": "./src/ads/index.ts"
   },
   "dependencies": {
     "@crm/db": "workspace:*",

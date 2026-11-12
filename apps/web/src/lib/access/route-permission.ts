@@ -42,7 +42,8 @@ export type AdminKey =
   | "emailSettings"
   | "dataManagement"
   | "manageWebforms"
-  | "manageJourneys";
+  | "manageJourneys"
+  | "manageIntegrations";
 export type ToolKey = "manageViews" | "tags" | "recordTimeline";
 
 /** `"$module"` means: the module named by the request (route param or `module` query). */

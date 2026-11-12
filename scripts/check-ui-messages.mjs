@@ -164,6 +164,8 @@ export const ALLOWED_NEW_EXEMPTION_PREFIXES = [
   "apps/web/src/components/records/cadences/",
   "apps/web/src/components/records/journeys/",
   "apps/web/src/modules/journeys/",
+  "apps/web/src/modules/ads/",
+  "apps/web/src/app/crm/[orgSlug]/settings/extensions/",
 ];
 
 export function filterUnauthorizedExemptions(

@@ -134,6 +134,7 @@ export const profilePermissionsSchema = z.object({
     dataManagement: z.boolean(),
     manageWebforms: z.boolean().default(false),
     manageJourneys: z.boolean().default(false),
+    manageIntegrations: z.boolean().default(false),
     viewAllRecords: moduleList,
     modifyAllRecords: moduleList,
   }),
@@ -184,6 +185,7 @@ export function administratorPermissions(opts?: {
           dataManagement: true,
           manageWebforms: true,
           manageJourneys: true,
+          manageIntegrations: true,
           viewAllRecords: all(),
           modifyAllRecords: all(),
         };
@@ -298,6 +300,7 @@ export function standardPermissions(opts?: {
           dataManagement: false,
           manageWebforms: false,
           manageJourneys: false,
+          manageIntegrations: false,
           viewAllRecords: [],
           modifyAllRecords: [],
         };
