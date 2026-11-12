@@ -84,6 +84,15 @@ export const adsTableContracts: readonly TableContract[] = [
   { name: "record_attributions", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
 ];
 
+export const portalTableContracts: readonly TableContract[] = [
+  { name: "portals", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "portal_user_types", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "portal_identities", privileges: ["SELECT", "INSERT", "UPDATE", "DELETE"] },
+  { name: "portal_tokens", privileges: ["SELECT", "INSERT", "UPDATE"] },
+  { name: "portal_sessions", privileges: ["SELECT", "INSERT", "UPDATE"] },
+  { name: "portal_auth_events", privileges: ["SELECT", "INSERT"] },
+];
+
 const identityTables = new Set([
   "users",
   "accounts",
@@ -153,6 +162,7 @@ export async function assertRuntimeCatalog(
     ...cadenceTableContracts,
     ...journeyTableContracts,
     ...adsTableContracts,
+    ...portalTableContracts,
   ];
   tables = [...installed.filter((base) => !tables.some((t) => t.name === base.name)), ...tables];
   const contracts = new Map(tables.map((table) => [table.name, table]));

@@ -13,7 +13,8 @@ export type AdminPermissionKey =
   | "dataManagement"
   | "manageWebforms"
   | "manageJourneys"
-  | "manageIntegrations";
+  | "manageIntegrations"
+  | "managePortals";
 
 export type AccessLoader = (ctx: OrgContext) => Promise<AccessSnapshot>;
 

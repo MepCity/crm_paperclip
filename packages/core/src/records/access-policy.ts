@@ -15,7 +15,8 @@ export type AdminKey =
   | "dataManagement"
   | "manageWebforms"
   | "manageJourneys"
-  | "manageIntegrations";
+  | "manageIntegrations"
+  | "managePortals";
 export type ModuleTool = "convert" | "findAndMerge" | "changeOwner" | "massUpdate" | "massDelete";
 
 /** Loads the viewer's access snapshot lazily (the fixture service is built synchronously). */

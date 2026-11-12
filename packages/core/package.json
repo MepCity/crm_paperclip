@@ -11,6 +11,7 @@
     "./records/fixture/metadata-projection": "./src/records/fixture/metadata-projection.ts",
     "./errors": "./src/errors.ts",
     "./feeds": "./src/feeds/index.ts",
+    "./portals": "./src/portals/index.ts",
     "./format": "./src/format/index.ts",
     "./transfer/types": "./src/transfer/types.ts",
     "./transfer/mapping": "./src/transfer/mapping.ts",

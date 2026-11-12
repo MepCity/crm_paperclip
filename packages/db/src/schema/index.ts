@@ -6,5 +6,6 @@ export * from "./cadences";
 export * from "./chat";
 export * from "./feeds";
 export * from "./journeys";
+export * from "./portals";
 export * from "./tenancy";
 export * from "./webforms";
