@@ -66,6 +66,7 @@ const settingsAdminKey: Readonly<Record<string, keyof ClientPermissions["admin"]
   "assignment-rules": "manageAutomation",
   email: "emailSettings",
   webforms: "manageWebforms",
+  "google-extensions": "manageIntegrations",
 };
 
 /** Hidden, not disabled: a link without permission is not rendered. No payload = everything shown. */
@@ -413,6 +414,15 @@ export const settingsNav: readonly NavLink[] = [
     match: "prefix",
     group: "Process Management",
     feature: "journeys",
+  },
+  {
+    id: "google-extensions",
+    label: english.modules.setup.items["google-extensions"],
+    icon: Icons.settings,
+    href: (slug) => `/crm/${slug}/settings/extensions/google`,
+    activePrefix: (slug) => `/crm/${slug}/settings/extensions/google`,
+    match: "prefix",
+    group: "Marketplace",
   },
 ];
 

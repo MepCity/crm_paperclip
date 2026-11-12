@@ -244,6 +244,7 @@ describe("settingsNav", () => {
       "approval-processes",
       "review-processes",
       "commandcenter",
+      "google-extensions",
     ]);
     const [general, members] = settingsNav;
     const calendarBooking = settingsNav.find((link) => link.id === "calendar-booking");
@@ -333,6 +334,15 @@ describe("settingsNav", () => {
     expect(isNavLinkActive(webforms, "demo", "/crm/demo/settings/webforms")).toBe(true);
     expect(isNavLinkActive(webforms, "demo", "/crm/demo/settings/webforms/new")).toBe(true);
     expect(isNavLinkActive(webforms, "demo", "/crm/demo/settings/users")).toBe(false);
+  });
+
+  it("exposes Google under Marketplace and matches its settings page", () => {
+    const google = settingsNav.find((link) => link.id === "google-extensions");
+    expect(google?.group).toBe("Marketplace");
+    expect(google?.href("demo")).toBe("/crm/demo/settings/extensions/google");
+    if (!google) return;
+    expect(isNavLinkActive(google, "demo", "/crm/demo/settings/extensions/google")).toBe(true);
+    expect(isNavLinkActive(google, "demo", "/crm/demo/settings/users")).toBe(false);
   });
 
   it("groups transfer history links and matches only their own settings page", () => {

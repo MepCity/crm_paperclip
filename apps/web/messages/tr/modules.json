@@ -1561,5 +1561,96 @@
       "columnStatus": "Durum",
       "noRecords": "Yolculuk bulunamadı"
     }
+  },
+  "googleExtensions": {
+    "title": "Google",
+    "description": "Google uzantılarını ve yerel reklam modellerini yapılandırın.",
+    "help": "Yardım",
+    "tabs": {
+      "contacts": "Kişiler",
+      "calendar": "Takvim",
+      "ads": "Google Ads",
+      "chat": "Google Chat"
+    },
+    "disabledTab": {
+      "bannerTitle": "Bu sistemde harici bağlantı devre dışı",
+      "bannerDescription": "Bu ortamda üçüncü taraf senkronizasyonu kullanılamaz. Kampanyaları ve ilişkilendirmeyi Google Ads sekmesinden yerel olarak yönetin.",
+      "authButton": "Doğrula"
+    },
+    "ads": {
+      "bannerTitle": "Bu sistemde harici bağlantı devre dışı",
+      "bannerDescription": "Bu ortamda harici reklam hesapları bağlanamaz. Kampanyalar, reklam grupları, anahtar kelimeler ve metin reklamları yerel olarak yönetilir ve web formu gönderimleriyle eşleştirilir.",
+      "attributionCardTitle": "İlişkilendirme nasıl çalışır",
+      "attributionCardDescription": "Web formu gönderimleri, gelen ziyaretçilerden izleme parametrelerini otomatik olarak yakalar: utm_campaign, utm_term, utm_source, utm_medium, utm_content ve gclid. Bir ziyaretçi web formunu gönderdiğinde, sistem utm_campaign değerini yerel kampanyalarla ve utm_term değerini anahtar kelimelerle eşleştirerek ilişkilendirmeyi aday veya ilgili kişi kaydının yanına kaydeder.",
+      "newCampaign": "Yeni Kampanya",
+      "newAdGroup": "Yeni Reklam Grubu",
+      "newKeyword": "Yeni Anahtar Kelime",
+      "newAdItem": "Yeni Metin Reklamı",
+      "emptyTitle": "Yapılandırılmış yerel reklam kampanyası yok",
+      "emptyDescription": "Web formu gönderimlerinden ilişkilendirmeyi izlemek için bir kampanya oluşturun.",
+      "campaigns": "Kampanyalar",
+      "adGroups": "Reklam Grupları",
+      "keywords": "Anahtar Kelimeler",
+      "adItems": "Metin Reklamları",
+      "noAdGroups": "Bu kampanyada reklam grubu yok.",
+      "noKeywords": "Bu reklam grubunda anahtar kelime yok.",
+      "noAdItems": "Bu reklam grubunda metin reklamı yok.",
+      "status": "Durum",
+      "budget": "Bütçe",
+      "createdAt": "Oluşturulma",
+      "actions": "İşlemler",
+      "edit": "Düzenle",
+      "delete": "Sil",
+      "addAdGroup": "Reklam Grubu Ekle",
+      "addKeyword": "Anahtar Kelime Ekle",
+      "addAdItem": "Metin Reklamı Ekle",
+      "matchType": "Eşleme Türü",
+      "keyword": "Anahtar Kelime",
+      "headline": "Başlık",
+      "description": "Açıklama",
+      "url": "URL",
+      "dialogs": {
+        "campaignCreateTitle": "Yeni Kampanya",
+        "campaignEditTitle": "Kampanyayı Düzenle",
+        "campaignName": "Kampanya Adı",
+        "budgetAmount": "Bütçe Tutarı",
+        "budgetCurrency": "Bütçe Para Birimi",
+        "groupCreateTitle": "Yeni Reklam Grubu",
+        "groupEditTitle": "Reklam Grubunu Düzenle",
+        "groupName": "Reklam Grubu Adı",
+        "keywordCreateTitle": "Yeni Anahtar Kelime",
+        "keywordEditTitle": "Anahtar Kelimeyi Düzenle",
+        "keywordText": "Anahtar Kelime Metni",
+        "adCreateTitle": "Yeni Metin Reklamı",
+        "adEditTitle": "Metin Reklamını Düzenle",
+        "headline1": "Başlık 1",
+        "headline2": "Başlık 2",
+        "adDescription": "Reklam Açıklaması",
+        "finalUrl": "Nihai URL",
+        "cancel": "İptal",
+        "save": "Kaydet",
+        "saving": "Kaydediliyor...",
+        "deleteCampaignTitle": "Kampanyayı Sil",
+        "deleteCampaignMessage": "Bu kampanyayı silmek istediğinizden emin misiniz? Tüm alt reklam grupları, anahtar kelimeler ve reklamlar da silinecektir.",
+        "deleteGroupTitle": "Reklam Grubunu Sil",
+        "deleteGroupMessage": "Bu reklam grubunu silmek istediğinizden emin misiniz? Tüm alt anahtar kelimeler ve reklamlar da silinecektir.",
+        "deleteKeywordTitle": "Anahtar Kelimeyi Sil",
+        "deleteKeywordMessage": "Bu anahtar kelimeyi silmek istediğinizden emin misiniz?",
+        "deleteAdTitle": "Metin Reklamını Sil",
+        "deleteAdMessage": "Bu metin reklamını silmek istediğinizden emin misiniz?",
+        "confirmDelete": "Sil"
+      },
+      "statuses": {
+        "active": "Etkin",
+        "enabled": "Etkin",
+        "paused": "Duraklatıldı",
+        "removed": "Kaldırıldı"
+      },
+      "matchTypes": {
+        "exact": "Tam Eşleme",
+        "phrase": "Sıralı Eşleme",
+        "broad": "Geniş Eşleme"
+      }
+    }
   }
 }

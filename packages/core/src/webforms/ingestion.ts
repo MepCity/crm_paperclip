@@ -1,6 +1,7 @@
 import { createHash } from "node:crypto";
 import { schema as dbSchema } from "@crm/db";
 import { and, asc, eq, isNull, lt, sql } from "drizzle-orm";
+import { writeRecordAttribution } from "../ads/service";
 import { matchesCondition } from "../approvals/criteria";
 import type { ProcessCondition } from "../approvals/types";
 import { getDb } from "../database";
@@ -532,16 +533,27 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
       "_hp",
     ]);
 
+    const fieldErrors: Record<string, string[]> = {};
+
+    const ATTRIBUTION_KEYS = [
+      "gclid",
+      "utm_source",
+      "utm_medium",
+      "utm_campaign",
+      "utm_term",
+      "utm_content",
+    ] as const;
+
+    for (const k of ATTRIBUTION_KEYS) {
+      allowedKeys.add(k);
+    }
+
     if (activeVersion.settings.captureAttribution) {
-      for (const k of [
-        "gclid",
-        "utm_source",
-        "utm_medium",
-        "utm_campaign",
-        "utm_term",
-        "utm_content",
-      ]) {
-        allowedKeys.add(k);
+      for (const k of ATTRIBUTION_KEYS) {
+        const val = input.data[k];
+        if (typeof val === "string" && val.length > 255) {
+          fieldErrors[k] = [`${k} değeri çok uzun.`];
+        }
       }
     }
 
@@ -566,7 +578,6 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
     }
 
     // Prepare submitted values
-    const fieldErrors: Record<string, string[]> = {};
     const sanitizedRecordInput: Record<string, unknown> = {};
     const bundle = fixtureModules[form.module];
     const fieldDefs = bundle?.metadata.fields ?? [];
@@ -922,6 +933,38 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
 
     if (!submissionRow) {
       throw new Error("Failed to insert submission record");
+    }
+
+    // Write record_attributions if captureAttribution is enabled and attribution params are present
+    if (activeVersion.settings.captureAttribution) {
+      const gclid = typeof input.data.gclid === "string" ? input.data.gclid.trim() : null;
+      const utmSource =
+        typeof input.data.utm_source === "string" ? input.data.utm_source.trim() : null;
+      const utmMedium =
+        typeof input.data.utm_medium === "string" ? input.data.utm_medium.trim() : null;
+      const utmCampaign =
+        typeof input.data.utm_campaign === "string" ? input.data.utm_campaign.trim() : null;
+      const utmTerm = typeof input.data.utm_term === "string" ? input.data.utm_term.trim() : null;
+      const utmContent =
+        typeof input.data.utm_content === "string" ? input.data.utm_content.trim() : null;
+
+      const hasAttribution = Boolean(
+        gclid || utmSource || utmMedium || utmCampaign || utmTerm || utmContent,
+      );
+
+      if (hasAttribution) {
+        await writeRecordAttribution(tx, orgId, {
+          recordModule: form.module,
+          recordId: createdRecord.id,
+          gclid: gclid || null,
+          utmSource: utmSource || null,
+          utmMedium: utmMedium || null,
+          utmCampaign: utmCampaign || null,
+          utmTerm: utmTerm || null,
+          utmContent: utmContent || null,
+          source: "webform",
+        });
+      }
     }
 
     // 9. After create (§3.8)
