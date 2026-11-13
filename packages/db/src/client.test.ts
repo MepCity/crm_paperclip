@@ -42,7 +42,7 @@ describe("database pool settings", () => {
       ...defaultPoolSettings,
       max: 3,
     });
-    const options = db.$client.options as Record<string, unknown>;
+    const options = db.$client.options as unknown as Record<string, unknown>;
     expect(options).toMatchObject({
       max: 3,
       connectionTimeoutMillis: 5_000,
