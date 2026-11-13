@@ -1,12 +1,16 @@
 import { randomBytes } from "node:crypto";
+import { type Transaction, withOrg } from "@crm/core";
 import { addAccessTestMember, createTestOrganization } from "@crm/core/testing";
+import { eq, schema } from "@crm/db";
 import { describe, expect, it } from "vitest";
 import * as authEvents from "@/app/crm/v2.1/settings/portals/auth-events/route";
 import * as portal from "@/app/crm/v2.1/settings/portals/route";
 import * as userTypeDetail from "@/app/crm/v2.1/settings/portals/user-types/[id]/route";
 import * as userTypes from "@/app/crm/v2.1/settings/portals/user-types/route";
 import * as actions from "@/app/crm/v2.1/settings/portals/users/[id]/actions/[action]/route";
+import * as stagingLink from "@/app/crm/v2.1/settings/portals/users/[id]/staging-link/route";
 import * as users from "@/app/crm/v2.1/settings/portals/users/route";
+import { getPortalMailer } from "@/server/portals";
 
 type Handler = (
   request: Request,
@@ -48,6 +52,7 @@ describe("portal settings routes (admin.managePortals)", () => {
       [users.GET, "GET"],
       [users.POST, "POST"],
       [actions.POST as unknown as Handler, "POST", { id, action: "disable" }],
+      [stagingLink.GET as unknown as Handler, "GET", { id }],
       [authEvents.GET, "GET"],
     ];
     for (const [handler, method, params] of denied) {
@@ -84,6 +89,92 @@ describe("portal settings routes (admin.managePortals)", () => {
     expect(bad.status).toBe(400);
     const listed = await call(users.GET, req("GET", admin.headers, org));
     expect((await listed.json()).users).toEqual([]);
+
+    // staging-link tests (CTO requirement: prod -> 404, other org's identity -> 404)
+    const prevEnv = process.env.NODE_ENV;
+    try {
+      (process.env as Record<string, string | undefined>).NODE_ENV = "production";
+      const prodRes = await call(
+        stagingLink.GET as unknown as Handler,
+        req("GET", admin.headers, org),
+        { id },
+      );
+      expect(prodRes.status).toBe(404);
+    } finally {
+      (process.env as Record<string, string | undefined>).NODE_ENV = prevEnv;
+    }
+
+    const { ctx: otherCtx, admin: otherAdmin } = await createTestOrganization();
+
+    // Querying an identity that doesn't exist in calling org -> 404
+    const notFoundRes = await call(
+      stagingLink.GET as unknown as Handler,
+      req("GET", admin.headers, org),
+      { id },
+    );
+    expect(notFoundRes.status).toBe(404);
+
+    // Create an identity in Org A
+    let testIdentityId = "";
+    await withOrg(ctx, async (tx: Transaction) => {
+      const [p] = await tx
+        .select()
+        .from(schema.portals)
+        .where(eq(schema.portals.organizationId, ctx.orgId));
+      const [u] = await tx
+        .select()
+        .from(schema.portalUserTypes)
+        .where(eq(schema.portalUserTypes.organizationId, ctx.orgId));
+      if (!p || !u) throw new Error("Portal or user type not found");
+      const [row] = await tx
+        .insert(schema.portalIdentities)
+        .values({
+          organizationId: ctx.orgId,
+          portalId: p.id,
+          userTypeId: u.id,
+          email: "alice.test@example.com",
+          displayName: "Alice Test",
+          recordModule: "Contacts",
+          recordId: "rec-1",
+          status: "invited",
+          createdBy: ctx.userId,
+        })
+        .returning({ id: schema.portalIdentities.id });
+      testIdentityId = row?.id ?? "";
+    });
+
+    // Populate staging mailer for Org A
+    const mailer = getPortalMailer();
+    mailer.outbox.set(`${ctx.orgId}:mail-1`, {
+      idempotencyKey: "token-1",
+      kind: "invite",
+      from: { address: "support@example.com" },
+      to: "alice.test@example.com",
+      subject: "Welcome",
+      text: "Accept here: https://crm.example.test/portal/help/accept#t=abc1234567890123456789012345678901234567890123",
+      html: "<p>Accept</p>",
+      orgId: ctx.orgId,
+    });
+
+    // Other org admin requesting Org A's identity -> 404
+    const crossOrgRes = await call(
+      stagingLink.GET as unknown as Handler,
+      req("GET", otherAdmin.headers, otherCtx.orgSlug),
+      { id: testIdentityId },
+    );
+    expect(crossOrgRes.status).toBe(404);
+
+    // Calling org's admin requesting its own identity -> 200 with link and token
+    const successRes = await call(
+      stagingLink.GET as unknown as Handler,
+      req("GET", admin.headers, org),
+      { id: testIdentityId },
+    );
+    expect(successRes.status).toBe(200);
+    const successJson = await successRes.json();
+    expect(successJson.token).toBe("abc1234567890123456789012345678901234567890123");
+    expect(successJson.link).toContain("#t=abc1234567890123456789012345678901234567890123");
+
     const disabled = await call(
       portal.PATCH,
       req("PATCH", admin.headers, org, { status: "disabled" }),

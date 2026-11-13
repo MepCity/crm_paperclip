@@ -1,3 +1,3 @@
-export { eq, sql } from "drizzle-orm";
+export { and, eq, sql } from "drizzle-orm";
 export { closeDb, createDb, type Database } from "./client";
 export * as schema from "./schema/index";

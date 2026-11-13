@@ -204,6 +204,504 @@
     "hash": "9176bf40a5dcb237"
   },
   {
+    "file": "apps/web/src/app/portal/[slug]/[module]/[id]/page.tsx",
+    "line": 86,
+    "column": 81,
+    "hash": "fa8274f042d2f559"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/[id]/page.tsx",
+    "line": 96,
+    "column": 15,
+    "hash": "95fe66b9cf25179d"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/[id]/page.tsx",
+    "line": 141,
+    "column": 14,
+    "hash": "859dfd92e88bc536"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/[id]/page.tsx",
+    "line": 159,
+    "column": 26,
+    "hash": "3b6ee484592eb8df"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/[id]/page.tsx",
+    "line": 171,
+    "column": 16,
+    "hash": "fec2ac0f4cf167e3"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/[id]/page.tsx",
+    "line": 181,
+    "column": 18,
+    "hash": "19766ed6ccb2f4a3"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/page.tsx",
+    "line": 88,
+    "column": 81,
+    "hash": "47d2a515ef2f05b8"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/page.tsx",
+    "line": 96,
+    "column": 15,
+    "hash": "1004e2c632bd047b"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/page.tsx",
+    "line": 129,
+    "column": 70,
+    "hash": "654418c680955e76"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/page.tsx",
+    "line": 140,
+    "column": 14,
+    "hash": "bb69311ace1b7aba"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/page.tsx",
+    "line": 154,
+    "column": 25,
+    "hash": "c06babed9b5ff53f"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/page.tsx",
+    "line": 162,
+    "column": 12,
+    "hash": "49c266baaaa70981"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/page.tsx",
+    "line": 167,
+    "column": 65,
+    "hash": "0a30a815d67d7dd2"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/page.tsx",
+    "line": 197,
+    "column": 68,
+    "hash": "64cff1319d2fd2cb"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/page.tsx",
+    "line": 206,
+    "column": 20,
+    "hash": "76e844caa0acd3ec"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/page.tsx",
+    "line": 216,
+    "column": 20,
+    "hash": "decc9a3569158be4"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/page.tsx",
+    "line": 258,
+    "column": 26,
+    "hash": "dcc839a4015c4b7d"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/page.tsx",
+    "line": 272,
+    "column": 67,
+    "hash": "0a30a815d67d7dd2"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/page.tsx",
+    "line": 280,
+    "column": 14,
+    "hash": "a57b08a480b822a0"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/[module]/page.tsx",
+    "line": 289,
+    "column": 14,
+    "hash": "1ff57a29d7c9d11b"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/accept/page.tsx",
+    "line": 39,
+    "column": 16,
+    "hash": "fd6af78ce288a640"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/accept/page.tsx",
+    "line": 44,
+    "column": 16,
+    "hash": "6c6e178ad2a856ca"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/accept/page.tsx",
+    "line": 49,
+    "column": 16,
+    "hash": "37ea33fa6fa2b2cd"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/accept/page.tsx",
+    "line": 73,
+    "column": 75,
+    "hash": "aa8e2401f8d1e698"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/accept/page.tsx",
+    "line": 74,
+    "column": 101,
+    "hash": "65cc5033063b3f7b"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/accept/page.tsx",
+    "line": 85,
+    "column": 74,
+    "hash": "ce7cfeaf6cc986f2"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/accept/page.tsx",
+    "line": 86,
+    "column": 68,
+    "hash": "8c81a031660aeacc"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/accept/page.tsx",
+    "line": 104,
+    "column": 14,
+    "hash": "7c451e0f436d04a6"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/accept/page.tsx",
+    "line": 116,
+    "column": 27,
+    "hash": "0ced89a646c13a33"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/accept/page.tsx",
+    "line": 118,
+    "column": 76,
+    "hash": "c8421fb3d5ab770d"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/accept/page.tsx",
+    "line": 127,
+    "column": 14,
+    "hash": "c292210c44167923"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 29,
+    "column": 81,
+    "hash": "47d2a515ef2f05b8"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 37,
+    "column": 15,
+    "hash": "d134ca025a6c63b2"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 38,
+    "column": 17,
+    "hash": "3b7c5c768d4749b6"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 46,
+    "column": 16,
+    "hash": "4de9a84462e1d3cf"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 72,
+    "column": 12,
+    "hash": "7295a5562c3c698d"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 76,
+    "column": 74,
+    "hash": "06a8b66a4d901b3f"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 77,
+    "column": 68,
+    "hash": "f8ca1add7979012a"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 97,
+    "column": 14,
+    "hash": "68971283841aecdf"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 108,
+    "column": 27,
+    "hash": "d979f97deece56b8"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 116,
+    "column": 14,
+    "hash": "d60dbba079223254"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 126,
+    "column": 35,
+    "hash": "f793de205ead5ac3"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 127,
+    "column": 38,
+    "hash": "8e588cd187741f1c"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 128,
+    "column": 36,
+    "hash": "c4ebc6d4a5832cd9"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 129,
+    "column": 38,
+    "hash": "1b015904cc17649e"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 137,
+    "column": 14,
+    "hash": "526e0087cc3f254d"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 147,
+    "column": 27,
+    "hash": "6d6434ffe2d03f70"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/Cases/new/page.tsx",
+    "line": 155,
+    "column": 14,
+    "hash": "19766ed6ccb2f4a3"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/layout.tsx",
+    "line": 6,
+    "column": 10,
+    "hash": "b3aae1ec0e18631d"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/layout.tsx",
+    "line": 7,
+    "column": 16,
+    "hash": "0d85348fdad6d55a"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/login/page.tsx",
+    "line": 39,
+    "column": 74,
+    "hash": "bcc0bcc9140b0c97"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/login/page.tsx",
+    "line": 40,
+    "column": 68,
+    "hash": "07da9b392686a2b1"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/login/page.tsx",
+    "line": 58,
+    "column": 14,
+    "hash": "09bf25ef30833633"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/login/page.tsx",
+    "line": 69,
+    "column": 27,
+    "hash": "53e6cdc30765aade"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/login/page.tsx",
+    "line": 78,
+    "column": 16,
+    "hash": "e7cf3ef4f17c3999"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/login/page.tsx",
+    "line": 85,
+    "column": 16,
+    "hash": "30c1d8d3e9128893"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/page.tsx",
+    "line": 39,
+    "column": 81,
+    "hash": "187be9a5769beb7f"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/page.tsx",
+    "line": 60,
+    "column": 73,
+    "hash": "7360593cbf620adf"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/page.tsx",
+    "line": 63,
+    "column": 72,
+    "hash": "f16232bf03925959"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/page.tsx",
+    "line": 64,
+    "column": 79,
+    "hash": "1d38d279b1535ce6"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/page.tsx",
+    "line": 73,
+    "column": 14,
+    "hash": "c5a9dd6b62fe978b"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/page.tsx",
+    "line": 82,
+    "column": 79,
+    "hash": "31ca6cfee60fa0d3"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/page.tsx",
+    "line": 84,
+    "column": 144,
+    "hash": "762c1e9510e064e0"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/page.tsx",
+    "line": 110,
+    "column": 20,
+    "hash": "399f303bede080af"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/page.tsx",
+    "line": 117,
+    "column": 22,
+    "hash": "af6aa8e6e24597ab"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/page.tsx",
+    "line": 132,
+    "column": 108,
+    "hash": "bbbdb85f0af521cf"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/page.tsx",
+    "line": 144,
+    "column": 14,
+    "hash": "2e6bc841c88ec1e8"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 61,
+    "column": 16,
+    "hash": "fd6af78ce288a640"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 66,
+    "column": 16,
+    "hash": "6c6e178ad2a856ca"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 71,
+    "column": 16,
+    "hash": "37ea33fa6fa2b2cd"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 95,
+    "column": 78,
+    "hash": "0568c7b06559cc28"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 98,
+    "column": 72,
+    "hash": "bf3ff5c633a66239"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 120,
+    "column": 18,
+    "hash": "7c451e0f436d04a6"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 132,
+    "column": 31,
+    "hash": "0ced89a646c13a33"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 140,
+    "column": 18,
+    "hash": "c292210c44167923"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 167,
+    "column": 77,
+    "hash": "0e5fc27d14b6ef30"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 168,
+    "column": 72,
+    "hash": "8ccc32160e82d540"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 174,
+    "column": 14,
+    "hash": "2f8998d5f55fad78"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 181,
+    "column": 78,
+    "hash": "fdfd41de7ae5e1d9"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 182,
+    "column": 72,
+    "hash": "6b790a2834ecfd60"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 204,
+    "column": 18,
+    "hash": "09bf25ef30833633"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 215,
+    "column": 31,
+    "hash": "53e6cdc30765aade"
+  },
+  {
+    "file": "apps/web/src/app/portal/[slug]/reset/page.tsx",
+    "line": 232,
+    "column": 18,
+    "hash": "ee9eb75e2562e630"
+  },
+  {
     "file": "apps/web/src/components/auth/sign-in-form.tsx",
     "line": 34,
     "column": 18,
@@ -3199,121 +3697,121 @@
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 153,
+    "line": 154,
     "column": 14,
     "hash": "f1b7505afa5c9e2b"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 183,
+    "line": 184,
     "column": 10,
     "hash": "b4e929d8bcfe0418"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 210,
+    "line": 211,
     "column": 14,
     "hash": "3a78695388b38b5c"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 218,
+    "line": 219,
     "column": 14,
     "hash": "24984fe2592707f8"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 227,
+    "line": 228,
     "column": 14,
     "hash": "dacca3cba3f346a4"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 236,
+    "line": 237,
     "column": 14,
     "hash": "94c116ee118a7299"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 246,
+    "line": 247,
     "column": 14,
     "hash": "0d24b42db450ca85"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 252,
+    "line": 253,
     "column": 18,
     "hash": "090512d93fcc3c0d"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 257,
+    "line": 258,
     "column": 22,
     "hash": "f514c310bd9e7f02"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 274,
+    "line": 275,
     "column": 12,
     "hash": "c910d474dcd724bf"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 291,
+    "line": 292,
     "column": 12,
     "hash": "2c57faa0b6257edd"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 299,
+    "line": 300,
     "column": 12,
     "hash": "a749cc4a01647267"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 307,
+    "line": 308,
     "column": 12,
     "hash": "d079ee92c1cb3559"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 315,
+    "line": 316,
     "column": 12,
     "hash": "fadf4711a2619a30"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 323,
+    "line": 324,
     "column": 12,
     "hash": "969ccbd3cf6300ec"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 341,
+    "line": 351,
     "column": 12,
     "hash": "ef9992233a1892eb"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 349,
+    "line": 359,
     "column": 12,
     "hash": "6ee71699e8b69061"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 357,
+    "line": 367,
     "column": 12,
     "hash": "31d61c75fac97fd9"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 365,
+    "line": 375,
     "column": 12,
     "hash": "39c7fb1dc54fd272"
   },
   {
     "file": "apps/web/src/components/shell/nav.ts",
-    "line": 374,
+    "line": 384,
     "column": 12,
     "hash": "b186714a4117b87a"
   },
@@ -8238,6 +8736,48 @@
     "hash": "1b9f384c1436f607"
   },
   {
+    "file": "apps/web/src/modules/external-portal/portal-not-found.tsx",
+    "line": 26,
+    "column": 10,
+    "hash": "ffcefd25a6de9856"
+  },
+  {
+    "file": "apps/web/src/modules/external-portal/portal-shell.tsx",
+    "line": 39,
+    "column": 137,
+    "hash": "5c62e091b8c0565f"
+  },
+  {
+    "file": "apps/web/src/modules/external-portal/portal-shell.tsx",
+    "line": 55,
+    "column": 18,
+    "hash": "3a78695388b38b5c"
+  },
+  {
+    "file": "apps/web/src/modules/external-portal/portal-shell.tsx",
+    "line": 82,
+    "column": 72,
+    "hash": "47d2a515ef2f05b8"
+  },
+  {
+    "file": "apps/web/src/modules/external-portal/portal-shell.tsx",
+    "line": 101,
+    "column": 18,
+    "hash": "0b184bc5d5341998"
+  },
+  {
+    "file": "apps/web/src/modules/external-portal/portal-shell.tsx",
+    "line": 110,
+    "column": 16,
+    "hash": "bcc0bcc9140b0c97"
+  },
+  {
+    "file": "apps/web/src/modules/external-portal/portal-shell.tsx",
+    "line": 124,
+    "column": 17,
+    "hash": "159441d4c3dff4a5"
+  },
+  {
     "file": "apps/web/src/modules/home/activities.ts",
     "line": 10,
     "column": 25,
@@ -11554,6 +12094,84 @@
     "line": 45,
     "column": 28,
     "hash": "0f8b5cb2e84b210d"
+  },
+  {
+    "file": "apps/web/src/modules/settings-portals/invite-user-modal.tsx",
+    "line": 41,
+    "column": 16,
+    "hash": "4886de215b51946c"
+  },
+  {
+    "file": "apps/web/src/modules/settings-portals/invite-user-modal.tsx",
+    "line": 45,
+    "column": 16,
+    "hash": "5baf85b4bcd5f78a"
+  },
+  {
+    "file": "apps/web/src/modules/settings-portals/portal-config-modal.tsx",
+    "line": 41,
+    "column": 16,
+    "hash": "7e008db940e3c7e3"
+  },
+  {
+    "file": "apps/web/src/modules/settings-portals/portal-config-modal.tsx",
+    "line": 45,
+    "column": 16,
+    "hash": "b7449a6338b2b228"
+  },
+  {
+    "file": "apps/web/src/modules/settings-portals/portal-config-modal.tsx",
+    "line": 93,
+    "column": 25,
+    "hash": "481486353feb4b7f"
+  },
+  {
+    "file": "apps/web/src/modules/settings-portals/portal-config-modal.tsx",
+    "line": 107,
+    "column": 80,
+    "hash": "4f96dc19816b4a3e"
+  },
+  {
+    "file": "apps/web/src/modules/settings-portals/portal-config-modal.tsx",
+    "line": 115,
+    "column": 29,
+    "hash": "483c3fffa4407e76"
+  },
+  {
+    "file": "apps/web/src/modules/settings-portals/portal-config-modal.tsx",
+    "line": 119,
+    "column": 63,
+    "hash": "bc61fb4b01bb435f"
+  },
+  {
+    "file": "apps/web/src/modules/settings-portals/portal-setup-screen.tsx",
+    "line": 259,
+    "column": 76,
+    "hash": "48845bff334a50a5"
+  },
+  {
+    "file": "apps/web/src/modules/settings-portals/portal-setup-screen.tsx",
+    "line": 279,
+    "column": 96,
+    "hash": "4f96dc19816b4a3e"
+  },
+  {
+    "file": "apps/web/src/modules/settings-portals/portal-setup-screen.tsx",
+    "line": 459,
+    "column": 37,
+    "hash": "f43a65ad826800a3"
+  },
+  {
+    "file": "apps/web/src/modules/settings-portals/user-type-modal.tsx",
+    "line": 190,
+    "column": 16,
+    "hash": "ed63963816f031c1"
+  },
+  {
+    "file": "apps/web/src/modules/settings-portals/user-type-modal.tsx",
+    "line": 262,
+    "column": 27,
+    "hash": "3372dabd895730a1"
   },
   {
     "file": "apps/web/src/modules/setup/setup-data.ts",

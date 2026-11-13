@@ -16,8 +16,9 @@ export const GET = apiRoute(
 
 /** Invite a Contact: `{ contactId, userTypeId }`. */
 export const POST = apiRoute(
-  async ({ ctx, request }) => ({
-    user: await getPortalAdmin().invite(ctx, await request.json().catch(() => null)),
-  }),
+  async ({ ctx, request }) => {
+    const user = await getPortalAdmin().invite(ctx, await request.json().catch(() => null));
+    return { user };
+  },
   { permission: { admin: "managePortals" } },
 );

@@ -166,6 +166,10 @@ export const ALLOWED_NEW_EXEMPTION_PREFIXES = [
   "apps/web/src/modules/journeys/",
   "apps/web/src/modules/ads/",
   "apps/web/src/app/crm/[orgSlug]/settings/extensions/",
+  "apps/web/src/modules/settings-portals/",
+  "apps/web/src/modules/external-portal/",
+  "apps/web/src/app/portal/",
+  "apps/web/src/app/crm/[orgSlug]/settings/portals/",
 ];
 
 export function filterUnauthorizedExemptions(

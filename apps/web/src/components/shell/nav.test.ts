@@ -235,6 +235,7 @@ describe("settingsNav", () => {
       "calendar-booking",
       "email",
       "webforms",
+      "portals",
       "import-history",
       "export-history",
       "modules-and-fields",
@@ -334,6 +335,16 @@ describe("settingsNav", () => {
     expect(isNavLinkActive(webforms, "demo", "/crm/demo/settings/webforms")).toBe(true);
     expect(isNavLinkActive(webforms, "demo", "/crm/demo/settings/webforms/new")).toBe(true);
     expect(isNavLinkActive(webforms, "demo", "/crm/demo/settings/users")).toBe(false);
+  });
+
+  it("exposes Portals under Channels and matches its settings page", () => {
+    const portals = settingsNav.find((link) => link.id === "portals");
+    expect(portals?.group).toBe("Channels");
+    expect(portals?.href("demo")).toBe("/crm/demo/settings/portals");
+    if (!portals) return;
+    expect(isNavLinkActive(portals, "demo", "/crm/demo/settings/portals")).toBe(true);
+    expect(isNavLinkActive(portals, "demo", "/crm/demo/settings/portals/users")).toBe(true);
+    expect(isNavLinkActive(portals, "demo", "/crm/demo/settings/users")).toBe(false);
   });
 
   it("exposes Google under Marketplace and matches its settings page", () => {

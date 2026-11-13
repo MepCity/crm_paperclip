@@ -1,6 +1,8 @@
 import { apiRoute } from "@/lib/api/server";
 import { definitionPorts } from "@/lib/definitions/ports";
 
+export const dynamic = "force-dynamic";
+
 export const GET = apiRoute(
   async ({ ctx }) => {
     try {
