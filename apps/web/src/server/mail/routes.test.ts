@@ -7,6 +7,10 @@ const ctx = {
   userId: "user-example",
   role: "admin" as const,
 };
+vi.mock("@crm/core/access", async (original) => ({
+  ...(await original<typeof import("@crm/core/access")>()),
+  getAccessSnapshot: vi.fn(async () => ({ profileKind: "administrator" })),
+}));
 vi.mock("@crm/core", async (original) => ({
   ...(await original<typeof import("@crm/core")>()),
   getSession: vi.fn(async () => ({ user: { id: ctx.userId } })),
