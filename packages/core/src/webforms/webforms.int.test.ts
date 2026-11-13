@@ -582,6 +582,21 @@ describe("webforms backend integration", () => {
     ).toBe("We will contact you shortly.");
     expect(dupResult.recordId).toBeUndefined();
 
+    // 9b. A solved challenge token is single-use: replaying it is spam
+    const replay = await submitWebform({
+      publicKey,
+      data: {
+        _token: chToken2,
+        _challenge: ch2.code,
+        _hp: "",
+        Last_Name: "Replay",
+        Company: "Replay Co",
+      },
+      origin: "https://trusted-site.com",
+      ip: "10.0.0.11",
+    });
+    expect(replay.outcome).toBe("spam");
+
     // 10. Rate limiting: exceeding 5 submissions per minute from same client
     const ipForRateLimit = "10.0.0.99";
     for (let i = 0; i < 5; i++) {

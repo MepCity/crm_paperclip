@@ -15,7 +15,7 @@ import { isValidDateOnly } from "../records/fixture/validation";
 import { OPEN_PICKLIST_FIELDS } from "../records/picklist-policy";
 import { systemOrgContext, withOrg } from "../tenancy";
 import type { OrgContext, Transaction } from "../tenancy/types";
-import { checkRateLimit, type RateLimitCheckResult } from "./rate-limit";
+import { checkRateLimit, consumeRenderToken, type RateLimitCheckResult } from "./rate-limit";
 import { computeClientHash, verifyChallenge, verifyRenderToken } from "./tokens";
 import type {
   Webform,
@@ -702,6 +702,26 @@ export async function submitWebform(input: SubmissionInput): Promise<SubmissionR
         payload: null,
       });
       return { outcome: "invalid", errors: fieldErrors };
+    }
+
+    // A solved challenge token is single-use. It is consumed only once the input is valid, so a
+    // visitor who fixes a validation error can resubmit with the same token; a replay is spam.
+    if (
+      activeVersion.settings.challenge &&
+      tokenRes.payload.challengeHash &&
+      !(await consumeRenderToken(tx, orgId, rawToken, tokenRes.payload.issuedAt))
+    ) {
+      await incrementStats("spam", submissionLocation);
+      await tx.insert(dbSchema.webformSubmissions).values({
+        organizationId: orgId,
+        formId: form.id,
+        versionId: activeVersion.id,
+        location: submissionLocation,
+        outcome: "spam",
+        clientHash,
+        payload: null,
+      });
+      return { outcome: "spam", acknowledgement: activeVersion.settings.acknowledgement };
     }
 
     // 6. Duplicate check (§3.7)

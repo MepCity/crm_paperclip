@@ -1,3 +1,4 @@
+import { readBoundedBody } from "@crm/core";
 import { getClientIp, isSameOrigin, resolvePublicForm, submitWebform } from "@crm/core/webforms";
 import { exemptRoute } from "@/lib/access/route-permission";
 
@@ -223,32 +224,33 @@ export const POST = exemptRoute(
       return new Response("Payload Too Large", { status: 413 });
     }
 
-    // 2. Parse body
+    // 2. Parse body (byte cap enforced while streaming, before any parsing)
     const contentType = request.headers.get("content-type") || "";
     let data: Record<string, unknown> = {};
+    const rawText = await readBoundedBody(request, MAX_PAYLOAD_BYTES);
+    if (rawText === null) {
+      return new Response("Payload Too Large", { status: 413 });
+    }
 
     if (contentType.includes("application/json")) {
-      const rawText = await request.text();
-      if (rawText.length > MAX_PAYLOAD_BYTES) {
-        return new Response("Payload Too Large", { status: 413 });
-      }
       try {
         data = JSON.parse(rawText) as Record<string, unknown>;
       } catch {
         return Response.json({ error: "Invalid JSON payload" }, { status: 400 });
       }
     } else if (contentType.includes("application/x-www-form-urlencoded")) {
-      const rawText = await request.text();
-      if (rawText.length > MAX_PAYLOAD_BYTES) {
-        return new Response("Payload Too Large", { status: 413 });
-      }
       const searchParams = new URLSearchParams(rawText);
       for (const [key, value] of searchParams.entries()) {
         data[key] = value;
       }
     } else if (contentType.includes("multipart/form-data")) {
       try {
-        const formData = await request.formData();
+        // Re-wrap the already bounded bytes so the multipart parser never sees an unbounded stream.
+        const formData = await new Request(request.url, {
+          method: "POST",
+          headers: { "content-type": contentType },
+          body: rawText,
+        }).formData();
         for (const [key, value] of formData.entries()) {
           if (typeof value === "string") {
             data[key] = value;
@@ -259,10 +261,6 @@ export const POST = exemptRoute(
       }
     } else {
       // Default to text / json attempt
-      const rawText = await request.text();
-      if (rawText.length > MAX_PAYLOAD_BYTES) {
-        return new Response("Payload Too Large", { status: 413 });
-      }
       try {
         data = JSON.parse(rawText) as Record<string, unknown>;
       } catch {

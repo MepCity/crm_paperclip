@@ -291,7 +291,6 @@ export function createPortalAuthService(deps: PortalAuthDeps = {}) {
         const orgId = resolved.orgId;
         if (!(await hitPortalLimit(tx, orgId, "loginClient", clientHash, now)).allowed)
           return TOO_MANY;
-        if (!(await hitPortalLimit(tx, orgId, "loginOrg", portal.id, now)).allowed) return TOO_MANY;
 
         const [identity] =
           email && email.length <= 254

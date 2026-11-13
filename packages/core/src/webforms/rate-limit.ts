@@ -1,22 +1,22 @@
+import { createHash } from "node:crypto";
 import { schema as dbSchema } from "@crm/db";
 import { lt, sql } from "drizzle-orm";
+import { isProxyTrusted } from "../http/client-ip";
 import type { Transaction } from "../tenancy/types";
 
 /**
  * Resolves the client IP address from incoming request headers.
  *
- * Security & Proxy Architecture:
- * 1. `x-forwarded-for` is parsed first. In standard reverse proxy configurations
- *    (e.g., Vercel, Render, Cloudflare), the trusted edge proxy appends the connecting
- *    client's IP to the end of the chain. Taking the first element (`forwarded.split(",")[0]`)
- *    is vulnerable to client header injection (e.g., client sends `X-Forwarded-For: 1.2.3.4`
- *    which becomes `1.2.3.4, <real_ip>`), allowing rate limit bypass. Taking the rightmost (last)
- *    non-empty element safely extracts the real client IP appended by our hosts' edge proxy.
- * 2. If there is no `x-forwarded-for` header (or it contains no non-empty values),
- *    `x-real-ip` is used if present.
- * 3. Falls back to "127.0.0.1" if no valid header exists.
+ * Forwarding headers are client-controlled unless a trusted reverse proxy rewrites them, so
+ * they are ignored unless `TRUST_PROXY=1` is set. When trusted, the rightmost
+ * `x-forwarded-for` element (appended by the edge proxy) wins, then `x-real-ip`.
+ * Without trust, or without any header, every caller shares the fallback `127.0.0.1`.
  */
-export function getClientIp(request: Request): string {
+export function getClientIp(
+  request: Request,
+  env: Record<string, string | undefined> = process.env,
+): string {
+  if (!isProxyTrusted(env)) return "127.0.0.1";
   const forwarded = request.headers.get("x-forwarded-for");
   if (forwarded) {
     const parts = forwarded
@@ -69,6 +69,20 @@ async function incrementRateLimit(
     .returning({ count: dbSchema.publicRateLimits.count });
 
   return row?.count ?? 1;
+}
+
+/**
+ * Marks a render token as used. The marker row is keyed by the token's own issue time, so it is
+ * swept together with the token's 2 h lifetime. Returns false when the token was used before.
+ */
+export async function consumeRenderToken(
+  tx: Transaction,
+  orgId: string,
+  token: string,
+  issuedAt: number,
+): Promise<boolean> {
+  const bucket = `token-used:${createHash("sha256").update(token).digest("base64url")}`;
+  return (await incrementRateLimit(tx, orgId, bucket, new Date(issuedAt))) === 1;
 }
 
 export async function checkRateLimit(

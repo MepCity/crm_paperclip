@@ -8,8 +8,15 @@ import { DEV_ADMIN_EMAIL, isDevLoginEnabled } from "./dev-login";
 export async function seedDevAdmin(
   db: Database,
   env: { NODE_ENV?: string; APP_URL?: string },
+  options: { databaseUrlFromEnvironment?: boolean } = {},
 ): Promise<void> {
   if (!isDevLoginEnabled(env)) return;
+  // A database supplied through DATABASE_URL may be shared or hosted: never plant the
+  // reserved admin/admin account in it.
+  if (options.databaseUrlFromEnvironment) {
+    console.warn("dev: not seeding the development admin into a DATABASE_URL from the environment");
+    return;
+  }
   await db.transaction(async (tx) => {
     // Serialize concurrent local starts, including the organization onboarding write.
     await tx.execute(sql`select pg_advisory_xact_lock(963)`);

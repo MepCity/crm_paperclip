@@ -495,13 +495,20 @@ describe("portal login, lockout and limits", () => {
     const session = await sessionRow(orgId, user.token);
     await seedBucket(orgId, "session", session?.id ?? "", 300);
     expect(statusOf(await env.auth.authenticate(env.slug, user.token, { ip: ip() }))).toBe(429);
-    // login per organisation: 300 / h
-    await seedBucket(orgId, "loginOrg", env.portal.id, 300);
+    // No organisation-wide login bucket: a flooded legacy org bucket must not lock members out.
+    await getDb()
+      .insert(schema.publicRateLimits)
+      .values({
+        organizationId: orgId,
+        bucket: `portal:loginOrg:${env.portal.id}`,
+        windowStart: new Date(Math.floor(Date.now() / 3_600_000) * 3_600_000),
+        count: 5000,
+      });
     expect(
       statusOf(
         await env.auth.login(env.slug, { email: user.email, password: PASSWORD }, { ip: ip() }),
       ),
-    ).toBe(429);
+    ).not.toBe(429);
   });
 });
 
