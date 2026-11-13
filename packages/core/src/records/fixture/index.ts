@@ -515,10 +515,13 @@ export function createFixtureRecordService(
       throw new NotFoundError("Record not found.");
   };
   const childLevel: ChildLevelResolver = (module, fields, levelOf) => {
-    if (!["Notes", "Attachments", "Contact_Roles", "Campaign_Members"].includes(module))
+    if (
+      !["Notes", "Attachments", "Contact_Roles", "Campaign_Members", "DealHistory"].includes(module)
+    )
       return undefined;
     let parent: { module: string; id: string } | undefined;
     if (module === "Notes") parent = attachmentParent(fields.Parent_Id);
+    else if (module === "DealHistory") parent = attachmentParent(fields.Potential_Name);
     else if (module === "Contact_Roles") parent = attachmentParent(fields.Deal);
     else if (module === "Campaign_Members") parent = attachmentParent(fields.Campaign);
     else {
@@ -535,6 +538,10 @@ export function createFixtureRecordService(
       typeof author === "string" ? author : isJsonObject(author) ? author.id : undefined;
     return childRecordLevel(levelOf(parent.module, parentRecord.fields), authorId === ctx.userId);
   };
+  /** 403 like the route gate when the profile cannot view the module (MEP-1516). */
+  const assertModuleView = (acc: RecordAccessChecker | undefined, module: string) => {
+    if (acc && !acc.canView(module)) throw new ForbiddenError(undefined, "permission_denied");
+  };
   let checkerPromise: Promise<RecordAccessChecker | undefined> | undefined;
   const accessFor = () =>
     // One snapshot per service instance (one request); undefined = system actor.
@@ -548,6 +555,7 @@ export function createFixtureRecordService(
     async list(module, recordId, query) {
       assertWebformCanRead();
       historyAccess = await accessFor();
+      assertModuleView(historyAccess, module);
       return inner.list(module, recordId, query);
     },
   });
@@ -1745,7 +1753,7 @@ export function createFixtureRecordService(
         if (bundle.childModule) continue;
         // Global search spans modules, so the route gate cannot check them: a module the
         // profile cannot view contributes nothing (ADR 0017 §4.1, MEP-1468).
-        if (acc && !acc.can(module, "view")) continue;
+        if (acc && !acc.canView(module)) continue;
         if (
           query.fields?.some(
             (name) => !bundle.metadata.fields.some((field) => field.apiName === name),
@@ -1947,6 +1955,7 @@ export function createFixtureRecordService(
     async get(module, id) {
       assertWebformCanRead();
       assertCadenceCanAccess(module);
+      assertModuleView(await accessFor(), module);
       const record = recordFor(module, id);
       await assertRecordLevel(module, [id], "read");
       if (module === "Attachments" && record.fields.$state !== "ready")

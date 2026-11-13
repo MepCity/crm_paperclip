@@ -1,5 +1,11 @@
+import {
+  administratorPermissions,
+  buildAccessSnapshot,
+  standardPermissions,
+} from "@crm/core/access";
 import { ForbiddenError } from "@crm/core/errors";
 import { beforeEach, expect, it, vi } from "vitest";
+import { permissionAllows, type RoutePermission } from "@/lib/access/route-permission";
 import {
   addOrganizationAddress,
   createAssignment,
@@ -103,8 +109,59 @@ it("checks the profile permission of each action before touching persistence", a
     { admin: "manageAutomation" },
     { admin: "emailSettings" },
     { feature: "reports", action: "manage" },
-    { feature: "reports", action: "view" },
+    {
+      allOf: [
+        { feature: "reports", action: "view" },
+        { module: "Leads", action: "view" },
+      ],
+    },
   ]);
+});
+it("runs a report only on a module the caller's profile can view (MEP-1516)", async () => {
+  await runReport("selected-org", { ...input, module: "DealHistory" }).catch(() => undefined);
+  const declared = permission.mock.calls.at(-1)?.[1] as RoutePermission;
+  const permissions = standardPermissions();
+  permissions.modules.Deals = { view: false, create: false, edit: false, delete: false };
+  const snapshot = (kind: "standard" | "administrator") =>
+    buildAccessSnapshot({
+      orgId: "o",
+      userId: "u",
+      version: 1,
+      profile: {
+        id: "p",
+        kind,
+        permissions: kind === "administrator" ? administratorPermissions() : permissions,
+      },
+      fieldRows: [],
+      roles: [{ id: "r", name: "CEO", parentRoleId: null, shareWithPeers: false }],
+      members: [{ userId: "u", roleId: "r", profileId: "p" }],
+      groupMembers: [],
+      defaults: [],
+      rules: [],
+    });
+  // A module outside the catalogue (DealHistory) is never reachable for a non-administrator.
+  expect(permissionAllows(snapshot("standard"), declared)).toBe(false);
+  expect(permissionAllows(snapshot("administrator"), declared)).toBe(true);
+  const deals = {
+    allOf: [
+      { feature: "reports", action: "view" },
+      { module: "Deals", action: "view" },
+    ],
+  } as const;
+  expect(permissionAllows(snapshot("standard"), deals)).toBe(false);
+  expect(
+    permissionAllows(snapshot("standard"), {
+      ...deals,
+      allOf: [deals.allOf[0], { module: "Leads", action: "view" }],
+    }),
+  ).toBe(true);
+  // A non-string module from a direct server-action call is denied, not treated as a wildcard.
+  permission.mockClear();
+  await runReport("selected-org", { ...input, module: 42 as unknown as string }).catch(
+    () => undefined,
+  );
+  const odd = permission.mock.calls.at(-1)?.[1] as RoutePermission;
+  expect(permissionAllows(snapshot("standard"), odd)).toBe(false);
 });
 it("does not swallow non-permission failures of the profile gate", async () => {
   permission.mockRejectedValue(new Error("snapshot unavailable"));
