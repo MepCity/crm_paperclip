@@ -1,3 +1,4 @@
+import { AsyncLocalStorage } from "node:async_hooks";
 import { schema } from "@crm/db";
 import { and, eq, gt, isNull, sql } from "drizzle-orm";
 import { z } from "zod";
@@ -133,13 +134,60 @@ export async function requireOrgContext(headers: Headers, orgSlug: string): Prom
   };
 }
 
+type OrgFrame = {
+  tx: Transaction;
+  orgId: string;
+  open: boolean;
+  /** Serialises sibling nested calls: they share one connection and one savepoint stack. */
+  queue: Promise<unknown>;
+};
+
+const orgFrames = new AsyncLocalStorage<OrgFrame>();
+
+/** True while the caller runs inside an open organisation transaction (uncommitted state). */
+export function insideOrgTransaction(): boolean {
+  return orgFrames.getStore()?.open === true;
+}
+
+async function runInFrame<T>(
+  tx: Transaction,
+  orgId: string,
+  work: (tx: Transaction) => Promise<T>,
+): Promise<T> {
+  const frame: OrgFrame = { tx, orgId, open: true, queue: Promise.resolve() };
+  try {
+    return await orgFrames.run(frame, () => work(tx));
+  } finally {
+    // A stray continuation started inside `work` must never reuse a released connection.
+    frame.open = false;
+  }
+}
+
+/**
+ * Runs `work` in an organisation-scoped transaction.
+ *
+ * Reentrant (MEP-1519): a call made while the same async context already holds an open
+ * transaction of the same organisation joins it through a savepoint instead of checking a
+ * second connection out of the pool. Holding one pooled connection while waiting for another
+ * starves the pool under load and deadlocks every request. A nested failure rolls back only
+ * its savepoint; nested writes commit together with the outer transaction.
+ */
 export async function withOrg<T>(
   ctx: OrgContext,
   work: (tx: Transaction) => Promise<T>,
 ): Promise<T> {
+  const outer = orgFrames.getStore();
+  if (outer?.open && outer.orgId === ctx.orgId) {
+    const turn = outer.queue.then(() =>
+      outer.tx.transaction((nested) => runInFrame(nested, ctx.orgId, work)),
+    );
+    outer.queue = turn.catch(() => undefined);
+    return turn;
+  }
+  // A different organisation never shares a connection: `app.org_id` scopes row security.
   return getDb().transaction(async (tx) => {
     await tx.execute(sql`select set_config('app.org_id', ${ctx.orgId}, true)`);
-    return work(tx);
+    return runInFrame(tx, ctx.orgId, work);
   });
 }
 
