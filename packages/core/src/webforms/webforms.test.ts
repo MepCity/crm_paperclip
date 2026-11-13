@@ -1,9 +1,10 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { ValidationError } from "../errors";
 import {
   computeClientHash,
   createRenderToken,
   derivePublicKey,
+  derivePurposeKey,
   generateChallenge,
   getAppSecret,
   getClientIp,
@@ -373,6 +374,19 @@ describe("Webforms core validation", () => {
       expect(svg).toContain('role="img"');
     });
 
+    it("draws glyphs as paths, never as text elements", () => {
+      const { svg } = generateChallenge();
+      expect(svg).not.toContain("<text");
+      expect(svg.match(/<path /g)?.length).toBe(5);
+    });
+
+    it("derives separate keys per purpose from the application secret", () => {
+      const a = derivePurposeKey("render-token", "s".repeat(40));
+      expect(a).toBe(derivePurposeKey("render-token", "s".repeat(40)));
+      expect(a).not.toBe(derivePurposeKey("challenge", "s".repeat(40)));
+      expect(a).not.toBe("s".repeat(40));
+    });
+
     it("verifies challenge answer case-insensitively and trimmed", () => {
       const { code, challengeHash } = generateChallenge();
       expect(verifyChallenge(code, challengeHash)).toBe(true);
@@ -438,6 +452,9 @@ describe("Webforms core validation", () => {
     });
 
     describe("getClientIp proxy handling", () => {
+      beforeEach(() => vi.stubEnv("TRUST_PROXY", "1"));
+      afterEach(() => vi.unstubAllEnvs());
+
       it("resolves single IP from x-forwarded-for", () => {
         const req = new Request("http://localhost/api/test", {
           headers: { "x-forwarded-for": "203.0.113.195" },
@@ -475,6 +492,14 @@ describe("Webforms core validation", () => {
           },
         });
         expect(getClientIp(req2)).toBe("198.51.100.50");
+      });
+
+      it("ignores forwarding headers unless TRUST_PROXY is set", () => {
+        vi.stubEnv("TRUST_PROXY", "");
+        const req = new Request("http://localhost/api/test", {
+          headers: { "x-forwarded-for": "203.0.113.195", "x-real-ip": "198.51.100.50" },
+        });
+        expect(getClientIp(req)).toBe("127.0.0.1");
       });
 
       it("falls back to 127.0.0.1 when no IP headers are present", () => {

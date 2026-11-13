@@ -151,7 +151,6 @@ describe("portal rate limits (ADR 0019a §2.5)", () => {
     expect(PORTAL_LIMITS).toEqual({
       loginIdentityFailures: { limit: 5, windowMs: 900_000 },
       loginClient: { limit: 20, windowMs: 900_000 },
-      loginOrg: { limit: 300, windowMs: 3_600_000 },
       resetEmail: { limit: 3, windowMs: 3_600_000 },
       resetClient: { limit: 10, windowMs: 3_600_000 },
       tokenClient: { limit: 10, windowMs: 900_000 },

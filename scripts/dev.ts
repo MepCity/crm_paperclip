@@ -100,7 +100,11 @@ async function main(): Promise<number> {
     const appUrl = `http://127.0.0.1:${port}`;
     const db = createDb(databaseUrl);
     try {
-      await seedDevAdmin(db, { ...process.env, APP_URL: appUrl });
+      await seedDevAdmin(
+        db,
+        { ...process.env, APP_URL: appUrl },
+        { databaseUrlFromEnvironment: Boolean(process.env.DATABASE_URL) },
+      );
     } finally {
       await closeDb(db);
     }

@@ -1,4 +1,4 @@
-import { createHash, createHmac, randomBytes, timingSafeEqual } from "node:crypto";
+import { createHash, createHmac, hkdfSync, randomBytes, timingSafeEqual } from "node:crypto";
 import { parseEnv } from "../env";
 
 export interface RenderTokenPayload {
@@ -43,6 +43,20 @@ export function getAppSecret(envSource: Record<string, string | undefined> = pro
   }
 }
 
+/**
+ * Derives an independent key for one purpose from the application secret (HKDF-SHA256), so a
+ * token minted for one purpose can never be replayed as another. Public form keys and the
+ * authentication library keep using the raw secret: they are persisted or already issued, and
+ * re-keying would invalidate existing forms and sessions. Render tokens, challenge hashes and
+ * client hashes are short-lived, so they moved to derived keys; tokens issued before this change
+ * stop verifying (at most 2 h of open forms) and nothing else is affected.
+ */
+export function derivePurposeKey(purpose: string, secret = getAppSecret()): string {
+  return Buffer.from(
+    hkdfSync("sha256", secret, "crm-purpose-key-v1", `purpose:${purpose}`, 32),
+  ).toString("base64url");
+}
+
 export function derivePublicKey(
   orgId: string,
   formId: string,
@@ -59,13 +73,16 @@ export function derivePublicKey(
   return { publicKey: rawKey, keyHash };
 }
 
-export function computeClientHash(ip: string, secret = getAppSecret()): string {
+export function computeClientHash(ip: string, secret = derivePurposeKey("client-hash")): string {
   return createHmac("sha256", secret)
     .update(ip.trim() || "unknown")
     .digest("base64url");
 }
 
-export function createRenderToken(payload: RenderTokenPayload, secret = getAppSecret()): string {
+export function createRenderToken(
+  payload: RenderTokenPayload,
+  secret = derivePurposeKey("render-token"),
+): string {
   const jsonStr = JSON.stringify({
     orgId: payload.orgId,
     formId: payload.formId,
@@ -80,7 +97,7 @@ export function createRenderToken(payload: RenderTokenPayload, secret = getAppSe
 
 export function verifyRenderToken(
   token: string,
-  secret = getAppSecret(),
+  secret = derivePurposeKey("render-token"),
 ): { ok: true; payload: RenderTokenPayload } | { ok: false; reason: "tampered" | "malformed" } {
   if (!token || typeof token !== "string") {
     return { ok: false, reason: "malformed" };
@@ -129,8 +146,60 @@ export function verifyRenderToken(
 
 const CHALLENGE_CHARS = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
 
+/** 5x7 bitmaps for the challenge alphabet; rows top to bottom, "1" = filled cell. */
+const GLYPHS: Record<string, string[]> = {
+  A: ["01110", "10001", "10001", "11111", "10001", "10001", "10001"],
+  B: ["11110", "10001", "10001", "11110", "10001", "10001", "11110"],
+  C: ["01110", "10001", "10000", "10000", "10000", "10001", "01110"],
+  D: ["11110", "10001", "10001", "10001", "10001", "10001", "11110"],
+  E: ["11111", "10000", "10000", "11110", "10000", "10000", "11111"],
+  F: ["11111", "10000", "10000", "11110", "10000", "10000", "10000"],
+  G: ["01110", "10001", "10000", "10111", "10001", "10001", "01111"],
+  H: ["10001", "10001", "10001", "11111", "10001", "10001", "10001"],
+  J: ["00111", "00010", "00010", "00010", "00010", "10010", "01100"],
+  K: ["10001", "10010", "10100", "11000", "10100", "10010", "10001"],
+  L: ["10000", "10000", "10000", "10000", "10000", "10000", "11111"],
+  M: ["10001", "11011", "10101", "10101", "10001", "10001", "10001"],
+  N: ["10001", "11001", "10101", "10011", "10001", "10001", "10001"],
+  P: ["11110", "10001", "10001", "11110", "10000", "10000", "10000"],
+  Q: ["01110", "10001", "10001", "10001", "10101", "10010", "01101"],
+  R: ["11110", "10001", "10001", "11110", "10100", "10010", "10001"],
+  S: ["01111", "10000", "10000", "01110", "00001", "00001", "11110"],
+  T: ["11111", "00100", "00100", "00100", "00100", "00100", "00100"],
+  U: ["10001", "10001", "10001", "10001", "10001", "10001", "01110"],
+  V: ["10001", "10001", "10001", "10001", "10001", "01010", "00100"],
+  W: ["10001", "10001", "10001", "10101", "10101", "11011", "10001"],
+  X: ["10001", "10001", "01010", "00100", "01010", "10001", "10001"],
+  Y: ["10001", "10001", "01010", "00100", "00100", "00100", "00100"],
+  Z: ["11111", "00001", "00010", "00100", "01000", "10000", "11111"],
+  "2": ["01110", "10001", "00001", "00010", "00100", "01000", "11111"],
+  "3": ["11110", "00001", "00001", "01110", "00001", "00001", "11110"],
+  "4": ["00010", "00110", "01010", "10010", "11111", "00010", "00010"],
+  "5": ["11111", "10000", "11110", "00001", "00001", "10001", "01110"],
+  "6": ["00110", "01000", "10000", "11110", "10001", "10001", "01110"],
+  "7": ["11111", "00001", "00010", "00100", "01000", "01000", "01000"],
+  "8": ["01110", "10001", "10001", "01110", "10001", "10001", "01110"],
+  "9": ["01110", "10001", "10001", "01111", "00001", "00010", "01100"],
+};
+
+const GLYPH_CELL = 3.4;
+
+/** Draws a glyph as one filled path (no text element, so no font or OCR-by-text shortcut). */
+function glyphPath(char: string): string {
+  const rows = GLYPHS[char] ?? [];
+  let d = "";
+  rows.forEach((row, y) => {
+    for (let x = 0; x < row.length; x++) {
+      if (row[x] === "1") {
+        d += `M${+(x * GLYPH_CELL).toFixed(2)} ${+(y * GLYPH_CELL).toFixed(2)}h${GLYPH_CELL}v${GLYPH_CELL}h-${GLYPH_CELL}z`;
+      }
+    }
+  });
+  return d;
+}
+
 export function generateChallenge(): { code: string; challengeHash: string; svg: string } {
-  const secret = getAppSecret();
+  const secret = derivePurposeKey("challenge");
   const bytes = randomBytes(5);
   let code = "";
   for (let i = 0; i < 5; i++) {
@@ -152,9 +221,9 @@ export function generateChallenge(): { code: string; challengeHash: string; svg:
     const char = code[i];
     const b = bytes[i] ?? 0;
     const x = startX + i * charSpacing;
-    const y = 32 + ((b % 7) - 3);
+    const y = 12 + ((b % 7) - 3);
     const rot = (b % 15) - 7;
-    textSvg += `<text x="${x}" y="${y}" font-family="monospace, monospace" font-size="24" font-weight="bold" fill="#1e293b" transform="rotate(${rot} ${x} ${y})">${char}</text>`;
+    textSvg += `<path d="${glyphPath(char ?? "")}" fill="#1e293b" transform="translate(${x} ${y}) rotate(${rot} 8.5 11.9)" />`;
   }
 
   // Add decorative noise lines and dots
@@ -186,7 +255,7 @@ export function verifyChallenge(
 ): boolean {
   if (!challengeHash) return true;
   if (!answer || typeof answer !== "string") return false;
-  const secret = getAppSecret();
+  const secret = derivePurposeKey("challenge");
   const calculatedHash = createHmac("sha256", secret)
     .update(`challenge:${answer.trim().toUpperCase()}`)
     .digest("hex");

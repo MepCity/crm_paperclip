@@ -17,6 +17,8 @@ export {
   ValidationError,
 } from "./errors";
 export { checkHealth, type HealthReport } from "./health";
+export { readBoundedBody } from "./http/body";
+export { isProxyTrusted } from "./http/client-ip";
 export type {
   DocumentTotals,
   HeaderInput,

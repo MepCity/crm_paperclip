@@ -4,12 +4,13 @@ import type { Transaction } from "../../tenancy/types";
 
 /**
  * ADR 0019a §2.5 limits, fixed windows in `public_rate_limits`, buckets prefixed `portal:`
- * (swept by the webforms sweep after 2 h).
+ * (swept by the webforms sweep after 2 h). There is deliberately no organisation-wide login
+ * bucket: one source could exhaust it and lock every member out (MEP-1520); abuse is limited per
+ * client hash and per identity.
  */
 export const PORTAL_LIMITS = {
   loginIdentityFailures: { limit: 5, windowMs: 15 * 60_000 },
   loginClient: { limit: 20, windowMs: 15 * 60_000 },
-  loginOrg: { limit: 300, windowMs: 60 * 60_000 },
   resetEmail: { limit: 3, windowMs: 60 * 60_000 },
   resetClient: { limit: 10, windowMs: 60 * 60_000 },
   tokenClient: { limit: 10, windowMs: 15 * 60_000 },

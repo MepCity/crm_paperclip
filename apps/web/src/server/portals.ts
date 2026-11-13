@@ -1,4 +1,4 @@
-import { parseEnv } from "@crm/core";
+import { parseEnv, readBoundedBody } from "@crm/core";
 import { InMemoryJobQueue } from "@crm/core/jobs";
 import {
   checkPortalCsrf,
@@ -152,8 +152,8 @@ export function portalHandler(
       let body: Record<string, unknown> = {};
       const method = request.method.toUpperCase();
       if (method !== "GET" && method !== "HEAD") {
-        const raw = await request.text();
-        if (raw.length > MAX_BODY) return portalJson({ message: "Request too large." }, 413);
+        const raw = await readBoundedBody(request, MAX_BODY);
+        if (raw === null) return portalJson({ message: "Request too large." }, 413);
         if (raw.trim() !== "") {
           try {
             const parsed: unknown = JSON.parse(raw);
