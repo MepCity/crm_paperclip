@@ -16,6 +16,16 @@ test.describe("Portals Setup Member Screens (ADR 0019a §6)", () => {
     await signUpNewUser(page);
     const org = await createOrganization(page);
 
+    // Configure organization sender email (ADR 0019a §5)
+    await page.goto(`/crm/${org.slug}/settings/email-configuration/organization-emails`);
+    await page.getByRole("button", { name: "Add Email Address", exact: true }).click();
+    await page.getByRole("textbox", { name: "Display Name", exact: true }).fill("Portal Support");
+    await page
+      .getByRole("textbox", { name: "Email Address", exact: true })
+      .fill("support@mepcity.test");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
+
     // 1. Navigate to Portals settings
     await page.goto(`/crm/${org.slug}/settings/portals`);
     assertNoPageErrors(pageErrors);
@@ -110,19 +120,7 @@ test.describe("Portals Setup Member Screens (ADR 0019a §6)", () => {
       "Client Support Tier",
     );
 
-    // 6. Configure organization sender email (ADR 0019a §5) & create Contact in CRM
-    await page.request.post(`/api/definitions/${org.slug}/organization-addresses`, {
-      headers: {
-        "X-CRM-ORG": org.slug,
-        "Content-Type": "application/json",
-        Origin: new URL(page.url()).origin,
-      },
-      data: {
-        displayName: "Portal Support",
-        address: "support@mepcity.test",
-      },
-    });
-
+    // 6. Create Contact in CRM
     const contactRes = await page.request.post("/crm/v2.2/Contacts", {
       headers: {
         "X-CRM-ORG": org.slug,

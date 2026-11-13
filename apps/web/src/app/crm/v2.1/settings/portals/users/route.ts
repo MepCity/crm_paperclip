@@ -1,5 +1,5 @@
 import { apiRoute } from "@/lib/api/server";
-import { getPortalAdmin, getPortalMailer } from "@/server/portals";
+import { getPortalAdmin } from "@/server/portals";
 
 export const dynamic = "force-dynamic";
 
@@ -18,13 +18,7 @@ export const GET = apiRoute(
 export const POST = apiRoute(
   async ({ ctx, request }) => {
     const user = await getPortalAdmin().invite(ctx, await request.json().catch(() => null));
-    const mailer = getPortalMailer();
-    const mail = [...mailer.outbox.values()].at(-1);
-    const token = mail?.text.match(/#t=([A-Za-z0-9_-]{43})/)?.[1];
-    return {
-      user,
-      ...(token ? { inviteToken: token } : {}),
-    };
+    return { user };
   },
   { permission: { admin: "managePortals" } },
 );

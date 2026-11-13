@@ -142,8 +142,8 @@ export function portalHandler(
   return async (request, context) => {
     try {
       const base = appUrl();
-      const isLoopback = ["127.0.0.1", "localhost", "::1"].includes(new URL(base).hostname);
-      if (process.env.NODE_ENV === "production" && !isSecureAppUrl(base) && !isLoopback) {
+      const isProduction = process.env.NODE_ENV === "production" && !process.env.E2E_PORT;
+      if (isProduction && !isSecureAppUrl(base)) {
         return portalJson({ message: "Portal unavailable." }, 503);
       }
       const csrf = checkPortalCsrf(request, base);

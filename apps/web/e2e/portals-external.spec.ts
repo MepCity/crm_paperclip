@@ -22,18 +22,17 @@ test.describe("External Portal Client Screens (ADR 0019a §6)", () => {
     const rand = randomBytes(4).toString("hex");
     const portalSlug = `e2e-portal-${rand}`;
 
-    // Configure organization sender address (ADR 0019a §5)
-    const orgAddressRes = await page.request.post(
-      `/api/definitions/${org.slug}/organization-addresses`,
-      {
-        headers: jsonHeaders,
-        data: {
-          displayName: "Enterprise Support",
-          address: "support@enterprise.test",
-        },
-      },
-    );
-    expect(orgAddressRes.ok(), await orgAddressRes.text()).toBe(true);
+    // Configure organization sender address (ADR 0019a §5) via settings UI
+    await page.goto(`/crm/${org.slug}/settings/email-configuration/organization-emails`);
+    await page.getByRole("button", { name: "Add Email Address", exact: true }).click();
+    await page
+      .getByRole("textbox", { name: "Display Name", exact: true })
+      .fill("Enterprise Support");
+    await page
+      .getByRole("textbox", { name: "Email Address", exact: true })
+      .fill("support@enterprise.test");
+    await page.getByRole("button", { name: "Save", exact: true }).click();
+    await expect(page.getByRole("dialog")).toHaveCount(0);
 
     // 2. Create Portal via settings API
     const portalRes = await page.request.post("/crm/v2.1/settings/portals", {
@@ -110,7 +109,17 @@ test.describe("External Portal Client Screens (ADR 0019a §6)", () => {
     });
     expect(inviteRes.ok(), await inviteRes.text()).toBe(true);
     const inviteJson = await inviteRes.json();
-    const token = inviteJson.inviteToken;
+    const identityId = String(inviteJson.user.id);
+    expect(identityId).toBeDefined();
+
+    // Retrieve single-use token via non-production staging endpoint
+    const stagingRes = await page.request.get(
+      `/crm/v2.1/settings/portals/users/${identityId}/staging-link`,
+      { headers: jsonHeaders },
+    );
+    expect(stagingRes.ok(), await stagingRes.text()).toBe(true);
+    const stagingJson = await stagingRes.json();
+    const token = stagingJson.token;
     expect(token).toBeDefined();
 
     // 6. Navigate to Accept Invitation page with token in URL fragment
