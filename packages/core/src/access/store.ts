@@ -167,6 +167,8 @@ type LoadDeps = {
   /** Opens an organisation-scoped transaction (`withOrg`), injected to avoid an import cycle. */
   withOrg: <T>(ctx: OrgContext, work: (tx: Transaction) => Promise<T>) => Promise<T>;
   cache?: SnapshotCache;
+  /** Read inside an outer, uncommitted transaction: use the cache but never fill it (MEP-1519). */
+  skipCacheWrite?: boolean;
 };
 
 /**
@@ -183,6 +185,6 @@ export async function loadAccessSnapshot(ctx: OrgContext, deps: LoadDeps): Promi
   const snapshot = await deps.withOrg(ctx, async (tx) =>
     buildAccessSnapshot(await loadAccessData(tx, ctx.orgId, ctx.userId)),
   );
-  cache.set(snapshot);
+  if (!deps.skipCacheWrite) cache.set(snapshot);
   return snapshot;
 }

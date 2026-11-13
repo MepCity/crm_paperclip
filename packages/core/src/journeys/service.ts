@@ -148,6 +148,15 @@ async function getJourneyInternal(
   };
 }
 
+/**
+ * Process-wide, so callers that build a service per request (web-form intake) still hit it and
+ * an invalidation from any instance reaches every reader (MEP-1519).
+ */
+const activeJourneysCache = new Map<
+  string,
+  { fetchedAt: number; journeys: (typeof schema.journeys.$inferSelect)[] }
+>();
+
 export function createJourneysService(defaultDeps?: Partial<JourneysWorkerDeps>) {
   const resolvedDeps: JourneysWorkerDeps = {
     accessSnapshotProvider:
@@ -156,11 +165,6 @@ export function createJourneysService(defaultDeps?: Partial<JourneysWorkerDeps>)
         getAccessSnapshot({ ...ctx, userId, accessVersion: undefined })),
     ...defaultDeps,
   };
-
-  const activeJourneysCache = new Map<
-    string,
-    { fetchedAt: number; journeys: (typeof schema.journeys.$inferSelect)[] }
-  >();
 
   function invalidateCache(orgId?: string) {
     if (orgId) {
