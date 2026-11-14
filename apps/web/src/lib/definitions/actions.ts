@@ -97,7 +97,18 @@ export async function runReport(
   input: ReportInput,
 ): Promise<DefinitionResult<import("@/modules/reports/port").ReportDetail>> {
   const ctx = await requireOrgContext(orgSlug);
-  if (!(await passes(requireActionPermission(ctx, { feature: "reports", action: "view" }))))
+  // The caller picks the module, so the profile must also view it (ADR 0017 §4.1, MEP-1516).
+  const module = typeof input?.module === "string" ? input.module : "";
+  if (
+    !(await passes(
+      requireActionPermission(ctx, {
+        allOf: [
+          { feature: "reports", action: "view" },
+          { module, action: "view" },
+        ],
+      }),
+    ))
+  )
     return forbidden;
   try {
     const { validateReportDefinition } = await import("@crm/core/definitions");

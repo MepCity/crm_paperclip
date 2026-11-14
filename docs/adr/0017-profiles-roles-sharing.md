@@ -140,7 +140,7 @@ Mechanics:
 Three layers, all required; the UI layer never replaces them:
 
 1. **Route gate** in `operationRoute`/`apiRoute`: each operation declares `(moduleSource, action)` in a static map (`operations.X.permission`); the wrapper calls `can()` before the handler. A test walks every `apps/web/src/app/**/route.ts` and every `"use server"` file and fails if any entry point has no declared permission (or an explicit `public`/`memberOnly` marker with a reason). This keeps the inventory true as routes are added.
-2. **Service layer**: `RecordAccessPolicy` inside the record service (record level, field projection, criteria, atomic multi-record checks, cross-module rules) — covers access-paths §2.2, search, timelines, analytics port.
+2. **Service layer**: `RecordAccessPolicy` inside the record service (record level, field projection, criteria, atomic multi-record checks, cross-module rules) — covers access-paths §2.2, search, timelines, analytics port. The service also applies the profile module-view gate of §4.1 itself (MEP-1516): a module the profile cannot view has record level `none` (list/count/summarize/search return nothing, writes see no record) and `get`/timeline answer 403 `permission_denied`, so entry points that pick the module themselves (reports, dashboards, feeds, ads summary) cannot bypass the route gate. Child modules use their feature key plus the parent record's module; record-store modules outside the catalogue use their parent module (`DealHistory`, `Contact_Roles` → Deals, `Campaign_Members` → Campaigns) and any other one is denied to non-administrators.
 3. **Bypass closures** — each moves behind the engine in the enforcement issue:
 
 | Area (access-paths §) | Rule |

@@ -36,6 +36,11 @@ export interface RecordAccessChecker {
   ): void;
   /** Profile gate for a module action (ADR 0017 §4.1). */
   can(module: string, action: ModuleAction): boolean;
+  /**
+   * Profile module-view gate for any record-store module, the same rule the route gate applies:
+   * child modules use their feature key, non-catalogue modules their parent module (MEP-1516).
+   */
+  canView(module: string): boolean;
   /** Organisation-level administration key (`admin.dataManagement`, ...). */
   admin(name: AdminKey): boolean;
   /** Module-list tool permission (`tools.convert`, `tools.findAndMerge`, ...). */
@@ -56,6 +61,25 @@ export interface RecordAccessChecker {
 
 /** The record store calls Meetings "Events"; the catalogue and snapshot use "Meetings". */
 const catalogueName = (module: string) => (module === "Events" ? "Meetings" : module);
+
+/**
+ * Record-store modules outside the catalogue whose profile gate is their parent module's
+ * (ADR 0017 §4.1). Any other non-catalogue module is denied to non-administrators.
+ */
+const PARENT_MODULE: Readonly<Record<string, string>> = {
+  DealHistory: "Deals",
+  Contact_Roles: "Deals",
+  Campaign_Members: "Campaigns",
+};
+
+/** Profile module-view gate of ADR 0017 §4.1 for a record-store module name (MEP-1516). */
+export function moduleViewAllowed(snapshot: AccessSnapshot, module: string): boolean {
+  if (snapshot.profileKind === "administrator") return true;
+  if (module === "Notes") return snapshot.permissions.features.notes.view === true;
+  if (module === "Attachments") return snapshot.permissions.features.attachments.view === true;
+  const name = PARENT_MODULE[module] ?? catalogueName(module);
+  return isCatalogueModule(name) && can(snapshot, name, "view");
+}
 
 function ownerOf(fields: Readonly<Record<string, FieldValue>>): string | null {
   const owner = fields.Owner;
@@ -89,10 +113,16 @@ export function createRecordAccessChecker(
     return found;
   };
   const level: RecordAccessChecker["level"] = (module, fields) => {
-    // Child modules (Notes, Attachments) follow their parent record (ADR 0017 §4.3 item 5).
+    if (snapshot.profileKind === "administrator") return "read_write_delete";
+    // Profile gate AND record level (ADR 0017 §1): a module the profile cannot view has no
+    // readable record, on every path that reads through the record service (MEP-1516).
+    if (!moduleViewAllowed(snapshot, module)) return "none";
+    // Child modules (Notes, Attachments, ...) follow their parent record (ADR 0017 §4.3 item 5);
+    // the parent's own module gate applies through `level` again.
     const child = resolveChild?.(module, fields, level);
     if (child) return child;
-    if (!isCatalogueModule(catalogueName(module))) return "read_write_delete";
+    // Never a full grant for a module outside the catalogue (MEP-1516).
+    if (!isCatalogueModule(catalogueName(module))) return "none";
     return recordLevel(snapshot, catalogueName(module), ownerOf(fields));
   };
   const checker: RecordAccessChecker = {
@@ -104,6 +134,7 @@ export function createRecordAccessChecker(
       if (!levelAllows(have, operation)) throw new ForbiddenError(undefined, "permission_denied");
     },
     can: (module, action) => can(snapshot, catalogueName(module), action),
+    canView: (module) => moduleViewAllowed(snapshot, module),
     admin: (name) => snapshot.profileKind === "administrator" || snapshot.permissions.admin[name],
     tool(name, module) {
       if (snapshot.profileKind === "administrator") return true;
