@@ -123,12 +123,21 @@ test.describe("External Portal Client Screens (ADR 0019a §6)", () => {
     expect(token).toBeDefined();
 
     // 6. Navigate to Accept Invitation page with token in URL fragment
+    // The portal provider probes the session on mount; for a visitor who has not
+    // signed in yet it answers 401 asynchronously, so wait for the page and the
+    // probe before dropping that expected 401.
+    const sessionProbe = page.waitForResponse(
+      (response) =>
+        response.url().includes(`/api/portal/${portalSlug}/me`) && response.status() === 401,
+    );
     await page.goto(`/portal/${portalSlug}/accept#t=${token}`);
-    assertNoPageErrors(pageErrors);
 
     // Verify invitation acceptance form
     const acceptForm = page.locator('[data-testid="portal-accept-form"]');
     await expect(acceptForm).toBeVisible();
+    await sessionProbe;
+    ignoreFailedResponses(pageErrors, [401]);
+    assertNoPageErrors(pageErrors);
 
     const newPassword = "SecurePassword123!";
     await page.locator('[data-testid="portal-accept-password"]').fill(newPassword);
