@@ -33,7 +33,7 @@ export function generateFixtureTasks(
       Priority:
         priorities[(Math.floor(index / 5) + seed) % priorities.length]?.storedValue ?? "Normal",
       Send_Notification_Email: false,
-      Locked__s: index > 10 && index % 13 === 0,
+      Locked__s: index > 23 && index % 13 === 0,
       Created_Time: stamp,
       Modified_Time: stamp,
       Closed_Time: status === "Completed" ? stamp : null,
