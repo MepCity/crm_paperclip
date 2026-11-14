@@ -1,9 +1,9 @@
 import { schema } from "@crm/db";
 import { and, count, desc, eq, gte, ilike, inArray, lte, ne, sql } from "drizzle-orm";
-import { canOnRecord } from "../access/evaluate";
 import type { AccessSnapshot } from "../access/types";
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "../errors";
 import type { RecordService } from "../records";
+import { assertRecordEditable } from "../records/record-guard";
 import { withOrg } from "../tenancy";
 import type { OrgContext } from "../tenancy/types";
 import { computeDueAt } from "./delays";
@@ -107,6 +107,12 @@ function mapStepRun(row: typeof schema.cadenceStepRuns.$inferSelect): CadenceSte
     outcomeReason: row.outcomeReason,
     executedAt: row.executedAt.toISOString(),
   };
+}
+
+/** Caller access for enrollment actions; absent = system actor (workers, tests). */
+export interface EnrollmentActionAccess {
+  accessSnapshot: AccessSnapshot;
+  recordService: RecordService;
 }
 
 async function getCadenceInternal(
@@ -700,21 +706,12 @@ export function createCadenceService() {
               "permission_denied",
             );
           }
-          if (options.recordService) {
-            const rec = await options.recordService.get(input.recordModule, input.recordId);
-            const canEdit = canOnRecord(
-              options.accessSnapshot,
+          if (options.recordService)
+            await assertRecordEditable(
+              { accessSnapshot: options.accessSnapshot, recordService: options.recordService },
               input.recordModule,
-              "edit",
-              rec.fields.Owner as string | undefined,
+              input.recordId,
             );
-            if (!canEdit) {
-              throw new ForbiddenError(
-                "User does not have write access to record",
-                "permission_denied",
-              );
-            }
-          }
         }
 
         // Unique non-final enrollment check (ADR 0019 §6)
@@ -809,7 +806,11 @@ export function createCadenceService() {
       return { enrolled, skippedCount };
     },
 
-    async pauseEnrollment(ctx: OrgContext, enrollmentId: string): Promise<CadenceEnrollment> {
+    async pauseEnrollment(
+      ctx: OrgContext,
+      enrollmentId: string,
+      access?: EnrollmentActionAccess,
+    ): Promise<CadenceEnrollment> {
       return withOrg(ctx, async (tx) => {
         const [enrollment] = await tx
           .select()
@@ -823,6 +824,9 @@ export function createCadenceService() {
           .for("update");
 
         if (!enrollment) throw new NotFoundError("Enrollment not found");
+        if (access) {
+          await assertRecordEditable(access, enrollment.recordModule, enrollment.recordId);
+        }
         if (enrollment.state !== "active") {
           throw new ConflictError("Can only pause active enrollments");
         }
@@ -847,7 +851,11 @@ export function createCadenceService() {
       });
     },
 
-    async resumeEnrollment(ctx: OrgContext, enrollmentId: string): Promise<CadenceEnrollment> {
+    async resumeEnrollment(
+      ctx: OrgContext,
+      enrollmentId: string,
+      access?: EnrollmentActionAccess,
+    ): Promise<CadenceEnrollment> {
       return withOrg(ctx, async (tx) => {
         const [enrollment] = await tx
           .select()
@@ -861,6 +869,9 @@ export function createCadenceService() {
           .for("update");
 
         if (!enrollment) throw new NotFoundError("Enrollment not found");
+        if (access) {
+          await assertRecordEditable(access, enrollment.recordModule, enrollment.recordId);
+        }
         if (enrollment.state !== "paused") {
           throw new ConflictError("Can only resume paused enrollments");
         }
@@ -889,6 +900,7 @@ export function createCadenceService() {
       ctx: OrgContext,
       enrollmentId: string,
       reason = "manual_unenroll",
+      access?: EnrollmentActionAccess,
     ): Promise<CadenceEnrollment> {
       return withOrg(ctx, async (tx) => {
         const [enrollment] = await tx
@@ -903,6 +915,9 @@ export function createCadenceService() {
           .for("update");
 
         if (!enrollment) throw new NotFoundError("Enrollment not found");
+        if (access) {
+          await assertRecordEditable(access, enrollment.recordModule, enrollment.recordId);
+        }
 
         const [updated] = await tx
           .update(schema.cadenceEnrollments)
