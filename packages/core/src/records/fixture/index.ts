@@ -631,6 +631,27 @@ export function createFixtureRecordService(
       requireRegisteredTargets: true,
     });
   };
+  /**
+   * Every lookup/parent id a write sends must point at a record the caller can read; an unreadable
+   * id is reported exactly like a missing one so existence does not leak (audit leads 16/20/11).
+   */
+  const assertReferencesReadable = async (module: string, input: RecordInput) => {
+    if (!options?.access) return; // system actor: no extra async hop
+    const acc = await accessFor();
+    if (!acc) return;
+    for (const field of bundleFor(module).metadata.fields) {
+      if (field.dataType !== "lookup") continue;
+      const value = input[field.apiName];
+      if (!isJsonObject(value) || typeof value.module !== "string" || typeof value.id !== "string")
+        continue;
+      if (!Object.hasOwn(fixtureModules, value.module)) continue;
+      const target = moduleStore(value.module).records.get(value.id);
+      if (target && !acc.visible(value.module, target.fields))
+        throw new ValidationError({
+          [field.apiName]: ["Referenced record does not exist in this organization."],
+        });
+    }
+  };
   const validateOwner = async (input: RecordInput) => {
     if (!Object.hasOwn(input, "Owner")) return;
     const members = options?.listMemberIds ? await options.listMemberIds() : [...state.memberIds];
@@ -1247,6 +1268,12 @@ export function createFixtureRecordService(
     );
   };
 
+  const ownerIdOf = (owner: unknown): string | null =>
+    typeof owner === "string"
+      ? owner
+      : isJsonObject(owner) && typeof owner.id === "string"
+        ? owner.id
+        : null;
   const attachmentLifecycle = fixtureAttachmentLifecycle(hookContext);
   const convertLead = async (leadId: string, input: ConvertLeadInput) => {
     assertWebformCanMutate();
@@ -1271,8 +1298,21 @@ export function createFixtureRecordService(
         ["Deals", input.deal],
       ] as const) {
         if (!target) continue;
-        if ("reuseId" in target) await assertRecordLevel(targetModule, [target.reuseId], "read");
-        else if (!convertAccess.can(targetModule, "create"))
+        if ("reuseId" in target) {
+          // Reused targets are modified (links, explicit updates): they must be editable.
+          await assertRecordLevel(targetModule, [target.reuseId], "edit");
+          const stored = moduleStore(targetModule).records.get(target.reuseId);
+          if (
+            target.update &&
+            Object.hasOwn(target.update, "Owner") &&
+            target.update.Owner !== ownerIdOf(stored?.fields.Owner) &&
+            !convertAccess.tool("changeOwner", targetModule)
+          )
+            throw new ForbiddenError(undefined, "permission_denied");
+          if (target.update) {
+            convertAccess.assertWrite(targetModule, target.update, stored?.fields);
+          }
+        } else if (!convertAccess.can(targetModule, "create"))
           throw new ForbiddenError(undefined, "permission_denied");
       }
     }
@@ -1331,6 +1371,7 @@ export function createFixtureRecordService(
         );
         validateReferences(module, normalized);
         await validateOwner(normalized);
+        await assertReferencesReadable(module, normalized);
         continue;
       }
       const normalized = normalizeInput(
@@ -1349,6 +1390,7 @@ export function createFixtureRecordService(
       validateInput(linked, false, relaxRequired(bundle, linked), bundle.managedFields);
       validateReferences(module, normalized);
       await validateOwner(normalized);
+      await assertReferencesReadable(module, normalized);
     }
     return atomic(
       { module: "Leads", recordId: leadId, kind: "record_converted", mechanism: "convert" },
@@ -2016,6 +2058,7 @@ export function createFixtureRecordService(
         bundle.managedFields,
       );
       validateReferences(module, normalized);
+      await assertReferencesReadable(module, normalized);
       await validateOwner(normalized);
       const writer = await accessFor();
       writer?.assertWrite(module, normalized);
@@ -2051,6 +2094,7 @@ export function createFixtureRecordService(
         bundle.managedFields,
       );
       validateReferences(module, normalized);
+      await assertReferencesReadable(module, normalized);
       await validateOwner(normalized);
       (await accessFor())?.assertWrite(module, normalized, recordFor(module, id).fields);
       await assertUnlocked(module, [id], "update");
@@ -2109,6 +2153,7 @@ export function createFixtureRecordService(
         throw new ValidationError({ [name]: ["This field cannot be mass updated."] });
       validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
       validateReferences(module, normalized);
+      await assertReferencesReadable(module, normalized);
       await validateOwner(normalized);
       const writer = await accessFor();
       if (writer && !writer.tool("massUpdate", module))
