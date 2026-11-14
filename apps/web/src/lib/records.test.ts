@@ -6,6 +6,13 @@ vi.mock("@crm/core/access", async (importOriginal) => ({
   getAccessSnapshot: vi.fn(async () => ({ profileKind: "administrator" })),
 }));
 
+// No database here: the approval observer fails closed without one (MEP-1518).
+vi.mock("./approvals", () => ({
+  getApprovals: () => ({
+    writeObserver: () => ({ assertEditable: async () => {}, afterWrite: async () => {} }),
+  }),
+}));
+
 import { getRecordService } from "./records";
 
 it("selects the fixture adapter with the caller's organization and user context", async () => {

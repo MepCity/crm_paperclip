@@ -1,6 +1,6 @@
 import { randomUUID } from "node:crypto";
 import { describe, expect, it } from "vitest";
-import { ForbiddenError, NotFoundError, ValidationError } from "../../errors";
+import { ForbiddenError, NotFoundError, RecordLockedError, ValidationError } from "../../errors";
 import type { OrgContext } from "../../tenancy/types";
 import type { RecordData } from "../contract";
 import {
@@ -359,12 +359,10 @@ describe("recoverable fixture record deletion contract", () => {
     } finally {
       tasks.createDefaults = defaults;
     }
-    await service.delete("Leads", [parent.id]);
-    const ids = (await entries(service)).map((entry) => entry.id);
-    await expect(service.recycleBin.restore(ids)).rejects.toMatchObject({
-      fieldErrors: { Locked__s: expect.any(Array) },
-    });
-    await expect(service.get("Tasks", locked.id)).rejects.toBeInstanceOf(NotFoundError);
+    // A locked child refuses the parent delete up front (MEP-1518): nothing reaches the bin.
+    await expect(service.delete("Leads", [parent.id])).rejects.toBeInstanceOf(RecordLockedError);
+    expect(await entries(service)).toHaveLength(0);
+    expect((await service.get("Tasks", locked.id)).id).toBe(locked.id);
     const other = await lead(service, "Permission");
     await service.delete("Leads", [other.id]);
     const entry = (await entries(service)).find((item) => item.recordId === other.id);
@@ -378,7 +376,7 @@ describe("recoverable fixture record deletion contract", () => {
       fieldErrors: { Owner: expect.any(Array) },
     });
     await expect(service.get("Leads", other.id)).rejects.toBeInstanceOf(NotFoundError);
-    expect(await entries(service)).toHaveLength(2);
+    expect(await entries(service)).toHaveLength(1);
   });
 
   it("rechecks a concurrent purge after asynchronous membership validation", async () => {

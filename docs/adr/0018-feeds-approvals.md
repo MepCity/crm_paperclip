@@ -155,7 +155,11 @@ Rules (all enforced server-side in the services; UI hides per ADR 0017 §8):
   action, step 1 approvers resolved now: users as listed, roles → members of
   the role, groups → resolved members (ADR 0017 §4.4),
   `record_owner_manager` → members of the parent role of the owner's role).
-  An empty approver set auto-approves the step (`auto_approved`).
+  An empty approver set never approves the step: the request stays `pending`
+  at that step with a `submitted` action carrying `resolution_error`, visible to
+  administrators, who may recall it (amended by MEP-1518; `auto_approved` stays
+  only for rows written before). Group steps must name existing groups at save
+  time and when a process is activated.
 - `rule: "any"` → first approval completes the step; `"all"` → every row must
   approve. Any rejection rejects the request. The last step's approval
   approves it.
@@ -164,10 +168,13 @@ Rules (all enforced server-side in the services; UI hides per ADR 0017 §8):
   `waiting_rereview`, the next edit by the owner moves it back to
   `waiting_review`, approve closes it.
 - No manual "Submit for approval" button (unobserved; decided). Edits that do
-  not match leave the record untouched. The observer must not fail the user's
-  write: a resolution error is logged and recorded as a `submitted` action with
-  the error, and the request stays `pending` with no approvers, visible to
-  administrators.
+  not match leave the record untouched. A resolution error is logged and
+  recorded as a `submitted` action with the error, and the request stays
+  `pending` with no approvers, visible to administrators. If the request itself
+  cannot be stored, the observer fails closed (MEP-1518): the record service
+  undoes the write and the user's request fails, so no matching record is ever
+  saved without its approval request. Merge, deduplication and lead conversion
+  pass the same lock check and observer as update.
 
 ### 6. Notifications and the bell
 

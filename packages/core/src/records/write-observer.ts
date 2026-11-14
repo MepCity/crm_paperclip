@@ -22,8 +22,8 @@ export interface RecordWriteObserver {
     operation: "update" | "delete";
   }): Promise<void>;
   /**
-   * Runs after the write committed. Must not fail the caller's write: the fixture
-   * service swallows and logs whatever it throws.
+   * Runs after the write committed. The fixture service logs and ignores what it throws,
+   * except a {@link WriteObserverFailure}: then it undoes the write and rethrows (fail closed).
    */
   afterWrite(event: RecordWriteEvent): Promise<void>;
   /**
@@ -55,4 +55,24 @@ export function combineWriteObservers(
       }
     },
   };
+}
+
+// A registered symbol, so the check also holds when a bundler loads this module twice.
+const FAIL_CLOSED = Symbol.for("crm.WriteObserverFailure");
+
+/**
+ * Thrown by an observer whose work is a condition of the write (the approval request): the
+ * record service rolls the write back instead of keeping a record the observer never saw.
+ */
+export class WriteObserverFailure extends Error {
+  override name = "WriteObserverFailure";
+  readonly [FAIL_CLOSED] = true;
+
+  constructor(message: string, cause?: unknown) {
+    super(message, { cause });
+  }
+}
+
+export function isWriteObserverFailure(error: unknown): error is WriteObserverFailure {
+  return typeof error === "object" && error !== null && FAIL_CLOSED in error;
 }

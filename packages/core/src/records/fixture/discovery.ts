@@ -1,4 +1,9 @@
-import { ConflictError, RecordLockedError, ValidationError } from "../../errors";
+import {
+  ConflictError,
+  RecordLockedError,
+  RecordLockedForApprovalError,
+  ValidationError,
+} from "../../errors";
 import type { DuplicateGroup, FieldDefinition, RecordData } from "../contract";
 
 const searchableTypes = new Set([
@@ -116,7 +121,11 @@ export function duplicateGroups(
 
 /** A lock or unique collision blocks one group; any other merge failure is a bug. */
 export function isDeferredMergeRejection(error: unknown): boolean {
-  return error instanceof RecordLockedError || error instanceof ConflictError;
+  return (
+    error instanceof RecordLockedError ||
+    error instanceof RecordLockedForApprovalError ||
+    error instanceof ConflictError
+  );
 }
 
 /**
