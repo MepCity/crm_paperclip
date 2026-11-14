@@ -1,7 +1,9 @@
+import { getAccessSnapshot } from "@crm/core/access";
 import { z } from "zod";
 import { apiRoute } from "@/lib/api/server";
 import { parseBody } from "@/lib/api/wire/chat";
 import { getCadences } from "@/lib/cadences";
+import { getRecordService } from "@/lib/records";
 
 export const dynamic = "force-dynamic";
 
@@ -22,18 +24,24 @@ export const GET = apiRoute<{ enrollmentId: string }>(
 export const POST = apiRoute<{ enrollmentId: string }>(
   async ({ ctx, params, request }) => {
     const input = await parseBody(request, enrollmentActionSchema);
+    // Acting on an enrollment needs edit access to the enrolled record (audit lead 10).
+    const access = {
+      accessSnapshot: await getAccessSnapshot(ctx),
+      recordService: getRecordService(ctx),
+    };
     if (input.action === "pause") {
-      const enrollment = await getCadences().pauseEnrollment(ctx, params.enrollmentId);
+      const enrollment = await getCadences().pauseEnrollment(ctx, params.enrollmentId, access);
       return { enrollment };
     }
     if (input.action === "resume") {
-      const enrollment = await getCadences().resumeEnrollment(ctx, params.enrollmentId);
+      const enrollment = await getCadences().resumeEnrollment(ctx, params.enrollmentId, access);
       return { enrollment };
     }
     const enrollment = await getCadences().unenrollRecord(
       ctx,
       params.enrollmentId,
       input.reason ?? "manual_unenroll",
+      access,
     );
     return { enrollment };
   },
