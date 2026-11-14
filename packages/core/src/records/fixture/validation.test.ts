@@ -406,3 +406,27 @@ describe("validateInput", () => {
     }
   });
 });
+
+describe("validateInput control characters (MEP-1518)", () => {
+  const fields = [
+    makeField({ apiName: "Company", dataType: "text" }),
+    makeField({ apiName: "Description", dataType: "textarea" }),
+  ];
+  const invalid = (input: Record<string, unknown>) => {
+    try {
+      validateInput(input as never, true, fields, new Set());
+    } catch (error) {
+      return (error as ValidationError).fieldErrors;
+    }
+    return null;
+  };
+
+  it("rejects NUL and other C0 control characters in text", () => {
+    expect(invalid({ Company: "Acme\u0000" })).toEqual({ Company: ["Invalid characters."] });
+    expect(invalid({ Description: "a\u001bb" })).toEqual({ Description: ["Invalid characters."] });
+  });
+
+  it("keeps tab, line feed and carriage return in multi-line text", () => {
+    expect(invalid({ Description: "line 1\r\nline\t2\n" })).toBeNull();
+  });
+});

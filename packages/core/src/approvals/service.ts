@@ -13,11 +13,19 @@ import {
 } from "../notifications";
 import { decodeCursor, encodeCursor } from "../notifications/service";
 import type { ModuleMetadataReader, RecordService } from "../records/contract";
-import type { RecordWriteEvent, RecordWriteObserver } from "../records/write-observer";
+import {
+  type RecordWriteEvent,
+  type RecordWriteObserver,
+  WriteObserverFailure,
+} from "../records/write-observer";
 import { withOrg } from "../tenancy";
 import type { OrgContext, Transaction } from "../tenancy/types";
 import { matchesCondition } from "./criteria";
+import { type ApproverDirectory, accessApproverDirectory } from "./directory";
 import { mapProcess, ProcessService } from "./process-service";
+
+export type { ApproverDirectory } from "./directory";
+
 import { isAdmin, iso, isoOrNull, isUuid, pgCode, type Row, rowsOf } from "./shared";
 import {
   type ActionKind,
@@ -42,18 +50,6 @@ const OPEN = APPROVAL_OPEN_STATUSES as readonly string[];
 const OPEN_SQL = sql.raw(`('${APPROVAL_OPEN_STATUSES.join("','")}')`);
 
 export type SystemRecords = Pick<RecordService, "get" | "update"> & Partial<ModuleMetadataReader>;
-
-/** Resolves approver groups and the record owner's manager. ADR 0017 plugs in here. */
-export interface ApproverDirectory {
-  groupMembers(tx: Transaction, orgId: string, groupIds: readonly string[]): Promise<string[]>;
-  ownerManagers(tx: Transaction, orgId: string, ownerId: string | null): Promise<string[]>;
-}
-
-/** Until profiles, roles and groups land (ADR 0017) there is no group or hierarchy data. */
-const emptyDirectory: ApproverDirectory = {
-  groupMembers: async () => [],
-  ownerManagers: async () => [],
-};
 
 export type ApprovalServiceDeps = {
   /** Record access for system-actor field updates; never wired to the write observer. */
@@ -134,7 +130,7 @@ export class ApprovalService {
   constructor(private readonly deps: ApprovalServiceDeps = {}) {
     this.processes = new ProcessService(deps.systemRecords);
     this.notifications = deps.notifications ?? getNotificationService();
-    this.directory = deps.directory ?? emptyDirectory;
+    this.directory = deps.directory ?? accessApproverDirectory;
   }
 
   // ---------------------------------------------------------------- record write path
@@ -203,7 +199,8 @@ export class ApprovalService {
     } catch (error) {
       // A concurrent writer opened a request for this record first: nothing to do.
       if (pgCode(error) === "23505") return;
-      throw error;
+      // Fail closed (MEP-1518): the record service undoes a write whose request was not stored.
+      throw new WriteObserverFailure("The approval request could not be submitted.", error);
     }
   }
 
@@ -278,6 +275,8 @@ export class ApprovalService {
       resolutionError = error instanceof Error ? error.message : "Approver resolution failed";
       console.error("Approval approver resolution failed", error);
     }
+    // A step nobody can decide never approves itself (MEP-1518): it stays pending.
+    if (!resolutionError && approvers.length === 0) resolutionError = noApprovers(1);
     await this.logAction(
       tx,
       ctx.orgId,
@@ -290,7 +289,7 @@ export class ApprovalService {
     );
     // The request stays open with no approvers; administrators see it in the "All" scope.
     if (resolutionError) return;
-    await this.openStep(tx, ctx, request, process, 1, approvers, event, ctx.userId);
+    await this.openStep(tx, ctx, request, process, 1, approvers, ctx.userId);
   }
 
   private async resolveApprovers(
@@ -328,6 +327,10 @@ export class ApprovalService {
     return [...new Set(ids)];
   }
 
+  /**
+   * Moves the request to `step` and assigns its approvers. A step without approvers stays
+   * pending with a resolution error for an administrator to recall; it never auto-approves.
+   */
   private async openStep(
     tx: Transaction,
     ctx: OrgContext,
@@ -335,7 +338,6 @@ export class ApprovalService {
     process: ApprovalProcess,
     step: number,
     approvers: readonly string[],
-    event: Pick<RecordWriteEvent, "record">,
     actorId: string,
   ): Promise<void> {
     await tx.execute(
@@ -344,13 +346,16 @@ export class ApprovalService {
     );
     const next = { ...request, step };
     if (approvers.length === 0) {
-      await this.logAction(tx, ctx.orgId, request.id, step, null, "auto_approved", null, null);
-      if (step >= process.steps.length) {
-        await this.finalize(tx, ctx, next, process, "approved", null);
-        return;
-      }
-      const following = await this.resolveApprovers(tx, ctx.orgId, process.steps[step], event);
-      await this.openStep(tx, ctx, next, process, step + 1, following, event, actorId);
+      await this.logAction(
+        tx,
+        ctx.orgId,
+        request.id,
+        step,
+        null,
+        "submitted",
+        `resolution_error: ${noApprovers(step)}`,
+        null,
+      );
       return;
     }
     for (const userId of approvers) {
@@ -798,16 +803,7 @@ export class ApprovalService {
         const following = await this.resolveApprovers(tx, ctx.orgId, process.steps[request.step], {
           record,
         });
-        await this.openStep(
-          tx,
-          ctx,
-          request,
-          process,
-          request.step + 1,
-          following,
-          { record },
-          ctx.userId,
-        );
+        await this.openStep(tx, ctx, request, process, request.step + 1, following, ctx.userId);
       }
     });
     return this.detail(ctx, id);
@@ -966,6 +962,10 @@ export class ApprovalService {
       };
     });
   }
+}
+
+function noApprovers(step: number): string {
+  return `No approver could be resolved for step ${step}.`;
 }
 
 function userRef(id: unknown, name: unknown): UserRef | null {

@@ -125,6 +125,31 @@ export class ProcessService {
     }
   }
 
+  /** Group steps must name existing groups of the organisation (MEP-1518). */
+  private async assertApproverRefs(
+    tx: Transaction,
+    orgId: string,
+    steps: ApprovalProcess["steps"],
+  ): Promise<void> {
+    for (const [index, step] of steps.entries()) {
+      if (step.approvers.kind !== "groups") continue;
+      const refs = [...new Set(step.approvers.refs)];
+      const valid = refs.filter(isUuid);
+      const found = valid.length
+        ? rowsOf(
+            await tx.execute(
+              sql`SELECT id FROM access_groups WHERE organization_id = ${orgId}
+                  AND id = ANY(${`{${valid.join(",")}}`}::uuid[])`,
+            ),
+          ).length
+        : 0;
+      if (found !== refs.length)
+        throw new ValidationError({
+          [`steps.${index}.approvers.refs`]: ["Choose existing groups."],
+        });
+    }
+  }
+
   private shape(
     kind: ProcessKind,
     value: {
@@ -155,6 +180,7 @@ export class ProcessService {
     try {
       return await withOrg(ctx, async (tx) => {
         await requireProcessAdmin(tx, ctx);
+        await this.assertApproverRefs(tx, ctx.orgId, input.steps);
         const row = rowsOf(
           await tx.execute(
             sql`INSERT INTO approval_processes (organization_id, kind, name, module, trigger, criteria,
@@ -203,6 +229,8 @@ export class ProcessService {
           active: input.active ?? current.active,
         };
         this.shape(kind, next);
+        if (input.steps || (next.active && !current.active))
+          await this.assertApproverRefs(tx, ctx.orgId, next.steps);
         const row = rowsOf(
           await tx.execute(
             sql`UPDATE approval_processes SET name = ${next.name}, module = ${next.module},

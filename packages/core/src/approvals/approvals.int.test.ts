@@ -1,6 +1,8 @@
+import { randomUUID } from "node:crypto";
 import { sql } from "drizzle-orm";
 import pg from "pg";
 import { describe, expect, it } from "vitest";
+import * as access from "../access";
 import {
   ConflictError,
   ForbiddenError,
@@ -10,9 +12,10 @@ import {
 } from "../errors";
 import { getNotificationService } from "../notifications";
 import type { RecordData } from "../records/contract";
+import { WriteObserverFailure } from "../records/write-observer";
 import { withOrg } from "../tenancy";
 import type { OrgContext } from "../tenancy/types";
-import { addTestMember, createTestOrganization } from "../testing";
+import { addAccessTestMember, addTestMember, createTestOrganization } from "../testing";
 import { ApprovalService, type SystemRecords } from "./service";
 import type { CreateProcessInput } from "./types";
 
@@ -316,23 +319,103 @@ describe("approval submission and decisions", () => {
     await s.service.assertEditable(s.b, "Deals", ["1"], "update");
   });
 
-  it("auto-approves a step with no approvers and finishes the request", async () => {
+  it("keeps a step with no approvers pending and never applies the on-approve update", async () => {
+    const s = await setup();
+    // An owner in the top role has no manager: the step resolves to nobody (MEP-1518).
+    await makeProcess(s, {
+      steps: [
+        { name: "Managers", approvers: { kind: "record_owner_manager", refs: [] }, rule: "any" },
+      ],
+      onApprove: [{ kind: "field_update", field: "Stage", value: "Auto" }],
+    });
+    await s.write(s.b, s.deal("1", { Owner: s.admin.userId }));
+    const all = await s.service.listQueue(s.admin, { type: "approval", scope: "all" });
+    expect(all.items).toHaveLength(1);
+    expect(all.items[0]?.status).toBe("pending");
+    const detail = await s.service.detail(s.admin, all.items[0]?.id ?? "");
+    expect(detail.actions.map((action) => action.action)).not.toContain("auto_approved");
+    expect(detail.actions[0]?.comment).toContain("resolution_error");
+    expect(s.updates).toHaveLength(0);
+    await expect(s.service.assertEditable(s.b, "Deals", ["1"], "update")).rejects.toBeInstanceOf(
+      RecordLockedForApprovalError,
+    );
+  });
+
+  it("keeps a later step with no approvers pending after the earlier step approves", async () => {
     const s = await setup();
     await makeProcess(s, {
-      steps: [{ name: "Managers", approvers: { kind: "groups", refs: ["none"] }, rule: "any" }],
+      steps: [
+        { name: "First", approvers: { kind: "users", refs: [s.c.userId] }, rule: "any" },
+        { name: "Nobody", approvers: { kind: "users", refs: [randomUUID()] }, rule: "any" },
+      ],
       onApprove: [{ kind: "field_update", field: "Stage", value: "Auto" }],
     });
     await s.write(s.b, s.deal("1"));
-    const page = await s.service.listQueue(s.b, {
-      type: "approval",
-      status: "decided",
-      scope: "mine",
+    const item = await onlyRequest(s, s.c);
+    const detail = await s.service.decide(s.c, item.id, "approve");
+    expect(detail.request.status).toBe("pending");
+    expect(detail.request.step).toBe(2);
+    expect(s.updates).toHaveLength(0);
+  });
+
+  it("resolves group steps through the organisation's groups and roles", async () => {
+    const s = await setup();
+    const group = await access.createGroup(s.admin, {
+      name: `Approvers ${randomUUID()}`,
+      members: [{ kind: "user", id: s.c.userId }],
     });
-    expect(page.items).toHaveLength(0);
-    const history = await s.service.history(s.b, {});
-    expect(history.items.map((item) => item.action)).toEqual(["auto_approved", "submitted"]);
-    expect(s.updates).toHaveLength(1);
-    expect((await getNotificationService().list(s.b)).items[0]?.kind).toBe("approval_decided");
+    await makeProcess(s, {
+      steps: [{ name: "Group", approvers: { kind: "groups", refs: [group.id] }, rule: "any" }],
+    });
+    await s.write(s.b, s.deal("1"));
+    const item = await onlyRequest(s, s.c);
+    expect((await s.service.listQueue(s.d, { type: "approval" })).items).toHaveLength(0);
+    expect((await s.service.decide(s.c, item.id, "approve")).request.status).toBe("approved");
+  });
+
+  it("resolves the owner's manager from the parent role", async () => {
+    const s = await setup();
+    const rep = await addAccessTestMember(s.admin, { profile: "standard", role: "Manager" });
+    await makeProcess(s, {
+      steps: [
+        { name: "Manager", approvers: { kind: "record_owner_manager", refs: [] }, rule: "any" },
+      ],
+    });
+    await s.write(rep.ctx, s.deal("1", { Owner: rep.ctx.userId }));
+    const item = await onlyRequest(s, s.admin);
+    expect((await s.service.listQueue(rep.ctx, { type: "approval" })).items).toHaveLength(0);
+    expect((await s.service.decide(s.admin, item.id, "approve")).request.status).toBe("approved");
+  });
+
+  it("rejects group steps that name no existing group at save time", async () => {
+    const s = await setup();
+    for (const refs of [["admin"], [randomUUID()]])
+      await expect(
+        s.service.processes.create(s.admin, "approval", {
+          name: `Bad ${Math.random()}`,
+          module: "Deals",
+          trigger: "create",
+          steps: [{ name: "G", approvers: { kind: "groups", refs }, rule: "any" }],
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+  });
+
+  it("fails closed when the request cannot be stored", async () => {
+    const s = await setup();
+    await makeProcess(s);
+    const record = s.deal("1");
+    await expect(
+      s.service.afterWrite(s.b, {
+        module: "Deals",
+        kind: "create",
+        record,
+        previous: undefined,
+        label: "Bad\u0000label",
+      }),
+    ).rejects.toBeInstanceOf(WriteObserverFailure);
+    expect(
+      (await s.service.listQueue(s.admin, { type: "approval", scope: "all" })).items,
+    ).toHaveLength(0);
   });
 
   it("records a failed approver resolution as an admin-visible request without approvers", async () => {
@@ -345,11 +428,12 @@ describe("approval submission and decisions", () => {
         ownerManagers: async () => [],
       },
     });
+    const group = await access.createGroup(s.admin, { name: `Grp ${randomUUID()}` });
     const process = await failing.processes.create(s.admin, "approval", {
       name: "Grp",
       module: "Deals",
       trigger: "create",
-      steps: [{ name: "G", approvers: { kind: "groups", refs: ["g"] }, rule: "any" }],
+      steps: [{ name: "G", approvers: { kind: "groups", refs: [group.id] }, rule: "any" }],
     });
     await failing.processes.update(s.admin, "approval", process.id, { active: true });
     const quiet = console.error;

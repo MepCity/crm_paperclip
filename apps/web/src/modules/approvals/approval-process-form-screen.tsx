@@ -7,6 +7,7 @@ import { Icons } from "@/components/ui/icon";
 import { Link } from "@/components/ui/link";
 import { Switch } from "@/components/ui/switch";
 import { useUsers } from "@/lib/api/client/hooks";
+import { createAccessClient } from "../settings-access/api";
 import { createApprovalProcess, fetchApprovalProcess, updateApprovalProcess } from "./api";
 import type { FieldUpdateAction, ProcessCondition, ProcessStep, ProcessTrigger } from "./types";
 
@@ -103,6 +104,28 @@ export function ApprovalProcessFormScreen({ orgSlug, processId }: ApprovalProces
   const [onReject, setOnReject] = useState<FormAction[]>([]);
 
   const { data: users = [] } = useUsers();
+  const [groups, setGroups] = useState<{ id: string; name: string }[] | null>(null);
+  const [groupsError, setGroupsError] = useState(false);
+
+  const needsGroups = steps.some((step) => step.approvers.kind === "groups");
+  useEffect(() => {
+    if (!needsGroups || groups !== null) return;
+    let cancelled = false;
+    createAccessClient(orgSlug)
+      .listGroups()
+      .then((list) => {
+        if (!cancelled) setGroups(list.map((group) => ({ id: group.id, name: group.name })));
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setGroups([]);
+          setGroupsError(true);
+        }
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [needsGroups, groups, orgSlug]);
 
   useEffect(() => {
     if (!processId) return;
@@ -461,7 +484,8 @@ export function ApprovalProcessFormScreen({ orgSlug, processId }: ApprovalProces
                     value={step.approvers.kind}
                     onChange={(e) => {
                       const kind = e.target.value as ApproverKind;
-                      const refs = kind === "record_owner_manager" ? [] : ["admin"];
+                      // Groups are chosen from the organisation's groups; there is no default.
+                      const refs = kind === "roles" ? ["admin"] : [];
                       handleStepChange(idx, { approvers: { kind, refs } });
                     }}
                     className="w-full rounded-md border border-border bg-surface px-2.5 py-1.5 text-sm text-text"
@@ -519,6 +543,49 @@ export function ApprovalProcessFormScreen({ orgSlug, processId }: ApprovalProces
                     className="w-full rounded-md border border-border bg-surface px-2.5 py-1.5 text-sm text-text"
                   />
                 </div>
+              )}
+
+              {step.approvers.kind === "groups" && (
+                <fieldset>
+                  <legend className="block text-xs font-semibold text-text-muted mb-1">
+                    Grup Seçin
+                  </legend>
+                  {groups === null ? (
+                    <p className="text-xs text-text-muted">Gruplar yükleniyor...</p>
+                  ) : groups.length === 0 ? (
+                    <p className="text-xs text-text-muted">
+                      {groupsError ? "Gruplar yüklenemedi." : "Henüz grup yok."}
+                    </p>
+                  ) : (
+                    <div className="max-h-40 space-y-1 overflow-y-auto rounded-md border border-border bg-surface px-2.5 py-1.5">
+                      {groups.map((group) => {
+                        const checked = step.approvers.refs.includes(group.id);
+                        return (
+                          <label
+                            key={group.id}
+                            className="flex items-center gap-2 text-sm text-text"
+                          >
+                            <input
+                              type="checkbox"
+                              checked={checked}
+                              onChange={() =>
+                                handleStepChange(idx, {
+                                  approvers: {
+                                    ...step.approvers,
+                                    refs: checked
+                                      ? step.approvers.refs.filter((ref) => ref !== group.id)
+                                      : [...step.approvers.refs, group.id],
+                                  },
+                                })
+                              }
+                            />
+                            {group.name}
+                          </label>
+                        );
+                      })}
+                    </div>
+                  )}
+                </fieldset>
               )}
 
               {step.approvers.kind === "users" && (

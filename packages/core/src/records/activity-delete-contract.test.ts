@@ -113,7 +113,24 @@ describe.each(Object.entries(parentInputs))("%s activity deletion contract", (mo
       ...extra,
     });
   };
-  it("deletes open, closed and locked children through either link, preserving unrelated records", async () => {
+  it("refuses the delete while a child is locked and changes nothing", async () => {
+    const service = make();
+    const parent = await createParent(service);
+    const open = await service.create("Tasks", {
+      ...activityInput("Tasks", false),
+      Who_Id: { module, id: parent.id },
+    });
+    const locked = await service.create("Calls", {
+      ...activityInput("Calls", true),
+      What_Id: { module, id: parent.id },
+      Subject: "Synthetic locked activity",
+    });
+    await expect(service.delete(module, [parent.id])).rejects.toBeInstanceOf(RecordLockedError);
+    expect((await service.get(module, parent.id)).id).toBe(parent.id);
+    expect((await service.get("Tasks", open.id)).id).toBe(open.id);
+    expect((await service.get("Calls", locked.id)).id).toBe(locked.id);
+  });
+  it("deletes open and closed children through either link, preserving unrelated records", async () => {
     const service = make();
     const parents = [await createParent(service), await createParent(service)];
     const other = await createParent(service);
@@ -127,11 +144,7 @@ describe.each(Object.entries(parentInputs))("%s activity deletion contract", (mo
           const child = await service.create(activityModule, {
             ...activityInput(activityModule, closed),
             [field]: { module, id: parent.id },
-            [activityModule === "Events" ? "Event_Title" : "Subject"]: "Synthetic locked activity",
           });
-          await expect(service.delete(activityModule, [child.id])).rejects.toBeInstanceOf(
-            RecordLockedError,
-          );
           expect(activityState(activityModule, child, new Date("2026-10-14T12:00:00Z"))).toBe(
             closed ? "closed" : "open",
           );

@@ -406,10 +406,14 @@ and ID, independent of name.
 
 `merge` accepts a master and one or two distinct duplicates in its bound module
 and organization. It applies update validation and the existing update/delete
-lock checks to every participant. The fixture currently has no finer record ACL;
+lock checks to every participant, including the approval lock (update on the master,
+delete on the duplicates); the master's edit is published to the write observer like an
+update. Lead conversion checks the approval lock on the lead and every reused record and
+publishes the lead edit, every created record and every changed reused record. The fixture currently has no finer record ACL;
 these checks are the same as existing update/delete, not a new permission model.
 All lookup redirections and unique-field checks are prepared before any write.
-The duplicates disappear permanently; selected values overwrite the master,
+The duplicates are deleted into the recycle bin, one entry each, under the merge's
+operation id (MEP-1518); selected values overwrite the master,
 other values remain. Every lookup that pointed at a removed duplicate is
 redirected to the master, except on the master itself: that field is not turned
 into a self-pointer, it becomes `null`. A value given explicitly in `values`
@@ -737,7 +741,9 @@ Open questions: the reference CRM's applied-filter timezone/day boundary and
 multi-activity badge precedence/date selection remain unobserved. The UTC boundary
 and task/meeting/call tie order require confirmation at the module board gate.
 
-Deleting Leads, Contacts, Accounts or Deals cascades to all registered Tasks, Events and Calls linked by either Who_Id or What_Id (matching module and ID), after validating every parent; child locks are ignored temporarily, merge and conversion do not cascade, and restore is out of scope.
+Deleting Leads, Contacts, Accounts or Deals cascades to all registered Tasks, Events and Calls linked by either Who_Id or What_Id (matching module and ID), after validating every parent. Before anything changes, every child must pass what deleting it directly needs: no write lock (`Locked__s`), no open approval request, the module delete permission and record-level delete access; one refusal stops the whole delete (MEP-1518). Merge and conversion do not cascade, and restore is out of scope.
+
+Open question (MEP-1518): the reference CRM's behaviour when a parent has a locked or non-deletable activity was not observed; until it is, the delete is refused.
 
 ## Campaigns
 

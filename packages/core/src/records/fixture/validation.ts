@@ -70,6 +70,20 @@ export function acceptsFieldValue(field: FieldDefinition, value: FieldValue): bo
       return typeof value === "string";
   }
 }
+/**
+ * A text value (or a text item of a list) carrying a C0 control character other than tab,
+ * line feed and carriage return, which multi-line text keeps (MEP-1518).
+ */
+function hasControlCharacter(value: unknown): boolean {
+  if (Array.isArray(value)) return value.some(hasControlCharacter);
+  if (typeof value !== "string") return false;
+  for (let index = 0; index < value.length; index += 1) {
+    const code = value.charCodeAt(index);
+    if (code < 0x20 && code !== 0x09 && code !== 0x0a && code !== 0x0d) return true;
+  }
+  return false;
+}
+
 export function validateInput(
   input: RecordInput,
   partial: boolean,
@@ -100,6 +114,7 @@ export function validateInput(
     } else if (present) {
       if (value === undefined || !acceptsFieldValue(field, value))
         errors[field.apiName] = ["Invalid field type."];
+      else if (hasControlCharacter(value)) errors[field.apiName] = ["Invalid characters."];
       else if (
         !field.acceptsJsonArray &&
         field.dataType !== "ALARM" &&

@@ -62,7 +62,7 @@ import {
 import { roundMoneyTwoDecimals } from "../rounding";
 import { matchesSystemFilters, validateSystemFilters } from "../system-filters";
 import type { TagService } from "../tags";
-import type { RecordWriteObserver } from "../write-observer";
+import { isWriteObserverFailure, type RecordWriteObserver } from "../write-observer";
 import {
   attachmentParent,
   attachmentUltimateParent,
@@ -660,20 +660,140 @@ export function createFixtureRecordService(
   ) => {
     if (observer) await observer.assertEditable({ module, ids, operation });
   };
-  /** Imports carry source times and never submit approvals; the observer must not fail a write. */
-  const publishWrite = async (
-    module: string,
-    kind: "create" | "edit",
-    record: RecordData,
-    previous: RecordData | undefined,
+  type ObservedWrite = {
+    module: string;
+    kind: "create" | "edit";
+    record: RecordData;
+    previous: RecordData | undefined;
+  };
+  /** The state before an observed commit and the module map that commit produced. */
+  type ObservedCommit = {
+    before: Pick<FixtureStore, "modules" | "deletions" | "history" | "sequence">;
+    committed: FixtureStore["modules"];
+  };
+  /** Runs one atomic write and remembers what to undo if a fail-closed observer refuses it. */
+  const observedAtomic = <T>(
+    operation: FixtureHistoryOperation,
+    write: () => T,
+  ): { result: T; commit: ObservedCommit } => {
+    const before = {
+      modules: state.modules,
+      deletions: state.deletions,
+      history: state.history,
+      sequence: state.sequence,
+    };
+    const result = atomic(operation, write);
+    return { result, commit: { before, committed: state.modules } };
+  };
+  /**
+   * Undoes an observed commit. Without a later commit the whole state goes back, history
+   * included. Otherwise only the rows this commit changed and nobody changed since revert,
+   * as a recorded rollback, and its recycle-bin entries disappear.
+   */
+  const rollback = ({ before, committed }: ObservedCommit) => {
+    if (state.modules === committed) {
+      state.modules = before.modules;
+      state.deletions = before.deletions;
+      state.history = before.history;
+      state.sequence = before.sequence;
+      return;
+    }
+    const [firstModule] = committed.keys();
+    atomic({ module: firstModule ?? "Leads", mechanism: "rollback" }, () => {
+      for (const [name, after] of committed) {
+        const prior = before.modules.get(name);
+        if (prior === after) continue;
+        const ids = new Set([...after.records.keys(), ...(prior?.records.keys() ?? [])]);
+        for (const id of ids) {
+          const was = prior?.records.get(id);
+          const now = after.records.get(id);
+          if (was === now || state.modules.get(name)?.records.get(id) !== now) continue;
+          const store = moduleStore(name);
+          if (!was) store.records.delete(id);
+          else {
+            store.records.set(id, was);
+            if (store.deletedRecords?.has(id)) {
+              store.deletedRecords = new Map(store.deletedRecords);
+              store.deletedRecords.delete(id);
+            }
+          }
+        }
+      }
+      for (const id of [...state.deletions.keys()])
+        if (!before.deletions.has(id)) state.deletions.delete(id);
+    });
+  };
+  /**
+   * Imports carry source times and never submit approvals. An observer failure is logged and
+   * ignored, except a fail-closed one (the approval request): it undoes the commit and rethrows.
+   */
+  const publishWrites = async (
+    writes: readonly ObservedWrite[],
+    commit: ObservedCommit,
     writeOptions?: RecordWriteOptions,
   ) => {
     if (!observer || writeOptions?.sourceTimes || writeOptions?.allowEmptyLines) return;
-    try {
-      const label = String(record.fields[bundleFor(module).displayNameField] ?? "");
-      await observer.afterWrite({ module, kind, record: copy(record), previous, label });
-    } catch (error) {
-      console.error("Record write observer failed", error);
+    for (const { module, kind, record, previous } of writes) {
+      try {
+        const label = String(record.fields[bundleFor(module).displayNameField] ?? "");
+        await observer.afterWrite({ module, kind, record: copy(record), previous, label });
+      } catch (error) {
+        if (!isWriteObserverFailure(error)) {
+          console.error("Record write observer failed", error);
+          continue;
+        }
+        rollback(commit);
+        throw error;
+      }
+    }
+  };
+  /** Activities the parent delete cascade removes with `roots` (activity-hooks.ts). */
+  const cascadeChildren = (module: string, roots: readonly RecordData[]) => {
+    const result = new Map<string, RecordData[]>();
+    if (!activityParentModules.has(module)) return result;
+    const rootIds = new Set(roots.map((record) => record.id));
+    for (const activityModule of Object.keys(activityRules)) {
+      if (!Object.hasOwn(fixtureModules, activityModule)) continue;
+      const store = state.modules.get(activityModule);
+      const children = [...(store?.records.values() ?? [])].filter((record) =>
+        activityParentIds(module, record).some((id) => rootIds.has(id)),
+      );
+      if (children.length) result.set(activityModule, children);
+    }
+    return result;
+  };
+  /**
+   * The cascade deletes children, so it needs what deleting them directly needs: no write
+   * lock, no open approval and the deleter's delete right on each one. Any refusal stops the
+   * whole delete before anything changes (MEP-1518).
+   */
+  const assertCascadeDeletable = async (module: string, roots: readonly RecordData[]) => {
+    const acc = await accessFor();
+    for (const [childModule, children] of cascadeChildren(module, roots)) {
+      for (const child of children) assertWritable(child, "delete");
+      if (acc) {
+        if (!acc.can(childModule, "delete"))
+          throw new ForbiddenError(
+            "You cannot delete the related activities of this record.",
+            "permission_denied",
+          );
+        for (const child of children) {
+          try {
+            acc.assert(childModule, child.fields, "delete");
+          } catch (error) {
+            if (!(error instanceof NotFoundError)) throw error;
+            throw new ForbiddenError(
+              "You cannot delete the related activities of this record.",
+              "permission_denied",
+            );
+          }
+        }
+      }
+      await assertUnlocked(
+        childModule,
+        children.map((child) => child.id),
+        "delete",
+      );
     }
   };
   const assertWritable = (record: RecordData, operation: "update" | "delete" = "update") => {
@@ -1026,7 +1146,7 @@ export function createFixtureRecordService(
     input: RecordInput,
     mechanism = "update",
   ) =>
-    atomic({ module, mechanism }, () => {
+    observedAtomic({ module, mechanism }, () => {
       // Resolve every target after asynchronous membership checks, before any write.
       const bundle = bundleFor(module);
       const records = [...new Set(ids)].map((id) => recordFor(module, id));
@@ -1065,9 +1185,16 @@ export function createFixtureRecordService(
     const unique = [...new Set(ids)];
     await assertUnlocked(module, unique, "update");
     const previous = observer ? unique.map((id) => copy(recordFor(module, id))) : [];
-    writeBatch(module, ids, input, mechanism);
-    for (const before of previous)
-      await publishWrite(module, "edit", copy(recordFor(module, before.id)), before);
+    const { commit } = writeBatch(module, ids, input, mechanism);
+    await publishWrites(
+      previous.map((before) => ({
+        module,
+        kind: "edit" as const,
+        record: copy(recordFor(module, before.id)),
+        previous: before,
+      })),
+      commit,
+    );
   };
 
   /** Synchronous insert shared by create and the conversion coordinator; callers validate first. */
@@ -1152,8 +1279,19 @@ export function createFixtureRecordService(
     validateInput(normalized, true, bundle.metadata.fields, bundle.managedFields);
     validateReferences(module, normalized);
     await validateOwner(normalized);
-    return atomic(
-      { module, recordId: input.masterId, kind: "records_merged", mechanism: "merge" },
+    // The approval lock covers the master (edited) and the duplicates (deleted) (MEP-1518).
+    await assertUnlocked(module, [input.masterId], "update");
+    await assertUnlocked(module, ids, "delete");
+    const previous = copy(recordFor(module, input.masterId));
+    const operationId = randomUUID();
+    const { result: merged, commit } = observedAtomic(
+      {
+        module,
+        recordId: input.masterId,
+        kind: "records_merged",
+        mechanism: "merge",
+        operationId,
+      },
       () => {
         // Resolve again after the asynchronous membership check, then commit without yielding.
         const master = recordFor(module, input.masterId);
@@ -1228,10 +1366,19 @@ export function createFixtureRecordService(
           projected.set(name, next);
         }
         for (const [name, records] of projected) moduleStore(name).records = records;
+        // Merged-away duplicates go to the recycle bin like a delete (MEP-1518).
+        for (const duplicate of group.slice(1)) {
+          moduleStore(module).records.set(duplicate.id, duplicate);
+          retainDeletion(recycleDependencies, module, duplicate, operationId, () => {
+            moduleStore(module).records.delete(duplicate.id);
+          });
+        }
         bundle.afterWrite?.(recordFor(module, master.id), copy(master), hookContext);
         return copy(resolveRead(module, recordFor(module, master.id)));
       },
     );
+    await publishWrites([{ module, kind: "edit", record: merged, previous }], commit);
+    return merged;
   };
   const findDuplicateGroups = async (
     module: string,
@@ -1358,7 +1505,12 @@ export function createFixtureRecordService(
       validateReferences(module, normalized);
       await validateOwner(normalized);
     }
-    return atomic(
+    // The approval lock covers the converted lead and every reused record (MEP-1518).
+    await assertUnlocked("Leads", [leadId], "update");
+    for (const [module, target] of targets)
+      if (target && "reuseId" in target) await assertUnlocked(module, [target.reuseId], "update");
+    const observed: ObservedWrite[] = [];
+    const { result: converted, commit } = observedAtomic(
       { module: "Leads", recordId: leadId, kind: "record_converted", mechanism: "convert" },
       () => {
         const lead = recordFor("Leads", leadId);
@@ -1406,6 +1558,7 @@ export function createFixtureRecordService(
               record = { id: existing.id, fields };
               bundle.afterWrite?.(record, copy(existing), hookContext);
               moduleState.records.set(record.id, record);
+              observed.push({ module, kind: "edit", record, previous: copy(existing) });
             }
           } else {
             const normalized = normalizeInput(
@@ -1414,6 +1567,8 @@ export function createFixtureRecordService(
               bundle.metadata.fields,
             );
             record = insertRecord(module, normalized);
+            const raw = moduleState.records.get(record.id) ?? record;
+            observed.push({ module, kind: "create", record: raw, previous: undefined });
           }
           ids[resultKey] = record.id;
           const ref = lookup(module, record.id, record.fields[bundle.displayNameField]);
@@ -1421,7 +1576,7 @@ export function createFixtureRecordService(
           if (module === "Accounts") account = ref;
           if (module === "Contacts") contact = ref;
         }
-        moduleStore("Leads").records.set(leadId, {
+        const convertedLead = {
           id: leadId,
           fields: {
             ...copy(lead.fields),
@@ -1431,6 +1586,13 @@ export function createFixtureRecordService(
             Modified_By: ctx.userId,
             Modified_Time: stamp,
           },
+        };
+        moduleStore("Leads").records.set(leadId, convertedLead);
+        observed.unshift({
+          module: "Leads",
+          kind: "edit",
+          record: convertedLead,
+          previous: copy(lead),
         });
         return {
           accountId: ids.accountId ?? null,
@@ -1439,6 +1601,14 @@ export function createFixtureRecordService(
         };
       },
     );
+    await publishWrites(
+      observed.map((write) => ({
+        ...write,
+        record: copy(resolveRead(write.module, write.record)),
+      })),
+      commit,
+    );
+    return converted;
   };
   /** ADR 0016 §7: one atomic write; returns the new invoice id. The quote is not changed. */
   const convertQuoteToInvoice = async (quoteId: string): Promise<string> => {
@@ -2028,15 +2198,19 @@ export function createFixtureRecordService(
       await validateOwner(normalized);
       const writer = await accessFor();
       writer?.assertWrite(module, normalized);
-      const created = atomic({ module, mechanism: "create" }, () =>
+      const { result: created, commit } = observedAtomic({ module, mechanism: "create" }, () =>
         insertRecord(module, normalized, createOpts),
+      );
+      await publishWrites(
+        [{ module, kind: "create", record: created, previous: undefined }],
+        commit,
+        createOpts,
       );
       if (createOpts?.idempotencyKey) {
         const moduleState = moduleStore(module);
         moduleState.idempotencyMap ??= new Map<string, string>();
         moduleState.idempotencyMap.set(createOpts.idempotencyKey, created.id);
       }
-      await publishWrite(module, "create", created, undefined, createOpts);
       return writer ? writer.project(module, created) : created;
     },
     async update(module, id, input, options) {
@@ -2064,33 +2238,40 @@ export function createFixtureRecordService(
       (await accessFor())?.assertWrite(module, normalized, recordFor(module, id).fields);
       await assertUnlocked(module, [id], "update");
       const previous = copy(recordFor(module, id));
-      const updatedRecord = atomic({ module, mechanism: "update" }, () => {
-        // Membership resolution may yield; preserve intervening partial writes/deletes.
-        const record = recordFor(module, id);
-        assertWritable(record);
-        const fields: Record<string, FieldValue> = {
-          ...copy(record.fields),
-          ...normalized,
-          Modified_By: ctx.userId,
-          Modified_Time: options?.sourceTimes?.modifiedTime ?? clock().toISOString(),
-        };
-        if (options !== undefined) {
-          bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext, options);
-        } else {
-          bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext);
-        }
-        fields[bundle.displayNameField] = bundle.fullName(fields);
-        const updated = { id, fields };
-        const moduleState = moduleStore(module);
-        assertUniqueFieldValues(
-          bundle.metadata.fields,
-          projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
-        );
-        bundle.afterWrite?.(updated, copy(record), hookContext);
-        moduleState.records.set(id, updated);
-        return copy(resolveRead(module, updated));
-      });
-      await publishWrite(module, "edit", updatedRecord, previous, options);
+      const { result: updatedRecord, commit } = observedAtomic(
+        { module, mechanism: "update" },
+        () => {
+          // Membership resolution may yield; preserve intervening partial writes/deletes.
+          const record = recordFor(module, id);
+          assertWritable(record);
+          const fields: Record<string, FieldValue> = {
+            ...copy(record.fields),
+            ...normalized,
+            Modified_By: ctx.userId,
+            Modified_Time: options?.sourceTimes?.modifiedTime ?? clock().toISOString(),
+          };
+          if (options !== undefined) {
+            bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext, options);
+          } else {
+            bundle.applyRules?.(fields, normalized, copy(record.fields), hookContext);
+          }
+          fields[bundle.displayNameField] = bundle.fullName(fields);
+          const updated = { id, fields };
+          const moduleState = moduleStore(module);
+          assertUniqueFieldValues(
+            bundle.metadata.fields,
+            projectRecordsWithOverrides(moduleState.records, new Map([[id, fields]])),
+          );
+          bundle.afterWrite?.(updated, copy(record), hookContext);
+          moduleState.records.set(id, updated);
+          return copy(resolveRead(module, updated));
+        },
+      );
+      await publishWrites(
+        [{ module, kind: "edit", record: updatedRecord, previous }],
+        commit,
+        options,
+      );
       const viewer = await accessFor();
       return viewer ? viewer.project(module, updatedRecord) : updatedRecord;
     },
@@ -2170,8 +2351,12 @@ export function createFixtureRecordService(
       const records = [...new Set(ids)].map((id) => recordFor(module, id));
       for (const record of records) assertWritable(record, "delete");
       await assertUnlocked(module, [...new Set(ids)], "delete");
+      await assertCascadeDeletable(module, records);
       const operationId = randomUUID();
       atomic({ module, mechanism: "delete", operationId }, () => {
+        // Re-check the children's write lock after the asynchronous checks, without yielding.
+        for (const children of cascadeChildren(module, records).values())
+          for (const child of children) assertWritable(child, "delete");
         for (const record of records) {
           // A previous root in the same batch can already own a shared cascade.
           if (!moduleStore(module).records.has(record.id)) continue;

@@ -1,4 +1,5 @@
 export { matchesCondition, matchesCriteria } from "./criteria";
+export { accessApproverDirectory } from "./directory";
 export { ProcessService } from "./process-service";
 export { seedDemoApprovals } from "./seed";
 export {
