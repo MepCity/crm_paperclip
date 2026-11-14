@@ -150,6 +150,43 @@ describe("record write observer", () => {
     expect((await records.get("Leads", second.id)).fields.Company).toBe("Kept Co");
   });
 
+  it("keeps the bin entry of a delete that committed while a refused merge waited", async () => {
+    let release = () => {};
+    const gate = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    let hold = false;
+    let held = false;
+    const spy = observer({
+      afterWrite: vi.fn(async (event) => {
+        if (hold && event.kind === "edit") {
+          hold = false;
+          held = true;
+          await gate;
+          throw new WriteObserverFailure("approval down");
+        }
+      }),
+    });
+    const records = createFixtureRecordService(ctx(), { writeObserver: spy });
+    const master = await records.create("Leads", lead);
+    const duplicate = await records.create("Leads", { ...lead, Last_Name: "Duplicate" });
+    const other = await records.create("Leads", { ...lead, Last_Name: "Other" });
+    hold = true;
+    const refused = records.merge("Leads", {
+      masterId: master.id,
+      duplicateIds: [duplicate.id],
+      values: {},
+    });
+    await vi.waitFor(() => expect(held).toBe(true));
+    await records.delete("Leads", [other.id]);
+    release();
+    await expect(refused).rejects.toBeInstanceOf(WriteObserverFailure);
+    const bin = (await records.recycleBin.list()).entries;
+    expect(bin.map((entry) => entry.recordId)).toEqual([other.id]);
+    await expect(records.get("Leads", other.id)).rejects.toBeInstanceOf(NotFoundError);
+    expect((await records.get("Leads", duplicate.id)).id).toBe(duplicate.id);
+  });
+
   it("checks the approval lock on merge and publishes the master edit; duplicates go to the bin", async () => {
     const spy = observer();
     const records = createFixtureRecordService(ctx(), { writeObserver: spy });

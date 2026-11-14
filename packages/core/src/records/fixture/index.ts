@@ -691,6 +691,8 @@ export function createFixtureRecordService(
   type ObservedCommit = {
     before: Pick<FixtureStore, "modules" | "deletions" | "history" | "sequence">;
     committed: FixtureStore["modules"];
+    /** Recycle-bin manifests right after this commit; only ids new here are its own. */
+    committedDeletions: FixtureStore["deletions"];
   };
   /** Runs one atomic write and remembers what to undo if a fail-closed observer refuses it. */
   const observedAtomic = <T>(
@@ -704,14 +706,17 @@ export function createFixtureRecordService(
       sequence: state.sequence,
     };
     const result = atomic(operation, write);
-    return { result, commit: { before, committed: state.modules } };
+    return {
+      result,
+      commit: { before, committed: state.modules, committedDeletions: state.deletions },
+    };
   };
   /**
    * Undoes an observed commit. Without a later commit the whole state goes back, history
    * included. Otherwise only the rows this commit changed and nobody changed since revert,
-   * as a recorded rollback, and its recycle-bin entries disappear.
+   * as a recorded rollback, and only its own recycle-bin entries disappear.
    */
-  const rollback = ({ before, committed }: ObservedCommit) => {
+  const rollback = ({ before, committed, committedDeletions }: ObservedCommit) => {
     if (state.modules === committed) {
       state.modules = before.modules;
       state.deletions = before.deletions;
@@ -740,7 +745,8 @@ export function createFixtureRecordService(
           }
         }
       }
-      for (const id of [...state.deletions.keys()])
+      // Only this commit's manifests: a delete that committed meanwhile keeps its bin entry.
+      for (const id of committedDeletions.keys())
         if (!before.deletions.has(id)) state.deletions.delete(id);
     });
   };
